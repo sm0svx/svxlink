@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstdio>
@@ -34,43 +34,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncAudioFifo.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 static const unsigned  MAX_WRITE_SIZE = 800;
 
-/**
+/*
  * Public member functions
  */
 AudioFifo::AudioFifo(unsigned fifo_size)
@@ -81,12 +81,12 @@ AudioFifo::AudioFifo(unsigned fifo_size)
 {
   assert(fifo_size > 0);
   fifo = new float[fifo_size];
-} /** AudioFifo */
+} /* AudioFifo */
 
 AudioFifo::~AudioFifo(void)
 {
   delete [] fifo;
-} /** ~AudioFifo */
+} /* ~AudioFifo */
 
 void AudioFifo::setSize(unsigned new_size)
 {
@@ -98,7 +98,7 @@ void AudioFifo::setSize(unsigned new_size)
     fifo = new float[fifo_size];
   }
   clear();
-} /** AudioFifo::setSize */
+} /* AudioFifo::setSize */
 
 unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const
 {
@@ -115,7 +115,7 @@ unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const
 
   return samples_in_buffer;
 
-} /** AudioFifo::samplesInFifo */
+} /* AudioFifo::samplesInFifo */
 
 void AudioFifo::clear(void)
 {
@@ -130,7 +130,7 @@ void AudioFifo::clear(void)
   {
     sinkFlushSamples();
   }
-} /** AudioFifo::clear */
+} /* AudioFifo::clear */
 
 void AudioFifo::setPrebufSamples(unsigned prebuf_samples)
 {
@@ -139,7 +139,7 @@ void AudioFifo::setPrebufSamples(unsigned prebuf_samples)
   {
     prebuf = (prebuf_samples > 0);
   }
-} /** AudioFifo::setPrebufSamples */
+} /* AudioFifo::setPrebufSamples */
 
 void AudioFifo::enableBuffering(bool enable)
 {
@@ -169,11 +169,11 @@ void AudioFifo::enableBuffering(bool enable)
       }
     }
   }
-} /** AudioFifo::enableBuffering */
+} /* AudioFifo::enableBuffering */
 
 int AudioFifo::writeSamples(const float *samples, int count)
 {
-  /**
+  /*
   printf("AudioFifo::writeSamples: count=%d empty=%s  prebuf=%s\n",
       	  count, empty() ? "true" : "false", prebuf ? "true" : "false");
   */
@@ -193,7 +193,7 @@ int AudioFifo::writeSamples(const float *samples, int count)
   if (empty() && !prebuf)
   {
     samples_written = sinkWriteSamples(samples, count);
-    /**
+    /*
     printf("AudioFifo::writeSamples: count=%d "
       	   "samples_written=%d\n", count, samples_written);
     */
@@ -237,7 +237,7 @@ int AudioFifo::writeSamples(const float *samples, int count)
   
   return samples_written;
   
-} /** writeSamples */
+} /* writeSamples */
 
 void AudioFifo::flushSamples(void)
 {
@@ -252,7 +252,7 @@ void AudioFifo::flushSamples(void)
   {
     writeSamplesFromFifo();
   }
-} /** AudioFifo::flushSamples */
+} /* AudioFifo::flushSamples */
 
 
 void AudioFifo::resumeOutput(void)
@@ -269,9 +269,9 @@ void AudioFifo::resumeOutput(void)
       sourceResumeOutput();
     }
   }
-} /** resumeOutput */
+} /* resumeOutput */
 
-/**
+/*
  * Protected member functions
  */
 
@@ -291,9 +291,9 @@ void AudioFifo::allSamplesFlushed(void)
       sourceAllSamplesFlushed();
     }
   }
-} /** AudioFifo::allSamplesFlushed */
+} /* AudioFifo::allSamplesFlushed */
 
-/**
+/*
  * Private member functions
  */
 void AudioFifo::writeSamplesFromFifo(void)
@@ -339,8 +339,8 @@ void AudioFifo::writeSamplesFromFifo(void)
     sinkFlushSamples();
   }
   
-} /** writeSamplesFromFifo */
+} /* writeSamplesFromFifo */
 
-/**
+/*
  * This file has not been truncated
  */

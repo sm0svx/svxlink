@@ -26,21 +26,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_GPIO_INCLUDED
 #define SQUELCH_GPIO_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -48,23 +48,23 @@ namespace Async
   class Timer;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -108,11 +108,11 @@ class SquelchGpio : public Squelch
     SquelchGpio& operator=(const SquelchGpio&);
     void readGpioValueData(void);
 
-};  /** class SquelchGpio */
+};  /* class SquelchGpio */
 
-#endif /** SQUELCH_GPIO_INCLUDED */
+#endif /* SQUELCH_GPIO_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

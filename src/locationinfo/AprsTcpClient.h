@@ -26,24 +26,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef APRS_TCP_CLIENT
 #define APRS_TCP_CLIENT
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <vector>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 
-/**
+/*
  * Local Includes
  */
 #include "LocationInfo.h"
 #include "AprsClient.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -51,23 +51,23 @@ namespace Async
   class Timer;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -120,10 +120,10 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     void  reconnectAprsServer(Async::Timer *t);
     void  startNormalSequence(Async::Timer *t);
 
-};  /** class AprsTcpClient */
+};  /* class AprsTcpClient */
 
-#endif /** APRS_TCP_CLIENT */
+#endif /* APRS_TCP_CLIENT */
 
-/**
+/*
  * This file has not been truncated
  */

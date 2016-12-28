@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_VALVE_INCLUDED
 #define ASYNC_AUDIO_VALVE_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -286,13 +286,13 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     bool is_flushing;
     bool input_stopped;
 
-};  /** class AudioValve */
+};  /* class AudioValve */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_VALVE_INCLUDED */
+#endif /* ASYNC_AUDIO_VALVE_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

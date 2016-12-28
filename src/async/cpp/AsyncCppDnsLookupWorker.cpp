@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <unistd.h>
@@ -41,51 +41,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncCppDnsLookupWorker.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
   : label(label), worker(0), notifier_rd(-1), notifier_wr(-1),
     notifier_watch(0), done(false), result(0)
 {
-} /** CppDnsLookupWorker::CppDnsLookupWorker */
+} /* CppDnsLookupWorker::CppDnsLookupWorker */
 
 CppDnsLookupWorker::~CppDnsLookupWorker(void)
 {
@@ -124,7 +124,7 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
   {
     close(notifier_wr);
   }
-} /** CppDnsLookupWorker::~CppDnsLookupWorker */
+} /* CppDnsLookupWorker::~CppDnsLookupWorker */
 
 bool CppDnsLookupWorker::doLookup(void)
 {
@@ -146,7 +146,7 @@ bool CppDnsLookupWorker::doLookup(void)
     cerr << "pthread_create: error " << ret << endl;
     return false;
   }
-  /**
+  /*
   if (pthread_detach(worker) != 0)
   {
     perror("pthread_detach");
@@ -156,16 +156,16 @@ bool CppDnsLookupWorker::doLookup(void)
 
   return true;
   
-} /** CppDnsLookupWorker::doLookup */
+} /* CppDnsLookupWorker::doLookup */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    CppDnsLookupWorker::workerFunc
  * Purpose:   This is the function that do the actual DNS lookup. It is
@@ -198,9 +198,9 @@ void *CppDnsLookupWorker::workerFunc(void *w)
   
    return NULL;
   
-} /** CppDnsLookupWorker::workerFunc */
+} /* CppDnsLookupWorker::workerFunc */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    CppDnsLookupWorker::notificationReceived
  * Purpose:   When the DNS lookup thread is done, this function will be
@@ -229,9 +229,9 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   
   resultsReady();
 
-} /** CppDnsLookupWorker::notificationReceived */
+} /* CppDnsLookupWorker::notificationReceived */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -24,52 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cerrno>
 #include <cstring>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 
-/**
+/*
  * Local Includes
  */
 #include "NetTrxTcpClient.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace NetTrxMsg;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
       	NetTrxTcpClient::clients;
 
-/**
+/*
  * Public member functions
  */
 NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
@@ -114,7 +114,7 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
 
   return con;
   
-} /** NetTrxTcpClient::instance */
+} /* NetTrxTcpClient::instance */
 
 void NetTrxTcpClient::deleteInstance(void)
 {
@@ -134,7 +134,7 @@ void NetTrxTcpClient::deleteInstance(void)
     clients.erase(it);
     delete this;
   }
-} /** NetTrxTcpClient::deleteInstance */
+} /* NetTrxTcpClient::deleteInstance */
 
 void NetTrxTcpClient::sendMsg(Msg *msg)
 {
@@ -146,9 +146,9 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
   { 
     delete msg;
   }
-} /** NetTrxTcpClient::sendMsg */
+} /* NetTrxTcpClient::sendMsg */
 
-/**
+/*
  * Protected member functions
  */
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
@@ -169,15 +169,15 @@ NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
   heartbeat_timer->setEnable(false);
   heartbeat_timer->expired.connect(mem_fun(*this, &NetTrxTcpClient::heartbeat));
   
-} /** NetTrxTcpClient::NetTrxTcpClient */
+} /* NetTrxTcpClient::NetTrxTcpClient */
 
 NetTrxTcpClient::~NetTrxTcpClient(void)
 {
   delete reconnect_timer;
   delete heartbeat_timer;
-} /** NetTrxTcpClient::~NetTrxTcpClient */
+} /* NetTrxTcpClient::~NetTrxTcpClient */
 
-/**
+/*
  * Private member functions
  */
 void NetTrxTcpClient::tcpConnected(void)
@@ -187,7 +187,7 @@ void NetTrxTcpClient::tcpConnected(void)
   gettimeofday(&last_msg_timestamp, NULL);
   heartbeat_timer->setEnable(true);
   state = STATE_VER_WAIT;
-} /** NetTx::tcpConnected */
+} /* NetTx::tcpConnected */
 
 void NetTrxTcpClient::tcpDisconnected(TcpConnection *con,
       	      	      	    TcpConnection::DisconnectReason reason)
@@ -198,7 +198,7 @@ void NetTrxTcpClient::tcpDisconnected(TcpConnection *con,
   reconnect_timer->setEnable(true);
   heartbeat_timer->setEnable(false);
   isReady(false);
-} /** NetTrxTcpClient::tcpDisconnected */
+} /* NetTrxTcpClient::tcpDisconnected */
 
 int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
 {
@@ -264,13 +264,13 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
   
   return orig_size;
   
-} /** NetTrxTcpClient::tcpDataReceived */
+} /* NetTrxTcpClient::tcpDataReceived */
 
 void NetTrxTcpClient::reconnect(Timer *t)
 {
   reconnect_timer->setEnable(false);
   connect();
-} /** NetTrxTcpClient::reconnect */
+} /* NetTrxTcpClient::reconnect */
 
 void NetTrxTcpClient::handleMsg(Msg *msg)
 {
@@ -366,7 +366,7 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
   }
   
   
-} /** NetTrxTcpClient::handleMsg */
+} /* NetTrxTcpClient::handleMsg */
 
 void NetTrxTcpClient::heartbeat(Timer *t)
 {
@@ -388,13 +388,13 @@ void NetTrxTcpClient::heartbeat(Timer *t)
   
   t->reset();
   
-} /** NetTrxTcpClient::heartbeat */
+} /* NetTrxTcpClient::heartbeat */
 
 void NetTrxTcpClient::localDisconnect(void)
 {
   disconnect();
   disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
-} /** NetTrxTcpClient::localDisconnect */
+} /* NetTrxTcpClient::localDisconnect */
 
 void NetTrxTcpClient::sendMsgP(Msg *msg)
 {
@@ -418,8 +418,8 @@ void NetTrxTcpClient::sendMsgP(Msg *msg)
   
   delete msg;
   
-} /** NetTrxTcpClient::sendMsgP */
+} /* NetTrxTcpClient::sendMsgP */
 
-/**
+/*
  * This file has not been truncated
  */

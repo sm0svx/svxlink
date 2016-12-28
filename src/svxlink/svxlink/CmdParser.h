@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef CMD_PARSER_INCLUDED
 #define CMD_PARSER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -35,36 +35,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class Command;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -115,7 +115,7 @@ class CmdParser
     typedef std::map<std::string, Command *> CmdMap;
     CmdMap cmds;
     
-};  /** class CmdParser */
+};  /* class CmdParser */
 
 class Command : public sigc::trackable
 {
@@ -205,11 +205,11 @@ class Command : public sigc::trackable
     CmdParser 	*parser;
     std::string cmd;
     
-};  /** class Command */
+};  /* class Command */
 
-#endif /** CMD_PARSER_INCLUDED */
+#endif /* CMD_PARSER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

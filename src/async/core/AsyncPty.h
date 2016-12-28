@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_PTY_INCLUDED
 #define ASYNC_PTY_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <unistd.h>
@@ -34,39 +34,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -167,12 +167,12 @@ class Pty : public sigc::trackable
     short pollMaster(void);
     void checkIfSlaveEndOpen(void);
 
-};  /** class Pty */
+};  /* class Pty */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_PTY_INCLUDED */
+#endif /* ASYNC_PTY_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

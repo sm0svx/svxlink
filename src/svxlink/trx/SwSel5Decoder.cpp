@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
@@ -36,26 +36,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdint.h>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "SwSel5Decoder.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 // All values are squared magnitude ratios !
-#define SEL5_RELATIVE_PEAK          20.0f  /** 13dB */
+#define SEL5_RELATIVE_PEAK          20.0f  /* 13dB */
 
 // The Goertzel algorithm is just a recursive way to evaluate the DFT at a
 // single frequency. For maximum detection reliability, the bandwidth will
@@ -64,39 +64,39 @@ using namespace Async;
 // however is acceptable for the SEL5 decoder. Furthermore, a time slack
 // between the tone detectors is unavoidable, since they use different
 // block lengths.
-#define SEL5_BANDWIDTH              35     /** 35Hz */
+#define SEL5_BANDWIDTH              35     /* 35Hz */
 #define SEL5_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
-/**
+/*
  * Local class definitions
  */
  
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 SwSel5Decoder::SwSel5Decoder(Config &cfg, const string &name)
   : Sel5Decoder(cfg, name), sel5_table(0), samples_left(SEL5_BLOCK_LENGTH),
     last_hit(0), last_stable(0), stable_timer(0), active_timer(0), arr_len(0)
 {
-} /** SwSel5Decoder::SwSel5Decoder */
+} /* SwSel5Decoder::SwSel5Decoder */
 
 
 SwSel5Decoder::~SwSel5Decoder(void)
 {
   delete [] sel5_table;
-} /** SwSel5Decoder::~SwSel5Decoder */
+} /* SwSel5Decoder::~SwSel5Decoder */
 
 
 bool SwSel5Decoder::initialize(void)
@@ -107,7 +107,7 @@ bool SwSel5Decoder::initialize(void)
   }
 
   float tones[16];
-  /**  the tones for each mode
+  /*  the tones for each mode
    *                   0        1         2        3        4        5
    *                   6        7         8        9        A        B
    *                   C        D         E        F
@@ -277,7 +277,7 @@ bool SwSel5Decoder::initialize(void)
 
   memset(row_energy, 0, sizeof(row_energy));
 
-  /** Init row detectors */
+  /* Init row detectors */
   for (int a=0; a<=arr_len; a++)
   {
      goertzelInit(&row_out[a],    tones[a], SEL5_BANDWIDTH, 0.0f);
@@ -286,7 +286,7 @@ bool SwSel5Decoder::initialize(void)
 
   return true;
 
-} /** SwSel5Decoder::initialize */
+} /* SwSel5Decoder::initialize */
 
 int SwSel5Decoder::writeSamples(const float *buf, int len)
 {
@@ -304,7 +304,7 @@ int SwSel5Decoder::writeSamples(const float *buf, int len)
 			  famp * *(row_out[k].win++);
         }
 
-        /** Row result calculators */
+        /* Row result calculators */
         for (k=0; k<=arr_len; k++)
         {
           if (--row_out[k].samples_left == 0)
@@ -314,77 +314,77 @@ int SwSel5Decoder::writeSamples(const float *buf, int len)
             row_energy[k] = goertzelResult(&row_out[k+20]);
         }
 
-         /** Now we are at the end of the detection block */
+         /* Now we are at the end of the detection block */
         if (--samples_left == 0)
             Sel5Receive();
     }
 
     return len;
 
-} /** SwDtmfDecoder::writeSamples */
+} /* SwDtmfDecoder::writeSamples */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
 void SwSel5Decoder::Sel5Receive(void)
 {
 
-    /** Find the peak row and the peak column */
+    /* Find the peak row and the peak column */
     int best_row = findMaxIndex(row_energy);
 
     uint8_t hit = 0;
-    /** Valid index test */
+    /* Valid index test */
     if (best_row >= 0)
     {
-        /** Got a hit */
+        /* Got a hit */
         hit = sel5_table[best_row];
     }
 
-    /** Call the post-processing function. */
+    /* Call the post-processing function. */
     Sel5PostProcess(hit);
 
-    /** Reset the sample counter. */
+    /* Reset the sample counter. */
     samples_left = SEL5_BLOCK_LENGTH;
 
-} /** SwSel5Decoder::Sel5Receive */
+} /* SwSel5Decoder::Sel5Receive */
 
 void SwSel5Decoder::Sel5PostProcess(uint8_t hit)
 {
 
-  /** This function is called when a complete block has been received. */
+  /* This function is called when a complete block has been received. */
   if (hit)
   {
 //    cout << "hit: " << hit << endl;
 
     if (last_hit != hit) active_timer = 0;
 
-    /** we need some successfully detects to ensure that a tone has really been
+    /* we need some successfully detects to ensure that a tone has really been
        detected */
     if (active_timer++ > 10 && last_stable != hit)
     {
 
-       /** 'E' the the repeat tone  */
+       /* 'E' the the repeat tone  */
        if (hit == 'E') dec_digits += last_stable;
          else dec_digits += hit;
 
-       /** the last successfully detected digit */
+       /* the last successfully detected digit */
        last_stable = hit;
     }
 
-    /** save the last hit */
+    /* save the last hit */
     last_hit = hit;
     stable_timer = 0;
   }
 
-  /** detecting end of sequence */
+  /* detecting end of sequence */
   if (!hit && stable_timer++ > 120)
   {
-    /** we need at least 4 digits */
+    /* we need at least 4 digits */
     if (dec_digits.length() > 3)
     {
        sequenceDetected(dec_digits);
@@ -396,50 +396,50 @@ void SwSel5Decoder::Sel5PostProcess(uint8_t hit)
     last_hit = 0;
   }
 
-} /** SwSel5Decoder::Sel5PostProcess */
+} /* SwSel5Decoder::Sel5PostProcess */
 
 void SwSel5Decoder::goertzelInit(GoertzelState *s, float freq, float bw, float offset)
 {
-    /** Adjust the block length to minimize the DFT error. */
+    /* Adjust the block length to minimize the DFT error. */
     s->block_length = lrintf(ceilf(freq / bw) * INTERNAL_SAMPLE_RATE / freq);
-    /** Scale output values to achieve same levels at different block lengths. */
+    /* Scale output values to achieve same levels at different block lengths. */
     s->scale_factor = 1.0e6f / (s->block_length * s->block_length);
-    /** Init detector frequency. */
+    /* Init detector frequency. */
     s->fac = 2.0f * cosf(2.0f * M_PI * freq / INTERNAL_SAMPLE_RATE);
-    /** Reset the tone detector state. */
+    /* Reset the tone detector state. */
     s->v2 = s->v3 = 0.0f;
     s->samples_left = static_cast<int>(s->block_length * (1.0f - offset));
-    /** Hamming window */
+    /* Hamming window */
     for (int i = 0; i < s->block_length; i++)
     {
         s->window_table.push_back(
            0.54 - 0.46 * cosf(2.0f * M_PI * i / (s->block_length - 1)));
     }
-    /** Point to the first table entry */
+    /* Point to the first table entry */
     s->win = s->window_table.begin();
 
-} /** SwSel5Decoder::goertzelInit */
+} /* SwSel5Decoder::goertzelInit */
 
 float SwSel5Decoder::goertzelResult(GoertzelState *s)
 {
     float v1, res;
 
-    /** Push a zero through the process to finish things off. */
+    /* Push a zero through the process to finish things off. */
     v1 = s->v2;
     s->v2 = s->v3;
     s->v3 = s->fac*s->v2 - v1;
-    /** Now calculate the non-recursive side of the filter. */
-    /** The result here is not scaled down to allow for the magnification
+    /* Now calculate the non-recursive side of the filter. */
+    /* The result here is not scaled down to allow for the magnification
        effect of the filter (the usual DFT magnification effect). */
     res = (s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac) * s->scale_factor;
-    /** Reset the tone detector state. */
+    /* Reset the tone detector state. */
     s->v2 = s->v3 = 0.0f;
     s->samples_left = s->block_length;
     s->win = s->window_table.begin();
-    /** Return the calculated signal level. */
+    /* Return the calculated signal level. */
     return res;
 
-} /** SwSel5Decoder::goertzelResult */
+} /* SwSel5Decoder::goertzelResult */
 
 int SwSel5Decoder::findMaxIndex(const float f[])
 {
@@ -447,7 +447,7 @@ int SwSel5Decoder::findMaxIndex(const float f[])
     int idx = -1;
     int i;
 
-    /** Peak search */
+    /* Peak search */
     for (i = 0; i < arr_len; i++)
     {
         if (f[i] > threshold)
@@ -459,7 +459,7 @@ int SwSel5Decoder::findMaxIndex(const float f[])
     if (idx < 0)
         return -1;
 
-    /** Peak test */
+    /* Peak test */
     threshold *= 1.0f / SEL5_RELATIVE_PEAK;
 
     for (i = 0; i < arr_len; i++)
@@ -469,8 +469,8 @@ int SwSel5Decoder::findMaxIndex(const float f[])
     }
     return idx;
 
-} /** SwSel5Decoder::findMaxIndex */
+} /* SwSel5Decoder::findMaxIndex */
 
-/**
+/*
  * This file has not been truncated
  */

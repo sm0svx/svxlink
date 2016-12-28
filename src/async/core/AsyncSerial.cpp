@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <sys/types.h>
@@ -42,57 +42,57 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncSerialDevice.h"
 #include "AsyncSerial.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 Serial::Serial(const string& serial_port)
   : serial_port(serial_port), canonical(false), fd(-1), port_settings(), dev(0)
 {
 
-} /** Serial::Serial */
+} /* Serial::Serial */
 
 
 Serial::~Serial(void)
 {
   close();
-} /** Serial::~Serial */
+} /* Serial::~Serial */
 
 
 bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
@@ -108,19 +108,19 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
   dev->setRestoreOnClose();
 
   memset(&port_settings, 0, sizeof(port_settings));
-  port_settings.c_iflag = INPCK   /** Perform parity checking */
-      	      	      	| IGNPAR  /** Ignore characters with parity errors */
-			| IGNBRK  /** Ignore BREAK condition */
+  port_settings.c_iflag = INPCK   /* Perform parity checking */
+      	      	      	| IGNPAR  /* Ignore characters with parity errors */
+			| IGNBRK  /* Ignore BREAK condition */
       	      	      	;
-  port_settings.c_cflag = CREAD   /** Enable receiver */
-      	      	      	| CLOCAL  /** Ignore modem status lines */
+  port_settings.c_cflag = CREAD   /* Enable receiver */
+      	      	      	| CLOCAL  /* Ignore modem status lines */
 			;
   switch (flow)
   {
     case FLOW_NONE:
       break;
     case FLOW_HW:
-      port_settings.c_cflag |= CRTSCTS /**(CCTS_OFLOW | CRTS_IFLOW)*/;
+      port_settings.c_cflag |= CRTSCTS /*(CCTS_OFLOW | CRTS_IFLOW)*/;
       break;
     case FLOW_XONOFF:
       port_settings.c_iflag |= (IXON | IXOFF);
@@ -257,7 +257,7 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
   
   return true;
   
-} /** Serial::setParams */
+} /* Serial::setParams */
 
 bool Serial::open(bool flush)
 {
@@ -276,7 +276,7 @@ bool Serial::open(bool flush)
   
   return true;
   
-} /** Serial::open */
+} /* Serial::open */
 
 
 bool Serial::close(void)
@@ -292,7 +292,7 @@ bool Serial::close(void)
   
   return success;
   
-} /** Serial::close */
+} /* Serial::close */
 
 
 bool Serial::setCanonical(bool canonical)
@@ -320,12 +320,12 @@ bool Serial::setCanonical(bool canonical)
    
   return true;
   
-} /** Serial::setCanonical */
+} /* Serial::setCanonical */
 
 bool Serial::stopInput(bool stop)
 {
   return tcflow(fd, stop ? TCIOFF : TCION) == 0;
-} /** Serial::stopInput */
+} /* Serial::stopInput */
 
 
 bool Serial::setPin(Pin pin, bool set)
@@ -357,7 +357,7 @@ bool Serial::setPin(Pin pin, bool set)
   
   return true;
   
-} /** Serial::setPin */
+} /* Serial::setPin */
 
 bool Serial::getPin(Pin pin, bool &is_set)
 {
@@ -400,17 +400,17 @@ bool Serial::getPin(Pin pin, bool &is_set)
   
   return true;
   
-} /** Serial::getPin */
+} /* Serial::getPin */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -26,24 +26,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ECHOLINK_DIRECTORY_CON_INCLUDED
 #define ECHOLINK_DIRECTORY_CON_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <vector>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 #include <AsyncDnsLookup.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -51,26 +51,26 @@ namespace Async
   class DnsLookup;
 };
 
-/**
+/*
  * Namespace
  */
 namespace EchoLink
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class Proxy;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -196,13 +196,13 @@ class DirectoryCon : public sigc::trackable
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void proxyReady(bool is_ready);
     
-};  /** class DirectoryCon */
+};  /* class DirectoryCon */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ECHOLINK_DIRECTORY_CON_INCLUDED */
+#endif /* ECHOLINK_DIRECTORY_CON_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

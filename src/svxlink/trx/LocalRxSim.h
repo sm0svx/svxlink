@@ -26,21 +26,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOCAL_RX_SIM_INCLUDED
 #define LOCAL_RX_SIM_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioGenerator.h>
 
-/**
+/*
  * Local Includes
  */
 #include "LocalRxBase.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -48,23 +48,23 @@ namespace Async
   class AudioPacer;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -139,10 +139,10 @@ class LocalRxSim : public LocalRxBase
     Async::Config         &cfg;
     Async::AudioGenerator audio_gen;
     Async::AudioPacer     *pacer;
-};  /** class LocalRxSim */
+};  /* class LocalRxSim */
 
-#endif /** LOCAL_RX_SIM_INCLUDED */
+#endif /* LOCAL_RX_SIM_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

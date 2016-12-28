@@ -24,15 +24,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncAudioEncoder.h"
@@ -47,33 +47,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioEncoderOpus.h"
 #endif
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 AudioEncoder *AudioEncoder::create(const std::string &name)
@@ -110,29 +110,29 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
   {
     return 0;
   }
-} /** AudioEncoder::create */
+} /* AudioEncoder::create */
 
 #if 0
 AudioEncoder::AudioEncoder(void)
 {
   
-} /** AudioEncoder::AudioEncoder */
+} /* AudioEncoder::AudioEncoder */
 
 AudioEncoder::~AudioEncoder(void)
 {
   
-} /** AudioEncoder::~AudioEncoder */
+} /* AudioEncoder::~AudioEncoder */
 #endif
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

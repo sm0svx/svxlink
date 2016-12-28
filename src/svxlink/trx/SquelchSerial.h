@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_SERIAL_INCLUDED
 #define SQUELCH_SERIAL_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncSerial.h>
 
-/**
+/*
  * Local Includes
  */
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -260,11 +260,11 @@ class SquelchSerial : public Squelch
       return true;
     }
 
-};  /** class SquelchSerial */
+};  /* class SquelchSerial */
 
-#endif /** SQUELCH_SERIAL_INCLUDED */
+#endif /* SQUELCH_SERIAL_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

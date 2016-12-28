@@ -24,50 +24,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncPty.h>
 
-/**
+/*
  * Local Includes
  */
 #include "PttPty.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
 
 
-/**
+/*
  *
  * Public member functions
  *
@@ -76,12 +76,12 @@ using namespace Async;
 PttPty::PttPty(void)
   : pty(0)
 {
-} /** PttPty::PttPty */
+} /* PttPty::PttPty */
 
 PttPty::~PttPty(void)
 {
   delete pty;
-} /** PttPty::~PttPty */
+} /* PttPty::~PttPty */
 
 bool PttPty::initialize(Async::Config &cfg, const std::string name)
 {
@@ -99,9 +99,9 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
   return pty->open();
-} /** PttPty::initialize */
+} /* PttPty::initialize */
 
-/**
+/*
  * This functions sends a character over the pty-device:
  * T  to direct the controller to enable the TX
  * R  to direct the controller to disable the TX
@@ -110,18 +110,18 @@ bool PttPty::setTxOn(bool tx_on)
 {
   char cmd(tx_on ? 'T' : 'R');
   return (pty->write(&cmd, 1) == 1);
-} /** PttPty::setTxOn */
+} /* PttPty::setTxOn */
 
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

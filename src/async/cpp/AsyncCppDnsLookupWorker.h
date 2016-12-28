@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED
 #define ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -40,20 +40,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "../core/AsyncDnsLookupWorker.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
@@ -62,15 +62,15 @@ namespace Async
 class Timer;
 class FdWatch;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -126,13 +126,13 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
     void onTimeout(Timer *t);
     void notificationReceived(FdWatch *w);
 
-};  /** class CppDnsLookupWorker */
+};  /* class CppDnsLookupWorker */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED */
+#endif /* ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

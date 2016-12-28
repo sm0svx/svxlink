@@ -24,45 +24,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "DtmfDigitHandler.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 DtmfDigitHandler::DtmfDigitHandler(void)
@@ -72,12 +72,12 @@ DtmfDigitHandler::DtmfDigitHandler(void)
       hide(mem_fun(*this, &DtmfDigitHandler::cmdTimeout)));
   cmd_tmo_timer.setTimeout(10000);
   cmd_tmo_timer.setEnable(false);
-} /** DtmfDigitHandler::DtmfDigitHandler */
+} /* DtmfDigitHandler::DtmfDigitHandler */
 
 DtmfDigitHandler::~DtmfDigitHandler(void)
 {
   
-} /** DtmfDigitHandler::~DtmfDigitHandler */
+} /* DtmfDigitHandler::~DtmfDigitHandler */
 
 void DtmfDigitHandler::digitReceived(char digit)
 {
@@ -157,15 +157,15 @@ void DtmfDigitHandler::cmdTimeout(void)
   prev_digit = '?';
 }
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

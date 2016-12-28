@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstring>
@@ -35,11 +35,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncFdWatch.h"
@@ -47,29 +47,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioDevice.h"
 #include "AsyncAudioDeviceFactory.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 map<string, AudioDevice*>  AudioDevice::devices;
@@ -78,7 +78,7 @@ int AudioDevice::block_size_hint = DEFAULT_BLOCK_SIZE_HINT;
 int AudioDevice::block_count_hint = DEFAULT_BLOCK_COUNT_HINT;
 int AudioDevice::channels = DEFAULT_CHANNELS;
 
-/**
+/*
  * Public member functions
  */
 AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
@@ -114,7 +114,7 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
   dev->aios.push_back(audio_io);
   return dev;
   
-} /** AudioDevice::registerAudioIO */
+} /* AudioDevice::registerAudioIO */
 
 void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
 {
@@ -146,7 +146,7 @@ void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
     }
     delete dev;
   }
-} /** AudioDevice::unregisterAudioIO */
+} /* AudioDevice::unregisterAudioIO */
 
 bool AudioDevice::open(Mode mode)
 {
@@ -179,7 +179,7 @@ bool AudioDevice::open(Mode mode)
   
   return false;
   
-} /** AudioDevice::open */
+} /* AudioDevice::open */
 
 void AudioDevice::close(void)
 {
@@ -195,19 +195,19 @@ void AudioDevice::close(void)
   closeDevice();  
   current_mode = MODE_NONE;
   
-} /** AudioDevice::close */
+} /* AudioDevice::close */
 
-/**
+/*
  * Protected member functions
  */
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), current_mode(MODE_NONE), use_count(0)
 {
-} /** AudioDevice::AudioDevice */
+} /* AudioDevice::AudioDevice */
 
 AudioDevice::~AudioDevice(void)
 {
-} /** AudioDevice::~AudioDevice */
+} /* AudioDevice::~AudioDevice */
 
 void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
 {
@@ -229,7 +229,7 @@ void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
       }
     }
   }
-} /** AudioDevice::putBlocks */
+} /* AudioDevice::putBlocks */
 
 int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
 {
@@ -329,13 +329,13 @@ int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
   
   return frames_to_write / block_size;
   
-} /** AudioDevice::getBlocks */
+} /* AudioDevice::getBlocks */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

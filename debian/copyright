@@ -28,7 +28,7 @@ Files: src/async/audio/fidlib.*
 Copyright: 2002-2004 Jim Peters <http://uazu.net/>
 License: LGPL-2.1
 
-Files: debian/**
+Files: debian/*
 Copyright: 2010 Michael Vorleiter (parsival1609@yahoo.de)
            2013 Felix Lechner
            2015 Richard Neese

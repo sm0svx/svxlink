@@ -27,41 +27,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef APRS_PTY_INCLUDED
 #define APRS_PTY_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include <AsyncPty.h>
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 using namespace sigc;
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -104,7 +104,7 @@ class AprsPty
       return pty->open();
     }
 
-    /**
+    /*
     */
     sigc::signal<void, std::string> messageReceived;
 
@@ -139,16 +139,16 @@ class AprsPty
           message = "";
         }
       }
-    } /** dataReceived */
+    } /* dataReceived */
 
-};  /** class AprsPty */
+};  /* class AprsPty */
 
 
-//} /** namespace */
+//} /* namespace */
 
-#endif /** APRS_PTY_INCLUDED */
+#endif /* APRS_PTY_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

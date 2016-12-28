@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef RX_INCLUDED
 #define RX_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -35,17 +35,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <map>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -54,23 +54,23 @@ namespace Async
   class Config;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
  
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -257,7 +257,7 @@ class Rx : public sigc::trackable, public Async::AudioSource
     
     void sqlTimeout(Async::Timer *t);
     
-};  /** class Rx */
+};  /* class Rx */
 
 class RxFactory
 {
@@ -275,11 +275,11 @@ class RxFactory
     
     std::string m_name;
 
-};  /** class RxFactory */
+};  /* class RxFactory */
 
-#endif /** RX_INCLUDED */
+#endif /* RX_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

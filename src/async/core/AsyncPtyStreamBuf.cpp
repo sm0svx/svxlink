@@ -24,50 +24,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <functional>
 #include <cassert>
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncPtyStreamBuf.h"
 #include "AsyncPty.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 
@@ -77,17 +77,17 @@ PtyStreamBuf::PtyStreamBuf(Pty *pty, size_t buf_size)
   assert(m_pty != 0);
   char *base = &m_buf.front();
   setp(base, base + m_buf.size() - 1);
-} /** PtyStreamBuf::PtyStreamBuf */
+} /* PtyStreamBuf::PtyStreamBuf */
 
 PtyStreamBuf::~PtyStreamBuf(void)
 {
-} /** PtyStreamBuf::~PtyStreamBuf */
+} /* PtyStreamBuf::~PtyStreamBuf */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 PtyStreamBuf::int_type PtyStreamBuf::overflow(int_type ch)
@@ -104,12 +104,12 @@ PtyStreamBuf::int_type PtyStreamBuf::overflow(int_type ch)
   }
 
   return traits_type::eof();
-} /** PtyStreamBuf::overflow */
+} /* PtyStreamBuf::overflow */
 
 int PtyStreamBuf::sync(void)
 {
   return (m_pty->isOpen() && writeToPty()) ? 0 : -1;
-} /** PtyStreamBuf::sync */
+} /* PtyStreamBuf::sync */
 
 bool PtyStreamBuf::writeToPty(void)
 {
@@ -117,9 +117,9 @@ bool PtyStreamBuf::writeToPty(void)
   pbump(-n);
   ssize_t written = m_pty->write(pbase(), n);
   return (written == n);
-} /** PtyStreamBuf::writeToPty */
+} /* PtyStreamBuf::writeToPty */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SVXSERVER_INCLUDED
 #define SVXSERVER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncTcpServer.h>
 #include <Tx.h>
 
-/**
+/*
  * Local Includes
  */
 #include "NetTrxMsg.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -150,12 +150,12 @@ class SvxServer : public sigc::trackable
     SvxServer(const SvxServer&);
     SvxServer& operator=(const SvxServer&);
 
-};  /** class SvxServer */
+};  /* class SvxServer */
 
-//} /** namespace */
+//} /* namespace */
 
-#endif /** SVXSERVER_INCLUDED */
+#endif /* SVXSERVER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

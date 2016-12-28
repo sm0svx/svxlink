@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <algorithm>
@@ -34,55 +34,55 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <QtAlgorithms>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "EchoLinkDirectoryModel.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace EchoLink;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 EchoLinkDirectoryModel::EchoLinkDirectoryModel(QObject *parent)
   : QAbstractItemModel(parent)
 {
   
-} /** EchoLinkDirectoryModel::EchoLinkDirectoryModel */
+} /* EchoLinkDirectoryModel::EchoLinkDirectoryModel */
 
 
 EchoLinkDirectoryModel::~EchoLinkDirectoryModel(void)
 {
   
-} /** EchoLinkDirectoryModel::~EchoLinkDirectoryModel */
+} /* EchoLinkDirectoryModel::~EchoLinkDirectoryModel */
 
 
 void EchoLinkDirectoryModel::updateStationList(
@@ -167,7 +167,7 @@ void EchoLinkDirectoryModel::updateStationList(
   
   //cout << "### stations=" << rowCount() << endl;
   
-} /** EchoLinkDirectoryModel::updateStationList */
+} /* EchoLinkDirectoryModel::updateStationList */
 
 QModelIndex EchoLinkDirectoryModel::index(int row, int column,
 					  const QModelIndex &parent) const
@@ -180,13 +180,13 @@ QModelIndex EchoLinkDirectoryModel::index(int row, int column,
   }
   
   return QModelIndex();
-} /** EchoLinkDirectoryModel::index */
+} /* EchoLinkDirectoryModel::index */
 
 QModelIndex EchoLinkDirectoryModel::parent(const QModelIndex &index) const
 {
   Q_UNUSED(index);
   return QModelIndex();
-} /** EchoLinkDirectoryModel::parent */
+} /* EchoLinkDirectoryModel::parent */
 
 int EchoLinkDirectoryModel::rowCount(const QModelIndex &parent) const
 {
@@ -196,13 +196,13 @@ int EchoLinkDirectoryModel::rowCount(const QModelIndex &parent) const
   }
   
   return stations.count();
-} /** EchoLinkDirectoryModel::rowCount */
+} /* EchoLinkDirectoryModel::rowCount */
 
 int EchoLinkDirectoryModel::columnCount(const QModelIndex &parent) const
 {
   Q_UNUSED(parent);
   return 6;
-} /** EchoLinkDirectoryModel::columnCount */
+} /* EchoLinkDirectoryModel::columnCount */
 
 QVariant EchoLinkDirectoryModel::headerData(int section,
 					    Qt::Orientation orientation,
@@ -230,7 +230,7 @@ QVariant EchoLinkDirectoryModel::headerData(int section,
   }
   
   return QAbstractItemModel::headerData(section, orientation, role);
-} /** EchoLinkDirectoryModel::headerData */
+} /* EchoLinkDirectoryModel::headerData */
 
 QVariant EchoLinkDirectoryModel::data(const QModelIndex &index, int role) const
 {
@@ -270,7 +270,7 @@ QVariant EchoLinkDirectoryModel::data(const QModelIndex &index, int role) const
   }
   
   return QVariant();
-} /** EchoLinkDirectoryModel::data */
+} /* EchoLinkDirectoryModel::data */
 
 bool EchoLinkDirectoryModel::removeRows(int row, int count,
 					const QModelIndex &parent)
@@ -288,17 +288,17 @@ bool EchoLinkDirectoryModel::removeRows(int row, int count,
   endRemoveRows();
   
   return true;
-} /** EchoLinkDirectoryModel::removeRows */
+} /* EchoLinkDirectoryModel::removeRows */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

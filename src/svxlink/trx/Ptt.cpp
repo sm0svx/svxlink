@@ -24,17 +24,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "Ptt.h"
@@ -45,17 +45,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "PttHidraw.h"
 #endif
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 namespace {
@@ -72,19 +72,19 @@ namespace {
   };
 };
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
@@ -120,17 +120,17 @@ Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
   }
   
   return ptt;
-} /** PttFactoryBase::createNamedPtt */
+} /* PttFactoryBase::createNamedPtt */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

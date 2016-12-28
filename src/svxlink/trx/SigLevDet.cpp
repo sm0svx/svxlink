@@ -24,17 +24,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/**
+/*
  * Local Includes
  */
 #include "SigLevDet.h"
@@ -43,17 +43,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SigLevDetDdr.h"
 #include "SigLevDetSim.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 namespace {
@@ -78,19 +78,19 @@ namespace {
   };
 };
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
@@ -117,17 +117,17 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
   }
   
   return det;
-} /** SigLevDetFactoryBase::createNamedSigLevDet */
+} /* SigLevDetFactoryBase::createNamedSigLevDet */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

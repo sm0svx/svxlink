@@ -26,44 +26,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_PROCESSOR_INCLUDED
 #define ASYNC_AUDIO_PROCESSOR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include <AsyncAudioSource.h>
 #include <AsyncAudioSink.h>
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -151,13 +151,13 @@ class AudioProcessor : public AudioSink, public AudioSource
     AudioProcessor& operator=(const AudioProcessor&);
     void writeFromBuf(void);
 
-};  /** class AudioProcessor */
+};  /* class AudioProcessor */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_PROCESSOR_INCLUDED */
+#endif /* ASYNC_AUDIO_PROCESSOR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

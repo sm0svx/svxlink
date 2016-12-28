@@ -32,7 +32,7 @@ An example of how to use the Serial class
 #ifndef SERIAL_INCLUDED
 #define SERIAL_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -41,40 +41,40 @@ An example of how to use the Serial class
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
 class SerialDevice;
   
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -285,13 +285,13 @@ class Serial : public sigc::trackable
     struct termios    	port_settings;
     SerialDevice      	*dev;
 
-};  /** class Serial */
+};  /* class Serial */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** SERIAL_INCLUDED */
+#endif /* SERIAL_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

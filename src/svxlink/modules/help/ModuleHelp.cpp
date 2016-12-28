@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstdio>
@@ -33,42 +33,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "version/MODULE_HELP.h"
 #include "ModuleHelp.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Pure C-functions
  */
 extern "C" {
@@ -76,9 +76,9 @@ extern "C" {
   {
     return new ModuleHelp(dl_handle, logic, cfg_name);
   }
-} /** extern "C" */
+} /* extern "C" */
 
-/**
+/*
  * Public member functions
  */
 
@@ -87,40 +87,40 @@ ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, const string& cfg_name)
 {
   cout << "\tModule Help v" MODULE_HELP_VERSION " starting...\n";
 
-} /** ModuleHelp */
+} /* ModuleHelp */
 
 ModuleHelp::~ModuleHelp(void)
 {
 
-} /** ~ModuleHelp */
+} /* ~ModuleHelp */
 
-/**
+/*
  * Protected member functions
  */
 void ModuleHelp::resumeOutput(void)
 {
   
-} /** ModuleHelp::resumeOutput */
+} /* ModuleHelp::resumeOutput */
 
 void ModuleHelp::allSamplesFlushed(void)
 {
   
-} /** ModuleHelp::allSamplesFlushed */
+} /* ModuleHelp::allSamplesFlushed */
 
 int ModuleHelp::writeSamples(const float *samples, int count)
 {
   return count;
-} /** ModuleHelp::writeSamples */
+} /* ModuleHelp::writeSamples */
 
 void ModuleHelp::flushSamples(void)
 {
   sourceAllSamplesFlushed();
-} /** ModuleHelp::flushSamples */
+} /* ModuleHelp::flushSamples */
 
-/**
+/*
  * Private member functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -135,9 +135,9 @@ void ModuleHelp::flushSamples(void)
 void ModuleHelp::activateInit(void)
 {
   playChooseModuleMsg();
-} /** activateInit */
+} /* activateInit */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -153,9 +153,9 @@ void ModuleHelp::activateInit(void)
 void ModuleHelp::deactivateCleanup(void)
 {
   
-} /** deactivateCleanup */
+} /* deactivateCleanup */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -175,9 +175,9 @@ bool ModuleHelp::dtmfDigitReceived(char digit, int duration)
   
   return false;
   
-} /** dtmfDigitReceived */
+} /* dtmfDigitReceived */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -202,7 +202,7 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
   }
   else
   {
-    //setIdle(false); /** Reset the module timeout timer */
+    //setIdle(false); /* Reset the module timeout timer */
     //setIdle(true);
     
     int module_id = atoi(cmd.c_str());
@@ -219,7 +219,7 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
       processEvent(ss.str());
     }
   }
-} /** dtmfCmdReceived */
+} /* dtmfCmdReceived */
 
 void ModuleHelp::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
@@ -237,7 +237,7 @@ void ModuleHelp::dtmfCmdReceivedWhenIdle(const std::string &cmd)
     ss << "no_such_module " << module_id;
     processEvent(ss.str());
   }
-} /** dtmfCmdReceivedWhenIdle */
+} /* dtmfCmdReceivedWhenIdle */
 
 void ModuleHelp::playChooseModuleMsg(void)
 {
@@ -253,8 +253,8 @@ void ModuleHelp::playChooseModuleMsg(void)
   ss << "]";
   processEvent(ss.str());
 
-} /** ModuleHelp::playChooseModuleMsg */
+} /* ModuleHelp::playChooseModuleMsg */
 
-/**
+/*
  * This file has not been truncated
  */

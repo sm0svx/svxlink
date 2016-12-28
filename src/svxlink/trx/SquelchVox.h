@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_VOX_INCLUDED
 #define SQUELCH_VOX_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/**
+/*
  * Local Includes
  */
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -115,11 +115,11 @@ class SquelchVox : public Squelch
     double  up_thresh;
     double  down_thresh;
 
-};  /** class SquelchVox */
+};  /* class SquelchVox */
 
-#endif /** SQUELCH_VOX_INCLUDED */
+#endif /* SQUELCH_VOX_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

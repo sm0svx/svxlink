@@ -26,24 +26,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef RTL_USB_INCLUDED
 #define RTL_USB_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <rtl-sdr.h>
 #include <pthread.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 
-/**
+/*
  * Local Includes
  */
 #include "RtlSdr.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -51,23 +51,23 @@ namespace Async
   class FdWatch;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -200,10 +200,10 @@ class RtlUsb : public RtlSdr
     void verboseClose(void);
     int verboseDeviceSearch(const char *s);
     
-};  /** class RtlUsb */
+};  /* class RtlUsb */
 
-#endif /** RTL_USB_INCLUDED */
+#endif /* RTL_USB_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

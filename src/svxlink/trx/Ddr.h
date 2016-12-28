@@ -29,42 +29,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DDR_INCLUDED
 #define DDR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "LocalRxBase.h"
 #include "RtlTcp.h"
 
-/**
+/*
  * Forward declarations
  */
 class WbRxRtlSdr;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -208,10 +208,10 @@ class Ddr : public LocalRxBase
     WbRxRtlSdr              *rtl;
     uint32_t                fq;
     
-};  /** class Ddr */
+};  /* class Ddr */
 
-#endif /** DDR_INCLUDED */
+#endif /* DDR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

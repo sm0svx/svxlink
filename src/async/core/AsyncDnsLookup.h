@@ -34,42 +34,42 @@ An example of how to use the Async::DnsLookup class
 #ifndef ASYNC_DNS_LOOKUP_INCLUDED
 #define ASYNC_DNS_LOOKUP_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <vector>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 class DnsLookupWorker;
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -136,13 +136,13 @@ class DnsLookup : public sigc::trackable
     
     void onResultsReady(void);
 
-};  /** class DnsLookup */
+};  /* class DnsLookup */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_DNS_LOOKUP_INCLUDED */
+#endif /* ASYNC_DNS_LOOKUP_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

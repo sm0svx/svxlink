@@ -27,7 +27,7 @@
  * \endverbatim
  */
 
-/**
+/*
  * System Includes
  */
 #include <sys/select.h>
@@ -40,11 +40,11 @@
 #include <cassert>
 #include <algorithm>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncCppDnsLookupWorker.h"
@@ -52,13 +52,13 @@
 #include "AsyncTimer.h"
 #include "AsyncCppApplication.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
@@ -83,24 +83,24 @@ using namespace Async;
     }                                                                         \
   } while (0)
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 int CppApplication::sighandler_pipe[2];
 
-/**
+/*
  * Public member functions
  */
 CppApplication::CppApplication(void)
@@ -109,12 +109,12 @@ CppApplication::CppApplication(void)
   FD_ZERO(&rd_set);
   FD_ZERO(&wr_set);
   sighandler_pipe[0] = sighandler_pipe[1] = -1;
-} /** CppApplication::CppApplication */
+} /* CppApplication::CppApplication */
 
 CppApplication::~CppApplication(void)
 {
   
-} /** CppApplication::~CppApplication */
+} /* CppApplication::~CppApplication */
 
 void CppApplication::exec(void)
 {
@@ -204,7 +204,7 @@ void CppApplication::exec(void)
     
     WatchMap::iterator witer, next_witer;
     
-      /** Check for activity on the read watch file descriptors */
+      /* Check for activity on the read watch file descriptors */
     witer=rd_watch_map.begin();
     while (witer != rd_watch_map.end())
     {
@@ -225,7 +225,7 @@ void CppApplication::exec(void)
       witer = next_witer;
     }
     
-      /** Check for activity on the write watch file descriptors */
+      /* Check for activity on the write watch file descriptors */
     witer=wr_watch_map.begin();
     while (witer != wr_watch_map.end())
     {
@@ -263,12 +263,12 @@ void CppApplication::exec(void)
   close(sighandler_pipe[1]);
   close(sighandler_pipe[0]);
   sighandler_pipe[0] = sighandler_pipe[1] = -1;
-} /** CppApplication::exec */
+} /* CppApplication::exec */
 
 void CppApplication::quit(void)
 {
   do_quit = true;
-} /** CppApplication::quit */
+} /* CppApplication::quit */
 
 void CppApplication::catchUnixSignal(int signum)
 {
@@ -298,7 +298,7 @@ void CppApplication::catchUnixSignal(int signum)
       exit(1);
     }
   }
-} /** CppApplication::catchUnixSignal */
+} /* CppApplication::catchUnixSignal */
 
 void CppApplication::uncatchUnixSignal(int signum)
 {
@@ -312,21 +312,21 @@ void CppApplication::uncatchUnixSignal(int signum)
     perror("sigaction");
     exit(1);
   }
-} /** CppApplication::uncatchUnixSignal */
+} /* CppApplication::uncatchUnixSignal */
 
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 void CppApplication::unixSignalHandler(int signum)
 {
   int cnt = write(sighandler_pipe[1], &signum, sizeof(signum));
   assert(cnt == sizeof(signum));
-} /** CppApplication::unixSignalHandler */
+} /* CppApplication::unixSignalHandler */
 
 void CppApplication::addFdWatch(FdWatch *fd_watch)
 {
@@ -358,7 +358,7 @@ void CppApplication::addFdWatch(FdWatch *fd_watch)
 
   (*watch_map)[fd] = fd_watch;
   
-} /** CppApplication::addFdWatch */
+} /* CppApplication::addFdWatch */
 
 void CppApplication::delFdWatch(FdWatch *fd_watch)
 {
@@ -407,14 +407,14 @@ void CppApplication::delFdWatch(FdWatch *fd_watch)
     
     ++max_desc;
   }
-} /** CppApplication::delFdWatch */
+} /* CppApplication::delFdWatch */
 
 void CppApplication::addTimer(Timer *timer)
 {
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   addTimerP(timer, current);
-} /** CppApplication::addTimer */
+} /* CppApplication::addTimer */
 
 void CppApplication::addTimerP(Timer *timer, const struct timespec& current)
 {
@@ -427,7 +427,7 @@ void CppApplication::addTimerP(Timer *timer, const struct timespec& current)
   clock_timeradd(&current, &add, &expiration);
   
   timer_map.insert(pair<struct timespec, Timer *>(expiration, timer));
-} /** CppApplication::addTimerP */
+} /* CppApplication::addTimerP */
 
 void CppApplication::delTimer(Timer *timer)
 {
@@ -441,12 +441,12 @@ void CppApplication::delTimer(Timer *timer)
       break;
     }
   }
-} /** CppApplication::delTimer */
+} /* CppApplication::delTimer */
 
 DnsLookupWorker *CppApplication::newDnsLookupWorker(const string& label)
 {
   return new CppDnsLookupWorker(label);
-} /** CppApplication::newDnsLookupWorker */
+} /* CppApplication::newDnsLookupWorker */
 
 void CppApplication::handleUnixSignal(void)
 {
@@ -462,9 +462,9 @@ void CppApplication::handleUnixSignal(void)
     unix_signal_recv_cnt = 0;
     unix_signal_recv = -1;
   }
-} /** CppApplication::handleUnixSignal */
+} /* CppApplication::handleUnixSignal */
 
-/**
+/*
  * This file has not been truncated
  */
 

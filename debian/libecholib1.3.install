@@ -1,1 +1,1 @@
-usr/lib/**/libecholib.so.*
+usr/lib/*/libecholib.so.*

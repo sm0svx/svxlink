@@ -24,20 +24,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 #include <cstdlib>
 #include <string.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 
-/**
+/*
  *
  * Local Includes
  *
@@ -50,17 +50,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Ddr.h"
 #include "LocalRxSim.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 class LocalRxFactory : public RxFactory
@@ -73,7 +73,7 @@ class LocalRxFactory : public RxFactory
     {
       return new LocalRx(cfg, name);
     }
-}; /** class LocalRxFactory */
+}; /* class LocalRxFactory */
 
 class VoterFactory : public RxFactory
 {
@@ -85,7 +85,7 @@ class VoterFactory : public RxFactory
     {
       return new Voter(cfg, name);
     }
-}; /** class VoterFactory */
+}; /* class VoterFactory */
 
 class NetRxFactory : public RxFactory
 {
@@ -97,7 +97,7 @@ class NetRxFactory : public RxFactory
     {
       return new NetRx(cfg, name);
     }
-}; /** class NetRxFactory */
+}; /* class NetRxFactory */
 
 class DummyRxFactory : public RxFactory
 {
@@ -109,7 +109,7 @@ class DummyRxFactory : public RxFactory
     {
       return new DummyRx(cfg, name);
     }
-}; /** class DummyRxFactory */
+}; /* class DummyRxFactory */
 
 class DdrFactory : public RxFactory
 {
@@ -121,7 +121,7 @@ class DdrFactory : public RxFactory
     {
       return new Ddr(cfg, name);
     }
-}; /** class DdrFactory */
+}; /* class DdrFactory */
 
 class LocalRxSimFactory : public RxFactory
 {
@@ -133,22 +133,22 @@ class LocalRxSimFactory : public RxFactory
     {
       return new LocalRxSim(cfg, name);
     }
-}; /** class LocalRxSimFactory */
+}; /* class LocalRxSimFactory */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 map<string, RxFactory*> RxFactory::rx_factories;
 
-/**
+/*
  * Public member functions
  */
 void Rx::setEnabled(bool status)
@@ -185,22 +185,22 @@ std::string Rx::muteStateToString(MuteState mute_state)
       return "ALL";
   }
   return "?";
-} /** Rx::muteStateToString */
+} /* Rx::muteStateToString */
 
 Rx::Rx(Config &cfg, const string& name)
   : m_name(name), m_verbose(true), m_sql_open(false), m_sql_open_hidden(false), m_cfg(cfg),
     m_sql_tmo_timer(0), m_is_enabled(true)
 {
-} /** Rx::Rx */
+} /* Rx::Rx */
 
 Rx::~Rx(void)
 {
   delete m_sql_tmo_timer;
-} /** Rx::~Rx */
+} /* Rx::~Rx */
 
 bool Rx::initialize(void)
 {
-  /**
+  /*
   string value;
   if (m_cfg.getValue(name(), "SQL_TIMEOUT", value))
   {
@@ -216,13 +216,13 @@ bool Rx::initialize(void)
   
   return true;
   
-} /** Rx::initialize */
+} /* Rx::initialize */
 
 RxFactory::RxFactory(const string &name)
   : m_name(name)
 {
   rx_factories[name] = this;
-} /** RxFactory::RxFactory */
+} /* RxFactory::RxFactory */
 
 RxFactory::~RxFactory(void)
 {
@@ -231,7 +231,7 @@ RxFactory::~RxFactory(void)
   assert(it != rx_factories.end());
   rx_factories.erase(it);
   
-} /** RxFactory::~RxFactory */
+} /* RxFactory::~RxFactory */
 
 Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
 {
@@ -272,9 +272,9 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
   
   return (*it).second->createRx(cfg, name);
 
-} /** RxFactory::createNamedRx */
+} /* RxFactory::createNamedRx */
 
-/**
+/*
  * Protected member functions
  */
 
@@ -305,9 +305,9 @@ void Rx::setSquelchState(bool is_open)
   {
     m_sql_tmo_timer->setEnable(is_open);
   }
-} /** Rx::setSquelchState */
+} /* Rx::setSquelchState */
 
-/**
+/*
  * Private member functions
  */
 void Rx::sqlTimeout(Timer *t)
@@ -315,9 +315,9 @@ void Rx::sqlTimeout(Timer *t)
   cerr << "*** WARNING: The squelch was open for too long for receiver "
        << name() << ". Forcing it closed.\n";
   setSquelchState(false);
-} /** Rx::sqlTimeout */
+} /* Rx::sqlTimeout */
 
-/**
+/*
  * This file has not been truncated
  */
 

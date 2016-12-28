@@ -26,20 +26,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef PTY_DTMF_DECODER_INCLUDED
 #define PTY_DTMF_DECODER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "HwDtmfDecoder.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -48,19 +48,19 @@ namespace Async
 };
 
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -138,11 +138,11 @@ class PtyDtmfDecoder : public HwDtmfDecoder
 
     void dataReceived(const void *buf, size_t count);
 
-};  /** class PtyDtmfDecoder */
+};  /* class PtyDtmfDecoder */
 
-#endif /** PTY_DTMF_DECODER_INCLUDED */
+#endif /* PTY_DTMF_DECODER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

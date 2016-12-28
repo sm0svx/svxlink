@@ -29,45 +29,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_QT_TIMER_INCLUDED
 #define ASYNC_QT_TIMER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Qt Includes
  */
 #include <QTimer>
 #undef emit
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncTimer.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -111,13 +111,13 @@ class AsyncQtTimer : public QObject
       timer->expired(timer);
     }
     
-};  /** class AsyncQtTimer */
+};  /* class AsyncQtTimer */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_QT_TIMER_INCLUDED */
+#endif /* ASYNC_QT_TIMER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

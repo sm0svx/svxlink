@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_PTY_INCLUDED
 #define SQUELCH_PTY_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncPty.h>
 
-/**
+/*
  * Local Includes
  */
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 using namespace sigc;
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -168,13 +168,13 @@ class SquelchPty : public Squelch
             break;
         }
       }
-    } /** dataReceived */
+    } /* dataReceived */
 
-};  /** class SquelchPty */
+};  /* class SquelchPty */
 
-#endif /** SQUELCH_PTY_INCLUDED */
+#endif /* SQUELCH_PTY_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

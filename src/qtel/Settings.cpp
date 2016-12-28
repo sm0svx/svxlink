@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -42,23 +42,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdlib.h>
 
-/**
+/*
  * Project Includes
  */
 #include <config.h>
 
-/**
+/*
  * Local Includes
  */
 #include "SettingsDialog.h"
 #include "Settings.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 
-/**
+/*
  * Defines & typedefs
  */
 
@@ -121,24 +121,24 @@ using namespace std;
 #define CONF_VOX_THRESHOLD_DEFAULT    	-30
 #define CONF_VOX_DELAY_DEFAULT      	1000
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 Settings *Settings::the_instance = 0;
 
-/**
+/*
  * Public member functions
  */
 Settings *Settings::instance(void)
@@ -150,7 +150,7 @@ Settings *Settings::instance(void)
   
   return the_instance;
   
-} /** Settings::instance */
+} /* Settings::instance */
 
 Settings::Settings(void)
   : dialog(0),
@@ -209,13 +209,13 @@ Settings::Settings(void)
   encodings.push_back(Encoding("CP1257", SettingsDialog::trUtf8("Baltic")));
   encodings.push_back(Encoding("CP1258"));
   encodings.push_back(Encoding("TIS-620", SettingsDialog::trUtf8("Thai")));
-} /** Settings::Settings */
+} /* Settings::Settings */
 
 Settings::~Settings(void)
 {
   encodings.clear();
   the_instance = 0;
-} /** Settings::~Settings */
+} /* Settings::~Settings */
 
 void Settings::showDialog(void)
 {
@@ -377,7 +377,7 @@ void Settings::showDialog(void)
     }
   }
     
-} /** Settings::showDialog */
+} /* Settings::showDialog */
 
 void Settings::readSettings(void)
 {
@@ -488,21 +488,21 @@ void Settings::readSettings(void)
     showDialog();
   }
   
-} /** Settings::readSettings */
+} /* Settings::readSettings */
 
 void Settings::setBookmarks(const QStringList &bookmarks)
 {
   m_bookmarks = bookmarks;
   QSettings qsettings;
   qsettings.setValue(CONF_BOOKMARKS, m_bookmarks);
-} /** Settings::setBookmarks */
+} /* Settings::setBookmarks */
 
 void Settings::setMainWindowSize(QSize size)
 {
   m_main_window_size = size;
   QSettings qsettings;
   qsettings.setValue(CONF_MAIN_WINDOW_SIZE, size);
-} /** Settings::setMainWindowSize */
+} /* Settings::setMainWindowSize */
 
 void Settings::setVSplitterSizes(QList<int> sizes)
 {
@@ -514,7 +514,7 @@ void Settings::setVSplitterSizes(QList<int> sizes)
   }
   QSettings qsettings;
   qsettings.setValue(CONF_VSPLITTER_SIZES, str_list);
-} /** Settings::setVSplitterSizes */
+} /* Settings::setVSplitterSizes */
 
 void Settings::setHSplitterSizes(QList<int> sizes)
 {
@@ -526,7 +526,7 @@ void Settings::setHSplitterSizes(QList<int> sizes)
   }
   QSettings qsettings;
   qsettings.setValue(CONF_HSPLITTER_SIZES, str_list);
-} /** Settings::setHSplitterSizes */
+} /* Settings::setHSplitterSizes */
 
 void Settings::setStationViewColSizes(QList<int> sizes)
 {
@@ -538,7 +538,7 @@ void Settings::setStationViewColSizes(QList<int> sizes)
   }
   QSettings qsettings;
   qsettings.setValue(CONF_STN_VIEW_COL_SIZES, str_list);
-} /** Settings::setStationViewColSizes */
+} /* Settings::setStationViewColSizes */
 
 void Settings::setIncomingViewColSizes(QList<int> sizes)
 {
@@ -550,7 +550,7 @@ void Settings::setIncomingViewColSizes(QList<int> sizes)
   }
   QSettings qsettings;
   qsettings.setValue(CONF_INCM_VIEW_COL_SIZES, str_list);
-} /** Settings::setStationViewColSizes */
+} /* Settings::setStationViewColSizes */
 
 void Settings::setVoxParams(bool enabled, int threshold_db, int delay_ms)
 {
@@ -561,24 +561,24 @@ void Settings::setVoxParams(bool enabled, int threshold_db, int delay_ms)
   qsettings.setValue(CONF_VOX_ENABLED, m_vox_enabled);
   qsettings.setValue(CONF_VOX_THRESHOLD, m_vox_threshold);
   qsettings.setValue(CONF_VOX_DELAY, m_vox_delay);
-} /** Settings::setVoxParams */
+} /* Settings::setVoxParams */
 
 void Settings::setConnectToIp(const QString &host)
 {
   m_connect_to_ip = host;
   QSettings qsettings;
   qsettings.setValue(CONF_CONNECT_TO_IP, m_connect_to_ip);
-} /** Settings::setConnectToIp */
+} /* Settings::setConnectToIp */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

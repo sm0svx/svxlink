@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef AUDIO_DEBUGGER_INCLUDED
 #define AUDIO_DEBUGGER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sys/time.h>
@@ -34,39 +34,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <stdint.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -211,13 +211,13 @@ class AudioDebugger : public AudioSink, public AudioSource
     AudioDebugger(const AudioDebugger&);
     AudioDebugger& operator=(const AudioDebugger&);
 
-}; /** AudioDebugger */
+}; /* AudioDebugger */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** AUDIO_DEBUGGER_INCLUDED */
+#endif /* AUDIO_DEBUGGER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

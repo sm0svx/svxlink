@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstring>
@@ -35,49 +35,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <linux/hidraw.h>
 #include <sys/ioctl.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/**
+/*
  * Local Includes
  */
 #include "SquelchHidraw.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 SquelchHidraw::SquelchHidraw(void)
   : fd(-1), watch(0), active_low(false), pin(0)
 {
-} /** SquelchHidraw::SquelchHidraw */
+} /* SquelchHidraw::SquelchHidraw */
 
 
 SquelchHidraw::~SquelchHidraw(void)
@@ -88,7 +88,7 @@ SquelchHidraw::~SquelchHidraw(void)
     close(fd);
     fd = -1;
   }
-} /** SquelchHidraw::~SquelchHidraw */
+} /* SquelchHidraw::~SquelchHidraw */
 
 /**
 Initializing the sound card as linux/hidraw device
@@ -190,11 +190,11 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   return true;
 }
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 /**
@@ -219,8 +219,8 @@ void SquelchHidraw::hidrawActivity(FdWatch *watch)
   {
     setSignalDetected(active_low ^ false);
   }
-} /** SquelchHidraw::hidrawActivity */
+} /* SquelchHidraw::hidrawActivity */
 
-/**
+/*
  * This file has not been truncated
  */

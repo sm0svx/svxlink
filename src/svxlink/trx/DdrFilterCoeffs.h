@@ -26,31 +26,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DDR_FILTER_COEFFS_INCLUDED
 #define DDR_FILTER_COEFFS_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 #define FILTER_COEFF(name, coeffs...) \
@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   }; \
   static const int name ## _cnt = sizeof(name) / sizeof(*name);
 
-/**
+/*
  * Exported Global Variables
  */
 /**
@@ -1072,12 +1072,12 @@ FILTER_COEFF(coeff_hilbert,
   -0.0000000000000037
 )
 
-/**
+/*
  * Class definitions
  */
 
-#endif /** DDR_FILTER_COEFFS_INCLUDED */
+#endif /* DDR_FILTER_COEFFS_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

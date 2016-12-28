@@ -26,23 +26,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SIG_LEV_DET_DDR_INCLUDED
 #define SIG_LEV_DET_DDR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <vector>
 #include <deque>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "SigLevDet.h"
 #include "RtlTcp.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -50,23 +50,23 @@ namespace Async
   class AudioFilter;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -162,11 +162,11 @@ class SigLevDetDdr : public SigLevDet
     SigLevDetDdr& operator=(const SigLevDetDdr&);
     void processSamples(const std::vector<RtlTcp::Sample> &samples);
     
-};  /** class SigLevDetDdr */
+};  /* class SigLevDetDdr */
 
-#endif /** SIG_LEV_DET_DDR_INCLUDED */
+#endif /* SIG_LEV_DET_DDR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

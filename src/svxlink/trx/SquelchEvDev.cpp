@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstring>
@@ -37,51 +37,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
-/**
+/*
  * Project Includes
  */
 #include <common.h>
 #include <AsyncFdWatch.h>
 
-/**
+/*
  * Local Includes
  */
 #include "SquelchEvDev.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 SquelchEvDev::SquelchEvDev(void)
   : fd(-1), watch(0)
 {
   
-} /** SquelchEvDev::SquelchEvDev */
+} /* SquelchEvDev::SquelchEvDev */
 
 SquelchEvDev::~SquelchEvDev(void)
 {
@@ -93,7 +93,7 @@ SquelchEvDev::~SquelchEvDev(void)
     close(fd);
     fd = -1;
   }
-} /** SquelchEvDev::~SquelchEvDev */
+} /* SquelchEvDev::~SquelchEvDev */
 
 bool SquelchEvDev::initialize(Async::Config& cfg, const std::string& rx_name)
 {
@@ -169,11 +169,11 @@ bool SquelchEvDev::initialize(Async::Config& cfg, const std::string& rx_name)
   return true;
 }
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
@@ -197,7 +197,7 @@ void SquelchEvDev::readEvDevData(FdWatch *w)
       return;
     }
     
-    /**
+    /*
     cout << "type=" << ev[i].type << " code=" << ev[i].code
 	<< " value=" << ev[i].value << endl;
     */
@@ -213,9 +213,9 @@ void SquelchEvDev::readEvDevData(FdWatch *w)
       setSignalDetected(false);
     }
   }
-} /** SquelchEvDev::readEvDevData */
+} /* SquelchEvDev::readEvDevData */
 
-/**
+/*
  * This file has not been truncated
  */
 

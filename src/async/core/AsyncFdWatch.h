@@ -33,38 +33,38 @@ An example of how to use the  Async::FdWatch class
 #ifndef ASYNC_FD_WATCH_INCLUDED
 #define ASYNC_FD_WATCH_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -168,13 +168,13 @@ class FdWatch : public sigc::trackable
     FdWatchType m_type;
     bool      	m_enabled;
 
-};  /** class FdWatch */
+};  /* class FdWatch */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_FD_WATCH_INCLUDED */
+#endif /* ASYNC_FD_WATCH_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

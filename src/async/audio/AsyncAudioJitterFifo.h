@@ -28,44 +28,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_JITTER_FIFO_INCLUDED
 #define ASYNC_AUDIO_JITTER_FIFO_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -177,13 +177,13 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     
     void writeSamplesFromFifo(void);
 
-};  /** class AudioJitterFifo */
+};  /* class AudioJitterFifo */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_JITTER_FIFO_INCLUDED */
+#endif /* ASYNC_AUDIO_JITTER_FIFO_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

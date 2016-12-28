@@ -33,7 +33,7 @@ An example of how to use the Async::TcpClient class
 #ifndef ASYNC_TCP_CLIENT_INCLUDED
 #define ASYNC_TCP_CLIENT_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -41,41 +41,41 @@ An example of how to use the Async::TcpClient class
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpConnection.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
 class DnsLookup;
 class IpAddress;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -210,13 +210,13 @@ class TcpClient : public TcpConnection
     void connectToRemote(void);
     void connectHandler(FdWatch *watch);
 
-};  /** class TcpClient */
+};  /* class TcpClient */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_TCP_CLIENT_INCLUDED */
+#endif /* ASYNC_TCP_CLIENT_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

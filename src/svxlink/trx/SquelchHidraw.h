@@ -26,22 +26,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_HIDRAW_INCLUDED
 #define SQUELCH_HIDRAW_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -49,23 +49,23 @@ namespace Async
   class Timer;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -110,11 +110,11 @@ class SquelchHidraw : public Squelch
     SquelchHidraw& operator=(const SquelchHidraw&);
     void hidrawActivity(Async::FdWatch *watch);
 
-};  /** class SquelchGpio */
+};  /* class SquelchGpio */
 
-#endif /** SQUELCH_HIDRAW_INCLUDED */
+#endif /* SQUELCH_HIDRAW_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -24,60 +24,60 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <algorithm>
 #include <cstring>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncAudioReader.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 AudioReader::AudioReader(void)
   : buf(0), buf_size(0), input_stopped(false), samples_in_buf(0)
 {
   
-} /** AudioReader::AudioReader */
+} /* AudioReader::AudioReader */
 
 AudioReader::~AudioReader(void)
 {
   
-} /** AudioReader::~AudioReader */
+} /* AudioReader::~AudioReader */
 
 int AudioReader::readSamples(float *samples, int count)
 {
@@ -101,7 +101,7 @@ int AudioReader::readSamples(float *samples, int count)
   
   return samples_in_buf;
   
-} /** AudioReader::readSamples */
+} /* AudioReader::readSamples */
 
 int AudioReader::writeSamples(const float *samples, int count)
 {
@@ -117,22 +117,22 @@ int AudioReader::writeSamples(const float *samples, int count)
   
   return samples_to_read;
   
-} /** AudioReader::writeSamples */
+} /* AudioReader::writeSamples */
 
 void AudioReader::flushSamples(void)
 {
   sourceAllSamplesFlushed();
-} /** AudioReader::flushSamples */
+} /* AudioReader::flushSamples */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

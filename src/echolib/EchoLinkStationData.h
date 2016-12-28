@@ -28,41 +28,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ECHOLINK_STATION_DATA_INCLUDED
 #define ECHOLINK_STATION_DATA_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <netinet/in.h>
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace EchoLink
 {
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -259,13 +259,13 @@ class StationData
     void removeTrailingSpaces(std::string& str);
     std::string callToCode(const std::string& call);
 
-};  /** class StationData */
+};  /* class StationData */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ECHOLINK_STATION_DATA_INCLUDED */
+#endif /* ECHOLINK_STATION_DATA_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

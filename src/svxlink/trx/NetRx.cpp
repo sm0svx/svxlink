@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
@@ -32,31 +32,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cstdlib>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncAudioDecoder.h>
 
-/**
+/*
  * Local Includes
  */
 #include "NetRx.h"
 #include "NetTrxMsg.h"
 #include "NetTrxTcpClient.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace NetTrxMsg;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 class ToneDet
@@ -72,19 +72,19 @@ class ToneDet
     
 };
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 NetRx::NetRx(Config &cfg, const string& name)
@@ -93,7 +93,7 @@ NetRx::NetRx(Config &cfg, const string& name)
     last_signal_strength(0.0), last_sql_rx_id(0), unflushed_samples(false),
     sql_is_open(false), audio_dec(0)
 {
-} /** NetRx::NetRx */
+} /* NetRx::NetRx */
 
 NetRx::~NetRx(void)
 {
@@ -109,7 +109,7 @@ NetRx::~NetRx(void)
   }
   tone_detectors.clear();
   
-} /** NetRx::~NetRx */
+} /* NetRx::~NetRx */
 
 bool NetRx::initialize(void)
 {
@@ -181,7 +181,7 @@ bool NetRx::initialize(void)
   
   return true;
   
-} /** NetRx:initialize */
+} /* NetRx:initialize */
 void NetRx::setMuteState(Rx::MuteState new_mute_state)
 {
   while (mute_state != new_mute_state)
@@ -223,7 +223,7 @@ void NetRx::setMuteState(Rx::MuteState new_mute_state)
   MsgSetMuteState *msg = new MsgSetMuteState(mute_state);
   sendMsg(msg);
   
-} /** NetRx::setMuteState */
+} /* NetRx::setMuteState */
 
 bool NetRx::addToneDetector(float fq, int bw, float thresh,
       	      	      	    int required_duration)
@@ -237,7 +237,7 @@ bool NetRx::addToneDetector(float fq, int bw, float thresh,
   
   return true;
 
-} /** NetRx::addToneDetector */
+} /* NetRx::addToneDetector */
 
 void NetRx::reset(void)
 {
@@ -265,13 +265,13 @@ void NetRx::reset(void)
   MsgReset *msg = new MsgReset;
   sendMsg(msg);
 
-} /** NetRx::reset */
+} /* NetRx::reset */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */                        
 
@@ -339,7 +339,7 @@ void NetRx::connectionReady(bool is_ready)
       setSquelchState(false);
     }
   }
-} /** NetRx::connectionReady */
+} /* NetRx::connectionReady */
 
 void NetRx::handleMsg(Msg *msg)
 {
@@ -425,7 +425,7 @@ void NetRx::handleMsg(Msg *msg)
       break;
     }
 
-    /**
+    /*
     default:
       cerr << name() << ": *** ERROR: Unknown TCP message received. Type="
       	   << msg->type() << ", Size=" << msg->size() << endl;
@@ -433,12 +433,12 @@ void NetRx::handleMsg(Msg *msg)
     */
   }
   
-} /** NetRx::handleMsg */
+} /* NetRx::handleMsg */
 
 void NetRx::sendMsg(Msg *msg)
 {
   tcp_con->sendMsg(msg);
-} /** NetUplink::sendMsg */
+} /* NetUplink::sendMsg */
 
 void NetRx::allEncodedSamplesFlushed(void)
 {
@@ -447,9 +447,9 @@ void NetRx::allEncodedSamplesFlushed(void)
   {
     setSquelchState(false);
   }
-} /** NetRx::allEncodedSamplesFlushed */
+} /* NetRx::allEncodedSamplesFlushed */
 
-/**
+/*
  * This file has not been truncated
  */
 

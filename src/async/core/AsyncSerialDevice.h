@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_SERIAL_DEVICE_INCLUDED
 #define ASYNC_SERIAL_DEVICE_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -38,38 +38,38 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <map>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -147,13 +147,13 @@ class SerialDevice : public sigc::trackable
     bool closePort(void);
     void onIncomingData(FdWatch *watch);
 
-};  /** class SerialDevice */
+};  /* class SerialDevice */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_SERIAL_DEVICE_INCLUDED */
+#endif /* ASYNC_SERIAL_DEVICE_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

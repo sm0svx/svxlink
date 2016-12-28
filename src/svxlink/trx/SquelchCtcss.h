@@ -26,45 +26,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_CTCSS_INCLUDED
 #define SQUELCH_CTCSS_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncAudioFilter.h>
 
-/**
+/*
  * Local Includes
  */
 #include "ToneDetector.h"
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -300,11 +300,11 @@ class SquelchCtcss : public Squelch
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
 
-};  /** class SquelchCtcss */
+};  /* class SquelchCtcss */
 
-#endif /** SQUELCH_CTCSS_INCLUDED */
+#endif /* SQUELCH_CTCSS_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

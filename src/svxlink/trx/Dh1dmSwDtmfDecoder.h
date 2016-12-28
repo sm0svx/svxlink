@@ -26,40 +26,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DH1DM_SW_DTMF_DECODER_INCLUDED
 #define DH1DM_SW_DTMF_DECODER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <vector>
 #include <stdint.h>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 //#include <AsyncAudioSink.h>
 
-/**
+/*
  * Local Includes
  */
 #include "DtmfDecoder.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
     
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -143,27 +143,27 @@ class Dh1dmSwDtmfDecoder : public DtmfDecoder
       int block_length;
     } GoertzelState;
 
-    /**! Tone detector working states for the row tones. */
+    /*! Tone detector working states for the row tones. */
     GoertzelState row_out[8];
-    /**! Tone detector working states for the column tones. */
+    /*! Tone detector working states for the column tones. */
     GoertzelState col_out[8];
-    /**! Row tone signal level values. */
+    /*! Row tone signal level values. */
     float row_energy[4];
-    /**! Column tone signal level values. */
+    /*! Column tone signal level values. */
     float col_energy[4];
-    /**! Remaining sample count in the current detection interval. */
+    /*! Remaining sample count in the current detection interval. */
     int samples_left;
-    /**! The result of the last tone analysis. */
+    /*! The result of the last tone analysis. */
     uint8_t last_hit;
-    /**! This is the last stable DTMF digit. */
+    /*! This is the last stable DTMF digit. */
     uint8_t last_stable;
-    /**! The detection timer advances when the input is stable. */
+    /*! The detection timer advances when the input is stable. */
     unsigned stable_timer;
-    /**! The active timer is reset when a new non-zero digit is detected. */
+    /*! The active timer is reset when a new non-zero digit is detected. */
     int active_timer;
-    /**! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
+    /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
     float normal_twist;
-    /**! Maximum acceptable "reverse" (higher bigger than lower) twist ratio */
+    /*! Maximum acceptable "reverse" (higher bigger than lower) twist ratio */
     float reverse_twist;
 
     void dtmfReceive(void);
@@ -172,11 +172,11 @@ class Dh1dmSwDtmfDecoder : public DtmfDecoder
     float goertzelResult(GoertzelState *s);
     int findMaxIndex(const float f[]);
 
-};  /** class Dh1dmSwDtmfDecoder */
+};  /* class Dh1dmSwDtmfDecoder */
 
-#endif /** DH1DM_SW_DTMF_DECODER_INCLUDED */
+#endif /* DH1DM_SW_DTMF_DECODER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

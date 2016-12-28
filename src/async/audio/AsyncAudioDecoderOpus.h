@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DECODER_OPUS_INCLUDED
 #define ASYNC_AUDIO_DECODER_OPUS_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <opus.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioDecoder.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -139,13 +139,13 @@ class AudioDecoderOpus : public AudioDecoder
     AudioDecoderOpus(const AudioDecoderOpus&);
     AudioDecoderOpus& operator=(const AudioDecoderOpus&);
     
-};  /** class AudioDecoderOpus */
+};  /* class AudioDecoderOpus */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_DECODER_OPUS_INCLUDED */
+#endif /* ASYNC_AUDIO_DECODER_OPUS_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -4,8 +4,8 @@
  * https://github.com/Yaffle/EventSource/
  */
 
-/**jslint indent: 2, vars: true, plusplus: true */
-/**global setTimeout, clearTimeout */
+/*jslint indent: 2, vars: true, plusplus: true */
+/*global setTimeout, clearTimeout */
 
 (function (global) {
   "use strict";

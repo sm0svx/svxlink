@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MAINWINDOW_INCLUDED
 #define MAINWINDOW_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -40,18 +40,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QModelIndex>
 #undef emit
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioIO.h>
 #include <EchoLinkDirectory.h>
 
-/**
+/*
  * Local Includes
  */
 #include "ui_MainWindowBase.h"
 
-/**
+/*
  * Forward declarations
  */
 class IncomingConnection;
@@ -63,23 +63,23 @@ namespace EchoLink
   class Proxy;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Class:     MainWindow
  * Purpose:   MainWindow class
@@ -159,11 +159,11 @@ class MainWindow : public QMainWindow, private Ui::MainWindowBase,
     void settings(void);
     void helpAbout(void);
 
-};  /** class MainWindow */
+};  /* class MainWindow */
 
-#endif /** MAINWINDOW_INCLUDED */
+#endif /* MAINWINDOW_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

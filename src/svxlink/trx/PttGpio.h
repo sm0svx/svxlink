@@ -26,41 +26,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef PTT_GPIO_INCLUDED
 #define PTT_GPIO_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "Ptt.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -110,10 +110,10 @@ class PttGpio : public Ptt
     PttGpio(const PttGpio&);
     PttGpio& operator=(const PttGpio&);
     
-};  /** class PttGpio */
+};  /* class PttGpio */
 
-#endif /** PTT_GPIO_INCLUDED */
+#endif /* PTT_GPIO_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

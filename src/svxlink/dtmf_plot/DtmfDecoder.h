@@ -26,39 +26,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DTMF_DECODER_INCLUDED
 #define DTMF_DECODER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 #include <sys/time.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 class DtmfToneDetector;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 class DtmfDecoder : public sigc::trackable, public Async::AudioSink
@@ -103,13 +103,13 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
       return digit_activated ? last_detected_digit : '?';
     }
 
-    /**
+    /*
      * @brief 	A signal that is emitted when a DTMF digit is first detected
      * @param 	digit The detected digit
      */
     sigc::signal<void, char> digitActivated;
 
-    /**
+    /*
      * @brief 	A signal that is emitted when a DTMF digit is no longer present
      * @param 	digit 	  The detected digit
      * @param 	duration  The time that the digit was active
@@ -132,11 +132,11 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     void checkTones(void);
     void setDigitActive(bool is_active);
 
-};  /** class DtmfDecoder */
+};  /* class DtmfDecoder */
 
-#endif /** DTMF_DECODER_INCLUDED */
+#endif /* DTMF_DECODER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

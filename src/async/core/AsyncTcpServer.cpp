@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <sys/types.h>
@@ -40,47 +40,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncTcpServer.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::TcpServer
  * Purpose:   Consturctor
@@ -102,7 +102,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     return;
   }
 
-  /** Force close on exec */
+  /* Force close on exec */
   if (fcntl(sock, F_SETFD, 1) == -1)
   {
     perror("fcntl(F_SETFD)");
@@ -110,7 +110,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     return;
   }
 
-    /** Reuse address if server crashes */
+    /* Reuse address if server crashes */
   const int on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) == -1)
   {
@@ -119,7 +119,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     return;
   }
 
-    /** Send small packets at once. */
+    /* Send small packets at once. */
   if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) == -1)
   {
     perror("setsockopt(sock, TCP_NODELAY)");
@@ -172,9 +172,9 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
   rd_watch->activity.connect(mem_fun(*this, &TcpServer::onConnection));
     
-} /** TcpServer::TcpServer */
+} /* TcpServer::TcpServer */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::~TcpServer
  * Purpose:   Destructor
@@ -189,9 +189,9 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
 TcpServer::~TcpServer(void)
 {
   cleanup();
-} /** TcpServer::~TcpServer */
+} /* TcpServer::~TcpServer */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::numberOfClients
  * Purpose:   Get the number of clients that is connected to the server
@@ -206,9 +206,9 @@ TcpServer::~TcpServer(void)
 int TcpServer::numberOfClients(void)
 {
   return tcpConnectionList.size();
-} /** TcpServer::numberOfClients */
+} /* TcpServer::numberOfClients */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::getClient
  * Purpose:   Return TcpConnection pointer to the given client
@@ -229,9 +229,9 @@ TcpConnection *TcpServer::getClient(unsigned int index)
   
   return 0;
 
-} /** TcpServer::getClient */
+} /* TcpServer::getClient */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::writeAll
  * Purpose:   Write data to all connected clients 
@@ -259,9 +259,9 @@ int TcpServer::writeAll(const void *buf, int count)
   
   return count;
 
-} /** TcpServer::writeAll */
+} /* TcpServer::writeAll */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::writeOnly
  * Purpose:   Send data only to the given client
@@ -289,9 +289,9 @@ int TcpServer::writeOnly(TcpConnection *con, const void *buf, int count)
   
   return count;
 
-} /** TcpServer::writeOnly */
+} /* TcpServer::writeOnly */
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpServer::writeExcept
  * Purpose:   Send data to all connected clients except the given client
@@ -323,16 +323,16 @@ int TcpServer::writeExcept(TcpConnection *con, const void *buf, int count)
   
   return count;
 
-} /** TcpServer::writeExcept */
+} /* TcpServer::writeExcept */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    TcpServer::cleanup
  * Purpose:   
@@ -363,9 +363,9 @@ void TcpServer::cleanup(void)
   }
   tcpConnectionList.clear();
   
-} /** TcpServer::cleanup */
+} /* TcpServer::cleanup */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    TcpServer::incomingConnection
  * Purpose:   
@@ -424,9 +424,9 @@ void TcpServer::onConnection(FdWatch *watch)
     // Emit signal on client connection
   clientConnected(con);
   
-} /** TcpServer::onConnection */
+} /* TcpServer::onConnection */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    TcpServer::onDisconnected
  * Purpose:   
@@ -451,9 +451,9 @@ void TcpServer::onDisconnected(TcpConnection *con,
   tcpConnectionList.erase(it);
   delete con;
   
-} /** TcpServer::onDisconnected */
+} /* TcpServer::onDisconnected */
 
-/**
+/*
  * This file has not been truncated
  */
 

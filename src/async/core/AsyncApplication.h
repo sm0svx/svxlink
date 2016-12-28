@@ -29,47 +29,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_APPLICATION_INCLUDED
 #define ASYNC_APPLICATION_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class Timer;
 class FdWatch;
 class DnsLookupWorker;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -162,13 +162,13 @@ class Application : public sigc::trackable
     virtual void delTimer(Timer *timer) = 0;
     virtual DnsLookupWorker *newDnsLookupWorker(const std::string& label) = 0;
     
-};  /** class Application */
+};  /* class Application */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_APPLICATION_INCLUDED */
+#endif /* ASYNC_APPLICATION_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

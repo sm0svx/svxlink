@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <termios.h>
@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <set>
 #include <cerrno>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncCppApplication.h>
@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <common.h>
 #include <config.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/SVXLINK.h"
@@ -72,24 +72,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "RepeaterLogic.h"
 #include "LinkManager.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace sigc;
 
-/**
+/*
  * Defines & typedefs
  */
 #define PROGRAM_NAME "SvxLink"
 
-/**
+/*
 
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 static void parse_arguments(int argc, const char **argv);
@@ -105,11 +105,11 @@ static bool logfile_write_timestamp(void);
 static void logfile_write(const char *buf);
 static void logfile_flush(void);
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 static char   	      	*pidfile_name = NULL;
@@ -123,10 +123,10 @@ static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
 
-/**
+/*
  * MAIN
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Function:  main
  * Purpose:   Start everything...
@@ -157,13 +157,13 @@ int main(int argc, char **argv)
   int noclose = 0;
   if (logfile_name != 0)
   {
-      /** Open the logfile */
+      /* Open the logfile */
     if (!logfile_open())
     {
       exit(1);
     }
 
-      /** Create a pipe to route stdout through */
+      /* Create a pipe to route stdout through */
     if (pipe(pipefd) == -1)
     {
       perror("pipe");
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
     stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
-      /** Redirect stdout to the logpipe */
+      /* Redirect stdout to the logpipe */
     if (close(STDOUT_FILENO) == -1)
     {
       perror("close(stdout)");
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-      /** Redirect stderr to the logpipe */
+      /* Redirect stderr to the logpipe */
     if (close(STDERR_FILENO) == -1)
     {
       perror("close(stderr)");
@@ -208,10 +208,10 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-      /** Close stdin */
+      /* Close stdin */
     close(STDIN_FILENO);
     
-      /** Force stdout to line buffered mode */
+      /* Force stdout to line buffered mode */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
     {
       perror("setlinebuf");
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 
     atexit(logfile_flush);
     
-      /** Tell the daemon function call not to close the file descriptors */
+      /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
 
@@ -510,15 +510,15 @@ int main(int argc, char **argv)
   
   return 0;
   
-} /** main */
+} /* main */
 
-/**
+/*
  *
  * Functions
  *
  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Function:  parse_arguments
  * Purpose:   Parse the command line arguments.
@@ -545,7 +545,7 @@ static void parse_arguments(int argc, const char **argv)
 	    "Specify the user to run SvxLink as", "<username>"},
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
-    /**
+    /*
     {"int_arg", 'i', POPT_ARG_INT, &int_arg, 0,
 	    "Description of int argument", "<an int>"},
     */
@@ -569,14 +569,14 @@ static void parse_arguments(int argc, const char **argv)
     exit(1);
   }
 
-  /**
+  /*
   printf("string_arg  = %s\n", string_arg);
   printf("int_arg     = %d\n", int_arg);
   printf("bool_arg    = %d\n", bool_arg);
   */
   
-    /** Parse arguments that do not begin with '-' (leftovers) */
-  /**
+    /* Parse arguments that do not begin with '-' (leftovers) */
+  /*
   arg = poptGetArg(optCon);
   while (arg != NULL)
   {
@@ -587,7 +587,7 @@ static void parse_arguments(int argc, const char **argv)
 
   poptFreeContext(optCon);
 
-} /** parse_arguments */
+} /* parse_arguments */
 
 static void stdinHandler(FdWatch *w)
 {
@@ -601,7 +601,7 @@ static void stdinHandler(FdWatch *w)
   }
   else if (cnt == 0)
   {
-      /** Stdin file descriptor closed */
+      /* Stdin file descriptor closed */
     delete stdin_watch;
     stdin_watch = 0;
     return;
@@ -643,7 +643,7 @@ static void stdout_handler(FdWatch *w)
       logfile_write(buf);
     }
   } while (len > 0);
-} /** stdout_handler  */
+} /* stdout_handler  */
 
 
 static void initialize_logics(Config &cfg)
@@ -711,7 +711,7 @@ static void initialize_logics(Config &cfg)
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
   }
-} /** initialize_logics */
+} /* initialize_logics */
 
 
 static void sighup_handler(int signal)
@@ -722,7 +722,7 @@ static void sighup_handler(int signal)
     return;
   }
   logfile_reopen("SIGHUP received");
-} /** sighup_handler */
+} /* sighup_handler */
 
 
 static void sigterm_handler(int signal)
@@ -745,7 +745,7 @@ static void sigterm_handler(int signal)
   msg += " received. Shutting down application...\n";
   logfile_write(msg.c_str());
   Application::app().quit();
-} /** sigterm_handler */
+} /* sigterm_handler */
 
 static void handle_unix_signal(int signum)
 {
@@ -759,7 +759,7 @@ static void handle_unix_signal(int signum)
       sigterm_handler(signum);
       break;
   }
-} /** handle_unix_signal */
+} /* handle_unix_signal */
 
 static bool logfile_open(void)
 {
@@ -777,7 +777,7 @@ static bool logfile_open(void)
 
   return true;
   
-} /** logfile_open */
+} /* logfile_open */
 
 static void logfile_reopen(const char *reason)
 {
@@ -792,7 +792,7 @@ static void logfile_reopen(const char *reason)
   msg = reason;
   msg += ". Logfile reopened\n";
   if (write(logfd, msg.c_str(), msg.size()) == -1) {}
-} /** logfile_reopen */
+} /* logfile_reopen */
 
 static bool logfile_write_timestamp(void)
 {
@@ -824,7 +824,7 @@ static bool logfile_write_timestamp(void)
     }
   }
   return true;
-} /** logfile_write_timestamp */
+} /* logfile_write_timestamp */
 
 static void logfile_write(const char *buf)
 {
@@ -869,7 +869,7 @@ static void logfile_write(const char *buf)
     }
     ptr += write_len;
   }
-} /** logfile_write */
+} /* logfile_write */
 
 static void logfile_flush(void)
 {
@@ -879,9 +879,9 @@ static void logfile_flush(void)
   {
     stdout_handler(stdout_watch);
   }
-} /**  logfile_flush */
+} /*  logfile_flush */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DEVICE_INCLUDED
 #define ASYNC_AUDIO_DEVICE_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -36,39 +36,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <map>
 #include <list>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class AudioIO;
 class FdWatch;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -215,7 +215,7 @@ class AudioDevice : public sigc::trackable
      */
     virtual void audioToWriteAvailable(void) = 0;
 
-    /**
+    /*
      * @brief	Tell the audio device to flush its buffers
      */
     virtual void flushSamples(void) = 0;
@@ -290,13 +290,13 @@ class AudioDevice : public sigc::trackable
     int       	      	use_count;
     std::list<AudioIO*> aios;
 
-};  /** class AudioDevice */
+};  /* class AudioDevice */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_DEVICE_INCLUDED */
+#endif /* ASYNC_AUDIO_DEVICE_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  *
  * System Includes
  *
@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 
 
-/**
+/*
  *
  * Project Includes
  *
@@ -52,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Local Includes
  *
@@ -64,7 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Namespaces to use
  *
@@ -75,7 +75,7 @@ using namespace Async;
 
 
 
-/**
+/*
  *
  * Defines & typedefs
  *
@@ -83,7 +83,7 @@ using namespace Async;
 
 
 
-/**
+/*
  *
  * Local class definitions
  *
@@ -91,7 +91,7 @@ using namespace Async;
 
 
 
-/**
+/*
  *
  * Prototypes
  *
@@ -99,7 +99,7 @@ using namespace Async;
 
 
 
-/**
+/*
  *
  * Exported Global Variables
  *
@@ -108,7 +108,7 @@ using namespace Async;
 
 
 
-/**
+/*
  *
  * Local Global Variables
  *
@@ -116,7 +116,7 @@ using namespace Async;
 
 
 
-/**
+/*
  *
  * Public member functions
  *
@@ -149,10 +149,10 @@ const char *TcpConnection::disconnectReasonStr(DisconnectReason reason)
   
   return "Unknown disconnect reason";
   
-} /** TcpConnection::disconnectReasonStr */
+} /* TcpConnection::disconnectReasonStr */
 
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    
  * Purpose:   
@@ -173,7 +173,7 @@ TcpConnection::TcpConnection(size_t recv_buf_len)
   rd_watch->activity.connect(mem_fun(*this, &TcpConnection::recvHandler));
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpConnection::writeHandler));
-} /** TcpConnection::TcpConnection */
+} /* TcpConnection::TcpConnection */
 
 
 TcpConnection::TcpConnection(int sock, const IpAddress& remote_addr,
@@ -188,7 +188,7 @@ TcpConnection::TcpConnection(int sock, const IpAddress& remote_addr,
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpConnection::writeHandler));
   setSocket(sock);
-} /** TcpConnection::TcpConnection */
+} /* TcpConnection::TcpConnection */
 
 
 TcpConnection::~TcpConnection(void)
@@ -197,7 +197,7 @@ TcpConnection::~TcpConnection(void)
   delete [] recv_buf;
   delete rd_watch;
   delete wr_watch;
-} /** TcpConnection::~TcpConnection */
+} /* TcpConnection::~TcpConnection */
 
 
 void TcpConnection::setRecvBufLen(size_t recv_buf_len)
@@ -212,7 +212,7 @@ void TcpConnection::setRecvBufLen(size_t recv_buf_len)
   this->recv_buf_len = recv_buf_len;
   delete [] recv_buf;
   recv_buf = new_recv_buf;
-} /** TcpConnection::setRecvBufLen */
+} /* TcpConnection::setRecvBufLen */
 
 
 void TcpConnection::disconnect(void)
@@ -227,7 +227,7 @@ void TcpConnection::disconnect(void)
     close(sock);
     sock = -1;  
   }
-} /** TcpConnection::disconnect */
+} /* TcpConnection::disconnect */
 
 
 int TcpConnection::write(const void *buf, int count)
@@ -249,18 +249,18 @@ int TcpConnection::write(const void *buf, int count)
   
   return cnt;
   
-} /** TcpConnection::write */
+} /* TcpConnection::write */
 
 
 
-/**
+/*
  *
  * Protected member functions
  *
  */
 
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpConnection::setSocket
  * Purpose:   
@@ -279,10 +279,10 @@ void TcpConnection::setSocket(int sock)
   rd_watch->setEnabled(true);
   wr_watch->setEnabled(false);
   wr_watch->setFd(sock, FdWatch::FD_WATCH_WR);
-} /** TcpConnection::setSocket */
+} /* TcpConnection::setSocket */
 
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpConnection::setRemoteAddr
  * Purpose:   
@@ -297,10 +297,10 @@ void TcpConnection::setSocket(int sock)
 void TcpConnection::setRemoteAddr(const IpAddress& remote_addr)
 {
   this->remote_addr = remote_addr;
-} /** TcpConnection::setRemoteAddr */
+} /* TcpConnection::setRemoteAddr */
 
 
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    TcpConnection::setRemotePort
  * Purpose:   
@@ -315,20 +315,20 @@ void TcpConnection::setRemoteAddr(const IpAddress& remote_addr)
 void TcpConnection::setRemotePort(uint16_t remote_port)
 {
   this->remote_port = remote_port;
-} /** TcpConnection::setRemotePort */
+} /* TcpConnection::setRemotePort */
 
 
 
 
 
-/**
+/*
  *
  * Private member functions
  *
  */
 
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    
  * Purpose:   
@@ -382,18 +382,18 @@ void TcpConnection::recvHandler(FdWatch *watch)
     recv_buf_cnt = recv_buf_cnt - processed;
   }
   
-} /** TcpConnection::recvHandler */
+} /* TcpConnection::recvHandler */
 
 
 void TcpConnection::writeHandler(FdWatch *watch)
 {
   watch->setEnabled(false);
   sendBufferFull(false);
-} /** TcpConnection::writeHandler */
+} /* TcpConnection::writeHandler */
 
 
 
-/**
+/*
  * This file has not been truncated
  */
 

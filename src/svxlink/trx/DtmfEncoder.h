@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DTMF_ENCODER_INCLUDED
 #define DTMF_ENCODER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -145,7 +145,7 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
      */
     void allSamplesFlushed(void);
     
-    /**
+    /*
      * @brief A signal that is emitted when all digits have been sent.
      */
     sigc::signal<void> allDigitsSent;
@@ -170,11 +170,11 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
     void playNextDigit(void);
     void writeAudio(void);
     
-};  /** class DtmfEncoder */
+};  /* class DtmfEncoder */
 
-#endif /** DTMF_ENCODER_INCLUDED */
+#endif /* DTMF_ENCODER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -26,23 +26,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SIG_LEV_DET_TONE_INCLUDED
 #define SIG_LEV_DET_TONE_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <vector>
 #include <deque>
 
-/**
+/*
  * Project Includes
  */
 #include <CppStdCompat.h>
 
-/**
+/*
  * Local Includes
  */
 #include "SigLevDet.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -52,23 +52,23 @@ namespace Async
 
 class Goertzel;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -175,11 +175,11 @@ class SigLevDetTone : public SigLevDet
     SigLevDetTone& operator=(const SigLevDetTone&);
     int processSamples(const float *samples, int count);
     
-};  /** class SigLevDetTone */
+};  /* class SigLevDetTone */
 
-#endif /** SIG_LEV_DET_TONE_INCLUDED */
+#endif /* SIG_LEV_DET_TONE_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -26,41 +26,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_OPEN_INCLUDED
 #define SQUELCH_OPEN_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "Squelch.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 using namespace sigc;
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -89,11 +89,11 @@ class SquelchOpen : public Squelch
 
   private:
 
-};  /** class SquelchOpen */
+};  /* class SquelchOpen */
 
-#endif /** SQUELCH_OPEN_INCLUDED */
+#endif /* SQUELCH_OPEN_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

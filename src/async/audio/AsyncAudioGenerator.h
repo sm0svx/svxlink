@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_GENERATOR_INCLUDED
 #define ASYNC_AUDIO_GENERATOR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <cmath>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -234,12 +234,12 @@ class AudioGenerator : public Async::AudioSource
       } while (written != 0);
     }
     
-};  /** class AudioGenerator */
+};  /* class AudioGenerator */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_GENERATOR_INCLUDED */
+#endif /* ASYNC_AUDIO_GENERATOR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

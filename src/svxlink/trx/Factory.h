@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef FACTORY_INCLUDED
 #define FACTORY_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <map>
@@ -34,35 +34,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cassert>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -98,7 +98,7 @@ class FactoryBase
       }
 
       return (*it).second->createObject();
-    } /** Factory::createNamedObject */
+    } /* Factory::createNamedObject */
 
     /**
      * @brief 	Get a list of valid class names
@@ -125,7 +125,7 @@ class FactoryBase
       typename FactoryMap::iterator it = factories.find(m_name);
       assert(it == factories.end());
       factories[name] = this;
-    } /** Factory::Factory */
+    } /* Factory::Factory */
 
     /**
      * @brief 	Destructor
@@ -135,7 +135,7 @@ class FactoryBase
       typename FactoryMap::iterator it = factories.find(m_name);
       assert(it != factories.end());
       factories.erase(it);
-    } /** Factory::~Factory */
+    } /* Factory::~Factory */
     
   protected:
     /**
@@ -152,7 +152,7 @@ class FactoryBase
     FactoryBase(const FactoryBase<T>&);
     FactoryBase& operator=(const FactoryBase<T>&);
     
-};  /** class FactoryBase */
+};  /* class FactoryBase */
 
 template <class T>
 typename FactoryBase<T>::FactoryMap FactoryBase<T>::factories;
@@ -201,8 +201,8 @@ class Factory : public FactoryT
     }
 };
 
-#endif /** FACTORY_INCLUDED */
+#endif /* FACTORY_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

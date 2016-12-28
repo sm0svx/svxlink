@@ -24,17 +24,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 #include <cstdlib>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "DtmfDecoder.h"
@@ -43,33 +43,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "S54sDtmfDecoder.h"
 #include "PtyDtmfDecoder.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
@@ -102,23 +102,23 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   
   return dec;
   
-} /** DtmfDecoder::create */
+} /* DtmfDecoder::create */
 
 bool DtmfDecoder::initialize(void)
 {
   cfg().getValue(name(), "DTMF_HANGTIME", m_hangtime);
   return true;
-} /** DtmfDecoder::initialize */
+} /* DtmfDecoder::initialize */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

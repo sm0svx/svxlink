@@ -26,45 +26,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef AUDIO_PACER_INCLUDED
 #define AUDIO_PACER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class Timer;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -147,13 +147,13 @@ class AudioPacer : public AudioSink, public AudioSource, public sigc::trackable
     
     void outputNextBlock(Async::Timer *t=0);
 
-};  /** class AudioPacer */
+};  /* class AudioPacer */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** AUDIO_PACER_INCLUDED */
+#endif /* AUDIO_PACER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

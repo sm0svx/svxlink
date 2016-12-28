@@ -26,27 +26,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef COMDIALOG_INCLUDED
 #define COMDIALOG_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 #include <string>
 #include <QEvent>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioIO.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
 
-/**
+/*
  * Local Includes
  */
 #include "ui_ComDialogBase.h"
 #include "Vox.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -60,19 +60,19 @@ namespace Async
 class QString;
 class QTextCodec;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 class ComDialog : public QDialog, private Ui::ComDialogBase,
@@ -138,11 +138,11 @@ class ComDialog : public QDialog, private Ui::ComDialogBase,
     void voxStateChanged(Vox::State state);
     void checkTransmit(void);
     
-};  /** class ComDialog */
+};  /* class ComDialog */
 
-#endif /** COMDIALOG_INCLUDED */
+#endif /* COMDIALOG_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

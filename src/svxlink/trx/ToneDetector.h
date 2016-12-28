@@ -26,39 +26,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef TONE_DETECTOR_INCLUDED
 #define TONE_DETECTOR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 #include <vector>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <CppStdCompat.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -448,11 +448,11 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     void postProcess(void);
     void setActivated(bool activated);
 
-};  /** class ToneDetector */
+};  /* class ToneDetector */
 
-#endif /** TONE_DETECTOR_INCLUDED */
+#endif /* TONE_DETECTOR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

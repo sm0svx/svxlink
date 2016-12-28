@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstdio>
@@ -34,23 +34,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cmath>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "ToneDetector.h"
 #include "DtmfDecoder.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace SigC;
 
-/**
+/*
  * Defines & typedefs
  */
 #define BASETONE_N    	      330
@@ -60,7 +60,7 @@ using namespace SigC;
 #define MIN_TWIST     	      -8
 #define MAX_TWIST     	      4
 
-/**
+/*
  * Local class definitions
  */
 class DtmfToneDetector : public sigc::trackable
@@ -84,7 +84,7 @@ class DtmfToneDetector : public sigc::trackable
       return basetone.value();
     }
     
-    /**
+    /*
     float overtoneValue(void)
     {
       return overtone.value();
@@ -114,21 +114,21 @@ class DtmfToneDetector : public sigc::trackable
     bool      	  is_active;
     int       	  tot_samples_processed;
     
-}; /** class DtmfToneDetector */
+}; /* class DtmfToneDetector */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 
@@ -146,7 +146,7 @@ DtmfDecoder::DtmfDecoder(void)
   col[2] = new DtmfToneDetector(false, 2, 1477);
   col[3] = new DtmfToneDetector(false, 3, 1633);
 
-} /** DtmfDecoder::DtmfDecoder */
+} /* DtmfDecoder::DtmfDecoder */
 
 DtmfDecoder::~DtmfDecoder(void)
 {
@@ -155,7 +155,7 @@ DtmfDecoder::~DtmfDecoder(void)
     delete row[i];
     delete col[i];
   }
-} /** DtmfDecoder::~DtmfDecoder */
+} /* DtmfDecoder::~DtmfDecoder */
 
 int DtmfDecoder::writeSamples(const float *buf, int len)
 {
@@ -185,13 +185,13 @@ int DtmfDecoder::writeSamples(const float *buf, int len)
   
   return orig_len;
   
-} /** DtmfDecoder::processSamples */
+} /* DtmfDecoder::processSamples */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 void DtmfDecoder::checkTones(void)
@@ -281,11 +281,11 @@ void DtmfDecoder::checkTones(void)
   
   last_detected_digit = digit;
   
-} /** DtmfDecoder::checkTones */
+} /* DtmfDecoder::checkTones */
 
 void DtmfDecoder::setDigitActive(bool is_active)
 {
-  /**
+  /*
   printf("DtmfDecoder::setDigitActive: is_active=%s\n",
     is_active ? "TRUE" : "FALSE");
   */
@@ -312,9 +312,9 @@ void DtmfDecoder::setDigitActive(bool is_active)
   
   digit_activated = is_active;
   
-} /** DtmfDecoder::setDigitActive */
+} /* DtmfDecoder::setDigitActive */
 
-/**
+/*
  * This file has not been truncated
  */
 

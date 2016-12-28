@@ -1,4 +1,4 @@
-/**
+/*
    Definitions for RTP packet manipulation routines
 */
 #ifndef RTPACKET_H

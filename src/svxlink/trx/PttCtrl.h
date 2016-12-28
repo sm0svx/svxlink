@@ -26,28 +26,28 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef PTT_CTRL_INCLUDED
 #define PTT_CTRL_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioIO.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioFifo.h>
 
-/**
+/*
  * Local Includes
  */
 #include "Tx.h"
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 /**
@@ -135,11 +135,11 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
     void transmit(bool do_transmit);
     void txDelayExpired(Async::Timer *t);
     
-}; /** class PttCtrl */
+}; /* class PttCtrl */
 
-#endif /** PTT_CTRL_INCLUDED */
+#endif /* PTT_CTRL_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

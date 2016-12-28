@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
@@ -32,42 +32,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstring>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncAudioProcessor.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 AudioProcessor::AudioProcessor(void)
@@ -76,12 +76,12 @@ AudioProcessor::AudioProcessor(void)
     input_buf_cnt(0), input_buf_size(0)
 {
   
-} /** AudioProcessor::AudioProcessor */
+} /* AudioProcessor::AudioProcessor */
 
 AudioProcessor::~AudioProcessor(void)
 {
   delete [] input_buf;
-} /** AudioProcessor::~AudioProcessor */
+} /* AudioProcessor::~AudioProcessor */
 
 int AudioProcessor::writeSamples(const float *samples, int len)
 {
@@ -154,7 +154,7 @@ int AudioProcessor::writeSamples(const float *samples, int len)
   
   return ret_len;
 
-} /** AudioProcessor::writeSamples */
+} /* AudioProcessor::writeSamples */
 
 void AudioProcessor::flushSamples(void)
 {
@@ -178,21 +178,21 @@ void AudioProcessor::flushSamples(void)
       sinkFlushSamples();
     }
   }
-} /** AudioProcessor::flushSamples */
+} /* AudioProcessor::flushSamples */
 
 void AudioProcessor::resumeOutput(void)
 {
   //cout << "AudioProcessor::resumeOutput" << endl;
   output_stopped = false;
   writeFromBuf();
-} /** AudioProcessor::resumeOutput */
+} /* AudioProcessor::resumeOutput */
 
 void AudioProcessor::allSamplesFlushed(void)
 {
   //cout << "AudioProcessor::allSamplesFlushed" << endl;
   do_flush = false;
   sourceAllSamplesFlushed();
-} /** AudioProcessor::allSamplesFlushed */
+} /* AudioProcessor::allSamplesFlushed */
 
 void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
 {
@@ -211,17 +211,17 @@ void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
     input_buf_size = 0;
     input_buf = 0;
   }
-} /** AudioProcessor::setSampleRateRatio */
+} /* AudioProcessor::setSampleRateRatio */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    AudioProcessor::writeFromBuf
  * Purpose:   Write processed samples from the buffer to the connected sink.
@@ -278,9 +278,9 @@ void AudioProcessor::writeFromBuf(void)
   
   output_stopped = (written == 0);
   
-} /** AudioProcessor::writeFromBuf */
+} /* AudioProcessor::writeFromBuf */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -24,49 +24,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncAudioEncoderSpeex.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 AudioEncoderSpeex::AudioEncoderSpeex(void)
@@ -89,14 +89,14 @@ AudioEncoderSpeex::AudioEncoderSpeex(void)
   //setAbr(8000);
   //setVbrMaxBitrate(32000);
   //enableHighpass(false);
-} /** AsyncAudioEncoderSpeex::AsyncAudioEncoderSpeex */
+} /* AsyncAudioEncoderSpeex::AsyncAudioEncoderSpeex */
 
 AudioEncoderSpeex::~AudioEncoderSpeex(void)
 {
   delete [] sample_buf;
   speex_bits_destroy(&bits);
   speex_encoder_destroy(enc_state);
-} /** AsyncAudioEncoderSpeex::~AsyncAudioEncoderSpeex */
+} /* AsyncAudioEncoderSpeex::~AsyncAudioEncoderSpeex */
 
 void AudioEncoderSpeex::setOption(const std::string &name,
       	      	      	      	  const std::string &value)
@@ -134,7 +134,7 @@ void AudioEncoderSpeex::setOption(const std::string &name,
     cerr << "*** WARNING AudioEncoderSpeex: Unknown option \""
       	 << name << "\". Ignoring it.\n";
   }
-} /** AudioEncoderSpeex::setOption */
+} /* AudioEncoderSpeex::setOption */
 
 void AudioEncoderSpeex::printCodecParams(void)
 {
@@ -149,97 +149,97 @@ void AudioEncoderSpeex::printCodecParams(void)
   //cout << "Highpass filter = " << (highpassEnabled() ? "EN" : "DIS")
   //     << "ABLED\n";
   cout << "--------------------------------------\n";
-} /** AudioEncoderSpeex::printCodecParams */
+} /* AudioEncoderSpeex::printCodecParams */
 
 void AudioEncoderSpeex::setFramesPerPacket(unsigned fpp)
 {
   frames_per_packet = fpp;
-} /** AudioEncoderSpeex::setFramesPerPacket */
+} /* AudioEncoderSpeex::setFramesPerPacket */
 
 void AudioEncoderSpeex::setQuality(int quality)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &quality);
-} /** AudioEncoderSpeex::setQuality */
+} /* AudioEncoderSpeex::setQuality */
 
 int AudioEncoderSpeex::setBitrate(int new_bitrate)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_BITRATE, &new_bitrate);
   return bitrate();
-} /** AudioEncoderSpeex::setBitrate */
+} /* AudioEncoderSpeex::setBitrate */
 
 int AudioEncoderSpeex::bitrate(void)
 {
   int br;
   speex_encoder_ctl(enc_state, SPEEX_GET_BITRATE, &br);
   return br;
-} /** AudioEncoderSpeex::bitrate */
+} /* AudioEncoderSpeex::bitrate */
 
 int AudioEncoderSpeex::setComplexity(int new_comp)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_COMPLEXITY, &new_comp);
   return complexity();
-} /** AudioEncoderSpeex::setBitrate */
+} /* AudioEncoderSpeex::setBitrate */
 
 int AudioEncoderSpeex::complexity(void)
 {
   int comp;
   speex_encoder_ctl(enc_state, SPEEX_GET_COMPLEXITY, &comp);
   return comp;
-} /** AudioEncoderSpeex::complexity */
+} /* AudioEncoderSpeex::complexity */
 
 void AudioEncoderSpeex::enableVbr(bool enable)
 {
   int do_enable = enable ? 1 : 0;
   speex_encoder_ctl(enc_state, SPEEX_SET_VBR, &do_enable);
-} /** AudioEncoderSpeex::enableVbr */
+} /* AudioEncoderSpeex::enableVbr */
 
 bool AudioEncoderSpeex::vbrEnabled(void)
 {
   int enabled;
   speex_encoder_ctl(enc_state, SPEEX_GET_VBR, &enabled);
   return (enabled != 0);
-} /** AudioEncoderSpeex::vbrEnabled */
+} /* AudioEncoderSpeex::vbrEnabled */
 
 int AudioEncoderSpeex::setVbrQuality(int quality)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_VBR_QUALITY, &quality);
   return vbrQuality();
-} /** AudioEncoderSpeex::setVbrQuality */
+} /* AudioEncoderSpeex::setVbrQuality */
 
 int AudioEncoderSpeex::vbrQuality(void)
 {
   int quality;
   speex_encoder_ctl(enc_state, SPEEX_GET_VBR_QUALITY, &quality);
   return quality;
-} /** AudioEncoderSpeex::vbrQuality */
+} /* AudioEncoderSpeex::vbrQuality */
 
 #if 0
 int AudioEncoderSpeex::setVbrMaxBitrate(int bitrate)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_VBR_MAX_BITRATE, &bitrate);
   return vbrMaxBitrate();
-} /** AudioEncoderSpeex::setVbrMaxBitrate */
+} /* AudioEncoderSpeex::setVbrMaxBitrate */
 
 int AudioEncoderSpeex::vbrMaxBitrate(void)
 {
   int bitrate;
   speex_encoder_ctl(enc_state, SPEEX_GET_VBR_MAX_BITRATE, &bitrate);
   return bitrate;
-} /** AudioEncoderSpeex::vbrMaxBitrate */
+} /* AudioEncoderSpeex::vbrMaxBitrate */
 #endif
 
 int AudioEncoderSpeex::setAbr(int new_abr)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_ABR, &new_abr);
   return abr();
-} /** AudioEncoderSpeex::setAbr */
+} /* AudioEncoderSpeex::setAbr */
 
 int AudioEncoderSpeex::abr(void)
 {
   int a;
   speex_encoder_ctl(enc_state, SPEEX_GET_ABR, &a);
   return a;
-} /** AudioEncoderSpeex::abr */
+} /* AudioEncoderSpeex::abr */
 
 #if 0
 bool AudioEncoderSpeex::enableHighpass(bool enable)
@@ -247,14 +247,14 @@ bool AudioEncoderSpeex::enableHighpass(bool enable)
   int hp = enable ? 1 : 0;
   speex_encoder_ctl(enc_state, SPEEX_SET_HIGHPASS, &hp);
   return highpassEnabled();
-} /** AudioEncoderSpeex::setAbr */
+} /* AudioEncoderSpeex::setAbr */
 
 bool AudioEncoderSpeex::highpassEnabled(void)
 {
   int hp;
   speex_encoder_ctl(enc_state, SPEEX_GET_HIGHPASS, &hp);
   return (hp != 0);
-} /** AudioEncoderSpeex::highpassEnabled */
+} /* AudioEncoderSpeex::highpassEnabled */
 #endif
 
 int AudioEncoderSpeex::writeSamples(const float *samples, int count)
@@ -284,17 +284,17 @@ int AudioEncoderSpeex::writeSamples(const float *samples, int count)
   
   return count;
   
-} /** AudioEncoderSpeex::writeSamples */
+} /* AudioEncoderSpeex::writeSamples */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

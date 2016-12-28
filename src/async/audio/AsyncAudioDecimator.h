@@ -21,42 +21,42 @@ ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 #ifndef ASYNC_AUDIO_DECIMATOR_INCLUDED
 #define ASYNC_AUDIO_DECIMATOR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioProcessor.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -116,13 +116,13 @@ class AudioDecimator : public AudioProcessor
     AudioDecimator(const AudioDecimator&);
     AudioDecimator& operator=(const AudioDecimator&);
     
-};  /** class AudioDecimator */
+};  /* class AudioDecimator */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_AUDIO_DECIMATOR_INCLUDED */
+#endif /* ASYNC_AUDIO_DECIMATOR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define QSO_FRN_INCLUDED
 
 
-/**
+/*
  *
  * System Includes
  *
@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 
 
-/**
+/*
  *
  * Project Includes
  *
@@ -55,7 +55,7 @@ extern "C" {
 #include <AsyncTcpConnection.h>
 
 
-/**
+/*
  *
  * Local Includes
  *
@@ -63,7 +63,7 @@ extern "C" {
 
 
 
-/**
+/*
  *
  * Forward declarations
  *
@@ -79,7 +79,7 @@ namespace Async
 };
 
 
-/**
+/*
  *
  * Namespace
  *
@@ -89,7 +89,7 @@ namespace Async
 //{
 
 
-/**
+/*
  *
  * Forward declarations of classes inside of the declared namespace
  *
@@ -101,7 +101,7 @@ class AudioFifo;
 class ModuleFrn;
 
 
-/**
+/*
  *
  * Defines & typedefs
  *
@@ -109,7 +109,7 @@ class ModuleFrn;
 typedef std::vector<std::string> FrnList;
 
 
-/**
+/*
  *
  * Exported Global Variables
  *
@@ -117,7 +117,7 @@ typedef std::vector<std::string> FrnList;
 
 
 
-/**
+/*
  *
  * Class definitions
  *
@@ -573,12 +573,12 @@ class QsoFrn
 };
 
 
-//} /** namespace */
+//} /* namespace */
 
-#endif /** QSO_FRN_INCLUDED */
+#endif /* QSO_FRN_INCLUDED */
 
 
-/**
+/*
  * This file has not been truncated
  */
 

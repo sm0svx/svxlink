@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
@@ -32,42 +32,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "AsyncAudioEncoderOpus.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 AudioEncoderOpus::AudioEncoderOpus(void)
@@ -93,13 +93,13 @@ AudioEncoderOpus::AudioEncoderOpus(void)
   setLsbDepth(16);
 #endif
 
-} /** AsyncAudioEncoderOpus::AsyncAudioEncoderOpus */
+} /* AsyncAudioEncoderOpus::AsyncAudioEncoderOpus */
 
 AudioEncoderOpus::~AudioEncoderOpus(void)
 {
   delete [] sample_buf;
   opus_encoder_destroy(enc);
-} /** AsyncAudioEncoderOpus::~AsyncAudioEncoderOpus */
+} /* AsyncAudioEncoderOpus::~AsyncAudioEncoderOpus */
 
 void AudioEncoderOpus::setOption(const std::string &name,
       	      	    	      	 const std::string &value)
@@ -140,7 +140,7 @@ void AudioEncoderOpus::setOption(const std::string &name,
     cerr << "*** WARNING AudioEncoderOpus: Unknown option \""
       	 << name << "\". Ignoring it.\n";
   }
-} /** AudioEncoderOpus::setOption */
+} /* AudioEncoderOpus::setOption */
 
 void AudioEncoderOpus::printCodecParams(void)
 {
@@ -165,7 +165,7 @@ void AudioEncoderOpus::printCodecParams(void)
   cout << "LSB depth            = " << lsbDepth() << endl;
 #endif
   cout << "--------------------------------------\n";
-} /** AudioEncoderOpus::printCodecParams */
+} /* AudioEncoderOpus::printCodecParams */
 
 float AudioEncoderOpus::setFrameSize(float new_frame_size_ms)
 {
@@ -175,7 +175,7 @@ float AudioEncoderOpus::setFrameSize(float new_frame_size_ms)
   delete sample_buf;
   sample_buf = new float[frame_size];
   return new_frame_size_ms;
-} /** AudioEncoderOpus::setFrameSize */
+} /* AudioEncoderOpus::setFrameSize */
 
 opus_int32 AudioEncoderOpus::setComplexity(opus_int32 new_comp)
 {
@@ -186,7 +186,7 @@ opus_int32 AudioEncoderOpus::setComplexity(opus_int32 new_comp)
          << opus_strerror(err) << endl;
   }
   return complexity();
-} /** AudioEncoderOpus::setBitrate */
+} /* AudioEncoderOpus::setBitrate */
 
 opus_int32 AudioEncoderOpus::complexity(void)
 {
@@ -200,7 +200,7 @@ opus_int32 AudioEncoderOpus::complexity(void)
     return -1;
   }
   return comp;
-} /** AudioEncoderOpus::complexity */
+} /* AudioEncoderOpus::complexity */
 
 opus_int32 AudioEncoderOpus::setBitrate(opus_int32 new_bitrate)
 {
@@ -211,7 +211,7 @@ opus_int32 AudioEncoderOpus::setBitrate(opus_int32 new_bitrate)
          << opus_strerror(err) << endl;
   }
   return bitrate();
-} /** AudioEncoderOpus::setBitrate */
+} /* AudioEncoderOpus::setBitrate */
 
 opus_int32 AudioEncoderOpus::bitrate(void)
 {
@@ -225,7 +225,7 @@ opus_int32 AudioEncoderOpus::bitrate(void)
     return -1;
   }
   return br;
-} /** AudioEncoderOpus::bitrate */
+} /* AudioEncoderOpus::bitrate */
 
 bool AudioEncoderOpus::enableVbr(bool enable)
 {
@@ -237,7 +237,7 @@ bool AudioEncoderOpus::enableVbr(bool enable)
          << opus_strerror(err) << endl;
   }
   return vbrEnabled();
-} /** AudioEncoderOpus::enableVbr */
+} /* AudioEncoderOpus::enableVbr */
 
 bool AudioEncoderOpus::vbrEnabled(void)
 {
@@ -251,7 +251,7 @@ bool AudioEncoderOpus::vbrEnabled(void)
     return false;
   }
   return (enabled != 0);
-} /** AudioEncoderOpus::vbrEnabled */
+} /* AudioEncoderOpus::vbrEnabled */
 
 bool AudioEncoderOpus::enableConstrainedVbr(bool enable)
 {
@@ -263,7 +263,7 @@ bool AudioEncoderOpus::enableConstrainedVbr(bool enable)
          << opus_strerror(err) << endl;
   }
   return constrainedVbrEnabled();
-} /** AudioEncoderOpus::enableConstrainedVbr */
+} /* AudioEncoderOpus::enableConstrainedVbr */
 
 bool AudioEncoderOpus::constrainedVbrEnabled(void)
 {
@@ -277,7 +277,7 @@ bool AudioEncoderOpus::constrainedVbrEnabled(void)
     return false;
   }
   return (enabled != 0);
-} /** AudioEncoderOpus::constrainedVbrEnabled */
+} /* AudioEncoderOpus::constrainedVbrEnabled */
 
 opus_int32 AudioEncoderOpus::setMaxBandwidth(opus_int32 new_bw)
 {
@@ -288,7 +288,7 @@ opus_int32 AudioEncoderOpus::setMaxBandwidth(opus_int32 new_bw)
          << opus_strerror(err) << endl;
   }
   return maxBandwidth();
-} /** AudioEncoderOpus::setMaxBandwidth */
+} /* AudioEncoderOpus::setMaxBandwidth */
 
 opus_int32 AudioEncoderOpus::maxBandwidth(void)
 {
@@ -302,7 +302,7 @@ opus_int32 AudioEncoderOpus::maxBandwidth(void)
     return -1;
   }
   return bw;
-} /** AudioEncoderOpus::maxBandwidth */
+} /* AudioEncoderOpus::maxBandwidth */
 
 opus_int32 AudioEncoderOpus::setBandwidth(opus_int32 new_bw)
 {
@@ -313,7 +313,7 @@ opus_int32 AudioEncoderOpus::setBandwidth(opus_int32 new_bw)
          << opus_strerror(err) << endl;
   }
   return bandwidth();
-} /** AudioEncoderOpus::setBandwidth */
+} /* AudioEncoderOpus::setBandwidth */
 
 opus_int32 AudioEncoderOpus::bandwidth(void)
 {
@@ -327,7 +327,7 @@ opus_int32 AudioEncoderOpus::bandwidth(void)
     return -1;
   }
   return bw;
-} /** AudioEncoderOpus::bandwidth */
+} /* AudioEncoderOpus::bandwidth */
 
 opus_int32 AudioEncoderOpus::setSignalType(opus_int32 new_type)
 {
@@ -338,7 +338,7 @@ opus_int32 AudioEncoderOpus::setSignalType(opus_int32 new_type)
          << opus_strerror(err) << endl;
   }
   return signalType();
-} /** AudioEncoderOpus::setSignalType */
+} /* AudioEncoderOpus::setSignalType */
 
 opus_int32 AudioEncoderOpus::signalType(void)
 {
@@ -352,7 +352,7 @@ opus_int32 AudioEncoderOpus::signalType(void)
     return -1;
   }
   return type;
-} /** AudioEncoderOpus::signalType */
+} /* AudioEncoderOpus::signalType */
 
 opus_int32 AudioEncoderOpus::setApplicationType(opus_int32 new_app)
 {
@@ -363,7 +363,7 @@ opus_int32 AudioEncoderOpus::setApplicationType(opus_int32 new_app)
          << opus_strerror(err) << endl;
   }
   return applicationType();
-} /** AudioEncoderOpus::setApplicationType */
+} /* AudioEncoderOpus::setApplicationType */
 
 opus_int32 AudioEncoderOpus::applicationType(void)
 {
@@ -377,7 +377,7 @@ opus_int32 AudioEncoderOpus::applicationType(void)
     return -1;
   }
   return app;
-} /** AudioEncoderOpus::applicationType */
+} /* AudioEncoderOpus::applicationType */
 
 bool AudioEncoderOpus::enableInbandFec(bool enable)
 {
@@ -389,7 +389,7 @@ bool AudioEncoderOpus::enableInbandFec(bool enable)
          << opus_strerror(err) << endl;
   }
   return inbandFecEnabled();
-} /** AudioEncoderOpus::enableInbandFec */
+} /* AudioEncoderOpus::enableInbandFec */
 
 bool AudioEncoderOpus::inbandFecEnabled(void)
 {
@@ -403,7 +403,7 @@ bool AudioEncoderOpus::inbandFecEnabled(void)
     return false;
   }
   return (enabled != 0);
-} /** AudioEncoderOpus::inbandFecEnabled */
+} /* AudioEncoderOpus::inbandFecEnabled */
 
 opus_int32 AudioEncoderOpus::setExpectedPacketLoss(opus_int32 new_pl_perc)
 {
@@ -414,7 +414,7 @@ opus_int32 AudioEncoderOpus::setExpectedPacketLoss(opus_int32 new_pl_perc)
          << opus_strerror(err) << endl;
   }
   return expectedPacketLoss();
-} /** AudioEncoderOpus::setExpectedPacketLoss */
+} /* AudioEncoderOpus::setExpectedPacketLoss */
 
 opus_int32 AudioEncoderOpus::expectedPacketLoss(void)
 {
@@ -428,7 +428,7 @@ opus_int32 AudioEncoderOpus::expectedPacketLoss(void)
     return -1;
   }
   return pl_perc;
-} /** AudioEncoderOpus::expectedPacketLoss */
+} /* AudioEncoderOpus::expectedPacketLoss */
 
 bool AudioEncoderOpus::enableDtx(bool enable)
 {
@@ -440,7 +440,7 @@ bool AudioEncoderOpus::enableDtx(bool enable)
          << opus_strerror(err) << endl;
   }
   return dtxEnabled();
-} /** AudioEncoderOpus::enableDtx */
+} /* AudioEncoderOpus::enableDtx */
 
 bool AudioEncoderOpus::dtxEnabled(void)
 {
@@ -454,7 +454,7 @@ bool AudioEncoderOpus::dtxEnabled(void)
     return false;
   }
   return (enabled != 0);
-} /** AudioEncoderOpus::dtxEnabled */
+} /* AudioEncoderOpus::dtxEnabled */
 
 #if OPUS_MAJOR > 0
 opus_int32 AudioEncoderOpus::setLsbDepth(opus_int32 new_depth)
@@ -466,7 +466,7 @@ opus_int32 AudioEncoderOpus::setLsbDepth(opus_int32 new_depth)
          << opus_strerror(err) << endl;
   }
   return lsbDepth();
-} /** AudioEncoderOpus::setLsbDepth */
+} /* AudioEncoderOpus::setLsbDepth */
 
 opus_int32 AudioEncoderOpus::lsbDepth(void)
 {
@@ -480,7 +480,7 @@ opus_int32 AudioEncoderOpus::lsbDepth(void)
     return -1;
   }
   return depth;
-} /** AudioEncoderOpus::lsbDepth */
+} /* AudioEncoderOpus::lsbDepth */
 #endif
 
 void AudioEncoderOpus::reset(void)
@@ -491,13 +491,13 @@ void AudioEncoderOpus::reset(void)
     cerr << "*** ERROR: Could not reset Opus encoder: "
          << opus_strerror(err) << endl;
   }
-} /** AudioEncoderOpus::reset */
+} /* AudioEncoderOpus::reset */
 
 #if 0
 void AudioEncoderOpus::setFramesPerPacket(unsigned fpp)
 {
   frames_per_packet = fpp;
-} /** AudioEncoderOpus::setFramesPerPacket */
+} /* AudioEncoderOpus::setFramesPerPacket */
 #endif
 
 const char *AudioEncoderOpus::bandwidthStr(opus_int32 bw)
@@ -519,7 +519,7 @@ const char *AudioEncoderOpus::bandwidthStr(opus_int32 bw)
     default:
       return "?";
   }
-} /** AudioEncoderOpus::bandwidthStr */
+} /* AudioEncoderOpus::bandwidthStr */
 
 const char *AudioEncoderOpus::signalTypeStr(opus_int32 type)
 {
@@ -534,7 +534,7 @@ const char *AudioEncoderOpus::signalTypeStr(opus_int32 type)
     default:
       return "?";
   }
-} /** AudioEncoderOpus::signalTypeStr */
+} /* AudioEncoderOpus::signalTypeStr */
 
 const char *AudioEncoderOpus::applicationTypeStr(opus_int32 type)
 {
@@ -549,7 +549,7 @@ const char *AudioEncoderOpus::applicationTypeStr(opus_int32 type)
     default:
       return "?";
   }
-} /** AudioEncoderOpus::applicationTypeStr */
+} /* AudioEncoderOpus::applicationTypeStr */
 
 int AudioEncoderOpus::writeSamples(const float *samples, int count)
 {
@@ -578,17 +578,17 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
   
   return count;
   
-} /** AudioEncoderOpus::writeSamples */
+} /* AudioEncoderOpus::writeSamples */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
-/**
+/*
  * This file has not been truncated
  */
 

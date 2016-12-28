@@ -30,24 +30,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_PARROT_INCLUDED
 #define MODULE_PARROT_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <list>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 #include <Module.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/SVXLINK.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -56,23 +56,23 @@ namespace Async
   class AudioValve;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
  
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -120,10 +120,10 @@ class ModuleParrot : public Module
     void onRepeatDelayExpired(void);
     void execCmdQueue(void);
 
-};  /** class ModuleParrot */
+};  /* class ModuleParrot */
 
-#endif /** MODULE_PARROT_INCLUDED */
+#endif /* MODULE_PARROT_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

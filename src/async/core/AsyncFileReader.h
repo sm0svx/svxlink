@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef FILE_READER_INCLUDED
 #define FILE_READER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -37,38 +37,38 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
   
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 class FileReader : public sigc::trackable
@@ -133,13 +133,13 @@ class FileReader : public sigc::trackable
     bool fillBuffer(void);
     int bytesInBuffer(void) const;
 
-};  /** class FileReader */
+};  /* class FileReader */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** FILE_READER_INCLUDED */
+#endif /* FILE_READER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

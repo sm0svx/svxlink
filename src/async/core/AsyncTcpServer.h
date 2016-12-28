@@ -31,46 +31,46 @@ An example of how to use the Async::TcpServer class
 #ifndef ASYNC_TCP_SERVER_INCLUDED
 #define ASYNC_TCP_SERVER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <vector>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpConnection.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace Async
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
   
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -168,13 +168,13 @@ class TcpServer : public sigc::trackable
     void onDisconnected(TcpConnection *con,
       	      	      	TcpConnection::DisconnectReason reason);
 
-};  /** class TcpServer */
+};  /* class TcpServer */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ASYNC_TCP_SERVER_INCLUDED */
+#endif /* ASYNC_TCP_SERVER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

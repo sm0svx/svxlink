@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstdio>
@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
@@ -45,23 +45,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/MODULE_PARROT.h"
 #include "ModuleParrot.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 class ModuleParrot::FifoAdapter : public AudioPassthrough
@@ -83,21 +83,21 @@ class ModuleParrot::FifoAdapter : public AudioPassthrough
   private:
     ModuleParrot *parrot;
     
-}; /** class ModuleParrot::FifoAdapter */
+}; /* class ModuleParrot::FifoAdapter */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Pure C-functions
  */
 extern "C" {
@@ -105,9 +105,9 @@ extern "C" {
   {
     return new ModuleParrot(dl_handle, logic, cfg_name);
   }
-} /** extern "C" */
+} /* extern "C" */
 
-/**
+/*
  * Public member functions
  */
 
@@ -120,14 +120,14 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
   repeat_delay_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ModuleParrot::onRepeatDelayExpired)));
   
-} /** ModuleParrot */
+} /* ModuleParrot */
 
 ModuleParrot::~ModuleParrot(void)
 {
   AudioSink::clearHandler();
   AudioSource::clearHandler();
   delete adapter; // This will delete all chained audio objects
-} /** ~ModuleParrot */
+} /* ~ModuleParrot */
 
 bool ModuleParrot::initialize(void)
 {
@@ -164,15 +164,15 @@ bool ModuleParrot::initialize(void)
   
   return true;
   
-} /** ModuleParrot::initialize */
+} /* ModuleParrot::initialize */
 
-/**
+/*
  * Protected member functions
  */
 
 void ModuleParrot::logicIdleStateChanged(bool is_idle)
 {
-  /**
+  /*
   printf("ModuleParrot::logicIdleStateChanged: is_idle=%s fifo->empty()=%s\n",
       is_idle ? "TRUE" : "FALSE",
       fifo->empty() ? "TRUE" : "FALSE");
@@ -201,12 +201,12 @@ void ModuleParrot::logicIdleStateChanged(bool is_idle)
   {
     repeat_delay_timer.setEnable(false);
   }
-} /** ModuleParrot::logicIdleStateChanged */
+} /* ModuleParrot::logicIdleStateChanged */
 
-/**
+/*
  * Private member functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -223,9 +223,9 @@ void ModuleParrot::activateInit(void)
   fifo->clear();
   cmd_queue.clear();
   valve->setOpen(false);  
-} /** activateInit */
+} /* activateInit */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -243,9 +243,9 @@ void ModuleParrot::deactivateCleanup(void)
   valve->setOpen(true);
   fifo->clear();
   repeat_delay_timer.setEnable(false);
-} /** deactivateCleanup */
+} /* deactivateCleanup */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -264,9 +264,9 @@ bool ModuleParrot::dtmfDigitReceived(char digit, int duration)
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   return false;
 
-} /** dtmfDigitReceived */
+} /* dtmfDigitReceived */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -290,19 +290,19 @@ void ModuleParrot::dtmfCmdReceived(const string& cmd)
   {
     execCmdQueue();
   }
-} /** dtmfCmdReceived */
+} /* dtmfCmdReceived */
 
 void ModuleParrot::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   stringstream ss;
   ss << "spell_digits " << cmd;
   processEvent(ss.str());
-} /** dtmfCmdReceivedWhenIdle */
+} /* dtmfCmdReceivedWhenIdle */
 
 void ModuleParrot::squelchOpen(bool is_open)
 {
   squelch_is_open = is_open;
-} /** ModuleParrot::squelchOpen */
+} /* ModuleParrot::squelchOpen */
 
 void ModuleParrot::allSamplesWritten(void)
 {
@@ -315,13 +315,13 @@ void ModuleParrot::allSamplesWritten(void)
   valve->setOpen(false);
 
   processEvent("all_played");
-} /** ModuleParrot::allSamplesWritten */
+} /* ModuleParrot::allSamplesWritten */
 
 void ModuleParrot::onRepeatDelayExpired(void)
 {
   repeat_delay_timer.setEnable(false);
   valve->setOpen(true);
-} /** ModuleParrot::onRepeatDelayExpired */
+} /* ModuleParrot::onRepeatDelayExpired */
 
 void ModuleParrot::execCmdQueue(void)
 {
@@ -353,8 +353,8 @@ void ModuleParrot::execCmdQueue(void)
       }
     }
   }
-} /** ModuleParrot::execCmdQueue */
+} /* ModuleParrot::execCmdQueue */
 
-/**
+/*
  * This file has not been truncated
  */

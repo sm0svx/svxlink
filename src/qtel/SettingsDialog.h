@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SETTINGS_DIALOG_INCLUDED
 #define SETTINGS_DIALOG_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <QFileDialog>
 
-/**
+/*
  * Project Includes
  */
 #include <EchoLinkStationData.h>
 
-/**
+/*
  * Local Includes
  */
 #include "ui_SettingsDialogBase.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -101,9 +101,9 @@ class SettingsDialog : public QDialog, public Ui::SettingsDialog
     }
 };
 
-#endif /** SETTINGS_DIALOG_INCLUDED */
+#endif /* SETTINGS_DIALOG_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_INCLUDED
 #define SQUELCH_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -36,37 +36,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <algorithm>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncAudioSink.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -407,11 +407,11 @@ class Squelch : public sigc::trackable, public Async::AudioSink
       squelchOpen(is_open);
     }
 
-};  /** class Squelch */
+};  /* class Squelch */
 
 
-#endif /** SQUELCH_INCLUDED */
+#endif /* SQUELCH_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

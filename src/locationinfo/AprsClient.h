@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define APRS_CLIENT
 
 
-/**
+/*
  *
  * System Includes
  *
@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 
 
-/**
+/*
  *
  * Project Includes
  *
@@ -46,7 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Local Includes
  *
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Forward declarations
  *
@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Namespace
  *
@@ -70,7 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Forward declarations of classes inside of the declared namespace
  *
@@ -78,21 +78,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/**
+/*
  *
  * Defines & typedefs
  *
  */
 
 
-/**
+/*
  *
  * Exported Global Variables
  *
  */
 
 
-/**
+/*
  *
  * Class definitions
  *
@@ -109,11 +109,11 @@ class AprsClient
     virtual void update3rdState(const std::string& call, const std::string& info) = 0;
     virtual void igateMessage(const std::string& info) = 0;
 
-};  /** class AprsClient */
+};  /* class AprsClient */
 
 
-#endif /** APRS_CLIENT */
+#endif /* APRS_CLIENT */
 
-/**
+/*
  * This file has not been truncated
  */

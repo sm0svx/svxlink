@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cassert>
@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/bind.h>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
@@ -50,14 +50,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <MsgHandler.h>
 #include <EventHandler.h>
 
-/**
+/*
  * Local Includes
  */
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 #include "multirate_filter_coeff.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
@@ -65,27 +65,27 @@ using namespace Async;
 using namespace EchoLink;
 using namespace sigc;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 
@@ -226,7 +226,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   init_ok = true;
   
-} /** QsoImpl::QsoImpl */
+} /* QsoImpl::QsoImpl */
 
 QsoImpl::~QsoImpl(void)
 {
@@ -238,16 +238,16 @@ QsoImpl::~QsoImpl(void)
   delete sink_handler;
   delete idle_timer;
   delete destroy_timer;
-} /** QsoImpl::~QsoImpl */
+} /* QsoImpl::~QsoImpl */
 
 bool QsoImpl::initOk(void)
 {
   return m_qso.initOk() && init_ok;
-} /** QsoImpl::initOk */
+} /* QsoImpl::initOk */
 
 void QsoImpl::logicIdleStateChanged(bool is_idle)
 {
-  /**
+  /*
   printf("QsoImpl::logicIdleStateChanged: is_idle=%s\n",
       is_idle ? "TRUE" : "FALSE");
   */
@@ -256,7 +256,7 @@ void QsoImpl::logicIdleStateChanged(bool is_idle)
   {
     idle_timer_cnt = 0;
   }
-} /** QsoImpl::logicIdleStateChanged */
+} /* QsoImpl::logicIdleStateChanged */
 
 bool QsoImpl::sendAudioRaw(Qso::RawPacket *packet)
 {
@@ -269,7 +269,7 @@ bool QsoImpl::sendAudioRaw(Qso::RawPacket *packet)
   
   return true;
   
-} /** QsoImpl::sendAudioRaw */
+} /* QsoImpl::sendAudioRaw */
 
 bool QsoImpl::connect(void)
 {
@@ -279,7 +279,7 @@ bool QsoImpl::connect(void)
     destroy_timer = 0;
   }
   return m_qso.connect();
-} /** QsoImpl::connect */
+} /* QsoImpl::connect */
 
 bool QsoImpl::accept(void)
 {
@@ -296,7 +296,7 @@ bool QsoImpl::accept(void)
   
   return success;
   
-} /** QsoImpl::accept */
+} /* QsoImpl::accept */
 
 void QsoImpl::reject(bool perm)
 {
@@ -314,7 +314,7 @@ void QsoImpl::reject(bool perm)
     event_handler->processEvent(ss.str());
     msg_handler->end();
   }
-} /** QsoImpl::reject */
+} /* QsoImpl::reject */
 
 void QsoImpl::setListenOnly(bool enable)
 {
@@ -328,7 +328,7 @@ void QsoImpl::setListenOnly(bool enable)
   {
     m_qso.setLocalName(sysop_name);
   }
-} /** QsoImpl::setListenOnly */
+} /* QsoImpl::setListenOnly */
 
 void QsoImpl::squelchOpen(bool is_open)
 {
@@ -339,13 +339,13 @@ void QsoImpl::squelchOpen(bool is_open)
          (is_open ? "1": "0"));
     msg_handler->end();
   }
-} /** QsoImpl::squelchOpen */
+} /* QsoImpl::squelchOpen */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 void QsoImpl::allRemoteMsgsWritten(void)
@@ -354,8 +354,8 @@ void QsoImpl::allRemoteMsgsWritten(void)
   {
     disconnect();
   }
-} /** QsoImpl::allRemoteMsgsWritten */
-/**
+} /* QsoImpl::allRemoteMsgsWritten */
+/*
  *----------------------------------------------------------------------------
  * Method:    onInfoMsgReceived
  * Purpose:   Called by the EchoLink::Qso object when an info message is
@@ -377,8 +377,8 @@ void QsoImpl::onInfoMsgReceived(const string& msg)
 	 << msg << endl;
     last_info_msg = msg;
   }  
-} /** onInfoMsgReceived */
-/**
+} /* onInfoMsgReceived */
+/*
  *----------------------------------------------------------------------------
  * Method:    onChatMsgReceived
  * Purpose:   Called by the EchoLink::Qso object when a chat message is
@@ -397,8 +397,8 @@ void QsoImpl::onChatMsgReceived(const string& msg)
        << " ---" << endl
        << msg << endl;
   chatMsgReceived(this, msg);
-} /** onChatMsgReceived */
-/**
+} /* onChatMsgReceived */
+/*
  *----------------------------------------------------------------------------
  * Method:    onStateChange
  * Purpose:   Called by the EchoLink::Qso object when the connection state
@@ -454,7 +454,7 @@ void QsoImpl::onStateChange(Qso::State state)
       break;
   }
   stateChange(this, state);
-} /** onStateChange */
+} /* onStateChange */
 
 void QsoImpl::idleTimeoutCheck(Timer *t)
 {
@@ -474,14 +474,14 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
     event_handler->processEvent(string(module->name()) + "::remote_timeout");
     msg_handler->end();
   }
-} /** idleTimeoutCheck */
+} /* idleTimeoutCheck */
 
 void QsoImpl::destroyMeNow(Timer *t)
 {
   destroyMe(this);
-} /** destroyMeNow */
+} /* destroyMeNow */
 
-/**
+/*
  * This file has not been truncated
  */
 

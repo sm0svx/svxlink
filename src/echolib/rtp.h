@@ -1,4 +1,4 @@
-/**
+/*
 * rtp.h  --  RTP header file
 * RTP draft: November 1994 version
 *
@@ -7,11 +7,11 @@
 
 #include <stdint.h>
 
-/**
+/*
 * Current type value.
 */
 #define RTP_VERSION 3
-#define RTP_MAX_SDES 256   /** maximum text length for SDES */
+#define RTP_MAX_SDES 256   /* maximum text length for SDES */
 
 typedef enum {
   RTCP_SR   = 200,
