@@ -2,6 +2,6 @@
 # access the OSS audio devices without problem.
 <sound>=/dev/audio* /dev/midi* \
         /dev/mixer* /dev/sequencer* \
-        /dev/sound/** /dev/beep \
-        /dev/snd/** /dev/adsp*
+        /dev/sound/* /dev/beep \
+        /dev/snd/* /dev/adsp*
 
