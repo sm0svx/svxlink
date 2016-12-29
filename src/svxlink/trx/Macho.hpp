@@ -211,7 +211,6 @@
 
 class TestAccess;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Various macros for state and history declaration
 
@@ -227,7 +226,6 @@ class TestAccess;
 // parameter.
 #define TSUBSTATE(STATE, SUPERSTATE) \
 	struct STATE : public ::Macho::Link< STATE<typename SUPERSTATE::ANCHOR>, typename SUPERSTATE::SELF >
-
 
 // Use this macro in your class definition to give it state functionality
 // (mandatory). If you have a state box declare it BEFORE macro invocation!
@@ -270,7 +268,6 @@ public: \
 	template<class U> void setStateHistory() { LINK::template setStateHistory<U>(); } \
 	void setState(const class Alias & state) { LINK::setState(state); }
 
-
 // Use this macro to select deep history strategy.
 #define DEEPHISTORY() \
 private: \
@@ -301,7 +298,6 @@ public:
 private: \
 	virtual void _deleteBox(::Macho::_StateInstance & instance) {} \
 public:
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Everything else is put into namespace 'Macho'.
@@ -357,7 +353,6 @@ namespace Macho {
 		typedef R T;
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Superstate for template states: allows multiple numbered instances of the same
 	// template state for a single anchor state.
@@ -371,7 +366,6 @@ namespace Macho {
 		Anchor(_StateInstance & instance) : T(instance) {}
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Box for states which don't declare own Box class.
 	class _EmptyBox {
@@ -379,7 +373,6 @@ namespace Macho {
 	public:
 		static _EmptyBox theEmptyBox;
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Helper functions for box creation
@@ -427,7 +420,6 @@ namespace Macho {
 	void * _cloneBox<_EmptyBox>(void * other);
 #endif
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Essential information pointed at by state key.
 	struct _KeyData {
@@ -444,7 +436,6 @@ namespace Macho {
 		const NameFn name;
 		const ID id;
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Base class for all state classes.
@@ -566,7 +557,6 @@ namespace Macho {
 		_StateInstance & _myStateInstance;
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Base class for user defined top state (and indirectly all other states).
 	template<class T>
@@ -584,7 +574,6 @@ namespace Macho {
 
 		_MachineBase & machine();
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// This class links substate specifications to superstate specifications by
@@ -678,7 +667,6 @@ namespace Macho {
 	private:
 		_StateInstance & _myStateInstance;
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Unique identifier for state S.
@@ -804,7 +792,6 @@ namespace Macho {
 		void * myBoxPlace;	// Reused box heap memory
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// StateInstance for Root state (the real top state).
 	class _RootInstance : public _StateInstance {
@@ -841,7 +828,6 @@ namespace Macho {
 		}
 
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// StateInstance for substates (including Top ;-)
@@ -902,7 +888,6 @@ namespace Macho {
 #endif
 
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Definitions for queuable event types
@@ -1012,7 +997,6 @@ namespace Macho {
 		typename DR<P4>::T myParam4;
 	};
 
-
 	// Event with three parameters
 	template<class TOP, class R, class P1, class P2, class P3>
 	class _Event3 : public IEvent<TOP> {
@@ -1037,7 +1021,6 @@ namespace Macho {
 		typename DR<P2>::T myParam2;
 		typename DR<P3>::T myParam3;
 	};
-
 
 	// Event with two parameters
 	template<class TOP, class R, class P1, class P2>
@@ -1084,7 +1067,6 @@ namespace Macho {
 		typename DR<P1>::T myParam1;
 	};
 
-
 	// Event with no parameters
 	template<class TOP, class R>
 	class _Event0 : public IEvent<TOP> {
@@ -1103,7 +1085,6 @@ namespace Macho {
 
 		Signature myHandler;
 	};
-
 
 	// Event creating functions using type inference
 	template<class P1, class P2, class P3, class P4, class P5, class P6, class R, class TOP>
@@ -1144,7 +1125,6 @@ namespace Macho {
 	}
 
 } // namespace Macho
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // MSVC++ 8.0 does not handle qualified member template friends:
@@ -1190,7 +1170,6 @@ public:
 
 };
 
-
 namespace Macho {
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -1214,7 +1193,6 @@ namespace Macho {
 		virtual void execute(_StateInstance & instance) = 0;
 	};
 
-
 	// Base class for Singleton initializers.
 	class _StaticInitializer : public _Initializer {
 		// Copy of Singleton is Singleton.
@@ -1223,7 +1201,6 @@ namespace Macho {
 		// Singletons are never destroyed.
 		virtual void destroy() {}
 	};
-
 
 	// Default initializer: provides no parameters, calls state's 'init' method
 	// only.
@@ -1234,7 +1211,6 @@ namespace Macho {
 		}
 	};
 
-
 	// History initializer: provides no parameters, performs transition to
 	// history of state if available.
 	class _HistoryInitializer : public _StaticInitializer {
@@ -1243,7 +1219,6 @@ namespace Macho {
 			instance.init(true);
 		}
 	};
-
 
 	// Special initializer: Helps alias impersonate as history state of given state.
 	class _AdaptingInitializer : public _Initializer {
@@ -1264,7 +1239,6 @@ namespace Macho {
 		const _MachineBase & myMachine;
 	};
 
-
 	// Initializers with one to six parameters.
 	template<class S, class P1>
 	class _Initializer1 : public _Initializer {
@@ -1283,7 +1257,6 @@ namespace Macho {
 
 		P1 myParam1;
 	};
-
 
 	template<class S, class P1, class P2>
 	class _Initializer2 : public _Initializer {
@@ -1304,7 +1277,6 @@ namespace Macho {
 		P1 myParam1;
 		P2 myParam2;
 	};
-
 
 	template<class S, class P1, class P2, class P3>
 	class _Initializer3 : public _Initializer {
@@ -1327,7 +1299,6 @@ namespace Macho {
 		P2 myParam2;
 		P3 myParam3;
 	};
-
 
 	template<class S, class P1, class P2, class P3, class P4>
 	class _Initializer4 : public _Initializer {
@@ -1352,7 +1323,6 @@ namespace Macho {
 		P3 myParam3;
 		P4 myParam4;
 	};
-
 
 	template<class S, class P1, class P2, class P3, class P4, class P5>
 	class _Initializer5 : public _Initializer {
@@ -1379,7 +1349,6 @@ namespace Macho {
 		P4 myParam4;
 		P5 myParam5;
 	};
-
 
 	template<class S, class P1, class P2, class P3, class P4, class P5, class P6>
 	class _Initializer6 : public _Initializer {
@@ -1409,12 +1378,10 @@ namespace Macho {
 		P6 myParam6;
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Singleton initializers.
 	static _DefaultInitializer _theDefaultInitializer;
 	static _HistoryInitializer _theHistoryInitializer;
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Base class for Machine objects.
@@ -1529,7 +1496,6 @@ namespace Macho {
 		// Array of StateInstance objects.
 		_StateInstance ** myInstances;
 	};
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// This is the base class for state aliases. A state alias represents a
@@ -1664,7 +1630,6 @@ namespace Macho {
 		return Alias(S::key(), new _AdaptingInitializer(machine));
 	}
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Snapshot of a machine object.
 	// Saves the state of a machine object at a specific point in time to be restored
@@ -1690,7 +1655,6 @@ namespace Macho {
 		Snapshot & operator=(const Snapshot<TOP> & other);
 	};
 #endif
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// A Machine object maintains a current state.
@@ -1843,7 +1807,6 @@ namespace Macho {
 	template<class S>
 	const ID StateID<S>::value = Machine<typename S::TOP>::theStateCount++;
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Implementation for StateSpecification
 
@@ -1923,7 +1886,6 @@ namespace Macho {
 		m.setPendingState(instance, &_theDefaultInitializer);
 	}
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Implementation for TopBase
 	template<class T>
@@ -1937,7 +1899,6 @@ namespace Macho {
 	inline _MachineBase & TopBase<T>::machine() {
 		return this->_myStateInstance.machine();
 	}
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Implementation for Link
@@ -2020,7 +1981,6 @@ namespace Macho {
 		return Alias(key());
 	}
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Implementation for Snapshot
 #ifdef MACHO_SNAPSHOTS
@@ -2038,6 +1998,5 @@ namespace Macho {
 #endif
 
 } // namespace Macho
-
 
 #endif // __MACHO_HPP__

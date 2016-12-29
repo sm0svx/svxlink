@@ -23,88 +23,50 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_ENCODER_GSM_INCLUDED
 #define ASYNC_AUDIO_ENCODER_GSM_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 extern "C" {
 #include <gsm.h>
 }
 
-
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioEncoder.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	An audio encoder that encodes to GSM
 @author Tobias Blomberg / SM0SVX
@@ -125,20 +87,19 @@ class AudioEncoderGsm : public AudioEncoder
      * @brief 	Destructor
      */
     virtual ~AudioEncoderGsm(void);
-  
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "GSM"; }
-  
+
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    
-    
+
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -151,8 +112,7 @@ class AudioEncoderGsm : public AudioEncoder
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
-    
-    
+
   protected:
     
   private:
@@ -169,12 +129,9 @@ class AudioEncoderGsm : public AudioEncoder
     
 };  /* class AudioEncoderGsm */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_ENCODER_GSM_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

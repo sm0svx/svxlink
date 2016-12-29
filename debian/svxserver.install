@@ -1,0 +1,4 @@
+lib/systemd/system/svxserver.service
+usr/bin/svxserver
+etc/svxlink/svxserver.conf
+

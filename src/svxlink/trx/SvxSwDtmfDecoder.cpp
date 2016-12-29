@@ -24,85 +24,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/****************************************************************************
- *
- * System Includes
- *
- ****************************************************************************/
-
+/*
+ * * System Includes
+ */
 #include <iostream>
 #include <iomanip>
 #include <cmath>
 #include <cstring>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncSigCAudioSink.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SvxSwDtmfDecoder.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 namespace {
   static const char digit_map[4][4] =
   {
@@ -116,13 +80,9 @@ namespace {
   static const float col_fqs[] = { 1209, 1336, 1477, 1633 };
 };
 
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0),
     row(8), col(8), block_size(0), block_pos(0), det_cnt(0), undet_cnt(0),
@@ -162,7 +122,6 @@ SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
   win_pwr_comp /= BLOCK_SIZE;
   win_pwr_comp = 1.0f / win_pwr_comp;
 } /* SvxSwDtmfDecoder::SvxSwDtmfDecoder */
-
 
 bool SvxSwDtmfDecoder::initialize(void)
 {
@@ -206,7 +165,6 @@ bool SvxSwDtmfDecoder::initialize(void)
   
 } /* SvxSwDtmfDecoder::initialize */
 
-
 int SvxSwDtmfDecoder::writeSamples(const float *buf, int len)
 {
   for (int i = 0; i < len; i++)
@@ -227,20 +185,13 @@ int SvxSwDtmfDecoder::writeSamples(const float *buf, int len)
   return len;
 } /* SvxSwDtmfDecoder::writeSamples */
 
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void SvxSwDtmfDecoder::processBlock(void)
 {
     // Reset all Goertzel objects
@@ -577,14 +528,12 @@ void SvxSwDtmfDecoder::processBlock(void)
   }
 } /* SvxSwDtmfDecoder::processBlock */
 
-
 void SvxSwDtmfDecoder::DtmfGoertzel::initialize(float freq)
 {
   Goertzel::initialize(freq, INTERNAL_SAMPLE_RATE);
   m_freq = freq;
   //m_max_fqdiff = m_freq * MAX_FQ_ERROR;
 } /* SvxSwDtmfDecoder::DtmfGoertzel::initialize */
-
 
 /*
  * This file has not been truncated

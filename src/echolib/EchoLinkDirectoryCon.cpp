@@ -24,95 +24,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <errno.h>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "EchoLinkProxy.h"
 #include "EchoLinkDirectoryCon.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 DirectoryCon::DirectoryCon(const vector<string> &servers,
                            const IpAddress &bind_ip)
   : servers(servers), client(0), last_disconnect_reason(0), is_ready(false)
@@ -137,14 +93,12 @@ DirectoryCon::DirectoryCon(const vector<string> &servers,
   }
 } /* DirectoryCon::DirectoryCon */
 
-
 DirectoryCon::~DirectoryCon(void)
 {
   disconnect();
   delete client;
   client = 0;
 } /* DirectoryCon::~DirectoryCon */
-
 
 void DirectoryCon::connect(void)
 {
@@ -157,7 +111,6 @@ void DirectoryCon::connect(void)
     doConnect();
   }
 } /* DirectoryCon::connect */
-
 
 void DirectoryCon::disconnect(void)
 {
@@ -190,7 +143,6 @@ void DirectoryCon::disconnect(void)
   }
 } /* DirectoryCon::disconnect */
 
-
 int DirectoryCon::write(const void *data, unsigned len)
 {
   Proxy *proxy = Proxy::instance();
@@ -212,7 +164,6 @@ int DirectoryCon::write(const void *data, unsigned len)
   }
 } /* DirectoryCon::write */
 
-
 bool DirectoryCon::isIdle(void) const
 {
   Proxy *proxy = Proxy::instance();
@@ -226,22 +177,13 @@ bool DirectoryCon::isIdle(void) const
   }
 } /* DirectoryCon::isIdle */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void DirectoryCon::doDnsLookup(void)
 {
   vector<string>::const_iterator it;
@@ -295,7 +237,6 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
   doConnect();
 } /* DirectoryCon::onDnsLookupResultsReady */
 
-
 void DirectoryCon::doConnect(void)
 {
   Proxy *proxy = Proxy::instance();
@@ -318,7 +259,6 @@ void DirectoryCon::doConnect(void)
   }
 } /* DirectoryCon::doConnect */
 
-
 void DirectoryCon::onDisconnected(TcpConnection *con,
                                   TcpClient::DisconnectReason reason)
 {
@@ -336,14 +276,11 @@ int DirectoryCon::onDataReceived(TcpConnection *con, void *data, int len)
   return dataReceived(data, static_cast<unsigned>(len));
 } /* DirectoryCon::onDataReceived */
 
-
 void DirectoryCon::proxyReady(bool is_ready)
 {
   this->is_ready = is_ready;
   ready(is_ready);
 } /* DirectoryCon::proxyReady */
-
-
 
 /*
  * This file has not been truncated

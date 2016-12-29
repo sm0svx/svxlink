@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -46,87 +41,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncExec.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 Exec::ExecMap     Exec::execs;
 int               Exec::sigchld_pipe[2] = {-1, -1};
 Async::FdWatch    *Exec::sigchld_watch = 0;
 struct sigaction  Exec::old_sigact;
 
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 Exec::Exec(const std::string &cmd)
   : pid(-1), stdout_watch(0), stderr_watch(0), stdin_fd(-1),
     status(0), nice_value(0), timeout_timer(0), pending_term(false)
@@ -166,7 +123,6 @@ Exec::Exec(const std::string &cmd)
   }
 } /* Exec::Exec */
 
-
 Exec::~Exec(void)
 {
   ExecMap::iterator it = execs.find(pid);
@@ -195,7 +151,6 @@ Exec::~Exec(void)
   delete timeout_timer;
 } /* Exec::~Exec */
 
-
 void Exec::setCommandLine(const std::string &cmd)
 {
   args.clear();
@@ -207,12 +162,10 @@ void Exec::setCommandLine(const std::string &cmd)
   }
 } /* Exec::setCommandLine */
 
-
 void Exec::appendArgument(const std::string &arg)
 {
   args.push_back(arg);
 } /* Exec::appendArgument */
-
 
 bool Exec::nice(int inc)
 {
@@ -229,7 +182,6 @@ bool Exec::nice(int inc)
   return true;
 } /* Exec::nice */
 
-
 void Exec::setTimeout(int time_s)
 {
   delete timeout_timer;
@@ -237,7 +189,6 @@ void Exec::setTimeout(int time_s)
   timeout_timer->expired.connect(hide(mem_fun(*this, &Exec::handleTimeout)));
   timeout_timer->setEnable(pid > 0);
 } /* Exec::setTimeout */
-
 
 bool Exec::run(void)
 {
@@ -345,7 +296,6 @@ bool Exec::run(void)
   exit(255);
 } /* Exec::run */
 
-
 bool Exec::writeStdin(const char *buf, int cnt)
 {
   int ret = write(stdin_fd, buf, cnt);
@@ -358,7 +308,6 @@ bool Exec::writeStdin(const char *buf, int cnt)
   return true;
 } /* Exec::writeStdin */
 
-
 bool Exec::writeStdin(const std::string &str)
 {
   if (str.empty())
@@ -367,7 +316,6 @@ bool Exec::writeStdin(const std::string &str)
   }
   return writeStdin(str.c_str(), str.size());
 } /* Exec::writeStdin */
-
 
 bool Exec::kill(int sig)
 {
@@ -385,52 +333,38 @@ bool Exec::kill(int sig)
   return true;
 } /* Exec::kill */
 
-
 bool Exec::closeStdin(void)
 {
   return (close(stdin_fd) == 0);
 } /* Exec::closeStdin */
-
 
 bool Exec::ifExited(void) const
 {
   return WIFEXITED(status);
 } /* Exec::ifExited */
 
-
 bool Exec::ifSignaled(void) const
 {
   return WIFSIGNALED(status);
 } /* Exec::ifSignaled */
-
 
 int Exec::exitStatus(void) const
 {
   return WEXITSTATUS(status);
 } /* Exec::exitStatus */
 
-
 int Exec::termSig(void) const
 {
   return WTERMSIG(status);
 } /* Exec::termSig */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void Exec::stdoutActivity(Async::FdWatch *w)
 {
   char buf[4096];
@@ -450,7 +384,6 @@ void Exec::stdoutActivity(Async::FdWatch *w)
   buf[cnt] = '\0';
   stdoutData(buf, cnt);
 } /* Exec::stdoutActivity */
-
 
 void Exec::stderrActivity(Async::FdWatch *w)
 {
@@ -472,7 +405,6 @@ void Exec::stderrActivity(Async::FdWatch *w)
   stderrData(buf, cnt);
 } /* Exec::stderrActivity */
 
-
 void Exec::handleSigChld(int signal_number, siginfo_t *info, void *context)
 {
     // Tell the SIGCHLD handler that we have received a signal
@@ -492,7 +424,6 @@ void Exec::handleSigChld(int signal_number, siginfo_t *info, void *context)
   }
 } /* Exec::handleSigChld */
 
-
 void Exec::subprocessExited(void)
 {
   execs.erase(pid);
@@ -501,7 +432,6 @@ void Exec::subprocessExited(void)
   timeout_timer = 0;
   exited();
 } /* Exec::subprocessExited */
-
 
 void Exec::handleTimeout(void)
 {
@@ -521,7 +451,6 @@ void Exec::handleTimeout(void)
     kill(SIGKILL);
   }
 } /* Exec::handleTimeout */
-
 
 void Exec::sigchldReceived(void)
 {
@@ -562,8 +491,6 @@ void Exec::sigchldReceived(void)
     it = next;
   }
 } /* Exec::sigchldReceived */
-
-
 
 /*
  * This file has not been truncated

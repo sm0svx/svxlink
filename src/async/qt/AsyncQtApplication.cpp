@@ -27,15 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <QSocketNotifier>
@@ -46,168 +40,76 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iostream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncQtDnsLookupWorker.h"
 #include "AsyncFdWatch.h"
 #include "AsyncTimer.h"
 #include "AsyncQtTimer.h"
 #include "AsyncQtApplication.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Local class definitions
  */
+
+/*
+ * Prototypes
+ */
+
+/*
+ * Exported Global Variables
+ */
+
+/*
+ * Local Global Variables
+ */
+
+/*
+ * Public member functions
+ */
+
 QtApplication::QtApplication(int &argc, char **argv)
   : QApplication(argc, argv)
 {
   
 } /* QtApplication::QtApplication */
 
-
 QtApplication::~QtApplication(void)
 {
   
 } /* QtApplication::~QtApplication */
-
 
 void QtApplication::exec(void)
 {
   QApplication::exec();
 } /* QtApplication::exec */
 
-
 void QtApplication::quit(void)
 {
   QApplication::quit();
 } /* QtApplication::quit */
 
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Protected member functions
  */
 
-
-
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-
 /*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
+ * Private member functions
  */
 void QtApplication::addFdWatch(FdWatch *fd_watch)
 {
@@ -231,7 +133,6 @@ void QtApplication::addFdWatch(FdWatch *fd_watch)
   }  
 } /* QtApplication::addFdWatch */
 
-
 void QtApplication::delFdWatch(FdWatch *fd_watch)
 {
   FdWatchMap::iterator iter;
@@ -253,9 +154,7 @@ void QtApplication::delFdWatch(FdWatch *fd_watch)
       break;
   }
   
-
 } /* QtApplication::delFdWatch */
-
 
 void QtApplication::rdFdActivity(int socket)
 {
@@ -265,7 +164,6 @@ void QtApplication::rdFdActivity(int socket)
   iter->second.first->activity(iter->second.first);
 } /* QtApplication::rdFdActivity */
 
-
 void QtApplication::wrFdActivity(int socket)
 {
   FdWatchMap::iterator iter;
@@ -274,13 +172,11 @@ void QtApplication::wrFdActivity(int socket)
   iter->second.first->activity(iter->second.first);
 } /* QtApplication::wrFdActivity */
 
-
 void QtApplication::addTimer(Timer *timer)
 {
   AsyncQtTimer *t = new AsyncQtTimer(timer);
   timer_map[timer] = t;  
 } /* QtApplication::addTimer */
-
 
 void QtApplication::delTimer(Timer *timer)
 {
@@ -291,12 +187,10 @@ void QtApplication::delTimer(Timer *timer)
   timer_map.erase(iter);
 } /* QtApplication::delTimer */
 
-
 DnsLookupWorker *QtApplication::newDnsLookupWorker(const string& label)
 {
   return new QtDnsLookupWorker(label);
 } /* QtApplication::newDnsLookupWorker */
-
 
 /*
  * This file has not been truncated

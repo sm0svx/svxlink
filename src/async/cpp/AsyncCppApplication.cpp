@@ -27,15 +27,9 @@
  * \endverbatim
  */
 
-
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/select.h>
 #include <signal.h>
 #include <unistd.h>
@@ -46,44 +40,27 @@
 #include <cassert>
 #include <algorithm>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncCppDnsLookupWorker.h"
 #include "AsyncFdWatch.h"
 #include "AsyncTimer.h"
 #include "AsyncCppApplication.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
 # define clock_timeradd(a, b, result)                                         \
   do {                                                                        \
@@ -106,60 +83,25 @@ using namespace Async;
     }                                                                         \
   } while (0)
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local Global Variables
- *
- ****************************************************************************/
-
-int CppApplication::sighandler_pipe[2];
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Prototypes
+ */
+
+/*
+ * Exported Global Variables
+ */
+
+/*
+ * Local Global Variables
+ */
+int CppApplication::sighandler_pipe[2];
+
+/*
+ * Public member functions
  */
 CppApplication::CppApplication(void)
   : do_quit(false), max_desc(0), unix_signal_recv(-1), unix_signal_recv_cnt(0)
@@ -169,12 +111,10 @@ CppApplication::CppApplication(void)
   sighandler_pipe[0] = sighandler_pipe[1] = -1;
 } /* CppApplication::CppApplication */
 
-
 CppApplication::~CppApplication(void)
 {
   
 } /* CppApplication::~CppApplication */
-
 
 void CppApplication::exec(void)
 {
@@ -325,12 +265,10 @@ void CppApplication::exec(void)
   sighandler_pipe[0] = sighandler_pipe[1] = -1;
 } /* CppApplication::exec */
 
-
 void CppApplication::quit(void)
 {
   do_quit = true;
 } /* CppApplication::quit */
-
 
 void CppApplication::catchUnixSignal(int signum)
 {
@@ -362,7 +300,6 @@ void CppApplication::catchUnixSignal(int signum)
   }
 } /* CppApplication::catchUnixSignal */
 
-
 void CppApplication::uncatchUnixSignal(int signum)
 {
   UnixSignalMap::iterator it = unix_signals.find(signum);
@@ -378,44 +315,18 @@ void CppApplication::uncatchUnixSignal(int signum)
 } /* CppApplication::uncatchUnixSignal */
 
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Protected member functions
  */
 
-
-
-
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void CppApplication::unixSignalHandler(int signum)
 {
   int cnt = write(sighandler_pipe[1], &signum, sizeof(signum));
   assert(cnt == sizeof(signum));
 } /* CppApplication::unixSignalHandler */
-
 
 void CppApplication::addFdWatch(FdWatch *fd_watch)
 {
@@ -448,7 +359,6 @@ void CppApplication::addFdWatch(FdWatch *fd_watch)
   (*watch_map)[fd] = fd_watch;
   
 } /* CppApplication::addFdWatch */
-
 
 void CppApplication::delFdWatch(FdWatch *fd_watch)
 {
@@ -499,14 +409,12 @@ void CppApplication::delFdWatch(FdWatch *fd_watch)
   }
 } /* CppApplication::delFdWatch */
 
-
 void CppApplication::addTimer(Timer *timer)
 {
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   addTimerP(timer, current);
 } /* CppApplication::addTimer */
-
 
 void CppApplication::addTimerP(Timer *timer, const struct timespec& current)
 {
@@ -520,7 +428,6 @@ void CppApplication::addTimerP(Timer *timer, const struct timespec& current)
   
   timer_map.insert(pair<struct timespec, Timer *>(expiration, timer));
 } /* CppApplication::addTimerP */
-
 
 void CppApplication::delTimer(Timer *timer)
 {
@@ -536,12 +443,10 @@ void CppApplication::delTimer(Timer *timer)
   }
 } /* CppApplication::delTimer */
 
-
 DnsLookupWorker *CppApplication::newDnsLookupWorker(const string& label)
 {
   return new CppDnsLookupWorker(label);
 } /* CppApplication::newDnsLookupWorker */
-
 
 void CppApplication::handleUnixSignal(void)
 {
@@ -558,8 +463,6 @@ void CppApplication::handleUnixSignal(void)
     unix_signal_recv = -1;
   }
 } /* CppApplication::handleUnixSignal */
-
-
 
 /*
  * This file has not been truncated

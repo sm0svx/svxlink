@@ -128,7 +128,6 @@
 //	Not A Lawyer".
 //
 
-
 #ifdef HUGE_VAL
  #define INF HUGE_VAL
 #else
@@ -136,7 +135,6 @@
 #endif
 
 #define TWOPI (2*M_PI)
-
 
 //
 //	Complex square root: aa= aa^0.5
@@ -204,7 +202,6 @@ static int n_zer;		// Same for zeros ...
 static double zer[MAXPZ];
 static char zertyp[MAXPZ];	
 
-
 //
 //	Pre-warp a frequency
 //
@@ -213,7 +210,6 @@ STATIC_INLINE double
 prewarp(double val) {
    return tan(val * M_PI) / M_PI;
 }
-
 
 //
 //	Bessel poles; final one is a real value for odd numbers of
@@ -356,7 +352,6 @@ chebyshev(int order, double ripple) {
       }
    }
 }
-
 
 //
 //	Adjust raw poles to LP filter

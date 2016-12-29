@@ -23,106 +23,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef DTMF_DECODER_INCLUDED
 #define DTMF_DECODER_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <string>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSink.h>
 #include <AsyncConfig.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
-/*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
  */
 
-
 /*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
-    
-
-
-/****************************************************************************
- *
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
  * @brief   This is the base class for implementing a DTMF decoder
  * @author  Tobias Blomberg, SM0SVX
@@ -196,8 +134,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * @param 	duration  The time that the digit was active
      */
     sigc::signal<void, char, int> digitDeactivated;
-    
-    
+
   protected:
     /**
      * @brief 	Constructor
@@ -211,8 +148,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     
     Async::Config &cfg(void) { return m_cfg; }
     const std::string &name(void) const { return m_name; }
-    
-    
+
   private:
     static const unsigned DEFAULT_HANGTIME = 0;
     
@@ -222,12 +158,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     
 };  /* class DtmfDecoder */
 
-
-//} /* namespace */
-
 #endif /* DTMF_DECODER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

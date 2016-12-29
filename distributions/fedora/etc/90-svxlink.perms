@@ -1,7 +1,0 @@
-# Redefine the sound class to not include /dev/dsp* so that SvxLink can
-# access the OSS audio devices without problem.
-<sound>=/dev/audio* /dev/midi* \
-        /dev/mixer* /dev/sequencer* \
-        /dev/sound/* /dev/beep \
-        /dev/snd/* /dev/adsp*
-

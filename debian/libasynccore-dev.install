@@ -1,0 +1,13 @@
+usr/lib/*/libasynccore.so
+usr/lib/*/libasynccore.a
+usr/include/svxlink/AsyncApplication.h
+usr/include/svxlink/AsyncConfig.h
+usr/include/svxlink/AsyncDnsLookup.h
+usr/include/svxlink/AsyncFdWatch.h
+usr/include/svxlink/AsyncIpAddress.h
+usr/include/svxlink/AsyncSerial.h
+usr/include/svxlink/AsyncTcpClient.h
+usr/include/svxlink/AsyncTcpConnection.h
+usr/include/svxlink/AsyncTcpServer.h
+usr/include/svxlink/AsyncTimer.h
+usr/include/svxlink/AsyncUdpSocket.h

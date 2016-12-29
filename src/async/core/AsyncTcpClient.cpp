@@ -27,15 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -46,85 +40,46 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstring>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncFdWatch.h"
 #include "AsyncDnsLookup.h"
 #include "AsyncTcpClient.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 TcpClient::TcpClient(size_t recv_buf_len)
   : TcpConnection(recv_buf_len), dns(0), sock(-1), wr_watch(0)
@@ -132,7 +87,6 @@ TcpClient::TcpClient(size_t recv_buf_len)
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
 } /* TcpClient::TcpClient */
-
 
 TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
     size_t recv_buf_len)
@@ -143,7 +97,6 @@ TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
   wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
   setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
-
 
 TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
     size_t recv_buf_len)
@@ -156,7 +109,6 @@ TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
   setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
 
-
 TcpClient::~TcpClient(void)
 {
   disconnect();
@@ -164,12 +116,10 @@ TcpClient::~TcpClient(void)
   wr_watch = 0;
 } /* TcpClient::~TcpClient */
 
-
 void TcpClient::bind(const IpAddress& bind_ip)
 {
   this->bind_ip = bind_ip;
 } /* TcpClient::bind */
-
 
 void TcpClient::connect(const string &remote_host, uint16_t remote_port)
 {
@@ -178,7 +128,6 @@ void TcpClient::connect(const string &remote_host, uint16_t remote_port)
   connect();
 } /* TcpClient::connect */
 
-
 void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
 {
   setRemoteAddr(remote_ip);
@@ -186,7 +135,6 @@ void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
   setRemotePort(remote_port);
   connect();
 } /* TcpClient::connect */
-
 
 void TcpClient::connect(void)
 {
@@ -208,7 +156,6 @@ void TcpClient::connect(void)
   }
 } /* TcpClient::connect */
 
-
 void TcpClient::disconnect(void)
 {
   TcpConnection::disconnect();
@@ -227,50 +174,12 @@ void TcpClient::disconnect(void)
 } /* TcpClient::disconnect */
 
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Protected member functions
  */
 
-
-
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-
 /*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
+ * Private member functions
  */
 void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
 {
@@ -295,7 +204,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 void TcpClient::connectToRemote(void)
 {
-  assert(sock == -1);
+  if (sock != -1) ::close(sock);
   
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
@@ -336,7 +245,7 @@ void TcpClient::connectToRemote(void)
       return;
     }
   }
-    
+
     /* Connect to the server */
   int result = ::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
       	      	       sizeof(addr));
@@ -366,7 +275,6 @@ void TcpClient::connectToRemote(void)
 
 } /* TcpClient::connectToRemote */
 
-
 void TcpClient::connectHandler(FdWatch *watch)
 {
   wr_watch->setEnabled(false);
@@ -395,8 +303,6 @@ void TcpClient::connectHandler(FdWatch *watch)
   connected();
   
 } /* TcpClient::connectHandler */
-
-
 
 /*
  * This file has not been truncated

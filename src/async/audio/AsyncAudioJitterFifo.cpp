@@ -26,97 +26,53 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioJitterFifo.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 static const unsigned  MAX_WRITE_SIZE = 800;
 
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
-
+ */
 AudioJitterFifo::AudioJitterFifo(unsigned fifo_size)
   : fifo_size(fifo_size), head(0), tail(0),
     output_stopped(false), prebuf(true), is_flushing(false)
@@ -125,12 +81,10 @@ AudioJitterFifo::AudioJitterFifo(unsigned fifo_size)
   fifo = new float[fifo_size];
 } /* AudioJitterFifo */
 
-
 AudioJitterFifo::~AudioJitterFifo(void)
 {
   delete [] fifo;
 } /* ~AudioJitterFifo */
-
 
 void AudioJitterFifo::setSize(unsigned new_size)
 {
@@ -143,7 +97,6 @@ void AudioJitterFifo::setSize(unsigned new_size)
   }
   clear();
 } /* AudioJitterFifo::setSize */
-
 
 unsigned AudioJitterFifo::samplesInFifo(void) const
 {
@@ -160,7 +113,6 @@ unsigned AudioJitterFifo::samplesInFifo(void) const
   return samples_in_buffer;
 
 } /* AudioJitterFifo::samplesInFifo */
-
 
 void AudioJitterFifo::clear(void)
 {
@@ -179,7 +131,6 @@ void AudioJitterFifo::clear(void)
     }
   }
 } /* AudioJitterFifo::clear */
-
 
 int AudioJitterFifo::writeSamples(const float *samples, int count)
 {
@@ -214,7 +165,6 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
   
 } /* writeSamples */
 
-
 void AudioJitterFifo::flushSamples(void)
 {
   is_flushing = true;
@@ -223,7 +173,6 @@ void AudioJitterFifo::flushSamples(void)
     sinkFlushSamples();
   }
 } /* AudioJitterFifo::flushSamples */
-
 
 void AudioJitterFifo::resumeOutput(void)
 {
@@ -234,15 +183,9 @@ void AudioJitterFifo::resumeOutput(void)
   }
 } /* resumeOutput */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
-
+ */
 
 void AudioJitterFifo::allSamplesFlushed(void)
 {
@@ -257,14 +200,9 @@ void AudioJitterFifo::allSamplesFlushed(void)
   }
 } /* AudioJitterFifo::allSamplesFlushed */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 void AudioJitterFifo::writeSamplesFromFifo(void)
 {
@@ -317,8 +255,6 @@ void AudioJitterFifo::writeSamplesFromFifo(void)
   }
   
 } /* writeSamplesFromFifo */
-
-
 
 /*
  * This file has not been truncated

@@ -23,91 +23,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SIG_LEV_DET_DDR_INCLUDED
 #define SIG_LEV_DET_DDR_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <vector>
 #include <deque>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SigLevDet.h"
 #include "RtlTcp.h"
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
   class AudioFilter;
 };
 
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A signal level detector measuring power levels using a DDR
 @author Tobias Blomberg / SM0SVX
@@ -182,7 +143,6 @@ class SigLevDetDdr : public SigLevDet
     virtual int writeSamples(const float *samples, int count) { return count; }
     virtual void flushSamples(void) {}
 
-
   private:
     static const unsigned BLOCK_LENGTH    = 10;  // 10ms
 
@@ -204,12 +164,7 @@ class SigLevDetDdr : public SigLevDet
     
 };  /* class SigLevDetDdr */
 
-
-//} /* namespace */
-
 #endif /* SIG_LEV_DET_DDR_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

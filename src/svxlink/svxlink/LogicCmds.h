@@ -23,92 +23,53 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef LOGIC_CMDS_INCLUDED
 #define LOGIC_CMDS_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <common.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "CmdParser.h"
 #include "Logic.h"
 #include "Module.h"
 #include "QsoRecorder.h"
 #include "LinkManager.h"
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	The module activation command
 @author Tobias Blomberg
@@ -163,7 +124,6 @@ class ModuleActivateCmd : public Command
     Logic *logic;
 
 };  /* class ModuleActivateCmd */
-
 
 /**
 @brief	The logic linking activation command
@@ -233,7 +193,6 @@ class LinkCmd : public Command
     LinkManager::LinkRef  link;
 
 };  /* class LinkCmd */
-
 
 /**
 @brief	The QSO recorder command
@@ -315,7 +274,6 @@ class QsoRecorderCmd : public Command
 
 };  /* class QsoRecorderCmd */
 
-
 /**
 @brief	The change language command
 @author Tobias Blomberg
@@ -353,7 +311,6 @@ class ChangeLangCmd : public Command
     Logic       *logic;
 
 };
-
 
 /**
 @brief	The online command
@@ -401,12 +358,7 @@ class OnlineCmd : public Command
 
 };
 
-
-//} /* namespace */
-
 #endif /* LOGIC_CMDS_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

@@ -9,7 +9,6 @@
 #
 namespace eval Logic {
 
-
 #
 # A variable used to store a timestamp for the last identification.
 #
@@ -27,7 +26,6 @@ variable min_time_between_ident 120;
 #
 variable short_ident_interval 0;
 variable long_ident_interval 0;
-
 
 #
 # The ident_only_after_tx variable indicates if identification is only to
@@ -56,7 +54,6 @@ proc startup {} {
   #send_short_ident
 }
 
-
 #
 # Executed when a specified module could not be found
 #   module_id - The numeric ID of the module
@@ -65,7 +62,6 @@ proc no_such_module {module_id} {
   playMsg "Core" "no_such_module";
   playNumber $module_id;
 }
-
 
 #
 # Executed when a manual identification is initiated with the * DTMF code
@@ -120,7 +116,6 @@ proc manual_identification {} {
   playSilence 250;
 }
 
-
 #
 # Executed when a short identification should be sent
 #   hour    - The hour on which this identification occur
@@ -136,7 +131,6 @@ proc send_short_ident {{hour -1} {minute -1}} {
   }
   playSilence 500;
 }
-
 
 #
 # Executed when a long identification (e.g. hourly) should be sent
@@ -174,7 +168,6 @@ proc send_long_ident {hour minute} {
   playSilence 500;
 }
 
-
 #
 # Executed when the squelch just have closed and the RGR_SOUND_DELAY timer has
 # expired.
@@ -192,14 +185,12 @@ proc send_rgr_sound {} {
   playSilence 100;
 }
 
-
 #
 # Executed when an empty macro command (i.e. D#) has been entered.
 #
 proc macro_empty {} {
   playMsg "Core" "operation_failed";
 }
-
 
 #
 # Executed when an entered macro command could not be found
@@ -208,14 +199,12 @@ proc macro_not_found {} {
   playMsg "Core" "operation_failed";
 }
 
-
 #
 # Executed when a macro syntax error occurs (configuration error).
 #
 proc macro_syntax_error {} {
   playMsg "Core" "operation_failed";
 }
-
 
 #
 # Executed when the specified module in a macro command is not found
@@ -225,7 +214,6 @@ proc macro_module_not_found {} {
   playMsg "Core" "operation_failed";
 }
 
-
 #
 # Executed when the activation of the module specified in the macro command
 # failed.
@@ -233,7 +221,6 @@ proc macro_module_not_found {} {
 proc macro_module_activation_failed {} {
   playMsg "Core" "operation_failed";
 }
-
 
 #
 # Executed when a macro command is executed that requires a module to
@@ -247,7 +234,6 @@ proc macro_another_active_module {} {
   playMsg $active_module "name";
 }
 
-
 #
 # Executed when an unknown DTMF command is entered
 #   cmd - The command string
@@ -257,7 +243,6 @@ proc unknown_command {cmd} {
   playMsg "Core" "unknown_command";
 }
 
-
 #
 # Executed when an entered DTMF command failed
 #   cmd - The command string
@@ -266,7 +251,6 @@ proc command_failed {cmd} {
   spellWord $cmd;
   playMsg "Core" "operation_failed";
 }
-
 
 #
 # Executed when a link to another logic core is activated.
@@ -279,7 +263,6 @@ proc activating_link {name} {
   }
 }
 
-
 #
 # Executed when a link to another logic core is deactivated.
 #   name  - The name of the link
@@ -290,7 +273,6 @@ proc deactivating_link {name} {
     spellWord $name;
   }
 }
-
 
 #
 # Executed when trying to deactivate a link to another logic core but the
@@ -304,7 +286,6 @@ proc link_not_active {name} {
   }
 }
 
-
 #
 # Executed when trying to activate a link to another logic core but the
 # link is already active.
@@ -316,7 +297,6 @@ proc link_already_active {name} {
     spellWord $name;
   }
 }
-
 
 #
 # Executed each time the transmitter is turned on or off
@@ -331,7 +311,6 @@ proc transmit {is_on} {
   }
 }
 
-
 #
 # Executed each time the squelch is opened or closed
 #   rx_id   - The ID of the RX that the squelch opened/closed on
@@ -342,7 +321,6 @@ proc squelch_open {rx_id is_open} {
   #puts "The squelch is $is_open on RX $rx_id";
   set sql_rx_id $rx_id;
 }
-
 
 #
 # Executed when a DTMF digit has been received
@@ -356,7 +334,6 @@ proc dtmf_digit_received {digit duration} {
   #puts "DTMF digit \"$digit\" detected with duration $duration ms";
   return 0;
 }
-
 
 #
 # Executed when a DTMF command has been received
@@ -399,7 +376,6 @@ proc dtmf_cmd_received {cmd} {
   return 0
 }
 
-
 #
 # Executed once every whole minute. Don't put any code here directly
 # Create a new function and add it to the timer tick subscriber list
@@ -413,7 +389,6 @@ proc every_minute {} {
   }
 }
 
-
 #
 # Use this function to add a function to the list of functions that
 # should be executed once every whole minute. This is not an event
@@ -423,7 +398,6 @@ proc addTimerTickSubscriber {func} {
   variable timer_tick_subscribers;
   lappend timer_tick_subscribers $func;
 }
-
 
 #
 # Should be executed once every whole minute to check if it is time to
@@ -478,7 +452,6 @@ proc checkPeriodicIdentify {} {
   }
 }
 
-
 #
 # Executed when the QSO recorder is being activated
 #
@@ -487,7 +460,6 @@ proc activating_qso_recorder {} {
   playMsg "Core" "qso_recorder";
 }
 
-
 #
 # Executed when the QSO recorder is being deactivated
 #
@@ -495,7 +467,6 @@ proc deactivating_qso_recorder {} {
   playMsg "Core" "deactivating";
   playMsg "Core" "qso_recorder";
 }
-
 
 #
 # Executed when trying to deactivate the QSO recorder even though it's
@@ -506,7 +477,6 @@ proc qso_recorder_not_active {} {
   playMsg "Core" "not_active";
 }
 
-
 #
 # Executed when trying to activate the QSO recorder even though it's
 # already active
@@ -515,7 +485,6 @@ proc qso_recorder_already_active {} {
   playMsg "Core" "qso_recorder";
   playMsg "Core" "already_active";
 }
-
 
 #
 # Executed when the timeout kicks in to activate the QSO recorder
@@ -526,7 +495,6 @@ proc qso_recorder_timeout_activate {} {
   playMsg "Core" "qso_recorder";
 }
 
-
 #
 # Executed when the timeout kicks in to deactivate the QSO recorder
 #
@@ -535,7 +503,6 @@ proc qso_recorder_timeout_deactivate {} {
   playMsg "Core" "deactivating";
   playMsg "Core" "qso_recorder";
 }
-
 
 #
 # Executed when the user is requesting a language change
@@ -546,7 +513,6 @@ proc set_language {lang_code} {
 
 }
 
-
 #
 # Executed when the user requests a list of available languages
 #
@@ -555,7 +521,6 @@ proc list_languages {} {
   puts "$logic_name: Available languages: (NOT IMPLEMENTED)";
 
 }
-
 
 #
 # Executed when the node is being brought online or offline
@@ -572,7 +537,6 @@ proc logic_online {online} {
     }
   }
 }
-
 
 ##############################################################################
 #
@@ -600,8 +564,6 @@ if [info exists CFG_IDENT_ONLY_AFTER_TX] {
     set ident_only_after_tx $CFG_IDENT_ONLY_AFTER_TX;
   }
 }
-
-
 
 # end of namespace
 }

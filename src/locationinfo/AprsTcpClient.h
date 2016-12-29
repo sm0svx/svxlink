@@ -23,91 +23,53 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef APRS_TCP_CLIENT
 #define APRS_TCP_CLIENT
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <string>
 #include <vector>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTcpClient.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "LocationInfo.h"
 #include "AprsClient.h"
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
   class Timer;
 };
 
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
-
+ */
 /**
 @brief	Aprs-logics
 @author Adi Bier / DL1HRC
@@ -125,7 +87,6 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
        const std::string& info, std::list<std::string>& call_list);
       void update3rdState(const std::string& call, const std::string& info);
      void igateMessage(const std::string& info);
-
 
   private:
     typedef std::vector<std::string> StrList;
@@ -160,7 +121,6 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     void  startNormalSequence(Async::Timer *t);
 
 };  /* class AprsTcpClient */
-
 
 #endif /* APRS_TCP_CLIENT */
 

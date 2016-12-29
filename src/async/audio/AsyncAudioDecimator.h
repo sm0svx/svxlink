@@ -18,84 +18,47 @@ THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT EXPRESS OR IMPLIED WARRANTY OF
 ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_DECIMATOR_INCLUDED
 #define ASYNC_AUDIO_DECIMATOR_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioProcessor.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	Decimates a higher sample rate into a lower one
 @author Tobias Blomberg / SM0SVX
@@ -124,13 +87,12 @@ class AudioDecimator : public AudioProcessor
      */
     AudioDecimator(int decimation_factor, const float *filter_coeff,
       	      	   int taps);
-  
+
     /**
      * @brief 	Destructor
      */
     ~AudioDecimator(void);
-  
-    
+
   protected:
     /**
      * @brief Process incoming samples and put them into the output buffer
@@ -145,7 +107,6 @@ class AudioDecimator : public AudioProcessor
      */
     virtual void processSamples(float *dest, const float *src, int count);
 
-    
   private:
     const int 	factor_M;
     float     	*p_Z;
@@ -157,12 +118,9 @@ class AudioDecimator : public AudioProcessor
     
 };  /* class AudioDecimator */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DECIMATOR_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

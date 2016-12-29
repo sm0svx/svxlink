@@ -16,7 +16,6 @@
 using namespace std;
 using namespace Async;
 
-
 class FileWriter : public Async::AudioProcessor
 {
   public:
@@ -54,7 +53,6 @@ class FileWriter : public Async::AudioProcessor
     int samppos;
 };
 
-
 namespace {
 string send_digits = "00112233445566778899AABBCCDD**##";
 //string send_digits = "0123456789ABCD*#";
@@ -74,7 +72,6 @@ void digit_detected(char ch, int duration)
   received_digits += ch;
 }
 };
-
 
 class FileReader : public AudioSource
 {
@@ -105,7 +102,6 @@ class FileReader : public AudioSource
       writeAudio();
     }
     
-
   protected:
     virtual void allSamplesFlushed(void)
     {
@@ -151,7 +147,6 @@ class FileReader : public AudioSource
     }
 };
 
-
 class PowerPlotter : public Async::AudioPassthrough
 {
   public:
@@ -176,7 +171,6 @@ class PowerPlotter : public Async::AudioPassthrough
     float prev_power;
 
 }; /* class PowerPlotter */
-
 
 int main()
 {

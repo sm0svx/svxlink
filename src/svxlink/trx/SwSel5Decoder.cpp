@@ -25,12 +25,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <algorithm>
 #include <cstring>
@@ -39,43 +36,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdint.h>
 
-
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SwSel5Decoder.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 // All values are squared magnitude ratios !
 #define SEL5_RELATIVE_PEAK          20.0f  /* 13dB */
 
@@ -89,45 +67,25 @@ using namespace Async;
 #define SEL5_BANDWIDTH              35     /* 35Hz */
 #define SEL5_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
+ */
+ 
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 SwSel5Decoder::SwSel5Decoder(Config &cfg, const string &name)
   : Sel5Decoder(cfg, name), sel5_table(0), samples_left(SEL5_BLOCK_LENGTH),
     last_hit(0), last_stable(0), stable_timer(0), active_timer(0), arr_len(0)
@@ -330,7 +288,6 @@ bool SwSel5Decoder::initialize(void)
 
 } /* SwSel5Decoder::initialize */
 
-
 int SwSel5Decoder::writeSamples(const float *buf, int len)
 {
     int k;
@@ -366,19 +323,13 @@ int SwSel5Decoder::writeSamples(const float *buf, int len)
 
 } /* SwDtmfDecoder::writeSamples */
 
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
+ */
 
 void SwSel5Decoder::Sel5Receive(void)
 {
@@ -401,7 +352,6 @@ void SwSel5Decoder::Sel5Receive(void)
     samples_left = SEL5_BLOCK_LENGTH;
 
 } /* SwSel5Decoder::Sel5Receive */
-
 
 void SwSel5Decoder::Sel5PostProcess(uint8_t hit)
 {
@@ -448,7 +398,6 @@ void SwSel5Decoder::Sel5PostProcess(uint8_t hit)
 
 } /* SwSel5Decoder::Sel5PostProcess */
 
-
 void SwSel5Decoder::goertzelInit(GoertzelState *s, float freq, float bw, float offset)
 {
     /* Adjust the block length to minimize the DFT error. */
@@ -471,7 +420,6 @@ void SwSel5Decoder::goertzelInit(GoertzelState *s, float freq, float bw, float o
 
 } /* SwSel5Decoder::goertzelInit */
 
-
 float SwSel5Decoder::goertzelResult(GoertzelState *s)
 {
     float v1, res;
@@ -492,7 +440,6 @@ float SwSel5Decoder::goertzelResult(GoertzelState *s)
     return res;
 
 } /* SwSel5Decoder::goertzelResult */
-
 
 int SwSel5Decoder::findMaxIndex(const float f[])
 {
@@ -524,5 +471,6 @@ int SwSel5Decoder::findMaxIndex(const float f[])
 
 } /* SwSel5Decoder::findMaxIndex */
 
-
-/*- End of file ------------------------------------------------------------*/
+/*
+ * This file has not been truncated
+ */

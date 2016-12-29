@@ -1,4 +1,0 @@
-# Set full access on serial and audio devices so that SvxLink can
-# access them without problem.
-KERNEL=="tty[A-Z]*",            MODE:="0666"
-KERNEL=="dsp*",                 MODE:="0666"

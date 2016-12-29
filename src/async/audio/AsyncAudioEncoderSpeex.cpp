@@ -24,95 +24,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioEncoderSpeex.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioEncoderSpeex::AudioEncoderSpeex(void)
   : buf_len(0), frames_per_packet(4), frame_cnt(0)
 {
@@ -135,14 +91,12 @@ AudioEncoderSpeex::AudioEncoderSpeex(void)
   //enableHighpass(false);
 } /* AsyncAudioEncoderSpeex::AsyncAudioEncoderSpeex */
 
-
 AudioEncoderSpeex::~AudioEncoderSpeex(void)
 {
   delete [] sample_buf;
   speex_bits_destroy(&bits);
   speex_encoder_destroy(enc_state);
 } /* AsyncAudioEncoderSpeex::~AsyncAudioEncoderSpeex */
-
 
 void AudioEncoderSpeex::setOption(const std::string &name,
       	      	      	      	  const std::string &value)
@@ -182,7 +136,6 @@ void AudioEncoderSpeex::setOption(const std::string &name,
   }
 } /* AudioEncoderSpeex::setOption */
 
-
 void AudioEncoderSpeex::printCodecParams(void)
 {
   cout << "------ Speex encoder parameters ------\n";
@@ -198,25 +151,21 @@ void AudioEncoderSpeex::printCodecParams(void)
   cout << "--------------------------------------\n";
 } /* AudioEncoderSpeex::printCodecParams */
 
-
 void AudioEncoderSpeex::setFramesPerPacket(unsigned fpp)
 {
   frames_per_packet = fpp;
 } /* AudioEncoderSpeex::setFramesPerPacket */
-
 
 void AudioEncoderSpeex::setQuality(int quality)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &quality);
 } /* AudioEncoderSpeex::setQuality */
 
-
 int AudioEncoderSpeex::setBitrate(int new_bitrate)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_BITRATE, &new_bitrate);
   return bitrate();
 } /* AudioEncoderSpeex::setBitrate */
-
 
 int AudioEncoderSpeex::bitrate(void)
 {
@@ -225,13 +174,11 @@ int AudioEncoderSpeex::bitrate(void)
   return br;
 } /* AudioEncoderSpeex::bitrate */
 
-
 int AudioEncoderSpeex::setComplexity(int new_comp)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_COMPLEXITY, &new_comp);
   return complexity();
 } /* AudioEncoderSpeex::setBitrate */
-
 
 int AudioEncoderSpeex::complexity(void)
 {
@@ -240,13 +187,11 @@ int AudioEncoderSpeex::complexity(void)
   return comp;
 } /* AudioEncoderSpeex::complexity */
 
-
 void AudioEncoderSpeex::enableVbr(bool enable)
 {
   int do_enable = enable ? 1 : 0;
   speex_encoder_ctl(enc_state, SPEEX_SET_VBR, &do_enable);
 } /* AudioEncoderSpeex::enableVbr */
-
 
 bool AudioEncoderSpeex::vbrEnabled(void)
 {
@@ -255,13 +200,11 @@ bool AudioEncoderSpeex::vbrEnabled(void)
   return (enabled != 0);
 } /* AudioEncoderSpeex::vbrEnabled */
 
-
 int AudioEncoderSpeex::setVbrQuality(int quality)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_VBR_QUALITY, &quality);
   return vbrQuality();
 } /* AudioEncoderSpeex::setVbrQuality */
-
 
 int AudioEncoderSpeex::vbrQuality(void)
 {
@@ -270,14 +213,12 @@ int AudioEncoderSpeex::vbrQuality(void)
   return quality;
 } /* AudioEncoderSpeex::vbrQuality */
 
-
 #if 0
 int AudioEncoderSpeex::setVbrMaxBitrate(int bitrate)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_VBR_MAX_BITRATE, &bitrate);
   return vbrMaxBitrate();
 } /* AudioEncoderSpeex::setVbrMaxBitrate */
-
 
 int AudioEncoderSpeex::vbrMaxBitrate(void)
 {
@@ -287,13 +228,11 @@ int AudioEncoderSpeex::vbrMaxBitrate(void)
 } /* AudioEncoderSpeex::vbrMaxBitrate */
 #endif
 
-
 int AudioEncoderSpeex::setAbr(int new_abr)
 {
   speex_encoder_ctl(enc_state, SPEEX_SET_ABR, &new_abr);
   return abr();
 } /* AudioEncoderSpeex::setAbr */
-
 
 int AudioEncoderSpeex::abr(void)
 {
@@ -301,7 +240,6 @@ int AudioEncoderSpeex::abr(void)
   speex_encoder_ctl(enc_state, SPEEX_GET_ABR, &a);
   return a;
 } /* AudioEncoderSpeex::abr */
-
 
 #if 0
 bool AudioEncoderSpeex::enableHighpass(bool enable)
@@ -311,7 +249,6 @@ bool AudioEncoderSpeex::enableHighpass(bool enable)
   return highpassEnabled();
 } /* AudioEncoderSpeex::setAbr */
 
-
 bool AudioEncoderSpeex::highpassEnabled(void)
 {
   int hp;
@@ -319,8 +256,6 @@ bool AudioEncoderSpeex::highpassEnabled(void)
   return (hp != 0);
 } /* AudioEncoderSpeex::highpassEnabled */
 #endif
-
-
 
 int AudioEncoderSpeex::writeSamples(const float *samples, int count)
 {
@@ -351,24 +286,13 @@ int AudioEncoderSpeex::writeSamples(const float *samples, int count)
   
 } /* AudioEncoderSpeex::writeSamples */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
-
+ */
 
 /*
  * This file has not been truncated

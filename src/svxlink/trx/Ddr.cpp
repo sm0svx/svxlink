@@ -26,14 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,54 +46,34 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iterator>
 #include <deque>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 #include <AsyncTcpClient.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "Ddr.h"
 #include "WbRxRtlSdr.h"
 #include "DdrFilterCoeffs.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
 namespace {
   template <class T>
@@ -468,7 +443,6 @@ namespace {
 
   }; /* AGC */
 
-
   class Demodulator : public Async::AudioSource
   {
     public:
@@ -498,7 +472,6 @@ namespace {
        */
       virtual void allSamplesFlushed(void) { }
   };
-
 
   class DemodulatorFm : public Demodulator
   {
@@ -592,7 +565,6 @@ namespace {
       DecimatorMS<float> *dec;
   };
 
-
   class DemodulatorAm : public Demodulator
   {
     public:
@@ -621,7 +593,6 @@ namespace {
     private:
       AGC              agc;
   };
-
 
 //#define USE_SSB_PHASE_DEMOD
 #ifdef USE_SSB_PHASE_DEMOD
@@ -717,7 +688,6 @@ namespace {
   };
 #endif
 
-
   class DemodulatorCw : public Demodulator
   {
     public:
@@ -752,7 +722,6 @@ namespace {
       Translate         trans;
       AGC               agc;
   };
-
 
   class Channelizer
   {
@@ -963,7 +932,6 @@ namespace {
 
 }; /* anonymous namespace */
 
-
 class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 {
   public:
@@ -1114,37 +1082,22 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
     int fq_offset;
 }; /* Channel */
 
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 Ddr::DdrMap Ddr::ddr_map;
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
+/*
+ * * Public member functions
+ */
 
 Ddr *Ddr::find(const std::string &name)
 {
@@ -1156,13 +1109,11 @@ Ddr *Ddr::find(const std::string &name)
   return 0;
 } /* Ddr::find */
 
-
 Ddr::Ddr(Config &cfg, const std::string& name)
   : LocalRxBase(cfg, name), cfg(cfg), channel(0), rtl(0),
     fq(0)
 {
 } /* Ddr::Ddr */
-
 
 Ddr::~Ddr(void)
 {
@@ -1180,7 +1131,6 @@ Ddr::~Ddr(void)
 
   delete channel;
 } /* Ddr::~Ddr */
-
 
 bool Ddr::initialize(void)
 {
@@ -1289,7 +1239,6 @@ bool Ddr::initialize(void)
   return true;
 } /* Ddr:initialize */
 
-
 void Ddr::tunerFqChanged(uint32_t center_fq)
 {
   if (channel == 0)
@@ -1312,62 +1261,47 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
   channel->enable();
 } /* Ddr::tunerFqChanged */
 
-
 void Ddr::setModulation(Modulation mod)
 {
   channel->setModulation(mod);
 } /* Ddr::setModulation */
-
 
 unsigned Ddr::preDemodSampleRate(void) const
 {
   return channel->chSampRate();
 } /* Ddr::preDemodSampleRate */
 
-
 bool Ddr::isReady(void) const
 {
   return (rtl != 0) && rtl->isReady();
 } /* Ddr::isReady */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
 bool Ddr::audioOpen(void)
 {
   return true;
 } /* Ddr::audioOpen */
 
-
 void Ddr::audioClose(void)
 {
 } /* Ddr::audioClose */
-
 
 int Ddr::audioSampleRate(void)
 {
   return 16000;
 } /* Ddr::audioSampleRate */
 
-
 Async::AudioSource *Ddr::audioSource(void)
 {
   return channel;
 } /* Ddr::audioSource */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
  * This file has not been truncated

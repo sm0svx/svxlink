@@ -24,98 +24,54 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <stdio.h>
 
 #include <algorithm>
 #include <cstring>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioPacer.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   : sample_rate(sample_rate), buf_size(block_size), prebuf_time(prebuf_time),
@@ -139,13 +95,11 @@ AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   
 } /* AudioPacer::AudioPacer */
 
-
 AudioPacer::~AudioPacer(void)
 {
   delete pace_timer;
   delete [] buf;
 } /* AudioPacer::~AudioPacer */
-
 
 int AudioPacer::writeSamples(const float *samples, int count)
 {
@@ -207,7 +161,6 @@ int AudioPacer::writeSamples(const float *samples, int count)
   
 } /* AudioPacer::writeSamples */
 
-
 void AudioPacer::flushSamples(void)
 {
   input_stopped = false;
@@ -219,7 +172,6 @@ void AudioPacer::flushSamples(void)
   }
 } /* AudioPacer::flushSamples */
 
-
 void AudioPacer::resumeOutput(void)
 {
   if (prebuf_samples <= 0)
@@ -228,15 +180,10 @@ void AudioPacer::resumeOutput(void)
     outputNextBlock();
   }
 } /* AudioPacer::resumeOutput */
-    
 
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 void AudioPacer::allSamplesFlushed(void)
 {
   if (do_flush)
@@ -246,14 +193,9 @@ void AudioPacer::allSamplesFlushed(void)
   }
 } /* AudioPacer::allSamplesFlushed */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 void AudioPacer::outputNextBlock(Timer *t)
 {
@@ -306,9 +248,6 @@ void AudioPacer::outputNextBlock(Timer *t)
   }
   
 } /* AudioPacer::outputNextBlock */
-
-
-
 
 /*
  * This file has not been truncated

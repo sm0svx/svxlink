@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -43,57 +38,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cstring>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioRecorder.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncExec.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "QsoRecorder.h"
 #include "Logic.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class QsoRecorder::FileEncoder : public Exec
 {
   public:
@@ -103,41 +76,26 @@ class QsoRecorder::FileEncoder : public Exec
     {}
 };
 
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
-
+ */
 namespace {
   int directory_filter(const struct dirent *ent);
   void replace_all(std::string& str, const std::string& from,
                    const std::string& to);
 };
 
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
+ */
 
 QsoRecorder::QsoRecorder(Logic *logic)
   : recorder(0), hard_chunk_limit(0), soft_chunk_limit(0), max_dirsize(0),
@@ -147,7 +105,6 @@ QsoRecorder::QsoRecorder(Logic *logic)
   selector = new AudioSelector;
 } /* QsoRecorder::QsoRecorder */
 
-
 QsoRecorder::~QsoRecorder(void)
 {
   setEnabled(false);
@@ -155,7 +112,6 @@ QsoRecorder::~QsoRecorder(void)
   delete tmo_timer;
   delete qso_tmo_timer;
 } /* QsoRecorder::~QsoRecorder */
-
 
 bool QsoRecorder::initialize(const Config &cfg, const string &name)
 {
@@ -210,13 +166,11 @@ bool QsoRecorder::initialize(const Config &cfg, const string &name)
   return true;
 } /* QsoRecorder::initialize */
 
-
 void QsoRecorder::addSource(Async::AudioSource *source, int prio)
 {
   selector->addSource(source);
   selector->enableAutoSelect(source, prio);
 } /* QsoRecorder::addSource */
-
 
 void QsoRecorder::setEnabled(bool enable)
 {
@@ -234,7 +188,6 @@ void QsoRecorder::setEnabled(bool enable)
   checkTimeoutTimers();
 } /* QsoRecorder::setEnabled */
 
-
 void QsoRecorder::setMaxChunkTime(unsigned max_time, unsigned soft_time)
 {
   hard_chunk_limit = max_time * 1000;
@@ -244,34 +197,23 @@ void QsoRecorder::setMaxChunkTime(unsigned max_time, unsigned soft_time)
   }
 } /* QsoRecorder::setChunkTime */
 
-
 void QsoRecorder::setMaxRecDirSize(unsigned max_size)
 {
   max_dirsize = max_size;
 } /* QsoRecorder::setMaxRecDirSize */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void QsoRecorder::openNewFile(void)
 {
   closeFile();
   openFile();
 } /* QsoRecorder::openNewFile */
-
 
 void QsoRecorder::openFile(void)
 {
@@ -295,7 +237,6 @@ void QsoRecorder::openFile(void)
     }
   }
 } /* QsoRecorder::openFile */
-
 
 void QsoRecorder::closeFile(void)
 {
@@ -380,7 +321,6 @@ void QsoRecorder::closeFile(void)
   }
 } /* QsoRecorder::closeFile */
 
-
 void QsoRecorder::cleanupDirectory(void)
 {
   if (max_dirsize == 0)
@@ -426,7 +366,6 @@ void QsoRecorder::cleanupDirectory(void)
   free(namelist);
 } /* QsoRecorder::cleanupDirectory */
 
-
 void QsoRecorder::timerExpired(void)
 {
   if (recorderIsActive() != default_active)
@@ -437,7 +376,6 @@ void QsoRecorder::timerExpired(void)
     setEnabled(default_active);
   }
 } /* QsoRecorder::timerExpired */
-
 
 void QsoRecorder::checkTimeoutTimers(void)
 {
@@ -455,12 +393,10 @@ void QsoRecorder::checkTimeoutTimers(void)
   }
 } /* QsoRecorder::checkTimeoutTimers */
 
-
 void QsoRecorder::handleEncoderPrintouts(const char *buf, int cnt)
 {
   cout << buf;
 } /* Exec::handleEncoderPrintouts */
-
 
 void QsoRecorder::encoderExited(QsoRecorder::FileEncoder *enc)
 {
@@ -481,21 +417,15 @@ void QsoRecorder::encoderExited(QsoRecorder::FileEncoder *enc)
   delete enc;
 } /* QsoRecorder::encoderExited */
 
-
 void QsoRecorder::onError(void)
 {
   cerr << "*** ERROR: The QsoRecorder in logic " << logic->name() 
        << " failed: " << recorder->errorMsg() << endl;
 } /* QsoRecorder::onError */
 
-
-
-/****************************************************************************
- *
+/*
  * Private functions
- *
- ****************************************************************************/
-
+ */
 namespace {
   int directory_filter(const struct dirent *ent)
   {
@@ -517,8 +447,6 @@ namespace {
     }
   } /* replace_all */
 };
-
-
 
 /*
  * This file has not been truncated
