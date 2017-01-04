@@ -822,6 +822,9 @@ int ModuleMetarInfo::handleMetar(std::string input)
    //
    // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
    //
+   temp << "metar \"" << input << "\"";
+   say(temp);
+
    temp << "airports " << icao;
    say(temp);
 
