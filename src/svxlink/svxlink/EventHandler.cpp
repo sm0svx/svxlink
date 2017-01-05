@@ -320,7 +320,7 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
-+int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
        	      	      	      int argc, const char *argv[])
  {
    if(argc != 4)
