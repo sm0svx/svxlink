@@ -26,47 +26,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef UPLINK_INCLUDED
 #define UPLINK_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
 //namespace MyNameSpace
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class Rx;
 class Tx;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -131,11 +131,11 @@ class Uplink : public sigc::trackable
     Uplink(const Uplink&);
     Uplink& operator=(const Uplink&);
 
-};  /** class Uplink */
+};  /* class Uplink */
 
-#endif /** UPLINK_INCLUDED */
+#endif /* UPLINK_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

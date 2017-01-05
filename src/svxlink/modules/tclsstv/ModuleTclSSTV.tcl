@@ -23,7 +23,7 @@ if {![info exists CFG_ID]} {
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]]
-
+ 
 #
 # A convenience function for printing out information prefixed by the
 # module name
@@ -34,7 +34,7 @@ proc printInfo {msg} {
   variable module_name
   puts "$module_name: $msg"
 }
-
+ 
 #
 # A convenience function for calling an event handler
 #
@@ -111,7 +111,8 @@ printInfo "Lecture meteo"
 source "/usr/share/svxlink/modules.d/Meteo.tcl"
 #playMsg "temperature_is"
 playNumber $temp_bale ;
-
+ 
+ 
 #set output [exec python /home/pi/code_jour/trait.py]
 #source "/home/pi/code_jour/codes.tcl"
  
@@ -130,7 +131,7 @@ proc dtmfDigitReceived {char duration} {
   printInfo "DTMF digit $char received with duration $duration milliseconds"
  
 }
-
+ 
 #
 # Executed when a DTMF command is received
 #
@@ -150,9 +151,10 @@ proc dtmfCmdReceived {cmd} {
   }
   else {
     processEvent "unknown_command $cmd"
+  }
 }
-}
-
+ 
+ 
 #
 # Executed when a DTMF command is received in idle mode. That is, a command is
 # received when this module has not been activated first.
@@ -163,7 +165,7 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
   printInfo "DTMF command received when idle: $cmd"
  
 }
-
+ 
 #
 # Executed when the squelch open or close.
 #
@@ -174,7 +176,7 @@ proc squelchOpen {is_open} {
   printInfo "The squelch is $str"
  
 }
-
+ 
 #
 # Executed when all announcement messages has been played.
 # Note that this function also may be called even if it wasn't this module
@@ -187,7 +189,7 @@ proc allMsgsWritten {} {
  
 # end of namespace
 }
-
+ 
 #
 # This file has not been truncated
 #

@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <unistd.h>
@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <map>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncCppApplication.h>
@@ -59,13 +59,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncFdWatch.h>
 #include <common.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/SVXSERVER.h"
 #include "server.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
@@ -73,16 +73,16 @@ using namespace Async;
 using namespace sigc;
 using namespace SvxLink;
 
-/**
+/*
  * Defines & typedefs
  */
 #define PROGRAM_NAME "svxserver"
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 static void parse_arguments(int argc, const char **argv);
@@ -93,11 +93,11 @@ static void sighup_handler(int signal);
 static void sigterm_handler(int signal);
 static bool open_logfile(void);
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 static char             *pidfile_name = NULL;
@@ -112,11 +112,11 @@ static string         	tstamp_format;
 static struct sigaction sighup_oldact, sigint_oldact, sigterm_oldact;
 static volatile bool  	reopen_log = false;
 
-/**
+/*
  * MAIN
  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Function:  main
  * Purpose:   Start everything...
@@ -175,13 +175,13 @@ int main(int argc, char **argv)
   int noclose = 0;
   if (logfile_name != 0)
   {
-      /** Open the logfile */
+      /* Open the logfile */
     if (!open_logfile())
     {
       exit(1);
     }
 
-      /** Create a pipe to route stdout through */
+      /* Create a pipe to route stdout through */
     if (pipe(pipefd) == -1)
     {
       perror("pipe");
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
-      /** Redirect stdout to the logpipe */
+      /* Redirect stdout to the logpipe */
     if (close(STDOUT_FILENO) == -1)
     {
       perror("close(stdout)");
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-      /** Redirect stderr to the logpipe */
+      /* Redirect stderr to the logpipe */
     if (close(STDERR_FILENO) == -1)
     {
       perror("close(stderr)");
@@ -216,17 +216,17 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-      /** Close stdin */
+      /* Close stdin */
     close(STDIN_FILENO);
 
-      /** Force stdout to line buffered mode */
+      /* Force stdout to line buffered mode */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
     {
       perror("setlinebuf");
       exit(1);
     }
 
-      /** Tell the daemon function call not to close the file descriptors */
+      /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
 
@@ -452,13 +452,13 @@ int main(int argc, char **argv)
 
   return 0;
 
-} /** main */
+} /* main */
 
-/**
+/*
  * Functions
  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Function:  parse_arguments
  * Purpose:   Parse the command line arguments.
@@ -485,7 +485,7 @@ static void parse_arguments(int argc, const char **argv)
             "Specify the user to run SvxLink as", "<username>"},
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
-    /**
+    /*
     {"int_arg", 'i', POPT_ARG_INT, &int_arg, 0,
 	    "Description of int argument", "<an int>"},
     */
@@ -509,14 +509,14 @@ static void parse_arguments(int argc, const char **argv)
     exit(1);
   }
 
-  /**
+  /*
   printf("string_arg  = %s\n", string_arg);
   printf("int_arg     = %d\n", int_arg);
   printf("bool_arg    = %d\n", bool_arg);
   */
 
-    /** Parse arguments that do not begin with '-' (leftovers) */
-  /**
+    /* Parse arguments that do not begin with '-' (leftovers) */
+  /*
   arg = poptGetArg(optCon);
   while (arg != NULL)
   {
@@ -527,7 +527,7 @@ static void parse_arguments(int argc, const char **argv)
 
   poptFreeContext(optCon);
 
-} /** parse_arguments */
+} /* parse_arguments */
 
 static void stdinHandler(FdWatch *w)
 {
@@ -541,7 +541,7 @@ static void stdinHandler(FdWatch *w)
   }
   else if (cnt == 0)
   {
-      /** Stdin file descriptor closed */
+      /* Stdin file descriptor closed */
     delete stdin_watch;
     stdin_watch = 0;
     return;
@@ -556,7 +556,7 @@ static void stdinHandler(FdWatch *w)
     case '\n':
       putchar('\n');
       break;
-    /**
+    /*
     case '0': case '1': case '2': case '3':
     case '4': case '5': case '6': case '7':
     case '8': case '9': case 'A': case 'B':
@@ -636,7 +636,7 @@ static void write_to_logfile(const char *buf)
     assert(ret == static_cast<ssize_t>(write_len));
     ptr += write_len;
   }
-} /** write_to_logfile */
+} /* write_to_logfile */
 
 static void stdout_handler(FdWatch *w)
 {
@@ -650,7 +650,7 @@ static void stdout_handler(FdWatch *w)
 
   write_to_logfile(buf);
 
-} /** stdout_handler  */
+} /* stdout_handler  */
 
 void sighup_handler(int signal)
 {
@@ -667,7 +667,7 @@ void sighup_handler(int signal)
   assert(ret == 34);
   reopen_log = true;
 
-} /** sighup_handler */
+} /* sighup_handler */
 
 void sigterm_handler(int signal)
 {
@@ -689,7 +689,7 @@ void sigterm_handler(int signal)
   msg += " received. Shutting down application...\n";
   write_to_logfile(msg.c_str());
   Application::app().quit();
-} /** sigterm_handler */
+} /* sigterm_handler */
 
 bool open_logfile(void)
 {
@@ -710,9 +710,9 @@ bool open_logfile(void)
 
   return true;
 
-} /** open_logfile */
+} /* open_logfile */
 
-/**
+/*
  * This file has not been truncated
  */
 

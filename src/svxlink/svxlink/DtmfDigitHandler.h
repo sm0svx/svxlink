@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DTMF_DIGIT_HANDLER_INCLUDED
 #define DTMF_DIGIT_HANDLER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -147,10 +147,10 @@ class DtmfDigitHandler : public sigc::trackable
     DtmfDigitHandler& operator=(const DtmfDigitHandler&);
     void cmdTimeout(void);
     
-};  /** class DtmfDigitHandler */
+};  /* class DtmfDigitHandler */
 
-#endif /** DTMF_DIGIT_HANDLER_INCLUDED */
+#endif /* DTMF_DIGIT_HANDLER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

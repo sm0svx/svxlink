@@ -9,6 +9,7 @@
 #
 #  Visit the project at OpenRepeater.com
 ###############################################################################
+
 # Start of namespace
 namespace eval RemoteRelay {
 	
@@ -25,7 +26,7 @@ namespace eval RemoteRelay {
 		variable module_name
 		puts "$module_name: $msg"
 	}
-
+	
 	# A convenience function for calling an event handler
 	proc processEvent {ev} {
 		variable module_name
@@ -73,6 +74,7 @@ namespace eval RemoteRelay {
 		set ACCESS_GRANTED 0
 		set ACCESS_ATTEMPTS_ATTEMPTED 0
 
+
 		printInfo "Module Activated"
 
 		if {$ACCESS_PIN_REQ == "1"} {
@@ -85,7 +87,7 @@ namespace eval RemoteRelay {
 		}
 		
 	}
-
+	
 	# Executed when this module is being deactivated.
 	proc deactivateCleanup {} {
 		printInfo "Module deactivated"

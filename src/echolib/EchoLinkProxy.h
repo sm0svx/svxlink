@@ -29,45 +29,45 @@ An example of how to use the EchoLinkProxy class
 #ifndef ECHOLINK_PROXY_INCLUDED
 #define ECHOLINK_PROXY_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace EchoLink
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -342,12 +342,12 @@ class Proxy : public sigc::trackable
     void handleSystemMsg(const unsigned char *buf, int len);
     void cmdTimeout(void);
     
-};  /** class Proxy */
+};  /* class Proxy */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ECHOLINK_PROXY_INCLUDED */
+#endif /* ECHOLINK_PROXY_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

@@ -48,12 +48,12 @@ Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
     m_tmo_timer(0)
 {
   
-} /** Module::Module */
+} /* Module::Module */
 
 Module::~Module(void)
 {
   delete m_tmo_timer;
-} /** Module::~Module */
+} /* Module::~Module */
 
 bool Module::initialize(void)
 {
@@ -96,7 +96,7 @@ bool Module::initialize(void)
   
   return true;
   
-} /** Module::initialize */
+} /* Module::initialize */
 
 void Module::activate(void)
 {
@@ -106,7 +106,7 @@ void Module::activate(void)
   
   processEvent("activating_module");
   
-  /**
+  /*
   m_audio_con = logic()->rx().audioReceived.connect(
       	  mem_fun(*this, &Module::audioFromRx));
   */
@@ -138,44 +138,44 @@ void Module::deactivate(void)
 Config &Module::cfg(void) const
 {
   return logic()->cfg();
-} /** Module::cfg */
+} /* Module::cfg */
 
 const string& Module::logicName(void) const
 {
   return logic()->name();
-} /** Module::logicName */
+} /* Module::logicName */
 
 void Module::playHelpMsg(void)
 {
   processEvent("play_help");
-} /** Module::playHelpMsg */
+} /* Module::playHelpMsg */
 
 void Module::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   std::stringstream ss;
   ss << "command_failed " << id() << cmd;
   logic()->processEvent(ss.str());
-} /** Module::dtmfCmdReceivedWhenIdle */
+} /* Module::dtmfCmdReceivedWhenIdle */
 
 void Module::processEvent(const string& event)
 {
   logic()->processEvent(event, this);
-} /** Module::playFile */
+} /* Module::playFile */
 
 void Module::setEventVariable(const string& name, const string& value)
 {
   logic()->setEventVariable(name, value);
-} /** Module::setEventVariable */
+} /* Module::setEventVariable */
 
 void Module::playFile(const string& path)
 {
   logic()->playFile(path);
-} /** Module::playFile */
+} /* Module::playFile */
 
 void Module::sendDtmf(const std::string& digits)
 {
   logic()->sendDtmf(digits);
-} /** Module::sendDtmf */
+} /* Module::sendDtmf */
 
 #if 0
 int Module::audioFromModule(float *samples, int count)
@@ -194,13 +194,13 @@ void Module::transmit(bool tx)
     m_is_transmitting = tx;
     logic()->moduleTransmitRequest(tx);
   }
-} /** transmit */
+} /* transmit */
 #endif
 
 bool Module::activateMe(void)
 {
   return logic()->activateModule(this);
-} /** Module::activateMe */
+} /* Module::activateMe */
 
 void Module::deactivateMe(void)
 {
@@ -208,17 +208,17 @@ void Module::deactivateMe(void)
   {
     logic()->deactivateModule(this);
   }
-} /** Module::deactivateMe */
+} /* Module::deactivateMe */
 
 Module *Module::findModule(int id)
 {
   return logic()->findModule(id);
-} /** Module::findModule */
+} /* Module::findModule */
 
 list<Module*> Module::moduleList(void)
 {
   return logic()->moduleList();
-} /** Module::moduleList */
+} /* Module::moduleList */
 
 void Module::setIdle(bool is_idle)
 {
@@ -226,38 +226,38 @@ void Module::setIdle(bool is_idle)
   {
     m_tmo_timer->setEnable(m_is_active && is_idle);
   }
-} /** Module::setIdle */
+} /* Module::setIdle */
 
 bool Module::logicIsIdle(void) const
 {
   return logic()->isIdle();
-} /** Module::logicIsIdle */
+} /* Module::logicIsIdle */
 
 void Module::logicIdleStateChanged(bool is_idle)
 {
-  /**
+  /*
   printf("Module::logicIdleStateChanged: is_idle=%s\n",
       is_idle ? "TRUE" : "FALSE");
   */
   setIdle(is_idle);
-} /** Module::logicIdleStateChanged */
+} /* Module::logicIdleStateChanged */
 
 bool Module::squelchIsOpen(void)
 {
   return logic()->rx().squelchIsOpen();
-} /** Module::squelchIsOpen */
+} /* Module::squelchIsOpen */
 
 bool Module::isWritingMessage(void)
 {
   return logic()->isWritingMessage();
-} /** Module::isWritingMessage */
+} /* Module::isWritingMessage */
 
 void Module::moduleTimeout(Timer *t)
 {
   cout << logic()->name() << ": Module timeout: " << name() << endl;
   processEvent("timeout");
   deactivateMe();
-} /** ModuleParrot::moduleTimeout */
+} /* ModuleParrot::moduleTimeout */
 
 
 

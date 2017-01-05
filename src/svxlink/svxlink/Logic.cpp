@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 
@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <vector>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
@@ -68,7 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <common.h>
 #include <config.h>
 
-/**
+/*
  * Local Includes
  */
 #include "EventHandler.h"
@@ -80,7 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LinkManager.h"
 #include "DtmfDigitHandler.h"
 
-/**
+/*
  * Namespaces to use
  */
 
@@ -89,27 +89,27 @@ using namespace Async;
 using namespace sigc;
 using namespace SvxLink;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 Logic::Logic(Config &cfg, const string& name)
@@ -135,7 +135,7 @@ Logic::Logic(Config &cfg, const string& name)
         mem_fun(*this, &Logic::sendRgrSound)));
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
-} /** Logic::Logic */
+} /* Logic::Logic */
 
 Logic::~Logic(void)
 {
@@ -143,7 +143,7 @@ Logic::~Logic(void)
   delete logic_con_out;
   delete logic_con_in;
   delete dtmf_digit_handler;
-} /** Logic::~Logic */
+} /* Logic::~Logic */
 
 bool Logic::initialize(void)
 {
@@ -524,7 +524,6 @@ bool Logic::initialize(void)
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->publishStateEvent.connect(
           mem_fun(*this, &Logic::publishStateEvent));
-  event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -592,7 +591,8 @@ bool Logic::initialize(void)
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
   return true;
-} /** Logic::initialize */
+
+} /* Logic::initialize */
 
 void Logic::processEvent(const string& event, const Module *module)
 {
@@ -611,7 +611,7 @@ void Logic::processEvent(const string& event, const Module *module)
 void Logic::setEventVariable(const string& name, const string& value)
 {
   event_handler->setVariable(name, value);
-} /** Logic::setEventVariable */
+} /* Logic::setEventVariable */
 
 void Logic::playFile(const string& path)
 {
@@ -623,7 +623,7 @@ void Logic::playFile(const string& path)
   }
 
   checkIdle();
-} /** Logic::playFile */
+} /* Logic::playFile */
 
 void Logic::playSilence(int length)
 {
@@ -635,7 +635,7 @@ void Logic::playSilence(int length)
   }
 
   checkIdle();
-} /** Logic::playSilence */
+} /* Logic::playSilence */
 
 void Logic::playTone(int fq, int amp, int len)
 {
@@ -645,20 +645,9 @@ void Logic::playTone(int fq, int amp, int len)
   {
     updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
   }
-  checkIdle();
-} /** Logic::playSilence */
-
-void Logic::playDtmf(char digit, int amp, int len)
-{
-  msg_handler->playDtmf(digit, amp, len, report_events_as_idle);
-
-  if (!msg_handler->isIdle())
-  {
-    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
-  }
 
   checkIdle();
-} /** Logic::playDtmf */
+} /* Logic::playSilence */
 
 void Logic::recordStart(const string& filename, unsigned max_time)
 {
@@ -674,13 +663,13 @@ void Logic::recordStart(const string& filename, unsigned max_time)
   }
   recorder->setMaxRecordingTime(max_time);
   rx_splitter->addSink(recorder, true);
-} /** Logic::recordStart */
+} /* Logic::recordStart */
 
 void Logic::recordStop(void)
 {
   rx_splitter->removeSink(recorder);
   recorder = 0;
-} /** Logic::recordStop */
+} /* Logic::recordStop */
 
 bool Logic::activateModule(Module *module)
 {
@@ -699,7 +688,8 @@ bool Logic::activateModule(Module *module)
   }
 
   return false;
-} /** Logic::activateModule */
+
+} /* Logic::activateModule */
 
 void Logic::deactivateModule(Module *module)
 {
@@ -714,7 +704,7 @@ void Logic::deactivateModule(Module *module)
     module->deactivate();
     event_handler->setVariable("active_module", "");
   }
-} /** Logic::deactivateModule */
+} /* Logic::deactivateModule */
 
 Module *Logic::findModule(int id)
 {
@@ -728,7 +718,8 @@ Module *Logic::findModule(int id)
   }
 
   return 0;
-} /** Logic::findModule */
+
+} /* Logic::findModule */
 
 Module *Logic::findModule(const string& name)
 {
@@ -742,7 +733,8 @@ Module *Logic::findModule(const string& name)
   }
 
   return 0;
-} /** Logic::findModule */
+
+} /* Logic::findModule */
 
 void Logic::dtmfDigitDetected(char digit, int duration)
 {
@@ -760,7 +752,8 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   {
     processCommandQueue();
   }
-} /** Logic::dtmfDigitDetected */
+
+} /* Logic::dtmfDigitDetected */
 
 void Logic::selcallSequenceDetected(std::string sequence)
 {
@@ -774,7 +767,7 @@ void Logic::selcallSequenceDetected(std::string sequence)
     cout << name() << ": Sel5 sequence \"" << sequence
          << "\" out of defined range\n";
   }
-} /** Logic::selcallSequenceDetected */
+} /* Logic::selcallSequenceDetected */
 
 void Logic::sendDtmf(const std::string& digits)
 {
@@ -782,17 +775,17 @@ void Logic::sendDtmf(const std::string& digits)
   {
     tx().sendDtmf(digits);
   }
-} /** Logic::sendDtmf */
+} /* Logic::sendDtmf */
 
 bool Logic::isWritingMessage(void)
 {
   return msg_handler->isWritingMessage();
-} /** Logic::isWritingMessage */
+} /* Logic::isWritingMessage */
 
 Async::AudioSink *Logic::logicConIn(void)
 {
   return logic_con_in;
-} /** Logic::logicConIn */
+} /* Logic::logicConIn */
 
 void Logic::setOnline(bool online)
 {
@@ -810,14 +803,14 @@ void Logic::setOnline(bool online)
   ss << "logic_online ";
   ss << (is_online ? 1 : 0);
   processEvent(ss.str());
-} /** Logic::setOnline */
+} /* Logic::setOnline */
 
 Async::AudioSource *Logic::logicConOut(void)
 {
   return logic_con_out;
-} /** Logic::logicConOut */
+} /* Logic::logicConOut */
 
-/**
+/*
  * Protected member functions
  */
 void Logic::squelchOpen(bool is_open)
@@ -863,7 +856,8 @@ void Logic::squelchOpen(bool is_open)
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
 
   checkIdle();
-} /** Logic::squelchOpen */
+
+} /* Logic::squelchOpen */
 
 bool Logic::getIdleState(void) const
 {
@@ -871,7 +865,7 @@ bool Logic::getIdleState(void) const
       	 state_det->isIdle() &&
       	 msg_handler->isIdle();
 
-} /** Logic::getIdleState */
+} /* Logic::getIdleState */
 void Logic::transmitterStateChange(bool is_transmitting)
 {
   if (LocationInfo::has_instance() &&
@@ -885,12 +879,12 @@ void Logic::transmitterStateChange(bool is_transmitting)
   stringstream ss;
   ss << "transmit " << (is_transmitting ? "1" : "0");
   processEvent(ss.str());
-} /** Logic::transmitterStateChange */
+} /* Logic::transmitterStateChange */
 
 void Logic::clearPendingSamples(void)
 {
   msg_handler->clear();
-} /** Logic::clearPendingSamples */
+} /* Logic::clearPendingSamples */
 
 void Logic::enableRgrSoundTimer(bool enable)
 {
@@ -912,24 +906,24 @@ void Logic::enableRgrSoundTimer(bool enable)
       sendRgrSound();
     }
   }
-} /** Logic::enableRgrSoundTimer */
+} /* Logic::enableRgrSoundTimer */
 
 #if 0
 bool Logic::remoteLogicIsTransmitting(void) const
 {
   return logic_con_in->isTransmitting();
-} /** Logic::remoteLogicIsTransmitting */
+} /* Logic::remoteLogicIsTransmitting */
 #endif
 
 void Logic::rxValveSetOpen(bool do_open)
 {
   rx_valve->setOpen(do_open);
-} /** Logic::rxValveSetOpen */
+} /* Logic::rxValveSetOpen */
 
 void Logic::rptValveSetOpen(bool do_open)
 {
   rpt_valve->setOpen(do_open);
-} /** Logic::rptValveSetOpen */
+} /* Logic::rptValveSetOpen */
 
 void Logic::checkIdle(void)
 {
@@ -940,7 +934,7 @@ void Logic::checkIdle(void)
     //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
     idleStateChanged(is_idle);
   }
-} /** Logic::checkIdle */
+} /* Logic::checkIdle */
 
 void Logic::setTxCtrlMode(Tx::TxCtrlMode mode)
 {
@@ -949,9 +943,9 @@ void Logic::setTxCtrlMode(Tx::TxCtrlMode mode)
   {
     tx().setTxCtrlMode(mode);
   }
-} /** Logic::setTxCtrlMode */
+} /* Logic::setTxCtrlMode */
 
-/**
+/*
  * Private member functions
  */
 void Logic::allMsgsWritten(void)
@@ -969,7 +963,7 @@ void Logic::allMsgsWritten(void)
   updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
   checkIdle();
 
-} /** Logic::allMsgsWritten */
+} /* Logic::allMsgsWritten */
 
 void Logic::loadModules(void)
 {
@@ -997,7 +991,7 @@ void Logic::loadModules(void)
       begin = comma + 1;
     }
   } while (comma != modules.end());
-} /** Logic::loadModules */
+} /* Logic::loadModules */
 
 void Logic::loadModule(const string& module_cfg_name)
 {
@@ -1112,7 +1106,7 @@ void Logic::loadModule(const string& module_cfg_name)
 
   modules.push_back(module);
 
-} /** Logic::loadModule */
+} /* Logic::loadModule */
 
 void Logic::unloadModules(void)
 {
@@ -1124,7 +1118,7 @@ void Logic::unloadModules(void)
     dlclose(plugin_handle);
   }
   modules.clear();
-} /** logic::unloadModules */
+} /* logic::unloadModules */
 
 
 void Logic::processCommandQueue(void)
@@ -1150,7 +1144,7 @@ void Logic::processCommandQueue(void)
     processCommand(cmd);
 
   }
-} /** Logic::processCommandQueue */
+} /* Logic::processCommandQueue */
 
 void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 {
@@ -1205,7 +1199,7 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
     }
   }
 
-} /** Logic::processCommand */
+} /* Logic::processCommand */
 
 void Logic::processMacroCmd(const string& macro_cmd)
 {
@@ -1277,7 +1271,7 @@ void Logic::processMacroCmd(const string& macro_cmd)
   {
     dtmfDigitDetected(module_cmd[i], 100);
   }
-} /** Logic::processMacroCmd */
+} /* Logic::processMacroCmd */
 
 void Logic::checkIfOnlineCmd(void)
 {
@@ -1286,7 +1280,7 @@ void Logic::checkIfOnlineCmd(void)
     cout << name() << ": Setting logic online\n";
     setOnline(true);
   }
-} /** Logic::checkIfOnlineCmd */
+} /* Logic::checkIfOnlineCmd */
 
 void Logic::putCmdOnQueue(void)
 {
@@ -1309,13 +1303,13 @@ void Logic::putCmdOnQueue(void)
 
   processCommandQueue();
 
-} /** Logic::putCmdOnQueue */
+} /* Logic::putCmdOnQueue */
 
 void Logic::sendRgrSound(void)
 {
   processEvent("send_rgr_sound");
   enableRgrSoundTimer(false);
-} /** Logic::sendRogerSound */
+} /* Logic::sendRogerSound */
 
 void Logic::timeoutNextMinute(void)
 {
@@ -1325,13 +1319,13 @@ void Logic::timeoutNextMinute(void)
   tm->tm_min += 1;
   tm->tm_sec = 0;
   every_minute_timer.setTimeout(*tm);
-} /** Logic::timeoutNextMinute */
+} /* Logic::timeoutNextMinute */
 
 void Logic::everyMinute(AtTimer *t)
 {
   processEvent("every_minute");
   timeoutNextMinute();
-} /** Logic::everyMinute */
+} /* Logic::everyMinute */
 
 void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
@@ -1353,7 +1347,7 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
   dtmfDigitDetected(digit, duration);
 
-} /** Logic::dtmfDigitDetectedP */
+} /* Logic::dtmfDigitDetectedP */
 
 void Logic::audioStreamStateChange(bool is_active, bool is_idle)
 {
@@ -1367,7 +1361,7 @@ void Logic::audioStreamStateChange(bool is_active, bool is_idle)
   }
 
   checkIdle();
-} /** Logic::audioStreamStateChange */
+} /* Logic::audioStreamStateChange */
 
 void Logic::cleanup(void)
 {
@@ -1396,7 +1390,7 @@ void Logic::cleanup(void)
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
   delete qso_recorder;                qso_recorder = 0;
   delete state_pty;                   state_pty = 0;
-} /** Logic::cleanup */
+} /* Logic::cleanup */
 
 void Logic::updateTxCtcss(bool do_set, TxCtcssType type)
 {
@@ -1411,17 +1405,17 @@ void Logic::updateTxCtcss(bool do_set, TxCtcssType type)
 
   tx().enableCtcss((tx_ctcss & tx_ctcss_mask) != 0);
 
-} /** Logic::updateTxCtcss */
+} /* Logic::updateTxCtcss */
 
 void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_LOGIC);
-} /** Logic::logicConInStreamStateChanged */
+} /* Logic::logicConInStreamStateChanged */
 
 void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
-} /** Logic::audioFromModuleStreamStateChanged */
+} /* Logic::audioFromModuleStreamStateChanged */
 
 void Logic::publishStateEvent(const string &event_name, const string &msg)
 {
@@ -1437,8 +1431,8 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   os << event_name << " " << msg;
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
-} /** Logic::publishStateEvent */
+} /* Logic::publishStateEvent */
 
-/**
+/*
  * This file has not been truncated
  */

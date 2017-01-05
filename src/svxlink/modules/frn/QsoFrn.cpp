@@ -27,12 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/**
- *
+/*
  * System Includes
- *
  */
 #include <cassert>
 #include <cstring>
@@ -41,11 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <regex.h>
 
-
-/**
- *
+/*
  * Project Includes
- *
  */
 #include <AsyncConfig.h>
 #include <AsyncAudioPacer.h>
@@ -58,75 +51,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 
-
-/**
- *
+/*
  * Local Includes
- *
  */
 #include "Utils.h"
 #include "ModuleFrn.h"
 #include "QsoFrn.h"
 #include "multirate_filter_coeff.h"
 
-
-/**
- *
+/*
  * Namespaces to use
- *
  */
 using namespace std;
 using namespace Async;
 using namespace sigc;
 using namespace FrnUtils;
 
-
-/**
- *
+/*
  * Defines & typedefs
- *
  */
 
-
-
-/**
- *
+/*
  * Local class definitions
- *
  */
 
-
-
-/**
- *
+/*
  * Prototypes
- *
  */
 
-
-
-/**
- *
+/*
  * Exported Global Variables
- *
  */
 
-
-
-/**
- *
+/*
  * Local Global Variables
- *
  */
 
-
-
-/**
- *
+/*
  * Public member functions
- *
  */
-
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
   , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
@@ -266,7 +229,6 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   init_ok = true;
 }
 
-
 QsoFrn::~QsoFrn(void)
 {
   AudioSink::clearHandler();
@@ -288,12 +250,10 @@ QsoFrn::~QsoFrn(void)
   gsmh = 0;
 }
 
-
 bool QsoFrn::initOk(void)
 {
   return init_ok;
 }
-
 
 void QsoFrn::connect(void)
 {
@@ -302,7 +262,6 @@ void QsoFrn::connect(void)
   cout << "connecting to " << opt_server << ":" << opt_port << endl;
   tcp_client->connect(opt_server, atoi(opt_port.c_str()));
 }
-
 
 void QsoFrn::disconnect(void)
 {
@@ -315,7 +274,6 @@ void QsoFrn::disconnect(void)
     tcp_client->disconnect();
   }
 }
-
 
 std::string QsoFrn::stateToString(State state)
 {
@@ -354,7 +312,6 @@ std::string QsoFrn::stateToString(State state)
   }
 }
 
-
 int QsoFrn::writeSamples(const float *samples, int count)
 {
   //cout << __FUNCTION__ << " " << count << endl;
@@ -391,7 +348,6 @@ int QsoFrn::writeSamples(const float *samples, int count)
   return samples_read;
 }
 
-
 void QsoFrn::flushSamples(void)
 {
   //cout << __FUNCTION__ << " " << stateToString(state) << endl;
@@ -412,12 +368,10 @@ void QsoFrn::flushSamples(void)
   sourceAllSamplesFlushed();
 }
 
-
 void QsoFrn::resumeOutput(void)
 {
   //cout << __FUNCTION__ << endl;
 }
-
 
 void QsoFrn::squelchOpen(bool is_open)
 {
@@ -428,8 +382,7 @@ void QsoFrn::squelchOpen(bool is_open)
   }
 }
 
-
-/**
+/*
  *
  * Protected member functions
  *
@@ -439,8 +392,7 @@ void QsoFrn::allSamplesFlushed(void)
   //cout << __FUNCTION__ << endl;
 }
 
-
-/**
+/*
  *
  * Private member functions
  *
@@ -457,7 +409,6 @@ void QsoFrn::setState(State newState)
       error();
   }
 }
-
 
 void QsoFrn::login(void)
 {
@@ -510,7 +461,6 @@ void QsoFrn::sendVoiceData(short *data, int len)
   }
 }
 
-
 void QsoFrn::reconnect(void)
 {
   reconnect_timeout_ms *= RECONNECT_BACKOFF;
@@ -525,7 +475,6 @@ void QsoFrn::reconnect(void)
     setState(STATE_ERROR);
   }
 }
-
 
 void QsoFrn::sendRequest(Request rq)
 {
@@ -567,7 +516,6 @@ void QsoFrn::sendRequest(Request rq)
     }
   }
 }
-
 
 int QsoFrn::handleAudioData(unsigned char *data, int len)
 {
@@ -630,7 +578,6 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
   return FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE;
 }
 
-
 int QsoFrn::handleCommand(unsigned char *data, int len)
 {
   int bytes_read = 0;
@@ -680,7 +627,6 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
   return bytes_read;
 }
 
-
 int QsoFrn::handleListHeader(unsigned char *data, int len)
 {
   int bytes_read = 0;
@@ -693,7 +639,6 @@ int QsoFrn::handleListHeader(unsigned char *data, int len)
   }
   return bytes_read;
 }
-
 
 int QsoFrn::handleList(unsigned char *data, int len)
 {
@@ -727,7 +672,6 @@ int QsoFrn::handleList(unsigned char *data, int len)
   //cout << "got " << len << " read " << bytes_read << endl;
   return bytes_read;
 }
-
 
 int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
 {
@@ -772,7 +716,6 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
   return bytes_read;
 }
 
-
 void QsoFrn::onConnected(void)
 {
   //cout << __FUNCTION__ << endl;
@@ -783,7 +726,6 @@ void QsoFrn::onConnected(void)
   con_timeout_timer->setEnable(true);
   login();
 }
-
 
 void QsoFrn::onDisconnected(TcpConnection *conn,
   TcpConnection::DisconnectReason reason)
@@ -837,7 +779,6 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
     reconnect_timer->reset();
   }
 }
-
 
 int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 {
@@ -898,12 +839,10 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
   return len - remaining_bytes;
 }
 
-
 void QsoFrn::onSendBufferFull(bool is_full)
 {
   cerr << "send buffer is full " << is_full << endl;
 }
-
 
 void QsoFrn::onConnectTimeout(Timer *timer)
 {
@@ -914,7 +853,6 @@ void QsoFrn::onConnectTimeout(Timer *timer)
     reconnect();
   }
 }
-
 
 void QsoFrn::onRxTimeout(Timer *timer)
 {
@@ -933,14 +871,12 @@ void QsoFrn::onKeepaliveTimeout(Timer *timer)
     sendRequest(RQ_P);
 }
 
-
 void QsoFrn::onRxVoiceStarted(const string &client_descritpion) const
 {
   if (is_rf_disabled)
     cout << "[listen only] ";
   cout << "voice started: " << client_descritpion << endl;
 }
-
 
 void QsoFrn::onFrnListReceived(const FrnList &list) const
 {
@@ -951,20 +887,18 @@ void QsoFrn::onFrnListReceived(const FrnList &list) const
   }
 }
 
-
 void QsoFrn::onFrnClientListReceived(const FrnList &list)
 {
   cout << "FRN active client list updated" << endl;
   client_list = list;
 }
 
-
 void QsoFrn::onDelayedReconnect(Async::Timer *timer)
 {
   reconnect();
 }
 
-/**
+/*
  * This file has not been truncated
  */
 

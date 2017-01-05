@@ -116,7 +116,7 @@ bool LocalRxSim::initialize(void)
   }
 
   return true;
-  
+
 } /** LocalRxSim:initialize */
 
 /**

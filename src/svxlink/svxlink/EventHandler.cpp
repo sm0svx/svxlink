@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
@@ -32,45 +32,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cstring>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncApplication.h>
 
-/**
+/*
  * Local Includes
  */
 #include "EventHandler.h"
 #include "Logic.h"
 #include "Module.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
 
@@ -103,11 +103,10 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
                     this, NULL);
   Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
                     this, NULL);
-  Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
 
   setVariable("script_path", event_script);
 
-} /** EventHandler::EventHandler */
+} /* EventHandler::EventHandler */
 
 EventHandler::~EventHandler(void)
 {
@@ -120,7 +119,7 @@ EventHandler::~EventHandler(void)
     }
     Tcl_Release(interp);
   }
-} /** EventHandler::~EventHandler */
+} /* EventHandler::~EventHandler */
 
 bool EventHandler::initialize(void)
 {
@@ -138,7 +137,7 @@ bool EventHandler::initialize(void)
   
   return true;
   
-} /** EventHandler::initialize */
+} /* EventHandler::initialize */
 
 void EventHandler::setVariable(const string& name, const string& value)
 {
@@ -155,7 +154,7 @@ void EventHandler::setVariable(const string& name, const string& value)
          << Tcl_GetStringResult(interp) << endl;
   }
   Tcl_Release(interp);
-} /** EventHandler::setVariable */
+} /* EventHandler::setVariable */
 
 bool EventHandler::processEvent(const string& event)
 {
@@ -177,7 +176,7 @@ bool EventHandler::processEvent(const string& event)
   
   return success;
   
-} /** EventHandler::processEvent */
+} /* EventHandler::processEvent */
 
 const string EventHandler::eventResult(void) const
 {
@@ -188,13 +187,13 @@ const string EventHandler::eventResult(void) const
   
   return Tcl_GetStringResult(interp);
   
-} /** EventHandler::eventResult */
+} /* EventHandler::eventResult */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 
@@ -320,25 +319,7 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
-int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
-      	      	      	      int argc, const char *argv[])
-{
-  if(argc != 4)
-  {
-    char msg[] = "Usage: playDtmf <digit#> <amp> <milliseconds>";
-    Tcl_SetResult(irp, msg, TCL_STATIC);
-    return TCL_ERROR;
-  }
-  //cout << "EventHandler::playDtmf: " << argv[1] << ", " 
-  //    << argv[2] << ", " << argv[3]<< endl;
-  char *digit;
-  digit = const_cast<char*>(argv[1]);
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->playDtmf(digit[0], atoi(argv[2]), atoi(argv[3]));
-
-  return TCL_OK;
-} /** EventHandler::playDtmfHandler */
-
-/**
+/*
  * This file has not been truncated
  */
+

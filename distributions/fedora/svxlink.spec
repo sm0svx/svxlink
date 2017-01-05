@@ -124,10 +124,10 @@ fi
 /usr/share/svxlink/sounds/Parrot
 /usr/share/svxlink/sounds/TclVoiceMail
 %config /usr/share/svxlink/sounds/events.tcl
-%config /usr/share/svxlink/sounds/events.d/**
+%config /usr/share/svxlink/sounds/events.d/*
 %defattr(644,root,root)
 %config(noreplace) /etc/svxlink.conf
-%config(noreplace) /etc/svxlink.d/**
+%config(noreplace) /etc/svxlink.d/*
 %config(noreplace) /etc/TclVoiceMail.conf
 %config(noreplace) /etc/logrotate.d/svxlink
 %config(noreplace) /etc/remotetrx.conf
@@ -153,7 +153,7 @@ fi
 %{_libdir}/svxlink/Module*.so
 /etc/init.d/svxlink
 /etc/init.d/remotetrx
-%ghost /var/log/**
+%ghost /var/log/*
 %exclude %{_includedir}/svxlink/Module.h
 %exclude %{_includedir}/svxlink/MsgHandler.h
 %exclude %{_includedir}/svxlink/EventHandler.h

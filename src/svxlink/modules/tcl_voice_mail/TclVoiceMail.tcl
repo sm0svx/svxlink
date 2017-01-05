@@ -55,6 +55,7 @@ proc activating_module {} {
   playMsg "login"
 }
 
+
 #
 # Executed when this module is being deactivated.
 #

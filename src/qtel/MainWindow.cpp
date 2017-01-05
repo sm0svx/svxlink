@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <iostream>
@@ -45,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QCloseEvent>
 #undef emit
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncIpAddress.h>
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkProxy.h>
 #include <common.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/QTEL.h"
@@ -66,37 +66,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EchoLinkDirectoryModel.h"
 #include "multirate_filter_coeff.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Public member functions
  */
-/**
+/*
  *------------------------------------------------------------------------
  * Method:    MainWindow::MainWindow
  * Purpose:   Constructor
@@ -206,7 +206,7 @@ MainWindow::MainWindow(void)
   }
   
   initMsgAudioIo();
-} /** MainWindow::MainWindow */
+} /* MainWindow::MainWindow */
 
 MainWindow::~MainWindow(void)
 {
@@ -237,13 +237,13 @@ MainWindow::~MainWindow(void)
   delete dir;
 
   Dispatcher::deleteInstance();
-} /** MainWindow::~MainWindow */
+} /* MainWindow::~MainWindow */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
+/*
  * Private member functions
  */
 void MainWindow::incomingConnection(const IpAddress& remote_ip,
@@ -283,7 +283,7 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
   incoming_con_param[QString::fromStdString(remote_call)] =
       QString::fromStdString(remote_priv);
   
-} /** MainWindow::incomingConnection */
+} /* MainWindow::incomingConnection */
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
@@ -300,7 +300,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
   {
     e->accept();
   }
-} /** MainWindow::closeEvent */
+} /* MainWindow::closeEvent */
 
 
 void MainWindow::serverError(const string& msg)
@@ -308,7 +308,7 @@ void MainWindow::serverError(const string& msg)
   cout << msg << endl;
   statusBar()->showMessage(msg.c_str(), 5000);
   server_msg_view->append(msg.c_str());
-} /** MainWindow::serverError */
+} /* MainWindow::serverError */
 
 void MainWindow::statusChanged(StationData::Status status)
 {
@@ -344,13 +344,13 @@ void MainWindow::statusChanged(StationData::Status status)
   
   prev_status = status;
   
-} /** MainWindow::statusChanged */
+} /* MainWindow::statusChanged */
 
 void MainWindow::allMsgsWritten(void)
 {
   //cout << "MainWindow::allMsgsWritten\n";
   msg_audio_io->close();  
-} /** MainWindow::allMsgsWritten */
+} /* MainWindow::allMsgsWritten */
 
 
 void MainWindow::initMsgAudioIo(void)
@@ -393,7 +393,7 @@ void MainWindow::initMsgAudioIo(void)
 
   prev_src->registerSink(msg_audio_io);
   
-} /** MainWindow::initMsgAudioIo */
+} /* MainWindow::initMsgAudioIo */
 
 void MainWindow::setupAudioParams(void)
 {
@@ -417,7 +417,7 @@ void MainWindow::setupAudioParams(void)
 #endif
   AudioIO::setSampleRate(rate);
   AudioIO::setChannels(1);
-} /** MainWindow::setupAudioParams */
+} /* MainWindow::setupAudioParams */
 
 void MainWindow::initEchoLink(void)
 {
@@ -469,7 +469,7 @@ void MainWindow::initEchoLink(void)
   }
   disp->incomingConnection.connect(
       mem_fun(*this, &MainWindow::incomingConnection));
-} /** MainWindow::initEchoLink */
+} /* MainWindow::initEchoLink */
 
 void MainWindow::updateBookmarkModel(void)
 {
@@ -494,7 +494,7 @@ void MainWindow::updateBookmarkModel(void)
   }
   bookmark_model->updateStationList(bookmarks);
   
-} /** MainWindow::updateBookmarkModel */
+} /* MainWindow::updateBookmarkModel */
 
 void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
 						       QListWidgetItem *previous
@@ -546,13 +546,13 @@ void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
 						   const QItemSelection&)));
   }
 
-} /** MainWindow::stationViewSelectorCurrentItemChanged */
+} /* MainWindow::stationViewSelectorCurrentItemChanged */
 
 
 void MainWindow::stationViewDoubleClicked(const QModelIndex &index)
 {
   connectionConnectToSelectedActionActivated();
-} /** MainWindow::stationViewDoubleClicked */
+} /* MainWindow::stationViewDoubleClicked */
 
 
 void MainWindow::stationViewSelectionChanged(const QItemSelection &current,
@@ -568,7 +568,7 @@ void MainWindow::stationViewSelectionChanged(const QItemSelection &current,
   addSelectedToBookmarksAction->setEnabled(item_selected);
   removeSelectedFromBookmarksAction->setEnabled(item_selected);
   
-} /** MainWindow::stationViewSelectionChanged */
+} /* MainWindow::stationViewSelectionChanged */
 
 void MainWindow::callsignListUpdated(void)
 {
@@ -588,7 +588,7 @@ void MainWindow::callsignListUpdated(void)
     old_server_msg = msg;
   }
     
-} /** MainWindow::callsignListUpdated */
+} /* MainWindow::callsignListUpdated */
 
 void MainWindow::refreshCallList(void)
 {
@@ -597,7 +597,7 @@ void MainWindow::refreshCallList(void)
     statusBar()->showMessage(trUtf8("Refreshing station list..."));
     dir->getCalls();
   }
-} /** MainWindow::refreshCallList */
+} /* MainWindow::refreshCallList */
 
 
 void MainWindow::updateRegistration(void)
@@ -610,29 +610,29 @@ void MainWindow::updateRegistration(void)
   {
     dir->makeOnline();
   }
-} /** MainWindow::updateRegistration */
+} /* MainWindow::updateRegistration */
 
 void MainWindow::setBusy(bool busy)
 {
   is_busy = busy;
   updateRegistration();
-} /** MainWindow::setBusy */
+} /* MainWindow::setBusy */
 
 void MainWindow::forceQuit(void)
 {
   close();
-} /** MainWindow::forceQuit */
+} /* MainWindow::forceQuit */
 
 void MainWindow::incomingSelectionChanged(void)
 {
   incoming_accept_button->setEnabled(incoming_con_view->selectedItems().size() > 0);
-} /** MainWindow::incomingSelectionChanged */
+} /* MainWindow::incomingSelectionChanged */
 
 void MainWindow::clearIncomingList(void)
 {
   incoming_con_view->clear();
   incoming_accept_button->setEnabled(false);
-} /** MainWindow::clearIncomingList */
+} /* MainWindow::clearIncomingList */
 
 void MainWindow::acceptIncoming(void)
 {
@@ -648,7 +648,7 @@ void MainWindow::acceptIncoming(void)
   Q_ASSERT(item_index >= 0);
   incoming_con_view->takeTopLevelItem(item_index);
   delete item;
-} /** MainWindow::acceptIncoming */
+} /* MainWindow::acceptIncoming */
 
 void MainWindow::addSelectedToBookmarks(void)
 {
@@ -667,7 +667,7 @@ void MainWindow::addSelectedToBookmarks(void)
   }
   updateBookmarkModel();
 
-} /** MainWindow::addSelectedToBookmarks */
+} /* MainWindow::addSelectedToBookmarks */
 
 void MainWindow::removeSelectedFromBookmarks(void)
 {
@@ -686,7 +686,7 @@ void MainWindow::removeSelectedFromBookmarks(void)
     Settings::instance()->setBookmarks(bookmarks);
     updateBookmarkModel();
   }
-} /** MainWindow::removeSelectedFromBookmarks */
+} /* MainWindow::removeSelectedFromBookmarks */
 
 void MainWindow::addNamedStationToBookmarks(void)
 {
@@ -705,7 +705,7 @@ void MainWindow::addNamedStationToBookmarks(void)
     }
   }
   
-} /** MainWindow::addNamedStationToBookmarks */
+} /* MainWindow::addNamedStationToBookmarks */
 
 void MainWindow::configurationUpdated(void)
 {
@@ -725,7 +725,7 @@ void MainWindow::configurationUpdated(void)
   initMsgAudioIo();
   initEchoLink();
   updateRegistration();
-} /** MainWindow::configurationChanged */
+} /* MainWindow::configurationChanged */
 
 void MainWindow::connectionConnectToIpActionActivated(void)
 {
@@ -744,7 +744,7 @@ void MainWindow::connectionConnectToIpActionActivated(void)
       com_dialog->show();
     }
   }
-} /** MainWindow::connectionConnectToIpActionActivated */
+} /* MainWindow::connectionConnectToIpActionActivated */
 
 void MainWindow::connectionConnectToSelectedActionActivated(void)
 {
@@ -760,12 +760,12 @@ void MainWindow::connectionConnectToSelectedActionActivated(void)
     ComDialog *com_dialog = new ComDialog(*dir, callsign, "?");
     com_dialog->show();
   }
-} /** MainWindow::connectionConnectToSelectedActionActivated */
+} /* MainWindow::connectionConnectToSelectedActionActivated */
 
 void MainWindow::settings(void)
 {
   Settings::instance()->showDialog();
-} /** MainWindow::settings */
+} /* MainWindow::settings */
 
 
 void MainWindow::helpAbout(void)
@@ -780,9 +780,9 @@ void MainWindow::helpAbout(void)
                "are welcome to redistribute it in accordance with the "
                "terms and conditions in "
                "the GNU GPL (General Public License) version 2 or later."));
-} /** MainWindow::helpAbout */
+} /* MainWindow::helpAbout */
 
-/**
+/*
  * This file has not been truncated
  */
 

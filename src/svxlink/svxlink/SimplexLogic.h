@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SIMPLEX_LOGIC_INCLUDED
 #define SIMPLEX_LOGIC_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  *
  * Local Includes
  *
  */
 #include "Logic.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -100,11 +100,11 @@ class SimplexLogic : public Logic
     bool  mute_rx_on_tx;
     bool  mute_tx_on_rx;
 
-};  /** class SimplexLogic */
+};  /* class SimplexLogic */
 
-#endif /** SIMPLEX_LOGIC_INCLUDED */
+#endif /* SIMPLEX_LOGIC_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

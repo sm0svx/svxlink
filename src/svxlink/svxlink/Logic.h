@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOGIC_INCLUDED
 #define LOGIC_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 
-/**
+/*
  * Project Includes
  */
 #include <LocationInfo.h>
@@ -49,12 +49,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <Tx.h>
 
-/**
+/*
  * Local Includes
  */
 #include "CmdParser.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -72,11 +72,11 @@ namespace Async
   class Pty;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 class Rx;
@@ -87,15 +87,15 @@ class Command;
 class QsoRecorder;
 class DtmfDigitHandler;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -132,7 +132,6 @@ class Logic : public sigc::trackable
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
-    virtual void playDtmf(char digit, int amp, int len);
     void recordStart(const std::string& filename, unsigned max_time);
     void recordStop(void);
 
@@ -266,11 +265,11 @@ class Logic : public sigc::trackable
     void publishStateEvent(const std::string &event_name,
                            const std::string &msg);
 
-};  /** class Logic */
+};  /* class Logic */
 
-#endif /** LOGIC_INCLUDED */
+#endif /* LOGIC_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

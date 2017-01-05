@@ -93,7 +93,6 @@ proc status_report {} {
   #printInfo "status_report called...";
 }
 
-
 #
 # Called when an illegal command has been entered
 #

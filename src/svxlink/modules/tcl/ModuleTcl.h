@@ -27,43 +27,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_TCL_INCLUDED
 #define MODULE_TCL_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <Module.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/SVXLINK.h"
 
-/**
+/*
  * Forward declarations
-
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -93,10 +92,10 @@ class ModuleTcl : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
 
-};  /** class ModuleTcl */
+};  /* class ModuleTcl */
 
-#endif /** MODULE_TCL_INCLUDED */
+#endif /* MODULE_TCL_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

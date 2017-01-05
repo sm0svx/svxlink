@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <stdio.h>
@@ -32,42 +32,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 #include "version/MODULE_TCL.h"
 #include "ModuleTcl.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
+ *
  * Prototypes
+ *
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Pure C-functions
  */
 extern "C" {
@@ -75,53 +77,50 @@ extern "C" {
   {
     return new ModuleTcl(dl_handle, logic, cfg_name);
   }
-} /** extern "C" */
+} /* extern "C" */
 
-/**
+/*
  * Public member functions
  */
-
 ModuleTcl::ModuleTcl(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
 {
   cout << "\tModule Tcl v" MODULE_TCL_VERSION " starting...\n";
 
-} /** ModuleTcl */
-
+} /* ModuleTcl */
 
 ModuleTcl::~ModuleTcl(void)
 {
 
-} /** ~ModuleTcl */
+} /* ~ModuleTcl */
 
-/**
+/*
  * Protected member functions
  */
-
 void ModuleTcl::resumeOutput(void)
 {
 
-} /** ModuleTcl::resumeOutput */
+} /* ModuleTcl::resumeOutput */
 
 void ModuleTcl::allSamplesFlushed(void)
 {
 
-} /** ModuleTcl::allSamplesFlushed */
+} /* ModuleTcl::allSamplesFlushed */
 
 int ModuleTcl::writeSamples(const float *samples, int count)
 {
   return count;
-} /** ModuleTcl::writeSamples */
+} /* ModuleTcl::writeSamples */
 
 void ModuleTcl::flushSamples(void)
 {
   sourceAllSamplesFlushed();
-} /** ModuleTcl::flushSamples */
+} /* ModuleTcl::flushSamples */
 
-/**
+/*
  * Private member functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -136,9 +135,9 @@ void ModuleTcl::flushSamples(void)
 void ModuleTcl::activateInit(void)
 {
   processEvent("activateInit");
-} /** activateInit */
+} /* activateInit */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -154,9 +153,9 @@ void ModuleTcl::activateInit(void)
 void ModuleTcl::deactivateCleanup(void)
 {
   processEvent("deactivateCleanup");
-} /** deactivateCleanup */
+} /* deactivateCleanup */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -176,9 +175,9 @@ bool ModuleTcl::dtmfDigitReceived(char digit, int duration)
   ss << "dtmfDigitReceived " << digit << " " << duration;
   processEvent(ss.str());
   return false;
-} /** dtmfDigitReceived */
+} /* dtmfDigitReceived */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -198,9 +197,9 @@ void ModuleTcl::dtmfCmdReceived(const string& cmd)
   stringstream ss;
   ss << "dtmfCmdReceived \"" << cmd << "\"";
   processEvent(ss.str());
-} /** dtmfCmdReceived */
+} /* dtmfCmdReceived */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceivedWhenIdle
  * Purpose:   This function is called by the logic core when a DTMF command
@@ -225,9 +224,9 @@ void ModuleTcl::dtmfCmdReceivedWhenIdle(const std::string &cmd)
   stringstream ss;
   ss << "dtmfCmdReceivedWhenIdle \"" << cmd << "\"";
   processEvent(ss.str());
-} /** dtmfCmdReceivedWhenIdle  */
+} /* dtmfCmdReceivedWhenIdle  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when the squelch open or close.
@@ -245,9 +244,9 @@ void ModuleTcl::squelchOpen(bool is_open)
   stringstream ss;
   ss << "squelchOpen " << (is_open ? 1 : 0);
   processEvent(ss.str());
-} /** squelchOpen */
+} /* squelchOpen */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
  * Purpose:   Called by the core system when all announcement messages has
@@ -264,8 +263,8 @@ void ModuleTcl::squelchOpen(bool is_open)
 void ModuleTcl::allMsgsWritten(void)
 {
   processEvent("allMsgsWritten");
-} /** allMsgsWritten */
+} /* allMsgsWritten */
 
-/**
+/*
  * This file has not been truncated
  */

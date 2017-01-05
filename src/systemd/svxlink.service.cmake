@@ -13,7 +13,7 @@ ExecStartPre=-/bin/touch /var/log/svxlink
 ExecStartPre=-/bin/chown $RUNASUSER /var/log/svxlink
 ExecStart=/bin/sh -c '@CMAKE_INSTALL_PREFIX@/bin/svxlink --logfile=/var/log/svxlink --config=$CFGFILE --pidfile=/run/svxlink.pid --runasuser=$RUNASUSER'
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStopPost=@CMAKE_INSTALL_PREFIX@/sbin/svxlink_gpio_down
+ExecStopPost=@CMAKE_INSTALL_PREFIX@/sbin/svvxlink_gpio_down
 Restart=on-failure
 TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@

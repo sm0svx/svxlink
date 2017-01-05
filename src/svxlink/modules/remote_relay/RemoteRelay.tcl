@@ -9,6 +9,8 @@
 #
 #  Visit the project at OpenRepeater.com
 ###############################################################################
+
+
 # Start of namespace
 namespace eval RemoteRelay {
 
@@ -20,11 +22,13 @@ namespace eval RemoteRelay {
 	# Extract the module name from the current namespace
 	set module_name [namespace tail [namespace current]]
 	
+	
 	# An "overloaded" playMsg that eliminates the need to write the module name as the first argument.
 	proc playMsg {msg} {
 		variable module_name
 		::playMsg $module_name $msg
 	}
+	
 	
 	# A convenience function for printing out information prefixed by the module name.
 	proc printInfo {msg} {
@@ -32,11 +36,13 @@ namespace eval RemoteRelay {
 		puts "$module_name: $msg"
 	}
 	
+	
 	# Executed when this module is being activated
 	proc activating_module {} {
 		variable module_name
 		Module::activating_module $module_name
 	}
+	
 	
 	# Executed when this module is being deactivated.
 	proc deactivating_module {} {
@@ -44,23 +50,27 @@ namespace eval RemoteRelay {
 		Module::deactivating_module $module_name
 	}
 	
+	
 	# Executed when the inactivity timeout for this module has expired.
 	proc timeout {} {
 		variable module_name
 		Module::timeout $module_name
 	}
 	
+	
 	# Executed when playing of the help message for this module has been requested.
 	proc play_help {} {
 		variable module_name
 		Module::play_help $module_name
 	}
-
+	
+	
 	#
 	# Executed when the state of this module should be reported on the radio
 	proc status_report {} {
 		printInfo "status_report called..."
 	}
+	
 	
 	# Called when an illegal command has been entered
 	proc unknown_command {cmd} {
@@ -76,6 +86,7 @@ namespace eval RemoteRelay {
 	proc dtmfDigitReceived {char duration} {
 		printInfo "DTMF digit $char received with duration $duration milliseconds";
 	}
+	
 	
 	# Executed when a DTMF command is received
 	proc dtmfCmdReceived {cmd} {

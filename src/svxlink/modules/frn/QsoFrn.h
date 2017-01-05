@@ -26,47 +26,32 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef QSO_FRN_INCLUDED
 #define QSO_FRN_INCLUDED
 
-
-/**
- *
+/*
  * System Includes
- *
  */
 #include <string>
 #include <vector>
 #include <sigc++/sigc++.h>
 
-
-/**
- *
+/*
  * Project Includes
- *
  */
 extern "C" {
 #include <gsm.h>
 }
-
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 #include <AsyncTcpConnection.h>
 
-
-/**
- *
+/*
  * Local Includes
- *
  */
 
-
-
-/**
- *
+/*
  * Forward declarations
- *
  */
 namespace Async
 {
@@ -78,21 +63,12 @@ namespace Async
   class TcpConnection;
 };
 
-
-/**
- *
+/*
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
-/**
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
  */
 class MsgHandler;
 class EventHandler;
@@ -100,29 +76,18 @@ class AsyncTimer;
 class AudioFifo;
 class ModuleFrn;
 
-
-/**
- *
+/*
  * Defines & typedefs
- *
  */
 typedef std::vector<std::string> FrnList;
 
-
-/**
- *
+/*
  * Exported Global Variables
- *
  */
 
-
-
-/**
- *
+/*
  * Class definitions
- *
  */
-
 /**
 @brief	Free Radio Network (FRN) QSO module
 @author sh123
@@ -572,13 +537,10 @@ class QsoFrn
     std::string         opt_net;
 };
 
-
-//} /** namespace */
-
-#endif /** QSO_FRN_INCLUDED */
+#endif /* QSO_FRN_INCLUDED */
 
 
-/**
+/*
  * This file has not been truncated
  */
 

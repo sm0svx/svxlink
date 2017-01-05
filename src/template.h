@@ -32,41 +32,41 @@ An example of how to use the Template class
 #ifndef TEMPLATE_INCLUDED
 #define TEMPLATE_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace MyNameSpace
 {
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -104,12 +104,12 @@ class Template
     Template(const Template&);
     Template& operator=(const Template&);
     
-};  /** class Template */
+};  /* class Template */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** TEMPLATE_INCLUDED */
+#endif /* TEMPLATE_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

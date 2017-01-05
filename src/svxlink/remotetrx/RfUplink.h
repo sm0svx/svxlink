@@ -26,21 +26,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef RF_UPLINK_INCLUDED
 #define RF_UPLINK_INCLUDED
 
-/**
+/*
  * System Includes
  */
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/**
+/*
  * Local Includes
  */
 #include "Uplink.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -48,23 +48,23 @@ namespace Async
   class AudioSelector;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -120,13 +120,13 @@ class RfUplink : public Uplink
     void rxDtmfDigitDetected(char digit, int duration);
     void uplinkTxTransmitterStateChange(bool is_transmitting);
 
-};  /** class RfUplink */
+};  /* class RfUplink */
 
-//} /** namespace */
+//} /* namespace */
 
-#endif /** RF_UPLINK_INCLUDED */
+#endif /* RF_UPLINK_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

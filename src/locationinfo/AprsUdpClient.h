@@ -26,24 +26,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef APRS_UDP_CLIENT
 #define APRS_UDP_CLIENT
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncUdpSocket.h>
 #include <AsyncDnsLookup.h>
 
-/**
+/*
  * Local Includes
  */
 #include "LocationInfo.h"
 #include "AprsClient.h"
 
-/**
+/*
  * Forward declarations
  */
 namespace Async
@@ -57,23 +57,23 @@ namespace EchoLink
   class StationData;
 };
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 
@@ -117,10 +117,10 @@ class AprsUdpClient : public AprsClient, public sigc::trackable
     int   getGainParam();
     int   getDirectionParam();
 
-};  /** class LocationInfoClient */
+};  /* class LocationInfoClient */
 
-#endif /** APRS_UDP_CLIENT */
+#endif /* APRS_UDP_CLIENT */
 
-/**
+/*
  * This file has not been truncated
  */

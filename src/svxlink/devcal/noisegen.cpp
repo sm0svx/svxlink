@@ -108,7 +108,7 @@ void sigterm_handler(int signal)
   msg += " received. Shutting down application...\n";
   cout << msg;
   Application::app().quit();
-} /** sigterm_handler */
+} /* sigterm_handler */
 
 void level_step(Timer *t, NoiseGenerator *gen)
 {

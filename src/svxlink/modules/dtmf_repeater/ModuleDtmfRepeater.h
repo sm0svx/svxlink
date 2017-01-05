@@ -27,43 +27,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_DTMF_REPEATER_INCLUDED
 #define MODULE_DTMF_REPEATER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTimer.h>
 #include <Module.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/SVXLINK.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -102,11 +102,10 @@ class ModuleDtmfRepeater : public Module
     void setupRepeatDelay(void);
     void sendStoredDigits(void);
 
-};  /** class ModuleDtmfRepeater */
+};  /* class ModuleDtmfRepeater */
 
+#endif /* MODULE_DTMF_REPEATER_INCLUDED */
 
-#endif /** MODULE_DTMF_REPEATER_INCLUDED */
-
-/**
+/*
  * This file has not been truncated
  */

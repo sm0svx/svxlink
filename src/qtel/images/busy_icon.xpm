@@ -1,6 +1,6 @@
-/** XPM */
+/* XPM */
 static const char *busy_icon[] = {
-/** columns rows colors chars-per-pixel */
+/* columns rows colors chars-per-pixel */
 "16 16 130 2",
 "   c #000000",
 ".  c #0a0803",
@@ -132,7 +132,7 @@ static const char *busy_icon[] = {
 "u. c #fff8e1",
 "i. c white",
 "p. c None",
-/** pixels */
+/* pixels */
 "p.p.p.p.p.M G X.9.} N , p.p.p.p.",
 "p.p.p.m V y.i.i.i.i.u.K 9 p.p.p.",
 "p.p.C n q.u.u.y.t.r.e.@.B 4 p.p.",

@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <unistd.h>
@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iterator>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncCppApplication.h>
@@ -52,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <common.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/DEVCAL.h"
@@ -64,13 +64,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "../trx/RtlSdr.h"
 #include "../trx/Ddr.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
@@ -80,7 +80,7 @@ using namespace Async;
 #define DEFAULT_CALDEV        2404.8f
 #define DEFAULT_MAXDEV        5000.0f
 
-/**
+/*
  * Local class definitions
  */
 class SineGenerator : public Async::AudioSource
@@ -407,14 +407,14 @@ class DevMeasure : public sigc::trackable
     unsigned      samp_rate;
 };
 
-/**
+/*
  * Prototypes
  */
 static void parse_arguments(int argc, const char **argv);
 static void stdin_handler(FdWatch *w);
 static void sigterm_handler(int signal);
 
-/**
+/*
  * Local Global Variables
  */
 static const char *mod_fqs_str = DEFAULT_MOD_FQS;
@@ -438,7 +438,7 @@ static vector<float> mod_fqs;
 static const char *audio_dev = "alsa:default";
 static const unsigned audio_ch = 0;
 
-/**
+/*
  * MAIN
  */
 int main(int argc, const char *argv[])
@@ -652,10 +652,10 @@ int main(int argc, const char *argv[])
   return 0;
 }
 
-/**
+/*
  * Functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Function:  parse_arguments
  * Purpose:   Parse the command line arguments.
@@ -684,7 +684,7 @@ static void parse_arguments(int argc, const char **argv)
 	    "The maximum deviation for the channel", "<deviation in Hz>"},
     {"headroom", 'H', POPT_ARG_FLOAT | POPT_ARGFLAG_SHOW_DEFAULT,
             &headroom_db, 0, "The headroom to use", "<headroom in dB>"},
-    /**
+    /*
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
     */
@@ -716,7 +716,7 @@ static void parse_arguments(int argc, const char **argv)
     exit(1);
   }
 
-    /** Parse arguments that do not begin with '-' (leftovers) */
+    /* Parse arguments that do not begin with '-' (leftovers) */
   const char *arg = 0;
   int argcnt = 0;
   while ((arg = poptGetArg(optCon)) != NULL)
@@ -754,7 +754,7 @@ static void parse_arguments(int argc, const char **argv)
   }
 
   SvxLink::splitStr(mod_fqs, mod_fqs_str, ",");
-  /**
+  /*
   for (vector<float>::iterator it = mod_fqs.begin(); it != mod_fqs.end(); ++it)
   {
     cout << *it << " ";
@@ -782,7 +782,7 @@ static void parse_arguments(int argc, const char **argv)
 
   poptFreeContext(optCon);
 
-} /** parse_arguments */
+} /* parse_arguments */
 
 static void stdin_handler(FdWatch *w)
 {
@@ -796,7 +796,7 @@ static void stdin_handler(FdWatch *w)
   }
   else if (cnt == 0)
   {
-      /** Stdin file descriptor closed */
+      /* Stdin file descriptor closed */
     delete stdin_watch;
     stdin_watch = 0;
     return;
@@ -880,7 +880,7 @@ static void stdin_handler(FdWatch *w)
     default:
       break;
   }
-} /** stdin_handler */
+} /* stdin_handler */
 
 static void sigterm_handler(int signal)
 {
@@ -902,8 +902,8 @@ static void sigterm_handler(int signal)
   msg += " received. Shutting down application...\n";
   cout << msg;
   Application::app().quit();
-} /** sigterm_handler */
+} /* sigterm_handler */
 
-/**
+/*
  * This file has not been truncated
  */

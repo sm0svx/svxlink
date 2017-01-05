@@ -33,7 +33,7 @@ An example of how to use the EchoLink::Directory class
 #ifndef ECHOLINK_DIRECTORY_INCLUDED
 #define ECHOLINK_DIRECTORY_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -43,18 +43,18 @@ An example of how to use the EchoLink::Directory class
 #include <vector>
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 #include <EchoLinkStationData.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 class Cmd;
@@ -64,21 +64,21 @@ namespace EchoLink
   class DirectoryCon;
 };
 
-/**
+/*
  * Namespace
  */
 namespace EchoLink
 {
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -382,15 +382,15 @@ class Directory : public sigc::trackable
     void onCmdTimeout(Async::Timer *timer);
     bool stationCodeEq(const StationData& stn, std::string code, bool exact);
 
-};  /** class Directory */
+};  /* class Directory */
 
 std::ostream& operator<<(std::ostream& os, const StationData& station);
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ECHOLINK_DIRECTORY_INCLUDED */
+#endif /* ECHOLINK_DIRECTORY_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

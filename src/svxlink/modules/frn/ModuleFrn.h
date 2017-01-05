@@ -24,45 +24,27 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef MODULE_FRN_INCLUDED
 #define MODULE_FRN_INCLUDED
 
-
-/**
- *
+/*
  * System Includes
- *
  */
-
 #include <string>
 
-
-
-/**
- *
+/*
  * Project Includes
- *
  */
-
 #include <Module.h>
 #include <version/SVXLINK.h>
 
-
-
-/**
- *
+/*
  * Local Includes
- *
  */
 #include "QsoFrn.h"
 
-
-/**
- *
+/*
  * Forward declarations
- *
  */
 namespace Async
 {
@@ -73,47 +55,25 @@ namespace Async
   class AudioJitterFifo;
 };
 
-
-/**
- *
+/*
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
-/**
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
-/**
- *
+/*
  * Defines & typedefs
- *
  */
 
-
-
-/**
- *
+/*
  * Exported Global Variables
- *
  */
 
-
-
-/**
- *
+/*
  * Class definitions
- *
  */
-
 /**
 @brief	Free Radio Network (FRN) module
 @author sh123
@@ -150,14 +110,10 @@ class ModuleFrn : public Module
     static const char       CMD_COUNT_CLIENTS = '1';
     static const char       CMD_RF_DISABLE = '2';
 
-};  /** class ModuleFrn */
+};  /* class ModuleFrn */
 
+#endif /* MODULE_FRN_INCLUDED */
 
-//} /** namespace */
-
-#endif /** MODULE_FRN_INCLUDED */
-
-
-/**
+/*
  * This file has not been truncated
  */

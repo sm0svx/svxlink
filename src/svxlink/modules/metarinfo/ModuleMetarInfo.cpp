@@ -1,4 +1,4 @@
-/**
+/*
 @file	 ModuleMetarInfo.cpp
 @brief   gives out a METAR report
 @author  Adi Bier / DL1HRC
@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstdio>
@@ -39,20 +39,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <regex.h>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/MODULE_METARINFO.h"
 #include "ModuleMetarInfo.h"
 #include "common.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
@@ -60,7 +60,7 @@ using namespace Async;
 using namespace sigc;
 using namespace SvxLink;
 
-/**
+/*
  * Defines & typedefs
  */
 #define INTOKEN 1
@@ -122,19 +122,19 @@ using namespace SvxLink;
 #define NOTACTUAL 98
 #define INVALID 99
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 std::string desc[] = {
@@ -156,7 +156,7 @@ std::string clouds[] = {"acc", "ac", "as", "cbmam", "cb",
                         "cc", "cf",  "ci", "cs", "cu",
                         "tcu", "ns", "sc", "sf", "st"};
 
-/**
+/*
  * Pure C-functions
  */
 extern "C" {
@@ -164,9 +164,9 @@ extern "C" {
   {
     return new ModuleMetarInfo(dl_handle, logic, cfg_name);
   }
-} /** extern "C" */
+} /* extern "C" */
 
-/**
+/*
  * Public member functions
  */
 ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
@@ -175,40 +175,43 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
-} /** ModuleMetarInfo */
+} /* ModuleMetarInfo */
 
 ModuleMetarInfo::~ModuleMetarInfo(void)
 {
    delete con;
-} /** ~ModuleMetarInfo */
+} /* ~ModuleMetarInfo */
 
-/**
+/*
  * Protected member functions
  */
 void ModuleMetarInfo::resumeOutput(void)
 {
 
-} /** ModuleMetarInfo::resumeOutput */
+} /* ModuleMetarInfo::resumeOutput */
+
 
 void ModuleMetarInfo::allSamplesFlushed(void)
 {
 
-} /** ModuleMetarInfo::allSamplesFlushed */
+} /* ModuleMetarInfo::allSamplesFlushed */
+
 
 int ModuleMetarInfo::writeSamples(const float *samples, int count)
 {
   return count;
-} /** ModuleMetarInfo::writeSamples */
+} /* ModuleMetarInfo::writeSamples */
+
 
 void ModuleMetarInfo::flushSamples(void)
 {
   sourceAllSamplesFlushed();
-} /** ModuleMetarInfo::flushSamples */
+} /* ModuleMetarInfo::flushSamples */
 
-/**
+/*
  * Private member functions
  */
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    initialize
  * Purpose:   Called by the core system right after the object has been
@@ -314,9 +317,9 @@ bool ModuleMetarInfo::initialize(void)
 
   return true;
 
-} /** initialize */
+} /* initialize */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -335,9 +338,9 @@ void ModuleMetarInfo::activateInit(void)
       icao = icao_default;
       openConnection();
   }
-} /** activateInit */
+} /* activateInit */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -354,9 +357,9 @@ void ModuleMetarInfo::deactivateCleanup(void)
 {
   delete con;
   con = 0;
-} /** deactivateCleanup */
+} /* deactivateCleanup */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -378,9 +381,9 @@ bool ModuleMetarInfo::dtmfDigitReceived(char digit, int duration)
 
   return false;
 
-} /** dtmfDigitReceived */
+} /* dtmfDigitReceived */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -503,17 +506,15 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
       say(tosay);
   }
 
-} /** dtmfCmdReceived */
-
-
+} /* dtmfCmdReceived */
 
 void ModuleMetarInfo::dtmfCmdReceivedWhenIdle(const string& cmd)
 {
   std::cout << "dtmfCmdReceivedWhenIdle\n";
   dtmfCmdReceived(cmd);
-} /** dtmfCmdReceivedWhenIdle */
+} /* dtmfCmdReceivedWhenIdle */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when the squelch open or close.
@@ -529,9 +530,9 @@ void ModuleMetarInfo::dtmfCmdReceivedWhenIdle(const string& cmd)
 void ModuleMetarInfo::squelchOpen(bool is_open)
 {
 
-} /** squelchOpen */
+} /* squelchOpen */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
  * Purpose:   Called by the core system when all announcement messages has
@@ -548,9 +549,9 @@ void ModuleMetarInfo::squelchOpen(bool is_open)
 void ModuleMetarInfo::allMsgsWritten(void)
 {
 
-} /** allMsgsWritten */
+} /* allMsgsWritten */
 
-/**
+/*
 * establish a tcp-connection to the METAR-Server
 */
 void ModuleMetarInfo::openConnection(void)
@@ -566,7 +567,7 @@ void ModuleMetarInfo::openConnection(void)
     con->connect();
   }
 
-} /** openConnection */
+} /* openConnection */
 
 int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
 {
@@ -830,7 +831,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
          case RMKVISIBILITY:
             it++;
             current = *it;
-/**          temp << "rmk_visibility ";
+/*          temp << "rmk_visibility ";
             // check if a direction is given?
             if (checkDirection(tempstr, current))
             {
@@ -1044,9 +1045,10 @@ int ModuleMetarInfo::checkToken(std::string token)
     regfree(&re);
 
     return retvalue;
-} /** checkToken */
+} /* checkToken */
 
-/**
+
+/*
 Cloud-ground 	CG 	Lightning between cloud and ground.
 In-cloud 	IC 	Lightning within the cloud.
 Cloud-cloud 	CC 	Streaks of lightning reaching from one cloud to another.
@@ -1063,7 +1065,7 @@ std::string ModuleMetarInfo::getLightning(std::string token)
     }
 
     return ss.str();
-} /** getLightning */
+} /* getLightning */
 
 std::string ModuleMetarInfo::getCloudType(std::string token)
 {
@@ -1085,7 +1087,7 @@ std::string ModuleMetarInfo::getCloudType(std::string token)
    }
 
    return ss.str();
-} /** getCloudType */
+} /* getCloudType */
 
 std::string ModuleMetarInfo::getTempinRmk(std::string token)
 {
@@ -1097,7 +1099,7 @@ std::string ModuleMetarInfo::getTempinRmk(std::string token)
    ss << atoi(token.substr(6,2).c_str()) << "." << token.substr(8,1);
 
    return ss.str();
-} /** getTemoinRmk */
+} /* getTemoinRmk */
 
 bool ModuleMetarInfo::getPeakWind(std::string &retval, std::string token)
 {
@@ -1122,14 +1124,14 @@ bool ModuleMetarInfo::getPeakWind(std::string &retval, std::string token)
    retval = ss.str();
 
    return true;
-} /** getPeakWind */
+} /* getPeakWind */
 
 bool ModuleMetarInfo::getRmkVisibility(std::string &retval, std::string token)
 {
    stringstream ss;
    // to do
    return true;
-} /** getRmkVisibility */
+} /* getRmkVisibility */
 
 std::string ModuleMetarInfo::getTemp(std::string token)
 {
@@ -1138,7 +1140,7 @@ std::string ModuleMetarInfo::getTemp(std::string token)
    ss << atoi(token.substr(2,2).c_str()) << "." << token.substr(4,1);
 
    return ss.str();
-} /** getTemp */
+} /* getTemp */
 
 // RMK section, Characteristics of Barometer Tendency
 std::string ModuleMetarInfo::getPressureinRmk(std::string token)
@@ -1162,14 +1164,14 @@ std::string ModuleMetarInfo::getPressureinRmk(std::string token)
    ss << atoi(token.substr(2,2).c_str()) << "." << token.substr(4,1) << " "
       << ptrend[token.substr(1,1)[0]];
    return ss.str();
-} /** getPressureinRmk */
+} /* getPressureinRmk */
 
 std::string ModuleMetarInfo::getPrecipitationinRmk(std::string token)
 {
    stringstream ss;
    ss << atoi(token.substr(1,2).c_str()) << "." << token.substr(3,2);
    return ss.str();
-} /** getPrecipitationinRmk */
+} /* getPrecipitationinRmk */
 
 std::string ModuleMetarInfo::getTempTime(std::string token)
 {
@@ -1184,7 +1186,7 @@ std::string ModuleMetarInfo::getTempTime(std::string token)
     ss << atoi(token.substr(0,2).c_str()) << " "
        << token.substr(3,2);
     return ss.str();
-} /** getTempTime */
+} /* getTempTime */
 
 // sea level pressure
 // Format: SLPppp
@@ -1195,7 +1197,7 @@ std::string ModuleMetarInfo::getSlp(std::string token)
     (atoi(token.substr(3,1).c_str()) > 6) ? ss << "9" : ss << "10";
     ss << token.substr(3,2) << "." << token.substr(5,1);
     return ss.str();
-} /** getSlp */
+} /* getSlp */
 
 void ModuleMetarInfo::isRwyState(std::string &retval, std::string token)
 {
@@ -1312,9 +1314,10 @@ void ModuleMetarInfo::isRwyState(std::string &retval, std::string token)
    }
 
    retval = ss.str();
-} /** isRwyState */
+} /* isRwyState */
 
-/** beginning an ending of Precipitation */
+
+/* beginning an ending of Precipitation */
 std::string ModuleMetarInfo::getPrecipitation(std::string token)
 {
 
@@ -1370,7 +1373,7 @@ std::string ModuleMetarInfo::getPrecipitation(std::string token)
    }
 
    return newstr;
-} /** getRecipitation */
+} /* getRecipitation */
 
 bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 {
@@ -1430,7 +1433,7 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
       }
    }
    return false;
-} /** isActualWX */
+} /* isActualWX */
 
 // needed by regex
 bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
@@ -1446,7 +1449,7 @@ bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
   regfree(re);
   return success;
 
-} /** rmatch */
+} /* rmatch */
 
 bool ModuleMetarInfo::isvalidUTC(std::string token)
 {
@@ -1471,7 +1474,7 @@ bool ModuleMetarInfo::isvalidUTC(std::string token)
    if (diff > 3720) return false;
 
    return true;
-} /** isvalidUTC */
+} /* isvalidUTC */
 
 bool ModuleMetarInfo::isView(std::string &retval, std::string token)
 {
@@ -1533,7 +1536,7 @@ bool ModuleMetarInfo::isView(std::string &retval, std::string token)
 
    retval = ss.str();
    return true;
-} /** isView */
+} /* isView */
 
 // That's why I love SI-units!
 void ModuleMetarInfo::isPartofMiles(std::string &retval, std::string token)
@@ -1550,7 +1553,7 @@ void ModuleMetarInfo::isPartofMiles(std::string &retval, std::string token)
    if (token.find("3/4",0) != string::npos) retval = "0.75";
    if (token.find("7/8",0) != string::npos) retval = "0.875";
 
-} /** isPartofMile */
+} /* isPartofMile */
 
 bool ModuleMetarInfo::isWind(std::string &retval, std::string token)
 {
@@ -1586,7 +1589,7 @@ bool ModuleMetarInfo::isWind(std::string &retval, std::string token)
 
    retval = ss.str();
    return true;
-} /** isWind */
+} /* isWind */
 
 bool ModuleMetarInfo::isQnh(std::string &retval, std::string token)
 {
@@ -1608,7 +1611,7 @@ bool ModuleMetarInfo::isQnh(std::string &retval, std::string token)
     }
     retval = ss.str();
     return true;
-} /** isQnh */
+} /* isQnh */
 
 void ModuleMetarInfo::isValueVaries(std::string &retval, std::string token)
 {
@@ -1616,7 +1619,7 @@ void ModuleMetarInfo::isValueVaries(std::string &retval, std::string token)
 
    ss << token.substr(0,3) << " " << token.substr(4,3);
    retval = ss.str();
-} /** isValueVaries */
+} /* isValueVaries */
 
 void ModuleMetarInfo::isTime(std::string &retval, std::string token)
 {
@@ -1627,7 +1630,7 @@ void ModuleMetarInfo::isTime(std::string &retval, std::string token)
    ss << tt->second;
    ss << " " << token.substr(2,4);
    retval = ss.str();
-} /** isTime */
+} /* isTime */
 
 void ModuleMetarInfo::validTemp(std::string &retval, std::string token)
 {
@@ -1648,7 +1651,7 @@ void ModuleMetarInfo::validTemp(std::string &retval, std::string token)
      ss << atoi(token.substr(0,2).c_str());
    }
    retval = ss.str();
-} /** validTemp */
+} /* validTemp */
 
 void ModuleMetarInfo::validDp(std::string &retval, std::string token)
 {
@@ -1665,7 +1668,7 @@ void ModuleMetarInfo::validDp(std::string &retval, std::string token)
      ss << atoi(token.substr(token.length()-2,2).c_str());
    }
    retval = ss.str();
-} /** validDp */
+} /* validDp */
 
 bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
 {
@@ -1767,7 +1770,7 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
 
    retval = ss.str();
    return true;
-} /** isRVR */
+} /* isRVR */
 
 void ModuleMetarInfo::isVerticalView(std::string &retval, std::string token)
 {
@@ -1776,7 +1779,7 @@ void ModuleMetarInfo::isVerticalView(std::string &retval, std::string token)
     // VV010  -> vertical view = 1000ft
     ss << atoi(token.substr(2,3).c_str()) * 100;
     retval = ss.str();
-} /** isVerticalView */
+} /* isVerticalView */
 
 bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
 {
@@ -1799,7 +1802,7 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
 
   retval = ss.str();
   return true;
-} /** ispObscurance */
+} /* ispObscurance */
 
 void ModuleMetarInfo::onConnected(void)
 {
@@ -1809,21 +1812,21 @@ void ModuleMetarInfo::onConnected(void)
   getpath += icao;
   getpath += ".TXT HTTP/1.0\015\012\015\012";
   con->write(getpath.c_str(), getpath.size());
-} /** onConnected */
+} /* onConnected */
 
-void ModuleMetarInfo::onDisconnected(TcpConnection * /**con*/,
+void ModuleMetarInfo::onDisconnected(TcpConnection * /*con*/,
                      TcpClient::DisconnectReason reason)
 {
   delete con;
   con = 0;
-} /** onDisconnect */
+} /* onDisconnect */
 
 void ModuleMetarInfo::say(stringstream &tmp)
 {
    if (debug) cout << tmp.str() << endl;  // debug
    processEvent(tmp.str());
    tmp.str("");
-} /** say */
+} /* say */
 
 // special split function
 int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
@@ -1866,8 +1869,8 @@ int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
 
   return L.size();
 
-} /** ModuleMetarInfo::splitStr */
+} /* ModuleMetarInfo::splitStr */
 
-/**
+/*
  * This file has not been truncated
  */

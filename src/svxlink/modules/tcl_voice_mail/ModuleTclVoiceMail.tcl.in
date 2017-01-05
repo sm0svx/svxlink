@@ -58,7 +58,6 @@ set cfg_relative_home ".svxlink/TclVoiceMail.conf";
 set max_subj_time 10000
 set max_mesg_time 120000
 
-
 #
 # A convenience function for printing out information prefixed by the
 # module name
@@ -70,7 +69,6 @@ proc printInfo {msg} {
   puts "$module_name: $msg";
 }
 
-
 #
 # A convenience function for calling an event handler
 #
@@ -80,7 +78,6 @@ proc processEvent {ev} {
   variable module_name
   ::processEvent "$module_name" "$ev"
 }
-
 
 #
 # Read configuration file
@@ -94,7 +91,6 @@ if {[info exists env(HOME)] && [file exists env(HOME)/$cfg_relative_home]} {
   exit 1;
 }
 
-
 #
 # Check if the spool directory is writable
 #
@@ -102,7 +98,6 @@ if {[file writable $recdir] != 1} {
   printInfo "*** ERROR: The spool directory ($recdir) is not writable by the current user or does not exist.";
   exit 1;
 }
-
 
 #
 # Read the specified user configuration variable for the specified user ID
@@ -120,14 +115,12 @@ proc id2var {id var} {
   }
 }
 
-
 #
 # Executed when this module is being activated
 #
 proc activateInit {} {
   setState "login"
 }
-
 
 #
 # Executed when this module is being deactivated.
@@ -139,7 +132,6 @@ proc deactivateCleanup {} {
   setState "idle"
 }
 
-
 #
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
@@ -148,7 +140,6 @@ proc deactivateCleanup {} {
 #
 proc dtmfDigitReceived {char duration} {
 }
-
 
 #
 # Executed when a DTMF command is received
@@ -183,7 +174,6 @@ proc dtmfCmdReceived {cmd} {
   }
 }
 
-
 #
 # Executed when a DTMF command is received in idle mode. That is, a command is
 # received when this module has not been activated first.
@@ -204,7 +194,6 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
   set msg_cnt [llength $subjects];
   processEvent "idle_announce_num_new_messages_for $call $msg_cnt"
 }
-
 
 #
 # Executed when the squelch open or close.
@@ -267,7 +256,6 @@ proc squelchOpen {is_open} {
   }
 }
 
-
 #
 # Executed when all announcement messages has been played.
 # Note that this function also may be called even if it wasn't this module
@@ -275,7 +263,6 @@ proc squelchOpen {is_open} {
 #
 proc allMsgsWritten {} {
 }
-
 
 #
 # Set a new state
@@ -285,7 +272,6 @@ proc allMsgsWritten {} {
 proc setState {new_state} {
   variable state $new_state
 }
-
 
 #
 # State "login" command handler
@@ -325,7 +311,6 @@ proc cmdLogin {cmd} {
     processEvent "login_failed_unknown_userid $userid"
   }
 }
-
 
 #
 # State "play next message" command handler
@@ -380,7 +365,6 @@ proc cmdPlayNextNewMessage {cmd} {
   }
 }
 
-
 #
 # Abort the current recording. If no recording is active nothing is done.
 #
@@ -401,7 +385,6 @@ proc abortRecording {} {
     set rec_rcpt "";
   }
 }
-
 
 #
 # State "record message" command handler
@@ -450,10 +433,8 @@ proc cmdRecordMessage {cmd} {
   }
 }
 
-
 # end of namespace
 }
-
 
 #
 # This file has not been truncated

@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef VOX_INCLUDED
 #define VOX_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <QObject>
 
-/**
+/*
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 class QTimer;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -188,11 +188,11 @@ class Vox : public QObject, public Async::AudioSink
   private slots:
     void voxTimeout(void);
     
-};  /** class Vox */
+};  /* class Vox */
 
-#endif /** VOX_INCLUDED */
+#endif /* VOX_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

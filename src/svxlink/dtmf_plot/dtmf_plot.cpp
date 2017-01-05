@@ -140,7 +140,7 @@ void dtmf_digit_detected(char digit)
   plot_win->digit_view->setCursorPosition(
       	  plot_win->digit_view->text().length());
   plot_win->digit_view->insert(str);
-} /**  */
+} /*  */
 
 int update_peak_meter(float *samples, int count)
 {
@@ -173,7 +173,7 @@ int update_peak_meter(float *samples, int count)
   
   return count;
   
-} /**  */
+} /*  */
 
 int fq_to_k(int N, int fq)
 {
@@ -188,8 +188,8 @@ int main(int argc, char **argv)
   
   const int basetone_N = 205;
   const int overtone_N = 201;
-  const int start_k = fq_to_k(basetone_N, 697) - 3; /**15*/
-  const int end_k = fq_to_k(basetone_N, 1633) + 3; /**50*/
+  const int start_k = fq_to_k(basetone_N, 697) - 3; /*15*/
+  const int end_k = fq_to_k(basetone_N, 1633) + 3; /*50*/
   const int start_ko = 32;
   const int end_ko = 85;
     

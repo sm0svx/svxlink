@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef EVENT_HANDLER_INCLUDED
 #define EVENT_HANDLER_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <tcl.h>
@@ -34,36 +34,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 class Logic;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -134,15 +134,6 @@ class EventHandler : public sigc::trackable
     sigc::signal<void, int, int, int>      playTone;
     
     /**
-     * @brief 	A signal that is emitted when the TCL script want to play
-     *	      	back a dtmf tone
-     * @param 	digit#    The dtmf-tone as character (0-9, A-F, #)
-     * @param 	amp   	   The tone amplitude to use (0-1000)
-     * @param 	duration  The duration of the tone in milliseconds
-     */
-    sigc::signal<void, char, int, int>      playDtmf;    
-
-    /**
      * @brief 	A signal that is emitted when the TCL script want to start
      *	      	a recording
      * @param 	filename The name of the file to record the audio to
@@ -190,13 +181,12 @@ class EventHandler : public sigc::trackable
       	      	    int argc, const char *argv[]);
     static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	            int argc, const char *argv[]);
-    static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
-      	      	    int argc, const char *argv[]);    
-};  /** class EventHandler */
+    
+};  /* class EventHandler */
 
-#endif /** EVENT_HANDLER_INCLUDED */
+#endif /* EVENT_HANDLER_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

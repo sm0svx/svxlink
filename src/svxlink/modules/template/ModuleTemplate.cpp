@@ -24,61 +24,60 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
-  * System Includes
+/*
+ * System Includes
  */
 #include <stdio.h>
 
 #include <iostream>
 #include <sstream>
 
-/**
+/*
  * Project Includes
  */
 #include <version/MODULE_TEMPLATE.h>
 
-/**
+/*
  * Local Includes
  */
 #include "ModuleTemplate.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
-/**
+/*
  * Pure C-functions
  */
-
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
     return new ModuleTemplate(dl_handle, logic, cfg_name);
   }
-} /** extern "C" */
+} /* extern "C" */
 
-/**
+/*
  * Public member functions
  */
 ModuleTemplate::ModuleTemplate(void *dl_handle, Logic *logic, const string& cfg_name)
@@ -86,36 +85,21 @@ ModuleTemplate::ModuleTemplate(void *dl_handle, Logic *logic, const string& cfg_
 {
   cout << "\tModule Template v" MODULE_TEMPLATE_VERSION " starting...\n";
 
-} /** ModuleTemplate */
+} /* ModuleTemplate */
 
 ModuleTemplate::~ModuleTemplate(void)
 {
 
-} /** ~ModuleTemplate */
+} /* ~ModuleTemplate */
 
-/**
+/*
  * Protected member functions
  */
 
-/**
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-/**
+/*
  * Private member functions
  */
-
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    initialize
  * Purpose:   Called by the core system right after the object has been
@@ -138,9 +122,9 @@ bool ModuleTemplate::initialize(void)
   
   return true;
   
-} /** initialize */
+} /* initialize */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -155,9 +139,9 @@ bool ModuleTemplate::initialize(void)
 void ModuleTemplate::activateInit(void)
 {
 
-} /** activateInit */
+} /* activateInit */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -173,9 +157,9 @@ void ModuleTemplate::activateInit(void)
 void ModuleTemplate::deactivateCleanup(void)
 {
   
-} /** deactivateCleanup */
+} /* deactivateCleanup */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -196,9 +180,9 @@ bool ModuleTemplate::dtmfDigitReceived(char digit, int duration)
   
   return false;
   
-} /** dtmfDigitReceived */
+} /* dtmfDigitReceived */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -226,16 +210,16 @@ void ModuleTemplate::dtmfCmdReceived(const string& cmd)
   {
 
   }
-} /** dtmfCmdReceived */
+} /* dtmfCmdReceived */
 
 #if 0
 void ModuleTemplate::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
 
-} /** dtmfCmdReceivedWhenIdle */
+} /* dtmfCmdReceivedWhenIdle */
 #endif
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when the squelch open or close.
@@ -251,9 +235,9 @@ void ModuleTemplate::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 void ModuleTemplate::squelchOpen(bool is_open)
 {
   
-} /** squelchOpen */
+} /* squelchOpen */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
  * Purpose:   Called by the core system when all announcement messages has
@@ -270,8 +254,8 @@ void ModuleTemplate::squelchOpen(bool is_open)
 void ModuleTemplate::allMsgsWritten(void)
 {
 
-} /** allMsgsWritten */
+} /* allMsgsWritten */
 
-/**
+/*
  * This file has not been truncated
  */

@@ -27,7 +27,6 @@ set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 set max_subj_time 10000
 set max_mesg_time 120000
 
-
 #
 # These settings are used when sending e-mail to users when a new voice mail
 # has been recorded for that user.
@@ -51,8 +50,6 @@ To listen to your voice mail, follow these steps:
 3. Listen to your message using 1#
 
 73 de MYCALL / MyName};
-
-
 
 #
 # This file has not been truncated

@@ -26,10 +26,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef MODULE_METAR_INCLUDED
 #define MODULE_METAR_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <string>
@@ -38,39 +39,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <map>
 #include <iostream>
 
-/**
+/*
  * Project Includes
  */
 #include <Module.h>
 #include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
 
-/**
+/*
  * Local Includes
  */
 #include "version/SVXLINK.h"
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Forward declarations of classes inside of the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -156,10 +157,10 @@ class ModuleMetarInfo : public Module
     bool getPeakWind(std::string &retval, std::string token);
     void say(std::stringstream &tmp);
 
-};  /** class ModuleMetarInfo */
+};  /* class ModuleMetarInfo */
 
-#endif /** MODULE_METAR_INCLUDED */
+#endif /* MODULE_METAR_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */

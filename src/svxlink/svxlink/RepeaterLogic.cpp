@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <sys/time.h>
@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <algorithm>
 
-/**
+/*
  * Project Includes
  */
 
@@ -47,40 +47,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <Tx.h>
 
-/**
+/*
  * Local Includes
  */
 #include "RepeaterLogic.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Local class definitions
  */
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Local Global Variables
  */
 
 
 
-/**
+/*
  * Public member functions
  */
 
@@ -103,12 +103,12 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   ident_nag_timer.expired.connect(mem_fun(*this, &RepeaterLogic::identNag));
   timerclear(&rpt_close_timestamp);
   timerclear(&sql_up_timestamp);
-} /** RepeaterLogic::RepeaterLogic */
+} /* RepeaterLogic::RepeaterLogic */
 
 
 RepeaterLogic::~RepeaterLogic(void)
 {
-} /** RepeaterLogic::~RepeaterLogic */
+} /* RepeaterLogic::~RepeaterLogic */
 
 bool RepeaterLogic::initialize(void)
 {
@@ -269,7 +269,7 @@ bool RepeaterLogic::initialize(void)
   
   return true;
   
-} /** RepeaterLogic::initialize */
+} /* RepeaterLogic::initialize */
 
 void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
@@ -280,7 +280,7 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
     rgr_enable = false;
   }
   
-  if ((event == "repeater_idle") || (event == "send_rgr_sound") /** ||
+  if ((event == "repeater_idle") || (event == "send_rgr_sound") /* ||
       (event.find("repeater_down") == 0) */ )
   {
     setReportEventsAsIdle(true);
@@ -291,7 +291,7 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
   {
     Logic::processEvent(event, module);
   }
-} /** RepeaterLogic::processEvent */
+} /* RepeaterLogic::processEvent */
 
 
 bool RepeaterLogic::activateModule(Module *module)
@@ -299,7 +299,7 @@ bool RepeaterLogic::activateModule(Module *module)
   open_reason = "MODULE";
   setUp(true, open_reason);
   return Logic::activateModule(module);
-} /** RepeaterLogic::activateModule */
+} /* RepeaterLogic::activateModule */
 
 void RepeaterLogic::setOnline(bool online)
 {
@@ -308,7 +308,7 @@ void RepeaterLogic::setOnline(bool online)
   {
     setUp(false, "OFFLINE");
   }
-} /** RepeaterLogic::setOnline */
+} /* RepeaterLogic::setOnline */
 
 void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 {
@@ -331,7 +331,7 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
            << "\" since the repeater is not up\n";
     }
   }
-} /** RepeaterLogic::dtmfDigitDetected */
+} /* RepeaterLogic::dtmfDigitDetected */
 
 void RepeaterLogic::selcallSequenceDetected(std::string sequence)
 {
@@ -360,9 +360,9 @@ void RepeaterLogic::selcallSequenceDetected(std::string sequence)
            << "\" since the repeater is not up\n";
     }
   }
-} /** RepeaterLogic::selcallSequenceDetected */
+} /* RepeaterLogic::selcallSequenceDetected */
 
-/**
+/*
  * Protected member functions
  */
 
@@ -373,7 +373,7 @@ void RepeaterLogic::allMsgsWritten(void)
   {
     setTxCtrlMode(Tx::TX_AUTO);
   }
-} /** RepeaterLogic::allMsgsWritten */
+} /* RepeaterLogic::allMsgsWritten */
 
 void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
@@ -387,12 +387,12 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 
   Logic::audioStreamStateChange(is_active, is_idle);
   
-} /** Logic::audioStreamStateChange */
+} /* Logic::audioStreamStateChange */
 
 #if 0
 bool RepeaterLogic::getIdleState(void) const
 {
-  /**
+  /*
   if (preserve_idle_state)
   {
     return isIdle();
@@ -401,10 +401,10 @@ bool RepeaterLogic::getIdleState(void) const
 
   return Logic::getIdleState();
 
-} /** RepeaterLogic::isIdle */
+} /* RepeaterLogic::isIdle */
 #endif
 
-/**
+/*
  *
  * Private member functions
  *
@@ -414,7 +414,7 @@ void RepeaterLogic::idleTimeout(Timer *t)
 {
   //printf("RepeaterLogic::idleTimeout\n");
   setUp(false, "IDLE");
-} /** RepeaterLogic::idleTimeout */
+} /* RepeaterLogic::idleTimeout */
 
 void RepeaterLogic::setIdle(bool idle)
 {
@@ -436,7 +436,7 @@ void RepeaterLogic::setIdle(bool idle)
 
   enableRgrSoundTimer(idle && rgr_enable);
   
-} /** RepeaterLogic::setIdle */
+} /* RepeaterLogic::setIdle */
 
 void RepeaterLogic::setUp(bool up, string reason)
 {
@@ -495,7 +495,7 @@ void RepeaterLogic::setUp(bool up, string reason)
     }
   }
   
-} /** RepeaterLogic::setUp */
+} /* RepeaterLogic::setUp */
 
 void RepeaterLogic::squelchOpen(bool is_open)
 {
@@ -579,7 +579,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
       }
     }
   }
-} /** RepeaterLogic::squelchOpen */
+} /* RepeaterLogic::squelchOpen */
 
 void RepeaterLogic::detectedTone(float fq)
 {
@@ -598,12 +598,12 @@ void RepeaterLogic::detectedTone(float fq)
       activateOnOpenOrClose(SQL_FLANK_CLOSE);
     }
   }
-} /** RepeaterLogic::detectedTone */
+} /* RepeaterLogic::detectedTone */
 
 void RepeaterLogic::playIdleSound(Timer *t)
 {
   processEvent("repeater_idle");
-} /** RepeaterLogic::playIdleSound */
+} /* RepeaterLogic::playIdleSound */
 
 
 void RepeaterLogic::openOnSqlTimerExpired(Timer *t)
@@ -611,7 +611,7 @@ void RepeaterLogic::openOnSqlTimerExpired(Timer *t)
   open_on_sql_timer.setEnable(false);
   open_reason = "SQL";
   activateOnOpenOrClose(open_sql_flank);
-} /** RepeaterLogic::openOnSqlTimerExpired */
+} /* RepeaterLogic::openOnSqlTimerExpired */
 
 void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
 {
@@ -653,9 +653,9 @@ void RepeaterLogic::identNag(Timer *t)
     cout << name() << ": Nagging user about identifying himself\n";
     processEvent("identify_nag");
   }
-} /** RepeaterLogic::identNag */
+} /* RepeaterLogic::identNag */
 
-/**
+/*
  * This file has not been truncated
  */
 

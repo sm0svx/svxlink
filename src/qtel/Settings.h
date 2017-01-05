@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SETTINGS_INCLUDED
 #define SETTINGS_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -37,32 +37,32 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QList>
 #undef emit
 
-/**
+/*
  * Project Includes
  */
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 class SettingsDialog;
 
-/**
+/*
  * Namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 class Settings : public sigc::trackable
@@ -180,11 +180,11 @@ class Settings : public sigc::trackable
     
     Settings(void);
     
-};  /** class Settings */
+};  /* class Settings */
 
-#endif /** SETTINGS_INCLUDED */
+#endif /* SETTINGS_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 

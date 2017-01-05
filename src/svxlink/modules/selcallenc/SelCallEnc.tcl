@@ -85,6 +85,7 @@ proc play_standard {std} {
   playMsg $std
 }
 
+
 proc play_sel_call {cmd} {
   variable variants
 

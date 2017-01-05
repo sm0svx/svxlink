@@ -33,7 +33,6 @@ proc playMsg {msg} {
   ::playMsg $module_name $msg;
 }
 
-
 #
 # A convenience function for printing out information prefixed by the
 # module name

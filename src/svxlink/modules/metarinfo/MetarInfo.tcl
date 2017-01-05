@@ -329,6 +329,7 @@ proc snowclosed {} {
    playSilence 200;
 }
 
+
 # RWY is clear
 proc all_rwy_clear {} {
   playMsg "all";

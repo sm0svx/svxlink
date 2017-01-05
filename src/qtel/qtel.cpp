@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/**
+/*
  * System Includes
  */
 #include <cstdio>
@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QTextCodec>
 #include <QLocale>
 
-/**
+/*
  * Project Includes
  */
 #include <config.h>
@@ -52,40 +52,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
 	
-/**
+/*
  * Local Includes
  */
 #include "Settings.h"
 #include "MainWindow.h"
 
-/**
+/*
  * Namespaces to use
  */
 using namespace Async;
 using namespace EchoLink;
 
-/**
+/*
  * Defines & typedefs
  */
 #define PROGRAM_NAME "qtel"
 
-/**
+/*
  * Prototypes
  */
 
-/**
+/*
  * Global Variables
  */
  
-/**
+/*
  * Private Global Variables
  */
 
-/**
+/*
  * MAIN
  */
 
-/**
+/*
  *----------------------------------------------------------------------------
  * Function:  main
  * Purpose:   Start everything...
@@ -145,10 +145,10 @@ int main(int argc, char **argv)
   return 0;
 }
 
-/**
+/*
  * Functions
  */
 
-/**
+/*
  * This file has not been truncated
  */

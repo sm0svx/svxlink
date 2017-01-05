@@ -24,7 +24,6 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]];
 
-
 #
 # A convenience function for printing out information prefixed by the
 # module name
@@ -104,6 +103,7 @@ proc squelchOpen {is_open} {
 proc allMsgsWritten {} {
   #printInfo "all_msgs_written called...";
 }
+
 
 #
 # Extract the message subject from the given message file

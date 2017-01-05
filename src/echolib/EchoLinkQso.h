@@ -38,7 +38,7 @@ disconnected the application exits.
 #ifndef ECHOLINK_QSO_INCLUDED
 #define ECHOLINK_QSO_INCLUDED
 
-/**
+/*
  * System Includes
  */
 #include <sys/time.h>
@@ -46,7 +46,7 @@ disconnected the application exits.
 #include <stdint.h>
 #include <string>
 
-/**
+/*
  * Project Includes
  */
 
@@ -58,33 +58,33 @@ extern "C" {
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/**
+/*
  * Local Includes
  */
 
-/**
+/*
  * Forward declarations
  */
 
-/**
+/*
  * Namespace
  */
 namespace EchoLink
 {
 
-/**
+/*
  * Forward declarations inside the declared namespace
  */
 
-/**
+/*
  * Defines & typedefs
  */
 
-/**
+/*
  * Exported Global Variables
  */
 
-/**
+/*
  * Class definitions
  */
 /**
@@ -487,13 +487,13 @@ class Qso
     void checkRxActivity(Async::Timer *timer);
     bool sendByePacket(void);
     
-};  /** class Qso */
+};  /* class Qso */
 
-} /** namespace */
+} /* namespace */
 
-#endif /** ECHOLINK_QSO_INCLUDED */
+#endif /* ECHOLINK_QSO_INCLUDED */
 
-/**
+/*
  * This file has not been truncated
  */
 
