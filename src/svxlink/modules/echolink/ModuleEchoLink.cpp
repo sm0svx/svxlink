@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cstdlib>
 #include <vector>
-#include <string.h>
 
 
 /****************************************************************************
@@ -912,11 +911,14 @@ void ModuleEchoLink::onError(const string& msg)
  * Bugs:
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::clientListChanged(void) {
+void ModuleEchoLink::clientListChanged(void)
+{
   stringstream ss;
   ss << "client_list_changed [list";
-  for (vector<QsoImpl *>::iterator it = qsos.begin(); it != qsos.end(); ++it) {
-    if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
+  for (vector<QsoImpl *>::iterator it = qsos.begin(); it != qsos.end(); ++it)
+  {
+    if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+    {
       ss << " " << (*it)->remoteCallsign();
     }
   }
@@ -1055,7 +1057,6 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   updateDescription();
-  clientListChanged();
 
   if (LocationInfo::has_instance())
   {
@@ -1119,6 +1120,11 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       break;
     }
     
+    case Qso::STATE_CONNECTED:
+      updateEventVariables();
+      clientListChanged();
+      break;
+
     default:
       updateEventVariables();
       break;
