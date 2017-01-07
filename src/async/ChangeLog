@@ -1,7 +1,10 @@
- 1.4.1 -- ?? ??? 2015
+ 1.4.1 -- ?? ??? 2017
 ----------------------
 
 * Support for Qt5 added. Patch contributed by Richard Neese.
+
+* Bugfix in AsyncCppDnsLookupWorker: Lookup could hang due to mutex
+  locking issues.
 
 
 
