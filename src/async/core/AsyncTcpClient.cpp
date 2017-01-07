@@ -190,15 +190,16 @@ void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
 
 void TcpClient::connect(void)
 {
-  if (remoteHost().isEmpty() || (dns == 0))
+    // Do nothing if DNS lookup is pending, connection is pending or if the
+    // connection is already established
+  if ((dns != 0) || (sock != -1) || (socket() != -1))
   {
-    if ((dns != 0) || (sock != -1) || (socket() != -1))
-    {
-      return;
-    }
-    
+    return;
+  }
+
+  if (remoteHost().isEmpty())
+  {
     assert(!remote_host.empty());
-    
     dns = new DnsLookup(remote_host);
     dns->resultsReady.connect(mem_fun(*this, &TcpClient::dnsResultsReady));
   }
@@ -295,7 +296,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 void TcpClient::connectToRemote(void)
 {
-  if (sock != -1) ::close(sock);
+  assert(sock == -1);
   
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));

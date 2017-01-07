@@ -4,7 +4,10 @@
 * Support for Qt5 added. Patch contributed by Richard Neese.
 
 * Bugfix in AsyncCppDnsLookupWorker: Lookup could hang due to mutex
-  locking issues.
+  locking issues. Patch by Steve/DH1DM.
+
+* Bugfix in AsyncTcpClient: An assertion error could occur if the connect
+  mthod was called twice.
 
 
 
