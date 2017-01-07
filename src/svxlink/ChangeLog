@@ -1,3 +1,14 @@
+ 1.6.0 -- ?? ??? 2017
+----------------------
+
+* New argument "call" to EchoLink::is_receiving TCL event handler.
+  Patch by hsmade.
+
+* New TCL event handler EchoLink::client_list_changed.
+  Patch by hsmade.
+
+
+
  1.5.0 -- 22 Nov 2015
 ----------------------
 
