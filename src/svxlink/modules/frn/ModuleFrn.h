@@ -1,12 +1,13 @@
 /**
-@file	 AsyncPtyStreamBuf.h
-@brief   A stream buffer for writing to a PTY
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-12-20
+@file	 ModuleFrn.h
+@brief   Free Radio Network (FRN) QSO module
+@author  sh123
+@date	 2014-12-30
 
 \verbatim
-Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+A module (plugin) for the svxlink server, a multi purpose tranciever
+frontend system.
+Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,13 +25,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AsyncPtyStreamBuf_demo.cpp
-An example of how to use the AsyncPtyStreamBuf class
-*/
 
-
-#ifndef ASYNC_PTY_STREAM_BUF_INCLUDED
-#define ASYNC_PTY_STREAM_BUF_INCLUDED
+#ifndef MODULE_FRN_INCLUDED
+#define MODULE_FRN_INCLUDED
 
 
 /****************************************************************************
@@ -39,8 +36,8 @@ An example of how to use the AsyncPtyStreamBuf class
  *
  ****************************************************************************/
 
-#include <streambuf>
-#include <vector>
+#include <string>
+
 
 
 /****************************************************************************
@@ -49,6 +46,9 @@ An example of how to use the AsyncPtyStreamBuf class
  *
  ****************************************************************************/
 
+#include <Module.h>
+#include <version/SVXLINK.h>
+
 
 
 /****************************************************************************
@@ -56,7 +56,7 @@ An example of how to use the AsyncPtyStreamBuf class
  * Local Includes
  *
  ****************************************************************************/
-
+#include "QsoFrn.h"
 
 
 /****************************************************************************
@@ -64,7 +64,14 @@ An example of how to use the AsyncPtyStreamBuf class
  * Forward declarations
  *
  ****************************************************************************/
-
+namespace Async
+{
+  class AudioSplitter;
+  class AudioValve;
+  class AudioSelector;
+  class AudioFifo;
+  class AudioJitterFifo;
+};
 
 
 /****************************************************************************
@@ -73,8 +80,8 @@ An example of how to use the AsyncPtyStreamBuf class
  *
  ****************************************************************************/
 
-namespace Async
-{
+//namespace MyNameSpace
+//{
 
 
 /****************************************************************************
@@ -83,7 +90,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class Pty;
   
 
 /****************************************************************************
@@ -109,59 +115,47 @@ class Pty;
  ****************************************************************************/
 
 /**
-@brief	A stream buffer class to stream characters to a PTY
-@author Tobias Blomberg / SM0SVX
-@date   2014-12-20
-
-This class can be used to write data to a UNIX 98 PTY using the standard
-streaming interface. The typical usage pattern is to first create an instance
-of a Pty. Then an instance of this class is created, the stream buffer. Lastly
-a std::ostream can be created with the stream buffer as an argument to the
-constructor. The std::ostream can then be used as any other output stream.
-
-\include AsyncPtyStreamBuf_demo.cpp
+@brief	Free Radio Network (FRN) module
+@author sh123
+@date   2014-12-30
 */
-class PtyStreamBuf : public std::streambuf
+class ModuleFrn : public Module
 {
   public:
-    /**
-     * @brief 	Default constructor
-     * @param   pty A previously created PTY object
-     * @param   buf_size The buffer size
-     */
-    explicit PtyStreamBuf(Pty *pty, std::size_t buf_size=256);
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~PtyStreamBuf(void);
-  
-    /**
-     * @brief 	Return the PTY this stream is attached to
-     * @return	The PTY
-     */
-    Pty *pty(void) const { return m_pty; }
-    
-  protected:
-    
+    ModuleFrn(void *dl_handle, Logic *logic, const std::string& cfg_name);
+    ~ModuleFrn(void);
+    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+
   private:
-    Pty *             m_pty;
-    std::vector<char> m_buf;
+    void moduleCleanup();
+    bool initialize(void);
+    void activateInit(void);
+    void deactivateCleanup(void);
+    bool dtmfDigitReceived(char digit, int duration);
+    void dtmfCmdReceived(const std::string& cmd);
+    void squelchOpen(bool is_open);
+    void allMsgsWritten(void);
+    void reportState(void);
+    bool validateCommand(const std::string& cmd, size_t argc);
+    void onQsoError(void);
 
-    PtyStreamBuf(const PtyStreamBuf&);
-    PtyStreamBuf& operator=(const PtyStreamBuf&);
+  private:
+    QsoFrn *qso;
+    Async::AudioValve       *audio_valve;
+    Async::AudioSplitter    *audio_splitter;
+    Async::AudioSelector    *audio_selector;
+    Async::AudioFifo        *audio_fifo;
 
-    virtual int_type overflow(int_type ch);
-    virtual int sync(void);
-    bool writeToPty(void);
-    
-};  /* class PtyStreamBuf */
+    static const char       CMD_HELP = '0';
+    static const char       CMD_COUNT_CLIENTS = '1';
+    static const char       CMD_RF_DISABLE = '2';
+
+};  /* class ModuleFrn */
 
 
-} /* namespace */
+//} /* namespace */
 
-#endif /* ASYNC_PTY_STREAM_BUF_INCLUDED */
-
+#endif /* MODULE_FRN_INCLUDED */
 
 
 /*
