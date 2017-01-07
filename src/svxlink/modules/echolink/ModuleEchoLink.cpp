@@ -901,7 +901,7 @@ void ModuleEchoLink::onError(const string& msg)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    clientList
+ * Method:    clientListChanged
  * Purpose:   Called on connect or disconnect of a remote client to send an
  *    	      event to list the connected stations.
  * Input:     None
@@ -912,18 +912,18 @@ void ModuleEchoLink::onError(const string& msg)
  * Bugs:
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::clientList(void) {
+void ModuleEchoLink::clientListChanged(void) {
   stringstream ss;
-  ss << "clients [list";
-  vector<QsoImpl *>::iterator it;
-  for (it = qsos.begin(); it != qsos.end(); ++it) {
+  ss << "client_list_changed [list";
+  for (vector<QsoImpl *>::iterator it = qsos.begin(); it != qsos.end(); ++it) {
     if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
       ss << " " << (*it)->remoteCallsign();
     }
   }
   ss << "]";
   processEvent(ss.str());
-} /* clientList */
+} /* clientListChanged */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -1055,7 +1055,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   updateDescription();
-  clientList();
+  clientListChanged();
 
   if (LocationInfo::has_instance())
   {
@@ -1115,7 +1115,7 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
 
       broadcastTalkerStatus();
       updateDescription();
-      clientList();
+      clientListChanged();
       break;
     }
     
@@ -1190,7 +1190,8 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
   stringstream ss;
-  ss << "is_receiving " << (is_receiving ? "1" : "0") << " " << qso->remoteCallsign();
+  ss << "is_receiving " << (is_receiving ? "1" : "0")
+     << " " << qso->remoteCallsign();
   processEvent(ss.str());
 
   if ((talker == 0) && is_receiving)

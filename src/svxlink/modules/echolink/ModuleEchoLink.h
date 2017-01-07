@@ -224,7 +224,7 @@ class ModuleEchoLink : public Module
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
-    void clientList(void);
+    void clientListChanged(void);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name,
       	    const std::string& priv);
