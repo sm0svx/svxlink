@@ -566,6 +566,7 @@ bool Logic::initialize(void)
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->publishStateEvent.connect(
           mem_fun(*this, &Logic::publishStateEvent));
+  event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -695,6 +696,23 @@ void Logic::playTone(int fq, int amp, int len)
 
   checkIdle();
 } /* Logic::playSilence */
+
+
+void Logic::playDtmf(const std::string& digits, int amp, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    msg_handler->playDtmf(digits[i], amp, len);
+    msg_handler->playSilence(50, report_events_as_idle);
+  }
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
+  checkIdle();
+} /* Logic::playDtmf */
 
 
 void Logic::recordStart(const string& filename, unsigned max_time)

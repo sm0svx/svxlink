@@ -7,6 +7,8 @@
 * New TCL event handler EchoLink::client_list_changed.
   Patch by hsmade.
 
+* New TCL function playDtmf. Patch by DL1HRC / Adi.
+
 
 
  1.5.0 -- 22 Nov 2015

@@ -148,6 +148,7 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
                     this, NULL);
   Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
                     this, NULL);
+  Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -412,6 +413,23 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
+
+int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                                  int argc, const char *argv[])
+{
+  if(argc != 4)
+  {
+    char msg[] = "Usage: playDtmf <digits> <amp> <milliseconds>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  //cout << "EventHandler::playDtmf: " << argv[1] << ", "
+  //    << argv[2] << ", " << argv[3]<< endl;
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->playDtmf(argv[1], atoi(argv[2]), atoi(argv[3]));
+
+  return TCL_OK;
+} /* EventHandler::playDtmfHandler */
 
 
 /*
