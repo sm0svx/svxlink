@@ -29,7 +29,7 @@ gpio_setup2() {
         fi
    fi
 }
-      
+
 ## GPIO PIN OUT support ?
 for i in $GPIO_OUT_PIN
 do

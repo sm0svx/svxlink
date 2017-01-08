@@ -19,7 +19,7 @@ TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@
 ;;; NotifyAccess=main
 LimitCORE=infinity
-WorkingDirectory=/etc/svxlink
+WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
 
 [Install]
 WantedBy=multi-user.target

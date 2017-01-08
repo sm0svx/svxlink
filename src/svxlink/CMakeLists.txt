@@ -1,15 +1,10 @@
 include_directories(trx svxlink)
 
-option(WITH_SYSTEMD "Set to ON to create unit files and systemd check on svx-daemon startup" ON )
-
-#############################################################################
-#Systemd Enviroment 
-#############################################################################
-
-if(WITH_SYSTEMD)     
-    add_subdirectory( systemd )
-endif(WITH_SYSTEMD ) 
-message( STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}" )
+option(WITH_SYSTEMD "Set to ON to include systemd support" ON)
+if(WITH_SYSTEMD)
+  add_subdirectory(systemd)
+endif(WITH_SYSTEMD)
+message(STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}")
 
 add_subdirectory(trx)
 add_subdirectory(svxlink)
