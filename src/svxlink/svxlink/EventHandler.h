@@ -174,9 +174,9 @@ class EventHandler : public sigc::trackable
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
-     *	      	back a dtmf tone
-     * @param 	digit#    The dtmf-tone as character (0-9, A-F, #)
-     * @param 	amp   	   The tone amplitude to use (0-1000)
+     *	      	back a dtmf digit
+     * @param 	digit     The dtmf-tone as character (0-9, A-D, *, #)
+     * @param 	amp   	  The tone amplitude to use (0-1000)
      * @param 	duration  The duration of the tone in milliseconds
      */
     sigc::signal<void, const std::string&, int, int> playDtmf;
@@ -231,7 +231,7 @@ class EventHandler : public sigc::trackable
     static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	            int argc, const char *argv[]);
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
-      	      	    int argc, const char *argv[]);
+                    int argc, const char *argv[]);
 
 };  /* class EventHandler */
 

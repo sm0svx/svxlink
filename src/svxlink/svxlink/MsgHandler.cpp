@@ -149,9 +149,10 @@ class ToneQueueItem : public QueueItem
 class DtmfQueueItem : public QueueItem
 {
   public:
-    DtmfQueueItem(int fqh, int fql, int amp, int len, int sample_rate, bool idle_marked)
+    DtmfQueueItem(int fqh, int fql, int amp, int len, int sample_rate,
+                  bool idle_marked)
       : QueueItem(idle_marked), fqh(fqh), fql(fql), amp(amp),
-      	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
+        tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
     int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
@@ -162,7 +163,7 @@ class DtmfQueueItem : public QueueItem
     int tone_len;
     int pos;
     int sample_rate;
-    
+
 };
 
 class RawFileQueueItem : public QueueItem
@@ -316,7 +317,7 @@ void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
   QueueItem *item = new ToneQueueItem(fq, amp, length, sample_rate,
       	      	      	      	      idle_marked);
   addItemToQueue(item);
-} /* MsgHandler::playSilence */
+} /* MsgHandler::playTone */
 
 
 void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
@@ -338,19 +339,17 @@ void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
   tone_map['0'] = pair<int, int>(941, 1336);
   tone_map['#'] = pair<int, int>(941, 1477);
   tone_map['D'] = pair<int, int>(941, 1633);
-  
+
   int fql = tone_map[digit].first;
   int fqh = tone_map[digit].second;
-  
-  QueueItem *item;
-  
+
   if (fql > 0)
   {
-    item = new DtmfQueueItem(fqh, fql, amp, length, sample_rate,
-      	      	      	      	      idle_marked);
+    QueueItem *item = new DtmfQueueItem(fqh, fql, amp, length, sample_rate,
+                                        idle_marked);
     addItemToQueue(item);
   }
-} /* MsgHandler::playSilence */
+} /* MsgHandler::playDtmf */
 
 
 void MsgHandler::clear(void)
@@ -970,7 +969,7 @@ void ToneQueueItem::unreadSamples(int len)
  ****************************************************************************/
 
 int DtmfQueueItem::readSamples(float *samples, int len)
-{  
+{
   int read_cnt = min(len, tone_len-pos);
   for (int i=0; i<read_cnt; ++i)
   {
@@ -979,9 +978,10 @@ int DtmfQueueItem::readSamples(float *samples, int len)
                 sin(2 * M_PI * fql * pos / sample_rate));
     ++pos;
   }
-  
+
   return read_cnt;
 } /* DtmfQueueItem::readSamples */
+
 
 void DtmfQueueItem::unreadSamples(int len)
 {

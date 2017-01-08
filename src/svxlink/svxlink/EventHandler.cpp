@@ -415,16 +415,16 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
 
 
 int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
-      	      	      	      int argc, const char *argv[])
+                                  int argc, const char *argv[])
 {
   if(argc != 4)
   {
-    char msg[] = "Usage: playDtmf <digit#> <amp> <milliseconds>";
+    char msg[] = "Usage: playDtmf <digits> <amp> <milliseconds>";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
-  cout << "EventHandler::playDtmf: " << argv[1] << ", "
-      << argv[2] << ", " << argv[3]<< endl;
+  //cout << "EventHandler::playDtmf: " << argv[1] << ", "
+  //    << argv[2] << ", " << argv[3]<< endl;
   EventHandler *self = static_cast<EventHandler *>(cdata);
   self->playDtmf(argv[1], atoi(argv[2]), atoi(argv[3]));
 

@@ -703,8 +703,15 @@ void Logic::playDtmf(const std::string& digits, int amp, int len)
   for (string::size_type i=0; i < digits.size(); ++i)
   {
     msg_handler->playDtmf(digits[i], amp, len);
-    checkIdle();
-  }  
+    msg_handler->playSilence(50, report_events_as_idle);
+  }
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
+  checkIdle();
 } /* Logic::playDtmf */
 
 

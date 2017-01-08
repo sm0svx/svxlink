@@ -171,10 +171,10 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     void playTone(int fq, int amp, int length, bool idle_marked=false);
 
     /**
-     * @brief 	Play a dtmf tone
-     * @param 	digit The dtmf digit to play
-     * @param 	amp The amplitude of the tone to play (0-1000)
-     * @param 	length The length in milliseconds of the tone to play
+     * @brief 	Play a DTMF digit
+     * @param 	digit The DTMF digit to play
+     * @param 	amp The amplitude of the individual DTMF tones (0-1000)
+     * @param 	length The length in milliseconds of the digit
      * @param   idle_marked Choose if the playback should be idle marked or not
      *
      */
