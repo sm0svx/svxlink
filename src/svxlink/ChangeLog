@@ -1,7 +1,12 @@
  1.6.0 -- ?? ??? 2017
 ----------------------
 
-* MetarInfo: smaller changes e.g. additional tcl function for raw output
+* ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
+  output
+
+* ModuleMetarInfo: Because of termination the metar service on noaa.gov some
+  changes were needed in the module (weather.noaa.gov - >
+  aviationweather.gov), better debug output if a metar can not be announced
 
 * New argument "call" to EchoLink::is_receiving TCL event handler.
   Patch by hsmade.
@@ -18,10 +23,6 @@
 
  1.5.0 -- 22 Nov 2015
 ----------------------
-
-* Because of termination the metar service on noaa.gov some changes were
-  needed in the ModuleMetarInfo (weather.noaa.gov - > aviationweather.gov),
-  better debug output if a metar can not be announced
 
 * Added support for using digital drop receivers on an RTL2832U based DVB-T
   USB dongle. This will open up the world of cheap receiver hardware to all
