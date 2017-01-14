@@ -524,6 +524,7 @@ int main(int argc, char **argv)
   app.exec();
 
   LinkManager::deleteInstance();
+  LocationInfo::deleteInstance();
 
   logfile_flush();
   

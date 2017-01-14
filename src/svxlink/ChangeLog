@@ -22,6 +22,9 @@
 * RemoteTrx now display squelch open/close even when disconnected from
   the main system.
 
+* Small bugfix in the LocationInfo functionality that made SvxLink exit
+  uncleanly, possibly with a segmentation fault.
+
 
 
  1.5.0 -- 22 Nov 2015
