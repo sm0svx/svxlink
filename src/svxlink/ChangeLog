@@ -1,6 +1,13 @@
  1.6.0 -- ?? ??? 2017
 ----------------------
 
+* ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
+  output
+
+* ModuleMetarInfo: Because of termination the metar service on noaa.gov some
+  changes were needed in the module (weather.noaa.gov - >
+  aviationweather.gov), better debug output if a metar can not be announced
+
 * New argument "call" to EchoLink::is_receiving TCL event handler.
   Patch by hsmade.
 
