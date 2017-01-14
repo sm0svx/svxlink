@@ -1,4 +1,19 @@
- 1.5.0 -- 10 Aug 2016
+ 1.6.0 -- ?? ??? 2017
+----------------------
+
+* MetarInfo: smaller changes e.g. additional tcl function for raw output
+
+* New argument "call" to EchoLink::is_receiving TCL event handler.
+  Patch by hsmade.
+
+* New TCL event handler EchoLink::client_list_changed.
+  Patch by hsmade.
+
+* New TCL function playDtmf. Patch by DL1HRC / Adi.
+
+
+
+ 1.5.0 -- 22 Nov 2015
 ----------------------
 
 * Because of termination the metar service on noaa.gov some changes were

@@ -1,0 +1,14 @@
+###############################################################################
+#                                                                             #
+#           Configuration file for the SvxLink server GPIO Pins               #
+#                                                                             #
+###############################################################################
+
+# Set what GPIO pins point out
+GPIO_OUT_PIN=""
+
+# Set what GPIO pins point in
+GPIO_IN_PIN=""
+
+# Set what GPIO pins need to be set low
+GPIO_LOW_PIN=""

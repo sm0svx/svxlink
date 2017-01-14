@@ -251,6 +251,17 @@ proc connected {} {
 
 
 #
+# Executed when the list of connected remote EchoLink clients changes
+#   client_list - List of connected clients
+#
+proc client_list_changed {client_list} {
+  #foreach {call} $client_list {
+  #  puts $call
+  #}
+}
+
+
+#
 # Executed when the EchoLink connection has been idle for too long. The
 # connection will be terminated.
 #
@@ -448,8 +459,11 @@ proc reject_outgoing_connection {call} {
 #
 # Executed when a transmission from an EchoLink station is starting
 # or stopping
+#   rx   - 1 if receiving or 0 if not
+#   call - The callsign of the remote station
 #
-proc is_receiving {rx} {
+#
+proc is_receiving {rx call} {
   if {$rx == 0} {
     playTone 1000 100 100;
   }

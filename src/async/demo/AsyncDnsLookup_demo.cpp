@@ -30,9 +30,6 @@ class MyClass : public sigc::trackable
 	cout << *it << endl;
       }
       
-      delete dns_lookup;
-      dns_lookup = 0;
-      
       Application::app().quit();
     }
     
