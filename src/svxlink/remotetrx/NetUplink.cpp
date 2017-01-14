@@ -239,6 +239,10 @@ bool NetUplink::initialize(void)
   {
     setFallbackActive(true);
   }
+  else
+  {
+    rx->setMuteState(Rx::MUTE_CONTENT);
+  }
 
   return true;
   
@@ -264,6 +268,7 @@ bool NetUplink::initialize(void)
 void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
 {
   assert(con == 0);
+  rx->reset();
   if (fallback_enabled) // Deactivate fallback repeater mode
   {
     setFallbackActive(false);
@@ -355,6 +360,10 @@ void NetUplink::disconnectCleanup(void)
   if (fallback_enabled)
   {
     setFallbackActive(true);
+  }
+  else
+  {
+    rx->setMuteState(Rx::MUTE_CONTENT);
   }
 } /* NetUplink::disconnectCleanup */
 
@@ -791,10 +800,10 @@ void NetUplink::unmuteTx(Timer *t)
 
 void NetUplink::setFallbackActive(bool activate)
 {
+  rx->reset();
   if (activate)
   {
     cout << name << ": Activating fallback repeater mode\n";
-    rx->reset();
     tx->setTxCtrlMode(Tx::TX_AUTO);
     tx_selector->selectSource(loopback_con);
     rx->setMuteState(Rx::MUTE_NONE);
@@ -802,7 +811,6 @@ void NetUplink::setFallbackActive(bool activate)
   else
   {
     cout << name << ": Deactivating fallback repeater mode\n";
-    rx->reset();
     tx->setTxCtrlMode(Tx::TX_OFF);
     tx_selector->selectSource(fifo);
   }
