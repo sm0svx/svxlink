@@ -25,6 +25,12 @@
 * Small bugfix in the LocationInfo functionality that made SvxLink exit
   uncleanly, possibly with a segmentation fault.
 
+* New TCL command, injectDtmf, to inject DTMF digits into the command
+  stream just as if they were received on the receiver. This function
+  can for example be used in conjuction with the dtmf_digit_received and
+  dtmf_cmd_received functions to remap commands to something different or
+  inventing compound commands.
+
 
 
  1.5.0 -- 22 Nov 2015

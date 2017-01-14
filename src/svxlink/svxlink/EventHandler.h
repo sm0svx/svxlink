@@ -210,6 +210,13 @@ class EventHandler : public sigc::trackable
     sigc::signal<void, const std::string&,
                  const std::string&> publishStateEvent;
     
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to inject
+     *	      	DTMF digits in the command queue
+     * @param 	digits    The dtmf-digits as character (0-9, A-D, *, #)
+     * @param 	duration  The duration of each digit in milliseconds
+     */
+    sigc::signal<void, const std::string&, int> injectDtmf;
     
   protected:
     
@@ -231,6 +238,8 @@ class EventHandler : public sigc::trackable
     static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	            int argc, const char *argv[]);
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                    int argc, const char *argv[]);
+    static int injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
 
 };  /* class EventHandler */
