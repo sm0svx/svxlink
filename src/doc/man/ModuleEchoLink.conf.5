@@ -170,6 +170,12 @@ Set this to the time in seconds that you want in between autoconnect tries.
 A longer description that is sent to remote stations upon connection. This
 description should typically include detailed station information like QTH,
 transceiver frequency/power, antenna, CTCSS tone frequency etc.
+.TP
+.B COMMAND_PTY
+Specify the path to a PTY that can be used to control the EchoLink module from
+the operating system. Commands: "KILL" will disconnect the current talker,
+"DISC callsign" will disconnect the station with the given callsign. Commands
+can be issued using a simple echo command from the shell.
 .
 .SH REGULAR EXPRESSIONS
 .

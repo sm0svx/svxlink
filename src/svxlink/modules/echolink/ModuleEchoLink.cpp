@@ -466,18 +466,19 @@ bool ModuleEchoLink::initialize(void)
   }
 
   string pty_path;
-  if(cfg().getValue(cfgName(), "ECHOLINK_PTY", pty_path))
+  if(cfg().getValue(cfgName(), "COMMAND_PTY", pty_path))
   {
     pty = new Pty(pty_path);
-    if (!pty->open()) {
+    if (!pty->open())
+    {
       cerr << "*** ERROR: Could not open echolink PTY "
-      <<pty_path << " as specified in configuration variable "
-      << name() << "/" << "ECHOLINK_PTY" << endl;
+           << pty_path << " as specified in configuration variable "
+           << name() << "/" << "COMMAND_PTY" << endl;
       return false;
     }
-    pty->dataReceived.connect(sigc::mem_fun(*this, &ModuleEchoLink::commandHandler));
+    pty->dataReceived.connect(
+        sigc::mem_fun(*this, &ModuleEchoLink::onCommandPtyInput));
   }
-
 
   return true;
   
@@ -519,35 +520,84 @@ void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
  *
  ****************************************************************************/
 
-void ModuleEchoLink::commandHandler(const void *buf, size_t count) {
-  char* buffer = (char *) buf;
-  char* command;
-  buffer[count] = '\0'; // received string is not null terminated
-  cout << "echolink commandHandler received: " << buffer << " (" << count << ")" << endl;
-  command = strtok(buffer, "\n\r ");
-  while (command != NULL && count >= 3) {
-    if (strstr(command, "KILL")) {
-      if (talker == 0) {
-        cout << "echolink: trying to KILL, but no active talkers" << endl;
-      } else {
-        cout << "echolink: KILLing talker: " << talker->remoteCallsign() << endl;
-        talker->disconnect();
-      }
-    } else if (strstr(command, ":D")) {
-      // disconnect client by callsign
-      vector<QsoImpl *>::iterator it;
-      for (it = qsos.begin(); it != qsos.end(); ++it) {
-        if (strstr(command, (*it)->remoteCallsign().c_str())) {
-          cout << "echolink: disconnecting user " << (*it)->remoteCallsign() << endl;
-          (*it)->disconnect();
-        }
+void ModuleEchoLink::handlePtyCommand(const std::string &full_command)
+{
+  istringstream is(full_command);
+  string command;
+  if (!(is >> command))
+  {
+    return;
+  }
+
+  if (command == "KILL") // Disconnect active talker
+  {
+    if (talker == 0)
+    {
+      cout << "EchoLink: Trying to KILL, but no active talker" << endl;
+    }
+    else
+    {
+      cout << "EchoLink: Killing talker: " << talker->remoteCallsign() << endl;
+      talker->disconnect();
+    }
+  }
+  else if (command == "DISC") // Disconnect client by callsign
+  {
+    string callsign;
+    if (!(is >> callsign))
+    {
+      cerr << "*** WARNING: Malformed EchoLink PTY disconnect command: \""
+           << full_command << "\"" << endl;
+      return;
+    }
+    vector<QsoImpl *>::iterator it;
+    for (it = qsos.begin(); it != qsos.end(); ++it)
+    {
+      if ((*it)->remoteCallsign() == callsign)
+      {
+        cout << "EchoLink: Disconnecting user "
+             << (*it)->remoteCallsign() << endl;
+        (*it)->disconnect();
+        return;
       }
     }
-    command = strtok(NULL, "\n\r ");
-    count -= sizeof(command);
+    cerr << "*** WARNING: Could not find EchoLink user \"" << callsign
+         << "\" in PTY command \"DISC\"" << endl;
   }
-//  printSquelchState();
-}
+  else
+  {
+    cerr << "*** WARNING: Unknown EchoLink PTY command received: \""
+         << full_command << "\"" << endl;
+  }
+} /* ModuleEchoLink::handlePtyCommand */
+
+
+void ModuleEchoLink::onCommandPtyInput(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<count; ++i)
+  {
+    char ch = buffer[i];
+    switch (ch)
+    {
+      case '\n':  // Execute command on NL
+        handlePtyCommand(command_buf);
+        command_buf.clear();
+        break;
+
+      case '\r':  // Ignore CR
+        break;
+
+      default:    // Append character to command buffer
+        if (command_buf.size() >= 256)  // Prevent cmd buffer growing too big
+        {
+          command_buf.clear();
+        }
+        command_buf += ch;
+        break;
+    }
+  }
+} /* ModuleEchoLink::onCommandPtyInput */
 
 
 void ModuleEchoLink::moduleCleanup(void)
