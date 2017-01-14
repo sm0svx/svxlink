@@ -92,6 +92,14 @@ proc status_report {} {
 }
 
 
+# METAR as raw txt to make them available in a file
+proc metar {input} {
+  set fp [open "/tmp/metar" w];
+  puts $fp $input;
+  close $fp
+}
+
+
 # no airport defined
 proc no_airport_defined {} {
    playMsg "no";
@@ -238,7 +246,7 @@ proc wind {deg {vel 0 } {unit 0} {gusts 0} {gvel 0}} {
     playMsg $unit;
   } else {
     sayNumber $deg;
-    playMsg "unit_degrees";
+    playMsg "unit_degree";
     playSilence 100;
     playMsg "at";
     playSilence 100;
@@ -752,6 +760,24 @@ proc airports args {
      playSilence 100;
   }
   playSilence 200;
+}
+
+
+# say clouds with covering
+proc cloudtypes {} {
+variable a 0;
+  variable l [llength $args];
+
+  while {$a < $l} {
+    set msg [lindex $args $a];
+    playMsg "cld_$msg";
+    playMsg "covering";
+    incr a;
+    playNumber [lindex $args $a];
+    playMsg "eighth";
+    incr a;
+    playSilence 100;
+  }
 }
 
 

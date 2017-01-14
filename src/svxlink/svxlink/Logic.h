@@ -173,6 +173,7 @@ class Logic : public sigc::trackable
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
+    virtual void playDtmf(const std::string& digits, int amp, int len);
     void recordStart(const std::string& filename, unsigned max_time);
     void recordStop(void);
 

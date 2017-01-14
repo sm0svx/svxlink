@@ -299,7 +299,6 @@ function(install_if_not_exists src dest)
   ")
 endfunction(install_if_not_exists)
 
-
 ##############################################################################
 # Main execution starts here
 ##############################################################################
@@ -332,4 +331,3 @@ if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
 add_subdirectory(doc)
-
