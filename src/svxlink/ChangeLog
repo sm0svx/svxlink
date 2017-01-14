@@ -9,6 +9,9 @@
 
 * New TCL function playDtmf. Patch by DL1HRC / Adi.
 
+* ModuleEchoLink: Add command PTY that can be used to send commands to the
+  EchoLink module at runtime. Patch by hsmade.
+
 
 
  1.5.0 -- 22 Nov 2015
