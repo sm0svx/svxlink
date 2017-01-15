@@ -104,6 +104,10 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
                     this, NULL);
   Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
+<<<<<<< HEAD
+=======
+  Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
+>>>>>>> refs/remotes/sm0svx/master
 
   setVariable("script_path", event_script);
 
@@ -194,16 +198,29 @@ const string EventHandler::eventResult(void) const
  * Protected member functions
  */
 
+<<<<<<< HEAD
 /*
  * Private member functions
  */
+=======
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+>>>>>>> refs/remotes/sm0svx/master
 
 int EventHandler::playFileHandler(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	   const char *argv[])
 {
   if(argc != 2)
   {
-    char msg[] = "Usage: playFile: <filename>";
+    static char msg[] = "Usage: playFile: <filename>";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
@@ -221,7 +238,7 @@ int EventHandler::playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 2)
   {
-    char msg[] = "Usage: playSilence <milliseconds>";
+    static char msg[] = "Usage: playSilence <milliseconds>";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
@@ -238,7 +255,7 @@ int EventHandler::playToneHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 4)
   {
-    char msg[] = "Usage: playTone <fq> <amp> <milliseconds>";
+    static char msg[] = "Usage: playTone <fq> <amp> <milliseconds>";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
@@ -258,7 +275,7 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
   {
     if((argc < 2) || (argc > 3))
     {
-      char msg[] = "Usage: recordStart <filename> [max_time]";
+      static char msg[] = "Usage: recordStart <filename> [max_time]";
       Tcl_SetResult(irp, msg, TCL_STATIC);
       return TCL_ERROR;
     }
@@ -275,7 +292,7 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
   {
     if(argc != 1)
     {
-      char msg[] = "Usage: recordStop";
+      static char msg[] = "Usage: recordStop";
       Tcl_SetResult(irp, msg, TCL_STATIC);
       return TCL_ERROR;
     }
@@ -293,7 +310,7 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 1)
   {
-    char msg[] = "Usage: deactivateModule";
+    static char msg[] = "Usage: deactivateModule";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
@@ -309,7 +326,7 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if (argc != 3)
   {
-    char msg[] = "Usage: publishStateEvent <event name> <event msg>";
+    static char msg[] = "Usage: publishStateEvent <event name> <event msg>";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
@@ -320,6 +337,7 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
+<<<<<<< HEAD
 int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
        	      	      	      int argc, const char *argv[])
  {
@@ -336,6 +354,49 @@ int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
  
    return TCL_OK;
  } /* EventHandler::playDtmfHandler */
+=======
+
+int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                                  int argc, const char *argv[])
+{
+  if(argc != 4)
+  {
+    static char msg[] = "Usage: playDtmf <digits> <amp> <milliseconds>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  //cout << "EventHandler::playDtmf: " << argv[1] << ", "
+  //    << argv[2] << ", " << argv[3]<< endl;
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->playDtmf(argv[1], atoi(argv[2]), atoi(argv[3]));
+
+  return TCL_OK;
+} /* EventHandler::playDtmfHandler */
+
+
+int EventHandler::injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                                    int argc, const char *argv[])
+{
+  if((argc < 2) or (argc > 3))
+  {
+    static char msg[] = "Usage: injectDtmf <digits> [milliseconds]";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  string digits(argv[1]);
+  int duration = 100;
+  if (argc == 3)
+  {
+    duration = atoi(argv[2]);
+  }
+  //cout << "EventHandler::injectDtmf: " << digits << ", " << duration << endl;
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->injectDtmf(digits, duration);
+
+  return TCL_OK;
+} /* EventHandler::injectDtmfHandler */
+
+>>>>>>> refs/remotes/sm0svx/master
 
 /*
  * This file has not been truncated

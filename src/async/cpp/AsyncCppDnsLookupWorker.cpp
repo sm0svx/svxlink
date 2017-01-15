@@ -40,6 +40,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <cstring>
+#include <algorithm>
 
 /**
  * Project Includes
@@ -82,39 +84,58 @@ using namespace Async;
  * Public member functions
  */
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
+<<<<<<< HEAD
   : label(label), worker(0), notifier_rd(-1), notifier_wr(-1),
     notifier_watch(0), done(false), result(0)
 {
 } /** CppDnsLookupWorker::CppDnsLookupWorker */
+=======
+  : label(label), worker_thread(0), notifier_rd(-1), notifier_wr(-1),
+    notifier_watch(0), done(false), result(0)
+{
+} /* CppDnsLookupWorker::CppDnsLookupWorker */
+
+>>>>>>> refs/remotes/sm0svx/master
 
 CppDnsLookupWorker::~CppDnsLookupWorker(void)
 {
-  if (worker != 0)
+  if (worker_thread != 0)
   {
-    int ret;
-    
     if (!done)
     {
-      ret = pthread_cancel(worker);
+      int ret = pthread_cancel(worker_thread);
       if (ret != 0)
       {
-	cerr << "pthread_cancel: error " << ret << endl;
+        cerr << "*** WARNING: pthread_cancel: " << strerror(ret) << endl;
       }
     }
+<<<<<<< HEAD
 
     void *ud;
     ret = pthread_join(worker, &ud);
+=======
+ 
+    int ret = pthread_join(worker_thread, NULL);
+>>>>>>> refs/remotes/sm0svx/master
     if (ret != 0)
     {
-      cerr << "pthread_join: error " << ret << endl;
+      cerr << "*** WARNING: pthread_join: " << strerror(ret) << endl;
     }
   }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> refs/remotes/sm0svx/master
   if (result != 0)
   {
     freeaddrinfo(result);
   }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> refs/remotes/sm0svx/master
   delete notifier_watch;
   if (notifier_rd != -1)
   {
@@ -124,15 +145,23 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
   {
     close(notifier_wr);
   }
+<<<<<<< HEAD
 } /** CppDnsLookupWorker::~CppDnsLookupWorker */
 
 bool CppDnsLookupWorker::doLookup(void)
 {
 
+=======
+} /* CppDnsLookupWorker::~CppDnsLookupWorker */
+
+
+bool CppDnsLookupWorker::doLookup(void)
+{
+>>>>>>> refs/remotes/sm0svx/master
   int fd[2];
   if (pipe(fd) != 0)
   {
-    perror("pipe");
+    cerr << "*** ERROR: Could not create pipe: " << strerror(errno) << endl;
     return false;
   }
   notifier_rd = fd[0];
@@ -140,12 +169,17 @@ bool CppDnsLookupWorker::doLookup(void)
   notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
   notifier_watch->activity.connect(
       	  mem_fun(*this, &CppDnsLookupWorker::notificationReceived));
+<<<<<<< HEAD
   int ret = pthread_create(&worker, NULL, workerFunc, this);
+=======
+  int ret = pthread_create(&worker_thread, NULL, workerFunc, this);
+>>>>>>> refs/remotes/sm0svx/master
   if (ret != 0)
   {
-    cerr << "pthread_create: error " << ret << endl;
+    cerr << "*** ERROR: pthread_create: " << strerror(ret) << endl;
     return false;
   }
+<<<<<<< HEAD
   /**
   if (pthread_detach(worker) != 0)
   {
@@ -153,6 +187,8 @@ bool CppDnsLookupWorker::doLookup(void)
     return false;
   }
   */
+=======
+>>>>>>> refs/remotes/sm0svx/master
 
   return true;
   
@@ -185,18 +221,33 @@ void *CppDnsLookupWorker::workerFunc(void *w)
 {
   CppDnsLookupWorker *worker = reinterpret_cast<CppDnsLookupWorker *>(w);
 
+<<<<<<< HEAD
   int ret = getaddrinfo(worker->label.c_str(), NULL, NULL, &worker->result);
   if (ret != 0)
   {
     cerr << "getaddrinfo" << gai_strerror(ret) << endl;
+=======
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;
+  int ret = getaddrinfo(worker->label.c_str(), NULL, &hints, &worker->result);
+  if (ret != 0)
+  {
+    cerr << "*** WARNING: Could not look up host \"" << worker->label
+         << "\": " << gai_strerror(ret) << endl;
+>>>>>>> refs/remotes/sm0svx/master
   }
   
   ret = write(worker->notifier_wr, "D", 1);
   assert(ret == 1);
   
   worker->done = true;
+<<<<<<< HEAD
   
    return NULL;
+=======
+  return NULL;
+>>>>>>> refs/remotes/sm0svx/master
   
 } /** CppDnsLookupWorker::workerFunc */
 
@@ -217,11 +268,22 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 {
   w->setEnabled(false);
 
+<<<<<<< HEAD
+=======
+  int ret = pthread_join(worker_thread, NULL);
+  if (ret != 0)
+  {
+    cerr << "*** WARNING: pthread_join: " << strerror(ret) << endl;
+  }
+  worker_thread = 0;
+
+>>>>>>> refs/remotes/sm0svx/master
   if (result != 0)
   {
     struct addrinfo *entry;
     for (entry = result; entry != 0; entry = entry->ai_next)
     {
+<<<<<<< HEAD
       struct in_addr addr = ((struct sockaddr_in*)entry->ai_addr)->sin_addr;
       the_addresses.push_back(IpAddress(addr));;
     }
@@ -230,6 +292,21 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   resultsReady();
 
 } /** CppDnsLookupWorker::notificationReceived */
+=======
+      //printf("ai_family=%d ai_socktype=%d ai_protocol=%d\n",
+      //       entry->ai_family, entry->ai_socktype, entry->ai_protocol);
+      IpAddress ip_addr(
+          reinterpret_cast<struct sockaddr_in*>(entry->ai_addr)->sin_addr);
+      if (find(the_addresses.begin(), the_addresses.end(), ip_addr) ==
+          the_addresses.end())
+      {
+        the_addresses.push_back(ip_addr);
+      }
+    }
+  }
+  resultsReady();
+} /* CppDnsLookupWorker::notificationReceived */
+>>>>>>> refs/remotes/sm0svx/master
 
 /**
  * This file has not been truncated

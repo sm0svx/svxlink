@@ -303,6 +303,7 @@ function(install_if_not_exists src dest)
   ")
 endfunction(install_if_not_exists)
 
+<<<<<<< HEAD
 #############################################################################
 #Systemd Enviroment 
 #############################################################################
@@ -313,6 +314,8 @@ endif(WITH_SYSTEMD )
 
 message( STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}" )
 
+=======
+>>>>>>> refs/remotes/sm0svx/master
 ##############################################################################
 # Main execution starts here
 ##############################################################################

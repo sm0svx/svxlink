@@ -525,6 +525,10 @@ bool Logic::initialize(void)
   event_handler->publishStateEvent.connect(
           mem_fun(*this, &Logic::publishStateEvent));
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
+<<<<<<< HEAD
+=======
+  event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
+>>>>>>> refs/remotes/sm0svx/master
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -659,6 +663,23 @@ void Logic::playDtmf(const std::string& digits, int amp, int len)
   }  
 } /* Logic::playDtmf */
 
+void Logic::playDtmf(const std::string& digits, int amp, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    msg_handler->playDtmf(digits[i], amp, len);
+    msg_handler->playSilence(50, report_events_as_idle);
+  }
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
+  checkIdle();
+} /* Logic::playDtmf */
+
+
 void Logic::recordStart(const string& filename, unsigned max_time)
 {
   recordStop();
@@ -681,6 +702,19 @@ void Logic::recordStop(void)
   recorder = 0;
 } /* Logic::recordStop */
 
+<<<<<<< HEAD
+=======
+
+void Logic::injectDtmf(const std::string& digits, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    dtmfDigitDetected(digits[i], len);
+  }
+} /* Logic::injectDtmf */
+
+
+>>>>>>> refs/remotes/sm0svx/master
 bool Logic::activateModule(Module *module)
 {
   if (active_module == module)

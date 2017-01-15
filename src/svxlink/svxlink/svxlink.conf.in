@@ -322,10 +322,14 @@ CALLSIGN=ER-MYCALL
 #ANTENNA_DIR=-1
 #BEACON_INTERVAL=10
 #TONE=136
+<<<<<<< HEAD
 #COMMENT=SvxLink by SM0SVX (svxlink.org)
 
 [Macros]
 1=EchoLink:9999#
 9=Parrot:0123456789#
 03400=EchoLink:9999#
+=======
+COMMENT=SvxLink by SM0SVX (www.svxlink.org)
+>>>>>>> refs/remotes/sm0svx/master
 

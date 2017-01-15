@@ -97,7 +97,11 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
      */
     ~CppDnsLookupWorker(void);
   
-    bool doLookup(void);
+    /**
+     * @brief   Called by the DnsLookup class to start the lookup
+     * @return  Return \em true on success or else \em false
+     */
+    virtual bool doLookup(void);
 
     /**
      * @brief 	Return the addresses for the host in the query
@@ -114,7 +118,7 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
   private:
     std::string	      	    label;
     std::vector<IpAddress>  the_addresses;
-    pthread_t 	      	    worker;
+    pthread_t 	      	    worker_thread;
     int       	      	    notifier_rd;
     int       	      	    notifier_wr;
     Async::FdWatch    	    *notifier_watch;

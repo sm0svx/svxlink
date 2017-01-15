@@ -89,7 +89,15 @@ class DnsLookupWorker
      * @brief 	Destructor
      */
     virtual ~DnsLookupWorker(void) {}
+<<<<<<< HEAD
 
+=======
+    
+    /**
+     * @brief   Called by the DnsLookup class to start the lookup
+     * @return  Return \em true on success or else \em false
+     */
+>>>>>>> refs/remotes/sm0svx/master
     virtual bool doLookup(void) { return true; }
 
     /**

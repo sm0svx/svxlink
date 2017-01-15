@@ -46,9 +46,9 @@ RUN mkdir -p /usr/share/svxlink/sounds && \
 ADD sudoers-svxlink /etc/sudoers.d/svxlink
 RUN chmod 0440 /etc/sudoers.d/svxlink
 
-ENV GIT_URL https://github.com/sm0svx/svxlink.git \
-    GIT_BRANCH master \
-    NUM_CORES 1
+ENV GIT_URL=https://github.com/sm0svx/svxlink.git \
+    GIT_BRANCH=master \
+    NUM_CORES=1
 
 RUN useradd -s /bin/bash svxlink
 ADD build-svxlink.sh /home/svxlink/

@@ -168,6 +168,8 @@ class ModuleEchoLink : public Module
     int   	      	  autocon_time;
     Async::Timer	  *autocon_timer;
     EchoLink::Proxy       *proxy;
+    Async::Pty            *pty;
+    std::string           command_buf;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -178,13 +180,22 @@ class ModuleEchoLink : public Module
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
+<<<<<<< HEAD
     void commandHandler(const void *buf, size_t count); // WIM
     Async::Pty                      *pty;   
+=======
+    void handlePtyCommand(const std::string &full_command);
+    void onCommandPtyInput(const void *buf, size_t count);
+>>>>>>> refs/remotes/sm0svx/master
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
+<<<<<<< HEAD
     void clientList(void);
+=======
+    void clientListChanged(void);
+>>>>>>> refs/remotes/sm0svx/master
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name,
       	    const std::string& priv);
