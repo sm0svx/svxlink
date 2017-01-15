@@ -60,12 +60,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   @ONLY
   )
 
-# Generate config file with correct paths
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio.conf.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf
-  @ONLY
-  )
-
 # Install targets
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
 install_mkdir(${SVX_SYSCONF_INSTALL_DIR}/svxlink.d)
