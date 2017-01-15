@@ -1,6 +1,6 @@
 #############################################################################
 #
-# Configuration file for the RemoteTrx systemd unit file
+# Configuration file for the RemoteTrx startup script /etc/init.d/remotetrx
 #
 #############################################################################
 
@@ -8,4 +8,8 @@
 RUNASUSER=svxlink
 
 # Specify which configuration file to use
-CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/remotetrx.conf
+CFGFILE=/etc/svxlink/remotetrx.conf
+
+# Environment variables to set up. Separate variables with a space.
+ENV="ASYNC_AUDIO_NOTRIGGER=1"
+
