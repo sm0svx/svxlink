@@ -40,8 +40,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 option(USE_QT "Build Qt applications and libs" ON)
 option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
 option(USE_DEFAULT_COMPILER_FLAGS "Use default compiler flags in cmake file" ON)
-option(WITH_SYSTEMD "Set to ON to create unit files and systemd check on svx-daemon startup" ON )
-#option(WITH_SYSTEMD_WATCHDOG  "Set to ON to use the systemd watchdog in svx-daemon" OFF)
 
 # The sample rate used internally in SvxLink
 if(NOT DEFINED INTERNAL_SAMPLE_RATE)
@@ -303,19 +301,6 @@ function(install_if_not_exists src dest)
   ")
 endfunction(install_if_not_exists)
 
-<<<<<<< HEAD
-#############################################################################
-#Systemd Enviroment 
-#############################################################################
-
-if(WITH_SYSTEMD) 
-    add_subdirectory( systemd )
-endif(WITH_SYSTEMD ) 
-
-message( STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}" )
-
-=======
->>>>>>> refs/remotes/sm0svx/master
 ##############################################################################
 # Main execution starts here
 ##############################################################################
