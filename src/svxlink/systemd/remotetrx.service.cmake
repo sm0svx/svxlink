@@ -1,8 +1,8 @@
 ;;;;; Author: Richard Neese<kb3vgw@gmail.com>
 
 [Unit]
-Description=svxlink remote transceiver repeater control software
-After=network.target remote-fs.target syslog.target time.target
+Description=svxlink remote repeater control software
+After=network.target remote-fs.target syslog.target time.target svxserver.service
 
 [Service]
 EnvironmentFile=/etc/default/remotetrx
@@ -16,7 +16,7 @@ TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@
 ;;;;NotifyAccess=main
 LimitCORE=infinity
-WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
+WorkingDirectory=/etc/svxlink
 
 [Install]
 WantedBy=multi-user.target

@@ -4,12 +4,6 @@
 #
 #############################################################################
 
-# The log file to use
-LOGFILE=/var/log/svxlink
-
-# The PID file to use
-PIDFILE=/var/run/svxlink.pid
-
 # The user to run the SvxLink server as
 RUNASUSER=svxlink
 
@@ -19,3 +13,6 @@ CFGFILE=/etc/svxlink/svxlink.conf
 # Environment variables to set up. Separate variables with a space.
 ENV="ASYNC_AUDIO_NOTRIGGER=1"
 
+if [ -r /etc/svxlink/svxlink_gpio.conf ]; then
+        . /etc/svxlink/svxlink_gpio.conf
+fi

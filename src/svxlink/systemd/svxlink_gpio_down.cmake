@@ -13,17 +13,32 @@ gpio_teardown() {
 }
 
 ## Unset GPIO OUT pin, if used
-for i in $GPIO_OUT_PIN
+for i in $GPIO_IN_HIGH
 do
 if [ ! -z "$i" ]; then
-   gpio_teardown OUT "$i"
+   gpio_teardown IN "$i"
 fi
 done
 
-## Unset GPIO IN pin, if used
-for i in $GPIO_IN_PIN
+for i in $GPIO_IN_LOW
 do
 if [ ! -z "$i" ]; then
-gpio_teardown IN "$i"
+   gpio_teardown IN "$i"
+fi
+done
+
+
+## Unset GPIO IN pin, if used
+for i in $GPIO_OUT_HIGH
+do
+if [ ! -z "$i" ]; then
+gpio_teardown OUT "$i"
+fi
+done
+
+for i in $GPIO_OUT_LOW
+do
+if [ ! -z "$i" ]; then
+gpio_teardown OUT "$i"
 fi
 done
