@@ -167,6 +167,18 @@ QsoFrn::QsoFrn(ModuleFrn *module)
          << "/PORT not set\n";
     return;
   }
+  if (!cfg.getValue(cfg_name, "SERVER_BACKUP", opt_server_backup))
+  {
+    cerr << "*** WARNING: Config variable " << cfg_name
+         << "/SERVER_BACKUP not set\n";
+    opt_server_backup = opt_server;
+  }
+  if (!cfg.getValue(cfg_name, "PORT_BACKUP", opt_port_backup))
+  {
+    cerr << "*** WARNING: Config variable " << cfg_name
+         << "/PORT_BACKUP not set\n";
+    opt_port_backup = opt_port;
+  }
   if (!cfg.getValue(cfg_name, "EMAIL_ADDRESS", opt_email_address))
   {
     cerr << "*** ERROR: Config variable " << cfg_name
@@ -295,12 +307,15 @@ bool QsoFrn::initOk(void)
 }
 
 
-void QsoFrn::connect(void)
+void QsoFrn::connect(bool is_backup)
 {
   setState(STATE_CONNECTING);
 
-  cout << "connecting to " << opt_server << ":" << opt_port << endl;
-  tcp_client->connect(opt_server, atoi(opt_port.c_str()));
+  server = is_backup ? opt_server_backup : opt_server;
+  port = is_backup ? opt_port_backup : opt_port;
+
+  cout << "connecting to " << server << ":" << port << endl;
+  tcp_client->connect(server, atoi(port.c_str()));
 }
 
 
@@ -324,7 +339,7 @@ std::string QsoFrn::stateToString(State state)
     case STATE_DISCONNECTED:
       return "DISCONNECTED";
     case STATE_CONNECTING:
-      return "CONNECTING";
+      return "CONNECTING"; 
     case STATE_CONNECTED:
       return "CONNECTED";
     case STATE_LOGGING_IN_1:
@@ -513,15 +528,23 @@ void QsoFrn::sendVoiceData(short *data, int len)
 
 void QsoFrn::reconnect(void)
 {
+  bool is_using_backup_server = (server == opt_server_backup && port == opt_port_backup);
+
   reconnect_timeout_ms *= RECONNECT_BACKOFF;
+  if (reconnect_timeout_ms > RECONNECT_MAX_TIMEOUT) {
+    reconnect_timeout_ms = RECONNECT_MAX_TIMEOUT;
+  }
+
   if (connect_retry_cnt++ < MAX_CONNECT_RETRY_CNT)
   {
     cout << "reconnecting #" << connect_retry_cnt << endl;
-    connect();
+    connect(!is_using_backup_server);
   }
   else
   {
     cerr << "failed to reconnect " << MAX_CONNECT_RETRY_CNT << " times" << endl;
+    connect_retry_cnt = 0;
+    reconnect_timeout_ms = RECONNECT_TIMEOUT_TIME;
     setState(STATE_ERROR);
   }
 }
