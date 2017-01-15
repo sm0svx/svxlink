@@ -53,6 +53,7 @@ extern "C" {
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 #include <AsyncTcpConnection.h>
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -521,22 +522,22 @@ class QsoFrn
     void onDelayedReconnect(Async::Timer *timer);
 
   private:
-    static const int    CLIENT_INDEX_SIZE       = 2;
-    static const int    TCP_BUFFER_SIZE         = 65536;
-    static const int    FRAME_COUNT             = 5;
-    static const int    PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
-    static const int    GSM_FRAME_SIZE          = 65;     // WAV49 has 65
-    static const int    BUFFER_SIZE             = FRAME_COUNT*PCM_FRAME_SIZE;
-    static const int    FRN_AUDIO_PACKET_SIZE   = FRAME_COUNT*GSM_FRAME_SIZE;
+    static const int        CLIENT_INDEX_SIZE       = 2;
+    static const int        TCP_BUFFER_SIZE         = 65536;
+    static const int        FRAME_COUNT             = 5;
+    static const int        PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
+    static const int        GSM_FRAME_SIZE          = 65;     // WAV49 has 65
+    static const int        BUFFER_SIZE             = FRAME_COUNT*PCM_FRAME_SIZE;
+    static const int        FRN_AUDIO_PACKET_SIZE   = FRAME_COUNT*GSM_FRAME_SIZE;
 
-    static const int    CON_TIMEOUT_TIME        = 30000;
-    static const int    RX_TIMEOUT_TIME         = 1000;
-    static const int    KEEPALIVE_TIMEOUT_TIME  = 5000;
+    static const int        CON_TIMEOUT_TIME        = 30000;
+    static const int        RX_TIMEOUT_TIME         = 1000;
+    static const int        KEEPALIVE_TIMEOUT_TIME  = 5000;
 
-    static const int    MAX_CONNECT_RETRY_CNT   = 10;
-    static const int    RECONNECT_TIMEOUT_TIME  = 5*1000;
-    static const int    RECONNECT_MAX_TIMEOUT   = 2*60*1000;
-    const float         RECONNECT_BACKOFF       = 1.2f;
+    static const int        MAX_CONNECT_RETRY_CNT   = 10;
+    static const int        RECONNECT_TIMEOUT_TIME  = 5*1000;
+    static const int        RECONNECT_MAX_TIMEOUT   = 2*60*1000;
+    static CONSTEXPR float  RECONNECT_BACKOFF       = 1.2f;
 
     bool                init_ok;
 
