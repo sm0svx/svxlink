@@ -1,3 +1,42 @@
+ 1.6.0 -- ?? ??? 2017
+----------------------
+
+* ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
+  output
+
+* ModuleMetarInfo: Because of termination the metar service on noaa.gov some
+  changes were needed in the module (weather.noaa.gov - >
+  aviationweather.gov), better debug output if a metar can not be announced
+
+* New argument "call" to EchoLink::is_receiving TCL event handler.
+  Patch by hsmade.
+
+* New TCL event handler EchoLink::client_list_changed.
+  Patch by hsmade.
+
+* New TCL function playDtmf. Patch by DL1HRC / Adi.
+
+* ModuleEchoLink: Add command PTY that can be used to send commands to the
+  EchoLink module at runtime. Patch by hsmade.
+
+* RemoteTrx now display squelch open/close even when disconnected from
+  the main system.
+
+* Small bugfix in the LocationInfo functionality that made SvxLink exit
+  uncleanly, possibly with a segmentation fault.
+
+* New TCL command, injectDtmf, to inject DTMF digits into the command
+  stream just as if they were received on the receiver. This function
+  can for example be used in conjuction with the dtmf_digit_received and
+  dtmf_cmd_received functions to remap commands to something different or
+  inventing compound commands.
+
+* ModuleTclVoiceMail: SvxLink would not start if the HOME environment
+  variable was not set. That prevented proper operation from system
+  startcripts.
+
+
+
  1.5.0 -- 22 Nov 2015
 ----------------------
 

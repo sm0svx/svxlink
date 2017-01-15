@@ -1,0 +1,15 @@
+#############################################################################
+#
+# Configuration file for the SvxLink Systemd unit file
+#
+#############################################################################
+
+# The user to run the SvxLink server as
+RUNASUSER=svxlink
+
+# Specify which configuration file to use
+CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
+
+if [ -r @SVX_SYSCONF_INSTALL_DIR@/svxlink_gpio.conf ]; then
+. @SVX_SYSCONF_INSTALL_DIR@/svxlink_gpio.conf
+fi
