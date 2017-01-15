@@ -339,7 +339,7 @@ std::string QsoFrn::stateToString(State state)
     case STATE_DISCONNECTED:
       return "DISCONNECTED";
     case STATE_CONNECTING:
-      return "CONNECTING"; 
+      return "CONNECTING";
     case STATE_CONNECTED:
       return "CONNECTED";
     case STATE_LOGGING_IN_1:

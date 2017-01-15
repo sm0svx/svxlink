@@ -35,6 +35,11 @@
   variable was not set. That prevented proper operation from system
   startcripts.
 
+* ModuleFrn: Now possible to specify a backup server that is used when the
+  connection to the primary server fail. Use the new configuration variables
+  SERVER_BACKUP and PORT_BACKUP to configure the backup server.
+  Patch by sh123.
+
 
 
  1.5.0 -- 22 Nov 2015
