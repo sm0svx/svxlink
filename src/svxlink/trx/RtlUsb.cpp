@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstring>
 #include <cstdlib>
 #include <iterator>
@@ -44,51 +39,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <errno.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncFdWatch.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "RtlUsb.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class RtlUsb::SampleBuffer : public sigc::trackable
 {
   public:
@@ -267,39 +240,21 @@ class RtlUsb::SampleBuffer : public sigc::trackable
     }
 };
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 RtlUsb::RtlUsb(const std::string &match)
   : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), rtl_reader_thread(),
     dev_match(match), dev_name("?"), sample_buf(0),
@@ -307,24 +262,18 @@ RtlUsb::RtlUsb(const std::string &match)
 {
   reconnect_timer.expired.connect(
       hide(mem_fun(*this, &RtlUsb::initializeDongle)));
-} /* RtlUsb::RtlUsb */
-
+} /** RtlUsb::RtlUsb */
 
 RtlUsb::~RtlUsb(void)
 {
   verboseClose();
   delete sample_buf;
   sample_buf = 0;
-} /* RtlUsb::~RtlUsb */
+} /** RtlUsb::~RtlUsb */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 void RtlUsb::handleSetTunerIfGain(uint16_t stage, int16_t gain)
 {
   if (dev == NULL)
@@ -340,13 +289,12 @@ void RtlUsb::handleSetTunerIfGain(uint16_t stage, int16_t gain)
   }
   else
   {
-    /*
+    /**
     cerr << "### Tuner IF gain stage " << stage << " set to " 
          << (gain / 10.0) << "dB\n";
          */
   }
-} /* RtlUsb::handleSetTunerIfGain */
-
+} /** RtlUsb::handleSetTunerIfGain */
 
 void RtlUsb::handleSetCenterFq(uint32_t fq)
 {
@@ -365,8 +313,7 @@ void RtlUsb::handleSetCenterFq(uint32_t fq)
   {
     //cerr << "### Tuned to " << fq << "Hz\n";
   }
-} /* RtlUsb::handleSetCenterFq */
-
+} /** RtlUsb::handleSetCenterFq */
 
 void RtlUsb::handleSetSampleRate(uint32_t rate)
 {
@@ -390,8 +337,7 @@ void RtlUsb::handleSetSampleRate(uint32_t rate)
   {
     //cerr << "### Sample rate set to " << rate << "Hz\n";
   }
-} /* RtlUsb::handleSetSampleRate */
-
+} /** RtlUsb::handleSetSampleRate */
 
 void RtlUsb::handleSetGainMode(uint32_t mode)
 {
@@ -402,7 +348,7 @@ void RtlUsb::handleSetGainMode(uint32_t mode)
 
   if (mode == 0)
   {
-      /* Enable automatic gain */
+      /** Enable automatic gain */
     int r = rtlsdr_set_tuner_gain_mode(dev, 0);
     if (r < 0)
     {
@@ -416,7 +362,7 @@ void RtlUsb::handleSetGainMode(uint32_t mode)
   }
   else
   {
-      /* Enable manual gain */
+      /** Enable manual gain */
     int r = rtlsdr_set_tuner_gain_mode(dev, 1);
     if (r < 0)
     {
@@ -428,8 +374,7 @@ void RtlUsb::handleSetGainMode(uint32_t mode)
       //cerr << "### Enable manual gain control\n";
     }
   }
-} /* RtlUsb::handleSetGainMode */
-
+} /** RtlUsb::handleSetGainMode */
 
 void RtlUsb::handleSetGain(int32_t gain)
 {
@@ -438,7 +383,7 @@ void RtlUsb::handleSetGain(int32_t gain)
     return;
   }
 
-    /* Set the tuner gain */
+    /** Set the tuner gain */
   int r = rtlsdr_set_tuner_gain(dev, gain);
   if (r < 0)
   {
@@ -449,8 +394,7 @@ void RtlUsb::handleSetGain(int32_t gain)
   {
     //cout << "### Tuner gain set to " << (gain/10.0) << "dB\n";
   }
-} /* RtlUsb::handleSetGain */
-
+} /** RtlUsb::handleSetGain */
 
 void RtlUsb::handleSetFqCorr(uint32_t corr)
 {
@@ -469,8 +413,7 @@ void RtlUsb::handleSetFqCorr(uint32_t corr)
   {
     //cerr << "### Tuner error set to " << corr << " ppm\n";
   }
-} /* RtlUsb::handleSetFqCorr */
-
+} /** RtlUsb::handleSetFqCorr */
 
 void RtlUsb::handleEnableTestMode(bool enable)
 {
@@ -488,8 +431,7 @@ void RtlUsb::handleEnableTestMode(bool enable)
   {
     //cerr << "### Test mode " << (enable ? "enabled" : "disabled") << endl;
   }
-} /* RtlUsb::handleEnableTestMode */
-
+} /** RtlUsb::handleEnableTestMode */
 
 void RtlUsb::handleEnableDigitalAgc(bool enable)
 {
@@ -507,24 +449,18 @@ void RtlUsb::handleEnableDigitalAgc(bool enable)
   {
     //cerr << "### Digital AGC " << (enable ? "enabled" : "disabled") << endl;
   }
-} /* RtlUsb::handleEnableDigitalAgc */
+} /** RtlUsb::handleEnableDigitalAgc */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void *RtlUsb::startRtlReader(void *data)
 {
   RtlUsb *rtl = reinterpret_cast<RtlUsb*>(data);
   assert(rtl != 0);
   rtl->rtlReader();
   return NULL;
-} /* RtlUsb::startRtlReader */
-
+} /** RtlUsb::startRtlReader */
 
 #if 0
 void RtlUsb::rtlReader(void)
@@ -573,7 +509,7 @@ void RtlUsb::rtlReader(void)
     cerr << "*** WARNING: Failed to close write end of RTL "
          << "sample reader pipe: " << strerror(errno) << "\n";
   }
-} /* RtlUsb::rtlReader */
+} /** RtlUsb::rtlReader */
 #else
 void RtlUsb::rtlReader(void)
 {
@@ -584,8 +520,7 @@ void RtlUsb::rtlReader(void)
     cerr << "*** WARNING: Failed to read samples from RTL dongle\n";
   }
   sample_buf->closeWritePipe();
-} /* RtlUsb::rtlReader */
-
+} /** RtlUsb::rtlReader */
 
 void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
 {
@@ -596,9 +531,8 @@ void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
     cerr << "*** WARNING: Write error while writing to the RTL sample buffer\n";
     rtl->verboseClose();
   }
-} /* RtlUsb::rtlsdrCallback */
+} /** RtlUsb::rtlsdrCallback */
 #endif
-
 
 void RtlUsb::initializeDongle(void)
 {
@@ -701,8 +635,7 @@ void RtlUsb::initializeDongle(void)
 
     // Tell the world that we are ready for operation
   readyStateChanged();
-} /* RtlUsb::initializeDongle */
-
+} /** RtlUsb::initializeDongle */
 
 void RtlUsb::verboseClose(void)
 {
@@ -751,8 +684,7 @@ void RtlUsb::verboseClose(void)
 
     // Signal to upper layers that the receiver is no longer ready
   readyStateChanged();
-} /* RtlUsb::verboseClose */
-
+} /** RtlUsb::verboseClose */
 
 int RtlUsb::verboseDeviceSearch(const char *s)
 {
@@ -766,18 +698,18 @@ int RtlUsb::verboseDeviceSearch(const char *s)
     return -1;
   }
 
-    /* Does string look like raw id number */
+    /** Does string look like raw id number */
   device = (int)strtol(s, &s2, 0);
   if (s2[0] == '\0' && device >= 0 && device < device_count)
   {
-    /*
+    /**
     cerr << "### Device index match. Using device " << device << ": "
          << rtlsdr_get_device_name((uint32_t)device) << endl;
     */
     return device;
   }
 
-    /* Does string exact match a serial */
+    /** Does string exact match a serial */
   for (i = 0; i < device_count; i++)
   {
     rtlsdr_get_device_usb_strings(i, vendor, product, serial);
@@ -786,14 +718,14 @@ int RtlUsb::verboseDeviceSearch(const char *s)
       continue;
     }
     device = i;
-    /*
+    /**
     cerr << "### Serial match. Using device " << device << ": "
          << rtlsdr_get_device_name((uint32_t)device) << endl;
     */
     return device;
   }
 
-    /* Does string prefix match a serial */
+    /** Does string prefix match a serial */
   for (i = 0; i < device_count; i++)
   {
     rtlsdr_get_device_usb_strings(i, vendor, product, serial);
@@ -802,14 +734,14 @@ int RtlUsb::verboseDeviceSearch(const char *s)
       continue;
     }
     device = i;
-    /*
+    /**
     cerr << "### Serial prefix match. Using device " << device << ": "
          << rtlsdr_get_device_name((uint32_t)device) << endl;
     */
     return device;
   }
 
-    /* Does string suffix match a serial */
+    /** Does string suffix match a serial */
   for (i = 0; i < device_count; i++)
   {
     rtlsdr_get_device_usb_strings(i, vendor, product, serial);
@@ -823,7 +755,7 @@ int RtlUsb::verboseDeviceSearch(const char *s)
       continue;
     }
     device = i;
-    /*
+    /**
     cerr << "### Serial suffix match. Using device " << device << ": " 
          << rtlsdr_get_device_name((uint32_t)device) << endl;
     */
@@ -840,8 +772,6 @@ int RtlUsb::verboseDeviceSearch(const char *s)
   return -1;
 }
 
-
-
-/*
+/**
  * This file has not been truncated
  */

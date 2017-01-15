@@ -10,7 +10,7 @@ class documentation.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2017 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,108 +28,61 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncApplication.h"
 #include "AsyncTimer.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 Timer::Timer(int timeout_ms, Type type, bool enabled)
   : m_type(type), m_timeout_ms(timeout_ms), m_is_enabled(false)
 {
   setEnable(enabled && (timeout_ms >= 0));
-} /* Timer::Timer */
-
+} /** Timer::Timer */
 
 Timer::~Timer(void)
 {
   setEnable(false);
-} /* Timer::~Timer */
-
+} /** Timer::~Timer */
 
 void Timer::setTimeout(int timeout_ms)
 {
@@ -142,8 +95,7 @@ void Timer::setTimeout(int timeout_ms)
   {
     setEnable(false);
   }
-} /* Timer::setTimeout */
-
+} /** Timer::setTimeout */
 
 void Timer::setEnable(bool do_enable)
 {
@@ -158,8 +110,7 @@ void Timer::setEnable(bool do_enable)
     Application::app().delTimer(this);
     m_is_enabled = false;
   }
-} /* Timer::setEnable */
-
+} /** Timer::setEnable */
 
 void Timer::reset(void)
 {
@@ -169,29 +120,17 @@ void Timer::reset(void)
     Application::app().delTimer(this);
     Application::app().addTimer(this);
   }
-} /* Timer::reset */
+} /** Timer::reset */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

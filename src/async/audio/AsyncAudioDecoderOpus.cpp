@@ -24,96 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <stdint.h>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioDecoderOpus.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioDecoderOpus::AudioDecoderOpus(void)
   : frame_size(0)
 {
@@ -124,14 +80,12 @@ AudioDecoderOpus::AudioDecoderOpus(void)
     cerr << "*** ERROR: Could not initialize Opus decoder\n";
     exit(1);
   }
-} /* AudioDecoderOpus::AudioDecoderOpus */
-
+} /** AudioDecoderOpus::AudioDecoderOpus */
 
 AudioDecoderOpus::~AudioDecoderOpus(void)
 {
   opus_decoder_destroy(dec);
-} /* AudioDecoderOpus::~AudioDecoderOpus */
-
+} /** AudioDecoderOpus::~AudioDecoderOpus */
 
 void AudioDecoderOpus::setOption(const std::string &name,
       	      	      	      	  const std::string &value)
@@ -147,8 +101,7 @@ void AudioDecoderOpus::setOption(const std::string &name,
     cerr << "*** WARNING AudioDecoderOpus: Unknown option \""
       	 << name << "\". Ignoring it.\n";
   }
-} /* AudioDecoderOpus::setOption */
-
+} /** AudioDecoderOpus::setOption */
 
 void AudioDecoderOpus::printCodecParams(void) const
 {
@@ -157,8 +110,7 @@ void AudioDecoderOpus::printCodecParams(void) const
   cout << "Gain       = " << gain() << "dB\n";
   cout << "--------------------------------------\n";
 #endif
-} /* AudioDecoderOpus::printCodecParams */
-
+} /** AudioDecoderOpus::printCodecParams */
 
 #if OPUS_MAJOR > 0
 float AudioDecoderOpus::setGain(float new_gain)
@@ -166,8 +118,7 @@ float AudioDecoderOpus::setGain(float new_gain)
   opus_int32 gaini = static_cast<opus_int32>(256.0f * new_gain);
   opus_decoder_ctl(dec, OPUS_SET_GAIN(gaini));
   return gain();
-} /* AudioDecoderOpus::setGain */
-
+} /** AudioDecoderOpus::setGain */
 
 float AudioDecoderOpus::gain(void) const
 {
@@ -175,15 +126,13 @@ float AudioDecoderOpus::gain(void) const
     // coverity[ptr_arith]
   opus_decoder_ctl(dec, OPUS_GET_GAIN(&gaini));
   return gaini / 256.0f;
-} /* AudioDecoderOpus::gain */
+} /** AudioDecoderOpus::gain */
 #endif
-
 
 void AudioDecoderOpus::reset(void)
 {
   opus_decoder_ctl(dec, OPUS_RESET_STATE);
-} /* AudioDecoderOpus::reset */
-
+} /** AudioDecoderOpus::reset */
 
 void AudioDecoderOpus::writeEncodedSamples(void *buf, int size)
 {
@@ -238,27 +187,17 @@ void AudioDecoderOpus::writeEncodedSamples(void *buf, int size)
     cerr << "**** ERROR: Opus decoder error: " << opus_strerror(frame_size)
          << endl;
   }
-} /* AudioDecoderOpus::writeEncodedSamples */
+} /** AudioDecoderOpus::writeEncodedSamples */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

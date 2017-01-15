@@ -23,79 +23,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef SW_SEL5_DECODER_INCLUDED
 #define SW_SEL5_DECODER_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <vector>
 #include <stdint.h>
 #include <sigc++/sigc++.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "Sel5Decoder.h"
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
  * @brief   This class implements a software SEL5 decoder
  * @author  Tobias Blomberg, SM0SVX & Adi / DL1HRC
@@ -152,28 +117,28 @@ class SwSel5Decoder : public Sel5Decoder
       int block_length;
     } GoertzelState;
 
-    /*! Tone detector working states for the row tones. */
+    /**! Tone detector working states for the row tones. */
     GoertzelState row_out[36];
 
-    /* tone-digit table*/
+    /** tone-digit table*/
     char *sel5_table;
 
-    /*! Row tone signal level values. */
+    /**! Row tone signal level values. */
     float row_energy[16];
 
-    /*! Remaining sample count in the current detection interval. */
+    /**! Remaining sample count in the current detection interval. */
     int samples_left;
-    /*! The result of the last tone analysis. */
+    /**! The result of the last tone analysis. */
     uint8_t last_hit;
-    /*! This is the last stable tone digit. */
+    /**! This is the last stable tone digit. */
     uint8_t last_stable;
-    /*! The detection timer advances when the input is stable. */
+    /**! The detection timer advances when the input is stable. */
     int stable_timer;
-    /*! The active timer is reset when a new non-zero digit is detected. */
+    /**! The active timer is reset when a new non-zero digit is detected. */
     int active_timer;
-    /*! the detected Sel5 sequence */
+    /**! the detected Sel5 sequence */
     std::string dec_digits;
-    /*! the length of the tone definition */
+    /**! the length of the tone definition */
     int arr_len;
 
     void Sel5Receive(void);
@@ -182,16 +147,11 @@ class SwSel5Decoder : public Sel5Decoder
     float goertzelResult(GoertzelState *s);
     int findMaxIndex(const float f[]);
 
-};  /* class SwSel5Decoder */
+};  /** class SwSel5Decoder */
 
+#endif /** SW_SEL5_DECODER_INCLUDED */
 
-//} /* namespace */
-
-#endif /* SW_SEL5_DECODER_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

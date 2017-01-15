@@ -23,87 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_VALVE_INCLUDED
 #define ASYNC_AUDIO_VALVE_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	Implements a "valve" for audio
 @author Tobias Blomberg / SM0SVX
@@ -124,12 +85,12 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
 	is_idle(true), is_flushing(false), input_stopped(false)
     {
     }
-  
+
     /**
      * @brief 	Destructor
      */
     ~AudioValve(void) {}
-    
+
     /**
      * @brief 	Open or close the valve
      * @param 	do_open If \em true the valve is open or else it's closed
@@ -191,7 +152,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       {
       	return;
       }
-      
+
       this->block_when_closed = block_when_closed;
       
       if (!block_when_closed && input_stopped)
@@ -200,7 +161,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       	sourceResumeOutput();
       }
     }
-    
+
     /**
      * @brief 	Check if the valve is open
      * @returns Return \em true if the valve is open or else \em false
@@ -209,7 +170,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     {
       return is_open;
     }
-    
+
     /**
      * @brief 	Check if the valve is idle
      * @returns Return \em true if the valve is idle or else \em false
@@ -218,7 +179,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     {
       return is_idle;
     }
-  
+
     /**
      * @brief 	Write samples into the valve
      * @param 	samples The buffer containing the samples
@@ -251,7 +212,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       return ret;
     }
-    
+
     /**
      * @brief 	Tell the valve to flush the previously written samples
      *
@@ -274,7 +235,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       	sourceAllSamplesFlushed();
       }
     }
-    
+
     /**
      * @brief Resume audio output to the sink
      * 
@@ -294,7 +255,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
 	}
       }
     }
-    
+
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -312,30 +273,26 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       	sourceAllSamplesFlushed();
       }
     }
-    
-    
+
   protected:
-    
+
   private:
     AudioValve(const AudioValve&);
     AudioValve& operator=(const AudioValve&);
-    
+
     bool block_when_closed;
     bool is_open;
     bool is_idle;
     bool is_flushing;
     bool input_stopped;
-    
-};  /* class AudioValve */
 
+};  /** class AudioValve */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_VALVE_INCLUDED */
+#endif /** ASYNC_AUDIO_VALVE_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -23,85 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_DECODER_OPUS_INCLUDED
 #define ASYNC_AUDIO_DECODER_OPUS_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <opus.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioDecoder.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	An audio decoder that use the Opus audio codec
 @author Tobias Blomberg / SM0SVX
@@ -116,18 +79,18 @@ class AudioDecoderOpus : public AudioDecoder
      * @brief 	Default constuctor
      */
     AudioDecoderOpus(void);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~AudioDecoderOpus(void);
-  
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "OPUS"; }
-  
+
     /**
      * @brief 	Set an option for the decoder
      * @param 	name The name of the option
@@ -139,7 +102,7 @@ class AudioDecoderOpus : public AudioDecoder
      * @brief Print codec parameter settings
      */
     virtual void printCodecParams(void) const;
-    
+
 #if OPUS_MAJOR
     /**
      * @brief   Configures decoder gain adjustment
@@ -166,10 +129,9 @@ class AudioDecoderOpus : public AudioDecoder
      * @param 	size The size of the buffer
      */
     virtual void writeEncodedSamples(void *buf, int size);
-    
 
   protected:
-    
+ 
   private:
     OpusDecoder *dec;
     int         frame_size;
@@ -177,16 +139,13 @@ class AudioDecoderOpus : public AudioDecoder
     AudioDecoderOpus(const AudioDecoderOpus&);
     AudioDecoderOpus& operator=(const AudioDecoderOpus&);
     
-};  /* class AudioDecoderOpus */
+};  /** class AudioDecoderOpus */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_DECODER_OPUS_INCLUDED */
 
-#endif /* ASYNC_AUDIO_DECODER_OPUS_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -24,68 +24,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncAudioFilter.h>
 #include <common.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SigLevDetTone.h"
 #include "Goertzel.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace SvxLink;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 #if 0
 class SigLevDetTone::HammingWindow
 {
@@ -126,40 +99,24 @@ class SigLevDetTone::HammingWindow
     HammingWindow(const HammingWindow&);
     HammingWindow& operator=(const HammingWindow&);
     
-};  /* HammingWindow */
+};  /** HammingWindow */
 #endif
 
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 SigLevDetTone::SigLevDetTone(void)
   : sample_rate(0), tone_siglev_map(10), block_idx(0), last_siglev(0),
     passband_energy(0.0f), filter(0), prev_peak_to_tot_pwr(0.0f),
@@ -169,8 +126,7 @@ SigLevDetTone::SigLevDetTone(void)
   {
     det[i] = 0;
   }
-} /* SigLevDetTone::SigLevDetTone */
-
+} /** SigLevDetTone::SigLevDetTone */
 
 SigLevDetTone::~SigLevDetTone(void)
 {
@@ -180,8 +136,7 @@ SigLevDetTone::~SigLevDetTone(void)
   {
     delete det[i];
   }
-} /* SigLevDetTone::~SigLevDetTone */
-
+} /** SigLevDetTone::~SigLevDetTone */
 
 bool SigLevDetTone::initialize(Config &cfg, const string& name, int sample_rate)
 {
@@ -225,7 +180,7 @@ bool SigLevDetTone::initialize(Config &cfg, const string& name, int sample_rate)
   
   return SigLevDet::initialize(cfg, name, sample_rate);
   
-} /* SigLevDetTone::initialize */
+} /** SigLevDetTone::initialize */
 
 
 void SigLevDetTone::reset(void)
@@ -240,15 +195,13 @@ void SigLevDetTone::reset(void)
   prev_peak_to_tot_pwr = 0.0f;
   update_counter = 0;
   siglev_values.clear();
-} /* SigLevDetTone::reset */
-
+} /** SigLevDetTone::reset */
 
 void SigLevDetTone::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
   update_counter = 0;  
-} /* SigLevDetTone::setContinuousUpdateInterval */
-
+} /** SigLevDetTone::setContinuousUpdateInterval */
 
 void SigLevDetTone::setIntegrationTime(int time_ms)
 {
@@ -259,8 +212,7 @@ void SigLevDetTone::setIntegrationTime(int time_ms)
   {
     integration_time = 1;
   }
-} /* SigLevDetTone::setIntegrationTime */
-
+} /** SigLevDetTone::setIntegrationTime */
 
 float SigLevDetTone::siglevIntegrated(void) const
 {
@@ -275,23 +227,15 @@ float SigLevDetTone::siglevIntegrated(void) const
     return sum / siglev_values.size();
   }
   return 0;
-} /* SigLevDetTone::siglevIntegrated */
+} /** SigLevDetTone::siglevIntegrated */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
 int SigLevDetTone::processSamples(const float *samples, int count)
 {
@@ -393,11 +337,9 @@ int SigLevDetTone::processSamples(const float *samples, int count)
   
   return count;
   
-} /* SigLevDetTone::processSamples */
+} /** SigLevDetTone::processSamples */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

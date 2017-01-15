@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -43,83 +38,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncFdWatch.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncPty.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 Pty::Pty(const std::string &slave_link)
   : slave_link(slave_link), master(-1), watch(0),
     pollhup_timer(POLLHUP_CHECK_INTERVAL, Timer::TYPE_PERIODIC)
@@ -127,14 +84,12 @@ Pty::Pty(const std::string &slave_link)
   pollhup_timer.setEnable(false);
   pollhup_timer.expired.connect(
       sigc::hide(mem_fun(*this, &Pty::checkIfSlaveEndOpen)));
-} /* Pty::Pty */
-
+} /** Pty::Pty */
 
 Pty::~Pty(void)
 {
   close();
-} /* Pty::~Pty */
-
+} /** Pty::~Pty */
 
 bool Pty::open(void)
 {
@@ -209,8 +164,7 @@ bool Pty::open(void)
   pollhup_timer.setEnable(true);
 
   return true;
-} /* Pty::open */
-
+} /** Pty::open */
 
 void Pty::close(void)
 {
@@ -226,8 +180,7 @@ void Pty::close(void)
     ::close(master);
     master = -1;
   }
-} /* Pty::close */
-
+} /** Pty::close */
 
 bool Pty::reopen(void)
 {
@@ -237,8 +190,7 @@ bool Pty::reopen(void)
     return false;
   }
   return true;
-} /* Pty::reopen */
-
+} /** Pty::reopen */
 
 ssize_t Pty::write(const void *buf, size_t count)
 {
@@ -247,24 +199,15 @@ ssize_t Pty::write(const void *buf, size_t count)
     return count;
   }
   return ::write(master, buf, count);
-} /* Pty::write */
+} /** Pty::write */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 /**
  * @brief   Called when characters are received on the master PTY
  * @param   w The watch that triggered the event
@@ -305,8 +248,7 @@ void Pty::charactersReceived(void)
     return;
   }
   dataReceived(buf, rd);
-} /* Pty::charactersReceived */
-
+} /** Pty::charactersReceived */
 
 /**
  * @brief   Read file descriptor status for the master end of the PTY
@@ -329,8 +271,7 @@ short Pty::pollMaster(void)
     return 0;
   }
   return 0;
-} /* Pty::pollMaster */
-
+} /** Pty::pollMaster */
 
 /**
  * @brief Check if slave end of the PTY is open
@@ -355,11 +296,9 @@ void Pty::checkIfSlaveEndOpen(void)
   {
     charactersReceived();
   }
-} /* Pty::checkIfSlaveEndOpen */
+} /** Pty::checkIfSlaveEndOpen */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

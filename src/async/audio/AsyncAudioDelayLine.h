@@ -23,86 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_DELAY_LINE_INCLUDED
 #define ASYNC_AUDIO_DELAY_LINE_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	This class implements an audio delay line
 @author Tobias Blomberg / SM0SVX
@@ -138,7 +100,7 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * The default is 10 milliseconds. Set to 0 to turn off.
      */
     void setFadeTime(int time_ms);
-    
+
     /**
      * @brief 	Mute audio
      * @param 	do_mute If \em true mute else unmute
@@ -151,7 +113,7 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * should be muted. Negative values are not allowed.
      */
     void mute(bool do_mute, int time_ms=0);
-    
+
     /**
      * @brief 	Clear samples in the delay line
      * @param 	time_ms How much time in milliseconds to clear
@@ -161,7 +123,7 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * samples will not be flushed. They will be thrown away.
      */
     void clear(int time_ms=-1);
-  
+
     /**
      * @brief 	Write samples into the delay line
      * @param 	samples The buffer containing the samples
@@ -172,7 +134,7 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * only called from a connected source object.
      */
     int writeSamples(const float *samples, int count);
-    
+
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -192,7 +154,7 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * This function is normally only called from a connected sink object.
      */
     void resumeOutput(void);
-    
+
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -202,10 +164,9 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * This function is normally only called from a connected sink object.
      */
     void allSamplesFlushed(void);
-    
-    
+
   protected:
-    
+
   private:
     static const int DEFAULT_FADE_TIME = 10; // 10ms default fade time
 
@@ -220,7 +181,7 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
     int		fade_len;
     int		fade_pos;
     int		fade_dir;
-    
+
     AudioDelayLine(const AudioDelayLine&);
     AudioDelayLine& operator=(const AudioDelayLine&);
     void writeRemainingSamples(void);
@@ -248,18 +209,15 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
       
       return gain;
       
-    } /* AudioDelayLine::currentFadeGain  */
+    } /** AudioDelayLine::currentFadeGain  */
 
-};  /* class AudioDelayLine */
+};  /** class AudioDelayLine */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_DELAY_LINE_INCLUDED */
 
-#endif /* ASYNC_AUDIO_DELAY_LINE_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

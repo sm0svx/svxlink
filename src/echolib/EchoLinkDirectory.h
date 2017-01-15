@@ -27,22 +27,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example EchoLinkDirectory_demo.cpp
 An example of how to use the EchoLink::Directory class
 */
-
-
 #ifndef ECHOLINK_DIRECTORY_INCLUDED
 #define ECHOLINK_DIRECTORY_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <string>
@@ -50,32 +43,20 @@ An example of how to use the EchoLink::Directory class
 #include <vector>
 #include <iostream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 #include <EchoLinkStationData.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 class Cmd;
 
 namespace EchoLink
@@ -83,38 +64,23 @@ namespace EchoLink
   class DirectoryCon;
 };
 
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace EchoLink
 {
 
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class for accessing an EchoLink directory server
 @author Tobias Blomberg
@@ -131,7 +97,7 @@ class Directory : public sigc::trackable
 {
   public:
     static const unsigned MAX_DESCRIPTION_SIZE = 27;
-    
+
     /**
      * @brief 	Constructor
      * @param 	servers     The EchoLink directory servers to connect to
@@ -144,12 +110,12 @@ class Directory : public sigc::trackable
               const std::string& callsign,
       	      const std::string& password, const std::string& description="",
               const Async::IpAddress &bind_ip=Async::IpAddress());
-  
+
     /**
      * @brief 	Destructor
      */
     ~Directory(void);
-    
+
     /**
      * @brief 	Login to the directory server and set status to online
      *
@@ -158,7 +124,7 @@ class Directory : public sigc::trackable
      * the registration from timing out.
      */
     void makeOnline(void);
-    
+
     /**
      * @brief 	Login to the directory server and set status to busy
      *
@@ -167,23 +133,23 @@ class Directory : public sigc::trackable
      * the registration from timing out.
      */
     void makeBusy(void);
-    
+
     /**
      * @brief 	Logout from the directory server
      */
     void makeOffline(void);
-    
+
     /**
      * @brief 	Refresh the current registration in the directory server
      */
     void refreshRegistration(void) { onRefreshRegistration(0); }
-    
+
     /**
      * @brief 	Return the current status of the registration
      * @return	Returns the status
      */
     StationData::Status status(void) const { return current_status; }
-    
+
     /**
      * @brief 	Return the current status of the registration in string
      *	      	representation
@@ -193,7 +159,7 @@ class Directory : public sigc::trackable
     { 
       return StationData::statusStr(current_status);
     }
-    
+
     /**
      * @brief Get the station list from the directory server
      *
@@ -207,31 +173,31 @@ class Directory : public sigc::trackable
      * this message by using the Directory::message function.
      */
     void getCalls(void);
-    
+
     /**
      * @brief Set the hostname or IP-address of the EchoLink servers to use
      * @param servers The new servers to use
      */
     void setServers(const std::vector<std::string>& servers);
-    
+
     /**
      * @brief 	Get the name of the remote host
      * @return	Returns the name of the remote host
      */
     const std::vector<std::string>& servers(void) const { return the_servers; }
-    
+
     /**
      * @brief Set the callsign to use when logging in to the server
      * @param callsign The new callsign to use
      */
     void setCallsign(const std::string& callsign);
-    
+
     /**
      * @brief 	Get the callsign that is used when logging in to the server
      * @return	Return the callsign
      */
     const std::string& callsign(void) const { return the_callsign; }
-    
+
     /**
      * @brief 	Set the password to use when logging in to the server
      * @param 	password The new password to use
@@ -243,7 +209,7 @@ class Directory : public sigc::trackable
      * @return	Return the password
      */
     const std::string& password(void) const { return the_password; }
-    
+
     /**
      * @brief 	Set the description to register in the server
      * @param 	description The new description to use
@@ -259,7 +225,7 @@ class Directory : public sigc::trackable
      * @return	Return the description
      */
     const std::string& description(void) const { return the_description; }
-    
+
     /**
      * @brief 	Get a list of all active links
      * @return	Returns a reference to a list of StationData objects
@@ -269,7 +235,7 @@ class Directory : public sigc::trackable
      * a previous call to Directory::getCalls must have been made.
      */
     const std::list<StationData>& links(void) const { return the_links; }
-    
+
     /**
      * @brief 	Get a list of all active repeasters
      * @return	Returns a reference to a list of StationData objects
@@ -282,7 +248,7 @@ class Directory : public sigc::trackable
     {
       return the_repeaters;
     }
-    
+
     /**
      * @brief 	Get a list of all active conferences
      * @return	Returns a reference to a list of StationData objects
@@ -296,13 +262,13 @@ class Directory : public sigc::trackable
     {
       return the_conferences;
     }
-    
+
     /**
      * @brief 	Get a list of all active "normal" stations
      * @return	Returns a reference to a list of StationData objects
      */
     const std::list<StationData>& stations(void) const { return the_stations; }
-    
+
     /**
      * @brief 	Get the message returned by the directory server
      * @return	Returns the message string (may be empty)
@@ -312,7 +278,7 @@ class Directory : public sigc::trackable
      * call is made again.
      */
     const std::string& message(void) const { return the_message; }
-    
+
     /**
      * @brief 	Find a callsign in the station list
      * @param 	call  The callsign to find
@@ -320,7 +286,7 @@ class Directory : public sigc::trackable
      *	      	found. Otherwise a NULL-pointer is returned.
      */
     const StationData *findCall(const std::string& call);
-    
+
     /**
      * @brief 	Find a station in the station list given a station ID
      * @param 	id  The ID to find
@@ -347,20 +313,20 @@ class Directory : public sigc::trackable
      * @param status The new status
      */
     sigc::signal<void, StationData::Status> statusChanged;
-    
+
     /**
      * @brief A signal that is emitted when the station list has been updated
      */
     sigc::signal<void> stationListUpdated;
-    
+
     /**
      * @brief A signal that is emitted when an error occurs
      * @param msg The error message
      */
     sigc::signal<void, const std::string&> error;
-    
+
   protected:
-    
+
   private:
     typedef enum
     {
@@ -418,16 +384,11 @@ class Directory : public sigc::trackable
 
 };  /* class Directory */
 
-
 std::ostream& operator<<(std::ostream& os, const StationData& station);
-
 
 } /* namespace */
 
-
 #endif /* ECHOLINK_DIRECTORY_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

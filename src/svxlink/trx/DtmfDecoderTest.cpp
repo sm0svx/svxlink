@@ -16,7 +16,6 @@
 using namespace std;
 using namespace Async;
 
-
 class FileWriter : public Async::AudioProcessor
 {
   public:
@@ -54,7 +53,6 @@ class FileWriter : public Async::AudioProcessor
     int samppos;
 };
 
-
 namespace {
 string send_digits = "00112233445566778899AABBCCDD**##";
 //string send_digits = "0123456789ABCD*#";
@@ -67,14 +65,13 @@ void digit_detected(char ch, int duration)
   cout << " pos=" << fwriter->sampPos()
        << " (" << (static_cast<float>(fwriter->sampPos()) / (60*16000)) << "m)";
   cout << endl;
-  /*
+  /**
   cout << " digit=" << ch
        << " duration=" << duration << endl;
   */
   received_digits += ch;
 }
 };
-
 
 class FileReader : public AudioSource
 {
@@ -105,7 +102,6 @@ class FileReader : public AudioSource
       writeAudio();
     }
     
-
   protected:
     virtual void allSamplesFlushed(void)
     {
@@ -151,7 +147,6 @@ class FileReader : public AudioSource
     }
 };
 
-
 class PowerPlotter : public Async::AudioPassthrough
 {
   public:
@@ -175,8 +170,7 @@ class PowerPlotter : public Async::AudioPassthrough
     static CONSTEXPR float ALPHA = 0.05;
     float prev_power;
 
-}; /* class PowerPlotter */
-
+}; /** class PowerPlotter */
 
 int main()
 {
@@ -214,7 +208,7 @@ int main()
   prev_src->registerSink(voiceband_filter, true);
   prev_src = voiceband_filter;
 
-  /*
+  /**
   PowerPlotter pp;
   prev_src->registerSink(&pp);
   prev_src = &pp;

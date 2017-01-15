@@ -26,15 +26,9 @@
  * \endverbatim
  */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -46,52 +40,30 @@
 #include <cstdio>
 #include <cstring>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncFdWatch.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncIpAddress.h"
 #include "AsyncUdpSocket.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class UdpPacket
 {
   public:
@@ -105,53 +77,23 @@ class UdpPacket
     {
       memcpy(this->buf, buf, len);
     }
-  
+
 };
 
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
   : sock(-1), rd_watch(0), wr_watch(0), send_buf(0)
@@ -174,7 +116,7 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
     cleanup();
     return;
   }
-  
+
     // Bind the socket to a local port if one was specified
   if (local_port > 0)
   {
@@ -197,7 +139,7 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
       return;
     }
   }
-  
+
     // Setup a watch for incoming data
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
   assert(rd_watch != 0);
@@ -210,14 +152,12 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
   wr_watch->activity.connect(mem_fun(*this, &UdpSocket::sendRest));
   wr_watch->setEnabled(false);
   
-} /* UdpSocket::UdpSocket */
-
+} /** UdpSocket::UdpSocket */
 
 UdpSocket::~UdpSocket(void)
 {
   cleanup();
-} /* UdpSocket::~UdpSocket */
-
+} /** UdpSocket::~UdpSocket */
 
 bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
     const void *buf, int count)
@@ -226,7 +166,7 @@ bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
   {
     return false;
   }
-  
+
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(remote_port);
@@ -252,53 +192,14 @@ bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
   
   return true;
   
-} /* UdpSocket::write */
+} /** UdpSocket::write */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 
-
-
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
  */
 void UdpSocket::cleanup(void)
 {
@@ -319,8 +220,7 @@ void UdpSocket::cleanup(void)
     }
     sock = -1;
   }
-} /* UdpSocket::cleanup */
-
+} /** UdpSocket::cleanup */
 
 void UdpSocket::handleInput(FdWatch *watch)
 {
@@ -337,9 +237,8 @@ void UdpSocket::handleInput(FdWatch *watch)
   }
   
   dataReceived(IpAddress(addr.sin_addr), buf, len);
-  
-} /* UdpSocket::handleInput */
 
+} /** UdpSocket::handleInput */
 
 void UdpSocket::sendRest(FdWatch *watch)
 {
@@ -347,7 +246,7 @@ void UdpSocket::sendRest(FdWatch *watch)
   addr.sin_family = AF_INET;
   addr.sin_port = htons(send_buf->port);
   addr.sin_addr = send_buf->ip.ip4Addr();
-  /*
+  /**
   cout << "sock=" << sock << "  port=" << send_buf->port
       << "  ip=" << send_buf->ip.toString() << "  len=" << send_buf->len
       << endl;
@@ -375,14 +274,9 @@ void UdpSocket::sendRest(FdWatch *watch)
   send_buf = 0;
   wr_watch->setEnabled(false);
   
-} /* UdpSocket::handleInput */
+} /** UdpSocket::handleInput */
 
-
-
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

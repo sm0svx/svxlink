@@ -27,14 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstdio>
 #include <cstdlib>
 #include <stdio.h>
@@ -44,48 +39,30 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <regex.h>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/MODULE_METARINFO.h"
 #include "ModuleMetarInfo.h"
 #include "common.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace sigc;
 using namespace SvxLink;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define INTOKEN 1
 #define TIME 2
 #define ISMILE 3
@@ -145,37 +122,21 @@ using namespace SvxLink;
 #define NOTACTUAL 98
 #define INVALID 99
 
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 std::string desc[] = {
           "vcbldu", "vcblsa", "vcblsn", "bcfg", "vcpo",
           "bldu", "blsa", "blpy", "blsn", "fzbr",
@@ -195,13 +156,9 @@ std::string clouds[] = {"acc", "ac", "as", "cbmam", "cb",
                         "cc", "cf",  "ci", "cs", "cu",
                         "tcu", "ns", "sc", "sf", "st"};
 
-/****************************************************************************
- *
+/*
  * Pure C-functions
- *
- ****************************************************************************/
-
-
+ */
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -209,15 +166,9 @@ extern "C" {
   }
 } /* extern "C" */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
-
+ */
 ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
                                  const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), con(0)
@@ -226,34 +177,14 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
 
 } /* ModuleMetarInfo */
 
-
 ModuleMetarInfo::~ModuleMetarInfo(void)
 {
    delete con;
 } /* ~ModuleMetarInfo */
 
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:
- * Purpose:
- * Input:
- * Output:
- * Author:
- * Created:
- * Remarks:
- * Bugs:
- *------------------------------------------------------------------------
+ * Protected member functions
  */
-
 void ModuleMetarInfo::resumeOutput(void)
 {
 
@@ -277,15 +208,9 @@ void ModuleMetarInfo::flushSamples(void)
   sourceAllSamplesFlushed();
 } /* ModuleMetarInfo::flushSamples */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
-
+ */
 /*
  *----------------------------------------------------------------------------
  * Method:    initialize
@@ -331,8 +256,6 @@ bool ModuleMetarInfo::initialize(void)
   shdesig["+"] = "heavy";
   shdesig["fm"]= "from";
   shdesig["tl"]= "until";
-
-
 
   if (!Module::initialize())
   {
@@ -420,7 +343,6 @@ bool ModuleMetarInfo::initialize(void)
 
 } /* initialize */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    activateInit
@@ -442,7 +364,6 @@ void ModuleMetarInfo::activateInit(void)
   }
 } /* activateInit */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
@@ -461,7 +382,6 @@ void ModuleMetarInfo::deactivateCleanup(void)
   delete con;
   con = 0;
 } /* deactivateCleanup */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -486,7 +406,6 @@ bool ModuleMetarInfo::dtmfDigitReceived(char digit, int duration)
   return false;
 
 } /* dtmfDigitReceived */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -613,15 +532,11 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
 
 } /* dtmfCmdReceived */
 
-
-
 void ModuleMetarInfo::dtmfCmdReceivedWhenIdle(const string& cmd)
 {
   std::cout << "dtmfCmdReceivedWhenIdle\n";
   dtmfCmdReceived(cmd);
 } /* dtmfCmdReceivedWhenIdle */
-
-
 
 /*
  *----------------------------------------------------------------------------
@@ -640,7 +555,6 @@ void ModuleMetarInfo::squelchOpen(bool is_open)
 {
 
 } /* squelchOpen */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -661,7 +575,6 @@ void ModuleMetarInfo::allMsgsWritten(void)
 
 } /* allMsgsWritten */
 
-
 /*
 * establish a tcp-connection to the METAR-Server
 */
@@ -677,7 +590,6 @@ void ModuleMetarInfo::openConnection(void)
   }
 
 } /* openConnection */
-
 
 int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
 {
@@ -1171,7 +1083,6 @@ int ModuleMetarInfo::handleMetar(std::string input)
    return 1;
 }
 
-
 // here we check the current METAR-token with regex
 // function, it returns the type (temperature, dewpoint, clouds, ...)
 int ModuleMetarInfo::checkToken(std::string token)
@@ -1267,7 +1178,6 @@ std::string ModuleMetarInfo::getLightning(std::string token)
     return ss.str();
 } /* getLightning */
 
-
 std::string ModuleMetarInfo::getCloudType(std::string token)
 {
    stringstream ss;
@@ -1290,7 +1200,6 @@ std::string ModuleMetarInfo::getCloudType(std::string token)
    return ss.str();
 } /* getCloudType */
 
-
 std::string ModuleMetarInfo::getTempinRmk(std::string token)
 {
    stringstream ss;
@@ -1302,7 +1211,6 @@ std::string ModuleMetarInfo::getTempinRmk(std::string token)
 
    return ss.str();
 } /* getTemoinRmk */
-
 
 bool ModuleMetarInfo::getPeakWind(std::string &retval, std::string token)
 {
@@ -1329,14 +1237,12 @@ bool ModuleMetarInfo::getPeakWind(std::string &retval, std::string token)
    return true;
 } /* getPeakWind */
 
-
 bool ModuleMetarInfo::getRmkVisibility(std::string &retval, std::string token)
 {
    stringstream ss;
    // to do
    return true;
 } /* getRmkVisibility */
-
 
 std::string ModuleMetarInfo::getTemp(std::string token)
 {
@@ -1346,7 +1252,6 @@ std::string ModuleMetarInfo::getTemp(std::string token)
 
    return ss.str();
 } /* getTemp */
-
 
 // RMK section, Characteristics of Barometer Tendency
 std::string ModuleMetarInfo::getPressureinRmk(std::string token)
@@ -1372,14 +1277,12 @@ std::string ModuleMetarInfo::getPressureinRmk(std::string token)
    return ss.str();
 } /* getPressureinRmk */
 
-
 std::string ModuleMetarInfo::getPrecipitationinRmk(std::string token)
 {
    stringstream ss;
    ss << atoi(token.substr(1,2).c_str()) << "." << token.substr(3,2);
    return ss.str();
 } /* getPrecipitationinRmk */
-
 
 std::string ModuleMetarInfo::getTempTime(std::string token)
 {
@@ -1396,7 +1299,6 @@ std::string ModuleMetarInfo::getTempTime(std::string token)
     return ss.str();
 } /* getTempTime */
 
-
 // sea level pressure
 // Format: SLPppp
 std::string ModuleMetarInfo::getSlp(std::string token)
@@ -1407,7 +1309,6 @@ std::string ModuleMetarInfo::getSlp(std::string token)
     ss << token.substr(3,2) << "." << token.substr(5,1);
     return ss.str();
 } /* getSlp */
-
 
 void ModuleMetarInfo::isRwyState(std::string &retval, std::string token)
 {
@@ -1562,7 +1463,6 @@ std::string ModuleMetarInfo::getPrecipitation(std::string token)
       }
    }
 
-
    // then we catch the rest by detecting the beginning (b) or ending (e) of
    // precipitation
    // SH RA BO5E30 SH SN B20E55 -> SH RA began_at 05 endet_at 30 sh sn began_at ...
@@ -1585,7 +1485,6 @@ std::string ModuleMetarInfo::getPrecipitation(std::string token)
 
    return newstr;
 } /* getRecipitation */
-
 
 bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 {
@@ -1647,7 +1546,6 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
    return false;
 } /* isActualWX */
 
-
 // needed by regex
 bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
 {
@@ -1664,8 +1562,12 @@ bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
 
 } /* rmatch */
 
+<<<<<<< HEAD
+bool ModuleMetarInfo::isvalidUTC(std::string token)
+=======
 
 bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
+>>>>>>> refs/remotes/sm0svx/master
 {
 
    // token e.g.: 2016-08-10T08:20:00Z
@@ -1702,7 +1604,6 @@ bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
 
    return true;
 } /* isvalidUTC */
-
 
 bool ModuleMetarInfo::isView(std::string &retval, std::string token)
 {
@@ -1783,7 +1684,6 @@ void ModuleMetarInfo::isPartofMiles(std::string &retval, std::string token)
 
 } /* isPartofMile */
 
-
 bool ModuleMetarInfo::isWind(std::string &retval, std::string token)
 {
    stringstream ss;
@@ -1820,7 +1720,6 @@ bool ModuleMetarInfo::isWind(std::string &retval, std::string token)
    return true;
 } /* isWind */
 
-
 bool ModuleMetarInfo::isQnh(std::string &retval, std::string token)
 {
     stringstream ss;
@@ -1843,7 +1742,6 @@ bool ModuleMetarInfo::isQnh(std::string &retval, std::string token)
     return true;
 } /* isQnh */
 
-
 void ModuleMetarInfo::isValueVaries(std::string &retval, std::string token)
 {
    stringstream ss;
@@ -1851,7 +1749,6 @@ void ModuleMetarInfo::isValueVaries(std::string &retval, std::string token)
    ss << token.substr(0,3) << " " << token.substr(4,3);
    retval = ss.str();
 } /* isValueVaries */
-
 
 void ModuleMetarInfo::isTime(std::string &retval, std::string token)
 {
@@ -1863,7 +1760,6 @@ void ModuleMetarInfo::isTime(std::string &retval, std::string token)
    ss << " " << token.substr(2,4);
    retval = ss.str();
 } /* isTime */
-
 
 void ModuleMetarInfo::validTemp(std::string &retval, std::string token)
 {
@@ -1886,7 +1782,6 @@ void ModuleMetarInfo::validTemp(std::string &retval, std::string token)
    retval = ss.str();
 } /* validTemp */
 
-
 void ModuleMetarInfo::validDp(std::string &retval, std::string token)
 {
    stringstream ss;
@@ -1903,7 +1798,6 @@ void ModuleMetarInfo::validDp(std::string &retval, std::string token)
    }
    retval = ss.str();
 } /* validDp */
-
 
 bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
 {
@@ -1922,7 +1816,6 @@ bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
    retval = ss.str();
    return true;
 }
-
 
 bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
 {
@@ -2008,7 +1901,6 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
    return true;
 } /* isRVR */
 
-
 void ModuleMetarInfo::isVerticalView(std::string &retval, std::string token)
 {
     stringstream ss;
@@ -2017,7 +1909,6 @@ void ModuleMetarInfo::isVerticalView(std::string &retval, std::string token)
     ss << atoi(token.substr(2,3).c_str()) * 100;
     retval = ss.str();
 } /* isVerticalView */
-
 
 bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
 {
@@ -2041,7 +1932,6 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
   retval = ss.str();
   return true;
 } /* ispObscurance */
-
 
 void ModuleMetarInfo::onConnected(void)
 {
@@ -2081,7 +1971,6 @@ void ModuleMetarInfo::onConnected(void)
   con->write(getpath.c_str(), getpath.size());
 } /* onConnected */
 
-
 void ModuleMetarInfo::onDisconnected(TcpConnection * /*con*/,
                      TcpClient::DisconnectReason reason)
 {
@@ -2089,14 +1978,12 @@ void ModuleMetarInfo::onDisconnected(TcpConnection * /*con*/,
   con = 0;
 } /* onDisconnect */
 
-
 void ModuleMetarInfo::say(stringstream &tmp)
 {
    if (debug) cout << tmp.str() << endl;  // debug
    processEvent(tmp.str());
    tmp.str("");
 } /* say */
-
 
 // special split function
 int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
@@ -2140,7 +2027,6 @@ int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
   return L.size();
 
 } /* ModuleMetarInfo::splitStr */
-
 
 /*
  * This file has not been truncated

@@ -24,22 +24,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
+ */
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 #include <AsyncConfig.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
@@ -49,66 +43,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioInterpolator.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 #include <version/MODULE_FRN.h>
 #include "ModuleFrn.h"
 #include "multirate_filter_coeff.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Pure C-functions
- *
- ****************************************************************************/
+ */
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -116,13 +86,9 @@ extern "C" {
   }
 } /* extern "C" */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
+ */
 ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
   , qso(0)
@@ -134,40 +100,18 @@ ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
 
 } /* ModuleFrn */
 
-
 ModuleFrn::~ModuleFrn(void)
 {
   moduleCleanup();
 } /* ~ModuleFrn */
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Protected member functions
  */
 
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
  *----------------------------------------------------------------------------
@@ -237,7 +181,6 @@ bool ModuleFrn::initialize(void)
   
 } /* initialize */
 
-
 void ModuleFrn::moduleCleanup()
 {
   AudioSource::clearHandler();
@@ -281,7 +224,6 @@ void ModuleFrn::activateInit(void)
     qso->connect();
 }
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
@@ -300,7 +242,6 @@ void ModuleFrn::deactivateCleanup(void)
   audio_valve->setOpen(true);
   qso->disconnect();
 }
-
 
 /*
  *----------------------------------------------------------------------------
@@ -324,7 +265,6 @@ bool ModuleFrn::dtmfDigitReceived(char digit, int duration)
   return false;
 
 } /* dtmfDigitReceived */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -391,7 +331,6 @@ void ModuleFrn::dtmfCmdReceived(const string& cmd)
 
 } /* dtmfCmdReceived */
 
-
 bool ModuleFrn::validateCommand(const string& cmd, size_t argc)
 {
   if (cmd.size() == argc)
@@ -407,14 +346,12 @@ bool ModuleFrn::validateCommand(const string& cmd, size_t argc)
   }
 } /* ModulrFrn::commandFailed */
 
-
 #if 0
 void ModuleFrn::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
 
 } /* dtmfCmdReceivedWhenIdle */
 #endif
-
 
 /*
  *----------------------------------------------------------------------------
@@ -434,7 +371,6 @@ void ModuleFrn::squelchOpen(bool is_open)
   qso->squelchOpen(is_open);
 }
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
@@ -453,7 +389,6 @@ void ModuleFrn::allMsgsWritten(void)
 {
 
 } /* allMsgsWritten */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -477,7 +412,6 @@ void ModuleFrn::reportState(void)
   ss << "count_clients " << qso->clientsCount();
   processEvent(ss.str());
 } /* reportState */
-
 
 void ModuleFrn::onQsoError(void)
 {

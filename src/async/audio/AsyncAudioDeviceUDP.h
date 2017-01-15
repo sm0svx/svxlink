@@ -27,90 +27,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_DEVICE_UDP_INCLUDED
 #define ASYNC_AUDIO_DEVICE_UDP_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <string>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncIpAddress.h>
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioDevice.h"
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class UdpSocket;
 class Timer;
 
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	
 @author Tobias Blomberg / SM0SVX
@@ -128,12 +90,12 @@ class AudioDeviceUDP : public Async::AudioDevice
      * @param 	dev_name  The name of the device to associate this object with
      */
     explicit AudioDeviceUDP(const std::string& dev_name);
-  
+
     /**
      * @brief 	Destructor
      */
     ~AudioDeviceUDP(void);
-  
+
     /**
      * @brief 	Find out what the blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
@@ -146,7 +108,7 @@ class AudioDeviceUDP : public Async::AudioDevice
      *	      	or else \em false
      */
     virtual bool isFullDuplexCapable(void);
-    
+
     /**
      * @brief 	Tell the audio device handler that there are audio to be
      *	      	written in the buffer
@@ -157,7 +119,7 @@ class AudioDeviceUDP : public Async::AudioDevice
      * @brief	Tell the audio device to flush its buffers
      */
     virtual void flushSamples(void);
-    
+
     /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
@@ -169,8 +131,7 @@ class AudioDeviceUDP : public Async::AudioDevice
      * been flushed.
      */
     virtual int samplesToWrite(void) const;
-    
-    
+
   protected:
     /**
      * @brief 	Open the audio device
@@ -184,7 +145,6 @@ class AudioDeviceUDP : public Async::AudioDevice
      */
     virtual void closeDevice(void);
 
-    
   private:
     int                 block_size;
     Async::UdpSocket    *sock;
@@ -196,17 +156,14 @@ class AudioDeviceUDP : public Async::AudioDevice
     
     void audioReadHandler(const Async::IpAddress &ip, void *buf, int count);
     void audioWriteHandler(void);
-    
-};  /* class AudioDeviceUDP */
 
+};  /** class AudioDeviceUDP */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DEVICE_UDP_INCLUDED */
+#endif /** ASYNC_AUDIO_DEVICE_UDP_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

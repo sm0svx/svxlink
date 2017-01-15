@@ -1,4 +1,4 @@
-include_directories(trx svxlink)
+include_directories(trx svxlink svxserver)
 
 option(WITH_SYSTEMD "Set to ON to include systemd support" ON)
 if(WITH_SYSTEMD)
@@ -13,3 +13,4 @@ add_subdirectory(modules)
 add_subdirectory(remotetrx)
 add_subdirectory(siglevdetcal)
 add_subdirectory(devcal)
+add_subdirectory(svxserver)

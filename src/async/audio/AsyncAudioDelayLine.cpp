@@ -24,95 +24,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstring>
 #include <cmath>
 #include <algorithm>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioDelayLine.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioDelayLine::AudioDelayLine(int length_ms)
   : size(length_ms * INTERNAL_SAMPLE_RATE / 1000), ptr(0), flush_cnt(0),
     is_muted(false), mute_cnt(0), last_clear(0), fade_gain(0), fade_len(0),
@@ -122,15 +78,13 @@ AudioDelayLine::AudioDelayLine(int length_ms)
   memset(buf, 0, size * sizeof(*buf));
   clear();
   setFadeTime(DEFAULT_FADE_TIME);
-} /* AudioDelayLine::AudioDelayLine */
-
+} /** AudioDelayLine::AudioDelayLine */
 
 AudioDelayLine::~AudioDelayLine(void)
 {
   delete [] fade_gain;
   delete [] buf;
-} /* AudioDelayLine::~AudioDelayLine */
-
+} /** AudioDelayLine::~AudioDelayLine */
 
 void AudioDelayLine::setFadeTime(int time_ms)
 {
@@ -153,8 +107,7 @@ void AudioDelayLine::setFadeTime(int time_ms)
     fade_gain[i] = pow(2.0f, -15.0f * (static_cast<float>(i) / fade_len));
   }
   fade_gain[fade_len-1] = 0;
-} /* AudioDelayLine::setFadeTime  */
-
+} /** AudioDelayLine::setFadeTime  */
 
 void AudioDelayLine::mute(bool do_mute, int time_ms)
 {
@@ -189,8 +142,7 @@ void AudioDelayLine::mute(bool do_mute, int time_ms)
       mute_cnt = mute_ext;
     }
   }
-} /* AudioDelayLine::mute */
-
+} /** AudioDelayLine::mute */
 
 void AudioDelayLine::clear(int time_ms)
 {
@@ -220,8 +172,7 @@ void AudioDelayLine::clear(int time_ms)
 
   last_clear = max(0, count - fade_len);
   
-} /* AudioDelayLine::clear */
-
+} /** AudioDelayLine::clear */
 
 int AudioDelayLine::writeSamples(const float *samples, int count)
 {
@@ -252,8 +203,7 @@ int AudioDelayLine::writeSamples(const float *samples, int count)
   
   return written;
   
-} /* AudioDelayLine::writeSamples */
-
+} /** AudioDelayLine::writeSamples */
 
 void AudioDelayLine::flushSamples(void)
 {
@@ -267,8 +217,7 @@ void AudioDelayLine::flushSamples(void)
   {
     sinkFlushSamples();
   }
-} /* AudioDelayLine::flushSamples */
-
+} /** AudioDelayLine::flushSamples */
 
 void AudioDelayLine::resumeOutput(void)
 {
@@ -280,29 +229,20 @@ void AudioDelayLine::resumeOutput(void)
   {
     sourceResumeOutput();
   }
-} /* AudioDelayLine::resumeOutput */
-
+} /** AudioDelayLine::resumeOutput */
 
 void AudioDelayLine::allSamplesFlushed(void)
 {
   sourceAllSamplesFlushed();
-} /* AudioDelayLine::allSamplesFlushed */
+} /** AudioDelayLine::allSamplesFlushed */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
 void AudioDelayLine::writeRemainingSamples(void)
 {
@@ -335,11 +275,9 @@ void AudioDelayLine::writeRemainingSamples(void)
   {
     sinkFlushSamples();
   }
-} /* AudioDelayLine::writeRemainingSamples */
+} /** AudioDelayLine::writeRemainingSamples */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

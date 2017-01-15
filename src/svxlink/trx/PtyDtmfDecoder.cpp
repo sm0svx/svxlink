@@ -24,108 +24,62 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncPty.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "PtyDtmfDecoder.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 PtyDtmfDecoder::PtyDtmfDecoder(Config &cfg, const string &name)
   : HwDtmfDecoder(cfg, name), pty(0)
 {
 
-} /* PtyDtmfDecoder::PtyDtmfDecoder */
-
+} /** PtyDtmfDecoder::PtyDtmfDecoder */
 
 PtyDtmfDecoder::~PtyDtmfDecoder(void)
 {
   delete pty;
   pty = 0;
-} /* PtyDtmfDecoder::~PtyDtmfDecoder */
-
+} /** PtyDtmfDecoder::~PtyDtmfDecoder */
 
 bool PtyDtmfDecoder::initialize(void)
 {
@@ -151,24 +105,15 @@ bool PtyDtmfDecoder::initialize(void)
       sigc::mem_fun(*this, &PtyDtmfDecoder::dataReceived));
   return pty->open();
 
-} /* PtyDtmfDecoder::initialize */
+} /** PtyDtmfDecoder::initialize */
 
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void PtyDtmfDecoder::dataReceived(const void *buf, size_t count)
 {
   const char *ptr = reinterpret_cast<const char*>(buf);
@@ -199,11 +144,9 @@ void PtyDtmfDecoder::dataReceived(const void *buf, size_t count)
       cerr << "*** WARNING: Illegal DTMF PTY command received: " << cmd << endl;
     }
   }
-} /* PtyDtmfDecoder::dataReceived */
+} /** PtyDtmfDecoder::dataReceived */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

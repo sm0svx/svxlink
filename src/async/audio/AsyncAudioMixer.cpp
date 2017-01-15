@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,63 +24,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <algorithm>
 #include <cstring>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioMixer.h"
 #include "AsyncAudioFifo.h"
 #include "AsyncAudioReader.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
 class Async::AudioMixer::MixerSrc : public AudioSink
 {
@@ -151,48 +125,30 @@ class Async::AudioMixer::MixerSrc : public AudioSink
     bool      	is_flushed;
     bool      	do_flush;
     
-}; /* class Async::AudioMixer::MixerSrc */
+}; /** class Async::AudioMixer::MixerSrc */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
+ */
 
 AudioMixer::AudioMixer(void)
   : output_timer(0, Timer::TYPE_ONESHOT, false), outbuf_pos(0),
     outbuf_cnt(0), is_flushed(true), output_stopped(false)
 {
   output_timer.expired.connect(mem_fun(*this, &AudioMixer::outputHandler));
-} /* AudioMixer::AudioMixer */
+} /** AudioMixer::AudioMixer */
 
 
 AudioMixer::~AudioMixer(void)
@@ -202,8 +158,7 @@ AudioMixer::~AudioMixer(void)
   {
     delete *it;
   }
-} /* AudioMixer::~AudioMixer */
-
+} /** AudioMixer::~AudioMixer */
 
 void AudioMixer::addSource(AudioSource *source)
 {
@@ -212,23 +167,18 @@ void AudioMixer::addSource(AudioSource *source)
   //mixer_src->setOverwrite(false);
   mixer_src->registerSource(source);
   sources.push_back(mixer_src);
-} /* AudioMixer::addSource */
-
+} /** AudioMixer::addSource */
 
 void AudioMixer::resumeOutput(void)
 {
   //printf("AudioMixer::resumeOutput\n");
   output_stopped = false;
   outputHandler(0);
-} /* AudioMixer::resumeOutput */
+} /** AudioMixer::resumeOutput */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
 void AudioMixer::allSamplesFlushed(void)
 {
@@ -238,18 +188,13 @@ void AudioMixer::allSamplesFlushed(void)
   {
     (*it)->mixerFlushedAllSamples();
   }
-} /* AudioMixer::allSamplesFlushed */
+} /** AudioMixer::allSamplesFlushed */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    AudioMixer::setAudioAvailable
  * Purpose:   Called by one of the incoming stream handlers when there is
@@ -266,10 +211,9 @@ void AudioMixer::allSamplesFlushed(void)
 void AudioMixer::setAudioAvailable(void)
 {
   output_timer.setEnable(true);
-} /* AudioMixer::setAudioAvailable */
+} /** AudioMixer::setAudioAvailable */
 
-
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    AudioMixer::flushSamples
  * Purpose:   Used by the input stream handlers to tell the mixer that
@@ -284,10 +228,9 @@ void AudioMixer::setAudioAvailable(void)
 void AudioMixer::flushSamples(void)
 {
   output_timer.setEnable(true);
-} /* AudioMixer::flushSamples */
+} /** AudioMixer::flushSamples */
 
-
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    AudioMixer::outputHandler
  * Purpose:   Handle the output of audio samples. All input streams are read
@@ -375,7 +318,7 @@ void AudioMixer::outputHandler(Timer *t)
   
   output_stopped = (samples_written == 0);
   
-} /* AudioMixer::outputHandler */
+} /** AudioMixer::outputHandler */
 
 
 void AudioMixer::checkFlush(void)
@@ -398,13 +341,9 @@ void AudioMixer::checkFlush(void)
   is_flushed = true;
   sinkFlushSamples();
   
-} /* AudioMixer::checkFlush */
+} /** AudioMixer::checkFlush */
 
-
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -28,113 +28,55 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncQtDnsLookupWorker.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 QtDnsLookupWorker::QtDnsLookupWorker(const string& label)
   : lookup_id(-1)
 {
   lookup_id = QHostInfo::lookupHost(label.c_str(), this,
 				    SLOT(onResultsReady(QHostInfo)));
-} /* QtDnsLookupWorker::QtDnsLookupWorker */
+} /** QtDnsLookupWorker::QtDnsLookupWorker */
 
 
 QtDnsLookupWorker::~QtDnsLookupWorker(void)
@@ -143,7 +85,7 @@ QtDnsLookupWorker::~QtDnsLookupWorker(void)
   {
     QHostInfo::abortHostLookup(lookup_id);
   }
-} /* QtDnsLookupWorker::~QtDnsLookupWorker */
+} /** QtDnsLookupWorker::~QtDnsLookupWorker */
 
 
 vector<IpAddress> QtDnsLookupWorker::addresses(void)
@@ -163,34 +105,24 @@ vector<IpAddress> QtDnsLookupWorker::addresses(void)
   
   return addr_list;
   
-} /* QtDnsLookupWorker::addresses */
+} /** QtDnsLookupWorker::addresses */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
 void QtDnsLookupWorker::onResultsReady(const QHostInfo &info)
 {
   lookup_id = -1;
   host_info = info;
   resultsReady();
-} /* QtDnsLookupWorker::onResultsReady */
+} /** QtDnsLookupWorker::onResultsReady */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

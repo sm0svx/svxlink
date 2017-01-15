@@ -33,7 +33,6 @@ typedef struct RunBuf {
    double buf[0];
 } RunBuf;
 
-
 //
 //	Filter processing routine.  This is designed to avoid too many
 //	branches, and references are very localized in the code,
@@ -186,7 +185,6 @@ filter_step(void *fbuf, double iir) {
 
    return iir;
 }
-
 
 //
 //	Create an instance of a filter, ready to run.  This returns a
@@ -456,7 +454,6 @@ fid_run_zapbuf(void *buf) {
    RunBuf *rb= buf;
    memset(rb->buf, 0, rb->mov_cnt + sizeof(double));
 }   
-   
 
 //
 //	Delete an instance

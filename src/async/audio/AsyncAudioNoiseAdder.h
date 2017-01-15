@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,86 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_NOISE_ADDER
 #define ASYNC_AUDIO_NOISE_ADDER
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <string>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioProcessor.h>
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
 @brief	A class to add gaussian white noise to an audio stream
@@ -163,14 +125,12 @@ class AudioNoiseAdder : public AudioProcessor
     AudioNoiseAdder& operator=(const AudioNoiseAdder&);
     float generateGaussianNoise(void);
 
-};  /* class AudioNoiseAdder */
+};  /** class AudioNoiseAdder */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_NOISE_ADDER */
 
-#endif /* ASYNC_AUDIO_NOISE_ADDER */
-
-
-/*
+/**
  * This file has not been truncated
  */

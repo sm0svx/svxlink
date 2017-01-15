@@ -24,7 +24,6 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]];
 
-
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
 # as the first argument.
@@ -33,7 +32,6 @@ proc playMsg {msg} {
   variable module_name;
   ::playMsg $module_name $msg;
 }
-
 
 #
 # A convenience function for printing out information prefixed by the
@@ -44,7 +42,6 @@ proc printInfo {msg} {
   puts "$module_name: $msg";
 }
 
-
 #
 # Executed when this module is being activated
 #
@@ -52,7 +49,6 @@ proc activating_module {} {
   variable module_name;
   Module::activating_module $module_name;
 }
-
 
 #
 # Executed when this module is being deactivated.
@@ -62,7 +58,6 @@ proc deactivating_module {} {
   Module::deactivating_module $module_name;
 }
 
-
 #
 # Executed when the inactivity timeout for this module has expired.
 #
@@ -71,7 +66,6 @@ proc timeout {} {
   Module::timeout $module_name;
 }
 
-
 #
 # Executed when playing of the help message for this module has been requested.
 #
@@ -79,7 +73,6 @@ proc play_help {} {
   variable module_name;
   Module::play_help $module_name;
 }
-
 
 #
 # Executed when the user has entered some digits that he want the node to
@@ -90,7 +83,6 @@ proc spell_digits {digits} {
   playSilence 500;
 }
 
-
 #
 # Executed when all recorded audio has been played back
 #
@@ -99,7 +91,6 @@ proc all_played {} {
   #playTone 440 500 100
   #playSilence 100
 }
-
 
 # end of namespace
 }

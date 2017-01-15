@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -46,87 +41,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncExec.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 Exec::ExecMap     Exec::execs;
 int               Exec::sigchld_pipe[2] = {-1, -1};
 Async::FdWatch    *Exec::sigchld_watch = 0;
 struct sigaction  Exec::old_sigact;
 
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 Exec::Exec(const std::string &cmd)
   : pid(-1), stdout_watch(0), stderr_watch(0), stdin_fd(-1),
     status(0), nice_value(0), timeout_timer(0), pending_term(false)
@@ -156,7 +113,7 @@ Exec::Exec(const std::string &cmd)
       cout << "*** ERROR: Could not set up SIGCHLD signal handler\n";
       exit(1);
     }
-    /*
+    /**
     cout << "### handler=" << old_sigact.sa_handler
         //<< " mask=" << old_sigact.sa_mask
       << " flags=" << old_sigact.sa_flags
@@ -164,8 +121,7 @@ Exec::Exec(const std::string &cmd)
       << endl;
     */
   }
-} /* Exec::Exec */
-
+} /** Exec::Exec */
 
 Exec::~Exec(void)
 {
@@ -193,8 +149,7 @@ Exec::~Exec(void)
   }
 
   delete timeout_timer;
-} /* Exec::~Exec */
-
+} /** Exec::~Exec */
 
 void Exec::setCommandLine(const std::string &cmd)
 {
@@ -205,14 +160,12 @@ void Exec::setCommandLine(const std::string &cmd)
   {
     args.push_back(part);
   }
-} /* Exec::setCommandLine */
-
+} /** Exec::setCommandLine */
 
 void Exec::appendArgument(const std::string &arg)
 {
   args.push_back(arg);
-} /* Exec::appendArgument */
-
+} /** Exec::appendArgument */
 
 bool Exec::nice(int inc)
 {
@@ -227,8 +180,7 @@ bool Exec::nice(int inc)
     }
   }
   return true;
-} /* Exec::nice */
-
+} /** Exec::nice */
 
 void Exec::setTimeout(int time_s)
 {
@@ -236,8 +188,7 @@ void Exec::setTimeout(int time_s)
   timeout_timer = new Timer(1000 * time_s);
   timeout_timer->expired.connect(hide(mem_fun(*this, &Exec::handleTimeout)));
   timeout_timer->setEnable(pid > 0);
-} /* Exec::setTimeout */
-
+} /** Exec::setTimeout */
 
 bool Exec::run(void)
 {
@@ -313,7 +264,7 @@ bool Exec::run(void)
     return true;
   }
 
-  /* From this point we are in the child process */
+  /** From this point we are in the child process */
 
     // Set up stdin pipe
   close(in_filedes[1]);
@@ -343,8 +294,7 @@ bool Exec::run(void)
        << ": " << strerror(errno) << endl;
 
   exit(255);
-} /* Exec::run */
-
+} /** Exec::run */
 
 bool Exec::writeStdin(const char *buf, int cnt)
 {
@@ -356,8 +306,7 @@ bool Exec::writeStdin(const char *buf, int cnt)
     return false;
   }
   return true;
-} /* Exec::writeStdin */
-
+} /** Exec::writeStdin */
 
 bool Exec::writeStdin(const std::string &str)
 {
@@ -366,8 +315,7 @@ bool Exec::writeStdin(const std::string &str)
     return true;
   }
   return writeStdin(str.c_str(), str.size());
-} /* Exec::writeStdin */
-
+} /** Exec::writeStdin */
 
 bool Exec::kill(int sig)
 {
@@ -383,54 +331,40 @@ bool Exec::kill(int sig)
     return false;
   }
   return true;
-} /* Exec::kill */
-
+} /** Exec::kill */
 
 bool Exec::closeStdin(void)
 {
   return (close(stdin_fd) == 0);
-} /* Exec::closeStdin */
-
+} /** Exec::closeStdin */
 
 bool Exec::ifExited(void) const
 {
   return WIFEXITED(status);
-} /* Exec::ifExited */
-
+} /** Exec::ifExited */
 
 bool Exec::ifSignaled(void) const
 {
   return WIFSIGNALED(status);
-} /* Exec::ifSignaled */
-
+} /** Exec::ifSignaled */
 
 int Exec::exitStatus(void) const
 {
   return WEXITSTATUS(status);
-} /* Exec::exitStatus */
-
+} /** Exec::exitStatus */
 
 int Exec::termSig(void) const
 {
   return WTERMSIG(status);
-} /* Exec::termSig */
+} /** Exec::termSig */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void Exec::stdoutActivity(Async::FdWatch *w)
 {
   char buf[4096];
@@ -449,8 +383,7 @@ void Exec::stdoutActivity(Async::FdWatch *w)
   }
   buf[cnt] = '\0';
   stdoutData(buf, cnt);
-} /* Exec::stdoutActivity */
-
+} /** Exec::stdoutActivity */
 
 void Exec::stderrActivity(Async::FdWatch *w)
 {
@@ -470,8 +403,7 @@ void Exec::stderrActivity(Async::FdWatch *w)
   }
   buf[cnt] = '\0';
   stderrData(buf, cnt);
-} /* Exec::stderrActivity */
-
+} /** Exec::stderrActivity */
 
 void Exec::handleSigChld(int signal_number, siginfo_t *info, void *context)
 {
@@ -490,8 +422,7 @@ void Exec::handleSigChld(int signal_number, siginfo_t *info, void *context)
   {
     old_sigact.sa_handler(signal_number);
   }
-} /* Exec::handleSigChld */
-
+} /** Exec::handleSigChld */
 
 void Exec::subprocessExited(void)
 {
@@ -500,8 +431,7 @@ void Exec::subprocessExited(void)
   delete timeout_timer;
   timeout_timer = 0;
   exited();
-} /* Exec::subprocessExited */
-
+} /** Exec::subprocessExited */
 
 void Exec::handleTimeout(void)
 {
@@ -520,8 +450,7 @@ void Exec::handleTimeout(void)
             "signal to it\n";
     kill(SIGKILL);
   }
-} /* Exec::handleTimeout */
-
+} /** Exec::handleTimeout */
 
 void Exec::sigchldReceived(void)
 {
@@ -561,11 +490,9 @@ void Exec::sigchldReceived(void)
     }
     it = next;
   }
-} /* Exec::sigchldReceived */
+} /** Exec::sigchldReceived */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

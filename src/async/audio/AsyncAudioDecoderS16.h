@@ -23,84 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_DECODER_S16_INCLUDED
 #define ASYNC_AUDIO_DECODER_S16_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioDecoder.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	An audio decoder for signed 16 bit samples
 @author Tobias Blomberg / SM0SVX
@@ -134,24 +97,20 @@ class AudioDecoderS16 : public AudioDecoder
      * @param 	size The size of the buffer
      */
     virtual void writeEncodedSamples(void *buf, int size);
-    
 
   protected:
-    
+
   private:
     AudioDecoderS16(const AudioDecoderS16&);
     AudioDecoderS16& operator=(const AudioDecoderS16&);
-    
-};  /* class AudioDecoderS16 */
 
+};  /** class AudioDecoderS16 */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DECODER_S16_INCLUDED */
+#endif /** ASYNC_AUDIO_DECODER_S16_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

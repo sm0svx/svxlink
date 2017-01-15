@@ -23,95 +23,56 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef RX_INCLUDED
 #define RX_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <string>
 #include <map>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
   class Timer;
   class Config;
 };
 
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
-  
-
-/****************************************************************************
- *
+ */
+ 
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	The base class for a receiver
 @author Tobias Blomberg
@@ -132,18 +93,30 @@ class Rx : public sigc::trackable, public Async::AudioSource
       MUTE_ALL      //! Mute everything. Also close the audio device.
     } MuteState;
 
+    /**
+     * @brief 	Set the enabled status, close squelch if disabled
+     * @param   state The status
+     */
+    void setEnabled(bool status);
+
+    /**
+     * @brief 	Get the enabled state
+     * @return   The status
+     */
+    bool isEnabled(void);
+
     static std::string muteStateToString(MuteState mute_state);
 
     /**
      * @brief 	Default constuctor
      */
     explicit Rx(Async::Config &cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~Rx(void);
-  
+
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
@@ -265,7 +238,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     sigc::signal<void> readyStateChanged;
 
-    
   protected:
     /**
      * @brief 	Set the state of the squelch
@@ -273,19 +245,19 @@ class Rx : public sigc::trackable, public Async::AudioSource
      *	      	      	\em false if it is closed.
      */
     void setSquelchState(bool is_open);
-    
-    
+
   private:
     std::string   m_name;
     bool          m_verbose;
     bool      	  m_sql_open;
+    bool      	  m_sql_open_hidden;
     Async::Config m_cfg;
     Async::Timer  *m_sql_tmo_timer;
+    bool          m_is_enabled;
     
     void sqlTimeout(Async::Timer *t);
     
-};  /* class Rx */
-
+};  /** class Rx */
 
 class RxFactory
 {
@@ -303,16 +275,11 @@ class RxFactory
     
     std::string m_name;
 
-};  /* class RxFactory */
+};  /** class RxFactory */
 
+#endif /** RX_INCLUDED */
 
-//} /* namespace */
-
-#endif /* RX_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -23,86 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_SIGC_AUDIO_SOURCE_INCLUDED
 #define ASYNC_SIGC_AUDIO_SOURCE_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSource.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	An adapter class to connect to an AudioSink class using SigC
 @author Tobias Blomberg
@@ -134,7 +96,7 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
     {
       sigResumeOutput();
     }
-    
+
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -189,16 +151,14 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
      */
     sigc::signal<void> sigAllSamplesFlushed;
     
-};  /* class SigCAudioSource */
+};  /** class SigCAudioSource */
 
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_SIGC_AUDIO_SOURCE_INCLUDED */
+#endif /** ASYNC_SIGC_AUDIO_SOURCE_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

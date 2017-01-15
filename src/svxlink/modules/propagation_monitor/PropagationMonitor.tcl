@@ -19,12 +19,10 @@ if {![info exists CFG_ID]} {
   return
 }
 
-
 #
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]]
-
 
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
@@ -37,7 +35,6 @@ proc playMsg {msg} {
   ::playMsg $module_name $msg
 }
 
-
 #
 # A convenience function for printing out information prefixed by the
 # module name
@@ -47,7 +44,6 @@ proc printInfo {msg} {
   puts "$module_name: $msg"
 }
 
-
 #
 # Executed when this module is being activated
 #
@@ -55,7 +51,6 @@ proc activating_module {} {
   variable module_name
   Module::activating_module $module_name
 }
-
 
 #
 # Executed when this module is being deactivated.
@@ -65,7 +60,6 @@ proc deactivating_module {} {
   Module::deactivating_module $module_name;
 }
 
-
 #
 # Executed when the inactivity timeout for this module has expired.
 #
@@ -74,7 +68,6 @@ proc timeout {} {
   Module::timeout $module_name;
 }
 
-
 #
 # Executed when playing of the help message for this module has been requested.
 #
@@ -82,7 +75,6 @@ proc play_help {} {
   variable module_name;
   Module::play_help $module_name;
 }
-
 
 #
 # Executed when the state of this module should be reported on the radio
@@ -101,7 +93,6 @@ proc status_report {} {
   #printInfo "status_report called...";
 }
 
-
 #
 # Called when an illegal command has been entered
 #
@@ -111,7 +102,6 @@ proc unknown_command {cmd} {
   playNumber $cmd
   playMsg "unknown_command"
 }
-
 
 #
 # Play an alert sound to get the users attention
@@ -126,7 +116,6 @@ proc playAlertSound {} {
   }
   playSilence 1000
 }
-
 
 #
 # Say the specified band name (e.g. two meters, seventy centimeters etc)
@@ -144,7 +133,6 @@ proc sayBand {band} {
   }
 }
 
-
 #
 # Say the specified locator
 #
@@ -157,7 +145,6 @@ proc sayLocator {loc} {
     #spellWord $part3
   }
 }
-
 
 #
 # Handle aurora alert from Good DX.
@@ -180,7 +167,6 @@ proc dxrobot_aurora_alert {hour min} {
   sayBand "2m"
   playSilence 200
 }
-
 
 #
 # Handle E-skip alert from Good DX.
@@ -216,7 +202,6 @@ proc dxrobot_eskip_alert {hour min band {from ""} {to ""}} {
   playSilence 200
 }
 
-
 #
 # Handle sporadic E alert from VHFDX.
 #
@@ -240,7 +225,6 @@ proc vhfdx_sporadic_e_opening {band muf locator} {
     playSilence 1000
   }
 }
-
 
 #
 # Handle possible sporadic E alert from VHFDX.
@@ -268,7 +252,6 @@ proc vhfdx_possible_sporadic_e_opening {band from_loc to_loc direction} {
   }
 }
 
-
 #
 # Handle multi-hop sporadic-E opening alert from VHFDX.
 #
@@ -283,7 +266,6 @@ proc vhfdx_multi_hop_sporadic_e_opening {band} {
     playSilence 1000
   }
 }
-
 
 #
 # Handle tropo opening alert from VHFDX.
@@ -311,7 +293,6 @@ proc vhfdx_tropo_opening {band range call1 loc1 call2 loc2} {
   }
 }
 
-
 #
 # Handle aurora opening alert from VHFDX.
 #
@@ -332,7 +313,6 @@ proc vhfdx_aurora_opening {band lat call loc} {
     playSilence 1000
   }
 }
-
 
 #
 # Handle FAI activity
@@ -381,10 +361,8 @@ proc vhfdx_f2_opening {band} {
   }
 }
 
-
 # end of namespace
 }
-
 
 #
 # This file has not been truncated

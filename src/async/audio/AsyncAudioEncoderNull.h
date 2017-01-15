@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,86 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_ENCODER_NULL_INCLUDED
 #define ASYNC_AUDIO_ENCODER_NULL_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <limits>
 #include <stdint.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioEncoder.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A null audio "encoder" that just communicate zero samples
 @author Tobias Blomberg / SM0SVX
@@ -166,16 +129,13 @@ class AudioEncoderNull : public AudioEncoder
     AudioEncoderNull(const AudioEncoderNull&);
     AudioEncoderNull& operator=(const AudioEncoderNull&);
     
-};  /* class AudioEncoderNull */
+};  /** class AudioEncoderNull */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_ENCODER_NULL_INCLUDED */
 
-#endif /* ASYNC_AUDIO_ENCODER_NULL_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

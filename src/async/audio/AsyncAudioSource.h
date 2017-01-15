@@ -23,85 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_SOURCE_INCLUDED
 #define ASYNC_AUDIO_SOURCE_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class AudioSink;
   
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
 @brief	The base class for an audio source
@@ -191,8 +154,7 @@ class AudioSource
       assert(m_handler != 0);
       m_handler->resumeOutput();
     }
-    
-
+  
   protected:
     /**
      * @brief The registered sink has flushed all samples
@@ -209,7 +171,7 @@ class AudioSource
       m_handler->handleAllSamplesFlushed();
     }
     
-    /*
+    /**
      * @brief 	Write samples to the connected sink
      * @param 	samples The buffer containing the samples to write
      * @param 	len   	The number of samples in the buffer
@@ -223,7 +185,7 @@ class AudioSource
      */
     int sinkWriteSamples(const float *samples, int len);
     
-    /*
+    /**
      * @brief 	Tell the sink to flush any buffered samples
      *
      * This function is used by the inheriting class to tell the connected
@@ -245,7 +207,7 @@ class AudioSource
      */
     bool setHandler(AudioSource *handler);
     
-    /*
+    /**
      * @brief 	Return the handler
      * @return	Returns the handler previously set with setHandler or 0
      *          if none have been set
@@ -257,7 +219,6 @@ class AudioSource
      */
     void clearHandler(void);
     
-    
   private:
     AudioSink 	*m_sink;
     bool      	m_sink_managed;
@@ -268,16 +229,13 @@ class AudioSource
     bool registerSinkInternal(AudioSink *sink, bool managed, bool reg);
     void unregisterSinkInternal(bool is_being_destroyed);
 
-};  /* class AudioSource */
+};  /** class AudioSource */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_SOURCE_INCLUDED */
 
-#endif /* ASYNC_AUDIO_SOURCE_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

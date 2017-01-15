@@ -23,91 +23,53 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example AsyncPtyStreamBuf_demo.cpp
 An example of how to use the AsyncPtyStreamBuf class
 */
-
-
 #ifndef ASYNC_PTY_STREAM_BUF_INCLUDED
 #define ASYNC_PTY_STREAM_BUF_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <streambuf>
 #include <vector>
 
 
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class Pty;
-  
 
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A stream buffer class to stream characters to a PTY
 @author Tobias Blomberg / SM0SVX
@@ -155,15 +117,12 @@ class PtyStreamBuf : public std::streambuf
     virtual int sync(void);
     bool writeToPty(void);
     
-};  /* class PtyStreamBuf */
+};  /** class PtyStreamBuf */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_PTY_STREAM_BUF_INCLUDED */
 
-#endif /* ASYNC_PTY_STREAM_BUF_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

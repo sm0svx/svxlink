@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,17 +23,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef WBRX_RTL_SDR_INCLUDED
 #define WBRX_RTL_SDR_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <map>
@@ -42,29 +37,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <complex>
 #include <set>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
   class Config;
@@ -72,47 +55,25 @@ namespace Async
 class RtlSdr;
 class Ddr;
 
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A WBRX using RTL2832U based DVB-T tuners
 @author Tobias Blomberg / SM0SVX
@@ -223,15 +184,10 @@ class WbRxRtlSdr : public sigc::trackable
     void findBestCenterFq(void);
     void rtlReadyStateChanged(void);
     
-};  /* class WbRxRtlSdr */
+};  /** class WbRxRtlSdr */
 
+#endif /** WBRX_RTL_SDR_INCLUDED */
 
-//} /* namespace */
-
-#endif /* WBRX_RTL_SDR_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

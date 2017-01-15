@@ -29,89 +29,51 @@
 /** @example AsyncUdpSocket_demo.cpp
 An example of how to use the Async::UdpSocket class
 */
-
-
 #ifndef ASYNC_UDP_SOCKET_INCLUDED
 #define ASYNC_UDP_SOCKET_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncIpAddress.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 class UdpPacket;
 
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class FdWatch;
 
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class for working with UDP sockets
 @author Tobias Blomberg
@@ -132,12 +94,12 @@ class UdpSocket : public sigc::trackable
      *	      	            If left empty, bind to all interfaces.
      */
     UdpSocket(uint16_t local_port=0, const IpAddress &bind_ip=IpAddress());
-  
+
     /**
      * @brief 	Destructor
      */
     ~UdpSocket(void);
-    
+
     /**
      * @brief 	Check if the initialization was ok
      * @return	Returns \em true if everything went fine during initialization
@@ -165,7 +127,7 @@ class UdpSocket : public sigc::trackable
      *          -1 on error
      */
     int fd(void) const { return sock; }
-    
+
     /**
      * @brief 	A signal that is emitted when data has been received
      * @param 	ip    The IP-address the data was received from
@@ -173,36 +135,33 @@ class UdpSocket : public sigc::trackable
      * @param 	count The number of bytes read
      */
     sigc::signal<void, const IpAddress&, void *, int> dataReceived;
-    
+
     /**
      * @brief 	A signal that is emitted when the send buffer is full
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if the buffer full condition has been cleared
      */
     sigc::signal<void, bool> sendBufferFull;
-    
+
   protected:
-    
+
   private:
     int       	sock;
     FdWatch * 	rd_watch;
     FdWatch * 	wr_watch;
     UdpPacket * send_buf;
-    
+
     void cleanup(void);
     void handleInput(FdWatch *watch);
     void sendRest(FdWatch *watch);
 
-};  /* class UdpSocket */
+};  /** class UdpSocket */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_UDP_SOCKET_INCLUDED */
 
-#endif /* ASYNC_UDP_SOCKET_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

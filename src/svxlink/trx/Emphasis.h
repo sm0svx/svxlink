@@ -23,88 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef EMPHASIS_INCLUDED
 #define EMPHASIS_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sstream>
 #include <cstdlib>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioFilter.h>
 //#include <AsyncAudioProcessor.h>
 #include <CppStdCompat.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	Base class for the pre- and de-emphasis filters
 @author Tobias Blomberg / SM0SVX
@@ -147,7 +108,7 @@ class EmphasisBase : public Async::AudioFilter
      */
     ~EmphasisBase(void) {}
   
-    /*
+    /**
     void setOutputGain(double gain_db)
     {
       b0 /= output_gain;
@@ -163,7 +124,7 @@ class EmphasisBase : public Async::AudioFilter
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    /*
+    /**
     virtual void processSamples(float *dest, const float *src, int count)
     {
       for (int i=0; i<count; ++i)
@@ -201,8 +162,7 @@ class EmphasisBase : public Async::AudioFilter
     EmphasisBase(const EmphasisBase&);
     EmphasisBase& operator=(const EmphasisBase&);
     
-};  /* class EmphasisBase */
-
+};  /** class EmphasisBase */
 
 /**
 @brief	Implements a pre-emphasis filter
@@ -243,8 +203,7 @@ class PreemphasisFilter : public EmphasisBase
     PreemphasisFilter(const PreemphasisFilter&);
     PreemphasisFilter& operator=(const PreemphasisFilter&);
 
-}; /* class PreemphasisFilter */
-
+}; /** class PreemphasisFilter */
 
 /**
 @brief	Implements a de-emphasis filter
@@ -278,15 +237,10 @@ class DeemphasisFilter : public EmphasisBase
     DeemphasisFilter(const DeemphasisFilter&);
     DeemphasisFilter& operator=(const DeemphasisFilter&);
 
-}; /* class DeemphasisFilter */
+}; /** class DeemphasisFilter */
 
+#endif /** EMPHASIS_INCLUDED */
 
-//} /* namespace */
-
-#endif /* EMPHASIS_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

@@ -23,90 +23,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SQUELCH_EVDEV_INCLUDED
 #define SQUELCH_EVDEV_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <string>
 #include <vector>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "Squelch.h"
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
   class FdWatch;
 };
 
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
 @brief	An event input device squelch detector
@@ -139,7 +101,6 @@ class SquelchEvDev : public Squelch
 
   protected:
 
-
   private:
     std::vector<int>	open_ev;
     std::vector<int>	close_ev;
@@ -150,16 +111,11 @@ class SquelchEvDev : public Squelch
     SquelchEvDev& operator=(const SquelchEvDev&);
     void readEvDevData(Async::FdWatch *w);
 
-};  /* class SquelchEvDev */
+};  /** class SquelchEvDev */
 
+#endif /** SQUELCH_EVDEV_INCLUDED */
 
-//} /* namespace */
-
-#endif /* SQUELCH_EVDEV_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

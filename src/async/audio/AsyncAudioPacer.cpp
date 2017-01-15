@@ -24,98 +24,54 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <stdio.h>
 
 #include <algorithm>
 #include <cstring>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioPacer.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   : sample_rate(sample_rate), buf_size(block_size), prebuf_time(prebuf_time),
@@ -137,15 +93,13 @@ AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
     pace_timer->setEnable(false);
   }
   
-} /* AudioPacer::AudioPacer */
-
+} /** AudioPacer::AudioPacer */
 
 AudioPacer::~AudioPacer(void)
 {
   delete pace_timer;
   delete [] buf;
-} /* AudioPacer::~AudioPacer */
-
+} /** AudioPacer::~AudioPacer */
 
 int AudioPacer::writeSamples(const float *samples, int count)
 {
@@ -205,8 +159,7 @@ int AudioPacer::writeSamples(const float *samples, int count)
   
   return samples_written;
   
-} /* AudioPacer::writeSamples */
-
+} /** AudioPacer::writeSamples */
 
 void AudioPacer::flushSamples(void)
 {
@@ -217,8 +170,7 @@ void AudioPacer::flushSamples(void)
   {
     sinkFlushSamples();
   }
-} /* AudioPacer::flushSamples */
-
+} /** AudioPacer::flushSamples */
 
 void AudioPacer::resumeOutput(void)
 {
@@ -227,16 +179,11 @@ void AudioPacer::resumeOutput(void)
     pace_timer->setEnable(true);
     outputNextBlock();
   }
-} /* AudioPacer::resumeOutput */
-    
+} /** AudioPacer::resumeOutput */
 
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 void AudioPacer::allSamplesFlushed(void)
 {
   if (do_flush)
@@ -244,16 +191,11 @@ void AudioPacer::allSamplesFlushed(void)
     do_flush = false;
     sourceAllSamplesFlushed();
   }
-} /* AudioPacer::allSamplesFlushed */
+} /** AudioPacer::allSamplesFlushed */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 void AudioPacer::outputNextBlock(Timer *t)
 {
@@ -305,12 +247,9 @@ void AudioPacer::outputNextBlock(Timer *t)
     sinkFlushSamples();
   }
   
-} /* AudioPacer::outputNextBlock */
+} /** AudioPacer::outputNextBlock */
 
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

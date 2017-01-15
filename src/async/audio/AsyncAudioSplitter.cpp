@@ -24,62 +24,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cassert>
 #include <cstring>
 #include <iostream>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncApplication.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioSource.h"
 #include "AsyncAudioSplitter.h"
 
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
 class Async::AudioSplitter::Branch : public AudioSource
 {
@@ -148,7 +123,7 @@ class Async::AudioSplitter::Branch : public AudioSource
       
       return len;
       
-    } /* sinkWriteSamples */
+    } /** sinkWriteSamples */
     
     void sinkFlushSamples(void)
     {
@@ -162,8 +137,7 @@ class Async::AudioSplitter::Branch : public AudioSource
       	is_flushed = true;
       	splitter->branchAllSamplesFlushed();
       }
-    } /* sinkFlushSamples */
-    
+    } /** sinkFlushSamples */
 
   private:
     bool      	  is_enabled;
@@ -178,7 +152,7 @@ class Async::AudioSplitter::Branch : public AudioSource
       {
       	splitter->branchResumeOutput();
       }
-    } /* resumeOutput */
+    } /** resumeOutput */
     
     virtual void allSamplesFlushed(void)
     {
@@ -189,43 +163,25 @@ class Async::AudioSplitter::Branch : public AudioSource
       {
       	splitter->branchAllSamplesFlushed();
       }
-    } /* allSamplesFlushed */
+    } /** allSamplesFlushed */
 
-}; /* class Branch */
+}; /** class Branch */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioSplitter::AudioSplitter(void)
   : buf(0), buf_size(0), buf_len(0), do_flush(false), input_stopped(false),
     flushed_branches(0), main_branch(0)
@@ -233,8 +189,7 @@ AudioSplitter::AudioSplitter(void)
   main_branch = new Branch(this);
   branches.push_back(main_branch);
   AudioSource::setHandler(main_branch);
-} /* AudioSplitter::AudioSplitter */
-
+} /** AudioSplitter::AudioSplitter */
 
 AudioSplitter::~AudioSplitter(void)
 {
@@ -244,8 +199,7 @@ AudioSplitter::~AudioSplitter(void)
   delete main_branch;
   main_branch = 0;
   branches.clear();
-} /* AudioSplitter::~AudioSplitter */
-
+} /** AudioSplitter::~AudioSplitter */
 
 void AudioSplitter::addSink(AudioSink *sink, bool managed)
 {
@@ -256,8 +210,7 @@ void AudioSplitter::addSink(AudioSink *sink, bool managed)
   {
     branch->sinkFlushSamples();
   }
-} /* AudioSplitter::addSink */
-
+} /** AudioSplitter::addSink */
 
 void AudioSplitter::removeSink(AudioSink *sink)
 {
@@ -284,8 +237,7 @@ void AudioSplitter::removeSink(AudioSink *sink)
       break;
     }
   }
-} /* AudioSplitter::removeSink */
-
+} /** AudioSplitter::removeSink */
 
 void AudioSplitter::removeAllSinks(void)
 {
@@ -299,8 +251,7 @@ void AudioSplitter::removeAllSinks(void)
   }
   branches.clear();
   branches.push_back(main_branch);
-} /* AudioSplitter::removeAllSinks */
-
+} /** AudioSplitter::removeAllSinks */
 
 void AudioSplitter::enableSink(AudioSink *sink, bool enable)
 {
@@ -318,8 +269,7 @@ void AudioSplitter::enableSink(AudioSink *sink, bool enable)
       break;
     }
   }
-} /* AudioSplitter::enableSink */
-
+} /** AudioSplitter::enableSink */
 
 int AudioSplitter::writeSamples(const float *samples, int len)
 {
@@ -364,8 +314,7 @@ int AudioSplitter::writeSamples(const float *samples, int len)
   
   return len;
   
-} /* AudioSplitter::writeSamples */
-
+} /** AudioSplitter::writeSamples */
 
 void AudioSplitter::flushSamples(void)
 {
@@ -390,54 +339,14 @@ void AudioSplitter::flushSamples(void)
   
   flushAllBranches();
   
-} /* AudioSplitter::flushSamples */
+} /** AudioSplitter::flushSamples */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 
-
-
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
  */
 void AudioSplitter::writeFromBuffer(void)
 {
@@ -475,8 +384,7 @@ void AudioSplitter::writeFromBuffer(void)
       }
     }
   }
-} /* AudioSplitter::writeFromBuffer */
-
+} /** AudioSplitter::writeFromBuffer */
 
 void AudioSplitter::flushAllBranches(void)
 {
@@ -485,8 +393,7 @@ void AudioSplitter::flushAllBranches(void)
   {
     (*it)->sinkFlushSamples();
   }
-} /* AudioSplitter::flushAllBranches */
-
+} /** AudioSplitter::flushAllBranches */
 
 void AudioSplitter::branchResumeOutput(void)
 {
@@ -496,8 +403,7 @@ void AudioSplitter::branchResumeOutput(void)
     input_stopped = false;
     sourceResumeOutput();
   }
-} /* AudioSplitter::branchResumeOutput */
-
+} /** AudioSplitter::branchResumeOutput */
 
 void AudioSplitter::branchAllSamplesFlushed(void)
 {
@@ -509,10 +415,9 @@ void AudioSplitter::branchAllSamplesFlushed(void)
     do_flush = false;
     sourceAllSamplesFlushed();
   }
-} /* AudioSplitter::branchAllSamplesFlushed */
+} /** AudioSplitter::branchAllSamplesFlushed */
 
-
-/*
+/**
  * @brief: Delete removed branches
  *
  * This functions is called by a zero second timer to cleanup removed branches.
@@ -536,10 +441,8 @@ void AudioSplitter::cleanupBranches(void)
       ++it;
     }
   }
-} /* AudioSplitter::cleanupBranches */
+} /** AudioSplitter::cleanupBranches */
 
-
-
-/*
+/**
  * This file has not been truncated
  */

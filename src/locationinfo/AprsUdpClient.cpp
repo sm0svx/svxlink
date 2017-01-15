@@ -24,99 +24,58 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <cstdio>
 #include <cmath>
 #include <cstring>
 #include <ctime>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 #include <rtp.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/SVXLINK.h"
 #include "AprsUdpClient.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 #define HASH_KEY		0x73e2
 
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
             const std::string &server, int port)
   : loc_cfg(loc_cfg), server(server), port(port), dns(0), beacon_timer(0),
@@ -128,13 +87,11 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
      mem_fun(*this, &AprsUdpClient::sendLocationInfo));
 } /* AprsUdpClient::AprsUdpClient */
 
-
 AprsUdpClient::~AprsUdpClient(void)
 {
   updateDirectoryStatus(StationData::STAT_OFFLINE);
   delete beacon_timer;
 } /* AprsUdpClient::~AprsUdpClient */
-
 
 void AprsUdpClient::updateDirectoryStatus(StationData::Status status)
 {
@@ -143,7 +100,6 @@ void AprsUdpClient::updateDirectoryStatus(StationData::Status status)
   {
     return;
   }
-
     // Stop automatic beacon timer
   beacon_timer->reset();
 
@@ -157,7 +113,6 @@ void AprsUdpClient::updateDirectoryStatus(StationData::Status status)
   beacon_timer->setEnable(true);
 
 } /* AprsUdpClient::updateDirectoryStatus */
-
 
 void AprsUdpClient::updateQsoStatus(int action, const string& call,
   const string& info, list<string>& call_list)
@@ -183,28 +138,18 @@ void AprsUdpClient::updateQsoStatus(int action, const string& call,
 
 } /* AprsUdpClient::updateQsoStatus */
 
-
 void AprsUdpClient::update3rdState(const string& call, const string& info)
 {
    // do nothing
 } /* AprsUdpClient::update3rdState */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void AprsUdpClient::sendLocationInfo(Timer *t)
 {
   if (ip_addr.isEmpty())
@@ -226,7 +171,6 @@ void AprsUdpClient::sendLocationInfo(Timer *t)
   }
 } /* AprsUdpClient::sendLocationInfo */
 
-
 void AprsUdpClient::dnsResultsReady(DnsLookup& dns_lookup)
 {
   vector<IpAddress> result = dns->addresses();
@@ -245,7 +189,6 @@ void AprsUdpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 } /* AprsUdpClient::dnsResultsReady */
 
-
 #define addText(block, text) \
   do { \
     int sl = strlen(text); \
@@ -253,7 +196,6 @@ void AprsUdpClient::dnsResultsReady(DnsLookup& dns_lookup)
     memcpy(block, text, sl); \
     block += sl; \
   } while (0)
-
 
 int AprsUdpClient::buildSdesPacket(char *p)
 {
@@ -348,7 +290,6 @@ int AprsUdpClient::buildSdesPacket(char *p)
 
 } /* AprsUdpClient::buildSdesPacket */
 
-
 // generate passcode for the aprs-servers, copied from xastir-source...
 // special tnx to:
 // Copyright (C) 1999,2000  Frank Giannandrea
@@ -369,30 +310,25 @@ short AprsUdpClient::getPasswd(const string& call)
   return (hash & 0x7fff);
 } /* AprsUdpClient::passwd_hash */
 
-
 int AprsUdpClient::getToneParam()
 {
   return (loc_cfg.tone < 1000) ? loc_cfg.tone : 0;
 } /* AprsUdpClient::getToneParam */
-
 
 int AprsUdpClient::getPowerParam()
 {
   return lrintf(sqrt((float)loc_cfg.power));
 } /* AprsUdpClient::getPowerParam */
 
-
 int AprsUdpClient::getHeightParam()
 {
   return lrintf(log((float)loc_cfg.height / 10.0) / log(2.0));
 } /* AprsUdpClient::getHeightParam */
 
-
 int AprsUdpClient::getGainParam()
 {
   return (loc_cfg.gain < 10) ? loc_cfg.gain : 9;
 } /* AprsUdpClient::getGainParam */
-
 
 int AprsUdpClient::getDirectionParam()
 {
@@ -409,7 +345,6 @@ int AprsUdpClient::getDirectionParam()
   return lrintf((float)loc_cfg.beam_dir / 45.0);
 
 } /* AprsUdpClient::getDirectionParam */
-
 
 /*
  * This file has not been truncated

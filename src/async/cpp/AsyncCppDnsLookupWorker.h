@@ -27,19 +27,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
-
 #ifndef ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED
 #define ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <pthread.h>
 #include <netdb.h>
@@ -47,67 +40,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "../core/AsyncDnsLookupWorker.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
 class Timer;
 class FdWatch;
-  
-  
-/****************************************************************************
- *
+
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
 @brief	DNS lookup worker for the Cpp variant of the async environment
@@ -147,10 +112,9 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
      * the hostname in the query.
      */
     virtual std::vector<IpAddress> addresses(void) { return the_addresses; }
-    
-    
+
   protected:
-    
+
   private:
     std::string	      	    label;
     std::vector<IpAddress>  the_addresses;
@@ -166,16 +130,13 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
     void onTimeout(Timer *t);
     void notificationReceived(FdWatch *w);
 
-};  /* class CppDnsLookupWorker */
+};  /** class CppDnsLookupWorker */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED */
 
-#endif /* ASYNC_CPP_DNS_LOOKUP_WORKER_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

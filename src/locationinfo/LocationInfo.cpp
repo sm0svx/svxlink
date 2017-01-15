@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -40,94 +35,59 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <sys/time.h>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/SVXLINK.h"
 #include "LocationInfo.h"
 #include "AprsTcpClient.h"
 #include "AprsUdpClient.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-
-  // Put all locally defined types, functions and variables in an anonymous
-  // namespace to make them file local. The "static" keyword has been
-  // deprecated in C++ so it should not be used.
+// Put all locally defined types, functions and variables in an anonymous
+// namespace to make them file local. The "static" keyword has been
+// deprecated in C++ so it should not be used.
 namespace
 {
 
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-/****************************************************************************
- *
+/*
  * Prototypes for local functions
- *
- ****************************************************************************/
-
+ */
 void print_error(const string &name, const string &variable,
                  const string &value, const string &example = "");
 
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
-
+ */
 } // End of anonymous namespace
 
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 LocationInfo* LocationInfo::_instance = 0;
 
 bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_name)
@@ -196,7 +156,6 @@ bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_n
 
 } /* LocationInfo::initialize */
 
-
 void LocationInfo::updateDirectoryStatus(StationData::Status status)
 {
   ClientList::const_iterator it;
@@ -205,7 +164,6 @@ void LocationInfo::updateDirectoryStatus(StationData::Status status)
     (*it)->updateDirectoryStatus(status);
   }
 } /* LocationInfo::updateDirectoryStatus */
-
 
 void LocationInfo::updateQsoStatus(int action, const string& call,
                                    const string& info, list<string>& call_list)
@@ -217,7 +175,6 @@ void LocationInfo::updateQsoStatus(int action, const string& call,
   }
 } /* LocationInfo::updateQsoStatus */
 
-
 void LocationInfo::update3rdState(const string& call, const string& info)
 {
   ClientList::const_iterator it;
@@ -227,7 +184,6 @@ void LocationInfo::update3rdState(const string& call, const string& info)
   }
 } /* LocationInfo::update3rdState */
 
-
 void LocationInfo::igateMessage(const std::string& info)
 {
   ClientList::const_iterator it;
@@ -236,7 +192,6 @@ void LocationInfo::igateMessage(const std::string& info)
     (*it)->igateMessage(info);
   }
 } /* LocationInfo::igateMessage */
-
 
 string LocationInfo::getCallsign(void)
 {
@@ -248,7 +203,6 @@ bool LocationInfo::getTransmitting(const std::string &name)
 {
    return aprs_stats[name].tx_on;
 } /* LocationInfo::getTransmitting */
-
 
 void LocationInfo::setTransmitting(const std::string &name, struct timeval tv,
                                      bool state)
@@ -267,7 +221,6 @@ void LocationInfo::setTransmitting(const std::string &name, struct timeval tv,
    }
 } /* LocationInfo::isTransmitting */
 
-
 void LocationInfo::setReceiving(const std::string &name, struct timeval tv,
                                  bool state)
 {
@@ -285,20 +238,13 @@ void LocationInfo::setReceiving(const std::string &name, struct timeval tv,
    }
 } /* LocationInfo::isReceiving */
 
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 bool LocationInfo::parsePosition(const Config &cfg, const string &name)
 {
   bool success = true;
@@ -320,7 +266,6 @@ bool LocationInfo::parsePosition(const Config &cfg, const string &name)
   return success;
 
 } /* LocationInfo::parsePosition */
-
 
 bool LocationInfo::parseLatitude(Coordinate &pos, const string &value)
 {
@@ -357,7 +302,6 @@ bool LocationInfo::parseLatitude(Coordinate &pos, const string &value)
 
 } /* LocationInfo::parseLatitude */
 
-
 bool LocationInfo::parseLongitude(Coordinate &pos, const string &value)
 {
   unsigned int deg, min, sec;
@@ -392,7 +336,6 @@ bool LocationInfo::parseLongitude(Coordinate &pos, const string &value)
   return true;
 
 } /* LocationInfo::parseLongitude */
-
 
 bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
 {
@@ -464,14 +407,12 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
 
 } /* LocationInfo::parseStationHW */
 
-
 bool LocationInfo::parsePath(const Async::Config &cfg, const string &name)
 {
     // FIXME: Verify the path syntax!
   loc_cfg.path = cfg.getValue(name, "PATH");
   return true;
 } /* LocationInfo::parsePath */
-
 
 int LocationInfo::calculateRange(const Cfg &cfg)
 {
@@ -488,7 +429,6 @@ int LocationInfo::calculateRange(const Cfg &cfg)
   return lrintf(tmp);
 
 } /* LocationInfo::calculateRange */
-
 
 bool LocationInfo::parseAntennaHeight(Cfg &cfg, const std::string value)
 {
@@ -518,7 +458,6 @@ bool LocationInfo::parseAntennaHeight(Cfg &cfg, const std::string value)
   return true;
 
 } /* LocationInfo::parseAntennaHeight */
-
 
 bool LocationInfo::parseClients(const Async::Config &cfg, const string &name)
 {
@@ -565,7 +504,6 @@ bool LocationInfo::parseClients(const Async::Config &cfg, const string &name)
 
 } /* LocationInfo::parseClients */
 
-
 bool LocationInfo::parseClientStr(string &host, int &port, const string &val)
 {
   if (val.empty())
@@ -602,14 +540,12 @@ bool LocationInfo::parseClientStr(string &host, int &port, const string &val)
 
 } /* LocationInfo::parseClientStr */
 
-
 void LocationInfo::startStatisticsTimer(int interval) {
   delete aprs_stats_timer;
   aprs_stats_timer = new Timer(interval, Timer::TYPE_PERIODIC);
   aprs_stats_timer->setEnable(true);
   aprs_stats_timer->expired.connect(mem_fun(*this, &LocationInfo::sendAprsStatistics));
 } /* LocationInfo::statStatisticsTimer */
-
 
 void LocationInfo::sendAprsStatistics(Timer *t)
 {
@@ -682,7 +618,6 @@ void LocationInfo::sendAprsStatistics(Timer *t)
   }
 } /* LocationInfo::sendAprsStatistics */
 
-
 void LocationInfo::initExtPty(std::string ptydevice)
 {
   AprsPty *aprspty = new AprsPty();
@@ -696,7 +631,6 @@ void LocationInfo::initExtPty(std::string ptydevice)
                     &LocationInfo::mesReceived));
   }
 } /* LocationInfo::initExtPty */
-
 
 void LocationInfo::mesReceived(std::string message)
 {
@@ -712,12 +646,9 @@ void LocationInfo::mesReceived(std::string message)
   cout << message << endl;
 } /* LocationInfo::mesReceived */
 
-
-/****************************************************************************
- *
+/*
  * Private local functions
- *
- ****************************************************************************/
+ **/
 
   // Put all locally defined functions in an anonymous namespace to make them
   // file local. The "static" keyword has been deprecated in C++ so it
@@ -739,7 +670,6 @@ void print_error(const string &name, const string &variable,
 } /* print_error */
 
 } // End of anonymous namespace
-
 
 /*
  * This file has not been truncated

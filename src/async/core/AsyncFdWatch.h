@@ -9,7 +9,7 @@ file descriptor, a signal is emitted.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2017 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,76 +30,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /** @example  AsyncFdWatch_demo.cpp
 An example of how to use the  Async::FdWatch class
 */
-
-
 #ifndef ASYNC_FD_WATCH_INCLUDED
 #define ASYNC_FD_WATCH_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class for watching file descriptors
 @author Tobias Blomberg
@@ -127,7 +94,7 @@ class FdWatch : public sigc::trackable
       FD_WATCH_RD,  ///< File descriptor watch for incoming data
       FD_WATCH_WR   ///< File descriptor watch for outgoing data
     } FdWatchType;
-    
+
     /**
      * @brief Default constructor
      *
@@ -135,7 +102,7 @@ class FdWatch : public sigc::trackable
      * filedescriptor to watch and the type of watch.
      */
     FdWatch(void);
-    
+
     /**
      * @brief Constructor
      *
@@ -146,37 +113,37 @@ class FdWatch : public sigc::trackable
      * @param type  The type of watch to create (see @ref FdWatchType)
      */
     FdWatch(int fd, FdWatchType type);
-    
+
     /**
      * @brief Destructor
      */
     ~FdWatch(void);
-    
+
     /**
      * @brief Return the file descriptor being watched
      * @return Returns the file descriptor
      */
     int fd(void) const { return m_fd; }
-    
+
     /**
      * @brief Return the type of this watch
      * @return Returns the type (see @ref FdWatchType)
      */
     FdWatchType type(void) const { return m_type; }
-    
+
     /**
      * @brief Enable or disable the watch
      * @param enabled Set to \em true to enable the watch or \em false to
      *	      	      disable it.
      */
     void setEnabled(bool enabled);
-    
+
     /**
      * @brief Check if the watch is enabled or not
      * @return Returns true if the watch is enabled, or else false.
      */
     bool isEnabled(void) const { return m_enabled; }
-    
+
     /**
      * @brief Set the file descriptor to watch
      * @param fd    The file descriptor to watch
@@ -193,25 +160,21 @@ class FdWatch : public sigc::trackable
      * @param watch Pointer to the watch object
      */
     sigc::signal<void, FdWatch*> activity;
-    
-    
+
   protected:
-    
+
   private:
     int       	m_fd;
     FdWatchType m_type;
     bool      	m_enabled;
-  
-};  /* class FdWatch */
 
+};  /** class FdWatch */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_FD_WATCH_INCLUDED */
+#endif /** ASYNC_FD_WATCH_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

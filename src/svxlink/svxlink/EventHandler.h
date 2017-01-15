@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,88 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef EVENT_HANDLER_INCLUDED
 #define EVENT_HANDLER_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <tcl.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 class Logic;
 
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	Manage the TCL interpreter and call TCL functions for different events.
 @author Tobias Blomberg
@@ -171,7 +132,16 @@ class EventHandler : public sigc::trackable
      * @param 	duration  The duration of the tone in milliseconds
      */
     sigc::signal<void, int, int, int>      playTone;
-    
+
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to play
+     *	      	back a dtmf tone
+     * @param 	digit#    The dtmf-tone as character (0-9, A-F, #)
+     * @param 	amp   	   The tone amplitude to use (0-1000)
+     * @param 	duration  The duration of the tone in milliseconds
+     */
+    sigc::signal<void, const std::string&, int, int> playDtmf;
+     
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back a dtmf digit
@@ -209,6 +179,9 @@ class EventHandler : public sigc::trackable
      */
     sigc::signal<void, const std::string&,
                  const std::string&> publishStateEvent;
+<<<<<<< HEAD
+
+=======
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to inject
@@ -218,8 +191,9 @@ class EventHandler : public sigc::trackable
      */
     sigc::signal<void, const std::string&, int> injectDtmf;
     
+>>>>>>> refs/remotes/sm0svx/master
   protected:
-    
+
   private:
     std::string event_script;
     Logic	*logic;
@@ -238,18 +212,20 @@ class EventHandler : public sigc::trackable
     static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	            int argc, const char *argv[]);
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+<<<<<<< HEAD
+      	      	    int argc, const char *argv[]);
+=======
                     int argc, const char *argv[]);
     static int injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
 
 };  /* class EventHandler */
 
+>>>>>>> refs/remotes/sm0svx/master
 
-//} /* namespace */
+};  /* class EventHandler */
 
 #endif /* EVENT_HANDLER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

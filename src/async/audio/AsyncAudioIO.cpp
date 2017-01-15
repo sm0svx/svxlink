@@ -27,15 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
@@ -44,21 +38,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cerrno>
 #include <cmath>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioDevice.h"
 #include "AsyncFdWatch.h"
 #include "AsyncAudioReader.h"
@@ -67,33 +53,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioIO.h"
 #include "AsyncAudioDebugger.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class Async::AudioIO::InputFifo : public AudioFifo
 {
   public:
@@ -143,8 +115,7 @@ class Async::AudioIO::InputFifo : public AudioFifo
     AudioDevice *audio_dev;
     bool do_flush;
     
-}; /* Async::AudioIO::InputFifo */
-
+}; /** Async::AudioIO::InputFifo */
 
 class Async::AudioIO::DelayedFlushAudioReader
   : public AudioReader, public sigc::trackable
@@ -189,78 +160,53 @@ class Async::AudioIO::DelayedFlushAudioReader
     {
       flush_timer.setEnable(false);
       AudioReader::flushSamples();
-    } /* AudioIO::flushDone */
+    } /** AudioIO::flushDone */
 
-}; /* class Async::AudioIO::DelayedFlushAudioReader */
+}; /** class Async::AudioIO::DelayedFlushAudioReader */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
-
+ */
 void AudioIO::setSampleRate(int rate)
 {
   AudioDevice::setSampleRate(rate);
-} /* AudioIO::setSampleRate */
-
+} /** AudioIO::setSampleRate */
 
 void AudioIO::setBlocksize(int size)
 {
   AudioDevice::setBlocksize(size);
-} /* AudioIO::setBlocksize */
-
+} /** AudioIO::setBlocksize */
 
 int AudioIO::blocksize(void)
 {
   return audio_dev->blocksize();
-} /* AudioIO::blocksize */
-
+} /** AudioIO::blocksize */
 
 void AudioIO::setBlockCount(int count)
 {
   AudioDevice::setBlockCount(count);
-} /* AudioIO::setBlockCount */
-
+} /** AudioIO::setBlockCount */
 
 void AudioIO::setChannels(int channels)
 {
   return AudioDevice::setChannels(channels);
-} /* AudioIO::setBufferCount */
-
-
+} /** AudioIO::setBufferCount */
 
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0),
-    /* lead_in_pos(0), */ m_gain(1.0), sample_rate(-1),
+    /** lead_in_pos(0), */ m_gain(1.0), sample_rate(-1),
     m_channel(channel), input_valve(0), input_fifo(0), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
@@ -287,8 +233,7 @@ AudioIO::AudioIO(const string& dev_name, int channel)
   
   //new AudioDebugger(input_fifo);
 
-} /* AudioIO::AudioIO */
-
+} /** AudioIO::AudioIO */
 
 AudioIO::~AudioIO(void)
 {
@@ -296,14 +241,12 @@ AudioIO::~AudioIO(void)
   AudioSink::clearHandler();
   delete input_valve;
   AudioDevice::unregisterAudioIO(this);
-} /* AudioIO::~AudioIO */
-
+} /** AudioIO::~AudioIO */
 
 bool AudioIO::isFullDuplexCapable(void)
 {
   return audio_dev->isFullDuplexCapable();
-} /* AudioIO::isFullDuplexCapable */
-
+} /** AudioIO::isFullDuplexCapable */
 
 bool AudioIO::open(Mode mode)
 {
@@ -324,7 +267,7 @@ bool AudioIO::open(Mode mode)
     return true;
   }
   
-    /* FIXME: Yes, I knwow... Ugly cast... */
+    /** FIXME: Yes, I knwow... Ugly cast... */
   bool open_ok = audio_dev->open((AudioDevice::Mode)mode);
   if (open_ok)
   {
@@ -337,8 +280,7 @@ bool AudioIO::open(Mode mode)
 
   return open_ok;
   
-} /* AudioIO::open */
-
+} /** AudioIO::open */
 
 void AudioIO::close(void)
 {
@@ -347,7 +289,7 @@ void AudioIO::close(void)
     return;
   }
   
-  /*
+  /**
   if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
   {
     read_con.disconnect();
@@ -361,48 +303,20 @@ void AudioIO::close(void)
 
   audio_dev->close(); 
   
-} /* AudioIO::close */
+} /** AudioIO::close */
 
 
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions used by friend class AudioDevice
- *
- ****************************************************************************/
-
+ */
 int AudioIO::readSamples(float *samples, int count)
 {
   //printf("AudioIO[%s:%d]::readSamples\n", audio_dev->devName().c_str(), m_channel);
@@ -421,39 +335,32 @@ int AudioIO::readSamples(float *samples, int count)
   
   return samples_read;
   
-} /* AudioIO::readSamples */
-
+} /** AudioIO::readSamples */
 
 bool AudioIO::doFlush(void) const
 {
   //printf("AudioIO::doFlush\n");
   return input_fifo->doFlush();
-} /* AudioIO::doFlush */
-
+} /** AudioIO::doFlush */
 
 bool AudioIO::isIdle(void) const
 {
   //printf("AudioIO::doFlush\n");
   return audio_reader->isIdle();
-} /* AudioIO::isIdle */
-
+} /** AudioIO::isIdle */
 
 int AudioIO::audioRead(float *samples, int count)
 {
   return sinkWriteSamples(samples, count);
-} /* AudioIO::audioRead */
-
+} /** AudioIO::audioRead */
 
 unsigned AudioIO::samplesAvailable(void)
 {
   //printf("AudioIO[%s:%d]::samplesAvailable: %d\n", audio_dev->devName().c_str(), m_channel, input_fifo->samplesInFifo(true));
   return input_fifo->samplesInFifo();
-} /* AudioIO::samplesAvailable */
+} /** AudioIO::samplesAvailable */
 
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

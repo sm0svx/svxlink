@@ -23,90 +23,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_ENCODER_SPEEX_INCLUDED
 #define ASYNC_AUDIO_ENCODER_SPEEX_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <speex/speex.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioEncoder.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	An audio encoder that encodes samples using the Speex codec
 @author Tobias Blomberg / SM0SVX
 @date   2008-10-15
-
 This class implements an audio encoder that use the Speex audio codec.
 */
 class AudioEncoderSpeex : public AudioEncoder
@@ -245,8 +207,7 @@ class AudioEncoderSpeex : public AudioEncoder
     
     //bool enableHighpass(bool enable);
     //bool highpassEnabled(void);
-    
-    
+
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -259,8 +220,7 @@ class AudioEncoderSpeex : public AudioEncoder
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
-    
-    
+
   protected:
     
   private:
@@ -275,16 +235,13 @@ class AudioEncoderSpeex : public AudioEncoder
     AudioEncoderSpeex(const AudioEncoderSpeex&);
     AudioEncoderSpeex& operator=(const AudioEncoderSpeex&);
     
-};  /* class AudioEncoderSpeex */
+};  /** class AudioEncoderSpeex */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_ENCODER_SPEEX_INCLUDED */
 
-#endif /* ASYNC_AUDIO_ENCODER_SPEEX_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

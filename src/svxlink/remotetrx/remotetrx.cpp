@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,14 +28,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
@@ -55,13 +50,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncFdWatch.h>
@@ -71,46 +62,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <common.h>
 #include <config.h>
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/REMOTE_TRX.h"
 #include "TrxHandler.h"
 #include "NetTrxAdapter.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace sigc;
 using namespace SvxLink;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define PROGRAM_NAME "RemoteTrx"
 
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
 class NetRxAdapterFactory : public RxFactory
 {
@@ -129,7 +103,6 @@ class NetRxAdapterFactory : public RxFactory
     }
 }; /* class NetRxAdapterFactory */
 
-
 class NetTxAdapterFactory : public TxFactory
 {
   public:
@@ -147,14 +120,9 @@ class NetTxAdapterFactory : public TxFactory
     }
 }; /* class NetTxAdapterFactory */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
-
+ */
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
 static void stdout_handler(FdWatch *w);
@@ -167,22 +135,13 @@ static bool logfile_write_timestamp(void);
 static void logfile_write(const char *buf);
 static void logfile_flush(void);
 
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 static char             *pidfile_name = NULL;
 static char             *logfile_name = NULL;
 static char             *runasuser = NULL;
@@ -193,14 +152,9 @@ static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
 
-
-
-/****************************************************************************
- *
+/*
  * MAIN
- *
- ****************************************************************************/
-
+ */
 
 /*
  *----------------------------------------------------------------------------
@@ -388,9 +342,8 @@ int main(int argc, char **argv)
   }
   else
   {
-    cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/remotetrx.conf";
-    if (!cfg.open(cfg_filename))
+    if (home_dir != NULL &&
+	!cfg.open(cfg_filename = string(home_dir) + "/.svxlink/remotetrx.conf"))
     {
       cfg_filename = SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf";
       if (!cfg.open(cfg_filename))
@@ -470,7 +423,7 @@ int main(int argc, char **argv)
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION
-          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "
@@ -594,15 +547,9 @@ int main(int argc, char **argv)
   
 } /* main */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Functions
- *
- ****************************************************************************/
-
+ */
 /*
  *----------------------------------------------------------------------------
  * Function:  parse_arguments
@@ -660,7 +607,7 @@ static void parse_arguments(int argc, const char **argv)
   printf("bool_arg    = %d\n", bool_arg);
   */
   
-    /* Parse arguments that do not begin with '-' (leftovers) */
+  /* Parse arguments that do not begin with '-' (leftovers) */
   /*
   arg = poptGetArg(optCon);
   while (arg != NULL)
@@ -715,7 +662,6 @@ static void stdinHandler(FdWatch *w)
   }
 }
 
-
 static void stdout_handler(FdWatch *w)
 {
   ssize_t len =  0;
@@ -731,7 +677,6 @@ static void stdout_handler(FdWatch *w)
   } while (len > 0);
 } /* stdout_handler  */
 
-
 static void sighup_handler(int signal)
 {
   if (logfile_name == 0)
@@ -741,7 +686,6 @@ static void sighup_handler(int signal)
   }
   logfile_reopen("SIGHUP received");
 } /* sighup_handler */
-
 
 void sigterm_handler(int signal)
 {
@@ -765,7 +709,6 @@ void sigterm_handler(int signal)
   Application::app().quit();
 } /* sigterm_handler */
 
-
 static void handle_unix_signal(int signum)
 {
   switch (signum)
@@ -779,7 +722,6 @@ static void handle_unix_signal(int signum)
       break;
   }
 } /* handle_unix_signal */
-
 
 static bool logfile_open(void)
 {
@@ -801,7 +743,6 @@ static bool logfile_open(void)
   
 } /* logfile_open */
 
-
 static void logfile_reopen(const char *reason)
 {
   logfile_write_timestamp();
@@ -816,7 +757,6 @@ static void logfile_reopen(const char *reason)
   msg += ". Logfile reopened\n";
   if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 } /* logfile_reopen */
-
 
 static bool logfile_write_timestamp(void)
 {
@@ -849,7 +789,6 @@ static bool logfile_write_timestamp(void)
   }
   return true;
 } /* logfile_write_timestamp */
-
 
 static void logfile_write(const char *buf)
 {
@@ -896,7 +835,6 @@ static void logfile_write(const char *buf)
   }
 } /* logfile_write */
 
-
 static void logfile_flush(void)
 {
   cout.flush();
@@ -906,8 +844,6 @@ static void logfile_flush(void)
     stdout_handler(stdout_watch);
   }
 } /*  logfile_flush */
-
-
 
 /*
  * This file has not been truncated

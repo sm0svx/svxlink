@@ -39,11 +39,11 @@ An example of how to use the Config class
 #define ASYNC_CONFIG_INCLUDED
 
 
-/****************************************************************************
+/**
  *
  * System Includes
  *
- ****************************************************************************/
+ */
 
 #include <stdio.h>
 
@@ -54,69 +54,69 @@ An example of how to use the Config class
 #include <sstream>
 
 
-/****************************************************************************
+/**
  *
  * Project Includes
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Local Includes
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Forward declarations
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Namespace
  *
- ****************************************************************************/
+ */
 
 namespace Async
 {
 
 
-/****************************************************************************
+/**
  *
  * Forward declarations of classes inside of the declared namespace
  *
- ****************************************************************************/
+ */
 
   
 
-/****************************************************************************
+/**
  *
  * Defines & typedefs
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Exported Global Variables
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Class definitions
  *
- ****************************************************************************/
+ */
 
 /**
 @brief	A class for reading INI-formatted configuration files
@@ -227,7 +227,7 @@ class Config
       }
       rsp = tmp;
       return true;
-    } /* Config::getValue */
+    } /** Config::getValue */
 
     /**
      * @brief 	Get the value of the given config variable into container
@@ -281,7 +281,7 @@ class Config
         c.push_back(tmp);
       }
       return true;
-    } /* Config::getValue */
+    } /** Config::getValue */
 
     /**
      * @brief 	Get a range checked variable value
@@ -327,7 +327,7 @@ class Config
       }
       rsp = tmp;
       return true;
-    } /* Config::getValue */
+    } /** Config::getValue */
 
     /**
      * @brief 	Return the name of all the tags in the given section
@@ -368,16 +368,16 @@ class Config
     char *parseValue(char *value);
     char *translateEscapedChars(char *val);
 
-};  /* class Config */
+};  /** class Config */
 
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_CONFIG_INCLUDED */
+#endif /** ASYNC_CONFIG_INCLUDED */
 
 
 
-/*
+/**
  * This file has not been truncated
  */
 

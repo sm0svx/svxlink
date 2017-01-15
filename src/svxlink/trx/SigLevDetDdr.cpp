@@ -26,105 +26,105 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/****************************************************************************
+/**
  *
  * System Includes
  *
- ****************************************************************************/
+ */
 
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
 
 
-/****************************************************************************
+/**
  *
  * Project Includes
  *
- ****************************************************************************/
+ */
 
 #include <AsyncConfig.h>
 
 
-/****************************************************************************
+/**
  *
  * Local Includes
  *
- ****************************************************************************/
+ */
 
 #include "SigLevDetDdr.h"
 #include "Ddr.h"
 
 
 
-/****************************************************************************
+/**
  *
  * Namespaces to use
  *
- ****************************************************************************/
+ */
 
 using namespace std;
 using namespace Async;
 
 
 
-/****************************************************************************
+/**
  *
  * Defines & typedefs
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Local class definitions
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Prototypes
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Exported Global Variables
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Local Global Variables
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Public member functions
  *
- ****************************************************************************/
+ */
 
 SigLevDetDdr::SigLevDetDdr(void)
   : sample_rate(0), block_idx(0), last_siglev(0.0f), integration_time(1),
     update_interval(0), update_counter(0), pwr_sum(0.0), slope(1.0),
     offset(0.0), block_size(0)
 {
-} /* SigLevDetDdr::SigLevDetDdr */
+} /** SigLevDetDdr::SigLevDetDdr */
 
 
 SigLevDetDdr::~SigLevDetDdr(void)
 {
-} /* SigLevDetDdr::~SigLevDetDdr */
+} /** SigLevDetDdr::~SigLevDetDdr */
 
 
 bool SigLevDetDdr::initialize(Config &cfg, const string& name, int sample_rate)
@@ -149,7 +149,7 @@ bool SigLevDetDdr::initialize(Config &cfg, const string& name, int sample_rate)
 
   return SigLevDet::initialize(cfg, name, sample_rate);
   
-} /* SigLevDetDdr::initialize */
+} /** SigLevDetDdr::initialize */
 
 
 void SigLevDetDdr::reset(void)
@@ -159,14 +159,14 @@ void SigLevDetDdr::reset(void)
   update_counter = 0;
   siglev_values.clear();
   pwr_sum = 0.0;
-} /* SigLevDetDdr::reset */
+} /** SigLevDetDdr::reset */
 
 
 void SigLevDetDdr::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
   update_counter = 0;  
-} /* SigLevDetDdr::setContinuousUpdateInterval */
+} /** SigLevDetDdr::setContinuousUpdateInterval */
 
 
 void SigLevDetDdr::setIntegrationTime(int time_ms)
@@ -178,7 +178,7 @@ void SigLevDetDdr::setIntegrationTime(int time_ms)
   {
     integration_time = 1;
   }
-} /* SigLevDetDdr::setIntegrationTime */
+} /** SigLevDetDdr::setIntegrationTime */
 
 
 float SigLevDetDdr::siglevIntegrated(void) const
@@ -194,23 +194,23 @@ float SigLevDetDdr::siglevIntegrated(void) const
     return sum / siglev_values.size();
   }
   return 0;
-} /* SigLevDetDdr::siglevIntegrated */
+} /** SigLevDetDdr::siglevIntegrated */
 
 
 
-/****************************************************************************
+/**
  *
  * Protected member functions
  *
- ****************************************************************************/
+ */
 
 
 
-/****************************************************************************
+/**
  *
  * Private member functions
  *
- ****************************************************************************/
+ */
 
 void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
 {
@@ -243,11 +243,11 @@ void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
       pwr_sum = 0.0;
     }
   }
-} /* SigLevDetDdr::processSamples */
+} /** SigLevDetDdr::processSamples */
 
 
 
-/*
+/**
  * This file has not been truncated
  */
 

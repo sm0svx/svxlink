@@ -48,11 +48,16 @@ set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 # Configuration file names
 #
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
+<<<<<<< HEAD
+set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
+set cfg_relative_home ".svxlink/TclVoiceMail.conf";
+=======
 set cfg_home ""
 if {[info exists ::env(HOME)]} {
   set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 }
 
+>>>>>>> refs/remotes/sm0svx/master
 
 #
 # Default maximum recording times. Set them from config variables if
@@ -60,7 +65,6 @@ if {[info exists ::env(HOME)]} {
 #
 set max_subj_time 10000
 set max_mesg_time 120000
-
 
 #
 # A convenience function for printing out information prefixed by the
@@ -73,7 +77,6 @@ proc printInfo {msg} {
   puts "$module_name: $msg";
 }
 
-
 #
 # A convenience function for calling an event handler
 #
@@ -84,10 +87,17 @@ proc processEvent {ev} {
   ::processEvent "$module_name" "$ev"
 }
 
-
 #
 # Read configuration file
 #
+<<<<<<< HEAD
+if {[info exists env(HOME)] && [file exists env(HOME)/$cfg_relative_home]} {
+  source env(HOME)/$cfg_relative_home;
+} elseif [file exists $cfg_etc] {
+  source $cfg_etc;
+} else {
+  printInfo "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \$HOME/\"$cfg_relative_home\" and \"$cfg_etc\"";
+=======
 if {$cfg_home != "" && [file exists $cfg_home]} {
   source $cfg_home;
 } elseif [file exists $cfg_etc] {
@@ -99,9 +109,9 @@ if {$cfg_home != "" && [file exists $cfg_home]} {
   }
   set info_str "$info_str \"$cfg_etc\""
   printInfo "$info_str"
+>>>>>>> refs/remotes/sm0svx/master
   exit 1;
 }
-
 
 #
 # Check if the spool directory is writable
@@ -110,7 +120,6 @@ if {[file writable $recdir] != 1} {
   printInfo "*** ERROR: The spool directory ($recdir) is not writable by the current user or does not exist.";
   exit 1;
 }
-
 
 #
 # Read the specified user configuration variable for the specified user ID
@@ -128,14 +137,12 @@ proc id2var {id var} {
   }
 }
 
-
 #
 # Executed when this module is being activated
 #
 proc activateInit {} {
   setState "login"
 }
-
 
 #
 # Executed when this module is being deactivated.
@@ -147,7 +154,6 @@ proc deactivateCleanup {} {
   setState "idle"
 }
 
-
 #
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
@@ -156,7 +162,6 @@ proc deactivateCleanup {} {
 #
 proc dtmfDigitReceived {char duration} {
 }
-
 
 #
 # Executed when a DTMF command is received
@@ -191,7 +196,6 @@ proc dtmfCmdReceived {cmd} {
   }
 }
 
-
 #
 # Executed when a DTMF command is received in idle mode. That is, a command is
 # received when this module has not been activated first.
@@ -212,7 +216,6 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
   set msg_cnt [llength $subjects];
   processEvent "idle_announce_num_new_messages_for $call $msg_cnt"
 }
-
 
 #
 # Executed when the squelch open or close.
@@ -275,7 +278,6 @@ proc squelchOpen {is_open} {
   }
 }
 
-
 #
 # Executed when all announcement messages has been played.
 # Note that this function also may be called even if it wasn't this module
@@ -283,7 +285,6 @@ proc squelchOpen {is_open} {
 #
 proc allMsgsWritten {} {
 }
-
 
 #
 # Set a new state
@@ -293,7 +294,6 @@ proc allMsgsWritten {} {
 proc setState {new_state} {
   variable state $new_state
 }
-
 
 #
 # State "login" command handler
@@ -333,7 +333,6 @@ proc cmdLogin {cmd} {
     processEvent "login_failed_unknown_userid $userid"
   }
 }
-
 
 #
 # State "play next message" command handler
@@ -388,7 +387,6 @@ proc cmdPlayNextNewMessage {cmd} {
   }
 }
 
-
 #
 # Abort the current recording. If no recording is active nothing is done.
 #
@@ -409,7 +407,6 @@ proc abortRecording {} {
     set rec_rcpt "";
   }
 }
-
 
 #
 # State "record message" command handler
@@ -458,10 +455,8 @@ proc cmdRecordMessage {cmd} {
   }
 }
 
-
 # end of namespace
 }
-
 
 #
 # This file has not been truncated

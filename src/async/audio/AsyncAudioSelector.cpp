@@ -25,60 +25,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioPassthrough.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioSelector.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class Async::AudioSelector::Branch : public AudioPassthrough
 {
   public:
@@ -143,15 +116,13 @@ class Async::AudioSelector::Branch : public AudioPassthrough
       }
       AudioPassthrough::allSamplesFlushed();
     }
-    
-  
+
   private:
     AudioSelector *selector;
     bool auto_select;
     int prio;
     
-}; /* class Async::AudioSelector::Branch */
-
+}; /** class Async::AudioSelector::Branch */
 
 class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
 {
@@ -165,48 +136,27 @@ class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
 
 };
 
-
-
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioSelector::AudioSelector(void)
 {
   null_branch = new NullBranch(this);
   null_branch->setSelectionPrio(-100000);
   setHandler(null_branch);
-} /* AudioSelector::AudioSelector */
-
+} /** AudioSelector::AudioSelector */
 
 AudioSelector::~AudioSelector(void)
 {
@@ -218,8 +168,7 @@ AudioSelector::~AudioSelector(void)
     delete (*it).second;
   }
   delete null_branch;
-} /* AudioSelector::~AudioSelector */
-
+} /** AudioSelector::~AudioSelector */
 
 void AudioSelector::addSource(Async::AudioSource *source)
 {
@@ -227,8 +176,7 @@ void AudioSelector::addSource(Async::AudioSource *source)
   Branch *branch = new Branch(this, source);
   source->registerSink(branch);
   branch_map[source] = branch;
-} /* AudioSelector::addSource */
-
+} /** AudioSelector::addSource */
 
 void AudioSelector::removeSource(AudioSource *source)
 {
@@ -243,16 +191,14 @@ void AudioSelector::removeSource(AudioSource *source)
   assert(branch_map.find(source) == branch_map.end());
   delete branch;
   
-} /* AudioSelector::removeSource */
-
+} /** AudioSelector::removeSource */
 
 void AudioSelector::setSelectionPrio(AudioSource *source, int prio)
 {
   assert(branch_map.find(source) != branch_map.end());
   Branch *branch = branch_map[source];
   branch->setSelectionPrio(prio);
-} /* AudioSelector::setAutoSelectPrio */
-
+} /** AudioSelector::setAutoSelectPrio */
 
 void AudioSelector::enableAutoSelect(AudioSource *source, int prio)
 {
@@ -260,24 +206,21 @@ void AudioSelector::enableAutoSelect(AudioSource *source, int prio)
   Branch *branch = branch_map[source];
   branch->setSelectionPrio(prio);
   branch->enableAutoSelect();
-} /* AudioSelector::enableAutoSelect */
-
+} /** AudioSelector::enableAutoSelect */
 
 void AudioSelector::disableAutoSelect(AudioSource *source)
 {
   assert(branch_map.find(source) != branch_map.end());
   Branch *branch = branch_map[source];
   branch->disableAutoSelect();
-} /* AudioSelector::disableAutoSelect */
-
+} /** AudioSelector::disableAutoSelect */
 
 bool AudioSelector::autoSelectEnabled(AudioSource *source)
 {
   assert(branch_map.find(source) != branch_map.end());
   const Branch *branch = branch_map[source];
   return branch->autoSelectEnabled();
-} /* AudioSelector::autoSelectEnabled */
-
+} /** AudioSelector::autoSelectEnabled */
 
 void AudioSelector::selectSource(AudioSource *source)
 {
@@ -296,24 +239,15 @@ void AudioSelector::selectSource(AudioSource *source)
   
   selectBranch(branch);
   
-} /* AudioSelector::selectSource */
+} /** AudioSelector::selectSource */
 
+/**
+ * * Protected member functions
+ */
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void AudioSelector::selectBranch(Branch *branch)
 {
   //printf("AudioSelector::selectBranch: branch=%p\n", branch);
@@ -328,10 +262,8 @@ void AudioSelector::selectBranch(Branch *branch)
   
   setHandler(branch);
 
-} /* AudioSelector::selectBranch */
+} /** AudioSelector::selectBranch */
 
-
-
-/*
+/**
  * This file has not been truncated
  */

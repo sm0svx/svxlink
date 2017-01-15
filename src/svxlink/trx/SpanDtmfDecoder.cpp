@@ -24,15 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <algorithm>
 
@@ -41,50 +35,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdint.h>
 #include <spandsp.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SpanDtmfDecoder.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace SigC;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
 class SpanDtmfDecoder::PrivateData
 {
@@ -93,50 +66,31 @@ class SpanDtmfDecoder::PrivateData
     
 };
 
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 SpanDtmfDecoder::SpanDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), last_detected_digit('?'), active_sample_cnt(0),
     hang_sample_cnt(0), state(STATE_IDLE)
 {
-} /* SpanDtmfDecoder::SpanDtmfDecoder */
-
+} /** SpanDtmfDecoder::SpanDtmfDecoder */
 
 SpanDtmfDecoder::~SpanDtmfDecoder(void)
 {
   delete p;
-} /* SpanDtmfDecoder::~SpanDtmfDecoder */
-
+} /** SpanDtmfDecoder::~SpanDtmfDecoder */
 
 bool SpanDtmfDecoder::initialize(void)
 {
@@ -172,8 +126,7 @@ bool SpanDtmfDecoder::initialize(void)
   
   return true;
   
-} /* SpanDtmfDecoder::initialize */
-
+} /** SpanDtmfDecoder::initialize */
 
 int SpanDtmfDecoder::writeSamples(const float *buf, int len)
 {
@@ -220,27 +173,16 @@ int SpanDtmfDecoder::writeSamples(const float *buf, int len)
   
   return len - samples_left;
   
-} /* SpanDtmfDecoder::processSamples */
+} /** SpanDtmfDecoder::processSamples */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
-
-/*
+ */
+/**
  *----------------------------------------------------------------------------
  * Method:    SpanDtmfDecoder::toneReportCb
  * Purpose:   Static callback method called when a DTMF digit is activated
@@ -260,10 +202,9 @@ void SpanDtmfDecoder::toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS)
   SpanDtmfDecoder *dtmf_dec = reinterpret_cast<SpanDtmfDecoder*>(user_data);
   assert(dtmf_dec != 0);
   dtmf_dec->toneReport(code);
-} /* SpanDtmfDecoder::toneReport */
+} /** SpanDtmfDecoder::toneReport */
 
-
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    SpanDtmfDecoder::toneReport
  * Purpose:   Callback method called by the static callback method when a
@@ -315,11 +256,9 @@ void SpanDtmfDecoder::toneReport(int code)
       state = STATE_HANG;
     }
   }
-} /* SpanDtmfDecoder::toneReport */
+} /** SpanDtmfDecoder::toneReport */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,85 +23,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SIG_LEV_DET_SIM_INCLUDED
 #define SIG_LEV_DET_SIM_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <deque>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SigLevDet.h"
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A simulated signal level detector
 @author Tobias Blomberg / SM0SVX
@@ -178,7 +139,6 @@ class SigLevDetSim : public SigLevDet
     virtual int writeSamples(const float *samples, int count);
     virtual void flushSamples(void) {}
 
-
   private:
     static const unsigned BLOCK_LENGTH    = 10;  // 10ms
     static unsigned int   next_seed;
@@ -205,16 +165,11 @@ class SigLevDetSim : public SigLevDet
     void randNewSiglev(void);
     void toggleSiglev(void);
     
-};  /* class SigLevDetSim */
+};  /** class SigLevDetSim */
 
+#endif /** SIG_LEV_DET_SIM_INCLUDED */
 
-//} /* namespace */
-
-#endif /* SIG_LEV_DET_SIM_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -23,85 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef FACTORY_INCLUDED
 #define FACTORY_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <map>
 #include <string>
 #include <sstream>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	Base class for an object factory
 @author Tobias Blomberg / SM0SVX
@@ -135,7 +98,7 @@ class FactoryBase
       }
 
       return (*it).second->createObject();
-    } /* Factory::createNamedObject */
+    } /** Factory::createNamedObject */
 
     /**
      * @brief 	Get a list of valid class names
@@ -162,7 +125,7 @@ class FactoryBase
       typename FactoryMap::iterator it = factories.find(m_name);
       assert(it == factories.end());
       factories[name] = this;
-    } /* Factory::Factory */
+    } /** Factory::Factory */
 
     /**
      * @brief 	Destructor
@@ -172,7 +135,7 @@ class FactoryBase
       typename FactoryMap::iterator it = factories.find(m_name);
       assert(it != factories.end());
       factories.erase(it);
-    } /* Factory::~Factory */
+    } /** Factory::~Factory */
     
   protected:
     /**
@@ -189,12 +152,10 @@ class FactoryBase
     FactoryBase(const FactoryBase<T>&);
     FactoryBase& operator=(const FactoryBase<T>&);
     
-};  /* class FactoryBase */
-
+};  /** class FactoryBase */
 
 template <class T>
 typename FactoryBase<T>::FactoryMap FactoryBase<T>::factories;
-
 
 /**
 @brief	Base class for a specific object factory
@@ -240,13 +201,8 @@ class Factory : public FactoryT
     }
 };
 
+#endif /** FACTORY_INCLUDED */
 
-//} /* namespace */
-
-#endif /* FACTORY_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

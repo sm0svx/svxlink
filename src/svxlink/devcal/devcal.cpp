@@ -24,12 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <unistd.h>
 #include <signal.h>
 #include <popt.h>
@@ -43,13 +40,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iterator>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
 #include <AsyncAudioSplitter.h>
@@ -59,13 +52,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <common.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/DEVCAL.h"
 #if 0
 #include "../trx/Ptt.h"
@@ -75,22 +64,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "../trx/RtlSdr.h"
 #include "../trx/Ddr.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
 #define PROGRAM_NAME          "devcal"
 #define DEFAULT_MOD_FQS       "1000.0"
@@ -98,13 +80,9 @@ using namespace Async;
 #define DEFAULT_CALDEV        2404.8f
 #define DEFAULT_MAXDEV        5000.0f
 
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class SineGenerator : public Async::AudioSource
 {
   public:
@@ -205,7 +183,6 @@ class SineGenerator : public Async::AudioSource
     
 };
 
-
 class Window
 {
   public:
@@ -243,7 +220,6 @@ class Window
     float *w;
 };
 
-
 class FlatTopWindow : public Window
 {
   public:
@@ -269,7 +245,6 @@ class FlatTopWindow : public Window
       }
     }
 };
-
 
 class DevPrinter : public AudioSink
 {
@@ -395,7 +370,6 @@ class DevPrinter : public AudioSink
     double        carrier_fq;
 };
 
-
 class DevMeasure : public sigc::trackable
 {
   public:
@@ -433,25 +407,16 @@ class DevMeasure : public sigc::trackable
     unsigned      samp_rate;
 };
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
-
+ */
 static void parse_arguments(int argc, const char **argv);
 static void stdin_handler(FdWatch *w);
 static void sigterm_handler(int signal);
 
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 static const char *mod_fqs_str = DEFAULT_MOD_FQS;
 static float headroom_db = DEFAULT_HEADROOM_DB;
 static float caldev = DEFAULT_CALDEV;
@@ -473,18 +438,13 @@ static vector<float> mod_fqs;
 static const char *audio_dev = "alsa:default";
 static const unsigned audio_ch = 0;
 
-
-
-/****************************************************************************
- *
+/*
  * MAIN
- *
- ****************************************************************************/
-
+ */
 int main(int argc, const char *argv[])
 {
   cout << PROGRAM_NAME " v" DEVCAL_VERSION
-          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you\n";
   cout << "are welcome to redistribute it in accordance with the "
@@ -692,14 +652,9 @@ int main(int argc, const char *argv[])
   return 0;
 }
 
-
-
-/****************************************************************************
- *
+/*
  * Functions
- *
- ****************************************************************************/
-
+ */
 /*
  *----------------------------------------------------------------------------
  * Function:  parse_arguments
@@ -829,7 +784,6 @@ static void parse_arguments(int argc, const char **argv)
 
 } /* parse_arguments */
 
-
 static void stdin_handler(FdWatch *w)
 {
   char buf[1];
@@ -928,7 +882,6 @@ static void stdin_handler(FdWatch *w)
   }
 } /* stdin_handler */
 
-
 static void sigterm_handler(int signal)
 {
   const char *signame = 0;
@@ -950,7 +903,6 @@ static void sigterm_handler(int signal)
   cout << msg;
   Application::app().quit();
 } /* sigterm_handler */
-
 
 /*
  * This file has not been truncated

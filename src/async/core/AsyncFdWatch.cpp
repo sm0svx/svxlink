@@ -9,7 +9,7 @@ file descriptor, a signal is emitted.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2017 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,104 +27,60 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncApplication.h"
 #include "AsyncFdWatch.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 FdWatch::FdWatch(void)
   : m_fd(-1), m_type(FD_WATCH_RD), m_enabled(false)
 {
-} /* FdWatch::FdWatch */
-
+} /** FdWatch::FdWatch */
 
 FdWatch::FdWatch(int fd, FdWatchType type)
   : m_fd(fd), m_type(type), m_enabled(true)
 {
   Application::app().addFdWatch(this);
-} /* FdWatch::FdWatch */
-
+} /** FdWatch::FdWatch */
 
 FdWatch::~FdWatch(void)
 {
@@ -132,8 +88,7 @@ FdWatch::~FdWatch(void)
   {
     Application::app().delFdWatch(this);
   }
-} /* FdWatch::~FdWatch */
-
+} /** FdWatch::~FdWatch */
 
 void FdWatch::setEnabled(bool enabled)
 {
@@ -148,8 +103,7 @@ void FdWatch::setEnabled(bool enabled)
     Application::app().delFdWatch(this);
     m_enabled = enabled;
   }
-} /* FdWatch::setEnabled */
-
+} /** FdWatch::setEnabled */
 
 void FdWatch::setFd(int fd, FdWatchType type)
 {
@@ -158,26 +112,16 @@ void FdWatch::setFd(int fd, FdWatchType type)
   m_fd = fd;
   m_type = type;
   setEnabled(was_enabled);
-} /* FdWatch::setFd */
+} /** FdWatch::setFd */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/*
+/**
  * This file has not been truncated
  */

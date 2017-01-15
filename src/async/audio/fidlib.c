@@ -207,7 +207,6 @@
 //	project settings, or add /D "T_MSVC" to the compiler
 //	command-line.)
 //
-
 #ifndef T_LINUX
 #ifndef T_MINGW
 #ifndef T_MSVC
@@ -215,7 +214,6 @@
 #endif
 #endif
 #endif
-
 
 //
 //	Select which method of filter execution is preferred.
@@ -225,7 +223,6 @@
 //	  RF_CMDLIST  -- faster pre-compiled code
 //	  RF_JIT      -- fastest JIT run-time generated code (no longer supported)
 //
-
 #ifndef RF_COMBINED
 #ifndef RF_CMDLIST
 #ifndef RF_JIT
@@ -239,7 +236,6 @@
 //
 //	Includes
 //
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -278,7 +274,6 @@ extern FidFilter *mkfilter(char *, ...);
     return log(val + sqrt(val*val + 1.0));
  }
 #endif
-
 
 //
 //	Support code

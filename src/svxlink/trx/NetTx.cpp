@@ -24,99 +24,58 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioEncoder.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "NetTx.h"
 #include "NetTrxMsg.h"
 #include "NetTrxTcpClient.h"
 
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace NetTrxMsg;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
+ */
 
 NetTx::NetTx(Config &cfg, const string& name)
   : cfg(cfg), name(name), tcp_con(0), log_disconnects_once(false),
@@ -126,7 +85,6 @@ NetTx::NetTx(Config &cfg, const string& name)
 {
 } /* NetTx::NetTx */
 
-
 NetTx::~NetTx(void)
 {
   clearHandler();
@@ -134,7 +92,6 @@ NetTx::~NetTx(void)
   delete pacer;
   tcp_con->deleteInstance();
 } /* NetTx::~NetTx */
-
 
 bool NetTx::initialize(void)
 {
@@ -206,8 +163,7 @@ bool NetTx::initialize(void)
   
   return true;
   
-} /* NetTx:initialize */
-
+} /** NetTx:initialize */
 
 void NetTx::setTxCtrlMode(TxCtrlMode mode)
 {
@@ -231,46 +187,33 @@ void NetTx::setTxCtrlMode(TxCtrlMode mode)
 	break;
     }
   }
-} /* NetTx::setTxCtrlMode */
-
+} /** NetTx::setTxCtrlMode */
 
 bool NetTx::isTransmitting(void) const
 {
   return is_transmitting;
-} /* NetTx::isTransmitting */
-
+} /** NetTx::isTransmitting */
 
 void NetTx::enableCtcss(bool enable)
 {
   ctcss_enable = enable;
   MsgEnableCtcss *msg = new MsgEnableCtcss(enable);
   sendMsg(msg);
-} /* NetTx::enableCtcss */
-
+} /** NetTx::enableCtcss */
 
 void NetTx::sendDtmf(const std::string& digits)
 {
   MsgSendDtmf *msg = new MsgSendDtmf(digits);
   sendMsg(msg);
-} /* NetTx::sendDtmf */
+} /** NetTx::sendDtmf */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void NetTx::connectionReady(bool is_ready)
 {
   if (is_ready)
@@ -325,7 +268,6 @@ void NetTx::connectionReady(bool is_ready)
   }
 }
 
-
 void NetTx::handleMsg(Msg *msg)
 {
   switch (msg->type())
@@ -350,7 +292,7 @@ void NetTx::handleMsg(Msg *msg)
       break;
     }
     
-    /*
+    /**
     default:
       cerr << name << ": *** ERROR: Unknown TCP message received. Type="
       	   << msg->type() << ", Size=" << msg->size() << endl;
@@ -360,12 +302,10 @@ void NetTx::handleMsg(Msg *msg)
   
 } /* NetTx::handleMsg */
 
-
 void NetTx::sendMsg(Msg *msg)
 {
   tcp_con->sendMsg(msg);
-} /* NetUplink::sendMsg */
-
+} /** NetUplink::sendMsg */
 
 void NetTx::writeEncodedSamples(const void *buf, int size)
 {
@@ -394,7 +334,6 @@ void NetTx::writeEncodedSamples(const void *buf, int size)
   }
 } /* NetTx::writeEncodedSamples */
 
-
 void NetTx::flushEncodedSamples(void)
 {
   if (is_connected)
@@ -409,7 +348,6 @@ void NetTx::flushEncodedSamples(void)
   }
 } /* NetTx::flushSamples */
 
-
 void NetTx::setIsTransmitting(bool is_transmitting)
 {
   if (is_transmitting != this->is_transmitting)
@@ -420,7 +358,6 @@ void NetTx::setIsTransmitting(bool is_transmitting)
     transmitterStateChange(is_transmitting);
   }
 } /* NetTx::setIsTransmitting */
-
 
 void NetTx::allEncodedSamplesFlushed(void)
 {
@@ -434,9 +371,7 @@ void NetTx::allEncodedSamplesFlushed(void)
   }
 } /* NetTx::allEncodedSamplesFlushed */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

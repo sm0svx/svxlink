@@ -26,89 +26,51 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef FILE_READER_INCLUDED
 #define FILE_READER_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <unistd.h>
 
 #include <string>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class FdWatch;
   
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 class FileReader : public sigc::trackable
 {
   public:
@@ -134,7 +96,7 @@ class FileReader : public sigc::trackable
       * @return  Return \em true on success or else \em false on failue.
       */
     bool open(const std::string& name);
-    
+
     /**
       * @brief   Close a previously opened file
       * @return  Return \em true on success or else \em false on failue.
@@ -148,7 +110,7 @@ class FileReader : public sigc::trackable
      *          was already closed.
      */
     bool isOpen(void) const { return (fd != -1); }
-    
+
     /**
       * @brief   Read data from a previously opened file
       * @param   buf  A read target data buffer
@@ -158,7 +120,6 @@ class FileReader : public sigc::trackable
       */
     int read(void *buf, int len);
 
-      
   private:
     int     fd;
     FdWatch *rd_watch;
@@ -167,21 +128,18 @@ class FileReader : public sigc::trackable
     int     buf_size;
     bool    is_full;
     bool    is_eof;
-    
+
     void onDataAvail(FdWatch *watch);
     bool fillBuffer(void);
     int bytesInBuffer(void) const;
-    
-};  /* class FileReader */
 
+};  /** class FileReader */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* FILE_READER_INCLUDED */
+#endif /** FILE_READER_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

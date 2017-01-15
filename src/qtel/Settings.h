@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,17 +23,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SETTINGS_INCLUDED
 #define SETTINGS_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <QStringList>
@@ -42,102 +37,34 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QList>
 #undef emit
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 class SettingsDialog;
 
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
-/*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
  */
 
-
 /*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
-
-
-/****************************************************************************
- *
  * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Class definitions
- *
- ****************************************************************************/
+ */
 
 /*
- *----------------------------------------------------------------------------
- * Class:     Settings
- * Purpose:   Settings class
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */   
+ * Class definitions
+ */
 class Settings : public sigc::trackable
 {
   public:
@@ -255,12 +182,7 @@ class Settings : public sigc::trackable
     
 };  /* class Settings */
 
-
-//} /* namespace */
-
 #endif /* SETTINGS_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,89 +23,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_PTY_INCLUDED
 #define ASYNC_PTY_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <unistd.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class FdWatch;
-  
 
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A wrapper class for using a PTY
 @author Tobias Blomberg / SM0SVX
@@ -186,9 +149,9 @@ class Pty : public sigc::trackable
      * @param   count The number of bytes in the buffer
      */
     sigc::signal<void, const void*, size_t> dataReceived;
-    
+
   protected:
-    
+
   private:
     static const int POLLHUP_CHECK_INTERVAL = 100;
 
@@ -204,15 +167,12 @@ class Pty : public sigc::trackable
     short pollMaster(void);
     void checkIfSlaveEndOpen(void);
 
-};  /* class Pty */
+};  /** class Pty */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_PTY_INCLUDED */
 
-#endif /* ASYNC_PTY_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

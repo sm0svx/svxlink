@@ -8,7 +8,7 @@ This file contains an object that handles the playback of audio clips.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,14 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -51,53 +46,29 @@ extern "C" {
 #include <iostream>
 #include <cstring>
 
-
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "MsgHandler.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 //#define WRITE_BLOCK_SIZE    4*160
 #define WRITE_BLOCK_SIZE    256
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class QueueItem
 {
   public:
@@ -149,10 +120,16 @@ class ToneQueueItem : public QueueItem
 class DtmfQueueItem : public QueueItem
 {
   public:
+<<<<<<< HEAD
+    DtmfQueueItem(int fqh, int fql, int amp, int len, int sample_rate, bool idle_marked)
+      : QueueItem(idle_marked), fqh(fqh), fql(fql), amp(amp),
+      	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
+=======
     DtmfQueueItem(int fqh, int fql, int amp, int len, int sample_rate,
                   bool idle_marked)
       : QueueItem(idle_marked), fqh(fqh), fql(fql), amp(amp),
         tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
+>>>>>>> refs/remotes/sm0svx/master
     int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
@@ -163,7 +140,11 @@ class DtmfQueueItem : public QueueItem
     int tone_len;
     int pos;
     int sample_rate;
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> refs/remotes/sm0svx/master
 };
 
 class RawFileQueueItem : public QueueItem
@@ -238,39 +219,21 @@ class WavFileQueueItem : public QueueItem
     int read16bitValue(unsigned char *ptr, uint16_t *val);
 };
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
     current(0), is_writing_message(false), non_idle_cnt(0)
@@ -278,12 +241,10 @@ MsgHandler::MsgHandler(int sample_rate)
   
 }
 
-
 MsgHandler::~MsgHandler(void)
 {
   clearP();
 } /* MsgHandler::~MsgHandler */
-
 
 void MsgHandler::playFile(const string& path, bool idle_marked)
 {
@@ -304,13 +265,11 @@ void MsgHandler::playFile(const string& path, bool idle_marked)
   addItemToQueue(item);
 } /* MsgHandler::playFile */
 
-
 void MsgHandler::playSilence(int length, bool idle_marked)
 {
   QueueItem *item = new SilenceQueueItem(length, sample_rate, idle_marked);
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
-
 
 void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
 {
@@ -351,13 +310,44 @@ void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
   }
 } /* MsgHandler::playDtmf */
 
+void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
+{
+  static map<char, pair<int, int> > tone_map;
+  tone_map['1'] = pair<int, int>(697, 1209);
+  tone_map['2'] = pair<int, int>(697, 1336);
+  tone_map['3'] = pair<int, int>(697, 1477);
+  tone_map['A'] = pair<int, int>(697, 1633);
+  tone_map['4'] = pair<int, int>(770, 1209);
+  tone_map['5'] = pair<int, int>(770, 1336);
+  tone_map['6'] = pair<int, int>(770, 1477);
+  tone_map['B'] = pair<int, int>(770, 1633);
+  tone_map['7'] = pair<int, int>(852, 1209);
+  tone_map['8'] = pair<int, int>(852, 1336);
+  tone_map['9'] = pair<int, int>(852, 1477);
+  tone_map['C'] = pair<int, int>(852, 1633);
+  tone_map['*'] = pair<int, int>(941, 1209);
+  tone_map['0'] = pair<int, int>(941, 1336);
+  tone_map['#'] = pair<int, int>(941, 1477);
+  tone_map['D'] = pair<int, int>(941, 1633);
+  
+  int fql = tone_map[digit].first;
+  int fqh = tone_map[digit].second;
+  
+  QueueItem *item;
+  
+  if (fql > 0)
+  {
+    item = new DtmfQueueItem(fqh, fql, amp, length, sample_rate,
+      	      	      	      	      idle_marked);
+    addItemToQueue(item);
+  }
+} /* MsgHandler::playSilence */
 
 void MsgHandler::clear(void)
 {
   clearP();
   sinkFlushSamples();
 } /* MsgHandler::clear */
-
 
 void MsgHandler::begin(void)
 {
@@ -368,7 +358,6 @@ void MsgHandler::begin(void)
   }
   ++nesting_level;
 } /* MsgHandler::begin */
-
 
 void MsgHandler::end(void)
 {
@@ -391,7 +380,6 @@ void MsgHandler::end(void)
   }
 } /* MsgHandler::end */
 
-
 void MsgHandler::resumeOutput(void)
 {
   if (current != 0)
@@ -400,15 +388,9 @@ void MsgHandler::resumeOutput(void)
   }
 } /* MsgHandler::resumeOutput */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
-
+ */
 void MsgHandler::allSamplesFlushed(void)
 {
   //printf("MsgHandler::allSamplesFlushed\n");
@@ -416,15 +398,9 @@ void MsgHandler::allSamplesFlushed(void)
   allMsgsWritten();
 } /* MsgHandler::allSamplesFlushed */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Private member functions for class MsgHandler
- *
- ****************************************************************************/
-
+ */
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
   is_writing_message = true;
@@ -438,7 +414,6 @@ void MsgHandler::addItemToQueue(QueueItem *item)
     playMsg();
   }
 } /* MsgHandler::addItemToQueue */
-
 
 void MsgHandler::playMsg(void)
 {
@@ -472,7 +447,6 @@ void MsgHandler::playMsg(void)
     writeSamples();
   }
 } /* MsgHandler::playMsg */
-
 
 void MsgHandler::writeSamples(void)
 {
@@ -513,7 +487,6 @@ void MsgHandler::writeSamples(void)
     playMsg();
 } /* MsgHandler::writeSamples */
 
-
 void MsgHandler::deleteQueueItem(QueueItem *item)
 {
   if (item == 0)
@@ -527,7 +500,6 @@ void MsgHandler::deleteQueueItem(QueueItem *item)
   }
   delete item;
 } /* MsgHandler::deleteQueueItem */
-
 
 void MsgHandler::clearP(void)
 {
@@ -545,13 +517,9 @@ void MsgHandler::clearP(void)
   msg_queue.clear();
 } /* MsgHandler::clearP */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions for class FileQueueItem
- *
- ****************************************************************************/
+ */
 
 RawFileQueueItem::~RawFileQueueItem(void)
 {
@@ -577,7 +545,6 @@ bool RawFileQueueItem::initialize(void)
   
 } /* RawFileQueueItem::initialize */
 
-
 int RawFileQueueItem::readSamples(float *samples, int len)
 {
   short buf[len];
@@ -601,7 +568,6 @@ int RawFileQueueItem::readSamples(float *samples, int len)
   
 } /* RawFileQueueItem::readSamples */
 
-
 void RawFileQueueItem::unreadSamples(int len)
 {
   if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
@@ -610,13 +576,9 @@ void RawFileQueueItem::unreadSamples(int len)
   }
 } /* RawFileQueueItem::unreadSamples */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions for class GsmFileQueueItem
- *
- ****************************************************************************/
+ */
 
 GsmFileQueueItem::~GsmFileQueueItem(void)
 {
@@ -630,7 +592,6 @@ GsmFileQueueItem::~GsmFileQueueItem(void)
     ::close(file);
   }
 } /* GsmFileQueueItem::~FileQueueItem */
-
 
 bool GsmFileQueueItem::initialize(void)
 {
@@ -652,7 +613,6 @@ bool GsmFileQueueItem::initialize(void)
   return true;
   
 } /* GsmFileQueueItem::initialize */
-
 
 int GsmFileQueueItem::readSamples(float *samples, int len)
 {
@@ -697,7 +657,6 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
   
 } /* GsmFileQueueItem::readSamples */
 
-
 void GsmFileQueueItem::unreadSamples(int len)
 {
   //cout << "GsmFileQueueItem::unreadSamples(" << len << ")\n";
@@ -714,13 +673,9 @@ void GsmFileQueueItem::unreadSamples(int len)
   
 } /* GsmFileQueueItem::unreadSamples */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions for class WavFileQueueItem
- *
- ****************************************************************************/
+ */
 
 WavFileQueueItem::~WavFileQueueItem(void)
 {
@@ -729,7 +684,6 @@ WavFileQueueItem::~WavFileQueueItem(void)
     ::close(file);
   }
 } /* RawFileQueueItem::~FileQueueItem */
-
 
 bool WavFileQueueItem::initialize(void)
 {
@@ -853,7 +807,6 @@ bool WavFileQueueItem::initialize(void)
   
 } /* WavFileQueueItem::initialize */
 
-
 int WavFileQueueItem::readSamples(float *samples, int len)
 {
   short buf[len];
@@ -877,7 +830,6 @@ int WavFileQueueItem::readSamples(float *samples, int len)
   
 } /* WavFileQueueItem::readSamples */
 
-
 void WavFileQueueItem::unreadSamples(int len)
 {
   if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
@@ -886,13 +838,11 @@ void WavFileQueueItem::unreadSamples(int len)
   }
 } /* WavFileQueueItem::unreadSamples */
 
-
 int WavFileQueueItem::read32bitValue(unsigned char *ptr, uint32_t *val)
 {
   *val = ptr[0] + (ptr[1] << 8) + (ptr[2] << 16) + (ptr[3] << 24);
   return 4;
 } /* WavFileQueueItem::read32bitValue */
-
 
 int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
 {
@@ -900,14 +850,9 @@ int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
   return 2;
 } /* WavFileQueueItem::read16bitValue */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions for class SilenceQueueItem
- *
- ****************************************************************************/
-
+ */
 int SilenceQueueItem::readSamples(float *samples, int len)
 {
   assert(silence_left != -1);
@@ -927,19 +872,21 @@ int SilenceQueueItem::readSamples(float *samples, int len)
   
 } /* SilenceQueueItem::readSamples */
 
-
 void SilenceQueueItem::unreadSamples(int len)
 {
   silence_left += len;
 } /* SilenceQueueItem::unreadSamples */
 
+<<<<<<< HEAD
+/*
+=======
 
 
 /****************************************************************************
  *
+>>>>>>> refs/remotes/sm0svx/master
  * Private member functions for class ToneQueueItem
- *
- ****************************************************************************/
+ */
 
 int ToneQueueItem::readSamples(float *samples, int len)
 {
@@ -954,14 +901,31 @@ int ToneQueueItem::readSamples(float *samples, int len)
   
 } /* ToneQueueItem::readSamples */
 
-
 void ToneQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* ToneQueueItem::unreadSamples */
 
+/**
+ * Private member functions for class DtmfQueueItem
+ */
 
+int DtmfQueueItem::readSamples(float *samples, int len)
+{  
+  int read_cnt = min(len, tone_len-pos);
+  for (int i=0; i<read_cnt; ++i)
+  {
+    samples[i] = amp / 1000.0 * (
+                sin(2 * M_PI * fqh * pos / sample_rate) +
+                sin(2 * M_PI * fql * pos / sample_rate));
+    ++pos;
+  }
+  
+  return read_cnt;
+} /* DtmfQueueItem::readSamples */
 
+<<<<<<< HEAD
+=======
 /****************************************************************************
  *
  * Private member functions for class DtmfQueueItem
@@ -983,12 +947,16 @@ int DtmfQueueItem::readSamples(float *samples, int len)
 } /* DtmfQueueItem::readSamples */
 
 
+>>>>>>> refs/remotes/sm0svx/master
 void DtmfQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* DtmfQueueItem::unreadSamples */
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> refs/remotes/sm0svx/master
 
 /*
  * This file has not been truncated

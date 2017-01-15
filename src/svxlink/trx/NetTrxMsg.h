@@ -23,18 +23,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef NET_TRX_MSG_INCLUDED
 #define NET_TRX_MSG_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -43,75 +37,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <gcrypt.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <Tx.h>
 #include <Rx.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace NetTrxMsg
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define NET_TRX_DEFAULT_TCP_PORT   "5210"
 #define NET_TRX_DEFAULT_UDP_PORT   NET_TRX_DEFAULT_TCP_PORT
 
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 #pragma pack(push, 1)
 
 /**
@@ -161,11 +123,10 @@ class Msg
     Msg(const Msg&);
     Msg& operator=(const Msg&);
     
-};  /* class Msg */
+};  /** class Msg */
 
 
-
-/************************** Administrative Messages **************************/
+/** Administrative Messages */
 
 class MsgProtoVer : public Msg
 {
@@ -183,8 +144,7 @@ class MsgProtoVer : public Msg
     uint16_t m_major;
     uint16_t m_minor;
     
-}; /* MsgProtoVer */
-
+}; /** MsgProtoVer */
 
 class MsgHeartbeat : public Msg
 {
@@ -192,8 +152,7 @@ class MsgHeartbeat : public Msg
     static const unsigned TYPE = 1;
     MsgHeartbeat(void) : Msg(TYPE, sizeof(MsgHeartbeat)) {}
     
-};  /* MsgHeartbeat */
-
+};  /** MsgHeartbeat */
 
 class MsgAuthChallenge : public Msg
 {
@@ -211,8 +170,7 @@ class MsgAuthChallenge : public Msg
   private:
     unsigned char m_challenge[CHALLENGE_LEN];
     
-}; /* MsgAuthChallenge */
-
+}; /** MsgAuthChallenge */
 
 class MsgAuthResponse : public Msg
 {
@@ -264,8 +222,7 @@ class MsgAuthResponse : public Msg
         return false;
     }
     
-}; /* MsgAuthResponse */
-
+}; /** MsgAuthResponse */
 
 class MsgAuthOk : public Msg
 {
@@ -273,14 +230,9 @@ class MsgAuthOk : public Msg
     static const unsigned TYPE = 12;
     MsgAuthOk(void) : Msg(TYPE, sizeof(MsgAuthOk)) {}
     
-};  /* MsgAuthOk */
+};  /** MsgAuthOk */
 
-
-
-
-
-/****************************** Common Messages *****************************/
-
+/** Common Messages */
 class MsgAudioCodecSelect : public Msg
 {
   public:
@@ -380,8 +332,7 @@ class MsgAudioCodecSelect : public Msg
     uint8_t m_option_cnt;
     char    m_options[256];
     
-};  /* MsgAudioCodecSelect */
-
+};  /** MsgAudioCodecSelect */
 
 class MsgRxAudioCodecSelect : public MsgAudioCodecSelect
 {
@@ -390,8 +341,7 @@ class MsgRxAudioCodecSelect : public MsgAudioCodecSelect
     MsgRxAudioCodecSelect(const char *codec_name)
       : MsgAudioCodecSelect(codec_name, TYPE) {}
   
-};  /* MsgRxAudioCodecSelect */
-
+};  /** MsgRxAudioCodecSelect */
 
 class MsgTxAudioCodecSelect : public MsgAudioCodecSelect
 {
@@ -400,8 +350,7 @@ class MsgTxAudioCodecSelect : public MsgAudioCodecSelect
     MsgTxAudioCodecSelect(const char *codec_name)
       : MsgAudioCodecSelect(codec_name, TYPE) {}
   
-};  /* MsgTxAudioCodecSelect */
-
+};  /** MsgTxAudioCodecSelect */
 
 class MsgAudio : public Msg
 {
@@ -425,13 +374,23 @@ class MsgAudio : public Msg
     int     m_size;
     uint8_t m_buf[BUFSIZE];
     
-}; /* MsgAudio */
+}; /** MsgAudio */
 
+class MsgRemoteCall : public Msg
+{
+  public:
+    static const unsigned TYPE = 105;
 
+    MsgRemoteCall(std::string callsign) :
+      Msg(TYPE, sizeof(MsgRemoteCall)), m_callsign(callsign) {}
+    std::string getCall(void) const { return m_callsign; }
 
+  private:
+    std::string m_callsign;
 
-/******************************** RX Messages ********************************/
+}; /** MsgRemoteCall */
 
+/** RX Messages */
 class MsgSetMuteState : public Msg
 {
   public:
@@ -443,8 +402,7 @@ class MsgSetMuteState : public Msg
   private:
     Rx::MuteState  m_mute_state;
     
-}; /* MsgSetMuteState */
-
+}; /** MsgSetMuteState */
 
 class MsgAddToneDetector : public Msg
 {
@@ -464,8 +422,7 @@ class MsgAddToneDetector : public Msg
     float m_thresh;
     int   m_required_duration;
     
-}; /* MsgAddToneDetector */
-
+}; /** MsgAddToneDetector */
 
 class MsgReset : public Msg
 {
@@ -473,10 +430,7 @@ class MsgReset : public Msg
     static const unsigned TYPE = 202;
     MsgReset(void) : Msg(TYPE, sizeof(MsgReset)) {}
     
-}; /* MsgReset */
-
-
-
+}; /** MsgReset */
 
 class MsgSquelch : public Msg
 {
@@ -494,8 +448,7 @@ class MsgSquelch : public Msg
     float m_signal_strength;
     int   m_sql_rx_id;
     
-}; /* MsgSquelch */
-
+}; /** MsgSquelch */
 
 class MsgDtmf : public Msg
 {
@@ -510,8 +463,7 @@ class MsgDtmf : public Msg
     char  m_digit;
     int   m_duration;
     
-}; /* MsgDtmf */
-
+}; /** MsgDtmf */
 
 class MsgTone : public Msg
 {
@@ -524,8 +476,7 @@ class MsgTone : public Msg
   private:
     float  m_tone_fq;
     
-}; /* MsgTone */
-
+}; /** MsgTone */
 
 class MsgSel5 : public Msg
 {
@@ -543,8 +494,7 @@ class MsgSel5 : public Msg
 
   private:
     char m_digits[MAX_DIGITS + 1];
-}; /* MsgSel5 */
-
+}; /** MsgSel5 */
 
 class MsgSiglevUpdate : public Msg
 {
@@ -560,12 +510,9 @@ class MsgSiglevUpdate : public Msg
     float m_signal_strength;
     int   m_sql_rx_id;
     
-}; /* MsgSiglevUpdate */
+}; /** MsgSiglevUpdate */
 
-
-
-/******************************** TX Messages ********************************/
-
+/** TX Messages */
 class MsgSetTxCtrlMode : public Msg
 {
   public:
@@ -577,7 +524,7 @@ class MsgSetTxCtrlMode : public Msg
   private:
     Tx::TxCtrlMode m_mode;
     
-}; /* MsgSetTxCtrlMode */
+}; /** MsgSetTxCtrlMode */
 
 
 class MsgEnableCtcss : public Msg
@@ -591,8 +538,7 @@ class MsgEnableCtcss : public Msg
   private:
     bool m_enable;
         
-}; /* MsgEnableCtcss */
-
+}; /** MsgEnableCtcss */
 
 class MsgSendDtmf : public Msg
 {
@@ -611,8 +557,7 @@ class MsgSendDtmf : public Msg
   private:
     char  m_digits[MAX_DIGITS+1];
     
-}; /* MsgSendDtmf */
-
+}; /** MsgSendDtmf */
 
 class MsgFlush : public Msg
 {
@@ -620,10 +565,7 @@ class MsgFlush : public Msg
     static const unsigned TYPE = 303;
     MsgFlush(void)
       : Msg(TYPE, sizeof(MsgFlush)) {}
-}; /* MsgFlush */
-
-
-
+}; /** MsgFlush */
 
 class MsgTxTimeout : public Msg
 {
@@ -631,8 +573,7 @@ class MsgTxTimeout : public Msg
     static const unsigned TYPE = 350;
     MsgTxTimeout(void)
       : Msg(TYPE, sizeof(MsgTxTimeout)) {}
-}; /* MsgTxTimeout */
-
+}; /** MsgTxTimeout */
 
 class MsgTransmitterStateChange : public Msg
 {
@@ -646,8 +587,7 @@ class MsgTransmitterStateChange : public Msg
   private:
     bool m_is_transmitting;
     
-}; /* MsgTxTimeout */
-
+}; /** MsgTxTimeout */
 
 class MsgAllSamplesFlushed : public Msg
 {
@@ -655,21 +595,15 @@ class MsgAllSamplesFlushed : public Msg
     static const unsigned TYPE = 352;
     MsgAllSamplesFlushed(void)
       : Msg(TYPE, sizeof(MsgAllSamplesFlushed)) {}
-}; /* MsgTxTimeout */
-
+}; /** MsgTxTimeout */
 
 #pragma pack(pop)
 
+} /** namespace */
 
+#endif /** NET_TRX_MSG_INCLUDED */
 
-} /* namespace */
-
-
-#endif /* NET_TRX_MSG_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

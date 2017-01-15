@@ -27,15 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -44,114 +38,62 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <algorithm>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncIpAddress.h"
 
-
-
-/****************************************************************************
+/**
  *
  * Namespaces to use
  *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-
-/****************************************************************************
- *
- * Local Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
+
+/**
+ * Local class definitions
+ */
+
+/**
+ * Prototypes
+ */
+
+/**
+ * Exported Global Variables
+ */
+
+/**
+ * Local Global Variables
+ */
+
+/**
+ * Public member functions
+ */
+
 IpAddress::IpAddress(void)
 {
   m_addr.s_addr = INADDR_NONE;
-} /* IpAddress::IpAddress */
-
+} /** IpAddress::IpAddress */
 
 IpAddress::IpAddress(const string& addr)
 {
   setIpFromString(addr);
-} /* IpAddress::IpAddress */
-
+} /** IpAddress::IpAddress */
 
 IpAddress::IpAddress(const Ip4Addr& addr)
   : m_addr(addr)
 {
   
-} /* IpAddress::IpAddress */
-
+} /** IpAddress::IpAddress */
 
 bool IpAddress::isUnicast(void) const
 {
@@ -162,8 +104,7 @@ bool IpAddress::isUnicast(void) const
   
   return is_unicast;
   
-} /* IpAddress::isUnicast */
-
+} /** IpAddress::isUnicast */
 
 bool IpAddress::isWithinSubet(const std::string& subnet) const
 {
@@ -190,14 +131,12 @@ bool IpAddress::isWithinSubet(const std::string& subnet) const
 
   return (ntohl(m_addr.s_addr) & mask) == (ntohl(ip.s_addr) & mask);
  
-} /* IpAddress::isWithinSubet */
-
+} /** IpAddress::isWithinSubet */
 
 string IpAddress::toString(void) const
 {
   return inet_ntoa(m_addr);
-} /* IpAddress::toString */
-
+} /** IpAddress::toString */
 
 bool IpAddress::setIpFromString(const string &str)
 {
@@ -207,15 +146,12 @@ bool IpAddress::setIpFromString(const string &str)
     return false;
   }
   return true;
-} /* IpAddress::setIpFromString */
-
+} /** IpAddress::setIpFromString */
 
 std::ostream& Async::operator<<(std::ostream& os, const Async::IpAddress& ip)
 {
   return os << ip.toString();
-} /* Async::operator<< */
-
-
+} /** Async::operator<< */
 
 std::istream& Async::operator>>(std::istream& is, Async::IpAddress& ip)
 {
@@ -223,62 +159,17 @@ std::istream& Async::operator>>(std::istream& is, Async::IpAddress& ip)
   is >> str;
   ip.setIpFromString(str);
   return is;
-} /* Async::operator<< */
+} /** Async::operator<< */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 
-
-
-
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
  */
 
-
-
-
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 
 #include <cstring>
@@ -40,99 +35,59 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <locale>
 #include <limits>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioNoiseAdder.h"
 
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
 
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
+ */
 
 AudioNoiseAdder::AudioNoiseAdder(float level_db)
   : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f)), z1(0.0f),
     generate(false), seed(0)
 {
-} /* AudioNoiseAdder::AudioNoiseAdder */
-
+} /** AudioNoiseAdder::AudioNoiseAdder */
 
 AudioNoiseAdder::~AudioNoiseAdder(void)
 {
-} /* AudioNoiseAdder::~AudioNoiseAdder */
+} /** AudioNoiseAdder::~AudioNoiseAdder */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
 void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
 {
@@ -143,15 +98,11 @@ void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
     float noise = generateGaussianNoise();
     dest[i] = src[i] + noise;
   }
-} /* AudioNoiseAdder::writeSamples */
+} /** AudioNoiseAdder::writeSamples */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
 float AudioNoiseAdder::generateGaussianNoise(void)
 {
@@ -177,9 +128,8 @@ float AudioNoiseAdder::generateGaussianNoise(void)
   float z0 = sqrt(-2.0f * log(u1)) * cos(two_pi * u2);
   z1 = sqrt(-2.0f * log(u1)) * sin(two_pi * u2);
   return z0 * sigma + mu;
-} /* AudioNoiseAdder::generateGaussianNoise */
+} /** AudioNoiseAdder::generateGaussianNoise */
 
-
-/*
+/**
  * This file has not been truncated
  */

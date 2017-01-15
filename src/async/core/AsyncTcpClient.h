@@ -30,92 +30,54 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /** @example AsyncTcpClient_demo.cpp
 An example of how to use the Async::TcpClient class
 */
-
-
-
 #ifndef ASYNC_TCP_CLIENT_INCLUDED
 #define ASYNC_TCP_CLIENT_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
 #include <string>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTcpConnection.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class FdWatch;
 class DnsLookup;
 class IpAddress;
 
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class for creating a TCP client connection
 @author Tobias Blomberg
@@ -141,7 +103,7 @@ class TcpClient : public TcpConnection
      * take host and port must be used.
      */
     explicit TcpClient(size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
-    
+
     /**
      * @brief 	Constructor
      * @param 	remote_host   The hostname of the remote host
@@ -154,7 +116,7 @@ class TcpClient : public TcpConnection
      */
     TcpClient(const std::string& remote_host, uint16_t remote_port,
       	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
-    
+
     /**
      * @brief 	Constructor
      * @param 	remote_ip     The IP address of the remote host
@@ -167,12 +129,12 @@ class TcpClient : public TcpConnection
      */
     TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
       	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
-    
+
     /**
      * @brief 	Destructor
      */
     ~TcpClient(void);
-    
+
     /**
      * @brief   Bind to the interface having the specified IP address
      * @param   bind_ip The IP address of the interface to bind to
@@ -190,7 +152,7 @@ class TcpClient : public TcpConnection
      * already established or pending, nothing will be done.
      */
     void connect(const std::string &remote_host, uint16_t remote_port);
-    
+
     /**
      * @brief 	Connect to the remote host
      * @param 	remote_ip     The IP address of the remote host
@@ -202,7 +164,7 @@ class TcpClient : public TcpConnection
      * already established or pending, nothing will be done.
      */
     void connect(const Async::IpAddress& remote_ip, uint16_t remote_port);
-    
+
     /**
      * @brief 	Connect to the remote host
      *
@@ -212,7 +174,7 @@ class TcpClient : public TcpConnection
      * already established or pending, nothing will be done.
      */
     void connect(void);
-    
+
     /**
      * @brief 	Disconnect from the remote host
      *
@@ -221,7 +183,7 @@ class TcpClient : public TcpConnection
      * emitted when this function is called
      */
     void disconnect(void);
-    
+
     /**
      * @brief   Check if the connection is idle
      * @return  Returns \em true if the connection is idle
@@ -229,36 +191,32 @@ class TcpClient : public TcpConnection
      * A connection being idle means that it is not connected nor connecting.
      */
     bool isIdle(void) const { return TcpConnection::isIdle() && (sock == -1); }
-    
+
     /**
      * @brief 	A signal that is emitted when a connection has been established
      */
     sigc::signal<void>       	      	  connected;
-    
-        
+
   protected:
-    
+
   private:
     DnsLookup *       dns;
     std::string       remote_host;
     int       	      sock;
     FdWatch *         wr_watch;
     Async::IpAddress  bind_ip;
-    
+
     void dnsResultsReady(DnsLookup& dns_lookup);
     void connectToRemote(void);
     void connectHandler(FdWatch *watch);
 
-};  /* class TcpClient */
+};  /** class TcpClient */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_TCP_CLIENT_INCLUDED */
 
-#endif /* ASYNC_TCP_CLIENT_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

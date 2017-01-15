@@ -24,114 +24,68 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cmath>
 #include <limits>
 //#include <iostream>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioFilter.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncConfig.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SigLevDetNoise.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 SigLevDetNoise::SigLevDetNoise(void)
   : sample_rate(0), block_len(0), filter(0), sigc_sink(0),
     slope(10.0), offset(0.0), update_interval(0), update_counter(0),
     integration_time(0), ss(0.0), ss_cnt(0),
     bogus_thresh(numeric_limits<float>::max())
 {
-} /* SigLevDetNoise::SigLevDetNoise */
-
+} /** SigLevDetNoise::SigLevDetNoise */
 
 SigLevDetNoise::~SigLevDetNoise(void)
 {
   clearHandler();
   delete filter;
   delete sigc_sink;
-} /* SigLevDetNoise::~SigLevDetNoise */
-
+} /** SigLevDetNoise::~SigLevDetNoise */
 
 bool SigLevDetNoise::initialize(Config &cfg, const string& name,
                                 int sample_rate)
@@ -163,34 +117,34 @@ bool SigLevDetNoise::initialize(Config &cfg, const string& name,
 
   return SigLevDet::initialize(cfg, name, sample_rate);
 
-} /* SigLevDetNoise::initialize */
+} /** SigLevDetNoise::initialize */
 
 
 void SigLevDetNoise::setDetectorSlope(float slope)
 {
   this->slope = slope;
   reset();
-} /* SigLevDetNoise::setDetectorSlope  */
+} /** SigLevDetNoise::setDetectorSlope  */
 
 
 void SigLevDetNoise::setDetectorOffset(float offset)
 {
   this->offset = offset;
   reset();
-} /* SigLevDetNoise::setDetectorOffset  */
+} /** SigLevDetNoise::setDetectorOffset  */
 
 
 void SigLevDetNoise::setBogusThresh(float thresh)
 {
   bogus_thresh = thresh;
-} /* SigLevDetNoise::setBogusThresh */
+} /** SigLevDetNoise::setBogusThresh */
 
 
 void SigLevDetNoise::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
   update_counter = 0;
-} /* SigLevDetNoise::setContinuousUpdateInterval */
+} /** SigLevDetNoise::setContinuousUpdateInterval */
 
 
 void SigLevDetNoise::setIntegrationTime(int time_ms)
@@ -206,7 +160,7 @@ void SigLevDetNoise::setIntegrationTime(int time_ms)
     ss_values.erase(*ss_idx.begin());
     ss_idx.pop_front();
   }
-} /* SigLevDetNoise::setIntegrationTime */
+} /** SigLevDetNoise::setIntegrationTime */
 
 
 float SigLevDetNoise::lastSiglev(void) const
@@ -229,8 +183,7 @@ float SigLevDetNoise::lastSiglev(void) const
 
   return offset - slope * log10(*ss_idx.back());
 
-} /* SigLevDetNoise::lastSiglev */
-
+} /** SigLevDetNoise::lastSiglev */
 
 float SigLevDetNoise::siglevIntegrated(void) const
 {
@@ -260,8 +213,7 @@ float SigLevDetNoise::siglevIntegrated(void) const
 
   return siglev;
 
-} /* SigLevDetNoise::siglevIntegrated */
-
+} /** SigLevDetNoise::siglevIntegrated */
 
 void SigLevDetNoise::reset(void)
 {
@@ -271,24 +223,15 @@ void SigLevDetNoise::reset(void)
   ss_idx.clear();
   ss_cnt = 0;
   ss = 0.0;
-} /* SigLevDetNoise::reset */
+} /** SigLevDetNoise::reset */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 int SigLevDetNoise::processSamples(float *samples, int count)
 {
   for (int i=0; i<count; ++i)
@@ -323,11 +266,9 @@ int SigLevDetNoise::processSamples(float *samples, int count)
   
   return count;
   
-} /* SigLevDetNoise::processSamples */
+} /** SigLevDetNoise::processSamples */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

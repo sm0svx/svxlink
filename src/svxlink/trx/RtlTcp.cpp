@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstring>
 #include <cstdlib>
 #include <iterator>
@@ -39,83 +34,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "RtlTcp.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
   : con(remote_host, remote_port, blockSize()),
     reconnect_timer(1000, Timer::TYPE_PERIODIC)
@@ -127,23 +83,17 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
 
   reconnect_timer.expired.connect(
       hide(mem_fun(con, &Async::TcpClient::connect)));
-} /* RtlTcp::RtlTcp */
+} /** RtlTcp::RtlTcp */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 const std::string RtlTcp::displayName(void) const
 {
   ostringstream ss;
   ss << con.remoteHost() << ":" << con.remotePort();
   return ss.str();
-} /* RtlTcp::displayName */
-
+} /** RtlTcp::displayName */
 
 void RtlTcp::handleSetTunerIfGain(uint16_t stage, int16_t gain)
 {
@@ -151,59 +101,47 @@ void RtlTcp::handleSetTunerIfGain(uint16_t stage, int16_t gain)
   param <<= 16;
   param |= (uint16_t)gain;
   sendCommand(6, param);
-} /* RtlTcp::handleSetTunerIfGain */
-
+} /** RtlTcp::handleSetTunerIfGain */
 
 void RtlTcp::handleSetCenterFq(uint32_t fq)
 {
   sendCommand(1, fq);
-} /* RtlTcp::handleSetCenterFq */
-
+} /** RtlTcp::handleSetCenterFq */
 
 void RtlTcp::handleSetSampleRate(uint32_t rate)
 {
   con.setRecvBufLen(blockSize());
   sendCommand(2, rate);
-} /* RtlTcp::handleSetSampleRate */
-
+} /** RtlTcp::handleSetSampleRate */
 
 void RtlTcp::handleSetGainMode(uint32_t mode)
 {
   sendCommand(3, mode);
-} /* RtlTcp::handleSetGainMode */
-
+} /** RtlTcp::handleSetGainMode */
 
 void RtlTcp::handleSetGain(int32_t gain)
 {
   sendCommand(4, static_cast<uint32_t>(gain));
-} /* RtlTcp::handleSetGain */
-
+} /** RtlTcp::handleSetGain */
 
 void RtlTcp::handleSetFqCorr(uint32_t corr)
 {
   sendCommand(5, corr);
-} /* RtlTcp::handleSetFqCorr */
-
+} /** RtlTcp::handleSetFqCorr */
 
 void RtlTcp::handleEnableTestMode(bool enable)
 {
   sendCommand(7, enable ? 1 : 0);
-} /* RtlTcp::handleEnableTestMode */
-
+} /** RtlTcp::handleEnableTestMode */
 
 void RtlTcp::handleEnableDigitalAgc(bool enable)
 {
   sendCommand(8, enable ? 1 : 0);
-} /* RtlTcp::handleEnableDigitalAgc */
+} /** RtlTcp::handleEnableDigitalAgc */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void RtlTcp::sendCommand(char cmd, uint32_t param)
 {
   if (con.isConnected())
@@ -217,18 +155,16 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
     msg[1] = (param >> 24) & 0xff;
     con.write(msg, sizeof(msg));
   }
-} /* RtlTcp::sendCommand */
-
+} /** RtlTcp::sendCommand */
 
 void RtlTcp::connected(void)
 {
-  /*
+  /**
   cout << "### Connected to RtlTcp at " << con.remoteHost() << ":"
        << con.remotePort() << endl;
   */
   reconnect_timer.setEnable(false);
-} /* RtlTcp::connected */
-
+} /** RtlTcp::connected */
 
 void RtlTcp::disconnected(Async::TcpConnection *c,
                           Async::TcpConnection::DisconnectReason reason)
@@ -236,15 +172,14 @@ void RtlTcp::disconnected(Async::TcpConnection *c,
   setTunerType(TUNER_UNKNOWN);
   if (!reconnect_timer.isEnabled())
   {
-    /*
+    /**
     cout << "### Disconnected from RtlTcp at " << con.remoteHost() << ":"
          << con.remotePort() << endl;
     */
     reconnect_timer.setEnable(true);
     readyStateChanged();
   }
-} /* RtlTcp::disconnected */
-
+} /** RtlTcp::disconnected */
 
 int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
 {
@@ -300,9 +235,8 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
   handleIq(samples, samp_count);
 
   return 2 * samp_count;
-} /* RtlTcp::dataReceived */
+} /** RtlTcp::dataReceived */
 
-
-/*
+/**
  * This file has not been truncated
  */

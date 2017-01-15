@@ -23,85 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_DECODER_INCLUDED
 #define ASYNC_AUDIO_DECODER_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <string>
 #include <sigc++/sigc++.h>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSource.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
 @brief	Base class for an audio decoder
@@ -114,23 +78,23 @@ class AudioDecoder : public AudioSource, public sigc::trackable
 {
   public:
     static AudioDecoder *create(const std::string &name);
-    
+
     /**
      * @brief 	Default constuctor
      */
     AudioDecoder(void) {}
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~AudioDecoder(void) {}
-    
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const = 0;
-  
+
     /**
      * @brief 	Set an option for the decoder
      * @param 	name The name of the option
@@ -142,19 +106,19 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      * @brief Print codec parameter settings
      */
     virtual void printCodecParams(void) const {}
-    
+
     /**
      * @brief 	Write encoded samples into the decoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
     virtual void writeEncodedSamples(void *buf, int size) = 0;
-    
+
     /**
      * @brief Call this function when all encoded samples have been received
      */
     virtual void flushEncodedSamples(void) { sinkFlushSamples(); }
-    
+
     /**
      * @brief Resume audio output to the sink
      * 
@@ -163,12 +127,11 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void) {}
-    
+
     /**
      * @brief This signal is emitted when all encoded samples have been flushed
      */
     sigc::signal<void> allEncodedSamplesFlushed;
-    
 
   protected:
     /**
@@ -179,22 +142,18 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      * This function is normally only called from a connected sink object.
      */
     virtual void allSamplesFlushed(void) { allEncodedSamplesFlushed(); }
-    
-    
+
   private:
     AudioDecoder(const AudioDecoder&);
     AudioDecoder& operator=(const AudioDecoder&);
     
-};  /* class AudioDecoder */
+};  /** class AudioDecoder */
 
+} /** namespace */
 
-} /* namespace */
+#endif /** ASYNC_AUDIO_DECODER_INCLUDED */
 
-#endif /* ASYNC_AUDIO_DECODER_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */
 

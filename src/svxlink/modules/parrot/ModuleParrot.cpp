@@ -28,69 +28,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/MODULE_PARROT.h"
 #include "ModuleParrot.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class ModuleParrot::FifoAdapter : public AudioPassthrough
 {
   public:
@@ -112,38 +85,21 @@ class ModuleParrot::FifoAdapter : public AudioPassthrough
     
 }; /* class ModuleParrot::FifoAdapter */
 
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Pure C-functions
- *
- ****************************************************************************/
-
+ */
 
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
@@ -152,14 +108,9 @@ extern "C" {
   }
 } /* extern "C" */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
@@ -171,7 +122,6 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       sigc::hide(mem_fun(*this, &ModuleParrot::onRepeatDelayExpired)));
   
 } /* ModuleParrot */
-
 
 ModuleParrot::~ModuleParrot(void)
 {
@@ -218,17 +168,9 @@ bool ModuleParrot::initialize(void)
   
 } /* ModuleParrot::initialize */
 
-
-
-
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 
 void ModuleParrot::logicIdleStateChanged(bool is_idle)
 {
@@ -263,15 +205,9 @@ void ModuleParrot::logicIdleStateChanged(bool is_idle)
   }
 } /* ModuleParrot::logicIdleStateChanged */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
  *----------------------------------------------------------------------------
@@ -292,7 +228,6 @@ void ModuleParrot::activateInit(void)
   valve->setOpen(false);  
 } /* activateInit */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
@@ -312,7 +247,6 @@ void ModuleParrot::deactivateCleanup(void)
   fifo->clear();
   repeat_delay_timer.setEnable(false);
 } /* deactivateCleanup */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -335,7 +269,6 @@ bool ModuleParrot::dtmfDigitReceived(char digit, int duration)
   return false;
   
 } /* dtmfDigitReceived */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -371,7 +304,6 @@ void ModuleParrot::dtmfCmdReceivedWhenIdle(const std::string &cmd)
   processEvent(ss.str());
 } /* dtmfCmdReceivedWhenIdle */
 
-
 void ModuleParrot::squelchOpen(bool is_open)
 {
   squelch_is_open = is_open;
@@ -391,13 +323,11 @@ void ModuleParrot::allSamplesWritten(void)
   processEvent("all_played");
 } /* ModuleParrot::allSamplesWritten */
 
-
 void ModuleParrot::onRepeatDelayExpired(void)
 {
   repeat_delay_timer.setEnable(false);
   valve->setOpen(true);
 } /* ModuleParrot::onRepeatDelayExpired */
-
 
 void ModuleParrot::execCmdQueue(void)
 {
@@ -430,9 +360,6 @@ void ModuleParrot::execCmdQueue(void)
     }
   }
 } /* ModuleParrot::execCmdQueue */
-
-
-
 
 /*
  * This file has not been truncated

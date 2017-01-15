@@ -24,105 +24,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef SEL5_DECODER_INCLUDED
 #define SEL5_DECODER_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <string>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioSink.h>
 #include <AsyncConfig.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
-
-/*
- *----------------------------------------------------------------------------
- * Macro:
- * Purpose:
- * Input:
- * Output:
- * Author:
- * Created:
- * Remarks:
- * Bugs:
- *----------------------------------------------------------------------------
  */
 
-
-/*
- *----------------------------------------------------------------------------
- * Type:
- * Purpose:
- * Members:
- * Input:
- * Output:
- * Author:
- * Created:
- * Remarks:
- *----------------------------------------------------------------------------
- */
-
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
  * @brief   This is the base class for implementing a Sel5 decoder
@@ -189,7 +128,7 @@ class Sel5Decoder : public sigc::trackable, public Async::AudioSink
       sourceAllSamplesFlushed();
     }
 
-    /*
+    /**
      * @brief 	A signal that is emitted when a valid selcall sequece has been
      *          detected
      * @param 	sequence  The detected selcall sequence
@@ -214,15 +153,10 @@ class Sel5Decoder : public sigc::trackable, public Async::AudioSink
     Async::Config   m_cfg;
     std::string     m_name;
 
-};  /* class Sel5Decoder */
+};  /** class Sel5Decoder */
 
+#endif /** SEL5_DECODER_INCLUDED */
 
-//} /* namespace */
-
-#endif /* SEL5_DECODER_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

@@ -28,26 +28,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <cassert>
 #include <cmath>
 #include <limits>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncAudioIO.h>
 #include <AsyncAudioFilter.h>
@@ -62,13 +53,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncUdpSocket.h>
 #include <common.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SigLevDet.h"
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
@@ -88,35 +75,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchHidraw.h"
 #endif
 
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define DTMF_MUTING_POST  200
 #define TONE_1750_MUTING_PRE 75
 #define TONE_1750_MUTING_POST 100
 
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class PeakMeter : public AudioPassthrough
 {
   public:
@@ -148,7 +122,6 @@ class PeakMeter : public AudioPassthrough
     string name;
     
 };
-
 
 class AudioUdpSink : public UdpSocket, public AudioSink
 {
@@ -198,53 +171,35 @@ class AudioUdpSink : public UdpSocket, public AudioSink
 
 };
 
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(MUTE_ALL),
-    squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
+    squelch_det(0), siglevdet(0), /** siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
     sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0)
 {
-} /* LocalRxBase::LocalRxBase */
-
+} /** LocalRxBase::LocalRxBase */
 
 LocalRxBase::~LocalRxBase(void)
 {
   clearHandler();
   delete input_fifo;  // This will delete the whole chain of audio objects
-} /* LocalRxBase::~LocalRxBase */
-
+} /** LocalRxBase::~LocalRxBase */
 
 bool LocalRxBase::initialize(void)
 {
@@ -603,8 +558,7 @@ bool LocalRxBase::initialize(void)
 
   return true;
   
-} /* LocalRxBase:initialize */
-
+} /** LocalRxBase:initialize */
 
 void LocalRxBase::setMuteState(MuteState new_mute_state)
 {
@@ -660,8 +614,7 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
       }
     }
   }
-} /* LocalRxBase::setMuteState */
-
+} /** LocalRxBase::setMuteState */
 
 bool LocalRxBase::addToneDetector(float fq, int bw, float thresh,
       	      	      	      int required_duration)
@@ -677,8 +630,7 @@ bool LocalRxBase::addToneDetector(float fq, int bw, float thresh,
   
   return true;
 
-} /* LocalRxBase::addToneDetector */
-
+} /** LocalRxBase::addToneDetector */
 
 float LocalRxBase::signalStrength(void) const
 {
@@ -687,8 +639,7 @@ float LocalRxBase::signalStrength(void) const
     return siglevdet->siglevIntegrated();
   }
   return siglevdet->lastSiglev();
-} /* LocalRxBase::signalStrength */
-    
+} /** LocalRxBase::signalStrength */
 
 void LocalRxBase::reset(void)
 {
@@ -698,32 +649,22 @@ void LocalRxBase::reset(void)
   {
     delay->mute(false);
   }
-} /* LocalRxBase::reset */
+} /** LocalRxBase::reset */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void LocalRxBase::sel5Detected(std::string sequence)
 {
   if (mute_state == MUTE_NONE)
   {
     selcallSequenceDetected(sequence);
   }
-} /* LocalRxBase::sel5Detected */
-
+} /** LocalRxBase::sel5Detected */
 
 void LocalRxBase::dtmfDigitActivated(char digit)
 {
@@ -732,8 +673,7 @@ void LocalRxBase::dtmfDigitActivated(char digit)
   {
     delay->mute(true, dtmf_muting_pre);
   }
-} /* LocalRxBase::dtmfDigitActivated */
-
+} /** LocalRxBase::dtmfDigitActivated */
 
 void LocalRxBase::dtmfDigitDeactivated(char digit, int duration_ms)
 {
@@ -746,8 +686,7 @@ void LocalRxBase::dtmfDigitDeactivated(char digit, int duration_ms)
   {
     delay->mute(false, DTMF_MUTING_POST);
   }
-} /* LocalRxBase::dtmfDigitActivated */
-
+} /** LocalRxBase::dtmfDigitActivated */
 
 void LocalRxBase::audioStreamStateChange(bool is_active, bool is_idle)
 {
@@ -755,8 +694,7 @@ void LocalRxBase::audioStreamStateChange(bool is_active, bool is_idle)
   {
     setSquelchState(false);
   }
-} /* LocalRxBase::audioStreamStateChange */
-
+} /** LocalRxBase::audioStreamStateChange */
 
 void LocalRxBase::onSquelchOpen(bool is_open)
 {
@@ -797,8 +735,7 @@ void LocalRxBase::onSquelchOpen(bool is_open)
     siglevdet->setIntegrationTime(0);
     siglevdet->setContinuousUpdateInterval(0);
   }
-} /* LocalRxBase::onSquelchOpen */
-
+} /** LocalRxBase::onSquelchOpen */
 
 void LocalRxBase::tone1750detected(bool detected)
 {
@@ -811,15 +748,13 @@ void LocalRxBase::tone1750detected(bool detected)
    {
      delay->mute(false, TONE_1750_MUTING_POST);
    }
-} /* LocalRxBase::tone1750detected */
-
+} /** LocalRxBase::tone1750detected */
 
 void LocalRxBase::onSignalLevelUpdated(float siglev)
 {
   setSqlHangtimeFromSiglev(siglev);
   signalLevelUpdated(siglev);
-} /* LocalRxBase::onSignalLevelUpdated */
-
+} /** LocalRxBase::onSignalLevelUpdated */
 
 void LocalRxBase::setSqlHangtimeFromSiglev(float siglev)
 {
@@ -834,8 +769,7 @@ void LocalRxBase::setSqlHangtimeFromSiglev(float siglev)
       squelch_det->setHangtime(sql_extended_hangtime);
     }
   }
-} /* LocalRxBase::setSqlHangtime */
-
+} /** LocalRxBase::setSqlHangtime */
 
 void LocalRxBase::rxReadyStateChanged(void)
 {
@@ -846,11 +780,9 @@ void LocalRxBase::rxReadyStateChanged(void)
     siglevdet->signalLevelUpdated(siglevdet->lastSiglev());
     squelch_det->squelchOpen(false);
   }
-} /* LocalRxBase::rxReadyStateChanged */
+} /** LocalRxBase::rxReadyStateChanged */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

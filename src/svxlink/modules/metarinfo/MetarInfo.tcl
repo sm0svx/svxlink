@@ -24,7 +24,6 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]];
 
-
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
 # as the first argument.
@@ -33,7 +32,6 @@ proc playMsg {msg} {
   variable module_name;
   ::playMsg $module_name $msg;
 }
-
 
 #
 # A convenience function for printing out information prefixed by the
@@ -44,7 +42,6 @@ proc printInfo {msg} {
   puts "$module_name: $msg";
 }
 
-
 #
 # Executed when this module is being activated
 #
@@ -52,7 +49,6 @@ proc activating_module {} {
   variable module_name;
   Module::activating_module $module_name;
 }
-
 
 #
 # Executed when this module is being deactivated.
@@ -62,7 +58,6 @@ proc deactivating_module {} {
   Module::deactivating_module $module_name;
 }
 
-
 #
 # Executed when the inactivity timeout for this module has expired.
 #
@@ -71,7 +66,6 @@ proc timeout {} {
   Module::timeout $module_name;
 }
 
-
 #
 # Executed when playing of the help message for this module has been requested.
 #
@@ -79,7 +73,6 @@ proc play_help {} {
   variable module_name;
   Module::play_help $module_name;
 }
-
 
 #
 # Executed when the state of this module should be reported on the radio
@@ -91,6 +84,8 @@ proc status_report {} {
   printInfo "status_report called...";
 }
 
+<<<<<<< HEAD
+=======
 
 # METAR as raw txt to make them available in a file
 proc metar {input} {
@@ -100,6 +95,7 @@ proc metar {input} {
 }
 
 
+>>>>>>> refs/remotes/sm0svx/master
 # no airport defined
 proc no_airport_defined {} {
    playMsg "no";
@@ -107,7 +103,6 @@ proc no_airport_defined {} {
    playMsg "defined";
    playSilence 200;
 }
-
 
 # no airport defined
 proc no_such_airport {} {
@@ -117,7 +112,6 @@ proc no_such_airport {} {
    playSilence 200;
 }
 
-
 # METAR not valid
 proc metar_not_valid {} {
   playMsg "metarinformation";
@@ -126,14 +120,12 @@ proc metar_not_valid {} {
    playSilence 200;
 }
 
-
 # MET-report TIME
 proc metreport_time item {
    playMsg "metreport_time";
    spellNumber $item;
    playSilence 200;
 }
-
 
 # visibility
 proc visibility args {
@@ -148,7 +140,6 @@ proc visibility args {
   }
   playSilence 200;
 }
-
 
 # temperature
 proc temperature {temp} {
@@ -173,7 +164,6 @@ proc temperature {temp} {
   playSilence 200;
 }
 
-
 # dewpoint
 proc dewpoint {dewpt} {
   playMsg "dewpoint";
@@ -197,7 +187,6 @@ proc dewpoint {dewpt} {
   playSilence 200;
 }
 
-
 # sea level pressure
 proc slp {slp} {
   playMsg "slp";
@@ -206,14 +195,12 @@ proc slp {slp} {
   playSilence 200;
 }
 
-
 # flightlevel
 proc flightlevel {level} {
   playMsg "flightlevel";
   spellNumber $level;
   playSilence 200;
 }
-
 
 # No specific reports taken
 proc nospeci {} {
@@ -222,7 +209,6 @@ proc nospeci {} {
   playSilence 100;
 }
 
-
 # peakwind
 proc peakwind {val} {
   playMsg "pk_wnd";
@@ -230,7 +216,6 @@ proc peakwind {val} {
   playNumber $val;
   playSilence 200;
 }
-
 
 # wind
 proc wind {deg {vel 0 } {unit 0} {gusts 0} {gvel 0}} {
@@ -263,7 +248,6 @@ proc wind {deg {vel 0 } {unit 0} {gusts 0} {gvel 0}} {
   playSilence 200;
 }
 
-
 # weather actually
 proc actualWX args {
   foreach item $args {
@@ -275,7 +259,6 @@ proc actualWX args {
   }
   playSilence 200;
 }
-
 
 # wind varies $from $to
 proc windvaries {from to} {
@@ -294,7 +277,6 @@ proc windvaries {from to} {
    playMsg "unit_degrees";
    playSilence 200;
 }
-
 
 # Peak WIND
 proc peakwind {deg kts hh mm} {
@@ -316,7 +298,6 @@ proc peakwind {deg kts hh mm} {
    playMsg "utc";
    playSilence 200;
 }
-
 
 # ceiling varies $from $to
 proc ceilingvaries {from to} {
@@ -351,7 +332,6 @@ proc rvr args {
    playSilence 200;
 }
 
-
 # airport is closed due to snow
 proc snowclosed {} {
    playMag "aiport";
@@ -370,7 +350,6 @@ proc all_rwy_clear {} {
   playSilence 200;
 }
 
-
 # Runway designator
 proc runway args {
   foreach item $args {
@@ -384,7 +363,6 @@ proc runway args {
   playSilence 200;
 }
 
-
 # time
 proc utime {utime} {
    playNumber $utime;
@@ -392,7 +370,6 @@ proc utime {utime} {
    playMsg "utc";
    playSilence 200;
 }
-
 
 # vv100 -> "vertical view (ceiling) 1000 feet"
 proc ceiling {param} {
@@ -403,7 +380,6 @@ proc ceiling {param} {
    playMsg "unit_feet";
    playSilence 200;
 }
-
 
 # QNH
 proc qnh {value} {
@@ -418,7 +394,6 @@ proc qnh {value} {
   playSilence 200;
 }
 
-
 # altimeter
 proc altimeter {value} {
   playMsg "altimeter";
@@ -427,7 +402,6 @@ proc altimeter {value} {
   playMsg "unit_inches";
   playSilence 200;
 }
-
 
 # trend
 proc trend args {
@@ -438,7 +412,6 @@ proc trend args {
   }
   playSilence 200;
 }
-
 
 # clouds with arguments
 proc clouds {obs height {cbs ""}} {
@@ -455,7 +428,6 @@ proc clouds {obs height {cbs ""}} {
   playSilence 200;
 }
 
-
 # temporary weather obscuration
 proc tempo_obscuration {from until} {
   playMsg "tempo";
@@ -470,7 +442,6 @@ proc tempo_obscuration {from until} {
   playNumber $until;
   playSilence 200;
 }
-
 
 # max day temperature
 proc max_daytemp {deg time} {
@@ -489,7 +460,6 @@ proc max_daytemp {deg time} {
   playSilence 200;
 }
 
-
 # min day temperature
 proc min_daytemp {deg time} {
   playMsg "predicted";
@@ -507,7 +477,6 @@ proc min_daytemp {deg time} {
   playSilence 200;
 }
 
-
 # Maximum temperature in RMK section
 proc rmk_maxtemp {val} {
   playMsg "maximal";
@@ -522,7 +491,6 @@ proc rmk_maxtemp {val} {
   playMsg "unit_degrees";
   playSilence 200;
 }
-
 
 # Minimum temperature in RMK section
 proc rmk_mintemp {val} {
@@ -539,14 +507,12 @@ proc rmk_mintemp {val} {
   playSilence 200;
 }
 
-
 # the begin of RMK section
 proc remarks {} {
   playSilence 200;
   playMsg "remarks";
   playSilence 200;
 }
-
 
 # RMK section pressure trend next 3 h
 proc rmk_pressure {val args} {
@@ -571,7 +537,6 @@ proc rmk_pressure {val args} {
   }
   playSilence 200;
 }
-
 
 # precipitation last hours in RMK section
 proc rmk_precipitation {hour val} {
@@ -604,7 +569,6 @@ proc rmk_precip {args} {
   playSilence 200;
 }
 
-
 # daytime minimal/maximal temperature
 proc rmk_minmaxtemp {max min} {
   playMsg "daytime";
@@ -627,7 +591,6 @@ proc rmk_minmaxtemp {max min} {
   playSilence 200;
 }
 
-
 # recent temperature and dewpoint in RMK section
 proc rmk_tempdew {temp dewpt} {
   playMsg "re";
@@ -649,7 +612,6 @@ proc rmk_tempdew {temp dewpt} {
   playMsg "unit_degrees";
   playSilence 200;
 }
-
 
 # wind shift
 proc windshift {val} {
@@ -682,7 +644,6 @@ proc runwaystate args {
   playSilence 200;
 }
 
-
 # output numbers
 proc sayNumber { number } {
   variable ts;
@@ -709,7 +670,6 @@ proc sayNumber { number } {
   }
 }
 
-
 # output
 proc say args {
   variable tsay;
@@ -730,13 +690,11 @@ proc say args {
   playSilence 200;
 }
 
-
 # part 1 of help #01
 proc icao_available {} {
    playMsg "icao_available";
    playSilence 200;
 }
-
 
 # say preconfigured airports
 proc airports args {
@@ -762,6 +720,8 @@ proc airports args {
   playSilence 200;
 }
 
+<<<<<<< HEAD
+=======
 
 # say clouds with covering
 proc cloudtypes {} {
@@ -781,6 +741,7 @@ variable a 0;
 }
 
 
+>>>>>>> refs/remotes/sm0svx/master
 #
 # Spell the specified number
 #
@@ -794,7 +755,6 @@ proc playNr {number} {
     }
   }
 }
-
 
 # end of namespace
 }

@@ -28,105 +28,61 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncAudioIO.h>
 
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "LocalRx.h"
 
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : LocalRxBase(cfg, name), cfg(cfg), audio_io(0)
 {
-} /* LocalRx::LocalRx */
-
+} /** LocalRx::LocalRx */
 
 LocalRx::~LocalRx(void)
 {
   delete audio_io;
   audio_io = 0;
-} /* LocalRx::~LocalRx */
-
+} /** LocalRx::~LocalRx */
 
 bool LocalRx::initialize(void)
 {
@@ -157,16 +113,11 @@ bool LocalRx::initialize(void)
 
   return true;
   
-} /* LocalRx:initialize */
+} /** LocalRx:initialize */
 
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 bool LocalRx::audioOpen(void)
 {
     // Open the audio device for reading
@@ -178,37 +129,29 @@ bool LocalRx::audioOpen(void)
     return false;
   }
   return true;
-} /* LocalRx::audioOpen */
-
+} /** LocalRx::audioOpen */
 
 void LocalRx::audioClose(void)
 {
   audio_io->close();
-} /* LocalRx::audioClose */
+} /** LocalRx::audioClose */
 
 
 int LocalRx::audioSampleRate(void)
 {
   return audio_io->sampleRate();
-} /* LocalRx::audioSampleRate */
-
+} /** LocalRx::audioSampleRate */
 
 Async::AudioSource *LocalRx::audioSource(void)
 {
   return audio_io;
-} /* LocalRx::audioSource */
+} /** LocalRx::audioSource */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

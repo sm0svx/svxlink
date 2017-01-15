@@ -27,19 +27,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example Template_demo.cpp
 An example of how to use the Template class
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <popt.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -50,49 +44,31 @@ An example of how to use the Template class
 #include <cstring>
 #include <iostream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioIO.h>
-
 	
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "EchoLinkProxy.h"
 #include "EchoLinkDirectory.h"
 #include "EchoLinkDispatcher.h"
 #include "EchoLinkQsoTest.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define PROGRAM_NAME  "echolib_test"
 #define SERVER_NAME   "server1.echolink.org"
-
 
 typedef enum
 {
@@ -101,13 +77,9 @@ typedef enum
   PS_CONNECT_TO_CALL, PS_CONNECT_TO_IP, PS_LOGOFF, PS_QUIT
 } ProcessingStage;
 
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
-
+ */
 static void process_next_stage(void);
 static void on_error_msg(const string& msg);
 static void on_status_changed(StationData::Status status);
@@ -116,21 +88,13 @@ static void on_station_list_updated(void);
 static void print_call_list(const list<StationData>& calls);
 static void parse_arguments(int argc, const char **argv);
 
-
-/****************************************************************************
- *
+/*
  * Global Variables
- *
- ****************************************************************************/
+ */
  
-
-
-/****************************************************************************
- *
+/*
  * Private Global Variables
- *
- ****************************************************************************/
-
+ */
 int verbose = 0;
 int logon = 0;
 int logoff = 0;
@@ -157,13 +121,9 @@ char my_name[256];
 char my_location[256];
 char my_info[256];
 
-
-/****************************************************************************
- *
+/*
  * MAIN
- *
- ****************************************************************************/
-
+ */
 
 /*
  *----------------------------------------------------------------------------
@@ -262,18 +222,9 @@ int main( int argc, const char **argv )
   
 } /* main */
 
-
-
-
-
-
-
-/****************************************************************************
- *
+/*
  * Functions
- *
- ****************************************************************************/
-
+ */
 static void process_next_stage(void)
 {
   processing_stage = static_cast<ProcessingStage>(processing_stage + 1);
@@ -431,13 +382,11 @@ static void process_next_stage(void)
   
 } /* process_next_stage */
 
-
 static void on_error_msg(const string& msg)
 {
   cout << "*** ERROR: " << msg << endl;
   Application::app().quit();
 } /* on_error_msg */
-
 
 static void on_status_changed(StationData::Status status)
 {
@@ -450,13 +399,11 @@ static void on_status_changed(StationData::Status status)
   
 } /* on_status_changed */
 
-
 static void echolink_qso_done(EchoLinkQsoTest *con)
 {
   delete con;
   process_next_stage();
 } /* echolink_qso_done */
-
 
 static void on_station_list_updated(void)
 {
@@ -535,7 +482,6 @@ static void on_station_list_updated(void)
   
 } /* on_station_list_updated */
 
-
 /*
  *----------------------------------------------------------------------------
  * Function:  print_call_list
@@ -560,7 +506,6 @@ static void print_call_list(const list<StationData>& calls)
 	iter->description().c_str(), iter->id(), iter->ipStr().c_str());
   }  
 } /* print_call_list */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -654,8 +599,6 @@ static void parse_arguments( int argc, const char **argv )
   poptFreeContext(optCon);
 
 }
-
-
 
 /*
  * This file has not been truncated

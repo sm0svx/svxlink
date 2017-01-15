@@ -35,7 +35,6 @@ proc playMsg {msg} {
   ::playMsg $module_name $msg
 }
 
-
 #
 # Executed when this module is being activated
 #
@@ -78,11 +77,9 @@ proc play_help {} {
   }
 }
 
-
 proc status_report {} {
   #printInfo "status report called..."
 }
-
 
 proc play_standard {std} {
   playMsg $std
@@ -100,7 +97,6 @@ proc play_sel_call {cmd} {
     SelCall::play [string range $cmd 2 end]
   }
 }
-
 
 # end of namespace
 }

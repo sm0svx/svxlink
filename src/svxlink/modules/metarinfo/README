@@ -4,12 +4,10 @@ from Nov 2015) by Adi, DL1HRC
 VERSION 1.1.1 (10 Oct 2016)
 
 
-
 CHANGES:
 - two ways to request a METAR information from different web services
 - new configuration params
 - cloudtypes procedure added
-
 
 
 FUNCTION:
@@ -46,7 +44,6 @@ Examples:
 EDDP -> 32313171#
 KLAX -> 52532192#
 
-
 2) the star-method:
 
 dtmf on dialpad   digit
@@ -70,8 +67,11 @@ EDDM ->  33*3**6#
 ESSB ->  33*7777**22#
 LEPA ->  555*33*7*2#
 
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> refs/remotes/sm0svx/master
 INSTALL:
 
 - recompile and reinstall the latest trunk of SvxLink
@@ -112,6 +112,11 @@ LONGMESSAGES=1
 If set to 1, it gives out e.g. "Ceiling and visibility OK" instead of just
 "cavok". Comment out if you don't want it.
 
+<<<<<<< HEAD
+PROBLEMS AND BUGS:
+cat problems > dl1hrc [at] web.de
+
+=======
 TYPE=(XML||TXT)
 Configure the type of service
 
@@ -146,11 +151,15 @@ cat problems > dl1hrc [at] web.de
 
 
 
+>>>>>>> refs/remotes/sm0svx/master
 KNOWN PROBLEMS:
 - not all precipitations and combinations of it could be tested out
 - all after RMK can not be given out
 
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> refs/remotes/sm0svx/master
 ToDo:
 - SIGMET's, NOTAMS ?

@@ -1,7 +1,6 @@
 #ifndef MULTIRATE_FILTER_COEFF_INCLUDED
 #define MULTIRATE_FILTER_COEFF_INCLUDED
 
-
 /*
 First stage 48kHz <-> 16kHz (3.5kHz cut-off)
 This is an intermediate filter meant to be used to downsample to 8kHz.
@@ -49,7 +48,6 @@ static const float coeff_48_16_int[coeff_48_16_int_taps] =
   1.4483111628894497E-4,
   -0.001104533022845565
 };
-
 
 /*
 48kHz <-> 16kHz (5.5kHz cut-off)
@@ -117,7 +115,6 @@ static const float coeff_48_16[coeff_48_16_taps] =
   -0.0023665474931056,
   -0.0006552324784575
 };
-
 
 /*
 8kHz <-> 16kHz
@@ -225,6 +222,5 @@ static const float coeff_16_8[coeff_16_8_taps] =
   -8.268172996066966E-4,
   4.4954770039301524E-4
 };
-
 
 #endif /* MULTIRATE_FILTER_COEFF_INCLUDED */

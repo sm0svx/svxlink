@@ -27,82 +27,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example AsyncTimer_demo.cpp
 An example of how to use the Async::Timer class
 */
-
-
-
 #ifndef ASYNC_TIMER_INCLUDED
 #define ASYNC_TIMER_INCLUDED
 
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
-
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class that produces timer events
 @author Tobias Blomberg
@@ -140,18 +104,18 @@ class Timer : public sigc::trackable
      * zero has been set.
      */
     Timer(int timeout_ms = 0, Type type = TYPE_ONESHOT, bool enabled=true);
-    
+
     /**
      * @brief 	Destructor
      */
     ~Timer(void);
-    
+
     /**
      * @brief 	Return the type of this timer
      * @return	Returns the type of this timer
      */
     Type type(void) const { return m_type; }
-  
+
     /**
      * @brief 	Set (change) the timeout value
      * @param 	timeout_ms The new timeout value in milliseconds
@@ -165,13 +129,13 @@ class Timer : public sigc::trackable
      * zero has been set.
      */
     void setTimeout(int timeout_ms);
-  
+
     /**
      * @brief 	Return the setting of the timeout value
      * @return	Returns the timeout value in milliseconds
      */
     int timeout(void) const { return m_timeout_ms; }
-  
+
     /**
      * @brief 	Enable or disable the timer
      * @param 	do_enable Set to \em true to enable the timer or \em false to
@@ -181,14 +145,14 @@ class Timer : public sigc::trackable
      * a negative timeout value set must not be enabled.
      */
     void setEnable(bool do_enable);
-  
+
     /**
      * @brief 	Check if the timer is enabled
      * @return	Returns \em true if the timer is enabled or \em false if it is
      *	      	disabled
      */
     bool isEnabled(void) const { return m_is_enabled; }
-  
+
     /**
      * @brief 	Reset (restart) the timer
      *
@@ -198,7 +162,7 @@ class Timer : public sigc::trackable
      * If the timer is disabled, this function will do nothing.
      */
     void reset(void);
-    
+
     /**
      * @brief 	A signal that is emitted when the timer expires
      * @param 	timer A pointer to the timer that has expired
@@ -208,25 +172,21 @@ class Timer : public sigc::trackable
      * only connected slot.
      */
     sigc::signal<void, Timer *> expired;
-    
-    
+
   protected:
-    
+
   private:
     Type  m_type;
     int   m_timeout_ms;
     bool  m_is_enabled;
-  
-};  /* class Timer */
 
+};  /** class Timer */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_TIMER_INCLUDED */
+#endif /** ASYNC_TIMER_INCLUDED */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 

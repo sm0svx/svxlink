@@ -19,93 +19,49 @@ ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/**
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstring>
 
-
-/****************************************************************************
- *
+/**
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioDecimator.h"
 
-
-
-/****************************************************************************
- *
+/**
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/**
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/**
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioDecimator::AudioDecimator(int decimation_factor,
       	      	      	       const float *filter_coeff, int taps)
   : factor_M(decimation_factor), H_size(taps), p_H(filter_coeff)
@@ -113,22 +69,16 @@ AudioDecimator::AudioDecimator(int decimation_factor,
   setInputOutputSampleRate(factor_M, 1);
   p_Z = new float[H_size];
   memset(p_Z, 0, H_size * sizeof(*p_Z));
-} /* AudioDecimator::AudioDecimator */
-
+} /** AudioDecimator::AudioDecimator */
 
 AudioDecimator::~AudioDecimator(void)
 {
   delete [] p_Z;
-} /* AudioDecimator::~AudioDecimator */
+} /** AudioDecimator::~AudioDecimator */
 
-
-
-
-/****************************************************************************
- *
+/**
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
 void AudioDecimator::processSamples(float *dest, const float *src, int count)
 {
@@ -158,26 +108,20 @@ void AudioDecimator::processSamples(float *dest, const float *src, int count)
     {
       sum += p_H[tap] * p_Z[tap];
     }
-    *dest++ = sum;     /* store sum and point to next output */
+    *dest++ = sum;     /** store sum and point to next output */
     num_out++;
   }
 
   //printf("num_out=%d  count=%d  factor_M=%d\n", num_out, count, factor_M);
   assert(num_out == orig_count / factor_M);
   
-} /* AudioDecimator::processSamples */
+} /** AudioDecimator::processSamples */
 
-
-
-/****************************************************************************
- *
+/**
  * Private member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/*
+/**
  * This file has not been truncated
  */
 
