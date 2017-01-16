@@ -567,6 +567,7 @@ bool Logic::initialize(void)
   event_handler->publishStateEvent.connect(
           mem_fun(*this, &Logic::publishStateEvent));
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
+  event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -737,6 +738,15 @@ void Logic::recordStop(void)
   rx_splitter->removeSink(recorder);
   recorder = 0;
 } /* Logic::recordStop */
+
+
+void Logic::injectDtmf(const std::string& digits, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    dtmfDigitDetected(digits[i], len);
+  }
+} /* Logic::injectDtmf */
 
 
 bool Logic::activateModule(Module *module)

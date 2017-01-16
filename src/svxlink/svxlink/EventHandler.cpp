@@ -149,6 +149,7 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
                     this, NULL);
   Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
+  Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -271,20 +272,6 @@ const string EventHandler::eventResult(void) const
  * Private member functions
  *
  ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 
 int EventHandler::playFileHandler(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	   const char *argv[])
@@ -430,6 +417,29 @@ int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 } /* EventHandler::playDtmfHandler */
+
+
+int EventHandler::injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                                    int argc, const char *argv[])
+{
+  if((argc < 2) or (argc > 3))
+  {
+    static char msg[] = "Usage: injectDtmf <digits> [milliseconds]";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  string digits(argv[1]);
+  int duration = 100;
+  if (argc == 3)
+  {
+    duration = atoi(argv[2]);
+  }
+  //cout << "EventHandler::injectDtmf: " << digits << ", " << duration << endl;
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->injectDtmf(digits, duration);
+
+  return TCL_OK;
+} /* EventHandler::injectDtmfHandler */
 
 
 /*
