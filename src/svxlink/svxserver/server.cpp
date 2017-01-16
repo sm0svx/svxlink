@@ -222,16 +222,14 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     {
       (*it).second.state = STATE_DISC;
       (*it).second.sql_open = false;
-    //  cout << "... " << (*it).second.con->remoteHost() << ".sql_open=0 " << endl;
 
         // If a station lost network connection it can't be
         // master anymore, send a SQL close command to all
         // connected stations
       if (isMaster(con))
       {
-    //    cout << "--- sending SQL=0 to all, resetting master" << endl;
         MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
-        sendExcept(con, ms);
+        sendMsg(con, ms);
       }
       break;
     }
@@ -239,10 +237,9 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
 
   if (it != clients.end())
   {
-
     cout << "-X- removing client " << con->remoteHost() << ":"
          << con->remotePort()  << " from client list" << endl;
-     clients.erase(it);
+    clients.erase(it);
   }
 } /* SvxServer::clientDisconnected */
 
@@ -380,6 +377,11 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
           MsgAuthOk *ok_msg = new MsgAuthOk;
           sendMsg(con, ok_msg);
           ((*it).second).state = STATE_READY;
+
+          // sending SQL close to connected node just to be sure that it 
+          // isn't still open from former connects
+          MsgTransmitterStateChange *txcl = new MsgTransmitterStateChange(false);
+          sendMsg(con, txcl);
         }
       }
       else
@@ -450,10 +452,10 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
     case MsgAudio::TYPE:
     {
-        // if SvxServer is receiving an audiostream and the SQL is still not
-        // open, it will send a SQL=open command to all connected stations
-        // may occur in case of a network error when the connection has been
-        // reestablished
+      // if SvxServer is receiving an audiostream and the SQL is still not
+      // open, it will send a SQL=open command to all connected stations
+      // may occur in case of a network error when the connection has been
+      // reestablished
       if (!hasMaster())
       {
         audio_timer->setEnable(true);
@@ -486,9 +488,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
     case MsgFlush::TYPE:
     {
-        // reset the master to provide other stations to get the audio focus
-      cout << "... MsgFlush::TYPE: " << con->remoteHost() << endl;
-
+      // reset the master to provide other stations to get the audio focus
       if (isMaster(con))
       {
         resetMaster(con);
@@ -526,10 +526,10 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     {
       MsgSetTxCtrlMode *s = reinterpret_cast<MsgSetTxCtrlMode *>(msg);
 
-        // mode=1 means TX=true/on
+      // mode=1 means TX=true/on
       if (s->mode() == 1)
       {
-          // the station with 1st SQL opening becomes a master
+        // the station with 1st SQL opening becomes a master
         setMaster(con);
 
         MsgTransmitterStateChange *n = new MsgTransmitterStateChange(true);
@@ -541,7 +541,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         (*it).second.sql_open = true;
       }
 
-        // mode=2 means TX=AUTO
+      // mode=2 means TX=AUTO
       if (s->mode() == 2)
       {
         resetMaster(con);
