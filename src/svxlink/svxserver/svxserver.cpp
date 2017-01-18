@@ -2,7 +2,7 @@
 @file	 svxserver.cpp
 @brief   Main file for the svxserver remote transceiver for SvxLink
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2006-04-14
+@date	 2017-01-17
 
 This is the main file for the svxserver remote transceiver for the
 SvxLink server. It is used to link in remote transceivers to the SvxLink
@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 svxserver - A remote receiver for the SvxLink server
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

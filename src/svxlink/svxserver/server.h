@@ -157,6 +157,7 @@ class SvxServer : public sigc::trackable
       char      recv_buf[4096];
       unsigned  recv_cnt;
       unsigned  recv_exp;
+      bool  blocked;
     };
 
     typedef std::map<std::pair<const std::string, uint16_t>, Cons> Clients;

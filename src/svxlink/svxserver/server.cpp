@@ -2,7 +2,7 @@
 @file	 svxserver.cpp
 @brief   Main file for the svxserver
 @author  Adi Bier / DL1HRC
-@date	 2017-01-16
+@date	 2017-01-17
 
 This is the main file for the svxserver remote transceiver for the
 SvxLink server. It is used to link in remote transceivers to the SvxLink
@@ -122,7 +122,6 @@ SvxServer::SvxServer(Async::Config &cfg)
     cout << "--- setting HEARTBEAT_TIMEOUT=" << hbto << "ms" << endl;
   }
 
-  // cout << "--- AUTH_KEY=" << auth_key << endl;
   cout << "--- setting sql-timeout to " << sql_timeout << " ms" << endl;
   cout << "--- starting SERVER on port " << port << endl;
 
@@ -173,7 +172,8 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   Cons clpair;
   clpair.con = con;
   clpair.state = STATE_VER_WAIT;
-  clpair.sql_open = false;
+  clpair.sql_open = false;  // set SQL close as default
+  clpair.blocked = false;   // node is not blocked as default
   clpair.recv_exp = sizeof(Msg);
   clpair.recv_cnt = 0;
   gettimeofday(&clpair.last_msg, NULL);
@@ -573,6 +573,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
 void SvxServer::audiotimeout(Timer *t)
 {
+  // is an audio stream not received anymore: reset
   if (hasMaster())
   {
     cout << "...Audio timeout " << master->remoteHost() << endl;
@@ -583,7 +584,24 @@ void SvxServer::audiotimeout(Timer *t)
 
 void SvxServer::sqltimeout(Timer *t)
 {
-  cout << "...SQL timeout " << master->remoteHost() << endl;
+  Clients::iterator it;
+  Clients t_clients;
+
+  // find the connection handler that has a problem with
+  // the SQL -> revoke the AUTH grant
+  for (it=clients.begin(); it!=clients.end(); it++)
+  {
+    if ( (*it).second.con == master)
+    {
+      (*it).second.state = STATE_DISC;
+      (*it).second.blocked = true;
+      cout << "*** WARNING: SQL on " << master->remoteHost() 
+           << " has been open too long, blocking station." << endl;
+      gettimeofday(&((*it).second).last_msg, NULL);
+      break;
+    }
+  }
+
   resetAll();
 } /* SvxServer::sqltimeout */
 
@@ -599,10 +617,10 @@ void SvxServer::resetAll(void)
 
   for (it=clients.begin(); it!=clients.end(); it++)
   {
-    if ( ((*it).second).con == master)
+    if ( (*it).second.con == master)
     {
       (*it).second.sql_open = false;
-      gettimeofday(&((*it).second).last_msg, NULL);
+      gettimeofday(&(*it).second.last_msg, NULL);
       break;
     }
   }
@@ -627,7 +645,7 @@ void SvxServer::hbtimeout(Timer *t)
   for (it=clients.begin(); it!=clients.end(); it++)
   {
     gettimeofday(&t_time, NULL);
-    timersub(&t_time, &((*it).second).last_msg, &t_diff );
+    timersub(&t_time, &(*it).second.last_msg, &t_diff );
     diff_ms = int(t_diff.tv_sec * 1000 +  t_diff.tv_usec/1000);
 
       // if the difference more then 2*timeout, put the client
@@ -652,7 +670,7 @@ void SvxServer::hbtimeout(Timer *t)
     cout << "-X- disconnect client " << (*it).second.con->remoteHost() << ":"
          << (*it).second.con->remotePort() << endl;
     ((*it).second).con->disconnect();
-    clientDisconnected(((*it).second).con, TcpConnection::DR_ORDERED_DISCONNECT);
+    clientDisconnected((*it).second.con, TcpConnection::DR_ORDERED_DISCONNECT);
   }
 
   t->reset();
@@ -671,9 +689,9 @@ void SvxServer::sendExcept(Async::TcpConnection *con, Msg *msg)
     // sending data to connected clients without the source client
   for (it = t_clients.begin(); it != t_clients.end(); it++)
   {
-    if (((*it).second).con != con)
+    if ((*it).second.con != con)
     {
-      sendMsg(((*it).second).con, msg);
+      sendMsg((*it).second.con, msg);
     }
   }
 } /* SvxServer::sendExcept */
