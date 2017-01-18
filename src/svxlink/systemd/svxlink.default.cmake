@@ -13,6 +13,10 @@ CFGFILE=/etc/svxlink/svxlink.conf
 # Environment variables to set up. Separate variables with a space.
 ENV="ASYNC_AUDIO_NOTRIGGER=1"
 
+# AUDIO_SETTINGS_ONSTART="<string>"
+# AUDIO_SETTINGS_ONSTOP="<string>"
+#   <string>: shell script command(s)
+
 if [ -r /etc/svxlink/svxlink_gpio.conf ]; then
         . /etc/svxlink/svxlink_gpio.conf
 fi
