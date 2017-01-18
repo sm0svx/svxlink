@@ -305,9 +305,26 @@ BUFFER_LENGTH=0
 #SQL_CLOSE_REVOTE_DELAY=500
 #RX_SWITCH_DELAY=500
 
-[MultiTx]
+#svxlink 2 svxlink connection
+[LinkTrxMultiTx]
 TYPE=Multi
-TRANSMITTERS=Tx1,Tx2,Tx3
+TRANSMITTERS=LinkStation1,LinkStation2,LinkStation3
+
+[LinkStation1]
+TYPE=NetTrxAdapter
+LISTEN_PORT=5211
+AUTH_KEY="Station1Password"
+
+[LinkStation2]
+TYPE=NetTrxAdapter
+LISTEN_PORT=5212
+AUTH_KEY="Station2Password"
+
+[LinkStation3]
+TYPE=NetTrxAdapter
+LISTEN_PORT=5213
+AUTH_KEY="Station3Password"
+
 
 [LocationInfo]
 #APRS_SERVER_LIST=euro.aprs2.net:14580
