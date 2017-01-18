@@ -2,7 +2,7 @@
 
 [Unit]
 Description=svxlink repeater control software
-After=network.target remote-fs.target syslog.target time.target svxserver.service
+After=network.target remote-fs.target syslog.target time.target
 
 [Service]
 ;;; Type=Notify
