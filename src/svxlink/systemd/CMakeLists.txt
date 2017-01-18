@@ -27,7 +27,7 @@ if(WITH_SYSTEMD)
     configure_file(${CMAKE_SOURCE_DIR}/svxlink/systemd/svxlink_gpio_down.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_down)
     message( STATUS "Configured systemd unit file:svxlink_gpio_down.cmake" )
     
-    configure_file(${CMAKE_SOURCE_DIR}/svxlinkg/systemd/svxlink_gpio.conf.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio.conf)
+    configure_file(${CMAKE_SOURCE_DIR}/svxlink/systemd/svxlink_gpio.conf.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio.conf)
     message( STATUS "Configured systemd unit file:svxlink_gpio.conf.in.cmake" )
 
     if(EXISTS ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
