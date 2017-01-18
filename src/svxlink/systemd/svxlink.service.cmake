@@ -6,7 +6,7 @@ After=network.target remote-fs.target syslog.target time.target svxserver.servic
 
 [Service]
 ;;; Type=Notify
-EnvironmentFile=/etc/default/svxlink
+EnvironmentFile=@SVX_SYSCONF_INSTALL_DIR@/svxlink
 PIDFile=/run/svxlink.pid
 ExecStartPre=@CMAKE_INSTALL_PREFIX@/sbin/svxlink_gpio_up
 ExecStartPre=-/bin/touch /var/log/svxlink
@@ -19,7 +19,7 @@ TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@
 ;;; NotifyAccess=main
 LimitCORE=infinity
-WorkingDirectory=/etc/svxlink
+WorkingDirectory=@SVX_SYSCONF_INSTALL_DIIR@
 
 [Install]
 WantedBy=multi-user.target
