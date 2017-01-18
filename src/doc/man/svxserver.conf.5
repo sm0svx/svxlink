@@ -69,7 +69,8 @@ challenge-response procedure will be used for authentication.
 .TP
 .B SQL_TIMEOUT
 Define the maximum time in seconds for a squelch to be allowed in OPEN state
-befor a reset message will be send to all connected nodes.
+before the sql is detected as "hanging". This node will be blocked until 
+it is reconnected.
 A goot value would be about 300 seconds (5 minutes).
 .TP
 .B TIMESTAMP_FORMAT
