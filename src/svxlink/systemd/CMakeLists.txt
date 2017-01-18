@@ -28,7 +28,6 @@ if(WITH_SYSTEMD)
     
     configure_file(${CMAKE_SOURCE_DIR}/systemd/svxlink_gpio.conf.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio.conf)
     message( STATUS "Configured systemd unit file:svxlink_gpio.conf.in.cmake" )
-    
 
     if(EXISTS ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
         install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR} )
@@ -55,7 +54,7 @@ if(WITH_SYSTEMD)
      endif(EXISTS ${SYSTEMD_SCRIPTS_FILES_DIR})
      
      if(EXISTS ${SVX_SYSCONF_INSTALL_DIR})
-     	install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf DESTINATION ${SVX_SYSCONF_INSTALL_DIR} )
+     	install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/systemd/svxlink_gpio.conf ${SVX_SYSCONF_INSTALL_DIR} )
         message(STATUS "Unit files will be installed to ${SVX_SYSCONF_INSTALL_DIR} after make install" )
      endif(EXISTS ${SVX_SYSCONF_INSTALL_DIR})
      
