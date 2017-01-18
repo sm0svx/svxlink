@@ -17,7 +17,7 @@ if(WITH_SYSTEMD)
     configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.service.cmake ${PROJECT_BINARY_DIR}/systemd/remotetrx.service)
     message( STATUS "Configured systemd unit file:remotetrx.service" )
 
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.default.cmake${PROJECT_BINARY_DIR}/systemd/svxlink)
+    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.default.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink)
     message( STATUS "Configured systemd unit file:svxlink" )
 
     configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.cmake ${PROJECT_BINARY_DIR}/systemd/remotetrx)
