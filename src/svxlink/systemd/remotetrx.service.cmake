@@ -5,7 +5,7 @@ Description=svxlink remote repeater control software
 After=network.target remote-fs.target syslog.target time.target svxserver.service
 
 [Service]
-EnvironmentFile=/etc/default/remotetrx
+EnvironmentFile=@SVX_SYSCONF_INSTALL_DIIR@/remotetrx
 PIDFile=/run/remotetrx.pid
 ExecStartPre=-touch /var/log/remotetrx
 ExecStartPre=-chmod $User /var/log/remotetrx
@@ -14,9 +14,9 @@ ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@
-;;;;NotifyAccess=main
+;;NotifyAccess=main
 LimitCORE=infinity
-WorkingDirectory=/etc/svxlink
+WorkingDirectory=@SVX_SYSCONF_INSTALL_DIIR@
 
 [Install]
 WantedBy=multi-user.target
