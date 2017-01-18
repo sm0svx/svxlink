@@ -11,26 +11,26 @@ if(WITH_SYSTEMD)
 
     set(SYSTEMD_SOURCE_DIR /svxlink/systemd")
 
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/svxlink.service.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
+    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.cmake${PROJECT_BINARY_DIR}/systemd/svxlink.service)
     message( STATUS "Configured systemd unit file:svxlink.service" )
     
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/remotetrx.service.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/remotetrx.service)
+    configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.service.cmake ${PROJECT_BINARY_DIR}/systemd/remotetrx.service)
     message( STATUS "Configured systemd unit file:remotetrx.service" )
     
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/svxlink.default.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/svxlink)
+    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.default.cmake${PROJECT_BINARY_DIR}/systemd/svxlink)
     message( STATUS "Configured systemd unit file:svxlink" )
     
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/remotetrx.default.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/remotetrx)
+    configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.cmake ${PROJECT_BINARY_DIR}/systemd/remotetrx)
     message( STATUS "Configured systemd unit file:remotetrx" )   
 
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/svxlink_gpio_up.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_up)
-    message( STATUS "Configured systemd unit file:svxlink_gpio_up.SYSTEMD" )
+    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio_up.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_up)
+    message( STATUS "Configured systemd unit file:svxlink_gpio_up" )
 
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/svxlink_gpio_down.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_down)
-    message( STATUS "Configured systemd unit file:svxlink_gpio_down.SYSTEMD" )
+    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio_down.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_down)
+    message( STATUS "Configured systemd unit file:svxlink_gpio_down" )
     
-    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink/systemd/svxlink_gpio.conf.SYSTEMD ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio.conf)
-    message( STATUS "Configured systemd unit file:svxlink_gpio.conf.in.SYSTEMD" )
+    configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio.conf.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio.conf)
+    message( STATUS "Configured systemd unit file:svxlink_gpio.conf" )
 
     if(EXISTS ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
         install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR} )
