@@ -102,9 +102,19 @@ SvxServer::SvxServer(Async::Config &cfg)
   if (sql_timeout < 1000)
   {
      // if SQL_TIMEOUT not set, define 60 seconds
-    cerr << "--- WARNING: Configuration variable SQL_TIMEOUT is senseless or missing."
-         << "Setting default to 60 seconds" << endl;
+    cerr << "--- WARNING: Configuration variable SQL_TIMEOUT is senseless or"
+         << " missing. Setting default to 60 seconds" << endl;
     sql_timeout = 60000;
+  }
+
+  cfg.getValue("GLOBAL", "SQL_RESET_TIMEOUT", value);
+  sql_resettimeout = 1000 * atoi(value.c_str());
+  if (sql_resettimeout < 1000)
+  {
+     // if SQL_RESET_TIMEOUT not set, define 60 seconds
+    cerr << "--- WARNING: Configuration variable SQL_RESET_TIMEOUT is senseless"
+         << " or missing. Setting default to 60 seconds" << endl;
+    sql_resettimeout = 60000;
   }
 
   cfg.getValue("GLOBAL", "AUTH_KEY", auth_key, true);
@@ -142,6 +152,10 @@ SvxServer::SvxServer(Async::Config &cfg)
   sql_timer = new Async::Timer(sql_timeout);
   sql_timer->expired.connect(mem_fun(*this, &SvxServer::sqltimeout));
   sql_timer->setEnable(false);
+
+  sql_resettimer = new Async::Timer(sql_resettimeout);
+  sql_resettimer->expired.connect(mem_fun(*this, &SvxServer::sqlresettimeout));
+  sql_resettimer->setEnable(false);
 
   audio_timer = new Async::Timer(1000);
   audio_timer->expired.connect(mem_fun(*this, &SvxServer::audiotimeout));
@@ -338,7 +352,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
   {
     if ( ((*it).second).con == con)
     {
-      state = ((*it).second).state;
+      state = (*it).second.state;
       gettimeofday(&((*it).second).last_msg, NULL);
       break;
     }
@@ -539,6 +553,8 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         MsgSquelch  *ms = new MsgSquelch(true, 1.0, 1);
         sendExcept(con, ms);
         (*it).second.sql_open = true;
+        audio_timer->reset();
+        audio_timer->setEnable(true);
       }
 
       // mode=2 means TX=AUTO
@@ -606,6 +622,12 @@ void SvxServer::sqltimeout(Timer *t)
 } /* SvxServer::sqltimeout */
 
 
+void SvxServer::sqlresettimeout(Timer *t)
+{
+  
+} /* SvxServer::sqlresettimeout */
+
+
 void SvxServer::resetAll(void)
 {
   MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
@@ -656,7 +678,7 @@ void SvxServer::hbtimeout(Timer *t)
            << (*it).second.con->remoteHost() << ":"
            << (*it).second.con->remotePort() << endl;
       t_clients.insert(*it); // storing clients to be removed later
-      ((*it).second).state = STATE_DISC;
+      (*it).second.state = STATE_DISC;
     }
     else 
     {
@@ -669,7 +691,7 @@ void SvxServer::hbtimeout(Timer *t)
   {
     cout << "-X- disconnect client " << (*it).second.con->remoteHost() << ":"
          << (*it).second.con->remotePort() << endl;
-    ((*it).second).con->disconnect();
+    (*it).second.con->disconnect();
     clientDisconnected((*it).second.con, TcpConnection::DR_ORDERED_DISCONNECT);
   }
 
