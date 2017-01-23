@@ -167,7 +167,7 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param 	mute_state The mute state to set for this receiver
      */
     virtual void setMuteState(MuteState new_mute_state) = 0;
-
+    
     /**
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
@@ -212,20 +212,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @returns Returns \em true if the receiver is ready for operation
      */
     virtual bool isReady(void) const { return true; }
-
-#if 0
-    /**
-     * @brief 	Set the enabled status, close squelch if disabling
-     * @param   do_enable Set to \em true to enable the receiver
-     */
-    void setEnabled(bool do_enable);
-
-    /**
-     * @brief 	Get the enabled state
-     * @return  Returns \em true if receiver is enabled or else \em false
-     */
-    bool isEnabled(void);
-#endif
 
     /**
      * @brief 	A signal that indicates if the squelch is open or not
@@ -295,8 +281,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
     bool      	  m_sql_open;
     Async::Config m_cfg;
     Async::Timer  *m_sql_tmo_timer;
-    //bool          m_sql_open_hidden;
-    //bool          m_is_enabled;
     
     void sqlTimeout(Async::Timer *t);
     

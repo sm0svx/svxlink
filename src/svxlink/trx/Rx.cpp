@@ -217,7 +217,6 @@ std::string Rx::muteStateToString(MuteState mute_state)
 Rx::Rx(Config &cfg, const string& name)
   : m_name(name), m_verbose(true), m_sql_open(false), m_cfg(cfg),
     m_sql_tmo_timer(0)
-    //, m_sql_open_hidden(false), m_is_enabled(true)
 {
 } /* Rx::Rx */
 
@@ -247,39 +246,6 @@ bool Rx::initialize(void)
   return true;
   
 } /* Rx::initialize */
-
-
-#if 0
-void Rx::setEnabled(bool do_enable)
-{
-  if (do_enable == m_is_enabled)
-  {
-    return;
-  }
-  cout << m_name << ": " << (do_enable ? "Enable" : "Disable") << endl;
-  m_is_enabled = do_enable;
-  if (do_enable)
-  {
-    //cout << "### Rx:setEnabled: re-enable, set SQ to " 
-    //     << m_sql_open_hidden << endl;
-      // Set squelch to the correct, current squelch status
-    setSquelchState(m_sql_open_hidden);
-  }
-  else
-  {
-      // Close squelch, but set m_sql_open_hidden to what it WAS
-    bool was_open = m_sql_open;
-    setSquelchState(false);
-    m_sql_open_hidden = was_open;
-  }
-} /* Rx::setEnabled */
-
-
-bool Rx::isEnabled(void)
-{
-  return m_is_enabled;
-} /* Rx::isEnabled */
-#endif
 
 
 RxFactory::RxFactory(const string &name)
@@ -349,17 +315,6 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
 
 void Rx::setSquelchState(bool is_open)
 {
-#if 0
-  m_sql_open_hidden = is_open;
-
-  if (is_open && !m_is_enabled)
-  {
-    //cout << "### " << m_name << ": Refusing to open squelch, we're disabled"
-    //     << endl;
-    return;
-  }
-#endif
-
   if (is_open == m_sql_open)
   {
     return;

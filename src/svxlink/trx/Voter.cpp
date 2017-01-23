@@ -181,16 +181,9 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
         mute_state = orig_mute_state;
         enabled = false;
       }
-      //rx->setEnabled(status);
-      //stopOutput(true); // or else they will 'fall through' when all
-                          // 'open' RXes are disabled
     }
 
-    bool isEnabled(void) const
-    {
-      return enabled;
-      //return rx->isEnabled();
-    }
+    bool isEnabled(void) const { return enabled; }
 
     const std::string& name(void) const { return rx->name(); }
     
