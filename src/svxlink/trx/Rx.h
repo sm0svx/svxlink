@@ -132,18 +132,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
       MUTE_ALL      //! Mute everything. Also close the audio device.
     } MuteState;
 
-    /**
-     * @brief 	Set the enabled status, close squelch if disabled
-     * @param   state The status
-     */
-    void setEnabled(bool status);
-
-    /**
-     * @brief 	Get the enabled state
-     * @return   The status
-     */
-    bool isEnabled(void);
-
     static std::string muteStateToString(MuteState mute_state);
 
     /**
@@ -225,6 +213,20 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     virtual bool isReady(void) const { return true; }
 
+#if 0
+    /**
+     * @brief 	Set the enabled status, close squelch if disabling
+     * @param   do_enable Set to \em true to enable the receiver
+     */
+    void setEnabled(bool do_enable);
+
+    /**
+     * @brief 	Get the enabled state
+     * @return  Returns \em true if receiver is enabled or else \em false
+     */
+    bool isEnabled(void);
+#endif
+
     /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
@@ -291,10 +293,10 @@ class Rx : public sigc::trackable, public Async::AudioSource
     std::string   m_name;
     bool          m_verbose;
     bool      	  m_sql_open;
-    bool      	  m_sql_open_hidden;
     Async::Config m_cfg;
     Async::Timer  *m_sql_tmo_timer;
-    bool          m_is_enabled;
+    //bool          m_sql_open_hidden;
+    //bool          m_is_enabled;
     
     void sqlTimeout(Async::Timer *t);
     
