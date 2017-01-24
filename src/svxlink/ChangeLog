@@ -40,6 +40,11 @@
   SERVER_BACKUP and PORT_BACKUP to configure the backup server.
   Patch by sh123.
 
+* New command PTY for controlling the receiver voter. It's possible to
+  enable and disable receivers using the ENABLE and DISABLE commands.
+  Use the COMMAND_PTY config variable in the voter configuration section
+  to set it up.
+
 
 
  1.5.0 -- 22 Nov 2015

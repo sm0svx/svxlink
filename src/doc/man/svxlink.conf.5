@@ -1440,6 +1440,18 @@ and fast receiver is receiving the same signal and the faster is currently
 chosen, when the PTT is released the slower receiver will be voted before
 closing.  This will cause a double squelch tail and double roger beep.
 Default is 500 milliseconds.
+.TP
+.B COMMAND_PTY
+Specify the path to a PTY that can be used to control the voter from
+the operating system. Available commands:
+.RS
+.IP \(bu 4
+.BR "ENABLE rx_name" " - Enable the given receiver"
+.IP \(bu 4
+.BR "DISABLE rx_name" " - Disable the given receiver"
+.P
+Commands can be issued using a simple echo command from the shell. Example:
+echo "DISABLE Rx1" >/dev/shm/voter_ctrl
 .
 .SS Networked Receiver Section
 .
