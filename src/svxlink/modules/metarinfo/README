@@ -135,14 +135,14 @@ SERVER=tgftp.nws.noaa.gov
 LINK=data/observations/metar/stations
 
 2) the new xml service by aviationweather.gov:
-TYPE=TXT
+TYPE=XML
 SERVER=aviationweather.gov
 LINK=/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=
 
 
 
 PROBLEMS AND BUGS:
-cat problems > dl1hrc [at] web.de
+cat problems > dl1hrc [at] gmx.de
 
 
 
