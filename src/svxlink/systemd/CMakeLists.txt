@@ -6,7 +6,7 @@ if(WITH_SYSTEMD)
 
     set(SYSTEMD_CONFIGURATIONS_FILES_DIR "/lib/systemd/system" )
     set(SYSTEMD_DEFAULTS_FILES_DIR "/etc/default" )
-    set(SVX_SYSCONF_INSTALL_DIR "//etc/svxlink" )
+    set(SVX_SYSCONF_INSTALL_DIR "/etc/svxlink" )
     set(SYSTEMD_SCRIPTS_FILES_DIR "/usr/sbin" )
 
     set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd")
