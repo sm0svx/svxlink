@@ -68,9 +68,6 @@ install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
-install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf
-  ${SVX_SYSCONF_INSTALL_DIR}
-  )
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
 install(FILES RepeaterLogic.tcl SimplexLogic.tcl Module.tcl Logic.tcl CW.tcl
   SelCall.tcl locale.tcl
