@@ -5,9 +5,7 @@
 if(WITH_SYSTEMD)
   set(SYSTEMD_CONFIGURATIONS_FILES_DIR "/lib/systemd/system" )
   set(SYSTEMD_DEFAULTS_FILES_DIR "/etc/default" )
-  set(SYSTEMD_SCRIPTS_FILES_DIR "/usr/sbin" )
-
-  set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd")
+  set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd" )
 
   configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.in
                  ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
@@ -24,14 +22,6 @@ if(WITH_SYSTEMD)
   configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.in
                  ${PROJECT_BINARY_DIR}/systemd/remotetrx)
   message( STATUS "Configured systemd unit file:remotetrx" )
-
-  configure_file(${SYSTEMD_SOURCE_DIR}/gpio_setup.sh.in
-                 ${PROJECT_BINARY_DIR}/systemd/gpio_setup.sh)
-  message( STATUS "Configured systemd unit file:gpio_setup.sh" )
-
-  configure_file(${SYSTEMD_SOURCE_DIR}/gpio_tear_down.sh.in
-                 ${PROJECT_BINARY_DIR}/systemd/gpio_tear_down.sh)
-  message( STATUS "Configured systemd unit file:gpio_tear_down.sh" )
 
   if(EXISTS ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
     install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service
@@ -51,13 +41,4 @@ if(WITH_SYSTEMD)
                    "installed to ${SYSTEMD_DEFAULTS_FILES_DIR} "
                    "after make install")
   endif(EXISTS ${SYSTEMD_DEFAULTS_FILES_DIR})
-
-  if(EXISTS ${SYSTEMD_SCRIPTS_FILES_DIR})
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/systemd/gpio_setup.sh
-            DESTINATION ${SYSTEMD_SCRIPTS_FILES_DIR} )
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/systemd/gpio_tear_down.sh
-            DESTINATION ${SYSTEMD_SCRIPTS_FILES_DIR} )
-    message(STATUS "Systemd script files will be installed to "
-                   "${SYSTEMD_SCRIPTS_FILES_DIR} after make install")
-  endif(EXISTS ${SYSTEMD_SCRIPTS_FILES_DIR})
 endif(WITH_SYSTEMD)
