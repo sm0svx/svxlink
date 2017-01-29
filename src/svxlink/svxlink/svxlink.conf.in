@@ -6,7 +6,7 @@
 
 [GLOBAL]
 #MODULE_PATH=/usr/lib/arm-linux-gnueabihf/svxlink
-LOGICS=RepeaterLogic,LinkLogic
+LOGICS=SimplexLogic
 CFG_DIR=svxlink.d
 TIMESTAMP_FORMAT="%c"
 CARD_SAMPLE_RATE=16000
@@ -99,17 +99,6 @@ MAX_DIRSIZE=1024
 #TIMEOUT=300
 #QSO_TIMEOUT=300
 #ENCODER_CMD=/usr/bin/oggenc -Q \"%f\" && rm \"%f\"
-
-[Voter]
-TYPE=Voter
-RECEIVERS=Rx1,Rx2,Rx3
-VOTING_DELAY=200
-BUFFER_LENGTH=0
-#REVOTE_INTERVAL=1000
-#HYSTERESIS=50
-#SQL_CLOSE_REVOTE_DELAY=500
-#RX_SWITCH_DELAY=500
-#COMMAND_PTY=/dev/shm/voter_ctrl
 
 [MultiTx]
 TYPE=Multi
@@ -378,6 +367,7 @@ BUFFER_LENGTH=0
 #HYSTERESIS=50
 #SQL_CLOSE_REVOTE_DELAY=500
 #RX_SWITCH_DELAY=500
+#COMMAND_PTY=/dev/shm/voter_ctrl
 
 #svxlink 2 svxlink connection
 [LinkTrxMultiTx]
@@ -410,9 +400,10 @@ CALLSIGN=ER-MYCALL
 #ANTENNA_GAIN=6
 #ANTENNA_HEIGHT=20m
 #ANTENNA_DIR=-1
+#PATH=WIDE1-1
 #BEACON_INTERVAL=10
 #TONE=136
-#COMMENT=SvxLink by SM0SVX (svxlink.org)
+COMMENT=SvxLink by SM0SVX (www.svxlink.org)
 
 [Macros]
 1=EchoLink:9999#
