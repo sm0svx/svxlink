@@ -61,19 +61,6 @@ Description: Voice-over-IP server for ham radio operators (debug symbols)
  .
  EchoLink® is a registered trademark of Synergenics, LLC.
 
-Package: svxserver
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
-Description: Server to allow svxlink repeaters to linkup without 
- EchoLink® protocol.
-
-Package: svxserver-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: svxserver (= ${binary:Version}), ${misc:Depends}
-Description: svxserver (debug symbols)
-
 Package: remotetrx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
