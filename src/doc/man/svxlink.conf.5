@@ -312,7 +312,18 @@ after starting SvxLink. See STATE PTY FORMAT for more information on the format
 of the state messages.
 
 Example: STATE_PTY=/tmp/state_pty
-.
+.TP
+.B CTRL_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Monitoring
+the PTY output is as simple at doing a
+.B "echo \"*1#\" > /path/to/pty"
+after starting SvxLink.
+
+Example: CTRL_PTY=/tmp/ctrl_pty
+
 .SS Simplex Logic Section
 .
 The Simplex Logic section contains configuration data for a simplex logic core.
