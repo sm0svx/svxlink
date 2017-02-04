@@ -111,7 +111,6 @@ class LocationInfo
   public:
     static LocationInfo* instance()
     {
-       static CGuard g;
        if (!_instance)
         return NULL; // illegal pointer, if not initialized
        return _instance;
@@ -120,6 +119,12 @@ class LocationInfo
     static bool has_instance()
     {
         return _instance;
+    }
+
+    static void deleteInstance(void)
+    {
+      delete _instance;
+      _instance = 0;
     }
 
     struct Coordinate
@@ -199,20 +204,6 @@ class LocationInfo
     bool getTransmitting(const std::string &name);
     void setTransmitting(const std::string &name, struct timeval tv, bool state);
     void setReceiving(const std::string &name, struct timeval tv, bool state);
-
-    class CGuard
-    {
-       public:
-         ~CGuard()
-         {
-           if(NULL != LocationInfo::_instance)
-           {
-              delete LocationInfo::_instance;
-              LocationInfo::_instance = NULL;
-           }
-         }
-    };
-    friend class CGuard;
 
   private:
     static LocationInfo* _instance;

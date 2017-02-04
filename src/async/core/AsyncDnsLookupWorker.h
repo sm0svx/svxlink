@@ -124,6 +124,10 @@ class DnsLookupWorker
      */
     virtual ~DnsLookupWorker(void) {}
     
+    /**
+     * @brief   Called by the DnsLookup class to start the lookup
+     * @return  Return \em true on success or else \em false
+     */
     virtual bool doLookup(void) { return true; }
     
     /**

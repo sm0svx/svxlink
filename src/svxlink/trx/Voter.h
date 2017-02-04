@@ -68,6 +68,7 @@ namespace Async
 {
   class Timer;
   class AudioSelector;
+  class Pty;
 };
 
 
@@ -198,7 +199,7 @@ class Voter : public Rx
     static CONSTEXPR unsigned MIN_REVOTE_INTERVAL            = 100;
     static CONSTEXPR unsigned MAX_REVOTE_INTERVAL            = 60000;
     static CONSTEXPR unsigned MAX_RX_SWITCH_DELAY            = 3000;
-    
+
     class SatRx;
 
     TOPSTATE(Top)
@@ -409,6 +410,8 @@ class Voter : public Rx
     Macho::Machine<Top>   sm;
     bool		  is_processing_event;
     EventQueue		  event_queue;
+    Async::Pty            *command_pty;
+    std::string           command_buf;
     
     void dispatchEvent(Macho::IEvent<Top> *event);
     void satSquelchOpen(bool is_open, SatRx *rx);
@@ -419,6 +422,9 @@ class Voter : public Rx
     void resetAll(void);
     void printSquelchState(void);
     SatRx *findBestRx(void) const;
+    void onCommandPtyInput(const void *buf, size_t count);
+    void handlePtyCommand(const std::string &full_command);
+    void setRxEnabled(const std::string &rx_name, bool do_enable);
 
 };  /* class Voter */
 
