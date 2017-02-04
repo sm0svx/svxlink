@@ -9,7 +9,3 @@ RUNASUSER=svxlink
 
 # Specify which configuration file to use
 CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
-
-if [ -r @SVX_SYSCONF_INSTALL_DIR@/svxlink_gpio.conf ]; then
-. @SVX_SYSCONF_INSTALL_DIR@/svxlink_gpio.conf
-fi
