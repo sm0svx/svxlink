@@ -424,6 +424,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       return;
     }
 
+#if 0
       // get callsign from remote station, not implemented yet
     case MsgRemoteCall::TYPE:
     {
@@ -431,6 +432,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       (*it).second.callsign = n->getCall();
       return;
     }
+#endif
 
     case MsgSquelch::TYPE:
     {

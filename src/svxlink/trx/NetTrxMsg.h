@@ -428,19 +428,6 @@ class MsgAudio : public Msg
 }; /* MsgAudio */
 
 
-class MsgRemoteCall : public Msg
-{
-  public:
-    static const unsigned TYPE = 105;
-
-    MsgRemoteCall(std::string callsign) :
-      Msg(TYPE, sizeof(MsgRemoteCall)), m_callsign(callsign) {}
-    std::string getCall(void) const { return m_callsign; }
-
-  private:
-    std::string m_callsign;
-
-}; /* MsgRemoteCall */
 
 
 /******************************** RX Messages ********************************/
