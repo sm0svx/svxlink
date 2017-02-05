@@ -59,26 +59,33 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   @ONLY
   )
-
-# Generate config file with correct paths
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio.conf.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gpio.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   @ONLY
   )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_up.in
+  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_up)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
+  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_down)
 
 # Install targets
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
-install_mkdir(${SVX_SYSCONF_INSTALL_DIR}/svxlink.d)
 install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder svxlink.daemon)
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
-install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
 install(FILES RepeaterLogic.tcl SimplexLogic.tcl Module.tcl Logic.tcl CW.tcl
   SelCall.tcl locale.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
+  )
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_up
+  DESTINATION ${SBIN_INSTALL_DIR}
+  )
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_down
+  DESTINATION ${SBIN_INSTALL_DIR}
   )

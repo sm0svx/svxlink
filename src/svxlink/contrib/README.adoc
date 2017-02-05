@@ -1,0 +1,23 @@
+= Thirdparty contributions =
+
+This directory contain some contributions that is not yet an official part of
+the SvxLink project. The reason for that can be that parts are missing, like
+documentation or sound clips, or that the code have not yet been thoroughly
+reviewed.
+
+== Building ==
+To emphasize that this may be unstable code, no contributions are built or
+installed by default. They must be explicitly enabled during the build process.
+This is done using command line arguments for the cmake executable during the
+normal build process. The general pattern look like this:
+
+  cmake -DWITH_CONTRIB_name_of_contrib=ON ..
+
+Example:
+
+  cmake -DWITH_CONTRIB_MODULE_REMOTE_RELAY=ON ..
+
+== Package Maintainers ==
+If building binary packages of SvxLink, it should be made clear to the user
+that this is unofficial code. The preferred way is to provide contributions in
+separate packages.
