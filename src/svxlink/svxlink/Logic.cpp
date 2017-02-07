@@ -269,6 +269,22 @@ bool Logic::initialize(void)
     }
   }
 
+  string ctrl_pty_path;
+  cfg().getValue(name(), "CTRL_PTY", ctrl_pty_path);
+  if (!ctrl_pty_path.empty())
+  {
+    ctrl_pty = new Pty(ctrl_pty_path);
+    if (!ctrl_pty->open())
+    {
+      cerr << "*** ERROR: Could not open control PTY "
+           << ctrl_pty_path << " as spcified in configuration variable "
+           << name() << "/" << "CTRL_PTY" << endl;
+      cleanup();
+      return false;
+    }
+    ctrl_pty->dataReceived.connect(mem_fun(*this, &Logic::ptyCmdReceived));
+  }
+
   string value;
   if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
   {
@@ -1571,6 +1587,15 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   state_pty->write(os.str().c_str(), os.str().size());
 } /* Logic::publishStateEvent */
 
+
+void Logic::ptyCmdReceived(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<(count-1); ++i)
+  {
+    dtmfDigitDetectedP(buffer[i], 100);
+  }
+} /* Logic::ptyCmdReceived */
 
 
 /*
