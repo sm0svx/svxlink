@@ -28,6 +28,14 @@ set_target_properties(svxserver PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
+configure_file(${SYSTEMD_SOURCE_DIR}/svxserver.service.in
+               ${PROJECT_BINARY_DIR}/systemd/svxserver.service)
+#message(STATUS "Configured systemd unit file:svxserver.service")
+
 # Install targets
+install(FILES ${PROJECT_BINARY_DIR}/svxserver.service
+        DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
+
 install(TARGETS svxserver DESTINATION ${BIN_INSTALL_DIR})
 install_if_not_exists(svxserver.conf ${SVX_SYSCONF_INSTALL_DIR})
+
