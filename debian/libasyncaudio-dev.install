@@ -1,0 +1,4 @@
+usr/lib/*/libasyncaudio.so
+usr/lib/*/libasyncaudio.a
+usr/include/svxlink/AsyncAudio*.h
+usr/include/svxlink/AsyncSigCAudio*.h

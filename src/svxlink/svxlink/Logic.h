@@ -288,6 +288,7 @@ class Logic : public sigc::trackable
     std::string                     online_cmd;
     DtmfDigitHandler                *dtmf_digit_handler;
     Async::Pty                      *state_pty;
+    Async::Pty                      *ctrl_pty;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
@@ -307,7 +308,8 @@ class Logic : public sigc::trackable
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
     void publishStateEvent(const std::string &event_name,
                            const std::string &msg);
-
+    void ptyCmdReceived(const void *buf, size_t count);
+    
 };  /* class Logic */
 
 
