@@ -2,9 +2,11 @@
 # SvxLink ROIP Repeater system Systemd setup
 #############################################################################
 
-set(SYSTEMD_CONFIGURATIONS_FILES_DIR "/lib/systemd/system" )
-set(SYSTEMD_DEFAULTS_FILES_DIR "/etc/default" )
-set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd" )
+set(SYSTEMD_CONFIGURATIONS_FILES_DIR "/lib/systemd/system" CACHE PATH
+  "Path to systemd units")
+set(SYSTEMD_DEFAULTS_FILES_DIR "/etc/default" CACHE PATH
+  "Path to systemd unit configuration files")
+set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio_setup.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service)
@@ -13,10 +15,6 @@ configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio_setup.service.in
 configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
 #message(STATUS "Configured systemd unit file:svxlink.service")
-
-configure_file(${SYSTEMD_SOURCE_DIR}/svxserver.service.in
-               ${PROJECT_BINARY_DIR}/systemd/svxserver.service)
-#message(STATUS "Configured systemd unit file:svxserver.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.service.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx.service)
@@ -33,8 +31,6 @@ configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.in
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service
-        DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
-install(FILES ${PROJECT_BINARY_DIR}/systemd/svxserver.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
 install(FILES ${PROJECT_BINARY_DIR}/systemd/remotetrx.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})

@@ -31,3 +31,7 @@ set_target_properties(svxserver PROPERTIES
 # Install targets
 install(TARGETS svxserver DESTINATION ${BIN_INSTALL_DIR})
 install_if_not_exists(svxserver.conf ${SVX_SYSCONF_INSTALL_DIR})
+
+if(WITH_SYSTEMD)
+  add_subdirectory(systemd)
+endif(WITH_SYSTEMD)
