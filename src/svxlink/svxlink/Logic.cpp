@@ -153,7 +153,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 Logic::Logic(Config &cfg, const string& name)
-  : m_cfg(cfg),       	      	            m_name(name),
+  : LogicBase(cfg, name),
     m_rx(0),  	      	      	            m_tx(0),
     msg_handler(0), 	      	            active_module(0),
     exec_cmd_on_sql_close_timer(-1),        rgr_sound_timer(-1),
@@ -163,7 +163,7 @@ Logic::Logic(Config &cfg, const string& name)
     rx_splitter(0),                         rx_valve(0),
     rpt_valve(0),                           audio_from_module_selector(0),
     audio_to_module_splitter(0),            audio_to_module_selector(0),
-    state_det(0),                           is_idle(true),
+    state_det(0),
     fx_gain_normal(0),                      fx_gain_low(-12),
     long_cmd_digits(100),                   report_events_as_idle(false),
     qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
@@ -190,6 +190,11 @@ Logic::~Logic(void)
 
 bool Logic::initialize(void)
 {
+  if (!LogicBase::initialize())
+  {
+    return false;
+  }
+
   if (cfg().getValue(name(), "ONLINE_CMD", online_cmd))
   {
     OnlineCmd *cmd = new OnlineCmd(&cmd_parser, this, online_cmd);
@@ -627,12 +632,6 @@ bool Logic::initialize(void)
     return false;
   }
 
-  if (LinkManager::hasInstance())
-  {
-      // Register this logic in the link manager
-    LinkManager::instance()->addLogic(this);
-  }
-
   if (LocationInfo::has_instance())
   {
      LocationInfo::AprsStatistics lis;
@@ -1047,13 +1046,7 @@ void Logic::rptValveSetOpen(bool do_open)
 
 void Logic::checkIdle(void)
 {
-  bool new_idle_state = getIdleState();
-  if (new_idle_state != is_idle)
-  {
-    is_idle = new_idle_state;
-    //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
-    idleStateChanged(is_idle);
-  }
+  setIdle(getIdleState());
 } /* Logic::checkIdle */
 
 
