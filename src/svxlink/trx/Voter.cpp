@@ -109,7 +109,8 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 {
   public:
     SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
-      : rx_id(id), rx(0), fifo(0), sql_open(false)
+      : rx_id(id), rx(0), fifo(0), sql_open(false), enabled(true),
+        mute_state(Rx::MUTE_ALL) // FIXME: Set this from the Rx object
     {
       rx = RxFactory::createNamedRx(cfg, rx_name);
       if (rx != 0)
@@ -165,7 +166,25 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       rx->setVerbose(false);
       return true;
     }
-    
+
+    void setEnabled(bool do_enable)
+    {
+      if (do_enable)
+      {
+        enabled = true;
+        setMuteState(mute_state);
+      }
+      else
+      {
+        Rx::MuteState orig_mute_state = mute_state;
+        setMuteState(Rx::MUTE_ALL);
+        mute_state = orig_mute_state;
+        enabled = false;
+      }
+    }
+
+    bool isEnabled(void) const { return enabled; }
+
     const std::string& name(void) const { return rx->name(); }
     
     bool addToneDetector(float fq, int bw, float thresh, int required_duration)
@@ -177,6 +196,11 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
     void setMuteState(Rx::MuteState new_mute_state)
     {
+      mute_state = new_mute_state;
+      if (!enabled)
+      {
+        return;
+      }
       rx->setMuteState(new_mute_state);
       if (new_mute_state != Rx::MUTE_NONE)
       {
@@ -189,7 +213,11 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       }
     }
     
-    void reset(void) { rx->reset(); }
+    void reset(void)
+    {
+      rx->reset();
+      mute_state = Rx::MUTE_ALL; // FIXME: Set from Rx object
+    }
     
     bool squelchIsOpen(void) const { return sql_open; }
     
@@ -235,13 +263,15 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     typedef list<pair<char, int> >	DtmfBuf;
     typedef list<string>		SelcallBuf;
     
-    int		rx_id;    
-    Rx		*rx;
-    AudioFifo 	*fifo;
-    AudioValve	valve;
-    DtmfBuf   	dtmf_buf;
-    SelcallBuf	selcall_buf;
-    bool      	sql_open;
+    int		  rx_id;
+    Rx		  *rx;
+    AudioFifo 	  *fifo;
+    AudioValve	  valve;
+    DtmfBuf   	  dtmf_buf;
+    SelcallBuf	  selcall_buf;
+    bool      	  sql_open;
+    bool          enabled;
+    Rx::MuteState mute_state;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
@@ -335,7 +365,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false)
+    sm(Macho::State<Top>(this)), is_processing_event(false), command_pty(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -343,7 +373,10 @@ Voter::Voter(Config &cfg, const std::string& name)
 
 Voter::~Voter(void)
 {
+  delete command_pty;
+  command_pty = 0;
   delete selector;
+  selector = 0;
   
     // Mute all receivers before deleting them so that we do not get any
     // unexpected updates during deletion
@@ -366,7 +399,22 @@ bool Voter::initialize(void)
   {
     return false;
   }
-  
+
+  string pty_path;
+  if(cfg.getValue(name(), "COMMAND_PTY", pty_path))
+  {
+    command_pty = new Pty(pty_path);
+    if (!command_pty->open())
+    {
+      cerr << "*** ERROR: Could not open voter command PTY "
+      << pty_path << " as specified in configuration variable "
+      << name() << "/" << "COMMAND_PTY" << endl;
+      return false;
+    }
+    command_pty->dataReceived.connect(
+        sigc::mem_fun(*this, &Voter::onCommandPtyInput));
+  }
+
   string receivers;
   if (!cfg.getValue(name(), "RECEIVERS", receivers))
   {
@@ -624,9 +672,14 @@ void Voter::printSquelchState(void)
   {
     float siglev = (*it)->signalStrength();
     bool sql_is_open = (*it)->squelchIsOpen();
+    bool is_enabled = (*it)->isEnabled();
 
     os << (*it)->name();
-    if (sql_is_open)
+    if (!is_enabled)
+    {
+      os << "#";
+    }
+    else if (sql_is_open)
     {
       os << ((*it) == sm->activeSrx() ? "*" : ":");
     }
@@ -759,7 +812,6 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
     runTask(bind(voter().signalLevelUpdated.make_slot(), siglev));
   }
 } /* Voter::Top::satSignalLevelUpdated */
-
 
 void Voter::Top::runTask(sigc::slot<void> task)
 {
@@ -1224,6 +1276,93 @@ void Voter::SwitchActiveRx::timerExpired(void)
   setState<Receiving>();
 } /* Voter::SwitchActiveRx::timerExpired */
 
+
+void Voter::onCommandPtyInput(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<count; ++i)
+  {
+    char ch = buffer[i];
+    switch (ch)
+    {
+      case '\n':  // Execute command on NL
+        handlePtyCommand(command_buf);
+        command_buf.clear();
+        break;
+
+      case '\r':  // Ignore CR
+        break;
+
+      default:    // Append character to command buffer
+        if (command_buf.size() >= 256)  // Prevent cmd buffer growing too big
+        {
+          command_buf.clear();
+        }
+        command_buf += ch;
+        break;
+    }
+  }
+} /* Voter::onCommandPtyInput */
+
+
+void Voter::handlePtyCommand(const std::string &full_command)
+{
+  istringstream is(full_command);
+  string command;
+  if (!(is >> command))
+  {
+    return;
+  }
+
+  if (command == "ENABLE") // Enable receiver
+  {
+    string rx_name;
+    if (!(is >> rx_name))
+    {
+      cerr << "*** WARNING: Malformed voter PTY command: \""
+           << full_command << "\"" << endl;
+      return;
+    }
+    setRxEnabled(rx_name, true);
+  }
+  else if (command == "DISABLE") // Disable receiver
+  {
+    string rx_name;
+    if (!(is >> rx_name))
+    {
+      cerr << "*** WARNING: Malformed voter PTY command: \""
+           << full_command << "\"" << endl;
+      return;
+    }
+    setRxEnabled(rx_name, false);
+  }
+  else
+  {
+    cerr << "*** WARNING: Unknown voter PTY command received: \""
+         << full_command << "\"" << endl;
+  }
+} /* Voter::handlePtyCommand */
+
+
+void Voter::setRxEnabled(const std::string &rx_name, bool do_enable)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    if ((*it)->name() == rx_name)
+    {
+      if (do_enable != (*it)->isEnabled())
+      {
+        cout << name() << ": " << (do_enable ? "Enabling" : "Disabling")
+             << " receiver " << (*it)->name() << endl;
+        (*it)->setEnabled(do_enable);
+      }
+      return;
+    }
+  }
+  cerr << "*** WARNING: Could not " << (do_enable ? "enable" : "disable")
+       << " non-existent receiver \"" << rx_name << "\"" << endl;
+} /* Voter::setRxEnabled */
 
 
 /*
