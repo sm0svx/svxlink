@@ -1,11 +1,14 @@
 /**
-@file	 svxlink.cpp
-@brief   The main file for the SvxLink server
+@file	 svxreflector.cpp
+@brief   Main source file for the SvxReflector application
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-28
+@date	 2017-02-11
+
+The SvxReflector application is a central hub used to connect multiple SvxLink
+nodes together.
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+SvxReflector - An audio reflector for connecting SvxLink Servers
 Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -32,29 +35,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <termios.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <popt.h>
 #include <locale.h>
 #include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
-#include <dirent.h>
-#include <pwd.h>
+#include <sys/types.h>
 #include <grp.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <termios.h>
 
-#include <string>
+#include <popt.h>
+#include <sigc++/sigc++.h>
+
+#include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <iomanip>
-#include <algorithm>
-#include <vector>
-#include <cstring>
-#include <set>
-#include <cerrno>
 
 
 /****************************************************************************
@@ -64,12 +62,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncCppApplication.h>
-#include <AsyncConfig.h>
-#include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
-#include <AsyncAudioIO.h>
-#include <LocationInfo.h>
-#include <common.h>
+#include <AsyncConfig.h>
 #include <config.h>
 
 
@@ -79,14 +73,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
-#include "MsgHandler.h"
-#include "DummyLogic.h"
-#include "SimplexLogic.h"
-#include "RepeaterLogic.h"
-#include "ReflectorLogic.h"
-#include "LinkManager.h"
-
+#include "version/SVXREFLECTOR.h"
+#include "Reflector.h"
 
 
 /****************************************************************************
@@ -97,8 +85,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace sigc;
-
 
 
 /****************************************************************************
@@ -107,8 +93,7 @@ using namespace sigc;
  *
  ****************************************************************************/
 
-#define PROGRAM_NAME "SvxLink"
-
+#define PROGRAM_NAME "SvxReflector"
 
 
 /****************************************************************************
@@ -128,7 +113,6 @@ using namespace sigc;
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
 static void stdout_handler(FdWatch *w);
-static void initialize_logics(Config &cfg);
 static void sighup_handler(int signal);
 static void sigterm_handler(int signal);
 static void handle_unix_signal(int signum);
@@ -153,16 +137,15 @@ static void logfile_flush(void);
  *
  ****************************************************************************/
 
-static char   	      	  *pidfile_name = NULL;
-static char   	      	  *logfile_name = NULL;
-static char   	      	  *runasuser = NULL;
-static char   	      	  *config = NULL;
-static int    	      	  daemonize = 0;
-static int    	      	  logfd = -1;
-static vector<LogicBase*> logic_vec;
-static FdWatch	      	  *stdin_watch = 0;
-static FdWatch	      	  *stdout_watch = 0;
-static string         	  tstamp_format;
+static char             *pidfile_name = NULL;
+static char             *logfile_name = NULL;
+static char             *runasuser = NULL;
+static char   	      	*config = NULL;
+static int    	      	daemonize = 0;
+static int    	      	logfd = -1;
+static FdWatch	      	*stdin_watch = 0;
+static FdWatch	      	*stdout_watch = 0;
+static string         	tstamp_format;
 
 
 /****************************************************************************
@@ -170,7 +153,6 @@ static string         	  tstamp_format;
  * MAIN
  *
  ****************************************************************************/
-
 
 /*
  *----------------------------------------------------------------------------
@@ -182,12 +164,12 @@ static string         	  tstamp_format;
  *    	      	      program name.
  * Output:    Return 0 on success, else non-zero.
  * Author:    Tobias Blomberg, SM0SVX
- * Created:   2004-03-28
+ * Created:   2017-02-11
  * Remarks:   
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-int main(int argc, char **argv)
+int main(int argc, const char *argv[])
 {
   setlocale(LC_ALL, "");
 
@@ -256,16 +238,16 @@ int main(int argc, char **argv)
 
       /* Close stdin */
     close(STDIN_FILENO);
-    
+
       /* Force stdout to line buffered mode */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
     {
       perror("setlinebuf");
       exit(1);
-    }    
+    }
 
     atexit(logfile_flush);
-    
+
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
@@ -331,7 +313,7 @@ int main(int argc, char **argv)
   {
     home_dir = ".";
   }
-  
+
   tstamp_format = "%c";
 
   Config cfg;
@@ -342,20 +324,20 @@ int main(int argc, char **argv)
     if (!cfg.open(cfg_filename))
     {
       cerr << "*** ERROR: Could not open configuration file: "
-      	   << config << endl;
+           << config << endl;
       exit(1);
     }
   }
   else
   {
     cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/svxlink.conf";
+    cfg_filename += "/.svxlink/svxreflector.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = SVX_SYSCONF_INSTALL_DIR "/svxlink.conf";
+      cfg_filename = SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf";
       if (!cfg.open(cfg_filename))
       {
-	cfg_filename = SYSCONF_INSTALL_DIR "/svxlink.conf";
+	cfg_filename = SYSCONF_INSTALL_DIR "/svxreflector.conf";
 	if (!cfg.open(cfg_filename))
 	{
 	  cerr << "*** ERROR: Could not open configuration file";
@@ -365,19 +347,19 @@ int main(int argc, char **argv)
           }
           cerr << ".\n";
 	  cerr << "Tried the following paths:\n"
-      	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
-      	       << "\t" SVX_SYSCONF_INSTALL_DIR "/svxlink.conf\n"
-	       << "\t" SYSCONF_INSTALL_DIR "/svxlink.conf\n"
-	       << "Possible reasons for failure are: None of the files exist,\n"
-	       << "you do not have permission to read the file or there was a\n"
-	       << "syntax error in the file.\n";
+               << "\t" << home_dir << "/.svxlink/svxreflector.conf\n"
+               << "\t" SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
+               << "\t" SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
+               << "Possible reasons for failure are: None of the files exist,\n"
+               << "you do not have permission to read the file or there was a\n"
+               << "syntax error in the file.\n";
 	  exit(1);
 	}
       }
     }
   }
   string main_cfg_filename(cfg_filename);
-  
+
   string cfg_dir;
   if (cfg.getValue("GLOBAL", "CFG_DIR", cfg_dir))
   {
@@ -386,30 +368,29 @@ int main(int argc, char **argv)
       int slash_pos = main_cfg_filename.rfind('/');
       if (slash_pos != -1)
       {
-      	cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
+        cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
       }
       else
       {
-      	cfg_dir = string("./") + cfg_dir;
+        cfg_dir = string("./") + cfg_dir;
       }
     }
-    
+
     DIR *dir = opendir(cfg_dir.c_str());
     if (dir == NULL)
     {
       cerr << "*** ERROR: Could not read from directory spcified by "
-      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+           << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
       exit(1);
     }
-    
+
     struct dirent *dirent;
     while ((dirent = readdir(dir)) != NULL)
     {
       char *dot = strrchr(dirent->d_name, '.');
-      if ((dot == NULL) || (dirent->d_name[0] == '.') ||
-          (strcmp(dot, ".conf") != 0))
+      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
       {
-      	continue;
+        continue;
       }
       cfg_filename = cfg_dir + "/" + dirent->d_name;
       if (!cfg.open(cfg_filename))
@@ -419,96 +400,28 @@ int main(int argc, char **argv)
 	 exit(1);
        }
     }
-    
+
     if (closedir(dir) == -1)
     {
       cerr << "*** ERROR: Error closing directory specified by"
-      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+           << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
       exit(1);
     }
   }
-  
+
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
-  
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION
+
+  cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
           " Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
-  cout << "welcome to redistribute it in accordance with the terms "
-          "and conditions in the\n";
+  cout << "welcome to redistribute it in accordance with the "
+          "terms and conditions in the\n";
   cout << "GNU GPL (General Public License) version 2 or later.\n";
 
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
-  
-  string value;
-  if (cfg.getValue("GLOBAL", "CARD_SAMPLE_RATE", value))
-  {
-    int rate = atoi(value.c_str());
-    if (rate == 48000)
-    {
-      AudioIO::setBlocksize(1024);
-      AudioIO::setBlockCount(4);
-    }
-    else if (rate == 16000)
-    {
-      AudioIO::setBlocksize(512);
-      AudioIO::setBlockCount(2);
-    }
-    #if INTERNAL_SAMPLE_RATE <= 8000
-    else if (rate == 8000)
-    {
-      AudioIO::setBlocksize(256);
-      AudioIO::setBlockCount(2);
-    }
-    #endif
-    else
-    {
-      cerr << "*** ERROR: Illegal sound card sample rate specified for "
-      	      "config variable GLOBAL/CARD_SAMPLE_RATE. Valid rates are "
-	      #if INTERNAL_SAMPLE_RATE <= 8000
-	      "8000, "
-	      #endif
-	      "16000 and 48000\n";
-      exit(1);
-    }
-    AudioIO::setSampleRate(rate);
-    cout << "--- Using sample rate " << rate << "Hz\n";
-  }
-  
-  int card_channels = 2;
-  cfg.getValue("GLOBAL", "CARD_CHANNELS", card_channels);
-  AudioIO::setChannels(card_channels);
 
-    // Init locationinfo
-  if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
-  {
-    if (!LocationInfo::initialize(cfg, value))
-    {
-      cerr << "*** ERROR: Could not init LocationInfo, "
-           << "check configuration section LOCATION_INFO=" << value << "\n";
-      exit(1);
-    }
-  }
-
-    // Init Logiclinking
-  if (cfg.getValue("GLOBAL", "LINKS", value))
-  {
-    if (!LinkManager::initialize(cfg, value))
-    {
-      cerr << "*** ERROR: Could not initialize link manager. "
-           << "GLOBAL/LINKS=" << value << ".\n";
-      exit(1);
-    }
-  }
-
-  initialize_logics(cfg);
-
-  if (LinkManager::hasInstance())
-  {
-    LinkManager::instance()->allLogicsStarted();
-  }
-
-  struct termios org_termios;
+  struct termios org_termios = {0};
   if (logfile_name == 0)
   {
     struct termios termios;
@@ -518,18 +431,21 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
 
-  app.exec();
-
-  LinkManager::deleteInstance();
-  LocationInfo::deleteInstance();
+  Reflector ref;
+  if (ref.initialize(cfg))
+  {
+    app.exec();
+  }
+  else
+  {
+    cerr << ":-(" << endl;
+  }
 
   logfile_flush();
-  
+
   if (stdin_watch != 0)
   {
     delete stdin_watch;
@@ -543,23 +459,13 @@ int main(int argc, char **argv)
     close(pipefd[1]);
   }
 
-  vector<LogicBase*>::iterator lit;
-  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
-  {
-    delete *lit;
-  }
-  logic_vec.clear();
-  
   if (logfd != -1)
   {
     close(logfd);
   }
-  
+
   return 0;
-  
 } /* main */
-
-
 
 
 /****************************************************************************
@@ -588,11 +494,11 @@ static void parse_arguments(int argc, const char **argv)
   {
     POPT_AUTOHELP
     {"pidfile", 0, POPT_ARG_STRING, &pidfile_name, 0,
-	    "Specify the name of the pidfile to use", "<filename>"},
+            "Specify the name of the pidfile to use", "<filename>"},
     {"logfile", 0, POPT_ARG_STRING, &logfile_name, 0,
-	    "Specify the logfile to use (stdout and stderr)", "<filename>"},
+            "Specify the logfile to use (stdout and stderr)", "<filename>"},
     {"runasuser", 0, POPT_ARG_STRING, &runasuser, 0,
-	    "Specify the user to run SvxLink as", "<username>"},
+            "Specify the user to run SvxLink as", "<username>"},
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
     /*
@@ -600,16 +506,16 @@ static void parse_arguments(int argc, const char **argv)
 	    "Description of int argument", "<an int>"},
     */
     {"daemon", 0, POPT_ARG_NONE, &daemonize, 0,
-	    "Start SvxLink as a daemon", NULL},
+	    "Start " PROGRAM_NAME " as a daemon", NULL},
     {NULL, 0, 0, NULL, 0}
   };
   int err;
   //const char *arg = NULL;
   //int argcnt = 0;
-  
+
   optCon = poptGetContext(PROGRAM_NAME, argc, argv, optionsTable, 0);
   poptReadDefaultConfig(optCon, 0);
-  
+
   err = poptGetNextOpt(optCon);
   if (err != -1)
   {
@@ -624,7 +530,7 @@ static void parse_arguments(int argc, const char **argv)
   printf("int_arg     = %d\n", int_arg);
   printf("bool_arg    = %d\n", bool_arg);
   */
-  
+
     /* Parse arguments that do not begin with '-' (leftovers) */
   /*
   arg = poptGetArg(optCon);
@@ -657,35 +563,21 @@ static void stdinHandler(FdWatch *w)
     stdin_watch = 0;
     return;
   }
-  
+
   switch (toupper(buf[0]))
   {
     case 'Q':
       Application::app().quit();
       break;
-    
+
     case '\n':
       putchar('\n');
       break;
-    
-    case '0': case '1': case '2': case '3':
-    case '4': case '5': case '6': case '7':
-    case '8': case '9': case 'A': case 'B':
-    case 'C': case 'D': case '*': case '#':
-    case 'H':
-    {
-      Logic *logic = dynamic_cast<Logic*>(logic_vec[0]);
-      if (logic != 0)
-      {
-        logic->injectDtmfDigit(buf[0], 100);
-      }
-      break;
-    }
 
     default:
       break;
   }
-}
+} /* stdinHandler */
 
 
 static void stdout_handler(FdWatch *w)
@@ -702,82 +594,6 @@ static void stdout_handler(FdWatch *w)
     }
   } while (len > 0);
 } /* stdout_handler  */
-
-
-static void initialize_logics(Config &cfg)
-{
-  string logics;
-  if (!cfg.getValue("GLOBAL", "LOGICS", logics) || logics.empty())
-  {
-    cerr << "*** ERROR: Config variable GLOBAL/LOGICS is not set\n";
-    exit(1);
-  }
-
-  string::iterator comma;
-  string::iterator begin = logics.begin();
-  do
-  {
-    comma = find(begin, logics.end(), ',');
-    string logic_name;
-    if (comma == logics.end())
-    {
-      logic_name = string(begin, logics.end());
-    }
-    else
-    {
-      logic_name = string(begin, comma);
-      begin = comma + 1;
-    }
-    
-    cout << "\nStarting logic: " << logic_name << endl;
-    
-    string logic_type;
-    if (!cfg.getValue(logic_name, "TYPE", logic_type) || logic_type.empty())
-    {
-      cerr << "*** ERROR: Logic TYPE not specified for logic \""
-      	   << logic_name << "\". Skipping...\n";
-      continue;
-    }
-    LogicBase *logic = 0;
-    if (logic_type == "Simplex")
-    {
-      logic = new SimplexLogic(cfg, logic_name);
-    }
-    else if (logic_type == "Repeater")
-    {
-      logic = new RepeaterLogic(cfg, logic_name);
-    }
-    else if (logic_type == "Reflector")
-    {
-      logic = new ReflectorLogic(cfg, logic_name);
-    }
-    else if (logic_type == "Dummy")
-    {
-      logic = new DummyLogic(cfg, logic_name);
-    }
-    else
-    {
-      cerr << "*** ERROR: Unknown logic type \"" << logic_type
-      	   << "\"specified for logic " << logic_name << ".\n";
-      continue;
-    }
-    if ((logic == 0) || !logic->initialize())
-    {
-      cerr << "*** ERROR: Could not initialize Logic object \""
-      	   << logic_name << "\". Skipping...\n";
-      delete logic;
-      continue;
-    }
-    
-    logic_vec.push_back(logic);
-  } while (comma != logics.end());
-  
-  if (logic_vec.size() == 0)
-  {
-    cerr << "*** ERROR: No logics available. Bailing out...\n";
-    exit(1);
-  }
-} /* initialize_logics */
 
 
 static void sighup_handler(int signal)
@@ -835,16 +651,18 @@ static bool logfile_open(void)
   {
     close(logfd);
   }
-  
+
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
-    cerr << "open(\"" << logfile_name << "\"): " << strerror(errno) << endl;
+    ostringstream ss;
+    ss << "open(\"" << logfile_name << "\")";
+    perror(ss.str().c_str());
     return false;
   }
 
   return true;
-  
+
 } /* logfile_open */
 
 
@@ -904,13 +722,13 @@ static void logfile_write(const char *buf)
     cout << buf;
     return;
   }
-  
+
   const char *ptr = buf;
   while (*ptr != 0)
   {
     static bool print_timestamp = true;
     ssize_t ret;
-    
+
     if (print_timestamp)
     {
       if (!logfile_write_timestamp())
@@ -952,7 +770,6 @@ static void logfile_flush(void)
     stdout_handler(stdout_watch);
   }
 } /*  logfile_flush */
-
 
 
 /*

@@ -258,6 +258,10 @@ void LinkManager::addLogic(LogicBase *logic)
     // Make sure that we have not added this logic before
   assert(logic_map.find(logic->name()) == logic_map.end());
 
+    // Make sure that the logic connection objects have been created
+  assert(logic->logicConOut() != 0);
+  assert(logic->logicConIn() != 0);
+
     // Create a splitter to split the source audio from the logic being added
     // to all other logics.
   AudioSplitter *splitter = new AudioSplitter;
