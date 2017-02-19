@@ -624,7 +624,7 @@ void Proxy::handleUdpDataMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 {
   if (len > 0)
   {
-    udpDataReceived(remote_ip, buf, len);
+    udpDataReceived(remote_ip, 0, buf, len);
   }
 } /* Proxy::handleUdpDataMsg */
 
@@ -633,7 +633,7 @@ void Proxy::handleUdpCtrlMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 {
   if (len > 0)
   {
-    udpCtrlReceived(remote_ip, buf, len);
+    udpCtrlReceived(remote_ip, 0, buf, len);
   }
 } /* Proxy::handleUdpCtrlMsg */
 

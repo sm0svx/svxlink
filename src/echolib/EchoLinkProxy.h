@@ -284,25 +284,27 @@ class Proxy : public sigc::trackable
     /**
      * @brief   Signal emitted when UDP data has been received
      * @param   addr The remote IP address
+     * @param   port The remote UDP port number
      * @param   data Pointer to a buffer containing the data to send
      * @param   len The size of the data buffer
      *
      * This signal will be emitted when UDP data, like audio, have been
      * received through the EchoLink proxy server.
      */
-    sigc::signal<void, const Async::IpAddress&, void*,
+    sigc::signal<void, const Async::IpAddress&, uint16_t, void*,
                  unsigned> udpDataReceived;
 
     /**
      * @brief   Signal emitted when UDP control data has been received
      * @param   addr The remote IP address
+     * @param   port The remote UDP port number
      * @param   data Pointer to a buffer containing the data to send
      * @param   len The size of the data buffer
      *
      * This signal will be emitted when UDP control data have been
      * received through the EchoLink proxy server.
      */
-    sigc::signal<void, const Async::IpAddress&, void*,
+    sigc::signal<void, const Async::IpAddress&, uint16_t, void*,
                  unsigned> udpCtrlReceived;
 
     /**
