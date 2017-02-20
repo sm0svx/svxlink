@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <pwd.h>
 #include <dirent.h>
 #include <termios.h>
+#include <errno.h>
 
 #include <popt.h>
 #include <sigc++/sigc++.h>

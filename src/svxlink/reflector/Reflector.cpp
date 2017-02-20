@@ -214,11 +214,19 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   {
     msgpack::unpacked result;
     size_t offset = 0;
+#if MSGPACK_VERSION_MAJOR < 1
+    unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
+#else
     unpack(result, reinterpret_cast<const char *>(buf), count, offset);
+#endif
     msgpack::object client_id_obj(result.get());
     uint32_t client_id = 0;
+#if MSGPACK_VERSION_MAJOR < 1
+    client_id_obj.convert(&client_id);
+#else
     client_id_obj.convert(client_id);
-    cout << " client_id=" << client_id_obj;
+#endif
+    //cout << " client_id=" << client_id_obj;
     ReflectorClientMap::iterator it = client_map.find(client_id);
     if (it == client_map.end())
     {
@@ -242,21 +250,33 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       return;
     }
 
+#if MSGPACK_VERSION_MAJOR < 1
+    unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
+#else
     unpack(result, reinterpret_cast<const char *>(buf), count, offset);
+#endif
     msgpack::object msg_type_obj(result.get());
-    cout << " msg_type_obj=" << msg_type_obj;
+    //cout << " msg_type_obj=" << msg_type_obj;
 
     msgpack::object msg_data_obj;
     if (static_cast<int>(offset) < count)
     {
+#if MSGPACK_VERSION_MAJOR < 1
+      unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
+#else
       unpack(result, reinterpret_cast<const char *>(buf), count, offset);
+#endif
       msg_data_obj = result.get();
       //cout << " msg_data_obj=" << msg_data_obj;
     }
     cout << endl;
 
     unsigned msg_type = 0;
+#if MSGPACK_VERSION_MAJOR < 1
+    msg_type_obj.convert(&msg_type);
+#else
     msg_type_obj.convert(msg_type);
+#endif
     switch (msg_type)
     {
       case MsgAudio::TYPE:
@@ -278,12 +298,14 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         break;
     }
   }
+#if MSGPACK_VERSION_MAJOR >= 1
   catch (msgpack::insufficient_bytes)
   {
     cerr << "*** WARNING: The incoming UDP message is too short" << endl;
     // FIXME: Disconnect client or ignore?
     //client->disconnect("Protocol error");
   }
+#endif
   catch (msgpack::type_error)
   {
     cerr << "*** WARNING: The incoming UDP message type have the wrong "

@@ -224,7 +224,11 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
   memcpy(m_unp.buffer(), data, len);
   m_unp.buffer_consumed(len);
   msgpack::unpacked result;
+#if MSGPACK_VERSION_MAJOR < 1
+  while (m_unp.next(&result))
+#else
   while (m_unp.next(result))
+#endif
   {
     msgpack::object obj(result.get());
     //cout << obj << endl;
@@ -233,7 +237,11 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
       if (m_msg_type == 0)
       {
         unsigned msg_type = 0;
+#if MSGPACK_VERSION_MAJOR < 1
+        obj.convert(&msg_type);
+#else
         obj.convert(msg_type);
+#endif
         switch (msg_type)
         {
           case MsgAuthOk::TYPE:
@@ -267,6 +275,14 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
         m_msg_type = 0;
       }
     }
+    catch (msgpack::unpack_error)
+    {
+      cerr << "*** WARNING: Failed to unpack incoming message"
+           << endl;
+      m_msg_type = 0;
+      // FIXME: Disconnect!
+      //con->disconnect();
+    }
     catch (msgpack::type_error)
     {
       cerr << "*** WARNING: The incoming message type have the wrong object type"
@@ -292,7 +308,11 @@ void ReflectorLogic::handleMsgError(const msgpack::object &obj)
 void ReflectorLogic::handleMsgAuthChallenge(const msgpack::object &obj)
 {
   MsgAuthChallenge msg;
+#if MSGPACK_VERSION_MAJOR < 1
+  obj.convert(&msg);
+#else
   obj.convert(msg);
+#endif
   stringstream ss;
   ss << hex << setw(2) << setfill('0');
   for (int i=0; i<MsgAuthChallenge::CHALLENGE_LEN; ++i)
@@ -393,17 +413,29 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     }
 #endif
 
+#if MSGPACK_VERSION_MAJOR < 1
+    unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
+#else
     unpack(result, reinterpret_cast<const char *>(buf), count, offset);
+#endif
     msgpack::object msg_type_obj(result.get());
     //cout << " msg_type_obj=" << msg_type_obj;
 
+#if MSGPACK_VERSION_MAJOR < 1
+    unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
+#else
     unpack(result, reinterpret_cast<const char *>(buf), count, offset);
+#endif
     msgpack::object msg_data_obj(result.get());
     //cout << " msg_data_obj=" << msg_data_obj;
     //cout << endl;
 
     unsigned msg_type = 0;
+#if MSGPACK_VERSION_MAJOR < 1
+    msg_type_obj.convert(&msg_type);
+#else
     msg_type_obj.convert(msg_type);
+#endif
     switch (msg_type)
     {
       case MsgAudio::TYPE:
@@ -427,11 +459,20 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         break;
     }
   }
+#if MSGPACK_VERSION_MAJOR >= 1
   catch (msgpack::insufficient_bytes)
   {
     cerr << "*** WARNING: The incoming UDP message is too short" << endl;
     // FIXME: Disconnect client or ignore?
     //client->disconnect("Protocol error");
+  }
+#endif
+  catch (msgpack::unpack_error)
+  {
+    cerr << "*** WARNING: Failed to unpack incoming message"
+         << endl;
+    // FIXME: Disconnect!
+    //con->disconnect();
   }
   catch (msgpack::type_error)
   {

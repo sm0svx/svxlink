@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sstream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -158,16 +159,24 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
   memcpy(m_unp.buffer(), data, len);
   m_unp.buffer_consumed(len);
   msgpack::unpacked result;
+#if MSGPACK_VERSION_MAJOR < 1
+  while (m_unp.next(&result))
+#else
   while (m_unp.next(result))
+#endif
   {
     msgpack::object obj(result.get());
-    cout << obj << endl;
+    //cout << obj << endl;
     try
     {
       if (m_msg_type == 0)
       {
         unsigned msg_type = 0;
+#if MSGPACK_VERSION_MAJOR < 1
+        obj.convert(&msg_type);
+#else
         obj.convert(msg_type);
+#endif
         switch (msg_type)
         {
           default:
@@ -213,7 +222,11 @@ void ReflectorClient::handleMsgProtoVer(const msgpack::object &obj)
   }
 
   MsgProtoVer msg;
+#if MSGPACK_VERSION_MAJOR < 1
+  obj.convert(&msg);
+#else
   obj.convert(msg);
+#endif
   cout << "MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
        << ")" << endl;
   if ((msg.majorVer() != MsgProtoVer::MAJOR) ||

@@ -170,7 +170,11 @@ class MsgBase : public Msg
     static const unsigned TYPE  = msg_type;
     void fromMsgPackObj(const msgpack::object& obj)
     {
+#if MSGPACK_VERSION_MAJOR < 1
+      obj.convert(dynamic_cast<T*>(this));
+#else
       obj.convert(*dynamic_cast<T*>(this));
+#endif
     }
 
   protected:
@@ -212,15 +216,15 @@ class MsgAuthChallenge : public MsgBase<MsgAuthChallenge, 10>
 {
   public:
     static const int CHALLENGE_LEN  = 20;
-    MsgAuthChallenge(void)
+    MsgAuthChallenge(void) : m_challenge(CHALLENGE_LEN)
     {
-      gcry_create_nonce(m_challenge, CHALLENGE_LEN);
+      gcry_create_nonce(&m_challenge.front(), CHALLENGE_LEN);
     }
 
-    const unsigned char *challenge(void) const { return m_challenge; }
+    const uint8_t *challenge(void) const { return &m_challenge.front(); }
 
   private:
-    unsigned char m_challenge[CHALLENGE_LEN];
+    std::vector<uint8_t> m_challenge;
 
     MSG_DEFINE(MsgAuthChallenge, m_challenge);
 }; /* MsgAuthChallenge */
@@ -233,27 +237,27 @@ class MsgAuthResponse : public MsgBase<MsgAuthResponse, 11>
     static const int      DIGEST_LEN  = 20;
     MsgAuthResponse(const std::string& callsign, const std::string &key,
                     const unsigned char *challenge)
-      : m_callsign(callsign)
+      : m_digest(DIGEST_LEN), m_callsign(callsign)
     {
-      if (!calcDigest(m_digest, key.c_str(), key.size(), challenge))
+      if (!calcDigest(&m_digest.front(), key.c_str(), key.size(), challenge))
       {
         exit(1);
       }
     }
 
-    const unsigned char *digest(void) const { return m_digest; }
+    const uint8_t *digest(void) const { return &m_digest.front(); }
     const std::string& callsign(void) const { return m_callsign; }
 
     bool verify(const std::string &key, const unsigned char *challenge) const
     {
       unsigned char digest[DIGEST_LEN];
       bool ok = calcDigest(digest, key.c_str(), key.size(), challenge);
-      return ok && (memcmp(m_digest, digest, DIGEST_LEN) == 0);
+      return ok && (memcmp(&m_digest.front(), digest, DIGEST_LEN) == 0);
     }
 
   private:
-    unsigned char m_digest[DIGEST_LEN];
-    std::string   m_callsign;
+    std::vector<uint8_t> m_digest;
+    std::string          m_callsign;
 
     bool calcDigest(unsigned char *digest, const char *key,
                     int keylen, const unsigned char *challenge) const
