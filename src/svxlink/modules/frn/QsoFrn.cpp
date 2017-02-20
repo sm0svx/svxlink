@@ -422,7 +422,7 @@ void QsoFrn::flushSamples(void)
       sendVoiceData(send_buffer, send_buffer_cnt);
       send_buffer_cnt = 0;
     }
-    sendRequest(RQ_TX0);
+    sendRequest(RQ_RX0);
   }
   sourceAllSamplesFlushed();
 }
