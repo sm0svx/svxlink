@@ -1,7 +1,7 @@
 Metar information module for SvxLink (based on the latest trunk
-from Nov 2015) by Adi, DL1HRC
+from Feb 2017) by Adi, DL1HRC
 
-VERSION 1.1.1 (10 Oct 2016)
+VERSION 1.0.99.0 (21 Feb 2017)
 
 
 
@@ -15,7 +15,7 @@ CHANGES:
 FUNCTION:
 
 Get METAR (weather) information from ICAO locations, usually airports and 
-gives them out. With V1.1.1 you can request a METAR from an
+gives them out. With V1.0.99.0 you can request a METAR from an
 airport of your interest.
 
 command  function
