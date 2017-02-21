@@ -1,11 +1,11 @@
 #############################################################################
 #
-# Configuration file for the SvxLink Systemd unit file
+# Configuration file for the SvxServer systemd unit file
 #
 #############################################################################
 
-# The user to run the SvxLink server as
+# The user to run the SvxServer as
 RUNASUSER=svxlink
 
 # Specify which configuration file to use
-CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
+CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxserver.conf

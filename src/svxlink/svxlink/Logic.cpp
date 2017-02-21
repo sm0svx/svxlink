@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -169,7 +169,8 @@ Logic::Logic(Config &cfg, const string& name)
     qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
-    dtmf_digit_handler(0),                  state_pty(0)
+    dtmf_digit_handler(0),                  state_pty(0),
+    dtmf_ctrl_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -267,6 +268,23 @@ bool Logic::initialize(void)
       cleanup();
       return false;
     }
+  }
+
+  string dtmf_ctrl_pty_path;
+  cfg().getValue(name(), "DTMF_CTRL_PTY", dtmf_ctrl_pty_path);
+  if (!dtmf_ctrl_pty_path.empty())
+  {
+    dtmf_ctrl_pty = new Pty(dtmf_ctrl_pty_path);
+    if (!dtmf_ctrl_pty->open())
+    {
+      cerr << "*** ERROR: Could not open control PTY "
+           << dtmf_ctrl_pty_path << " as spcified in configuration variable "
+           << name() << "/" << "DTMF_CTRL_PTY" << endl;
+      cleanup();
+      return false;
+    }
+    dtmf_ctrl_pty->dataReceived.connect(
+        mem_fun(*this, &Logic::dtmfCtrlPtyCmdReceived));
   }
 
   string value;
@@ -1524,6 +1542,7 @@ void Logic::cleanup(void)
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
   delete qso_recorder;                qso_recorder = 0;
   delete state_pty;                   state_pty = 0;
+  delete dtmf_ctrl_pty;               dtmf_ctrl_pty = 0;
 } /* Logic::cleanup */
 
 
@@ -1571,6 +1590,20 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   state_pty->write(os.str().c_str(), os.str().size());
 } /* Logic::publishStateEvent */
 
+
+void Logic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<count; ++i)
+  {
+    const char &ch = buffer[i];
+    if (::isdigit(ch) || (ch == '*') || (ch == '#') ||
+        ((ch >= 'A') && (ch <= 'F')))
+    {
+      dtmfDigitDetectedP(ch, 100);
+    }
+  }
+} /* Logic::dtmfCtrlPtyCmdReceived */
 
 
 /*
