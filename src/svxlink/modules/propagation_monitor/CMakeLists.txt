@@ -12,7 +12,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/procmailrc.in
   )
 
 # Install targets
-install_mkdir(${SVX_SPOOL_INSTALL_DIR}/propagation_monitor svxlink.daemon)
+install_mkdir(${SVX_SPOOL_INSTALL_DIR}/propagation_monitor ${SVXLINK_USER}.${SVXLINK_GROUP})
 install(FILES Module${MODNAME}.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR}/modules.d)
 install(FILES ${MODNAME}.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/Module${MODNAME}.conf

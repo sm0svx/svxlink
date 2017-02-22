@@ -1,5 +1,5 @@
 # Install targets
-install_mkdir(${SVX_SPOOL_INSTALL_DIR} svxlink.daemon)
+install_mkdir(${SVX_SPOOL_INSTALL_DIR} ${SVXLINK_USER}.${SVXLINK_GROUP})
 install(FILES etc/logrotate.d/svxlink etc/logrotate.d/remotetrx
   DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
   )
