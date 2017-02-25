@@ -172,9 +172,9 @@ class ReflectorClient
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
-    void handleMsgProtoVer(const msgpack::object &obj);
-    void handleMsgAuthResponse(const msgpack::object &obj);
-    void sendMsg(const Msg &msg);
+    void handleMsgProtoVer(std::istream& is);
+    void handleMsgAuthResponse(std::istream& is);
+    void sendMsg(const ReflectorMsg& msg);
     void disconnect(const std::string& msg);
     void onDisconnected(Async::TcpConnection*,
                         Async::TcpConnection::DisconnectReason);

@@ -75,7 +75,8 @@ namespace Async
 };
 
 class ReflectorClient;
-class Msg;
+class ReflectorMsg;
+class ReflectorUdpMsg;
 
 
 /****************************************************************************
@@ -161,8 +162,9 @@ class Reflector : public sigc::trackable
                             Async::TcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendUdpMsg(const ReflectorClient *client, const Msg &msg);
-    void broadcastUdpMsgExcept(const ReflectorClient *client, const Msg& msg);
+    void sendUdpMsg(const ReflectorClient *client, const ReflectorUdpMsg& msg);
+    void broadcastUdpMsgExcept(const ReflectorClient *client,
+                               const ReflectorUdpMsg& msg);
 
 };  /* class Reflector */
 

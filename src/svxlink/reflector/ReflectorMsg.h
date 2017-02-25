@@ -41,7 +41,7 @@ An example of how to use the ReflectorMsg class
  *
  ****************************************************************************/
 
-#include <msgpack.hpp>
+#include <AsyncMsg.h>
 #include <gcrypt.h>
 
 
@@ -93,11 +93,6 @@ An example of how to use the ReflectorMsg class
  *
  ****************************************************************************/
 
-#define MSG_DEFINE(_CLASSNAME_, ...) \
-  public: \
-    _CLASSNAME_(const msgpack::object &obj) { fromMsgPackObj(obj); } \
-    virtual bool haveData(void) const { return true; } \
-    MSGPACK_DEFINE(__VA_ARGS__)
 
 
 /****************************************************************************
@@ -119,78 +114,97 @@ An example of how to use the ReflectorMsg class
 @author Tobias Blomberg / SM0SVX
 @date   2017-02-12
 */
-class Msg
+class ReflectorMsg : public Async::Msg
 {
   public:
     /**
      * @brief 	Constuctor
      * @param 	type The message type
+     * @param   size The payload size
      */
-    Msg(unsigned type) : m_type(type) {}
+    ReflectorMsg(uint16_t type=0, uint16_t size=0)
+      : m_type(type), m_size(size) {}
 
     /**
      * @brief 	Destructor
      */
-    virtual ~Msg(void) {}
+    virtual ~ReflectorMsg(void) {}
 
     /**
      * @brief 	Get the message type
      * @return	Returns the message type
      */
-    unsigned type(void) const { return m_type; }
+    uint16_t type(void) const { return m_type; }
+    void setSize(uint16_t size) { m_size = size; }
+    uint16_t size(void) const { return m_size; }
 
-    virtual bool haveData(void) const { return false; }
-
-     /**
-      * @brief  Pack the message into the given packer object
-      * @param  packer The packer object to pack the message into
-      */
-     void msgpack_pack(msgpack::packer<msgpack::sbuffer>& packer) const
-     {
-       pack(packer);
-     }
-
-  protected:
-    /**
-     * @brief 	Implemented by the deried class to pack message into buffer
-     * @param 	packer The packer object to use
-     */
-    virtual void pack(msgpack::packer<msgpack::sbuffer>& packer) const = 0;
+    ASYNC_MSG_MEMBERS(m_type, m_size)
 
   private:
-    unsigned m_type;
+    uint16_t m_type;
+    uint16_t m_size;
 
-};  /* class Msg */
+};  /* class ReflectorMsg */
 
 
-template <class T, unsigned msg_type>
-class MsgBase : public Msg
+template <unsigned msg_type>
+class ReflectorMsgBase : public ReflectorMsg
 {
   public:
     static const unsigned TYPE  = msg_type;
-    void fromMsgPackObj(const msgpack::object& obj)
-    {
-#if MSGPACK_VERSION_MAJOR < 1
-      obj.convert(dynamic_cast<T*>(this));
-#else
-      obj.convert(*dynamic_cast<T*>(this));
-#endif
-    }
 
   protected:
-    MsgBase(void) : Msg(T::TYPE) {}
+    ReflectorMsgBase(void) : ReflectorMsg(msg_type) {}
+
+}; /* ReflectorMsgBase */
+
+
+class ReflectorUdpMsg : public Async::Msg
+{
+  public:
+    /**
+     * @brief 	Constuctor
+     * @param 	type The message type
+     * @param   client_id The client ID
+     */
+    ReflectorUdpMsg(uint16_t type=0, uint16_t client_id=0)
+      : m_type(type), m_client_id(client_id) {}
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~ReflectorUdpMsg(void) {}
+
+    /**
+     * @brief 	Get the message type
+     * @return	Returns the message type
+     */
+    uint16_t type(void) const { return m_type; }
+    uint16_t clientId(void) const { return m_client_id; }
+
+    ASYNC_MSG_MEMBERS(m_type, m_client_id)
 
   private:
-    virtual void pack(msgpack::packer<msgpack::sbuffer>& packer) const
-    {
-      dynamic_cast<const T*>(this)->msgpack_pack(packer);
-    }
-}; /* MsgBase */
+    uint16_t m_type;
+    uint16_t m_client_id;
+};
+
+
+template <unsigned msg_type>
+class ReflectorUdpMsgBase : public ReflectorUdpMsg
+{
+  public:
+    static const unsigned TYPE  = msg_type;
+
+  protected:
+    ReflectorUdpMsgBase(void) : ReflectorUdpMsg(msg_type) {}
+
+}; /* ReflectorUdpMsgBase */
 
 
 /************************** Administrative Messages **************************/
 
-class MsgProtoVer : public MsgBase<MsgProtoVer, 5>
+class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
     static const uint16_t MAJOR = 1;
@@ -199,20 +213,29 @@ class MsgProtoVer : public MsgBase<MsgProtoVer, 5>
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }
 
+    ASYNC_MSG_MEMBERS(m_major, m_minor);
+
   private:
     uint16_t m_major;
     uint16_t m_minor;
-
-    MSG_DEFINE(MsgProtoVer, m_major, m_minor);
 }; /* MsgProtoVer */
 
 
-class MsgHeartbeat : public MsgBase<MsgHeartbeat, 1>
+class MsgHeartbeat : public ReflectorMsgBase<1>
 {
+  public:
+    ASYNC_MSG_NO_MEMBERS
 };  /* MsgHeartbeat */
 
 
-class MsgAuthChallenge : public MsgBase<MsgAuthChallenge, 10>
+class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+};  /* MsgUdpHeartbeat */
+
+
+class MsgAuthChallenge : public ReflectorMsgBase<10>
 {
   public:
     static const int CHALLENGE_LEN  = 20;
@@ -221,20 +244,21 @@ class MsgAuthChallenge : public MsgBase<MsgAuthChallenge, 10>
       gcry_create_nonce(&m_challenge.front(), CHALLENGE_LEN);
     }
 
-    const uint8_t *challenge(void) const { return &m_challenge.front(); }
+    const uint8_t *challenge(void) const { return &m_challenge[0]; }
+
+    ASYNC_MSG_MEMBERS(m_challenge);
 
   private:
     std::vector<uint8_t> m_challenge;
-
-    MSG_DEFINE(MsgAuthChallenge, m_challenge);
 }; /* MsgAuthChallenge */
 
 
-class MsgAuthResponse : public MsgBase<MsgAuthResponse, 11>
+class MsgAuthResponse : public ReflectorMsgBase<11>
 {
   public:
     static const int      ALGO        = GCRY_MD_SHA1;
     static const int      DIGEST_LEN  = 20;
+    MsgAuthResponse(void) {}
     MsgAuthResponse(const std::string& callsign, const std::string &key,
                     const unsigned char *challenge)
       : m_digest(DIGEST_LEN), m_callsign(callsign)
@@ -254,6 +278,8 @@ class MsgAuthResponse : public MsgBase<MsgAuthResponse, 11>
       bool ok = calcDigest(digest, key.c_str(), key.size(), challenge);
       return ok && (memcmp(&m_digest.front(), digest, DIGEST_LEN) == 0);
     }
+
+    ASYNC_MSG_MEMBERS(m_callsign, m_digest);
 
   private:
     std::vector<uint8_t> m_digest;
@@ -281,43 +307,43 @@ class MsgAuthResponse : public MsgBase<MsgAuthResponse, 11>
                   << std::endl;
         return false;
     }
-
-    MSG_DEFINE(MsgAuthResponse, m_callsign, m_digest);
 }; /* MsgAuthResponse */
 
 
-class MsgAuthOk : public MsgBase<MsgAuthOk, 12>
+class MsgAuthOk : public ReflectorMsgBase<12>
 {
+  public:
+    ASYNC_MSG_NO_MEMBERS
 };  /* MsgAuthOk */
 
 
-class MsgError : public MsgBase<MsgError, 13>
+class MsgError : public ReflectorMsgBase<13>
 {
   public:
-    MsgError(const std::string& msg) : m_msg(msg) {}
+    MsgError(const std::string& msg="") : m_msg(msg) {}
     const std::string& message(void) const { return m_msg; }
+
+    ASYNC_MSG_MEMBERS(m_msg)
 
   private:
     std::string m_msg;
-
-    MSG_DEFINE(MsgError, m_msg)
 }; /* MsgError */
 
 
-class MsgServerInfo : public MsgBase<MsgServerInfo, 100>
+class MsgServerInfo : public ReflectorMsgBase<100>
 {
   public:
-    MsgServerInfo(uint32_t client_id) : m_client_id(client_id) {}
+    MsgServerInfo(uint32_t client_id=0) : m_client_id(client_id) {}
     uint32_t clientId(void) { return m_client_id; }
+
+    ASYNC_MSG_MEMBERS(m_client_id)
 
   private:
     uint32_t  m_client_id;
-
-    MSG_DEFINE(MsgServerInfo, m_client_id)
 }; /* MsgServerInfo */
 
 
-class MsgAudio : public MsgBase<MsgAudio, 101>
+class MsgAudio : public ReflectorUdpMsgBase<101>
 {
   public:
     MsgAudio(void) {}
@@ -331,10 +357,10 @@ class MsgAudio : public MsgBase<MsgAudio, 101>
     }
     std::vector<uint8_t>& audioData(void) { return m_audio_data; }
 
+    ASYNC_MSG_MEMBERS(m_audio_data)
+
   private:
     std::vector<uint8_t> m_audio_data;
-
-    MSG_DEFINE(MsgAudio, m_audio_data)
 }; /* MsgAudio */
 
 

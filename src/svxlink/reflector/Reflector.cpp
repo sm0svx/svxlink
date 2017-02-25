@@ -210,6 +210,65 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   cout << "### Reflector::udpDatagramReceived: addr=" << addr
        << " port=" << port << " count=" << count;
 
+  stringstream ss;
+  ss.write(reinterpret_cast<const char *>(buf), count);
+
+  ReflectorUdpMsg header;
+  if (!header.unpack(ss))
+  {
+    // FIXME: Disconnect
+    cout << "*** ERROR: Unpacking failed for UDP message header\n";
+    return;
+  }
+
+  cout << "###   msg_type=" << header.type()
+       << " client_id=" << header.clientId() << std::endl;
+
+  ReflectorClientMap::iterator it = client_map.find(header.clientId());
+  if (it == client_map.end())
+  {
+    cerr << "*** WARNING: Incoming UDP packet has invalid client id" << endl;
+    return;
+  }
+  ReflectorClient *client = (*it).second;
+  if (addr != client->remoteHost())
+  {
+    cerr << "*** WARNING: Incoming UDP packet has the wrong source ip" << endl;
+    return;
+  }
+  if (client->remoteUdpPort() == 0)
+  {
+    client->setRemoteUdpPort(port);
+  }
+  else if (port != client->remoteUdpPort())
+  {
+    cerr << "*** WARNING: Incoming UDP packet has the wrong source UDP "
+            "port number" << endl;
+    return;
+  }
+
+  switch (header.type())
+  {
+    case MsgHeartbeat::TYPE:
+      cout << "MsgUdpHeartbeat()" << endl;
+      // FIXME: Handle heartbeat
+      break;
+    case MsgAudio::TYPE:
+    {
+      MsgAudio msg;
+      msg.unpack(ss);
+      //client->handleMsgAudio(msg);
+      broadcastUdpMsgExcept(client, msg);
+      break;
+    }
+    default:
+      cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
+           << header.type() << endl;
+      // FIXME: Disconnect client or ignore?
+      break;
+  }
+
+#if 0
   try
   {
     msgpack::unpacked result;
@@ -313,32 +372,36 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     // FIXME: Disconnect client or ignore?
     //client->disconnect("Protocol error");
   }
+#endif
 } /* Reflector::udpDatagramReceived */
 
 
-void Reflector::sendUdpMsg(const ReflectorClient *client, const Msg &msg)
+void Reflector::sendUdpMsg(const ReflectorClient *client,
+                           const ReflectorUdpMsg &msg)
 {
   if (client->remoteUdpPort() == 0)
   {
     return;
   }
 
-  msgpack::sbuffer msg_buf;
-  //msgpack::pack(msg_buf, client->clientId());
-  msgpack::pack(msg_buf, msg.type());
-  if (msg.haveData())
-  {
-    msgpack::pack(msg_buf, msg);
-  }
   cout << "### Reflector::sendUdpMsg: " << client->remoteHost() << ":"
        << client->remoteUdpPort() << endl;
+
+  ReflectorUdpMsg header(msg.type(), client->clientId());
+  ostringstream ss;
+  if (!header.pack(ss) || !msg.pack(ss))
+  {
+    // FIXME: Better error handling
+    cerr << "*** ERROR: Failed to pack reflector UDP message\n";
+    return;
+  }
   udp_sock->write(client->remoteHost(), client->remoteUdpPort(),
-                  msg_buf.data(), msg_buf.size());
+                  ss.str().data(), ss.str().size());
 } /* ReflectorLogic::sendUdpMsg */
 
 
 void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
-                                      const Msg& msg)
+                                      const ReflectorUdpMsg& msg)
 {
   for (ReflectorClientMap::iterator it = client_map.begin();
        it != client_map.end(); ++it)

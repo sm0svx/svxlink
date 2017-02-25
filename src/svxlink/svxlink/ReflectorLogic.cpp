@@ -219,7 +219,65 @@ void ReflectorLogic::onConnected(void)
 
 int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
 {
-  //cout << "### ReflectorLogic::onDataReceived: len=" << len << endl;
+  cout << "### ReflectorLogic::onDataReceived: len=" << len << endl;
+
+  int tot_consumed = 0;
+  while (len > 0)
+  {
+    ReflectorMsg header;
+    size_t msg_tot_size = header.packedSize();
+    if (static_cast<size_t>(len) < msg_tot_size)
+    {
+      cout << "### Header data underflow\n";
+      return tot_consumed;
+    }
+
+    stringstream ss;
+    ss.write(reinterpret_cast<const char *>(data), len);
+
+    if (!header.unpack(ss))
+    {
+      // FIXME: Disconnect
+      cout << "*** ERROR: Packing failed for TCP message header\n";
+      return tot_consumed;
+    }
+
+    msg_tot_size += header.size();
+    if (static_cast<size_t>(len) < msg_tot_size)
+    {
+      cout << "### Payload data underflow\n";
+      return tot_consumed;
+    }
+
+    switch (header.type())
+    {
+      case MsgError::TYPE:
+        handleMsgError(ss);
+        break;
+      case MsgAuthChallenge::TYPE:
+        handleMsgAuthChallenge(ss);
+        break;
+      case MsgAuthOk::TYPE:
+        handleMsgAuthOk();
+        break;
+      case MsgServerInfo::TYPE:
+        handleMsgServerInfo(ss);
+        break;
+      default:
+        cerr << "*** WARNING: Unknown protocol message received: msg_type="
+             << header.type() << endl;
+        break;
+    }
+
+    data += msg_tot_size;
+    len -= msg_tot_size;
+    tot_consumed += msg_tot_size;
+  }
+
+  return tot_consumed;
+
+
+#if 0
   m_unp.reserve_buffer(len);
   memcpy(m_unp.buffer(), data, len);
   m_unp.buffer_consumed(len);
@@ -292,32 +350,40 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
       //con->disconnect();
     }
   }
+#endif
   return len;
 } /* ReflectorLogic::onDataReceived */
 
 
-void ReflectorLogic::handleMsgError(const msgpack::object &obj)
+void ReflectorLogic::handleMsgError(std::istream& is)
 {
-  MsgError msg(obj);
+  MsgError msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgAuthChallenge\n";
+    return;
+  }
   cout << "### " << name() << ": MsgError(\"" << msg.message() << "\")" << endl;
   // FIXME: Handle reconnection
   m_con->disconnect();
-} /* ReflectorLogic::handleMsgAuthChallenge */
+} /* ReflectorLogic::handleMsgError */
 
 
-void ReflectorLogic::handleMsgAuthChallenge(const msgpack::object &obj)
+void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
 {
   MsgAuthChallenge msg;
-#if MSGPACK_VERSION_MAJOR < 1
-  obj.convert(&msg);
-#else
-  obj.convert(msg);
-#endif
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgAuthChallenge\n";
+    return;
+  }
   stringstream ss;
-  ss << hex << setw(2) << setfill('0');
+  ss << dec << setw(2) << setfill('0');
   for (int i=0; i<MsgAuthChallenge::CHALLENGE_LEN; ++i)
   {
-    ss << (int)msg.challenge()[i];
+    ss << (int)msg.challenge()[i] << " ";
   }
   cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
 
@@ -333,9 +399,15 @@ void ReflectorLogic::handleMsgAuthOk(void)
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
-void ReflectorLogic::handleMsgServerInfo(const msgpack::object &obj)
+void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 {
-  MsgServerInfo msg(obj);
+  MsgServerInfo msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgAuthChallenge\n";
+    return;
+  }
   cout << "### " << name() << ": MsgServerInfo(" << msg.clientId() << ")"
        << endl;
   m_client_id = msg.clientId();
@@ -344,17 +416,29 @@ void ReflectorLogic::handleMsgServerInfo(const msgpack::object &obj)
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
-  sendUdpMsg(MsgHeartbeat());
+  sendUdpMsg(MsgUdpHeartbeat());
 
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
-void ReflectorLogic::sendMsg(const Msg &msg)
+void ReflectorLogic::sendMsg(ReflectorMsg& msg)
 {
+  ostringstream ss;
+  msg.setSize(msg.packedSize());
+  if (!msg.ReflectorMsg::pack(ss) || !msg.pack(ss))
+  {
+    // FIXME: Better error handling
+    cerr << "*** ERROR: Failed to pack reflector TCP message\n";
+    return;
+  }
+  m_con->write(ss.str().data(), ss.str().size());
+
+#if 0
   msgpack::sbuffer msg_buf;
   msgpack::pack(msg_buf, msg.type());
   msgpack::pack(msg_buf, msg);
   m_con->write(msg_buf.data(), msg_buf.size());
+#endif
 } /* ReflectorLogic::sendMsg */
 
 
@@ -377,8 +461,57 @@ void ReflectorLogic::flushEncodedAudio(void)
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  //cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
-  //     << addr << " port=" << port << " count=" << count;
+  cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
+       << addr << " port=" << port << " count=" << count;
+  std::cout << std::endl;
+
+  stringstream ss;
+  ss.write(reinterpret_cast<const char *>(buf), count);
+
+  ReflectorUdpMsg header;
+  if (!header.unpack(ss))
+  {
+    // FIXME: Disconnect
+    cout << "*** ERROR: Unpacking failed for UDP message header\n";
+    return;
+  }
+
+  cout << "###   msg_type=" << header.type()
+       << " client_id=" << header.clientId() << std::endl;
+
+  // FIXME: Check remote IP and port number. Maybe also client ID?
+
+  switch (header.type())
+  {
+    case MsgHeartbeat::TYPE:
+      cout << "MsgUdpHeartbeat()" << endl;
+      // FIXME: Handle heartbeat
+      break;
+    case MsgAudio::TYPE:
+    {
+      MsgAudio msg;
+      msg.unpack(ss);
+      if (msg.audioData().empty())
+      {
+        m_logic_con_out->flushEncodedSamples();
+      }
+      else
+      {
+        m_logic_con_out->writeEncodedSamples(
+            &msg.audioData().front(), msg.audioData().size());
+      }
+      break;
+    }
+    default:
+      cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
+           << header.type() << endl;
+      // FIXME: Disconnect or ignore?
+      break;
+  }
+
+
+
+#if 0
   try
   {
     msgpack::unpacked result;
@@ -481,11 +614,29 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     // FIXME: Disconnect client or ignore?
     //client->disconnect("Protocol error");
   }
+#endif
 } /* ReflectorLogic::udpDatagramReceived */
 
 
-void ReflectorLogic::sendUdpMsg(const Msg &msg)
+void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 {
+  if (m_udp_sock == 0)
+  {
+    return;
+  }
+
+  ReflectorUdpMsg header(msg.type(), m_client_id);
+  ostringstream ss;
+  if (!header.pack(ss) || !msg.pack(ss))
+  {
+    // FIXME: Better error handling
+    cerr << "*** ERROR: Failed to pack reflector TCP message\n";
+    return;
+  }
+  m_udp_sock->write(m_con->remoteHost(), m_con->remotePort(),
+                    ss.str().data(), ss.str().size());
+
+#if 0
   msgpack::sbuffer msg_buf;
   msgpack::pack(msg_buf, m_client_id);
   msgpack::pack(msg_buf, msg.type());
@@ -495,6 +646,7 @@ void ReflectorLogic::sendUdpMsg(const Msg &msg)
   }
   m_udp_sock->write(m_con->remoteHost(), m_con->remotePort(),
                     msg_buf.data(), msg_buf.size());
+#endif
 } /* ReflectorLogic::sendUdpMsg */
 
 

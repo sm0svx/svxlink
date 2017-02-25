@@ -69,7 +69,8 @@ namespace Async
   class TcpConnection;
 };
 
-class Msg;
+class ReflectorMsg;
+class ReflectorUdpMsg;
 
 
 /****************************************************************************
@@ -168,16 +169,16 @@ class ReflectorLogic : public LogicBase
     ReflectorLogic& operator=(const ReflectorLogic&);
     void onConnected(void);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
-    void handleMsgError(const msgpack::object &obj);
-    void handleMsgAuthChallenge(const msgpack::object &obj);
+    void handleMsgError(std::istream& is);
+    void handleMsgAuthChallenge(std::istream& is);
     void handleMsgAuthOk(void);
-    void handleMsgServerInfo(const msgpack::object &obj);
-    void sendMsg(const Msg &msg);
+    void handleMsgServerInfo(std::istream& is);
+    void sendMsg(ReflectorMsg& msg);
     void sendEncodedAudio(const void *buf, int count);
     void flushEncodedAudio(void);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendUdpMsg(const Msg &msg);
+    void sendUdpMsg(const ReflectorUdpMsg& msg);
 
 };  /* class ReflectorLogic */
 

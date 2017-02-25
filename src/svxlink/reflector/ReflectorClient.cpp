@@ -150,11 +150,63 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
 {
   cout << "### ReflectorClient::onDataReceived: len=" << len << endl;
 
+  assert(len >= 0);
+
   if (m_con_state == STATE_DISCONNECTED)
   {
     return len;
   }
 
+  int tot_consumed = 0;
+  while ((len > 0) && (m_con_state != STATE_DISCONNECTED))
+  {
+    ReflectorMsg header;
+    size_t msg_tot_size = header.packedSize();
+    if (static_cast<size_t>(len) < msg_tot_size)
+    {
+      cout << "### Header data underflow\n";
+      return tot_consumed;
+    }
+
+    stringstream ss;
+    ss.write(reinterpret_cast<const char *>(data), len);
+
+    if (!header.unpack(ss))
+    {
+      // FIXME: Disconnect
+      cout << "*** ERROR: Packing failed for TCP message header\n";
+      return tot_consumed;
+    }
+
+    msg_tot_size += header.size();
+    if (static_cast<size_t>(len) < msg_tot_size)
+    {
+      cout << "### Payload data underflow\n";
+      return tot_consumed;
+    }
+
+    switch (header.type())
+    {
+      case MsgProtoVer::TYPE:
+        handleMsgProtoVer(ss);
+        break;
+      case MsgAuthResponse::TYPE:
+        handleMsgAuthResponse(ss);
+        break;
+      default:
+        cerr << "*** WARNING: Unknown protocol message received: msg_type="
+             << header.type() << endl;
+        break;
+    }
+
+    data += msg_tot_size;
+    len -= msg_tot_size;
+    tot_consumed += msg_tot_size;
+  }
+
+  return tot_consumed;
+
+#if 0
   m_unp.reserve_buffer(len);
   memcpy(m_unp.buffer(), data, len);
   m_unp.buffer_consumed(len);
@@ -210,10 +262,11 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
     }
   }
   return len;
+#endif
 } /* ReflectorClient::onDataReceived */
 
 
-void ReflectorClient::handleMsgProtoVer(const msgpack::object &obj)
+void ReflectorClient::handleMsgProtoVer(std::istream& is)
 {
   if (m_con_state != STATE_EXPECT_PROTO_VER)
   {
@@ -222,11 +275,12 @@ void ReflectorClient::handleMsgProtoVer(const msgpack::object &obj)
   }
 
   MsgProtoVer msg;
-#if MSGPACK_VERSION_MAJOR < 1
-  obj.convert(&msg);
-#else
-  obj.convert(msg);
-#endif
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgProtoVer\n";
+    return;
+  }
   cout << "MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
        << ")" << endl;
   if ((msg.majorVer() != MsgProtoVer::MAJOR) ||
@@ -250,7 +304,7 @@ void ReflectorClient::handleMsgProtoVer(const msgpack::object &obj)
 } /* ReflectorClient::handleMsgProtoVer */
 
 
-void ReflectorClient::handleMsgAuthResponse(const msgpack::object &obj)
+void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 {
   if (m_con_state != STATE_EXPECT_AUTH_RESPONSE)
   {
@@ -258,13 +312,19 @@ void ReflectorClient::handleMsgAuthResponse(const msgpack::object &obj)
     return;
   }
 
-  MsgAuthResponse msg(obj);
+  MsgAuthResponse msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgAuthResponse\n";
+    return;
+  }
   cout << "MsgAuthResponse(<digest>)" << endl;
 
+  m_callsign = msg.callsign();
   if (msg.verify("ThePassword :-)", m_auth_challenge))
   {
     sendMsg(MsgAuthOk());
-    m_callsign = msg.callsign();
     cout << m_callsign << ": Login OK from "
          << m_con->remoteHost() << ":" << m_con->remotePort()
          << endl;
@@ -279,8 +339,19 @@ void ReflectorClient::handleMsgAuthResponse(const msgpack::object &obj)
 } /* ReflectorClient::handleMsgProtoVer */
 
 
-void ReflectorClient::sendMsg(const Msg &msg)
+void ReflectorClient::sendMsg(const ReflectorMsg& msg)
 {
+  ReflectorMsg header(msg.type(), msg.packedSize());
+  ostringstream ss;
+  if (!header.pack(ss) || !msg.pack(ss))
+  {
+    // FIXME: Better error handling
+    cerr << "*** ERROR: Failed to pack TCP message\n";
+    return;
+  }
+  m_con->write(ss.str().data(), ss.str().size());
+
+#if 0
   msgpack::sbuffer msg_buf;
   msgpack::pack(msg_buf, msg.type());
   if (msg.haveData())
@@ -288,6 +359,7 @@ void ReflectorClient::sendMsg(const Msg &msg)
     msgpack::pack(msg_buf, msg);
   }
   m_con->write(msg_buf.data(), msg_buf.size());
+#endif
 } /* ReflectorClient::sendMsg */
 
 
