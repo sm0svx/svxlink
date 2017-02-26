@@ -231,8 +231,10 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  //cout << "###   msg_type=" << header.type()
-  //     << " client_id=" << header.clientId() << std::endl;
+  //cout << " msg_type=" << header.type()
+  //     << " client_id=" << header.clientId()
+  //     << " seq=" << header.sequenceNum()
+  //     << std::endl;
 
   ReflectorClientMap::iterator it = client_map.find(header.clientId());
   if (it == client_map.end())
@@ -255,6 +257,21 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     cerr << "*** WARNING: Incoming UDP packet has the wrong source UDP "
             "port number" << endl;
     return;
+  }
+
+    // Check sequence number
+  uint16_t udp_rx_seq_diff = header.sequenceNum() - client->nextUdpRxSeq();
+  if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
+  {
+    cout << "### Dropping out of sequence frame with seq="
+         << header.sequenceNum() << endl;
+    return;
+  }
+  else if (udp_rx_seq_diff > 0) // Frame lost
+  {
+    cout << "### Frame(s) lost. Resetting next expected sequence number to "
+         << (header.sequenceNum() + 1) << endl;
+    client->setNextUdpRxSeq(header.sequenceNum() + 1);
   }
 
   switch (header.type())
@@ -280,7 +297,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 } /* Reflector::udpDatagramReceived */
 
 
-void Reflector::sendUdpMsg(const ReflectorClient *client,
+void Reflector::sendUdpMsg(ReflectorClient *client,
                            const ReflectorUdpMsg &msg)
 {
   if (client->remoteUdpPort() == 0)
@@ -291,7 +308,7 @@ void Reflector::sendUdpMsg(const ReflectorClient *client,
   //cout << "### Reflector::sendUdpMsg: " << client->remoteHost() << ":"
   //     << client->remoteUdpPort() << endl;
 
-  ReflectorUdpMsg header(msg.type(), client->clientId());
+  ReflectorUdpMsg header(msg.type(), client->clientId(), client->nextUdpTxSeq());
   ostringstream ss;
   if (!header.pack(ss) || !msg.pack(ss))
   {

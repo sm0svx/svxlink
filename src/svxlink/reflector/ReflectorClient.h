@@ -146,6 +146,9 @@ class ReflectorClient
     uint16_t remoteUdpPort(void) const { return m_remote_udp_port; }
     void setRemoteUdpPort(uint16_t port) { m_remote_udp_port = port; }
     const std::string& callsign(void) const { return m_callsign; }
+    uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
+    uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq++; }
+    void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
 
   protected:
 
@@ -167,6 +170,8 @@ class ReflectorClient
     uint32_t              m_client_id;
     uint16_t              m_remote_udp_port;
     std::string           m_auth_key;
+    uint16_t              m_next_udp_tx_seq;
+    uint16_t              m_next_udp_rx_seq;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);

@@ -167,8 +167,8 @@ class ReflectorUdpMsg : public Async::Msg
      * @param 	type The message type
      * @param   client_id The client ID
      */
-    ReflectorUdpMsg(uint16_t type=0, uint16_t client_id=0)
-      : m_type(type), m_client_id(client_id) {}
+    ReflectorUdpMsg(uint16_t type=0, uint16_t client_id=0, uint16_t seq=0)
+      : m_type(type), m_client_id(client_id), m_seq(seq) {}
 
     /**
      * @brief 	Destructor
@@ -181,12 +181,14 @@ class ReflectorUdpMsg : public Async::Msg
      */
     uint16_t type(void) const { return m_type; }
     uint16_t clientId(void) const { return m_client_id; }
+    uint16_t sequenceNum(void) const { return m_seq; }
 
-    ASYNC_MSG_MEMBERS(m_type, m_client_id)
+    ASYNC_MSG_MEMBERS(m_type, m_client_id, m_seq)
 
   private:
     uint16_t m_type;
     uint16_t m_client_id;
+    uint16_t m_seq;
 };
 
 

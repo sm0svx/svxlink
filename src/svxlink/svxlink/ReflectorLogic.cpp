@@ -120,7 +120,8 @@ using namespace Async;
 
 ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
-    m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false)
+    m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false),
+    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
 } /* ReflectorLogic::ReflectorLogic */
@@ -228,6 +229,8 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   m_reconnect_timer.setEnable(true);
   delete m_udp_sock;
   m_udp_sock = 0;
+  m_next_udp_tx_seq = 0;
+  m_next_udp_rx_seq = 0;
 } /* ReflectorLogic::onDisconnected */
 
 
@@ -394,7 +397,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
   //cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
-  //     << addr << " port=" << port << " count=" << count << std::endl;
+  //     << addr << " port=" << port << " count=" << count;
 
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
@@ -407,10 +410,27 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  //cout << "###   msg_type=" << header.type()
-  //     << " client_id=" << header.clientId() << std::endl;
+  //cout << " msg_type=" << header.type()
+  //     << " client_id=" << header.clientId()
+  //     << " seq=" << header.sequenceNum()
+  //     << std::endl;
 
   // FIXME: Check remote IP and port number. Maybe also client ID?
+
+    // Check sequence number
+  uint16_t udp_rx_seq_diff = header.sequenceNum() - m_next_udp_rx_seq++;
+  if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
+  {
+    cout << "### Dropping out of sequence frame with seq="
+         << header.sequenceNum() << endl;
+    return;
+  }
+  else if (udp_rx_seq_diff > 0) // Frame lost
+  {
+    cout << "### Frame(s) lost. Resetting next expected sequence number to "
+         << (header.sequenceNum() + 1) << endl;
+    m_next_udp_rx_seq = header.sequenceNum() + 1;
+  }
 
   switch (header.type())
   {
@@ -449,7 +469,7 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
     return;
   }
 
-  ReflectorUdpMsg header(msg.type(), m_client_id);
+  ReflectorUdpMsg header(msg.type(), m_client_id, m_next_udp_tx_seq++);
   ostringstream ss;
   if (!header.pack(ss) || !msg.pack(ss))
   {

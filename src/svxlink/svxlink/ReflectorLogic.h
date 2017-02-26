@@ -160,10 +160,11 @@ class ReflectorLogic : public LogicBase
     uint32_t              m_client_id;
     std::string           m_reflector_password;
     std::string           m_callsign;
-
     Async::AudioEncoder*  m_logic_con_in;
     Async::AudioDecoder*  m_logic_con_out;
     Async::Timer          m_reconnect_timer;
+    uint16_t              m_next_udp_tx_seq;
+    uint16_t              m_next_udp_rx_seq;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
