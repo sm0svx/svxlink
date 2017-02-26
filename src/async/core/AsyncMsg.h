@@ -163,14 +163,14 @@ class MsgPacker<char>
   public:
     static bool pack(std::ostream& os, char val)
     {
-      std::cout << "pack<char>("<< int(val) << ")" << std::endl;
+      //std::cout << "pack<char>("<< int(val) << ")" << std::endl;
       return os.write(&val, 1).good();
     }
     static size_t packedSize(const char& val) { return sizeof(char); }
     static bool unpack(std::istream& is, char& val)
     {
       is.read(&val, 1);
-      std::cout << "unpack<char>(" << int(val) << ")" << std::endl;
+      //std::cout << "unpack<char>(" << int(val) << ")" << std::endl;
       return is.good();
     }
 };
@@ -181,7 +181,7 @@ class Packer64
   public:
     static bool pack(std::ostream& os, const T& val)
     {
-      std::cout << "pack<64>(" << val << ")" << std::endl;
+      //std::cout << "pack<64>(" << val << ")" << std::endl;
       Overlay o;
       o.val = val;
       o.uval = htobe64(o.uval);
@@ -194,7 +194,7 @@ class Packer64
       is.read(o.buf, sizeof(T));
       o.uval = be64toh(o.uval);
       val = o.val;
-      std::cout << "unpack<64>(" << val << ")" << std::endl;
+      //std::cout << "unpack<64>(" << val << ")" << std::endl;
       return is.good();
     }
   private:
@@ -215,7 +215,7 @@ class Packer32
   public:
     static bool pack(std::ostream& os, const T& val)
     {
-      std::cout << "pack<32>(" << val << ")" << std::endl;
+      //std::cout << "pack<32>(" << val << ")" << std::endl;
       Overlay o;
       o.val = val;
       o.uval = htobe32(o.uval);
@@ -228,7 +228,7 @@ class Packer32
       is.read(o.buf, sizeof(T));
       o.uval = be32toh(o.uval);
       val = o.val;
-      std::cout << "unpack<32>(" << val << ")" << std::endl;
+      //std::cout << "unpack<32>(" << val << ")" << std::endl;
       return is.good();
     }
   private:
@@ -249,7 +249,7 @@ class Packer16
   public:
     static bool pack(std::ostream& os, const T& val)
     {
-      std::cout << "pack<16>(" << val << ")" << std::endl;
+      //std::cout << "pack<16>(" << val << ")" << std::endl;
       Overlay o;
       o.val = val;
       o.uval = htobe16(o.uval);
@@ -262,7 +262,7 @@ class Packer16
       is.read(o.buf, sizeof(T));
       o.uval = be16toh(o.uval);
       val = o.val;
-      std::cout << "unpack<16>(" << val << ")" << std::endl;
+      //std::cout << "unpack<16>(" << val << ")" << std::endl;
       return is.good();
     }
   private:
@@ -282,14 +282,14 @@ class Packer8
   public:
     static bool pack(std::ostream& os, const T& val)
     {
-      std::cout << "pack<8>(" << int(val) << ")" << std::endl;
+      //std::cout << "pack<8>(" << int(val) << ")" << std::endl;
       return os.write(reinterpret_cast<const char*>(&val), sizeof(T)).good();
     }
     static size_t packedSize(const T& val) { return sizeof(T); }
     static bool unpack(std::istream& is, T& val)
     {
       is.read(reinterpret_cast<char*>(&val), sizeof(T));
-      std::cout << "unpack<8>(" << int(val) << ")" << std::endl;
+      //std::cout << "unpack<8>(" << int(val) << ")" << std::endl;
       return is.good();
     }
 };
@@ -302,7 +302,7 @@ class MsgPacker<std::string>
   public:
     static bool pack(std::ostream& os, const std::string& val)
     {
-      std::cout << "pack<string>(" << val << ")" << std::endl;
+      //std::cout << "pack<string>(" << val << ")" << std::endl;
       if (val.size() > std::numeric_limits<uint16_t>::max())
       {
         return false;
@@ -328,7 +328,7 @@ class MsgPacker<std::string>
         if (is.read(buf, str_len))
         {
           val.assign(buf, str_len);
-          std::cout << "unpack<string>(" << val << ")" << std::endl;
+          //std::cout << "unpack<string>(" << val << ")" << std::endl;
           return true;
         }
       }
@@ -342,7 +342,7 @@ class MsgPacker<std::vector<I> >
   public:
     static bool pack(std::ostream& os, const std::vector<I>& vec)
     {
-      std::cout << "pack<vector>(" << vec.size() << ")" << std::endl;
+      //std::cout << "pack<vector>(" << vec.size() << ")" << std::endl;
       if (vec.size() > std::numeric_limits<uint16_t>::max())
       {
         return false;
@@ -368,7 +368,7 @@ class MsgPacker<std::vector<I> >
       {
         return false;
       }
-      std::cout << "unpack<vector>(" << vec_size << ")" << std::endl;
+      //std::cout << "unpack<vector>(" << vec_size << ")" << std::endl;
       vec.clear();
       vec.reserve(vec_size);
       for (int i=0; i<vec_size; ++i)
@@ -387,7 +387,7 @@ class MsgPacker<std::map<Tag,Value> >
   public:
     static bool pack(std::ostream& os, const std::map<Tag, Value>& m)
     {
-      std::cout << "pack<map>(" << m.size() << ")" << std::endl;
+      //std::cout << "pack<map>(" << m.size() << ")" << std::endl;
       if (m.size() > std::numeric_limits<uint16_t>::max())
       {
         return false;
@@ -416,7 +416,7 @@ class MsgPacker<std::map<Tag,Value> >
       {
         return false;
       }
-      std::cout << "unpack<map>(" << map_size << ")" << std::endl;
+      //std::cout << "unpack<map>(" << map_size << ")" << std::endl;
       m.clear();
       for (int i=0; i<map_size; ++i)
       {
