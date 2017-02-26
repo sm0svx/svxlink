@@ -120,8 +120,9 @@ using namespace Async;
 
 ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
-    m_logic_con_out(0)
+    m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false)
 {
+  m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -186,6 +187,7 @@ bool ReflectorLogic::initialize(void)
 
   m_con = new TcpClient(reflector_host, reflector_port);
   m_con->connected.connect(mem_fun(*this, &ReflectorLogic::onConnected));
+  m_con->disconnected.connect(mem_fun(*this, &ReflectorLogic::onDisconnected));
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorLogic::onDataReceived));
   m_con->connect();
 
@@ -215,6 +217,18 @@ void ReflectorLogic::onConnected(void)
   MsgProtoVer msg;
   sendMsg(msg);
 } /* ReflectorLogic::onConnected */
+
+
+void ReflectorLogic::onDisconnected(TcpConnection *con,
+                                    TcpConnection::DisconnectReason reason)
+{
+  cout << name() << ": Disconnected from " << m_con->remoteHost() << ":"
+       << m_con->remotePort() << ": "
+       << TcpConnection::disconnectReasonStr(reason) << endl;
+  m_reconnect_timer.setEnable(true);
+  delete m_udp_sock;
+  m_udp_sock = 0;
+} /* ReflectorLogic::onDisconnected */
 
 
 int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
@@ -336,6 +350,7 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
        << endl;
   m_client_id = msg.clientId();
 
+  delete m_udp_sock;
   m_udp_sock = new UdpSocket;
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
@@ -446,6 +461,13 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
                     ss.str().data(), ss.str().size());
 } /* ReflectorLogic::sendUdpMsg */
 
+
+void ReflectorLogic::reconnect(Timer *t)
+{
+  cout << "### Reconnecting to reflector server\n";
+  t->setEnable(false);
+  m_con->connect();
+} /* ReflectorLogic::reconnect */
 
 
 /*

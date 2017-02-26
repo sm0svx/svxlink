@@ -44,6 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioDecoder.h>
 #include <AsyncAudioEncoder.h>
+#include <AsyncTcpConnection.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -65,7 +67,6 @@ namespace Async
 {
   class TcpClient;
   class UdpSocket;
-  class TcpConnection;
 };
 
 class ReflectorMsg;
@@ -153,19 +154,22 @@ class ReflectorLogic : public LogicBase
   protected:
 
   private:
-    Async::TcpClient *  m_con;
-    unsigned            m_msg_type;
-    Async::UdpSocket *  m_udp_sock;
-    uint32_t            m_client_id;
-    std::string         m_reflector_password;
-    std::string         m_callsign;
+    Async::TcpClient*     m_con;
+    unsigned              m_msg_type;
+    Async::UdpSocket*     m_udp_sock;
+    uint32_t              m_client_id;
+    std::string           m_reflector_password;
+    std::string           m_callsign;
 
-    Async::AudioEncoder *m_logic_con_in;
-    Async::AudioDecoder *m_logic_con_out;
+    Async::AudioEncoder*  m_logic_con_in;
+    Async::AudioDecoder*  m_logic_con_out;
+    Async::Timer          m_reconnect_timer;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
     void onConnected(void);
+    void onDisconnected(Async::TcpConnection *con,
+                        Async::TcpConnection::DisconnectReason reason);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void handleMsgError(std::istream& is);
     void handleMsgAuthChallenge(std::istream& is);
@@ -177,6 +181,7 @@ class ReflectorLogic : public LogicBase
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void sendUdpMsg(const ReflectorUdpMsg& msg);
+    void reconnect(Async::Timer *t);
 
 };  /* class ReflectorLogic */
 
