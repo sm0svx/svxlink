@@ -161,7 +161,7 @@ bool Reflector::initialize(Async::Config &cfg)
   srv->clientDisconnected.connect(
       mem_fun(*this, &Reflector::clientDisconnected));
 
-  uint16_t udp_listen_port;
+  uint16_t udp_listen_port = 5300;
   cfg.getValue("GLOBAL", "LISTEN_PORT", udp_listen_port);
   udp_sock = new UdpSocket(udp_listen_port);
   if ((udp_sock == 0) || !udp_sock->initOk())
