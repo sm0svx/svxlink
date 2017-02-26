@@ -41,7 +41,6 @@ An example of how to use the ReflectorClient class
  *
  ****************************************************************************/
 
-#include <msgpack.hpp>
 
 
 /****************************************************************************
@@ -160,7 +159,6 @@ class ReflectorClient
     } ConState;
 
     Async::TcpConnection  *m_con;
-    msgpack::unpacker     m_unp;
     unsigned              m_msg_type;
     unsigned char         m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
     ConState              m_con_state;

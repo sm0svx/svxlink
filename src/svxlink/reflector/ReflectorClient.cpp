@@ -206,64 +206,6 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
   }
 
   return tot_consumed;
-
-#if 0
-  m_unp.reserve_buffer(len);
-  memcpy(m_unp.buffer(), data, len);
-  m_unp.buffer_consumed(len);
-  msgpack::unpacked result;
-#if MSGPACK_VERSION_MAJOR < 1
-  while (m_unp.next(&result))
-#else
-  while (m_unp.next(result))
-#endif
-  {
-    msgpack::object obj(result.get());
-    //cout << obj << endl;
-    try
-    {
-      if (m_msg_type == 0)
-      {
-        unsigned msg_type = 0;
-#if MSGPACK_VERSION_MAJOR < 1
-        obj.convert(&msg_type);
-#else
-        obj.convert(msg_type);
-#endif
-        switch (msg_type)
-        {
-          default:
-            m_msg_type = msg_type;
-            break;
-        }
-      }
-      else
-      {
-        switch (m_msg_type)
-        {
-          case MsgProtoVer::TYPE:
-            handleMsgProtoVer(obj);
-            break;
-          case MsgAuthResponse::TYPE:
-            handleMsgAuthResponse(obj);
-            break;
-          default:
-            cerr << "*** WARNING: Unknown protocol message received: msg_type="
-                 << m_msg_type << endl;
-            break;
-        }
-        m_msg_type = 0;
-      }
-    }
-    catch (msgpack::type_error)
-    {
-      cerr << "*** WARNING: The incoming message type have the wrong object type"
-           << endl;
-      disconnect("Protocol error");
-    }
-  }
-  return len;
-#endif
 } /* ReflectorClient::onDataReceived */
 
 
@@ -351,16 +293,6 @@ void ReflectorClient::sendMsg(const ReflectorMsg& msg)
     return;
   }
   m_con->write(ss.str().data(), ss.str().size());
-
-#if 0
-  msgpack::sbuffer msg_buf;
-  msgpack::pack(msg_buf, msg.type());
-  if (msg.haveData())
-  {
-    msgpack::pack(msg_buf, msg);
-  }
-  m_con->write(msg_buf.data(), msg_buf.size());
-#endif
 } /* ReflectorClient::sendMsg */
 
 

@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <msgpack.hpp>
 
 
 /****************************************************************************
@@ -155,7 +154,6 @@ class ReflectorLogic : public LogicBase
 
   private:
     Async::TcpClient *  m_con;
-    msgpack::unpacker   m_unp;
     unsigned            m_msg_type;
     Async::UdpSocket *  m_udp_sock;
     uint32_t            m_client_id;

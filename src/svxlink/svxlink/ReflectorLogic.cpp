@@ -276,83 +276,6 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
   }
 
   return tot_consumed;
-
-
-#if 0
-  m_unp.reserve_buffer(len);
-  memcpy(m_unp.buffer(), data, len);
-  m_unp.buffer_consumed(len);
-  msgpack::unpacked result;
-#if MSGPACK_VERSION_MAJOR < 1
-  while (m_unp.next(&result))
-#else
-  while (m_unp.next(result))
-#endif
-  {
-    msgpack::object obj(result.get());
-    //cout << obj << endl;
-    try
-    {
-      if (m_msg_type == 0)
-      {
-        unsigned msg_type = 0;
-#if MSGPACK_VERSION_MAJOR < 1
-        obj.convert(&msg_type);
-#else
-        obj.convert(msg_type);
-#endif
-        switch (msg_type)
-        {
-          case MsgAuthOk::TYPE:
-            handleMsgAuthOk();
-            break;
-          default:
-            m_msg_type = msg_type;
-            break;
-        }
-      }
-      else
-      {
-        switch (m_msg_type)
-        {
-          case MsgError::TYPE:
-            handleMsgError(obj);
-            break;
-          case MsgAuthChallenge::TYPE:
-            handleMsgAuthChallenge(obj);
-            break;
-          case MsgServerInfo::TYPE:
-            handleMsgServerInfo(obj);
-            break;
-          default:
-            cerr << "*** WARNING: Unknown protocol message received: "
-                    "message type="
-                 << m_msg_type << endl;
-            // FIXME: Disconnect?
-            break;
-        }
-        m_msg_type = 0;
-      }
-    }
-    catch (msgpack::unpack_error)
-    {
-      cerr << "*** WARNING: Failed to unpack incoming message"
-           << endl;
-      m_msg_type = 0;
-      // FIXME: Disconnect!
-      //con->disconnect();
-    }
-    catch (msgpack::type_error)
-    {
-      cerr << "*** WARNING: The incoming message type have the wrong object type"
-           << endl;
-      m_msg_type = 0;
-      // FIXME: Disconnect!
-      //con->disconnect();
-    }
-  }
-#endif
-  return len;
 } /* ReflectorLogic::onDataReceived */
 
 
@@ -433,13 +356,6 @@ void ReflectorLogic::sendMsg(ReflectorMsg& msg)
     return;
   }
   m_con->write(ss.str().data(), ss.str().size());
-
-#if 0
-  msgpack::sbuffer msg_buf;
-  msgpack::pack(msg_buf, msg.type());
-  msgpack::pack(msg_buf, msg);
-  m_con->write(msg_buf.data(), msg_buf.size());
-#endif
 } /* ReflectorLogic::sendMsg */
 
 
@@ -463,8 +379,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
   cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
-       << addr << " port=" << port << " count=" << count;
-  std::cout << std::endl;
+       << addr << " port=" << port << " count=" << count << std::endl;
 
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
@@ -509,113 +424,6 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       // FIXME: Disconnect or ignore?
       break;
   }
-
-
-
-#if 0
-  try
-  {
-    msgpack::unpacked result;
-    size_t offset = 0;
-#if 0
-    unpack(result, reinterpret_cast<const char *>(buf), count, offset);
-    msgpack::object client_id_obj(result.get());
-    uint32_t client_id = 0;
-    client_id_obj.convert(client_id);
-    cout << " client_id=" << client_id_obj;
-    ReflectorClientMap::iterator it = client_map.find(client_id);
-    if (it == client_map.end())
-    {
-      cerr << "*** WARNING: Incoming UDP packet has invalid client id" << endl;
-      return;
-    }
-    ReflectorClient *client = (*it).second;
-    if (addr != client->remoteHost())
-    {
-      cerr << "*** WARNING: Incoming UDP packet has the wrong source ip" << endl;
-      return;
-    }
-    if (client->remoteUdpPort() == 0)
-    {
-      client->setRemoteUdpPort(port);
-    }
-    else if (port != client->remoteUdpPort())
-    {
-      cerr << "*** WARNING: Incoming UDP packet has the wrong source UDP "
-              "port number" << endl;
-      return;
-    }
-#endif
-
-#if MSGPACK_VERSION_MAJOR < 1
-    unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
-#else
-    unpack(result, reinterpret_cast<const char *>(buf), count, offset);
-#endif
-    msgpack::object msg_type_obj(result.get());
-    //cout << " msg_type_obj=" << msg_type_obj;
-
-#if MSGPACK_VERSION_MAJOR < 1
-    unpack(&result, reinterpret_cast<const char *>(buf), count, &offset);
-#else
-    unpack(result, reinterpret_cast<const char *>(buf), count, offset);
-#endif
-    msgpack::object msg_data_obj(result.get());
-    //cout << " msg_data_obj=" << msg_data_obj;
-    //cout << endl;
-
-    unsigned msg_type = 0;
-#if MSGPACK_VERSION_MAJOR < 1
-    msg_type_obj.convert(&msg_type);
-#else
-    msg_type_obj.convert(msg_type);
-#endif
-    switch (msg_type)
-    {
-      case MsgAudio::TYPE:
-      {
-        MsgAudio msg(msg_data_obj);
-        if (msg.audioData().empty())
-        {
-          m_logic_con_out->flushEncodedSamples();
-        }
-        else
-        {
-          m_logic_con_out->writeEncodedSamples(
-              &msg.audioData().front(), msg.audioData().size());
-        }
-        break;
-      }
-      default:
-        cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
-             << msg_type << endl;
-        // FIXME: Disconnect client or ignore?
-        break;
-    }
-  }
-#if MSGPACK_VERSION_MAJOR >= 1
-  catch (msgpack::insufficient_bytes)
-  {
-    cerr << "*** WARNING: The incoming UDP message is too short" << endl;
-    // FIXME: Disconnect client or ignore?
-    //client->disconnect("Protocol error");
-  }
-#endif
-  catch (msgpack::unpack_error)
-  {
-    cerr << "*** WARNING: Failed to unpack incoming message"
-         << endl;
-    // FIXME: Disconnect!
-    //con->disconnect();
-  }
-  catch (msgpack::type_error)
-  {
-    cerr << "*** WARNING: The incoming UDP message type have the wrong "
-            "object type" << endl;
-    // FIXME: Disconnect client or ignore?
-    //client->disconnect("Protocol error");
-  }
-#endif
 } /* ReflectorLogic::udpDatagramReceived */
 
 
@@ -636,18 +444,6 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
   }
   m_udp_sock->write(m_con->remoteHost(), m_con->remotePort(),
                     ss.str().data(), ss.str().size());
-
-#if 0
-  msgpack::sbuffer msg_buf;
-  msgpack::pack(msg_buf, m_client_id);
-  msgpack::pack(msg_buf, msg.type());
-  if (msg.haveData())
-  {
-    msgpack::pack(msg_buf, msg);
-  }
-  m_udp_sock->write(m_con->remoteHost(), m_con->remotePort(),
-                    msg_buf.data(), msg_buf.size());
-#endif
 } /* ReflectorLogic::sendUdpMsg */
 
 
