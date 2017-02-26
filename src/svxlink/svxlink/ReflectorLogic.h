@@ -182,6 +182,7 @@ class ReflectorLogic : public LogicBase
                              void *buf, int count);
     void sendUdpMsg(const ReflectorUdpMsg& msg);
     void reconnect(Async::Timer *t);
+    void disconnect(void);
 
 };  /* class ReflectorLogic */
 

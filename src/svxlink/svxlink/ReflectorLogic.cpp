@@ -304,7 +304,7 @@ void ReflectorLogic::handleMsgError(std::istream& is)
   }
   cout << "### " << name() << ": MsgError(\"" << msg.message() << "\")" << endl;
   // FIXME: Handle reconnection
-  m_con->disconnect();
+  disconnect();
 } /* ReflectorLogic::handleMsgError */
 
 
@@ -468,6 +468,13 @@ void ReflectorLogic::reconnect(Timer *t)
   t->setEnable(false);
   m_con->connect();
 } /* ReflectorLogic::reconnect */
+
+
+void ReflectorLogic::disconnect(void)
+{
+  m_con->disconnect();
+  onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
+} /* ReflectorLogic::disconnect */
 
 
 /*
