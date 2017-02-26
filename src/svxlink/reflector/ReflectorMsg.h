@@ -207,8 +207,8 @@ class ReflectorUdpMsgBase : public ReflectorUdpMsg
 class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
-    static const uint16_t MAJOR = 1;
-    static const uint16_t MINOR = 3;
+    static const uint16_t MAJOR = 0;
+    static const uint16_t MINOR = 1;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }

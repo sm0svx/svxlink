@@ -144,8 +144,7 @@ class ReflectorClient
     }
     uint16_t remoteUdpPort(void) const { return m_remote_udp_port; }
     void setRemoteUdpPort(uint16_t port) { m_remote_udp_port = port; }
-
-    void handleMsgAudio(const MsgAudio& msg);
+    const std::string& callsign(void) const { return m_callsign; }
 
   protected:
 

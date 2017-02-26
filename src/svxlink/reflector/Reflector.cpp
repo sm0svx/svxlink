@@ -207,8 +207,8 @@ void Reflector::clientDisconnected(Async::TcpConnection *con,
 void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                     void *buf, int count)
 {
-  cout << "### Reflector::udpDatagramReceived: addr=" << addr
-       << " port=" << port << " count=" << count;
+  //cout << "### Reflector::udpDatagramReceived: addr=" << addr
+  //     << " port=" << port << " count=" << count;
 
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
@@ -221,8 +221,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  cout << "###   msg_type=" << header.type()
-       << " client_id=" << header.clientId() << std::endl;
+  //cout << "###   msg_type=" << header.type()
+  //     << " client_id=" << header.clientId() << std::endl;
 
   ReflectorClientMap::iterator it = client_map.find(header.clientId());
   if (it == client_map.end())
@@ -249,8 +249,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
   switch (header.type())
   {
-    case MsgHeartbeat::TYPE:
-      cout << "MsgUdpHeartbeat()" << endl;
+    case MsgUdpHeartbeat::TYPE:
+      cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
       // FIXME: Handle heartbeat
       break;
     case MsgAudio::TYPE:
@@ -278,8 +278,8 @@ void Reflector::sendUdpMsg(const ReflectorClient *client,
     return;
   }
 
-  cout << "### Reflector::sendUdpMsg: " << client->remoteHost() << ":"
-       << client->remoteUdpPort() << endl;
+  //cout << "### Reflector::sendUdpMsg: " << client->remoteHost() << ":"
+  //     << client->remoteUdpPort() << endl;
 
   ReflectorUdpMsg header(msg.type(), client->clientId());
   ostringstream ss;

@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sstream>
 #include <cassert>
+#include <iomanip>
 
 
 /****************************************************************************
@@ -148,7 +149,7 @@ ReflectorClient::~ReflectorClient(void)
 
 int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
 {
-  cout << "### ReflectorClient::onDataReceived: len=" << len << endl;
+  //cout << "### ReflectorClient::onDataReceived: len=" << len << endl;
 
   assert(len >= 0);
 
@@ -224,7 +225,8 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
     cerr << "*** ERROR: Could not unpack MsgProtoVer\n";
     return;
   }
-  cout << "MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
+  cout << "### " << m_con->remoteHost() << ":" << m_con->remotePort()
+       << ": MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
        << ")" << endl;
   if ((msg.majorVer() != MsgProtoVer::MAJOR) ||
       (msg.minorVer() != MsgProtoVer::MINOR))
@@ -262,9 +264,17 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     cerr << "*** ERROR: Could not unpack MsgAuthResponse\n";
     return;
   }
-  cout << "MsgAuthResponse(<digest>)" << endl;
-
   m_callsign = msg.callsign();
+
+  stringstream ss;
+  ss << hex << setw(2) << setfill('0');
+  for (int i=0; i<MsgAuthResponse::DIGEST_LEN; ++i)
+  {
+    ss << (int)msg.digest()[i];
+  }
+  cout << "### " << m_callsign << ": MsgAuthResponse(" << ss.str() << ")"
+       << endl;
+
   if (msg.verify("ThePassword :-)", m_auth_challenge))
   {
     sendMsg(MsgAuthOk());
@@ -326,13 +336,6 @@ void ReflectorClient::onDiscTimeout(Timer *t)
   m_con->disconnect();
   m_con_state = STATE_DISCONNECTED;
 } /* ReflectorClient::onDiscTimeout */
-
-
-void ReflectorClient::handleMsgAudio(const MsgAudio& msg)
-{
-  cout << "### ReflectorClient::handleMsgAudio" << endl;
-
-} /* ReflectorClient::handleMsgAudio */
 
 
 /*

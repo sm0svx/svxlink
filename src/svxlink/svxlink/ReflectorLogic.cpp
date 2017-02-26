@@ -210,7 +210,7 @@ bool ReflectorLogic::initialize(void)
 
 void ReflectorLogic::onConnected(void)
 {
-  cout << "Connection established to " << m_con->remoteHost() << ":"
+  cout << name() << ": Connection established to " << m_con->remoteHost() << ":"
        << m_con->remotePort() << endl;
   MsgProtoVer msg;
   sendMsg(msg);
@@ -219,7 +219,7 @@ void ReflectorLogic::onConnected(void)
 
 int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
 {
-  cout << "### ReflectorLogic::onDataReceived: len=" << len << endl;
+  //cout << "### ReflectorLogic::onDataReceived: len=" << len << endl;
 
   char *buf = reinterpret_cast<char*>(data);
   int tot_consumed = 0;
@@ -304,10 +304,10 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
     return;
   }
   stringstream ss;
-  ss << dec << setw(2) << setfill('0');
+  ss << hex << setw(2) << setfill('0');
   for (int i=0; i<MsgAuthChallenge::CHALLENGE_LEN; ++i)
   {
-    ss << (int)msg.challenge()[i] << " ";
+    ss << (int)msg.challenge()[i];
   }
   cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
 
@@ -378,8 +378,8 @@ void ReflectorLogic::flushEncodedAudio(void)
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
-       << addr << " port=" << port << " count=" << count << std::endl;
+  //cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
+  //     << addr << " port=" << port << " count=" << count << std::endl;
 
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
@@ -392,15 +392,15 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  cout << "###   msg_type=" << header.type()
-       << " client_id=" << header.clientId() << std::endl;
+  //cout << "###   msg_type=" << header.type()
+  //     << " client_id=" << header.clientId() << std::endl;
 
   // FIXME: Check remote IP and port number. Maybe also client ID?
 
   switch (header.type())
   {
-    case MsgHeartbeat::TYPE:
-      cout << "MsgUdpHeartbeat()" << endl;
+    case MsgUdpHeartbeat::TYPE:
+      cout << "### " << name() << ": MsgUdpHeartbeat()" << endl;
       // FIXME: Handle heartbeat
       break;
     case MsgAudio::TYPE:
