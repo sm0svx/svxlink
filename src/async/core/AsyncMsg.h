@@ -45,6 +45,7 @@ An example of how to use the AsyncMsg class
 #include <map>
 #include <limits>
 #include <endian.h>
+#include <stdint.h>
 
 
 /****************************************************************************

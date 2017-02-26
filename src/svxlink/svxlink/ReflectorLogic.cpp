@@ -221,6 +221,7 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
 {
   cout << "### ReflectorLogic::onDataReceived: len=" << len << endl;
 
+  char *buf = reinterpret_cast<char*>(data);
   int tot_consumed = 0;
   while (len > 0)
   {
@@ -233,7 +234,7 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
     }
 
     stringstream ss;
-    ss.write(reinterpret_cast<const char *>(data), len);
+    ss.write(buf, len);
 
     if (!header.unpack(ss))
     {
@@ -269,7 +270,7 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
         break;
     }
 
-    data += msg_tot_size;
+    buf += msg_tot_size;
     len -= msg_tot_size;
     tot_consumed += msg_tot_size;
   }
