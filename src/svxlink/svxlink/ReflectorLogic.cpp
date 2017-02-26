@@ -47,7 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTcpClient.h>
 #include <AsyncUdpSocket.h>
-#include <AsyncAudioDebugger.h>
 
 
 /****************************************************************************
@@ -122,7 +121,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
     m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
-    m_udp_heartbeat_timer(60000, Timer::TYPE_PERIODIC, false)
+    m_udp_heartbeat_timer(60000, Timer::TYPE_PERIODIC, false), m_dec(0)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
   m_udp_heartbeat_timer.expired.connect(
@@ -134,6 +133,7 @@ ReflectorLogic::~ReflectorLogic(void)
 {
   delete m_udp_sock;
   delete m_logic_con_in;
+  delete m_dec;
   delete m_logic_con_out;
 } /* ReflectorLogic::~ReflectorLogic */
 
@@ -177,12 +177,17 @@ bool ReflectorLogic::initialize(void)
       mem_fun(*this, &ReflectorLogic::sendEncodedAudio));
   m_logic_con_in->flushEncodedSamples.connect(
       mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
-  m_logic_con_out = Async::AudioDecoder::create(audio_codec);
+  m_logic_con_out =
+      //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
+      new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
+  m_logic_con_out->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
   if (m_logic_con_out == 0)
   {
     cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
     return false;
   }
+  m_dec = Async::AudioDecoder::create(audio_codec);
+  m_dec->registerSink(m_logic_con_out);
 
   if (!LogicBase::initialize())
   {
@@ -448,11 +453,11 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       msg.unpack(ss);
       if (msg.audioData().empty())
       {
-        m_logic_con_out->flushEncodedSamples();
+        m_dec->flushEncodedSamples();
       }
       else
       {
-        m_logic_con_out->writeEncodedSamples(
+        m_dec->writeEncodedSamples(
             &msg.audioData().front(), msg.audioData().size());
       }
       break;

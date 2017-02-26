@@ -46,6 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioEncoder.h>
 #include <AsyncTcpConnection.h>
 #include <AsyncTimer.h>
+//#include <AsyncAudioJitterFifo.h>
+#include <AsyncAudioFifo.h>
 
 
 /****************************************************************************
@@ -161,11 +163,12 @@ class ReflectorLogic : public LogicBase
     std::string           m_reflector_password;
     std::string           m_callsign;
     Async::AudioEncoder*  m_logic_con_in;
-    Async::AudioDecoder*  m_logic_con_out;
+    Async::AudioFifo*     m_logic_con_out;
     Async::Timer          m_reconnect_timer;
     uint16_t              m_next_udp_tx_seq;
     uint16_t              m_next_udp_rx_seq;
     Async::Timer          m_udp_heartbeat_timer;
+    Async::AudioDecoder*  m_dec;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
