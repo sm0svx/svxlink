@@ -41,6 +41,7 @@ An example of how to use the ReflectorClient class
  *
  ****************************************************************************/
 
+#include <string>
 
 
 /****************************************************************************
@@ -125,7 +126,7 @@ class ReflectorClient
     /**
      * @brief 	Constructor
      */
-    ReflectorClient(Async::TcpConnection *con);
+    ReflectorClient(Async::TcpConnection *con, const std::string& auth_key);
 
     /**
      * @brief 	Destructor
@@ -165,6 +166,7 @@ class ReflectorClient
     std::string           m_callsign;
     uint32_t              m_client_id;
     uint16_t              m_remote_udp_port;
+    std::string           m_auth_key;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);

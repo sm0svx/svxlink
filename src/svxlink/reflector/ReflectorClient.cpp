@@ -115,10 +115,11 @@ uint32_t ReflectorClient::next_client_id = 0;
  *
  ****************************************************************************/
 
-ReflectorClient::ReflectorClient(Async::TcpConnection *con)
+ReflectorClient::ReflectorClient(Async::TcpConnection *con,
+                                 const std::string& auth_key)
   : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
-    m_client_id(next_client_id++), m_remote_udp_port(0)
+    m_client_id(next_client_id++), m_remote_udp_port(0), m_auth_key(auth_key)
 {
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorClient::onDataReceived));
   m_con->disconnected.connect(mem_fun(*this, &ReflectorClient::onDisconnected));
@@ -275,7 +276,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   cout << "### " << m_callsign << ": MsgAuthResponse(" << ss.str() << ")"
        << endl;
 
-  if (msg.verify("ThePassword :-)", m_auth_challenge))
+  if (msg.verify(m_auth_key, m_auth_challenge))
   {
     sendMsg(MsgAuthOk());
     cout << m_callsign << ": Login OK from "

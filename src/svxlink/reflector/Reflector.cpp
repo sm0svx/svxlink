@@ -153,13 +153,17 @@ bool Reflector::initialize(Async::Config &cfg)
     }
   }
 
-  srv = new TcpServer("5300");
+  std::string listen_port("5300");
+  cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
+  srv = new TcpServer(listen_port);
   srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
   srv->clientDisconnected.connect(
       mem_fun(*this, &Reflector::clientDisconnected));
 
-  udp_sock = new UdpSocket(5300);
+  uint16_t udp_listen_port;
+  cfg.getValue("GLOBAL", "LISTEN_PORT", udp_listen_port);
+  udp_sock = new UdpSocket(udp_listen_port);
   if ((udp_sock == 0) || !udp_sock->initOk())
   {
     cerr << "*** ERROR: Could not initialize UDP socket" << endl;
@@ -167,6 +171,12 @@ bool Reflector::initialize(Async::Config &cfg)
   }
   udp_sock->dataReceived.connect(
       mem_fun(*this, &Reflector::udpDatagramReceived));
+
+  if (!cfg.getValue("GLOBAL", "AUTH_KEY", m_auth_key) || m_auth_key.empty())
+  {
+    cerr << "*** ERROR: GLOBAL/AUTH_KEY must be specified\n";
+    return false;
+  }
 
   return true;
 } /* Reflector::initialize */
@@ -190,7 +200,7 @@ void Reflector::clientConnected(Async::TcpConnection *con)
 {
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " connected" << endl;
-  ReflectorClient *rc = new ReflectorClient(con);
+  ReflectorClient *rc = new ReflectorClient(con, m_auth_key);
   client_map[rc->clientId()] = rc;
 } /* Reflector::clientConnected */
 
