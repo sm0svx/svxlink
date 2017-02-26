@@ -121,9 +121,12 @@ using namespace Async;
 ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
     m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false),
-    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0)
+    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
+    m_udp_heartbeat_timer(60000, Timer::TYPE_PERIODIC, false)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
+  m_udp_heartbeat_timer.expired.connect(
+      mem_fun(*this, &ReflectorLogic::sendUdpHeartbeat));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -231,6 +234,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   m_udp_sock = 0;
   m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
+  m_udp_heartbeat_timer.setEnable(false);
 } /* ReflectorLogic::onDisconnected */
 
 
@@ -358,8 +362,8 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
-  sendUdpMsg(MsgUdpHeartbeat());
-
+  sendUdpHeartbeat();
+  m_udp_heartbeat_timer.setEnable(true);
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
@@ -495,6 +499,12 @@ void ReflectorLogic::disconnect(void)
   m_con->disconnect();
   onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* ReflectorLogic::disconnect */
+
+
+void ReflectorLogic::sendUdpHeartbeat(Async::Timer *t)
+{
+  sendUdpMsg(MsgUdpHeartbeat());
+} /* ReflectorLogic::sendUdpHeartbeat */
 
 
 /*
