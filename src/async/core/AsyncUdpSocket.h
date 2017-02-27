@@ -169,10 +169,11 @@ class UdpSocket : public sigc::trackable
     /**
      * @brief 	A signal that is emitted when data has been received
      * @param 	ip    The IP-address the data was received from
+     * @param   port  The remote port number
      * @param 	buf   The buffer containing the read data
      * @param 	count The number of bytes read
      */
-    sigc::signal<void, const IpAddress&, void *, int> dataReceived;
+    sigc::signal<void, const IpAddress&, uint16_t, void*, int> dataReceived;
     
     /**
      * @brief 	A signal that is emitted when the send buffer is full
