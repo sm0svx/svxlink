@@ -1,0 +1,10 @@
+[QsoRecorder]
+REC_DIR=/var/spool/svxlink/qso_recorder
+#MIN_TIME=1000
+MAX_TIME=3600
+SOFT_TIME=300
+MAX_DIRSIZE=1024
+#DEFAULT_ACTIVE=1
+#TIMEOUT=300
+#QSO_TIMEOUT=300
+#ENCODER_CMD=/usr/bin/oggenc -Q \"%f\" && rm \"%f\"

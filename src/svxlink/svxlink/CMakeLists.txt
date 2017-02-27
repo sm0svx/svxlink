@@ -63,6 +63,50 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gpio.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   @ONLY
   )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/duplex.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/duplex.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/link_radio.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/link_radio.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/linked_repeaters.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/linked_repeaters.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/macros.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/macros.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/net_rx_tx.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/net_rx_tx.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qso_recorder.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/qso_recorder.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/repeater_info.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/repeater_info.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/repeater_rx_tx.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/repeater_rx_tx.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sdr.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/sdr.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/simplex.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/simplex.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/voter.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/voter.conf
+  @ONLY
+  )
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_up.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_up)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
@@ -78,6 +122,37 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/duplex.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/link_radio.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/linked_repeaters.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/macros.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/net_rx_tx.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/qso_recorder.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/repeater_info.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/sdr.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/simplex.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/voter.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+  
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
 install(FILES RepeaterLogic.tcl SimplexLogic.tcl Module.tcl Logic.tcl CW.tcl
   SelCall.tcl locale.tcl

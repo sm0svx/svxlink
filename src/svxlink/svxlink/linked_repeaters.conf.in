@@ -1,0 +1,19 @@
+#svxlink 2 svxlink connection
+[LinkTrxMultiTx]
+TYPE=Multi
+TRANSMITTERS=LinkStation1,LinkStation2,LinkStation3
+
+[LinkStation1]
+TYPE=NetTrxAdapter
+LISTEN_PORT=5211
+AUTH_KEY="Station1Password"
+
+[LinkStation2]
+TYPE=NetTrxAdapter
+LISTEN_PORT=5212
+AUTH_KEY="Station2Password"
+
+[LinkStation3]
+TYPE=NetTrxAdapter
+LISTEN_PORT=5213
+AUTH_KEY="Station3Password"
