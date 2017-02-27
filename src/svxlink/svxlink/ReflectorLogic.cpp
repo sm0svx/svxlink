@@ -157,10 +157,16 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
-  if (!cfg().getValue(name(), "PASSWORD", m_reflector_password))
+  if (!cfg().getValue(name(), "AUTH_KEY", m_auth_key))
   {
-    cerr << "*** ERROR: " << name() << "/PASSWORD missing in configuration"
+    cerr << "*** ERROR: " << name() << "/AUTH_KEY missing in configuration"
          << endl;
+    return false;
+  }
+  if (m_auth_key == "Change this key now!")
+  {
+    cerr << "*** ERROR: You must change " << name() << "/AUTH_KEY from the "
+            "default value" << endl;
     return false;
   }
 
@@ -337,7 +343,7 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
   }
   cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
 
-  MsgAuthResponse response_msg(m_callsign, m_reflector_password,
+  MsgAuthResponse response_msg(m_callsign, m_auth_key,
                                msg.challenge());
   sendMsg(response_msg);
 } /* ReflectorLogic::handleMsgAuthChallenge */

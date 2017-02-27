@@ -160,7 +160,7 @@ class ReflectorLogic : public LogicBase
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
     uint32_t              m_client_id;
-    std::string           m_reflector_password;
+    std::string           m_auth_key;
     std::string           m_callsign;
     Async::AudioEncoder*  m_logic_con_in;
     Async::AudioFifo*     m_logic_con_out;

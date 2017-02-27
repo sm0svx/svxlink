@@ -83,7 +83,7 @@ IDLE_SOUND_INTERVAL=3000
 TYPE=Reflector
 HOST=localhost
 PORT=5300
-PASSWORD="Hello Reflector :-)"
+AUTH_KEY="Change this key now!"
 CALLSIGN="MYCALL"
 AUDIO_CODEC=OPUS
 
