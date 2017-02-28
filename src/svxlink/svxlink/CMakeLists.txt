@@ -143,6 +143,9 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/qso_recorder.conf
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/repeater_info.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/repeater_rx_tx.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/sdr.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
