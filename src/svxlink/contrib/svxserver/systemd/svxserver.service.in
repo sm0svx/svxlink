@@ -1,0 +1,22 @@
+;;;;; Author: Richard Neese<kb3vgw@gmail.com>
+
+[Unit]
+Description=svxserver svx2svx repeater control software
+After=network.target remote-fs.target syslog.target time.target
+
+[Service]
+EnvironmentFile=/etc/default/svxserver
+PIDFile=/run/svxserver.pid
+ExecStartPre=-/bin/touch /var/log/svxserver
+ExecStartPre=-/bin/chown $RUNASUSER /var/log/svxserver
+ExecStart=/bin/sh -c '@BIN_INSTALL_DIR@/svxserver --logfile=/var/log/svxserver --config=$CFGFILE --pidfile=/run/svxserver.pid --runasuser=$RUNASUSER'
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+TimeoutStartSec=60
+#WatchdogSec=@SVX_WatchdogSec@
+#NotifyAccess=main
+LimitCORE=infinity
+WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
+
+[Install]
+WantedBy=multi-user.target

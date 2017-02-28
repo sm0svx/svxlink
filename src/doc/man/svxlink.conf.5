@@ -306,12 +306,23 @@ PTY that SvxLink state events is published to. The published events is in a
 simple text format using a space separated list of values. SvxLink will create
 a softlink to the actual slave PTY. For that reason, SvxLink must have write
 permissions in the directory where the softlink should be created. Monitoring
-the PTY output is as simple at doing a
+the PTY output is as simple as doing a
 .B "cat /path/to/pty"
 after starting SvxLink. See STATE PTY FORMAT for more information on the format
 of the state messages.
 
 Example: STATE_PTY=/tmp/state_pty
+.TP
+.B DTMF_CTRL_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Sending
+commands to the PTY is as simple as doing a
+.B "echo '*1#' > /path/to/pty"
+after starting SvxLink.
+
+Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .
 .SS Simplex Logic Section
 .
@@ -1429,6 +1440,18 @@ and fast receiver is receiving the same signal and the faster is currently
 chosen, when the PTT is released the slower receiver will be voted before
 closing.  This will cause a double squelch tail and double roger beep.
 Default is 500 milliseconds.
+.TP
+.B COMMAND_PTY
+Specify the path to a PTY that can be used to control the voter from
+the operating system. Available commands:
+.RS
+.IP \(bu 4
+.BR "ENABLE rx_name" " - Enable the given receiver"
+.IP \(bu 4
+.BR "DISABLE rx_name" " - Disable the given receiver"
+.P
+Commands can be issued using a simple echo command from the shell. Example:
+echo "DISABLE Rx1" >/dev/shm/voter_ctrl
 .
 .SS Networked Receiver Section
 .
