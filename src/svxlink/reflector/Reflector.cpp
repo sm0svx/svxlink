@@ -177,6 +177,12 @@ bool Reflector::initialize(Async::Config &cfg)
     cerr << "*** ERROR: GLOBAL/AUTH_KEY must be specified\n";
     return false;
   }
+  if (m_auth_key == "Change this key now!")
+  {
+    cerr << "*** ERROR: You must change GLOBAL/AUTH_KEY from the "
+            "default value" << endl;
+    return false;
+  }
 
   return true;
 } /* Reflector::initialize */
