@@ -155,6 +155,7 @@ class Reflector : public sigc::trackable
     Async::UdpSocket*   udp_sock;
     ReflectorClientMap  client_map;
     std::string         m_auth_key;
+    ReflectorClient*    m_talker;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);

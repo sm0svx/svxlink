@@ -117,7 +117,7 @@ using namespace Async;
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : srv(0), udp_sock(0)
+  : srv(0), udp_sock(0), m_talker(0)
 {
 } /* Reflector::Reflector */
 
@@ -290,8 +290,22 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     {
       MsgAudio msg;
       msg.unpack(ss);
-      //client->handleMsgAudio(msg);
-      broadcastUdpMsgExcept(client, msg);
+      if (m_talker == 0)
+      {
+        m_talker = client;
+      }
+      if (m_talker == client)
+      {
+        broadcastUdpMsgExcept(client, msg);
+        if (msg.audioData().size() == 0)
+        {
+          m_talker = 0;
+        }
+      }
+      else
+      {
+        cout << "### " << m_talker->callsign() << " is already talking...\n";
+      }
       break;
     }
     default:
