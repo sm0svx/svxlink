@@ -42,6 +42,7 @@ An example of how to use the Reflector class
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -51,6 +52,7 @@ An example of how to use the Reflector class
  ****************************************************************************/
 
 #include <AsyncTcpConnection.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -156,6 +158,8 @@ class Reflector : public sigc::trackable
     ReflectorClientMap  client_map;
     std::string         m_auth_key;
     ReflectorClient*    m_talker;
+    Async::Timer        m_talker_timeout_timer;
+    struct timeval      m_last_talker_timestamp;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
@@ -167,6 +171,7 @@ class Reflector : public sigc::trackable
     void sendUdpMsg(ReflectorClient *client, const ReflectorUdpMsg& msg);
     void broadcastUdpMsgExcept(const ReflectorClient *client,
                                const ReflectorUdpMsg& msg);
+    void checkTalkerTimeout(Async::Timer *t);
 
 };  /* class Reflector */
 

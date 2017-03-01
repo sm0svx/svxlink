@@ -117,8 +117,12 @@ using namespace Async;
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : srv(0), udp_sock(0), m_talker(0)
+  : srv(0), udp_sock(0), m_talker(0),
+    m_talker_timeout_timer(1000, Timer::TYPE_PERIODIC)
 {
+  timerclear(&m_last_talker_timestamp);
+  m_talker_timeout_timer.expired.connect(
+      mem_fun(*this, &Reflector::checkTalkerTimeout));
 } /* Reflector::Reflector */
 
 
@@ -296,6 +300,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       }
       if (m_talker == client)
       {
+        gettimeofday(&m_last_talker_timestamp, NULL);
         broadcastUdpMsgExcept(client, msg);
         if (msg.audioData().size() == 0)
         {
@@ -353,6 +358,25 @@ void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
     }
   }
 } /* Reflector::broadcastUdpMsgExcept */
+
+
+void Reflector::checkTalkerTimeout(Async::Timer *t)
+{
+  //cout << "### Reflector::checkTalkerTimeout\n";
+
+  if (m_talker != 0)
+  {
+    struct timeval now, diff;
+    gettimeofday(&now, NULL);
+    timersub(&now, &m_last_talker_timestamp, &diff);
+    if (diff.tv_sec > 3)
+    {
+      cout << "### Talker timeout\n";
+      m_talker = 0;
+      broadcastUdpMsgExcept(0, MsgAudio());
+    }
+  }
+} /* Reflector::checkTalkerTimeout */
 
 
 /*
