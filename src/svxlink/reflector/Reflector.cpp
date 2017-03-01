@@ -290,29 +290,53 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
       // FIXME: Handle heartbeat
       break;
-    case MsgAudio::TYPE:
+
+    case MsgUdpAudio::TYPE:
     {
-      MsgAudio msg;
+      MsgUdpAudio msg;
       msg.unpack(ss);
-      if (m_talker == 0)
+      if (!msg.audioData().empty())
       {
-        m_talker = client;
-      }
-      if (m_talker == client)
-      {
-        gettimeofday(&m_last_talker_timestamp, NULL);
-        broadcastUdpMsgExcept(client, msg);
-        if (msg.audioData().size() == 0)
+        if (m_talker == 0)
         {
-          m_talker = 0;
+          m_talker = client;
         }
-      }
-      else
-      {
-        cout << "### " << m_talker->callsign() << " is already talking...\n";
+        if (m_talker == client)
+        {
+          gettimeofday(&m_last_talker_timestamp, NULL);
+          broadcastUdpMsgExcept(client, msg);
+        }
+        else
+        {
+          cout << "### " << m_talker->callsign() << " is already talking...\n";
+        }
       }
       break;
     }
+
+    case MsgUdpFlushSamples::TYPE:
+    {
+      //cout << "### " << client->callsign() << ": MsgUdpFlushSamples()" << endl;
+      if (client == m_talker)
+      {
+        m_talker = 0;
+        broadcastUdpMsgExcept(client, MsgUdpFlushSamples());
+      }
+        // To be 100% correct the reflector should wait for all connected
+        // clients to send a MsgUdpAllSamplesFlushed message but that will
+        // probably lead to problems, especially on reflectors with many
+        // clients. We therefore acknowledge the flush immediately here to
+        // the client which sent the flush request.
+      sendUdpMsg(client, MsgUdpAllSamplesFlushed());
+      break;
+    }
+
+    case MsgUdpAllSamplesFlushed::TYPE:
+      //cout << "### " << client->callsign() << ": MsgUdpAllSamplesFlushed()"
+      //     << endl;
+      // Ignore
+      break;
+
     default:
       cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
            << header.type() << endl;
@@ -372,8 +396,8 @@ void Reflector::checkTalkerTimeout(Async::Timer *t)
     if (diff.tv_sec > 3)
     {
       cout << "### Talker timeout\n";
+      broadcastUdpMsgExcept(m_talker, MsgUdpFlushSamples());
       m_talker = 0;
-      broadcastUdpMsgExcept(0, MsgAudio());
     }
   }
 } /* Reflector::checkTalkerTimeout */

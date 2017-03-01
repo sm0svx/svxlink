@@ -169,6 +169,7 @@ class ReflectorLogic : public LogicBase
     uint16_t              m_next_udp_rx_seq;
     Async::Timer          m_udp_heartbeat_timer;
     Async::AudioDecoder*  m_dec;
+    Async::Timer          m_flush_timeout_timer;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -189,6 +190,8 @@ class ReflectorLogic : public LogicBase
     void reconnect(Async::Timer *t);
     void disconnect(void);
     void sendUdpHeartbeat(Async::Timer *t=0);
+    void allEncodedSamplesFlushed(void);
+    void flushTimeout(Async::Timer *t);
 
 };  /* class ReflectorLogic */
 

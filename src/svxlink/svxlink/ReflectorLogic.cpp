@@ -121,11 +121,14 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
     m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
-    m_udp_heartbeat_timer(60000, Timer::TYPE_PERIODIC, false), m_dec(0)
+    m_udp_heartbeat_timer(60000, Timer::TYPE_PERIODIC, false), m_dec(0),
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
   m_udp_heartbeat_timer.expired.connect(
       mem_fun(*this, &ReflectorLogic::sendUdpHeartbeat));
+  m_flush_timeout_timer.expired.connect(
+      mem_fun(*this, &ReflectorLogic::flushTimeout));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -194,6 +197,8 @@ bool ReflectorLogic::initialize(void)
   }
   m_dec = Async::AudioDecoder::create(audio_codec);
   m_dec->registerSink(m_logic_con_out);
+  m_dec->allEncodedSamplesFlushed.connect(
+      mem_fun(*this, &ReflectorLogic::allEncodedSamplesFlushed));
 
   if (!LogicBase::initialize())
   {
@@ -246,6 +251,11 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
   m_udp_heartbeat_timer.setEnable(false);
+  if (m_flush_timeout_timer.isEnabled())
+  {
+    m_flush_timeout_timer.setEnable(false);
+    m_logic_con_in->allEncodedSamplesFlushed();
+  }
 } /* ReflectorLogic::onDisconnected */
 
 
@@ -396,15 +406,19 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 {
   //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
   //     << count << endl;
-  sendUdpMsg(MsgAudio(buf, count));
+  if (m_flush_timeout_timer.isEnabled())
+  {
+    m_flush_timeout_timer.setEnable(false);
+  }
+  sendUdpMsg(MsgUdpAudio(buf, count));
 } /* ReflectorLogic::sendEncodedAudio */
 
 
 void ReflectorLogic::flushEncodedAudio(void)
 {
   //cout << "### " << name() << ": ReflectorLogic::flushEncodedAudio" << endl;
-  sendUdpMsg(MsgAudio());
-  m_logic_con_in->allEncodedSamplesFlushed();
+  sendUdpMsg(MsgUdpFlushSamples());
+  m_flush_timeout_timer.setEnable(true);
 } /* ReflectorLogic::sendEncodedAudio */
 
 
@@ -453,21 +467,29 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       cout << "### " << name() << ": MsgUdpHeartbeat()" << endl;
       // FIXME: Handle heartbeat
       break;
-    case MsgAudio::TYPE:
+
+    case MsgUdpAudio::TYPE:
     {
-      MsgAudio msg;
+      MsgUdpAudio msg;
       msg.unpack(ss);
-      if (msg.audioData().empty())
-      {
-        m_dec->flushEncodedSamples();
-      }
-      else
+      if (!msg.audioData().empty())
       {
         m_dec->writeEncodedSamples(
             &msg.audioData().front(), msg.audioData().size());
       }
       break;
     }
+
+    case MsgUdpFlushSamples::TYPE:
+      //cout << "### " << name() << ": MsgUdpFlushSamples()" << endl;
+      m_dec->flushEncodedSamples();
+      break;
+
+    case MsgUdpAllSamplesFlushed::TYPE:
+      //cout << "### " << name() << ": MsgUdpAllSamplesFlushed()" << endl;
+      m_logic_con_in->allEncodedSamplesFlushed();
+      break;
+
     default:
       cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
            << header.type() << endl;
@@ -516,6 +538,19 @@ void ReflectorLogic::sendUdpHeartbeat(Async::Timer *t)
 {
   sendUdpMsg(MsgUdpHeartbeat());
 } /* ReflectorLogic::sendUdpHeartbeat */
+
+
+void ReflectorLogic::allEncodedSamplesFlushed(void)
+{
+  sendUdpMsg(MsgUdpAllSamplesFlushed());
+} /* ReflectorLogic::allEncodedSamplesFlushed */
+
+
+void ReflectorLogic::flushTimeout(Async::Timer *t)
+{
+  m_flush_timeout_timer.setEnable(false);
+  m_logic_con_in->allEncodedSamplesFlushed();
+} /* ReflectorLogic::flushTimeout */
 
 
 /*

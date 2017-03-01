@@ -210,7 +210,7 @@ class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
     static const uint16_t MAJOR = 0;
-    static const uint16_t MINOR = 1;
+    static const uint16_t MINOR = 2;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }
@@ -345,11 +345,11 @@ class MsgServerInfo : public ReflectorMsgBase<100>
 }; /* MsgServerInfo */
 
 
-class MsgAudio : public ReflectorUdpMsgBase<101>
+class MsgUdpAudio : public ReflectorUdpMsgBase<101>
 {
   public:
-    MsgAudio(void) {}
-    MsgAudio(const void *buf, int count)
+    MsgUdpAudio(void) {}
+    MsgUdpAudio(const void *buf, int count)
     {
       if (count > 0)
       {
@@ -363,7 +363,21 @@ class MsgAudio : public ReflectorUdpMsgBase<101>
 
   private:
     std::vector<uint8_t> m_audio_data;
-}; /* MsgAudio */
+}; /* MsgUdpAudio */
+
+
+class MsgUdpFlushSamples : public ReflectorUdpMsgBase<102>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgUdpFlushSamples */
+
+
+class MsgUdpAllSamplesFlushed : public ReflectorUdpMsgBase<103>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgUdpAllSamplesFlushed */
 
 
 //} /* namespace */
