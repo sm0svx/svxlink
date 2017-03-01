@@ -117,8 +117,12 @@ using namespace Async;
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : srv(0), udp_sock(0)
+  : srv(0), udp_sock(0), m_talker(0),
+    m_talker_timeout_timer(1000, Timer::TYPE_PERIODIC)
 {
+  timerclear(&m_last_talker_timestamp);
+  m_talker_timeout_timer.expired.connect(
+      mem_fun(*this, &Reflector::checkTalkerTimeout));
 } /* Reflector::Reflector */
 
 
@@ -175,6 +179,12 @@ bool Reflector::initialize(Async::Config &cfg)
   if (!cfg.getValue("GLOBAL", "AUTH_KEY", m_auth_key) || m_auth_key.empty())
   {
     cerr << "*** ERROR: GLOBAL/AUTH_KEY must be specified\n";
+    return false;
+  }
+  if (m_auth_key == "Change this key now!")
+  {
+    cerr << "*** ERROR: You must change GLOBAL/AUTH_KEY from the "
+            "default value" << endl;
     return false;
   }
 
@@ -284,8 +294,23 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     {
       MsgAudio msg;
       msg.unpack(ss);
-      //client->handleMsgAudio(msg);
-      broadcastUdpMsgExcept(client, msg);
+      if (m_talker == 0)
+      {
+        m_talker = client;
+      }
+      if (m_talker == client)
+      {
+        gettimeofday(&m_last_talker_timestamp, NULL);
+        broadcastUdpMsgExcept(client, msg);
+        if (msg.audioData().size() == 0)
+        {
+          m_talker = 0;
+        }
+      }
+      else
+      {
+        cout << "### " << m_talker->callsign() << " is already talking...\n";
+      }
       break;
     }
     default:
@@ -333,6 +358,25 @@ void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
     }
   }
 } /* Reflector::broadcastUdpMsgExcept */
+
+
+void Reflector::checkTalkerTimeout(Async::Timer *t)
+{
+  //cout << "### Reflector::checkTalkerTimeout\n";
+
+  if (m_talker != 0)
+  {
+    struct timeval now, diff;
+    gettimeofday(&now, NULL);
+    timersub(&now, &m_last_talker_timestamp, &diff);
+    if (diff.tv_sec > 3)
+    {
+      cout << "### Talker timeout\n";
+      m_talker = 0;
+      broadcastUdpMsgExcept(0, MsgAudio());
+    }
+  }
+} /* Reflector::checkTalkerTimeout */
 
 
 /*
