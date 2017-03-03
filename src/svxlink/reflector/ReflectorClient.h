@@ -161,7 +161,10 @@ class ReflectorClient
       STATE_CONNECTED, STATE_EXPECT_DISCONNECT
     } ConState;
 
-    Async::TcpConnection  *m_con;
+    static const unsigned HEARTBEAT_TX_CNT_RESET = 10;
+    static const unsigned HEARTBEAT_RX_CNT_RESET = 15;
+
+    Async::TcpConnection* m_con;
     unsigned              m_msg_type;
     unsigned char         m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
     ConState              m_con_state;
@@ -172,6 +175,9 @@ class ReflectorClient
     std::string           m_auth_key;
     uint16_t              m_next_udp_tx_seq;
     uint16_t              m_next_udp_rx_seq;
+    Async::Timer          m_heartbeat_timer;
+    unsigned              m_heartbeat_tx_cnt;
+    unsigned              m_heartbeat_rx_cnt;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -183,6 +189,7 @@ class ReflectorClient
     void onDisconnected(Async::TcpConnection*,
                         Async::TcpConnection::DisconnectReason);
     void onDiscTimeout(Async::Timer *t);
+    void handleHeartbeat(Async::Timer *t);
 
 };  /* class ReflectorClient */
 

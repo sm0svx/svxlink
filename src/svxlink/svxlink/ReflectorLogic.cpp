@@ -121,12 +121,14 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
     m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
-    m_udp_heartbeat_timer(60000, Timer::TYPE_PERIODIC, false), m_dec(0),
-    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
+    m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+    m_udp_heartbeat_tx_cnt(0), m_tcp_heartbeat_tx_cnt(0),
+    m_tcp_heartbeat_rx_cnt(0)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
-  m_udp_heartbeat_timer.expired.connect(
-      mem_fun(*this, &ReflectorLogic::sendUdpHeartbeat));
+  m_heartbeat_timer.expired.connect(
+      mem_fun(*this, &ReflectorLogic::heartbeatHandler));
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &ReflectorLogic::flushTimeout));
 } /* ReflectorLogic::ReflectorLogic */
@@ -236,6 +238,10 @@ void ReflectorLogic::onConnected(void)
        << m_con->remotePort() << endl;
   MsgProtoVer msg;
   sendMsg(msg);
+  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+  m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
+  m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
+  m_heartbeat_timer.setEnable(true);
 } /* ReflectorLogic::onConnected */
 
 
@@ -250,7 +256,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   m_udp_sock = 0;
   m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
-  m_udp_heartbeat_timer.setEnable(false);
+  m_heartbeat_timer.setEnable(false);
   if (m_flush_timeout_timer.isEnabled())
   {
     m_flush_timeout_timer.setEnable(false);
@@ -292,8 +298,13 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
       return tot_consumed;
     }
 
+    m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
+
     switch (header.type())
     {
+      case MsgHeartbeat::TYPE:
+        cout << "### " << name() << ": MsgHeartbeat()" << endl;
+        break;
       case MsgError::TYPE:
         handleMsgError(ss);
         break;
@@ -383,16 +394,17 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
-  sendUdpHeartbeat();
-  m_udp_heartbeat_timer.setEnable(true);
+  sendUdpMsg(MsgUdpHeartbeat());
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
-void ReflectorLogic::sendMsg(ReflectorMsg& msg)
+void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 {
+  m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
+
   ostringstream ss;
-  msg.setSize(msg.packedSize());
-  if (!msg.ReflectorMsg::pack(ss) || !msg.pack(ss))
+  ReflectorMsg header(msg.type(), msg.packedSize());
+  if (!header.pack(ss) || !msg.pack(ss))
   {
     // FIXME: Better error handling
     cerr << "*** ERROR: Failed to pack reflector TCP message\n";
@@ -501,6 +513,8 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
 void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 {
+  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+
   if (m_udp_sock == 0)
   {
     return;
@@ -534,12 +548,6 @@ void ReflectorLogic::disconnect(void)
 } /* ReflectorLogic::disconnect */
 
 
-void ReflectorLogic::sendUdpHeartbeat(Async::Timer *t)
-{
-  sendUdpMsg(MsgUdpHeartbeat());
-} /* ReflectorLogic::sendUdpHeartbeat */
-
-
 void ReflectorLogic::allEncodedSamplesFlushed(void)
 {
   sendUdpMsg(MsgUdpAllSamplesFlushed());
@@ -551,6 +559,26 @@ void ReflectorLogic::flushTimeout(Async::Timer *t)
   m_flush_timeout_timer.setEnable(false);
   m_logic_con_in->allEncodedSamplesFlushed();
 } /* ReflectorLogic::flushTimeout */
+
+
+void ReflectorLogic::heartbeatHandler(Async::Timer *t)
+{
+  if (--m_udp_heartbeat_tx_cnt == 0)
+  {
+    sendUdpMsg(MsgUdpHeartbeat());
+  }
+
+  if (--m_tcp_heartbeat_tx_cnt == 0)
+  {
+    sendMsg(MsgHeartbeat());
+  }
+
+  if (--m_tcp_heartbeat_rx_cnt == 0)
+  {
+    cout << name() << ": Heartbeat timeout" << endl;
+    disconnect();
+  }
+} /* ReflectorLogic::heartbeatHandler */
 
 
 /*

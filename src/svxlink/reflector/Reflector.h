@@ -152,14 +152,17 @@ class Reflector : public sigc::trackable
 
   private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
+    typedef std::map<Async::TcpConnection*,
+                     ReflectorClient*> ReflectorClientConMap;
 
-    Async::TcpServer*   srv;
-    Async::UdpSocket*   udp_sock;
-    ReflectorClientMap  client_map;
-    std::string         m_auth_key;
-    ReflectorClient*    m_talker;
-    Async::Timer        m_talker_timeout_timer;
-    struct timeval      m_last_talker_timestamp;
+    Async::TcpServer*     srv;
+    Async::UdpSocket*     udp_sock;
+    ReflectorClientMap    client_map;
+    std::string           m_auth_key;
+    ReflectorClient*      m_talker;
+    Async::Timer          m_talker_timeout_timer;
+    struct timeval        m_last_talker_timestamp;
+    ReflectorClientConMap m_client_con_map;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);

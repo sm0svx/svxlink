@@ -210,7 +210,7 @@ class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
     static const uint16_t MAJOR = 0;
-    static const uint16_t MINOR = 2;
+    static const uint16_t MINOR = 3;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }
@@ -228,13 +228,6 @@ class MsgHeartbeat : public ReflectorMsgBase<1>
   public:
     ASYNC_MSG_NO_MEMBERS
 };  /* MsgHeartbeat */
-
-
-class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
-{
-  public:
-    ASYNC_MSG_NO_MEMBERS
-};  /* MsgUdpHeartbeat */
 
 
 class MsgAuthChallenge : public ReflectorMsgBase<10>
@@ -343,6 +336,13 @@ class MsgServerInfo : public ReflectorMsgBase<100>
   private:
     uint32_t  m_client_id;
 }; /* MsgServerInfo */
+
+
+class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+};  /* MsgUdpHeartbeat */
 
 
 class MsgUdpAudio : public ReflectorUdpMsgBase<101>

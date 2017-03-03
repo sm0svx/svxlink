@@ -120,11 +120,16 @@ ReflectorClient::ReflectorClient(Async::TcpConnection *con,
   : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
     m_client_id(next_client_id++), m_remote_udp_port(0), m_auth_key(auth_key),
-    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0)
+    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
+    m_heartbeat_timer(1000, Timer::TYPE_PERIODIC),
+    m_heartbeat_tx_cnt(HEARTBEAT_TX_CNT_RESET),
+    m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET)
 {
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorClient::onDataReceived));
-  m_con->disconnected.connect(mem_fun(*this, &ReflectorClient::onDisconnected));
+  //m_con->disconnected.connect(mem_fun(*this, &ReflectorClient::onDisconnected));
   m_disc_timer.expired.connect(mem_fun(*this, &ReflectorClient::onDiscTimeout));
+  m_heartbeat_timer.expired.connect(
+      mem_fun(*this, &ReflectorClient::handleHeartbeat));
 } /* ReflectorClient::ReflectorClient */
 
 
@@ -155,7 +160,8 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
 
   assert(len >= 0);
 
-  if (m_con_state == STATE_DISCONNECTED)
+  if ((m_con_state == STATE_DISCONNECTED) ||
+      (m_con_state == STATE_EXPECT_DISCONNECT))
   {
     return len;
   }
@@ -189,8 +195,13 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
       return tot_consumed;
     }
 
+    m_heartbeat_rx_cnt = HEARTBEAT_RX_CNT_RESET;
+
     switch (header.type())
     {
+      case MsgHeartbeat::TYPE:
+        cout << "### " << callsign() << ": MsgHeartbeat()" << endl;
+        break;
       case MsgProtoVer::TYPE:
         handleMsgProtoVer(ss);
         break;
@@ -296,6 +307,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 
 void ReflectorClient::sendMsg(const ReflectorMsg& msg)
 {
+  m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
+
   ReflectorMsg header(msg.type(), msg.packedSize());
   ostringstream ss;
   if (!header.pack(ss) || !msg.pack(ss))
@@ -312,6 +325,8 @@ void ReflectorClient::disconnect(const std::string& msg)
 {
   cout << "### ReflectorClient::disconnect: " << msg << endl;
   sendMsg(MsgError(msg));
+  m_heartbeat_timer.setEnable(false);
+  m_remote_udp_port = 0;
   m_disc_timer.setEnable(true);
   m_con_state = STATE_EXPECT_DISCONNECT;
 } /* ReflectorClient::disconnect */
@@ -326,6 +341,8 @@ void ReflectorClient::onDisconnected(TcpConnection* con,
   }
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " disconnected" << endl;
+  m_heartbeat_timer.setEnable(false);
+  m_remote_udp_port = 0;
   m_disc_timer.setEnable(false);
   m_con_state = STATE_DISCONNECTED;
 } /* ReflectorClient::onDisconnected */
@@ -337,7 +354,23 @@ void ReflectorClient::onDiscTimeout(Timer *t)
   assert(m_con_state == STATE_EXPECT_DISCONNECT);
   m_con->disconnect();
   m_con_state = STATE_DISCONNECTED;
+  m_con->disconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* ReflectorClient::onDiscTimeout */
+
+
+void ReflectorClient::handleHeartbeat(Async::Timer *t)
+{
+  if (--m_heartbeat_tx_cnt == 0)
+  {
+    sendMsg(MsgHeartbeat());
+  }
+
+  if (--m_heartbeat_rx_cnt == 0)
+  {
+    cout << callsign() << ": Heartbeat timeout" << endl;
+    disconnect("Heartbeat timeout");
+  }
+} /* ReflectorClient::handleHeartbeat */
 
 
 /*

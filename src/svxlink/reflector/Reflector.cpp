@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -212,15 +213,28 @@ void Reflector::clientConnected(Async::TcpConnection *con)
        << " connected" << endl;
   ReflectorClient *rc = new ReflectorClient(con, m_auth_key);
   client_map[rc->clientId()] = rc;
+  m_client_con_map[con] = rc;
 } /* Reflector::clientConnected */
 
 
 void Reflector::clientDisconnected(Async::TcpConnection *con,
                                    Async::TcpConnection::DisconnectReason reason)
 {
-  //cout << "Client " << con->remoteHost() << ":" << con->remotePort()
-  //     << " disconnected" << endl;
+  ReflectorClientConMap::iterator it = m_client_con_map.find(con);
+  assert(it != m_client_con_map.end());
+  ReflectorClient *client = (*it).second;
 
+  if (!client->callsign().empty())
+  {
+    cout << client->callsign() << ": ";
+  }
+  cout << "Client " << con->remoteHost() << ":" << con->remotePort()
+       << " disconnected: " << TcpConnection::disconnectReasonStr(reason)
+       << endl;
+
+  client_map.erase(client->clientId());
+  m_client_con_map.erase(it);
+  delete client;
 } /* Reflector::clientDisconnected */
 
 
@@ -326,7 +340,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         // clients to send a MsgUdpAllSamplesFlushed message but that will
         // probably lead to problems, especially on reflectors with many
         // clients. We therefore acknowledge the flush immediately here to
-        // the client which sent the flush request.
+        // the client who sent the flush request.
       sendUdpMsg(client, MsgUdpAllSamplesFlushed());
       break;
     }
