@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncFdWatch.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -97,6 +98,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+void delete_connection(TcpConnection *con);
+};
 
 
 /****************************************************************************
@@ -528,11 +532,13 @@ void TcpServer::onDisconnected(TcpConnection *con,
   it = find(tcpConnectionList.begin(), tcpConnectionList.end(), con);
   assert(it != tcpConnectionList.end());
   tcpConnectionList.erase(it);
-  delete con;
-  
+  Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_connection), con));
 } /* TcpServer::onDisconnected */
 
 
+namespace {
+  void delete_connection(TcpConnection *con) { delete con; }
+};
 
 
 /*
