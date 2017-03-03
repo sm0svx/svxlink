@@ -119,7 +119,7 @@ using namespace Async;
 
 ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
-    m_logic_con_out(0), m_reconnect_timer(10000, Timer::TYPE_ONESHOT, false),
+    m_logic_con_out(0), m_reconnect_timer(20000, Timer::TYPE_ONESHOT, false),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
