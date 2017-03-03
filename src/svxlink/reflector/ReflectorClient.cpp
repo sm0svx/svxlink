@@ -200,7 +200,7 @@ int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
     switch (header.type())
     {
       case MsgHeartbeat::TYPE:
-        cout << "### " << callsign() << ": MsgHeartbeat()" << endl;
+        //cout << "### " << callsign() << ": MsgHeartbeat()" << endl;
         break;
       case MsgProtoVer::TYPE:
         handleMsgProtoVer(ss);
@@ -332,6 +332,7 @@ void ReflectorClient::disconnect(const std::string& msg)
 } /* ReflectorClient::disconnect */
 
 
+#if 0
 void ReflectorClient::onDisconnected(TcpConnection* con,
                                      TcpConnection::DisconnectReason)
 {
@@ -346,6 +347,7 @@ void ReflectorClient::onDisconnected(TcpConnection* con,
   m_disc_timer.setEnable(false);
   m_con_state = STATE_DISCONNECTED;
 } /* ReflectorClient::onDisconnected */
+#endif
 
 
 void ReflectorClient::onDiscTimeout(Timer *t)

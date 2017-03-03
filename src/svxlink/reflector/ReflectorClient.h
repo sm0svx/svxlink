@@ -186,8 +186,8 @@ class ReflectorClient
     void handleMsgAuthResponse(std::istream& is);
     void sendMsg(const ReflectorMsg& msg);
     void disconnect(const std::string& msg);
-    void onDisconnected(Async::TcpConnection*,
-                        Async::TcpConnection::DisconnectReason);
+    //void onDisconnected(Async::TcpConnection*,
+    //                    Async::TcpConnection::DisconnectReason);
     void onDiscTimeout(Async::Timer *t);
     void handleHeartbeat(Async::Timer *t);
 

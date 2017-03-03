@@ -303,7 +303,7 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
     switch (header.type())
     {
       case MsgHeartbeat::TYPE:
-        cout << "### " << name() << ": MsgHeartbeat()" << endl;
+        //cout << "### " << name() << ": MsgHeartbeat()" << endl;
         break;
       case MsgError::TYPE:
         handleMsgError(ss);

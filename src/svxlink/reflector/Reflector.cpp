@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTcpServer.h>
 #include <AsyncUdpSocket.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -92,6 +93,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+void delete_client(ReflectorClient *client);
+};
 
 
 /****************************************************************************
@@ -131,6 +135,12 @@ Reflector::~Reflector(void)
 {
   delete udp_sock;
   delete srv;
+
+  for (ReflectorClientMap::iterator it = client_map.begin();
+       it != client_map.end(); ++it)
+  {
+    delete (*it).second;
+  }
 } /* Reflector::~Reflector */
 
 
@@ -234,7 +244,7 @@ void Reflector::clientDisconnected(Async::TcpConnection *con,
 
   client_map.erase(client->clientId());
   m_client_con_map.erase(it);
-  delete client;
+  Application::app().runTask(sigc::bind(ptr_fun(&delete_client), client));
 } /* Reflector::clientDisconnected */
 
 
@@ -301,7 +311,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
-      cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
+      //cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
       // FIXME: Handle heartbeat
       break;
 
@@ -415,6 +425,11 @@ void Reflector::checkTalkerTimeout(Async::Timer *t)
     }
   }
 } /* Reflector::checkTalkerTimeout */
+
+
+namespace {
+void delete_client(ReflectorClient *client) { delete client; }
+};
 
 
 /*
