@@ -186,6 +186,11 @@ class ReflectorLogic : public LogicBase
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void handleMsgError(std::istream& is);
     void handleMsgAuthChallenge(std::istream& is);
+    void handleMsgNodeList(std::istream& is);
+    void handleMsgNodeJoined(std::istream& is);
+    void handleMsgNodeLeft(std::istream& is);
+    void handleMsgTalkerStart(std::istream& is);
+    void handleMsgTalkerStop(std::istream& is);
     void handleMsgAuthOk(void);
     void handleMsgServerInfo(std::istream& is);
     void sendMsg(const ReflectorMsg& msg);

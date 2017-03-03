@@ -203,6 +203,36 @@ bool Reflector::initialize(Async::Config &cfg)
 } /* Reflector::initialize */
 
 
+void Reflector::nodeList(std::vector<std::string>& nodes) const
+{
+  for (ReflectorClientMap::const_iterator it = client_map.begin();
+       it != client_map.end(); ++it)
+  {
+    const std::string& callsign = (*it).second->callsign();
+    if (!callsign.empty())
+    {
+      nodes.push_back(callsign);
+    }
+  }
+} /* Reflector::nodeList */
+
+
+void Reflector::broadcastMsgExcept(const ReflectorMsg& msg,
+                                   ReflectorClient *client)
+{
+  ReflectorClientMap::const_iterator it = client_map.begin();
+  for (; it != client_map.end(); ++it)
+  {
+    if ((*it).second != client)
+    {
+      //cout << "### Reflector::broadcastMsgExcept: "
+      //     << (*it).second->callsign() << endl;
+      (*it).second->sendMsg(msg);
+    }
+  }
+} /* Reflector::broadcastMsgExcept */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -221,7 +251,7 @@ void Reflector::clientConnected(Async::TcpConnection *con)
 {
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " connected" << endl;
-  ReflectorClient *rc = new ReflectorClient(con, m_auth_key);
+  ReflectorClient *rc = new ReflectorClient(this, con, m_auth_key);
   client_map[rc->clientId()] = rc;
   m_client_con_map[con] = rc;
 } /* Reflector::clientConnected */
@@ -244,7 +274,8 @@ void Reflector::clientDisconnected(Async::TcpConnection *con,
 
   client_map.erase(client->clientId());
   m_client_con_map.erase(it);
-  Application::app().runTask(sigc::bind(ptr_fun(&delete_client), client));
+  broadcastMsgExcept(MsgNodeLeft(client->callsign()), client);
+  Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_client), client));
 } /* Reflector::clientDisconnected */
 
 
@@ -324,6 +355,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         if (m_talker == 0)
         {
           m_talker = client;
+          broadcastMsgExcept(MsgTalkerStart(m_talker->callsign()));
         }
         if (m_talker == client)
         {
@@ -344,6 +376,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       if (client == m_talker)
       {
         m_talker = 0;
+        broadcastMsgExcept(MsgTalkerStop(client->callsign()));
         broadcastUdpMsgExcept(client, MsgUdpFlushSamples());
       }
         // To be 100% correct the reflector should wait for all connected
@@ -420,6 +453,7 @@ void Reflector::checkTalkerTimeout(Async::Timer *t)
     if (diff.tv_sec > 3)
     {
       cout << "### Talker timeout\n";
+      broadcastMsgExcept(MsgTalkerStop(m_talker->callsign()));
       broadcastUdpMsgExcept(m_talker, MsgUdpFlushSamples());
       m_talker = 0;
     }

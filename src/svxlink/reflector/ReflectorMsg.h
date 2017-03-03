@@ -210,7 +210,7 @@ class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
     static const uint16_t MAJOR = 0;
-    static const uint16_t MINOR = 3;
+    static const uint16_t MINOR = 4;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }
@@ -337,6 +337,79 @@ class MsgServerInfo : public ReflectorMsgBase<100>
     uint32_t  m_client_id;
 }; /* MsgServerInfo */
 
+
+class MsgNodeList : public ReflectorMsgBase<101>
+{
+  public:
+    std::vector<std::string>& nodes(void) { return m_nodes; }
+
+    ASYNC_MSG_MEMBERS(m_nodes);
+
+  private:
+    std::vector<std::string> m_nodes;
+}; /* MsgNodeList */
+
+
+class MsgNodeJoined : public ReflectorMsgBase<102>
+{
+  public:
+    MsgNodeJoined(const std::string& callsign="") : m_callsign(callsign) {}
+
+    const std::string& callsign(void) const { return m_callsign; }
+
+    ASYNC_MSG_MEMBERS(m_callsign);
+
+  private:
+    std::string m_callsign;
+}; /* MsgNodeJoined */
+
+
+class MsgNodeLeft : public ReflectorMsgBase<103>
+{
+  public:
+    MsgNodeLeft(const std::string& callsign="") : m_callsign(callsign) {}
+
+    const std::string& callsign(void) const { return m_callsign; }
+
+    ASYNC_MSG_MEMBERS(m_callsign);
+
+  private:
+    std::string m_callsign;
+}; /* MsgNodeLeft */
+
+
+class MsgTalkerStart : public ReflectorMsgBase<104>
+{
+  public:
+    MsgTalkerStart(const std::string& callsign="") : m_callsign(callsign) {}
+
+    const std::string& callsign(void) const { return m_callsign; }
+
+    ASYNC_MSG_MEMBERS(m_callsign);
+
+  private:
+    std::string m_callsign;
+}; /* MsgTalkerStart */
+
+
+class MsgTalkerStop : public ReflectorMsgBase<105>
+{
+  public:
+    MsgTalkerStop(const std::string& callsign="") : m_callsign(callsign) {}
+
+    const std::string& callsign(void) const { return m_callsign; }
+
+    ASYNC_MSG_MEMBERS(m_callsign);
+
+  private:
+    std::string m_callsign;
+}; /* MsgTalkerStop */
+
+
+
+
+
+/***************************** UDP Messages *****************************/
 
 class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
 {

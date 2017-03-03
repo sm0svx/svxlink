@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ReflectorClient.h"
+#include "Reflector.h"
 
 
 
@@ -115,7 +116,7 @@ uint32_t ReflectorClient::next_client_id = 0;
  *
  ****************************************************************************/
 
-ReflectorClient::ReflectorClient(Async::TcpConnection *con,
+ReflectorClient::ReflectorClient(Reflector *ref, Async::TcpConnection *con,
                                  const std::string& auth_key)
   : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
@@ -123,7 +124,8 @@ ReflectorClient::ReflectorClient(Async::TcpConnection *con,
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC),
     m_heartbeat_tx_cnt(HEARTBEAT_TX_CNT_RESET),
-    m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET)
+    m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET),
+    m_reflector(ref)
 {
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorClient::onDataReceived));
   //m_con->disconnected.connect(mem_fun(*this, &ReflectorClient::onDisconnected));
@@ -136,6 +138,27 @@ ReflectorClient::ReflectorClient(Async::TcpConnection *con,
 ReflectorClient::~ReflectorClient(void)
 {
 } /* ReflectorClient::~ReflectorClient */
+
+
+void ReflectorClient::sendMsg(const ReflectorMsg& msg)
+{
+  if ((m_con_state != STATE_CONNECTED) && (msg.type() >= 100))
+  {
+    return;
+  }
+
+  m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
+
+  ReflectorMsg header(msg.type(), msg.packedSize());
+  ostringstream ss;
+  if (!header.pack(ss) || !msg.pack(ss))
+  {
+    // FIXME: Better error handling
+    cerr << "*** ERROR: Failed to pack TCP message\n";
+    return;
+  }
+  m_con->write(ss.str().data(), ss.str().size());
+} /* ReflectorClient::sendMsg */
 
 
 
@@ -296,6 +319,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
          << endl;
     m_con_state = STATE_CONNECTED;
     sendMsg(MsgServerInfo(m_client_id));
+    sendNodeList();
+    m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
   }
   else
   {
@@ -305,20 +330,12 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 } /* ReflectorClient::handleMsgProtoVer */
 
 
-void ReflectorClient::sendMsg(const ReflectorMsg& msg)
+void ReflectorClient::sendNodeList(void)
 {
-  m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
-
-  ReflectorMsg header(msg.type(), msg.packedSize());
-  ostringstream ss;
-  if (!header.pack(ss) || !msg.pack(ss))
-  {
-    // FIXME: Better error handling
-    cerr << "*** ERROR: Failed to pack TCP message\n";
-    return;
-  }
-  m_con->write(ss.str().data(), ss.str().size());
-} /* ReflectorClient::sendMsg */
+  MsgNodeList msg;
+  m_reflector->nodeList(msg.nodes());
+  sendMsg(msg);
+} /* ReflectorClient::sendNodeList */
 
 
 void ReflectorClient::disconnect(const std::string& msg)

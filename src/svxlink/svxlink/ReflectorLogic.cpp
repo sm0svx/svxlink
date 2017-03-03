@@ -317,6 +317,21 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
       case MsgServerInfo::TYPE:
         handleMsgServerInfo(ss);
         break;
+      case MsgNodeList::TYPE:
+        handleMsgNodeList(ss);
+        break;
+      case MsgNodeJoined::TYPE:
+        handleMsgNodeJoined(ss);
+        break;
+      case MsgNodeLeft::TYPE:
+        handleMsgNodeLeft(ss);
+        break;
+      case MsgTalkerStart::TYPE:
+        handleMsgTalkerStart(ss);
+        break;
+      case MsgTalkerStop::TYPE:
+        handleMsgTalkerStop(ss);
+        break;
       default:
         cerr << "*** WARNING: Unknown protocol message received: msg_type="
              << header.type() << endl;
@@ -396,6 +411,90 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 
   sendUdpMsg(MsgUdpHeartbeat());
 } /* ReflectorLogic::handleMsgAuthChallenge */
+
+
+void ReflectorLogic::handleMsgNodeList(std::istream& is)
+{
+  MsgNodeList msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgNodeList\n";
+    return;
+  }
+  cout << "### " << name() << ": MsgNodeList(";
+  const vector<string>& nodes = msg.nodes();
+  if (!nodes.empty())
+  {
+    vector<string>::const_iterator it = nodes.begin();
+    cout << *it++;
+    for (; it != nodes.end(); ++it)
+    {
+      cout << ", " << *it;
+    }
+  }
+  cout << ")" << endl;
+} /* ReflectorLogic::handleMsgNodeList */
+
+
+void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
+{
+  MsgNodeJoined msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgNodeJoined\n";
+    return;
+  }
+  cout << "### " << name() << ": MsgNodeJoined(" << msg.callsign() << ")"
+       << endl;
+
+} /* ReflectorLogic::handleMsgNodeJoined */
+
+
+void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
+{
+  MsgNodeLeft msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgNodeLeft\n";
+    return;
+  }
+  cout << "### " << name() << ": MsgNodeLeft(" << msg.callsign() << ")"
+       << endl;
+
+} /* ReflectorLogic::handleMsgNodeLeft */
+
+
+void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
+{
+  MsgTalkerStart msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgTalkerStart\n";
+    return;
+  }
+  cout << "### " << name() << ": MsgTalkerStart(" << msg.callsign() << ")"
+       << endl;
+
+} /* ReflectorLogic::handleMsgTalkerStart */
+
+
+void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
+{
+  MsgTalkerStop msg;
+  if (!msg.unpack(is))
+  {
+    // FIXME: Disconnect
+    cerr << "*** ERROR: Could not unpack MsgTalkerStop\n";
+    return;
+  }
+  cout << "### " << name() << ": MsgTalkerStop(" << msg.callsign() << ")"
+       << endl;
+
+} /* ReflectorLogic::handleMsgTalkerStop */
 
 
 void ReflectorLogic::sendMsg(const ReflectorMsg& msg)

@@ -87,6 +87,7 @@ An example of how to use the ReflectorClient class
  *
  ****************************************************************************/
 
+class Reflector;
 
 
 /****************************************************************************
@@ -126,7 +127,8 @@ class ReflectorClient
     /**
      * @brief 	Constructor
      */
-    ReflectorClient(Async::TcpConnection *con, const std::string& auth_key);
+    ReflectorClient(Reflector *ref, Async::TcpConnection *con,
+                    const std::string& auth_key);
 
     /**
      * @brief 	Destructor
@@ -149,6 +151,7 @@ class ReflectorClient
     uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
     uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq++; }
     void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
+    void sendMsg(const ReflectorMsg& msg);
 
   protected:
 
@@ -178,13 +181,14 @@ class ReflectorClient
     Async::Timer          m_heartbeat_timer;
     unsigned              m_heartbeat_tx_cnt;
     unsigned              m_heartbeat_rx_cnt;
+    Reflector*            m_reflector;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void handleMsgProtoVer(std::istream& is);
+    void sendNodeList(void);
     void handleMsgAuthResponse(std::istream& is);
-    void sendMsg(const ReflectorMsg& msg);
     void disconnect(const std::string& msg);
     //void onDisconnected(Async::TcpConnection*,
     //                    Async::TcpConnection::DisconnectReason);

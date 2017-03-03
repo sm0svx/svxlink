@@ -43,6 +43,8 @@ An example of how to use the Reflector class
 
 #include <sigc++/sigc++.h>
 #include <sys/time.h>
+#include <vector>
+#include <string>
 
 
 /****************************************************************************
@@ -147,6 +149,9 @@ class Reflector : public sigc::trackable
      * @return	Return_value_of_this_member_function
      */
     bool initialize(Async::Config &cfg);
+
+    void nodeList(std::vector<std::string>& nodes) const;
+    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *client=0);
 
   protected:
 
