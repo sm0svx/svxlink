@@ -358,7 +358,13 @@ class MsgPacker<std::vector<I> >
     }
     static size_t packedSize(const std::vector<I>& vec)
     {
-      return sizeof(uint16_t) + MsgPacker<I>::packedSize(vec[0]) * vec.size();
+      size_t size = sizeof(uint16_t);
+      for (typename std::vector<I>::const_iterator it = vec.begin();
+           it != vec.end(); ++it)
+      {
+        size += MsgPacker<I>::packedSize(*it);
+      }
+      return size;
     }
     static bool unpack(std::istream& is, std::vector<I>& vec)
     {
@@ -404,9 +410,14 @@ class MsgPacker<std::map<Tag,Value> >
     }
     static size_t packedSize(const std::map<Tag, Value>& m)
     {
-      return sizeof(uint16_t) +
-        m.size() * (MsgPacker<Tag>::packedSize((*m.begin()).first) +
-                    MsgPacker<Value>::packedSize((*m.begin()).second));
+      size_t size = sizeof(uint16_t);
+      for (typename std::map<Tag, Value>::const_iterator it = m.begin();
+           it != m.end(); ++it)
+      {
+        size += (MsgPacker<Tag>::packedSize((*it).first) +
+                 MsgPacker<Value>::packedSize((*it).second));
+      }
+      return size;
     }
     static bool unpack(std::istream& is, std::map<Tag,Value>& m)
     {
