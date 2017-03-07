@@ -1,13 +1,11 @@
 /**
-@file	 Reflector.h
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2017-02-11
-
-A_detailed_description_for_this_file
+@file	 DmrLogic.h
+@brief
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2017-03-12
 
 \verbatim
-SvxReflector - An audio reflector for connecting SvxLink Servers
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -26,13 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Template_demo.cpp
-An example of how to use the Reflector class
-*/
-
-
-#ifndef REFLECTOR_INCLUDED
-#define REFLECTOR_INCLUDED
+#ifndef DMR_LOGIC_INCLUDED
+#define DMR_LOGIC_INCLUDED
 
 
 /****************************************************************************
@@ -41,10 +34,6 @@ An example of how to use the Reflector class
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-#include <sys/time.h>
-#include <vector>
-#include <string>
 
 
 /****************************************************************************
@@ -53,8 +42,12 @@ An example of how to use the Reflector class
  *
  ****************************************************************************/
 
-#include <AsyncTcpConnection.h>
+
+#include <AsyncDnsLookup.h>
 #include <AsyncTimer.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioEncoder.h>
+
 
 
 /****************************************************************************
@@ -63,6 +56,7 @@ An example of how to use the Reflector class
  *
  ****************************************************************************/
 
+#include "LogicBase.h"
 
 
 /****************************************************************************
@@ -73,14 +67,10 @@ An example of how to use the Reflector class
 
 namespace Async
 {
-  class TcpServer;
   class UdpSocket;
-  class Config;
+  class DnsLookup;
 };
 
-class ReflectorClient;
-class ReflectorMsg;
-class ReflectorUdpMsg;
 
 
 /****************************************************************************
@@ -124,70 +114,100 @@ class ReflectorUdpMsg;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief
 @author Tobias Blomberg / SM0SVX
-@date   2017-02-11
-
-A_detailed_class_description
+@date   2017-02-12
 */
-class Reflector : public sigc::trackable
+class DmrLogic : public LogicBase
 {
   public:
     /**
      * @brief 	Constructor
+     * @param   cfg A previously initialized configuration object
+     * @param   name The name of the logic core
      */
-    Reflector(void);
+    DmrLogic(Async::Config& cfg, const std::string& name);
 
     /**
      * @brief 	Destructor
      */
-    ~Reflector(void);
+    ~DmrLogic(void);
 
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Get the audio pipe sink used for writing audio into this logic
+     * @return	Returns an audio pipe sink object
      */
-    bool initialize(Async::Config &cfg);
+    virtual Async::AudioSink *logicConIn(void) { return m_logic_con_in; }
 
-    void nodeList(std::vector<std::string>& nodes) const;
-    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *client=0);
+    /**
+     * @brief 	Get the audio pipe source used for reading audio from this logic
+     * @return	Returns an audio pipe source object
+     */
+    virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
+
+    /**
+     * @brief 	Initialize the logic core
+     * @return	Returns \em true on success or \em false on failure
+     */
+    virtual bool initialize(void);
 
   protected:
 
   private:
-    typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
-    typedef std::map<Async::TcpConnection*,
-                     ReflectorClient*> ReflectorClientConMap;
+    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 60;
 
-    Async::TcpServer*     srv;
-    Async::UdpSocket*     udp_sock;
-    ReflectorClientMap    client_map;
+
+    enum STATUS {
+      WAITING_PASS_ACK,
+      AUTHENTICATED
+    };
+
+    STATUS m_state;
+
+
+    unsigned              m_msg_type;
+    Async::UdpSocket*     m_udp_sock;
+    Async::IpAddress	  ip_addr;
+    Async::DnsLookup	  *dns;
+    uint32_t              m_client_id;
     std::string           m_auth_key;
-    ReflectorClient*      m_talker;
-    Async::Timer          m_talker_timeout_timer;
-    struct timeval        m_last_talker_timestamp;
-    ReflectorClientConMap m_client_con_map;
+    std::string           dmr_host;
+    uint16_t              dmr_port;
+    std::string           m_callsign;
+    std::string           m_id;
+    Async::Timer          m_reconnect_timer;
+    Async::Timer          m_ping_timer;
 
-    Reflector(const Reflector&);
-    Reflector& operator=(const Reflector&);
-    void clientConnected(Async::TcpConnection *con);
-    void clientDisconnected(Async::TcpConnection *con,
-                            Async::TcpConnection::DisconnectReason reason);
-    void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
+    Async::AudioEncoder*  m_logic_con_in;
+    Async::AudioFifo*     m_logic_con_out;
+
+
+    DmrLogic(const DmrLogic&);
+    DmrLogic& operator=(const DmrLogic&);
+
+    void handleMsgServerInfo(std::istream& is);
+    void sendEncodedAudio(const void *buf, int count);
+    void flushEncodedAudio(void);
+    void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendUdpMsg(ReflectorClient *client, const ReflectorUdpMsg& msg);
-    void broadcastUdpMsgExcept(const ReflectorClient *client,
-                               const ReflectorUdpMsg& msg);
-    void checkTalkerTimeout(Async::Timer *t);
+    void sendMsg(std::string msg);
+    void connect(void);
+    void reconnect(Async::Timer *t);
+    void dnsResultsReady(Async::DnsLookup& dns_lookup);
+    void disconnect(void);
+    void allEncodedSamplesFlushed(void);
+    void flushTimeout(Async::Timer *t);
+    void pingHandler(Async::Timer *t);
+    void authPassphrase(std::string pass);
+    void sendPing(void);
+    void sendPong(void);
 
-};  /* class Reflector */
+};  /* class DmrLogic */
 
 
 //} /* namespace */
 
-#endif /* REFLECTOR_INCLUDED */
-
+#endif /* DMR_LOGIC_INCLUDED */
 
 
 /*
