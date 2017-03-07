@@ -36,8 +36,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 #include <iomanip>
 #include <cstring>
+#include <string>
 #include <ctime>
 
 
@@ -152,29 +154,29 @@ bool DmrLogic::initialize(void)
     return false;
   }
 
-  if (!cfg().getValue(name(), "ID", m_id))
+  string m_t_id;
+  if (!cfg().getValue(name(), "ID", m_t_id))
   {
     cerr << "*** ERROR: " << name() << "/ID missing in configuration"
          << endl;
     return false;
   }
-  if (m_id.length() != 8)
+
+  if (m_t_id.length() < 7 || m_t_id.length() > 8)
   {
-    cerr << "*** ERROR: " << name() << "/ID is wrong, must have 8 digits, "
-         << "e.g. ID=00123456" << endl;
+    cerr << "*** ERROR: " << name() << "/ID is wrong, must have 7 or 8 digits, "
+         << "e.g. ID=2620001" << endl;
     return false;
   }
+  stringstream ss;
+  ss << std::setfill('0') << std::setw(8) << std::hex << atoi(m_t_id.c_str());
+  m_id = ss.str();
+  std::transform(m_id.begin(), m_id.end(), m_id.begin(), ::toupper);
 
   if (!cfg().getValue(name(), "AUTH_KEY", m_auth_key))
   {
     cerr << "*** ERROR: " << name() << "/AUTH_KEY missing in configuration"
          << endl;
-    return false;
-  }
-  if (m_auth_key == "Change this key now!")
-  {
-    cerr << "*** ERROR: You must change " << name() << "/AUTH_KEY from the "
-            "default value" << endl;
     return false;
   }
 
@@ -269,12 +271,9 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   cout << "### " << name() << ": DmrLogic::onDataReceived: addr="
        << addr << " port=" << port << " count=" << count << endl;
 
-
   string token(reinterpret_cast<const char *>(buf));
 
   size_t found;
-
-  cout << token << endl;
 
    // look for ACK message from server
   if ((found = token.find("MSTNAK")) != std::string::npos)
@@ -289,7 +288,7 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
     token.erase(0,6);
     const char *t = token.c_str();
     char m_random_id[9];
-    sprintf(m_random_id, "%02X%02X%02X%02X", t[0]&0xff, (t[1]>>8) & 0xff,
+    sprintf(m_random_id, "%02X%02X%02X%02X", t[0] & 0xff, (t[1]>>8) & 0xff,
                                      (t[2]>>16) & 0xff, (t[3]>>24) & 0xff);
     cout << m_random_id << endl;
     m_state = WAITING_PASS_ACK;
