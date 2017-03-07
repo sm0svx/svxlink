@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -45,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTcpServer.h>
 #include <AsyncUdpSocket.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -91,6 +93,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+void delete_client(ReflectorClient *client);
+};
 
 
 /****************************************************************************
@@ -130,6 +135,12 @@ Reflector::~Reflector(void)
 {
   delete udp_sock;
   delete srv;
+
+  for (ReflectorClientMap::iterator it = client_map.begin();
+       it != client_map.end(); ++it)
+  {
+    delete (*it).second;
+  }
 } /* Reflector::~Reflector */
 
 
@@ -192,6 +203,36 @@ bool Reflector::initialize(Async::Config &cfg)
 } /* Reflector::initialize */
 
 
+void Reflector::nodeList(std::vector<std::string>& nodes) const
+{
+  for (ReflectorClientMap::const_iterator it = client_map.begin();
+       it != client_map.end(); ++it)
+  {
+    const std::string& callsign = (*it).second->callsign();
+    if (!callsign.empty())
+    {
+      nodes.push_back(callsign);
+    }
+  }
+} /* Reflector::nodeList */
+
+
+void Reflector::broadcastMsgExcept(const ReflectorMsg& msg,
+                                   ReflectorClient *client)
+{
+  ReflectorClientMap::const_iterator it = client_map.begin();
+  for (; it != client_map.end(); ++it)
+  {
+    if ((*it).second != client)
+    {
+      //cout << "### Reflector::broadcastMsgExcept: "
+      //     << (*it).second->callsign() << endl;
+      (*it).second->sendMsg(msg);
+    }
+  }
+} /* Reflector::broadcastMsgExcept */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -210,17 +251,31 @@ void Reflector::clientConnected(Async::TcpConnection *con)
 {
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " connected" << endl;
-  ReflectorClient *rc = new ReflectorClient(con, m_auth_key);
+  ReflectorClient *rc = new ReflectorClient(this, con, m_auth_key);
   client_map[rc->clientId()] = rc;
+  m_client_con_map[con] = rc;
 } /* Reflector::clientConnected */
 
 
 void Reflector::clientDisconnected(Async::TcpConnection *con,
                                    Async::TcpConnection::DisconnectReason reason)
 {
-  //cout << "Client " << con->remoteHost() << ":" << con->remotePort()
-  //     << " disconnected" << endl;
+  ReflectorClientConMap::iterator it = m_client_con_map.find(con);
+  assert(it != m_client_con_map.end());
+  ReflectorClient *client = (*it).second;
 
+  if (!client->callsign().empty())
+  {
+    cout << client->callsign() << ": ";
+  }
+  cout << "Client " << con->remoteHost() << ":" << con->remotePort()
+       << " disconnected: " << TcpConnection::disconnectReasonStr(reason)
+       << endl;
+
+  client_map.erase(client->clientId());
+  m_client_con_map.erase(it);
+  broadcastMsgExcept(MsgNodeLeft(client->callsign()), client);
+  Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_client), client));
 } /* Reflector::clientDisconnected */
 
 
@@ -287,32 +342,58 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
-      cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
+      //cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
       // FIXME: Handle heartbeat
       break;
-    case MsgAudio::TYPE:
+
+    case MsgUdpAudio::TYPE:
     {
-      MsgAudio msg;
+      MsgUdpAudio msg;
       msg.unpack(ss);
-      if (m_talker == 0)
+      if (!msg.audioData().empty())
       {
-        m_talker = client;
-      }
-      if (m_talker == client)
-      {
-        gettimeofday(&m_last_talker_timestamp, NULL);
-        broadcastUdpMsgExcept(client, msg);
-        if (msg.audioData().size() == 0)
+        if (m_talker == 0)
         {
-          m_talker = 0;
+          m_talker = client;
+          broadcastMsgExcept(MsgTalkerStart(m_talker->callsign()));
         }
-      }
-      else
-      {
-        cout << "### " << m_talker->callsign() << " is already talking...\n";
+        if (m_talker == client)
+        {
+          gettimeofday(&m_last_talker_timestamp, NULL);
+          broadcastUdpMsgExcept(client, msg);
+        }
+        else
+        {
+          cout << "### " << m_talker->callsign() << " is already talking...\n";
+        }
       }
       break;
     }
+
+    case MsgUdpFlushSamples::TYPE:
+    {
+      //cout << "### " << client->callsign() << ": MsgUdpFlushSamples()" << endl;
+      if (client == m_talker)
+      {
+        m_talker = 0;
+        broadcastMsgExcept(MsgTalkerStop(client->callsign()));
+        broadcastUdpMsgExcept(client, MsgUdpFlushSamples());
+      }
+        // To be 100% correct the reflector should wait for all connected
+        // clients to send a MsgUdpAllSamplesFlushed message but that will
+        // probably lead to problems, especially on reflectors with many
+        // clients. We therefore acknowledge the flush immediately here to
+        // the client who sent the flush request.
+      sendUdpMsg(client, MsgUdpAllSamplesFlushed());
+      break;
+    }
+
+    case MsgUdpAllSamplesFlushed::TYPE:
+      //cout << "### " << client->callsign() << ": MsgUdpAllSamplesFlushed()"
+      //     << endl;
+      // Ignore
+      break;
+
     default:
       cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
            << header.type() << endl;
@@ -372,11 +453,17 @@ void Reflector::checkTalkerTimeout(Async::Timer *t)
     if (diff.tv_sec > 3)
     {
       cout << "### Talker timeout\n";
+      broadcastMsgExcept(MsgTalkerStop(m_talker->callsign()));
+      broadcastUdpMsgExcept(m_talker, MsgUdpFlushSamples());
       m_talker = 0;
-      broadcastUdpMsgExcept(0, MsgAudio());
     }
   }
 } /* Reflector::checkTalkerTimeout */
+
+
+namespace {
+void delete_client(ReflectorClient *client) { delete client; }
+};
 
 
 /*

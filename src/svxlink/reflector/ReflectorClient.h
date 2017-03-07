@@ -87,6 +87,7 @@ An example of how to use the ReflectorClient class
  *
  ****************************************************************************/
 
+class Reflector;
 
 
 /****************************************************************************
@@ -126,7 +127,8 @@ class ReflectorClient
     /**
      * @brief 	Constructor
      */
-    ReflectorClient(Async::TcpConnection *con, const std::string& auth_key);
+    ReflectorClient(Reflector *ref, Async::TcpConnection *con,
+                    const std::string& auth_key);
 
     /**
      * @brief 	Destructor
@@ -149,6 +151,7 @@ class ReflectorClient
     uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
     uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq++; }
     void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
+    void sendMsg(const ReflectorMsg& msg);
 
   protected:
 
@@ -161,7 +164,10 @@ class ReflectorClient
       STATE_CONNECTED, STATE_EXPECT_DISCONNECT
     } ConState;
 
-    Async::TcpConnection  *m_con;
+    static const unsigned HEARTBEAT_TX_CNT_RESET = 10;
+    static const unsigned HEARTBEAT_RX_CNT_RESET = 15;
+
+    Async::TcpConnection* m_con;
     unsigned              m_msg_type;
     unsigned char         m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
     ConState              m_con_state;
@@ -172,17 +178,22 @@ class ReflectorClient
     std::string           m_auth_key;
     uint16_t              m_next_udp_tx_seq;
     uint16_t              m_next_udp_rx_seq;
+    Async::Timer          m_heartbeat_timer;
+    unsigned              m_heartbeat_tx_cnt;
+    unsigned              m_heartbeat_rx_cnt;
+    Reflector*            m_reflector;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void handleMsgProtoVer(std::istream& is);
+    void sendNodeList(void);
     void handleMsgAuthResponse(std::istream& is);
-    void sendMsg(const ReflectorMsg& msg);
     void disconnect(const std::string& msg);
-    void onDisconnected(Async::TcpConnection*,
-                        Async::TcpConnection::DisconnectReason);
+    //void onDisconnected(Async::TcpConnection*,
+    //                    Async::TcpConnection::DisconnectReason);
     void onDiscTimeout(Async::Timer *t);
+    void handleHeartbeat(Async::Timer *t);
 
 };  /* class ReflectorClient */
 

@@ -156,6 +156,10 @@ class ReflectorLogic : public LogicBase
   protected:
 
   private:
+    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 60;
+    static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
+    static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
+
     Async::TcpClient*     m_con;
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
@@ -167,8 +171,12 @@ class ReflectorLogic : public LogicBase
     Async::Timer          m_reconnect_timer;
     uint16_t              m_next_udp_tx_seq;
     uint16_t              m_next_udp_rx_seq;
-    Async::Timer          m_udp_heartbeat_timer;
+    Async::Timer          m_heartbeat_timer;
     Async::AudioDecoder*  m_dec;
+    Async::Timer          m_flush_timeout_timer;
+    unsigned              m_udp_heartbeat_tx_cnt;
+    unsigned              m_tcp_heartbeat_tx_cnt;
+    unsigned              m_tcp_heartbeat_rx_cnt;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -178,9 +186,14 @@ class ReflectorLogic : public LogicBase
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void handleMsgError(std::istream& is);
     void handleMsgAuthChallenge(std::istream& is);
+    void handleMsgNodeList(std::istream& is);
+    void handleMsgNodeJoined(std::istream& is);
+    void handleMsgNodeLeft(std::istream& is);
+    void handleMsgTalkerStart(std::istream& is);
+    void handleMsgTalkerStop(std::istream& is);
     void handleMsgAuthOk(void);
     void handleMsgServerInfo(std::istream& is);
-    void sendMsg(ReflectorMsg& msg);
+    void sendMsg(const ReflectorMsg& msg);
     void sendEncodedAudio(const void *buf, int count);
     void flushEncodedAudio(void);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
@@ -188,7 +201,9 @@ class ReflectorLogic : public LogicBase
     void sendUdpMsg(const ReflectorUdpMsg& msg);
     void reconnect(Async::Timer *t);
     void disconnect(void);
-    void sendUdpHeartbeat(Async::Timer *t=0);
+    void allEncodedSamplesFlushed(void);
+    void flushTimeout(Async::Timer *t);
+    void heartbeatHandler(Async::Timer *t);
 
 };  /* class ReflectorLogic */
 
