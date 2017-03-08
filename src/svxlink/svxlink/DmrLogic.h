@@ -194,6 +194,7 @@ class DmrLogic : public LogicBase
     std::string           m_url;
     std::string           m_swid;
     std::string           m_pack;
+    int                  seqId;
 
     DmrLogic(const DmrLogic&);
     DmrLogic& operator=(const DmrLogic&);
@@ -216,6 +217,7 @@ class DmrLogic : public LogicBase
     void sendPong(void);
     void sendCloseMessage(void);
     void sendConfiguration(void);
+    void handleDataMessage(std::string datamessage);
 
 };  /* class DmrLogic */
 

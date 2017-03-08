@@ -166,7 +166,7 @@ bool DmrLogic::initialize(void)
 
   if (m_t_id.length() < 6 || m_t_id.length() > 7)
   {
-    cerr << "*** ERROR: " << name() << "/ID is wrong, must have 6 or 7 digits, "
+    cerr << "*** ERROR: " << name() << "/ID is wrong, must have 6 or 7 digits,"
          << "e.g. ID=2620001" << endl;
     return false;
   }
@@ -467,7 +467,13 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
     cout << "Server sent a MSTTCL, closing session :(" << endl;
     sendCloseMessage();
   }
-
+  
+    // server sent data command
+  if ((found = token.find("DMRD")) != std::string::npos)
+  {
+    cout << "Server sent a DMRD" << endl;
+    handleDataMessage(token.erase(0,4));
+  }
 } /* DmrLogic::udpDatagramReceived */
 
 
@@ -579,6 +585,32 @@ void DmrLogic::sendConfiguration(void)
   cout << "--- sending configuration: " << p_msg << endl;
   sendMsg(p_msg);  
 }
+
+
+void DmrLogic::handleDataMessage(std::string dmessage)
+{
+  char const *dmsg = dmessage.c_str();
+  int m_sid = (int)&dmsg[0]; // squence number
+  
+  if (++seqId != m_sid)
+  {
+    cout << "WARNING: Wrong sequence number " << seqId << "!=" 
+         << m_sid << endl;
+    seqId = m_sid;
+  }
+
+  //int srcId = 
+  //int dstId = 
+  //int rptId =
+  //int slot = &dmsg[12] & 0x80;
+  //int calltype = &dmsg[12] & 0x40;
+  //int frametype = &dmsg[12] & 0x30;
+  //int datatype = 
+  //int voiceseq =
+  //int streamid = 
+  //int dmrdata =
+  
+} /* DmrLogic::handleDataMessage */
 
 /*
  * This file has not been truncated
