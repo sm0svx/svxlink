@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "DmrLogic.h"
 #include "sha256.h"
+#include "version/SVXLINK.h"
 
 
 /****************************************************************************
@@ -122,9 +123,10 @@ using namespace Async;
  ****************************************************************************/
 
 DmrLogic::DmrLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_udp_sock(0), m_auth_key("passw0rd"),dmr_host(""),
-    dmr_port(62032), m_callsign("N0CALL"), m_id(""),
-    m_ping_timer(60000, Timer::TYPE_PERIODIC, false)
+  : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0), 
+    m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032), 
+    m_callsign("N0CALL"), m_id(""), m_ping_timer(60000, 
+    Timer::TYPE_PERIODIC, false)
 {
 } /* DmrLogic::DmrLogic */
 
@@ -162,9 +164,9 @@ bool DmrLogic::initialize(void)
     return false;
   }
 
-  if (m_t_id.length() < 7 || m_t_id.length() > 8)
+  if (m_t_id.length() < 6 || m_t_id.length() > 7)
   {
-    cerr << "*** ERROR: " << name() << "/ID is wrong, must have 7 or 8 digits, "
+    cerr << "*** ERROR: " << name() << "/ID is wrong, must have 6 or 7 digits, "
          << "e.g. ID=2620001" << endl;
     return false;
   }
@@ -179,6 +181,146 @@ bool DmrLogic::initialize(void)
          << endl;
     return false;
   }
+
+  if (!cfg().getValue(name(), "RX_FREQU", m_rxfreq))
+  {
+    cerr << "*** ERROR: " << name() << "/RX_FREQU missing in configuration"
+         << endl;
+    return false;
+  }
+  if (m_rxfreq.length() != 9)
+  {
+    cerr << "*** ERROR: " << name() << "/RX_FREQU wrong length: " << m_rxfreq
+         << endl;
+    return false;      
+  }
+
+  if (!cfg().getValue(name(), "TX_FREQU", m_txfreq))
+  {
+    cerr << "*** ERROR: " << name() << "/TX_FREQU missing in configuration"
+         << endl;
+    return false;
+  }
+  if (m_txfreq.length() != 9)
+  {
+    cerr << "*** ERROR: " << name() << "/TX_FREQU wrong length: " << m_txfreq
+         << endl;
+    return false;      
+  }
+  
+  if (!cfg().getValue(name(), "POWER", m_power))
+  {
+    m_power = "01";
+  }
+  if (m_power.length() != 2)
+  {
+    cerr << "*** ERROR: " << name() << "/POWER wrong length: " << m_power
+         << endl;
+    return false;      
+  }
+
+  if (!cfg().getValue(name(), "COLORCODE", m_color))
+  {
+    m_color = "01";
+  }
+  if (m_color.length() != 2 || atoi(m_color.c_str()) <= 0)
+  {
+    cerr << "*** ERROR: " << name() << "/COLORCODE wrong: " << m_color
+         << endl;
+    return false;
+  }
+  
+  if (!cfg().getValue(name(), "LATITUDE", m_lat))
+  {
+    cerr << "*** ERROR: " << name() << "/LATITUDE not set."
+         << endl;
+    return false;
+  }
+  if (m_lat.length() != 8)
+  {
+    cerr << "*** ERROR: " << name() << "/LATITUDE wrong length: " 
+         << m_lat << endl;
+    return false;
+  }
+
+  if (!cfg().getValue(name(), "LONGITUDE", m_lon))
+  {
+    cerr << "*** ERROR: " << name() << "/LONGITUDE not set."
+         << endl;
+    return false;
+  }
+  if (m_lon.length() != 9)
+  {
+    cerr << "*** ERROR: " << name() << "/LONGITUDE wrong length: " 
+         << m_lon << endl;
+    return false;
+  }
+  
+  if (!cfg().getValue(name(), "HEIGHT", m_height))
+  {
+    m_height = "001";
+  }
+  if (m_height.length() != 3)
+  {
+    cerr << "*** ERROR: " << name() << "/HEIGHT wrong: " << m_height
+         << endl;
+    return false;      
+  }
+  
+  if (!cfg().getValue(name(), "LOCATION", m_location))
+  {
+    m_location = "none";
+  }
+  if (m_location.length() > 20)
+  {
+    cerr << "*** ERROR: " << name() << "/LOCATION to long: " << m_location
+         << endl;
+    return false;      
+  }
+  while (m_location.length() < 20)
+  {
+    m_location += ' ';
+  }
+  
+  if (!cfg().getValue(name(), "DESCRIPTION", m_description))
+  {
+    m_description = "none";
+  }
+  if (m_description.length() > 20)
+  {
+    cerr << "*** ERROR: " << name() << "/DESCRIPTION to long (>20 chars)" 
+         << endl;
+    return false;      
+  }
+  while (m_description.length() < 20)
+  {
+    m_description += ' ';
+  }
+  
+  if (!cfg().getValue(name(), "URL", m_url))
+  {
+    m_url = "http://svxlink.de";
+  }
+  if (m_url.length() > 124)
+  {
+    cerr << "*** ERROR: " << name() << "/URL to long: " 
+         << m_url << endl;
+    return false;      
+  }
+  while (m_url.length() < 124)
+  {
+    m_url += ' ';
+  }
+  
+  m_swid += "linux:SvxLink v";
+  m_swid += SVXLINK_VERSION;
+  while (m_swid.length() < 40)
+  {
+    m_swid += ' ';
+  }
+  
+  m_pack = "08032017                                ";
+  
 
   if (!LogicBase::initialize())
   {
@@ -234,7 +376,8 @@ void DmrLogic::connect(void)
   char msg[13];
   sprintf(msg, "RPTL%s", m_id.c_str());
   sendMsg(msg);
-
+  
+  m_state = CONNECTING;
   m_ping_timer.setEnable(true);
 
 } /* DmrLogic::onConnected */
@@ -285,14 +428,24 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
     // got MSTACK from server
   if ((found = token.find("RPTACK")) != std::string::npos)
   {
-    token.erase(0,6);
-    const char *t = token.c_str();
-    char m_random_id[9];
-    sprintf(m_random_id, "%02X%02X%02X%02X", t[0] & 0xff, (t[1]>>8) & 0xff,
-                                     (t[2]>>16) & 0xff, (t[3]>>24) & 0xff);
-    cout << m_random_id << endl;
-    m_state = WAITING_PASS_ACK;
-    authPassphrase((string)m_random_id);
+    if (m_state == CONNECTING)
+    {
+      token.erase(0,6);
+      const char *pass = token.c_str();
+      //char m_random_id[9];
+      //sprintf(m_random_id, "%02X%02X%02X%02X", t[0] & 0xff, (t[1]>>8) & 0xff,
+      //                          (t[2]>>16) & 0xff, (t[3]>>24) & 0xff);
+      cout << pass << endl;
+      authPassphrase(pass);
+    }
+    
+    // passphrase accepted by server
+    if (m_state == WAITING_PASS_ACK)
+    {
+      m_state = AUTHENTICATED;
+      cout << "--- authentified, sending configuration" << endl;
+      sendConfiguration();
+    }
   }
 
     // server sent a ping, requesting pong
@@ -307,21 +460,30 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   {
     cout << "Server sent a MSTPONG, OK :)" << endl;
   }
+  
+    // server sent close command
+  if ((found = token.find("MSTCL")) != std::string::npos)
+  {
+    cout << "Server sent a MSTTCL, closing session :(" << endl;
+    sendCloseMessage();
+  }
 
 } /* DmrLogic::udpDatagramReceived */
 
 
-void DmrLogic::authPassphrase(std::string pass)
+void DmrLogic::authPassphrase(const char *pass)
 {
   std::stringstream resp;
   resp << pass << m_auth_key;
 
   std::string p_msg = "RPTK";
   p_msg += m_id;
+  cout << "P-Message: " << p_msg << endl;
   p_msg += sha256(resp.str());
 
   cout << "### sending: " << p_msg << endl;
   sendMsg(p_msg);
+  m_state = WAITING_PASS_ACK;
 } /* DmrLogic::authPassphrase */
 
 
@@ -346,7 +508,7 @@ void DmrLogic::sendMsg(std::string msg)
 
   const char *dmr_packet = msg.c_str();
 
-  cout << "### sending upd packet: " << msg << " to " << ip_addr.toString()
+  cout << "### sending udp packet: " << msg << " to " << ip_addr.toString()
        << endl;
   m_udp_sock->write(ip_addr, dmr_port, dmr_packet, sizeof(dmr_packet));
 
@@ -388,6 +550,35 @@ void DmrLogic::sendPong(void)
   sendMsg(p_msg);
 } /* DmrLogic::sendPong */
 
+
+void DmrLogic::sendCloseMessage(void)
+{
+  std::string p_msg = "RPTCL";
+  p_msg += m_id;
+  sendMsg(p_msg);
+} /* DmrLogic::sendCloseMessage */
+
+
+void DmrLogic::sendConfiguration(void)
+{
+  std::string p_msg = "RPTC";
+  p_msg += m_callsign;
+  p_msg += m_id;
+  p_msg += m_rxfreq;
+  p_msg += m_txfreq;
+  p_msg += m_power;
+  p_msg += m_color;
+  p_msg += m_lat;
+  p_msg += m_lon;
+  p_msg += m_height;
+  p_msg += m_location;
+  p_msg += m_description;
+  p_msg += m_url;
+  p_msg += m_swid;
+  p_msg += m_pack;
+  cout << "--- sending configuration: " << p_msg << endl;
+  sendMsg(p_msg);  
+}
 
 /*
  * This file has not been truncated

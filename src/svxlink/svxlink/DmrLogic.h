@@ -158,6 +158,8 @@ class DmrLogic : public LogicBase
 
 
     enum STATUS {
+      DISCONNECTED,
+      CONNECTING,
       WAITING_PASS_ACK,
       AUTHENTICATED
     };
@@ -180,7 +182,18 @@ class DmrLogic : public LogicBase
 
     Async::AudioEncoder*  m_logic_con_in;
     Async::AudioFifo*     m_logic_con_out;
-
+    std::string           m_rxfreq;
+    std::string           m_txfreq;
+    std::string           m_power;
+    std::string           m_color;
+    std::string           m_lat;
+    std::string           m_lon;    
+    std::string           m_height;
+    std::string           m_location;
+    std::string           m_description;
+    std::string           m_url;
+    std::string           m_swid;
+    std::string           m_pack;
 
     DmrLogic(const DmrLogic&);
     DmrLogic& operator=(const DmrLogic&);
@@ -198,9 +211,11 @@ class DmrLogic : public LogicBase
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t);
     void pingHandler(Async::Timer *t);
-    void authPassphrase(std::string pass);
+    void authPassphrase(const char *t);
     void sendPing(void);
     void sendPong(void);
+    void sendCloseMessage(void);
+    void sendConfiguration(void);
 
 };  /* class DmrLogic */
 
