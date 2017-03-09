@@ -126,7 +126,7 @@ DmrLogic::DmrLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0), 
     m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032), 
     m_callsign("N0CALL"), m_id(""), m_ping_timer(60000, 
-    Timer::TYPE_PERIODIC, false),m_slot1(false),m_slot2(false)
+    Timer::TYPE_PERIODIC, false), m_slot1(false), m_slot2(false)
 {
 } /* DmrLogic::DmrLogic */
 
@@ -154,6 +154,10 @@ bool DmrLogic::initialize(void)
     cerr << "*** ERROR: " << name() << "/CALLSIGN missing in configuration"
          << endl;
     return false;
+  }
+  while (m_callsign.length() < 8)
+  {
+    m_callsign += ' ';
   }
 
   string m_t_id;
@@ -331,11 +335,17 @@ bool DmrLogic::initialize(void)
     m_swid += ' ';
   }
   
-  m_pack = "08032017                                ";
+  m_pack = "2 x GM1200E";
+  while (m_pack.length() < 40)
+  {
+    m_pack += ' ';
+  }
+  
   
   m_ping_timer.setEnable(false);
   m_ping_timer.expired.connect(
      mem_fun(*this, &DmrLogic::pingHandler));
+
 
   m_logic_con_in = Async::AudioEncoder::create("AMBE");
   if (m_logic_con_in == 0)
@@ -377,15 +387,12 @@ bool DmrLogic::initialize(void)
     }
   }
 
-
   if (!LogicBase::initialize())
   {
     return false;
   }
 
-  cout << "--- connecting to " << dmr_host << endl;
   connect();
-      
   return true;
 } /* DmrLogic::initialize */
 
@@ -410,7 +417,7 @@ void DmrLogic::connect(void)
 
   if (ip_addr.isEmpty())
   {
-    cout << "looking up dns " << endl;
+    cout << "--- looking up dns " << endl;
     dns = new DnsLookup(dmr_host);
     dns->resultsReady.connect(mem_fun(*this, &DmrLogic::dnsResultsReady));
     return;
@@ -424,7 +431,6 @@ void DmrLogic::connect(void)
       mem_fun(*this, &DmrLogic::onDataReceived));
 
   // init Login to Server
-  cout << "### login to " << dmr_host << endl;
   char msg[13];
   sprintf(msg, "RPTL%s", m_id.c_str());
   sendMsg(msg);
@@ -450,7 +456,6 @@ void DmrLogic::dnsResultsReady(DnsLookup& dns_lookup)
 
   ip_addr = result[0];
   connect();
-
 } /* DmrLogic::dnsResultsReady */
 
 
@@ -479,6 +484,7 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
        << addr << " port=" << port << " count=" << count << endl;
 
   string token(reinterpret_cast<const char *>(buf));
+  cout << ">>> rx:" << token << endl;
 
   size_t found;
 
@@ -490,16 +496,12 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   }
 
     // got MSTACK from server
-  if ((found = token.find("RPTACK")) != std::string::npos)
+  if ((found = token.find("MSTACK")) != std::string::npos)
   {
     if (m_state == CONNECTING)
     {
-      token.erase(0,6);
+      token.erase(0,14);
       const char *pass = token.c_str();
-      //char m_random_id[9];
-      //sprintf(m_random_id, "%02X%02X%02X%02X", t[0] & 0xff, (t[1]>>8) & 0xff,
-      //                          (t[2]>>16) & 0xff, (t[3]>>24) & 0xff);
-      cout << pass << endl;
       authPassphrase(pass);
       return;
     }
@@ -577,12 +579,12 @@ void DmrLogic::sendMsg(std::string msg)
     return;
   }
 
-  const char *dmr_packet = msg.c_str();
+ // const char *dmr_packet = msg.c_str();
 
   cout << "### sending udp packet: " << msg << " to " << ip_addr.toString()
-       << endl;
-  m_udp_sock->write(ip_addr, dmr_port, dmr_packet, sizeof(dmr_packet));
-
+       << ":" << dmr_port << " size=" << msg.length() << endl;
+       
+  m_udp_sock->write(ip_addr, dmr_port, msg.c_str(), msg.length());
 } /* DmrLogic::sendUdpMsg */
 
 
@@ -651,6 +653,7 @@ void DmrLogic::sendConfiguration(void)
   p_msg += m_swid;
   p_msg += m_pack;
   cout << "--- sending configuration: " << p_msg << endl;
+  cout << "laenge: " << p_msg.length() << endl;
   sendMsg(p_msg);  
 }
 

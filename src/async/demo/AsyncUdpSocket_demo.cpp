@@ -11,10 +11,11 @@ class MyClass : public sigc::trackable
   public:
     MyClass(void)
     {
-      sock = new UdpSocket(12345);
+      sock = new UdpSocket(62030);
       sock->dataReceived.connect(mem_fun(*this, &MyClass::onDataReceived));
-      IpAddress addr("127.0.0.1");
-      sock->write(addr, 12345, "Hello, UDP!\n", 13);
+      IpAddress addr("87.106.126.49");
+      std::cout << "sending: RPTL0027FA97\n";
+      sock->write(addr, 62030, "RPTL0027FA97", 12);
     }
     
     ~MyClass(void)
