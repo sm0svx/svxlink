@@ -335,13 +335,16 @@ bool DmrLogic::initialize(void)
     m_swid += ' ';
   }
   
-  m_pack = "2 x GM1200E";
+  // the hardware of the own node
+  if (!cfg().getValue(name(), "HARDWARE", m_pack))
+  {
+    m_pack = "2 x GM1200E";
+  }
   while (m_pack.length() < 40)
   {
     m_pack += ' ';
   }
-  
-  
+    
   m_ping_timer.setEnable(false);
   m_ping_timer.expired.connect(
      mem_fun(*this, &DmrLogic::pingHandler));
@@ -417,7 +420,6 @@ void DmrLogic::connect(void)
 
   if (ip_addr.isEmpty())
   {
-    cout << "--- looking up dns " << endl;
     dns = new DnsLookup(dmr_host);
     dns->resultsReady.connect(mem_fun(*this, &DmrLogic::dnsResultsReady));
     return;
@@ -484,7 +486,6 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
        << addr << " port=" << port << " count=" << count << endl;
 
   string token(reinterpret_cast<const char *>(buf));
-  cout << ">>> rx:" << token << endl;
 
   size_t found;
 
@@ -551,7 +552,6 @@ void DmrLogic::authPassphrase(const char *pass)
 
   std::string p_msg = "RPTK";
   p_msg += m_id;
-  cout << "P-Message: " << p_msg << endl;
   p_msg += sha256(resp.str());
 
   cout << "### sending: " << p_msg << endl;
@@ -581,7 +581,7 @@ void DmrLogic::sendMsg(std::string msg)
 
  // const char *dmr_packet = msg.c_str();
 
-  cout << "### sending udp packet: " << msg << " to " << ip_addr.toString()
+  cout << "### sending udp packet to " << ip_addr.toString()
        << ":" << dmr_port << " size=" << msg.length() << endl;
        
   m_udp_sock->write(ip_addr, dmr_port, msg.c_str(), msg.length());
