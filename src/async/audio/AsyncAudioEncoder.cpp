@@ -59,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifdef OPUS_MAJOR
 #include "AsyncAudioEncoderOpus.h"
 #endif
+#include "AsyncAudioEncoderAmbe.h"
 
 
 /****************************************************************************
@@ -149,6 +150,10 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
     return new AudioEncoderOpus;
   }
 #endif
+  else if (name == "AMBE")
+  {
+    return new AudioEncoderAmbe;
+  }  
   else
   {
     return 0;

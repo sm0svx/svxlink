@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioEncoder.h>
-
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -134,6 +134,12 @@ class DmrLogic : public LogicBase
     ~DmrLogic(void);
 
     /**
+     * @brief 	Initialize the logic core
+     * @return	Returns \em true on success or \em false on failure
+     */
+    virtual bool initialize(void);
+
+    /**
      * @brief 	Get the audio pipe sink used for writing audio into this logic
      * @return	Returns an audio pipe sink object
      */
@@ -144,12 +150,6 @@ class DmrLogic : public LogicBase
      * @return	Returns an audio pipe source object
      */
     virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
-
-    /**
-     * @brief 	Initialize the logic core
-     * @return	Returns \em true on success or \em false on failure
-     */
-    virtual bool initialize(void);
 
   protected:
 
@@ -182,6 +182,7 @@ class DmrLogic : public LogicBase
 
     Async::AudioEncoder*  m_logic_con_in;
     Async::AudioFifo*     m_logic_con_out;
+    Async::AudioDecoder*  m_dec;
     std::string           m_rxfreq;
     std::string           m_txfreq;
     std::string           m_power;

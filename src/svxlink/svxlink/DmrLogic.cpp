@@ -333,19 +333,59 @@ bool DmrLogic::initialize(void)
   
   m_pack = "08032017                                ";
   
+  m_ping_timer.setEnable(false);
+  m_ping_timer.expired.connect(
+     mem_fun(*this, &DmrLogic::pingHandler));
+
+  m_logic_con_in = Async::AudioEncoder::create("AMBE");
+  if (m_logic_con_in == 0)
+  {
+    cerr << "*** ERROR: Failed to initialize DMR encoder" << endl;
+    return false;
+  }
+  m_logic_con_in->writeEncodedSamples.connect(
+               mem_fun(*this, &DmrLogic::sendEncodedAudio));
+  m_logic_con_in->flushEncodedSamples.connect(
+               mem_fun(*this, &DmrLogic::flushEncodedAudio));
+  m_logic_con_out = new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
+  m_logic_con_out->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
+  
+  if (m_logic_con_out == 0)
+  {
+    cerr << "*** ERROR: Failed to initialize DMR decoder" << endl;
+    return false;
+  }
+
+  m_dec = Async::AudioDecoder::create("AMBE");
+  m_dec->registerSink(m_logic_con_out);
+  m_dec->allEncodedSamplesFlushed.connect(
+      mem_fun(*this, &DmrLogic::allEncodedSamplesFlushed));
+
+  // sending options to audio decoder
+  string opt_prefix(m_dec->name());
+  opt_prefix += "_AMBE_";
+  list<string> names = cfg().listSection(name());
+  list<string>::const_iterator nit;
+  for (nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg().getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      m_dec->setOption(opt_name, opt_value);
+    }
+  }
+
 
   if (!LogicBase::initialize())
   {
     return false;
   }
 
-  m_ping_timer.setEnable(false);
-  m_ping_timer.expired.connect(
-     mem_fun(*this, &DmrLogic::pingHandler));
-
-  cout << "connecting to " << dmr_host << endl;
+  cout << "--- connecting to " << dmr_host << endl;
   connect();
-
+      
   return true;
 } /* DmrLogic::initialize */
 
@@ -412,6 +452,18 @@ void DmrLogic::dnsResultsReady(DnsLookup& dns_lookup)
   connect();
 
 } /* DmrLogic::dnsResultsReady */
+
+
+void DmrLogic::sendEncodedAudio(const void *buf, int count)
+{
+  //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
+  //     << count << endl;
+/*  if (m_flush_timeout_timer.isEnabled())
+  {
+    m_flush_timeout_timer.setEnable(false);
+  }
+  sendUdpMsg(MsgUdpAudio(buf, count));*/
+} /* DmrLogic::sendEncodedAudio */
 
 
 void DmrLogic::flushEncodedAudio(void)
@@ -547,7 +599,7 @@ void DmrLogic::allEncodedSamplesFlushed(void)
 
 void DmrLogic::pingHandler(Async::Timer *t)
 {
-  // cout << "sending PING\n";
+  // cout << "PING timeout\n";
   sendPing();
 } /* DmrLogic::heartbeatHandler */
 
@@ -575,6 +627,9 @@ void DmrLogic::sendCloseMessage(void)
   std::string p_msg = "RPTCL";
   p_msg += m_id;
   sendMsg(p_msg);
+  
+  m_state = DISCONNECTED;
+  m_ping_timer.setEnable(false);
 } /* DmrLogic::sendCloseMessage */
 
 
