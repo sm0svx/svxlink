@@ -310,7 +310,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   ReflectorClient *client = (*it).second;
   if (addr != client->remoteHost())
   {
-    cerr << "*** WARNING: Incoming UDP packet has the wrong source ip" << endl;
+    cerr << "*** WARNING[" << client->callsign()
+         << "]: Incoming UDP packet has the wrong source ip" << endl;
     return;
   }
   if (client->remoteUdpPort() == 0)
@@ -319,7 +320,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
   else if (port != client->remoteUdpPort())
   {
-    cerr << "*** WARNING: Incoming UDP packet has the wrong source UDP "
+    cerr << "*** WARNING[" << client->callsign()
+         << "]: Incoming UDP packet has the wrong source UDP "
             "port number" << endl;
     return;
   }
@@ -328,13 +330,16 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   uint16_t udp_rx_seq_diff = header.sequenceNum() - client->nextUdpRxSeq();
   if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
   {
-    cout << "### Dropping out of sequence frame with seq="
-         << header.sequenceNum() << endl;
+    cout << "### " << client->callsign()
+         << ": Dropping out of sequence frame with seq="
+         << header.sequenceNum() << ". Expected seq="
+         << client->nextUdpRxSeq() << endl;
     return;
   }
   else if (udp_rx_seq_diff > 0) // Frame lost
   {
-    cout << "### Frame(s) lost. Resetting next expected sequence number to "
+    cout << "### " << client->callsign()
+         << ": Frame(s) lost. Resetting next expected sequence number to "
          << (header.sequenceNum() + 1) << endl;
     client->setNextUdpRxSeq(header.sequenceNum() + 1);
   }
@@ -395,7 +400,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       break;
 
     default:
-      cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
+      cerr << "*** WARNING[" << client->callsign()
+           << "]: Unknown UDP protocol message received: msg_type="
            << header.type() << endl;
       // FIXME: Disconnect client or ignore?
       break;
