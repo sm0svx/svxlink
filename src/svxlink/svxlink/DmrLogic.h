@@ -195,6 +195,8 @@ class DmrLogic : public LogicBase
     std::string           m_swid;
     std::string           m_pack;
     int                  seqId;
+    bool                 m_slot1;
+    bool                 m_slot2;
 
     DmrLogic(const DmrLogic&);
     DmrLogic& operator=(const DmrLogic&);

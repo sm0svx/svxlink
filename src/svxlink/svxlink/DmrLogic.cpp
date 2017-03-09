@@ -126,7 +126,7 @@ DmrLogic::DmrLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0), 
     m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032), 
     m_callsign("N0CALL"), m_id(""), m_ping_timer(60000, 
-    Timer::TYPE_PERIODIC, false)
+    Timer::TYPE_PERIODIC, false),m_slot1(false),m_slot2(false)
 {
 } /* DmrLogic::DmrLogic */
 
@@ -297,6 +297,18 @@ bool DmrLogic::initialize(void)
     m_description += ' ';
   }
   
+    // configure the time slots
+  string slot;
+  if (cfg().getValue(name(), "SLOT1", slot))
+  {
+    m_slot1 = true;
+  }
+  if (cfg().getValue(name(), "SLOT2", slot))
+  {
+    m_slot2 = true;
+  }
+  
+  // the url of the own node
   if (!cfg().getValue(name(), "URL", m_url))
   {
     m_url = "http://svxlink.de";
@@ -437,6 +449,7 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       //                          (t[2]>>16) & 0xff, (t[3]>>24) & 0xff);
       cout << pass << endl;
       authPassphrase(pass);
+      return;
     }
     
     // passphrase accepted by server
@@ -534,7 +547,7 @@ void DmrLogic::allEncodedSamplesFlushed(void)
 
 void DmrLogic::pingHandler(Async::Timer *t)
 {
-  // cout << "seiding PING\n";
+  // cout << "sending PING\n";
   sendPing();
 } /* DmrLogic::heartbeatHandler */
 

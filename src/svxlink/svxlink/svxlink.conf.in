@@ -81,7 +81,7 @@ IDLE_SOUND_INTERVAL=3000
 
 [DmrLogic]
 TYPE=Dmr
-HOST=central.brandmeister.us
+HOST=master.up4dar.de
 PORT=62031
 AUTH_KEY="passw0rd"
 CALLSIGN="MYCALL"
@@ -96,6 +96,9 @@ DESCRIPTION=SvxLink node
 LOCATION=Germany
 COLORCODE=01
 POWER=01
+SLOT1=0
+SLOT2=1
+DV_STICK=/dev/ttyUSB0
 
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD
