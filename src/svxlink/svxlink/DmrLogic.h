@@ -46,8 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncDnsLookup.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
-#include <AsyncAudioEncoder.h>
-#include <AsyncAudioDecoder.h>
+#include <AsyncAudioRecoder.h>
 
 
 /****************************************************************************
@@ -180,9 +179,9 @@ class DmrLogic : public LogicBase
     Async::Timer          m_reconnect_timer;
     Async::Timer          m_ping_timer;
 
-    Async::AudioEncoder*  m_logic_con_in;
-    Async::AudioFifo*     m_logic_con_out;
-    Async::AudioDecoder*  m_dec;
+    Async::AudioRecoder*  m_logic_con;
+    Async::AudioFifo*     m_logic_con_fifo;
+    //Async::AudioDecoder*  m_dec;
     std::string           m_rxfreq;
     std::string           m_txfreq;
     std::string           m_power;

@@ -136,6 +136,9 @@ DmrLogic::~DmrLogic(void)
   delete m_udp_sock;
   m_ping_timer = 0;
   delete dns;
+  delete m_logic_con_in;
+  delete m_logic_con_out;
+  delete m_dec;
 } /* DmrLogic::~DmrLogic */
 
 
@@ -143,7 +146,8 @@ bool DmrLogic::initialize(void)
 {
   if (!cfg().getValue(name(), "HOST", dmr_host))
   {
-    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" << endl;
+    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" 
+         << endl;
     return false;
   }
 
@@ -189,26 +193,26 @@ bool DmrLogic::initialize(void)
   if (!cfg().getValue(name(), "RX_FREQU", m_rxfreq))
   {
     cerr << "*** ERROR: " << name() << "/RX_FREQU missing in configuration"
-         << endl;
+         << ", e.g. RX_FREQU=430500000"  << endl;
     return false;
   }
   if (m_rxfreq.length() != 9)
   {
     cerr << "*** ERROR: " << name() << "/RX_FREQU wrong length: " << m_rxfreq
-         << endl;
+         << ", e.g. RX_FREQU=430500000" << endl;
     return false;      
   }
 
   if (!cfg().getValue(name(), "TX_FREQU", m_txfreq))
   {
     cerr << "*** ERROR: " << name() << "/TX_FREQU missing in configuration"
-         << endl;
+         << ", e.g. TX_FREQU=430500000" << endl;
     return false;
   }
   if (m_txfreq.length() != 9)
   {
     cerr << "*** ERROR: " << name() << "/TX_FREQU wrong length: " << m_txfreq
-         << endl;
+         << ", e.g. TX_FREQU=430500000" << endl;
     return false;      
   }
   
@@ -348,35 +352,45 @@ bool DmrLogic::initialize(void)
   m_ping_timer.setEnable(false);
   m_ping_timer.expired.connect(
      mem_fun(*this, &DmrLogic::pingHandler));
-
-
-  m_logic_con_in = Async::AudioEncoder::create("AMBE");
-  if (m_logic_con_in == 0)
+ 
+  // create the Dmr recoder device, DV3k USB stick or DSD lib
+  string ambe_handler;
+  if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
   {
-    cerr << "*** ERROR: Failed to initialize DMR encoder" << endl;
-    return false;
+    cerr << "*** ERROR: " << name() << "/AMBE_HANDLER not valid, must be" 
+         << " DV3k or SwDsd" << endl;
+    return false;   
   }
-  m_logic_con_in->writeEncodedSamples.connect(
-               mem_fun(*this, &DmrLogic::sendEncodedAudio));
-  m_logic_con_in->flushEncodedSamples.connect(
-               mem_fun(*this, &DmrLogic::flushEncodedAudio));
-  m_logic_con_out = new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
-  m_logic_con_out->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
   
-  if (m_logic_con_out == 0)
+  m_logic_con = Async::AudioRecoder::create(m_ambe_handler);
+    
+  if (m_logic_con == 0)
   {
-    cerr << "*** ERROR: Failed to initialize DMR decoder" << endl;
+    cerr << "*** ERROR: Failed to initialize DMR recoder" << endl;
     return false;
   }
-
-  m_dec = Async::AudioDecoder::create("AMBE");
-  m_dec->registerSink(m_logic_con_out);
-  m_dec->allEncodedSamplesFlushed.connect(
+  m_logic_con->writeEncodedSamples.connect(
+               mem_fun(*this, &DmrLogic::sendEncodedAudio));
+  m_logic_con->flushEncodedSamples.connect(
+               mem_fun(*this, &DmrLogic::flushEncodedAudio));
+  
+  // create a Fifo
+  m_logic_con_fifo = new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
+  m_logic_con_fifo->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
+  if (m_logic_con_fifo == 0)
+  {
+    cerr << "*** ERROR: Failed to initialize DMR fifo" << endl;
+    return false;
+  }
+  
+  m_logic_con->registerSink(m_logic_con_fifo);
+  m_logig_con->allEncodedSamplesFlushed.connect(
       mem_fun(*this, &DmrLogic::allEncodedSamplesFlushed));
-
+  
+  
   // sending options to audio decoder
   string opt_prefix(m_dec->name());
-  opt_prefix += "_AMBE_";
+  opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
   for (nit=names.begin(); nit!=names.end(); ++nit)
@@ -386,7 +400,7 @@ bool DmrLogic::initialize(void)
       string opt_value;
       cfg().getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      m_dec->setOption(opt_name, opt_value);
+      m_login_con->setOption(opt_name, opt_value);
     }
   }
 
@@ -486,7 +500,7 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
        << addr << " port=" << port << " count=" << count << endl;
 
   string token(reinterpret_cast<const char *>(buf));
-
+  cout << "### " << token << " ###" << endl;
   size_t found;
 
    // look for ACK message from server

@@ -157,7 +157,7 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void) { flushEncodedSamples(); }
-    
+
     /**
      * @brief 	A signal emitted when encoded samples are available
      * @param 	buf  Buffer containing encoded samples
