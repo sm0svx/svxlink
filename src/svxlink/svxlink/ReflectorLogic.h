@@ -156,8 +156,8 @@ class ReflectorLogic : public LogicBase
   protected:
 
   private:
-    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 60;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET = 300;
+    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 15;
+    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET = 60;
     static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
     static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
 
