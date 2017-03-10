@@ -168,8 +168,8 @@ class ReflectorClient
 
     static const unsigned HEARTBEAT_TX_CNT_RESET      = 10;
     static const unsigned HEARTBEAT_RX_CNT_RESET      = 15;
-    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET  = 60;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 300;
+    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET  = 15;
+    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 120;
 
     Async::TcpConnection* m_con;
     unsigned              m_msg_type;

@@ -327,6 +327,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   if (client->remoteUdpPort() == 0)
   {
     client->setRemoteUdpPort(port);
+    client->sendUdpMsg(MsgUdpHeartbeat());
   }
   else if (port != client->remoteUdpPort())
   {
