@@ -125,6 +125,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::TcpConnection *con,
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC),
     m_heartbeat_tx_cnt(HEARTBEAT_TX_CNT_RESET),
     m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET),
+    m_udp_heartbeat_tx_cnt(UDP_HEARTBEAT_TX_CNT_RESET),
+    m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
     m_reflector(ref)
 {
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorClient::onDataReceived));
@@ -142,7 +144,8 @@ ReflectorClient::~ReflectorClient(void)
 
 void ReflectorClient::sendMsg(const ReflectorMsg& msg)
 {
-  if ((m_con_state != STATE_CONNECTED) && (msg.type() >= 100))
+  if (((m_con_state != STATE_CONNECTED) && (msg.type() >= 100)) ||
+      !m_con->isConnected())
   {
     return;
   }
@@ -159,6 +162,36 @@ void ReflectorClient::sendMsg(const ReflectorMsg& msg)
   }
   m_con->write(ss.str().data(), ss.str().size());
 } /* ReflectorClient::sendMsg */
+
+
+void ReflectorClient::udpMsgReceived(void)
+{
+  m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
+} /* ReflectorClient::udpMsgReceived */
+
+
+void ReflectorClient::sendUdpMsg(const ReflectorUdpMsg &msg)
+{
+  if (remoteUdpPort() == 0)
+  {
+    return;
+  }
+
+  //cout << "### ReflectorClient::sendUdpMsg: " << client->remoteHost() << ":"
+  //     << client->remoteUdpPort() << endl;
+
+  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+
+  ReflectorUdpMsg header(msg.type(), clientId(), nextUdpTxSeq());
+  ostringstream ss;
+  if (!header.pack(ss) || !msg.pack(ss))
+  {
+    // FIXME: Better error handling
+    cerr << "*** ERROR: Failed to pack reflector UDP message\n";
+    return;
+  }
+  m_reflector->sendUdpDatagram(this, ss.str().data(), ss.str().size());
+} /* ReflectorClient::sendUdpMsg */
 
 
 
@@ -384,10 +417,21 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
     sendMsg(MsgHeartbeat());
   }
 
+  if (--m_udp_heartbeat_tx_cnt == 0)
+  {
+    sendUdpMsg(MsgUdpHeartbeat());
+  }
+
   if (--m_heartbeat_rx_cnt == 0)
   {
     cout << callsign() << ": Heartbeat timeout" << endl;
     disconnect("Heartbeat timeout");
+  }
+
+  if (--m_udp_heartbeat_rx_cnt == 0)
+  {
+    cout << callsign() << ": UDP heartbeat timeout" << endl;
+    disconnect("UDP heartbeat timeout");
   }
 } /* ReflectorClient::handleHeartbeat */
 

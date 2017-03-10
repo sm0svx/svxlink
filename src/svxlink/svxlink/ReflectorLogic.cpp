@@ -118,13 +118,14 @@ using namespace Async;
  ****************************************************************************/
 
 ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0), m_logic_con_in(0),
-    m_logic_con_out(0), m_reconnect_timer(20000, Timer::TYPE_ONESHOT, false),
+  : LogicBase(cfg, name), m_con(0), m_msg_type(0), m_udp_sock(0),
+    m_logic_con_in(0), m_logic_con_out(0),
+    m_reconnect_timer(20000, Timer::TYPE_ONESHOT, false),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
-    m_udp_heartbeat_tx_cnt(0), m_tcp_heartbeat_tx_cnt(0),
-    m_tcp_heartbeat_rx_cnt(0)
+    m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
+    m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
   m_heartbeat_timer.expired.connect(
@@ -140,6 +141,7 @@ ReflectorLogic::~ReflectorLogic(void)
   delete m_logic_con_in;
   delete m_dec;
   delete m_logic_con_out;
+  delete m_con;
 } /* ReflectorLogic::~ReflectorLogic */
 
 
@@ -239,6 +241,7 @@ void ReflectorLogic::onConnected(void)
   MsgProtoVer msg;
   sendMsg(msg);
   m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+  m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
   m_heartbeat_timer.setEnable(true);
@@ -499,6 +502,11 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
 
 void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 {
+  if (!m_con->isConnected())
+  {
+    return;
+  }
+
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
 
   ostringstream ss;
@@ -572,11 +580,12 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     m_next_udp_rx_seq = header.sequenceNum() + 1;
   }
 
+  m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
+
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
-      cout << "### " << name() << ": MsgUdpHeartbeat()" << endl;
-      // FIXME: Handle heartbeat
+      //cout << "### " << name() << ": MsgUdpHeartbeat()" << endl;
       break;
 
     case MsgUdpAudio::TYPE:
@@ -670,6 +679,12 @@ void ReflectorLogic::heartbeatHandler(Async::Timer *t)
   if (--m_tcp_heartbeat_tx_cnt == 0)
   {
     sendMsg(MsgHeartbeat());
+  }
+
+  if (--m_udp_heartbeat_rx_cnt == 0)
+  {
+    cout << name() << ": UDP Heartbeat timeout" << endl;
+    disconnect();
   }
 
   if (--m_tcp_heartbeat_rx_cnt == 0)

@@ -152,6 +152,7 @@ class Reflector : public sigc::trackable
 
     void nodeList(std::vector<std::string>& nodes) const;
     void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *client=0);
+    void sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
   protected:
 
@@ -176,7 +177,7 @@ class Reflector : public sigc::trackable
                             Async::TcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendUdpMsg(ReflectorClient *client, const ReflectorUdpMsg& msg);
+    //void sendUdpMsg(ReflectorClient *client, const ReflectorUdpMsg& msg);
     void broadcastUdpMsgExcept(const ReflectorClient *client,
                                const ReflectorUdpMsg& msg);
     void checkTalkerTimeout(Async::Timer *t);

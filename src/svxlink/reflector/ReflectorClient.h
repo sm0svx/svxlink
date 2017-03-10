@@ -152,6 +152,8 @@ class ReflectorClient
     uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq++; }
     void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
     void sendMsg(const ReflectorMsg& msg);
+    void udpMsgReceived(void);
+    void sendUdpMsg(const ReflectorUdpMsg &msg);
 
   protected:
 
@@ -164,8 +166,10 @@ class ReflectorClient
       STATE_CONNECTED, STATE_EXPECT_DISCONNECT
     } ConState;
 
-    static const unsigned HEARTBEAT_TX_CNT_RESET = 10;
-    static const unsigned HEARTBEAT_RX_CNT_RESET = 15;
+    static const unsigned HEARTBEAT_TX_CNT_RESET      = 10;
+    static const unsigned HEARTBEAT_RX_CNT_RESET      = 15;
+    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET  = 60;
+    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 300;
 
     Async::TcpConnection* m_con;
     unsigned              m_msg_type;
@@ -181,6 +185,8 @@ class ReflectorClient
     Async::Timer          m_heartbeat_timer;
     unsigned              m_heartbeat_tx_cnt;
     unsigned              m_heartbeat_rx_cnt;
+    unsigned              m_udp_heartbeat_tx_cnt;
+    unsigned              m_udp_heartbeat_rx_cnt;
     Reflector*            m_reflector;
 
     ReflectorClient(const ReflectorClient&);

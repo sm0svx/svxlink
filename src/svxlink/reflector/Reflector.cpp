@@ -233,6 +233,13 @@ void Reflector::broadcastMsgExcept(const ReflectorMsg& msg,
 } /* Reflector::broadcastMsgExcept */
 
 
+void Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
+                                size_t count)
+{
+  udp_sock->write(client->remoteHost(), client->remoteUdpPort(), buf, count);
+} /* Reflector::sendUdpDatagram */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -344,11 +351,12 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     client->setNextUdpRxSeq(header.sequenceNum() + 1);
   }
 
+  client->udpMsgReceived();
+
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
       //cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
-      // FIXME: Handle heartbeat
       break;
 
     case MsgUdpAudio::TYPE:
@@ -389,7 +397,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         // probably lead to problems, especially on reflectors with many
         // clients. We therefore acknowledge the flush immediately here to
         // the client who sent the flush request.
-      sendUdpMsg(client, MsgUdpAllSamplesFlushed());
+      client->sendUdpMsg(MsgUdpAllSamplesFlushed());
       break;
     }
 
@@ -409,6 +417,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 } /* Reflector::udpDatagramReceived */
 
 
+#if 0
 void Reflector::sendUdpMsg(ReflectorClient *client,
                            const ReflectorUdpMsg &msg)
 {
@@ -431,6 +440,7 @@ void Reflector::sendUdpMsg(ReflectorClient *client,
   udp_sock->write(client->remoteHost(), client->remoteUdpPort(),
                   ss.str().data(), ss.str().size());
 } /* ReflectorLogic::sendUdpMsg */
+#endif
 
 
 void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
@@ -441,7 +451,7 @@ void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
   {
     if ((*it).second != client)
     {
-      sendUdpMsg((*it).second, msg);
+      (*it).second->sendUdpMsg(msg);
     }
   }
 } /* Reflector::broadcastUdpMsgExcept */
