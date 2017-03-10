@@ -575,7 +575,9 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
   else if (udp_rx_seq_diff > 0) // Frame lost
   {
-    cout << "### Frame(s) lost. Resetting next expected sequence number to "
+    cout << "### Frame(s) lost. Expected seq=" << (m_next_udp_rx_seq - 1)
+         << " but received " << header.sequenceNum()
+         << ". Resetting next expected sequence number to "
          << (header.sequenceNum() + 1) << endl;
     m_next_udp_rx_seq = header.sequenceNum() + 1;
   }
