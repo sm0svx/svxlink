@@ -347,13 +347,13 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
          << client->nextUdpRxSeq() << endl;
     return;
   }
-  else if (udp_rx_seq_diff > 0) // Frame lost
+  else if (udp_rx_seq_diff > 0) // Frame(s) lost
   {
     cout << "### " << client->callsign()
-         << ": Frame(s) lost. Resetting next expected sequence number to "
-         << (header.sequenceNum() + 1) << endl;
-    client->setNextUdpRxSeq(header.sequenceNum() + 1);
+         << ": UDP frame(s) lost. Expected seq=" << client->nextUdpRxSeq()
+         << ". Received seq=" << header.sequenceNum() << endl;
   }
+  client->setNextUdpRxSeq(header.sequenceNum() + 1);
 
   client->udpMsgReceived();
 

@@ -566,7 +566,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   // FIXME: Check remote IP and port number. Maybe also client ID?
 
     // Check sequence number
-  uint16_t udp_rx_seq_diff = header.sequenceNum() - m_next_udp_rx_seq++;
+  uint16_t udp_rx_seq_diff = header.sequenceNum() - m_next_udp_rx_seq;
   if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
   {
     cout << "### Dropping out of sequence frame with seq="
@@ -575,12 +575,12 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
   else if (udp_rx_seq_diff > 0) // Frame lost
   {
-    cout << "### Frame(s) lost. Expected seq=" << (m_next_udp_rx_seq - 1)
+    cout << "### UDP frame(s) lost. Expected seq=" << m_next_udp_rx_seq
          << " but received " << header.sequenceNum()
          << ". Resetting next expected sequence number to "
          << (header.sequenceNum() + 1) << endl;
-    m_next_udp_rx_seq = header.sequenceNum() + 1;
   }
+  m_next_udp_rx_seq = header.sequenceNum() + 1;
 
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
 

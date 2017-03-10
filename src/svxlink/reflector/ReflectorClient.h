@@ -149,7 +149,7 @@ class ReflectorClient
     void setRemoteUdpPort(uint16_t port) { m_remote_udp_port = port; }
     const std::string& callsign(void) const { return m_callsign; }
     uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
-    uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq++; }
+    uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq; }
     void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
     void sendMsg(const ReflectorMsg& msg);
     void udpMsgReceived(void);
