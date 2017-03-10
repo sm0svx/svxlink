@@ -333,7 +333,6 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     cerr << "*** ERROR: Could not unpack MsgAuthResponse\n";
     return;
   }
-  m_callsign = msg.callsign();
 
   stringstream ss;
   ss << hex << setw(2) << setfill('0');
@@ -341,11 +340,12 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   {
     ss << (int)msg.digest()[i];
   }
-  cout << "### " << m_callsign << ": MsgAuthResponse(" << ss.str() << ")"
+  cout << "### " << msg.callsign() << ": MsgAuthResponse(" << ss.str() << ")"
        << endl;
 
   if (msg.verify(m_auth_key, m_auth_challenge))
   {
+    m_callsign = msg.callsign();
     sendMsg(MsgAuthOk());
     cout << m_callsign << ": Login OK from "
          << m_con->remoteHost() << ":" << m_con->remotePort()
@@ -357,7 +357,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   }
   else
   {
-    cout << m_callsign << ": Access denied" << endl;
+    cout << msg.callsign() << ": Access denied" << endl;
     disconnect("Access denied");
   }
 } /* ReflectorClient::handleMsgProtoVer */

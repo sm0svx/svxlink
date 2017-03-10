@@ -281,7 +281,10 @@ void Reflector::clientDisconnected(Async::TcpConnection *con,
 
   client_map.erase(client->clientId());
   m_client_con_map.erase(it);
-  broadcastMsgExcept(MsgNodeLeft(client->callsign()), client);
+  if (!client->callsign().empty())
+  {
+    broadcastMsgExcept(MsgNodeLeft(client->callsign()), client);
+  }
   Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_client), client));
 } /* Reflector::clientDisconnected */
 
