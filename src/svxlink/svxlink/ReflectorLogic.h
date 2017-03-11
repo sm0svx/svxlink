@@ -168,7 +168,7 @@ class ReflectorLogic : public LogicBase
     std::string           m_auth_key;
     std::string           m_callsign;
     Async::AudioEncoder*  m_logic_con_in;
-    Async::AudioFifo*     m_logic_con_out;
+    Async::AudioSource*   m_logic_con_out;
     Async::Timer          m_reconnect_timer;
     uint16_t              m_next_udp_tx_seq;
     uint16_t              m_next_udp_rx_seq;

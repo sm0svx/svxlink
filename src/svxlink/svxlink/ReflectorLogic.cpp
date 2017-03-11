@@ -140,7 +140,7 @@ ReflectorLogic::~ReflectorLogic(void)
   delete m_udp_sock;
   delete m_logic_con_in;
   delete m_dec;
-  delete m_logic_con_out;
+  //delete m_logic_con_out;
   delete m_con;
 } /* ReflectorLogic::~ReflectorLogic */
 
@@ -190,19 +190,32 @@ bool ReflectorLogic::initialize(void)
       mem_fun(*this, &ReflectorLogic::sendEncodedAudio));
   m_logic_con_in->flushEncodedSamples.connect(
       mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
-  m_logic_con_out =
-      //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
-      new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
-  m_logic_con_out->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
-  if (m_logic_con_out == 0)
+
+
+    // Create audio decoder
+  m_dec = Async::AudioDecoder::create(audio_codec);
+  if (m_dec == 0)
   {
     cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
     return false;
   }
-  m_dec = Async::AudioDecoder::create(audio_codec);
-  m_dec->registerSink(m_logic_con_out);
   m_dec->allEncodedSamplesFlushed.connect(
       mem_fun(*this, &ReflectorLogic::allEncodedSamplesFlushed));
+  AudioSource *prev_src = m_dec;
+
+    // Create jitter FIFO if jitter buffer delay > 0
+  unsigned jitter_buffer_delay = 0;
+  cfg().getValue(name(), "JITTER_BUFFER_DELAY", jitter_buffer_delay);
+  if (jitter_buffer_delay > 0)
+  {
+    AudioFifo *fifo = new Async::AudioFifo(
+        2 * jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
+        //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
+    fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
+    prev_src->registerSink(fifo, true);
+    prev_src = fifo;
+  }
+  m_logic_con_out = prev_src;
 
   if (!LogicBase::initialize())
   {
