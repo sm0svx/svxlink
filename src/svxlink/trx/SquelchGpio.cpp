@@ -118,7 +118,7 @@ using namespace Async;
  ****************************************************************************/
 
 SquelchGpio::SquelchGpio(void)
-  : fd(-1), timer(0), active_low(false)
+  : fd(-1), timer(0), active_low(false), gpio_path("/sys/class/gpio")
 {
   
 } /* SquelchGpio::SquelchGpio */
@@ -143,6 +143,8 @@ bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
     return false;
   }
 
+  cfg.getValue(rx_name, "GPIO_PATH", gpio_path);
+
   string sql_pin;
   if (!cfg.getValue(rx_name, "GPIO_SQL_PIN", sql_pin) || sql_pin.empty())
   {
@@ -158,7 +160,7 @@ bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
   }
 
   stringstream ss;
-  ss << "/sys/class/gpio/" << sql_pin << "/value";
+  ss << gpio_path << "/" << sql_pin << "/value";
   fd = open(ss.str().c_str(), O_RDONLY);
   if (fd < 0)
   {

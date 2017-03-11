@@ -3,8 +3,9 @@
 # Configuration file for the SvxLink server GPIO Pins
 #
 ###############################################################################
-#gpio system pin path
-#pi/odroid/nanopi/pine64 = /sys/class/gpio orangpi= /sys/class/gpio_sw
+
+# GPIO system pin path
+# RPi/odroid/nanopi/pine64 = /sys/class/gpio, orangpi = /sys/class/gpio_sw
 GPIO_PATH=/sys/class/gpio
 
 # Space separated list of GPIO pins that point IN and have an
