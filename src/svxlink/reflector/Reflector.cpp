@@ -372,6 +372,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         if (m_talker == 0)
         {
           m_talker = client;
+          cout << "### Talker start: " << m_talker->callsign() << endl;
           broadcastMsgExcept(MsgTalkerStart(m_talker->callsign()));
         }
         if (m_talker == client)
@@ -381,7 +382,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         }
         else
         {
-          cout << "### " << m_talker->callsign() << " is already talking...\n";
+          cout << "### " << client->callsign() << ": " << m_talker->callsign()
+               << " is already talking...\n";
         }
       }
       break;
@@ -392,6 +394,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       //cout << "### " << client->callsign() << ": MsgUdpFlushSamples()" << endl;
       if (client == m_talker)
       {
+        cout << "### Talker stop: " << m_talker->callsign() << endl;
         m_talker = 0;
         broadcastMsgExcept(MsgTalkerStop(client->callsign()));
         broadcastUdpMsgExcept(client, MsgUdpFlushSamples());
@@ -472,7 +475,7 @@ void Reflector::checkTalkerTimeout(Async::Timer *t)
     timersub(&now, &m_last_talker_timestamp, &diff);
     if (diff.tv_sec > 3)
     {
-      cout << "### Talker timeout\n";
+      cout << "### Talker timeout: " << m_talker->callsign() << endl;
       broadcastMsgExcept(MsgTalkerStop(m_talker->callsign()));
       broadcastUdpMsgExcept(m_talker, MsgUdpFlushSamples());
       m_talker = 0;
