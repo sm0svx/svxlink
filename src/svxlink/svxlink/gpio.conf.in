@@ -21,10 +21,10 @@ GPIO_OUT_HIGH=""
 GPIO_OUT_LOW=""
 
 # User that should own the GPIO device files
-GPIO_USER="svxlink"
+GPIO_USER="@SVXLINK_USER@"
 
 # Group for the GPIO device files
-GPIO_GROUP="svxlink"
+GPIO_GROUP="@SVXLINK_GROUP@"
 
 # File access mode for the GPIO device files
 GPIO_MODE="0664"
