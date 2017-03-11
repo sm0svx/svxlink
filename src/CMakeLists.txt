@@ -327,6 +327,11 @@ set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
 # Find the chown utility
 include(FindCHOWN)
 
+set(SVXLINK_USER "svxlink" CACHE STRING "Set SVXLink system user")
+set(SVXLINK_GROUP "daemon" CACHE STRING "Set SVXLink system group")
+message(STATUS "SVXLink user = ${SVXLINK_USER}")
+message(STATUS "SVXLink group = ${SVXLINK_GROUP}")
+
 # Add directories to build
 add_subdirectory(async)
 add_subdirectory(misc)
