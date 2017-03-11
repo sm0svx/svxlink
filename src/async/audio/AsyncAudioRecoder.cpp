@@ -2,7 +2,7 @@
 @file	 AsyncAudioRecoder.cpp
 @brief   Base class of an audio Recoder
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@date	 2017-03-10
 
 \verbatim
 Async - A library for programming event driven applications
@@ -113,6 +113,7 @@ using namespace Async;
 
 AudioRecoder *AudioRecoder::create(const std::string &name)
 {
+
   if (name == "DV3k")
   {
     return new AudioRecoderDV3k;
@@ -121,29 +122,27 @@ AudioRecoder *AudioRecoder::create(const std::string &name)
   {
 //    return new AudioRecoderSwDsd;
   }
-  else
-  {
-    return 0;
-  }
+
+  return 0;
 }
 
 
 #if 0
 AudioRecoder::AudioRecoder(void)
 {
-  
+
 } /* AudioRecoder::AudioRecoder */
 
 
 AudioRecoder::~AudioRecoder(void)
 {
-  
+
 } /* AudioRecoder::~AudioRecoder */
 
 
 void AudioRecoder::resumeOutput(void)
 {
-  
+
 } /* AudioRecoder::resumeOutput */
 #endif
 
@@ -158,7 +157,7 @@ void AudioRecoder::resumeOutput(void)
 #if 0
 void AudioRecoder::allSamplesFlushed(void)
 {
-  
+
 } /* AudioRecoder::allSamplesFlushed */
 #endif
 

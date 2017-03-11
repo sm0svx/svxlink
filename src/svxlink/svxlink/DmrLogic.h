@@ -179,7 +179,8 @@ class DmrLogic : public LogicBase
     Async::Timer          m_reconnect_timer;
     Async::Timer          m_ping_timer;
 
-    Async::AudioRecoder*  m_logic_con;
+    Async::AudioRecoder*  m_logic_con_in;
+    Async::AudioRecoder*  m_logic_con_out;
     Async::AudioFifo*     m_logic_con_fifo;
     //Async::AudioDecoder*  m_dec;
     std::string           m_rxfreq;
@@ -187,16 +188,16 @@ class DmrLogic : public LogicBase
     std::string           m_power;
     std::string           m_color;
     std::string           m_lat;
-    std::string           m_lon;    
+    std::string           m_lon;
     std::string           m_height;
     std::string           m_location;
     std::string           m_description;
     std::string           m_url;
     std::string           m_swid;
     std::string           m_pack;
-    int                  seqId;
-    bool                 m_slot1;
-    bool                 m_slot2;
+    int                   seqId;
+    bool                  m_slot1;
+    bool                  m_slot2;
 
     DmrLogic(const DmrLogic&);
     DmrLogic& operator=(const DmrLogic&);

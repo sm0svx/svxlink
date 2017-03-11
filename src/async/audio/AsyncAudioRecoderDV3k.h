@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioRecoder.h>
+#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -78,7 +79,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -94,7 +95,9 @@ namespace Async
  *
  ****************************************************************************/
 
-
+#define DV3K_TYPE_CONTROL 0x00
+#define DV3K_TYPE_AMBE 0x01
+#define DV3K_TYPE_AUDIO 0x02
 
 /****************************************************************************
  *
@@ -115,42 +118,115 @@ class AudioRecoderDV3k : public AudioRecoder
     /**
      * @brief 	Default constuctor
      */
-    AudioRecoderDV3k(void) {};
-  
+    AudioRecoderDV3k(void);
+
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioRecoderDV3k(void) {};
-  
+    virtual ~AudioRecoderDV3k(void);
+
     /**
-     * @brief 	Set the gain to use
-     * @param 	gain_db The gain given in dB
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
      */
- //   virtual void setGain(float gain_db) { m_gain = powf(10, gain_db / 20); }
-    
+    virtual const char *name(void) const { return "DV3k"; }
+
     /**
-     * @brief 	Read the gain
-     * @return	Return the gain in dB
+     * @brief 	Set an option for the decoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
      */
-  //  virtual float gain(void) const { return 20 * log10(m_gain); }
-    
-    
+    virtual void setOption(const std::string &name, const std::string &value);
+
+    /**
+     * @brief 	Write encoded samples into the decoder
+     * @param 	buf  Buffer containing encoded samples
+     * @param 	size The size of the buffer
+     */
+    virtual void writeDecodedSamples(void *buf, int size);
+
+
+
   protected:
-   /* void processSamples(float *dest, const float *src, int count)
+    void processSamples(float *dest, const float *src, int count)
     {
       for (int i=0; i<count; ++i)
       {
       	dest[i] = src[i] * m_gain;
       }
     }
-    */
-    
+
+
   private:
     AudioRecoderDV3k(const AudioRecoderDV3k&);
     AudioRecoderDV3k& operator=(const AudioRecoderDV3k&);
-    
+
+    Async::Serial *dv3kdev;
+
+   static const unsigned char DV3K_START_BYTE   = 0x61;
+   static const unsigned char DV3K_CONTROL_RATEP  = 0x0A;
+   static const unsigned char DV3K_CONTROL_PRODID = 0x30;
+   static const unsigned char DV3K_CONTROL_VERSTRING = 0x31;
+   static const unsigned char DV3K_CONTROL_RESET = 0x33;
+   static const unsigned char DV3K_CONTROL_READY = 0x39;
+   static const unsigned char DV3K_CONTROL_CHANFMT = 0x15;
+
+
+    struct dv3k_packet {
+      unsigned char start_byte;
+      struct {
+        unsigned short payload_length;
+        unsigned char packet_type;
+      } header;
+      union {
+        struct {
+          unsigned char field_id;
+          union {
+            char prodid[16];
+            char ratep[12];
+            char version[48];
+            short chanfmt;
+          } data;
+        } ctrl;
+        struct {
+          unsigned char field_id;
+          unsigned char num_samples;
+          short samples[160];
+          unsigned char cmode_field_id;
+          short cmode_value;
+        } audio;
+        struct {
+          struct {
+            unsigned char field_id;
+            unsigned char num_bits;
+            unsigned char data[9];
+          } data;
+          struct {
+            unsigned char field_id;
+            unsigned short value;
+          } cmode;
+          struct {
+            unsigned char field_id;
+            unsigned char tone;
+            unsigned char amplitude;
+          } tone;
+        } ambe;
+    } payload;
+  };
+
+    struct dv3k_packet responsePacket;
+    struct dv3k_packet ctrlPacket;
+
+
     float m_gain;
-    
+    std::string port;
+    int baud;
+
+
+    bool  createDV3k(void);
+    bool initDV3k(void);
+    void onCharactersReceived(char *buf, int count);
+
 };  /* class AudioRecoderDV3k */
 
 

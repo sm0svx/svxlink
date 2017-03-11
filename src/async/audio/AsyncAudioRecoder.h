@@ -80,7 +80,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -115,23 +115,23 @@ class AudioRecoder : public AudioSource, public AudioSink, public sigc::trackabl
 {
   public:
     static AudioRecoder *create(const std::string &name);
-    
+
     /**
      * @brief 	Default constuctor
      */
     AudioRecoder(void) {}
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~AudioRecoder(void) {}
-    
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
-    virtual const char *name(void);// const = 0;
-  
+    virtual const char *name(void) const = 0;
+
     /**
      * @brief 	Set an option for the Recoder
      * @param 	name The name of the option
@@ -143,19 +143,19 @@ class AudioRecoder : public AudioSource, public AudioSink, public sigc::trackabl
      * @brief Print codec parameter settings
      */
     virtual void printCodecParams(void) const {}
-    
+
     /**
-     * @brief 	Write encoded samples into the Recoder
+     * @brief 	Write encoded samples into the Decoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    virtual void writeEncodedSamples(void *buf, int size); // = 0;
+    virtual void writeDecodedSamples(void *buf, int size) = 0;
 
     /**
      * @brief 	Call this function when all encoded samples have been flushed
      */
     virtual void allEncodedSamplesFlushed(void) { sourceAllSamplesFlushed(); }
-    
+
     /**
      * @brief Call this function when all encoded samples have been received
      */
@@ -170,16 +170,16 @@ class AudioRecoder : public AudioSource, public AudioSink, public sigc::trackabl
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void) { flushEncodedSamples(); }
-    
+
     /**
      * @brief Resume audio output to the sink
-     * 
+     *
      * This function will be called when the registered audio sink is ready to
      * accept more samples.
      * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void) {}
-    
+
     /**
      * @brief This signal is emitted when all encoded samples have been flushed
      */
@@ -188,8 +188,15 @@ class AudioRecoder : public AudioSource, public AudioSink, public sigc::trackabl
     /**
      * @brief This signal is emitted when the source calls flushSamples
      */
-    sigc::signal<void> flushEncodedSamples;    
-    
+    sigc::signal<void> flushEncodedSamples;
+
+    /**
+     * @brief 	A signal emitted when encoded samples are available
+     * @param 	buf  Buffer containing encoded samples
+     * @param 	size The size of the buffer
+     */
+    sigc::signal<void,const void *,int> writeEncodedSamples;
+
 
   protected:
     /**
@@ -200,12 +207,13 @@ class AudioRecoder : public AudioSource, public AudioSink, public sigc::trackabl
      * This function is normally only called from a connected sink object.
      */
     virtual void allSamplesFlushed(void) { allEncodedSamplesFlushed(); }
-    
-    
+
+
   private:
     AudioRecoder(const AudioRecoder&);
     AudioRecoder& operator=(const AudioRecoder&);
-    
+
+
 };  /* class AudioRecoder */
 
 

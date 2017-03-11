@@ -59,7 +59,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifdef OPUS_MAJOR
 #include "AsyncAudioDecoderOpus.h"
 #endif
-#include "AsyncAudioDecoderAmbe.h"
 
 
 /****************************************************************************
@@ -138,10 +137,6 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
   {
     return new AudioDecoderGsm;
   }
-  else if (name == "AMBE")
-  {
-    return new AudioDecoderAmbe;
-  }  
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
@@ -164,19 +159,19 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
 #if 0
 AudioDecoder::AudioDecoder(void)
 {
-  
+
 } /* AudioDecoder::AudioDecoder */
 
 
 AudioDecoder::~AudioDecoder(void)
 {
-  
+
 } /* AudioDecoder::~AudioDecoder */
 
 
 void AudioDecoder::resumeOutput(void)
 {
-  
+
 } /* AudioDecoder::resumeOutput */
 #endif
 
@@ -191,7 +186,7 @@ void AudioDecoder::resumeOutput(void)
 #if 0
 void AudioDecoder::allSamplesFlushed(void)
 {
-  
+
 } /* AudioDecoder::allSamplesFlushed */
 #endif
 

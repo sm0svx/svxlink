@@ -123,9 +123,9 @@ using namespace Async;
  ****************************************************************************/
 
 DmrLogic::DmrLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0), 
-    m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032), 
-    m_callsign("N0CALL"), m_id(""), m_ping_timer(60000, 
+  : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0),
+    m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032),
+    m_callsign("N0CALL"), m_id(""), m_ping_timer(60000,
     Timer::TYPE_PERIODIC, false), m_slot1(false), m_slot2(false)
 {
 } /* DmrLogic::DmrLogic */
@@ -138,7 +138,7 @@ DmrLogic::~DmrLogic(void)
   delete dns;
   delete m_logic_con_in;
   delete m_logic_con_out;
-  delete m_dec;
+  delete m_logic_con_fifo;
 } /* DmrLogic::~DmrLogic */
 
 
@@ -146,7 +146,7 @@ bool DmrLogic::initialize(void)
 {
   if (!cfg().getValue(name(), "HOST", dmr_host))
   {
-    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/HOST missing in configuration"
          << endl;
     return false;
   }
@@ -200,7 +200,7 @@ bool DmrLogic::initialize(void)
   {
     cerr << "*** ERROR: " << name() << "/RX_FREQU wrong length: " << m_rxfreq
          << ", e.g. RX_FREQU=430500000" << endl;
-    return false;      
+    return false;
   }
 
   if (!cfg().getValue(name(), "TX_FREQU", m_txfreq))
@@ -213,9 +213,9 @@ bool DmrLogic::initialize(void)
   {
     cerr << "*** ERROR: " << name() << "/TX_FREQU wrong length: " << m_txfreq
          << ", e.g. TX_FREQU=430500000" << endl;
-    return false;      
+    return false;
   }
-  
+
   if (!cfg().getValue(name(), "POWER", m_power))
   {
     m_power = "01";
@@ -224,7 +224,7 @@ bool DmrLogic::initialize(void)
   {
     cerr << "*** ERROR: " << name() << "/POWER wrong length: " << m_power
          << endl;
-    return false;      
+    return false;
   }
 
   if (!cfg().getValue(name(), "COLORCODE", m_color))
@@ -237,7 +237,7 @@ bool DmrLogic::initialize(void)
          << endl;
     return false;
   }
-  
+
   if (!cfg().getValue(name(), "LATITUDE", m_lat))
   {
     cerr << "*** ERROR: " << name() << "/LATITUDE not set."
@@ -246,7 +246,7 @@ bool DmrLogic::initialize(void)
   }
   if (m_lat.length() != 8)
   {
-    cerr << "*** ERROR: " << name() << "/LATITUDE wrong length: " 
+    cerr << "*** ERROR: " << name() << "/LATITUDE wrong length: "
          << m_lat << endl;
     return false;
   }
@@ -259,11 +259,11 @@ bool DmrLogic::initialize(void)
   }
   if (m_lon.length() != 9)
   {
-    cerr << "*** ERROR: " << name() << "/LONGITUDE wrong length: " 
+    cerr << "*** ERROR: " << name() << "/LONGITUDE wrong length: "
          << m_lon << endl;
     return false;
   }
-  
+
   if (!cfg().getValue(name(), "HEIGHT", m_height))
   {
     m_height = "001";
@@ -272,9 +272,9 @@ bool DmrLogic::initialize(void)
   {
     cerr << "*** ERROR: " << name() << "/HEIGHT wrong: " << m_height
          << endl;
-    return false;      
+    return false;
   }
-  
+
   if (!cfg().getValue(name(), "LOCATION", m_location))
   {
     m_location = "none";
@@ -283,28 +283,28 @@ bool DmrLogic::initialize(void)
   {
     cerr << "*** ERROR: " << name() << "/LOCATION to long: " << m_location
          << endl;
-    return false;      
+    return false;
   }
   while (m_location.length() < 20)
   {
     m_location += ' ';
   }
-  
+
   if (!cfg().getValue(name(), "DESCRIPTION", m_description))
   {
     m_description = "none";
   }
   if (m_description.length() > 20)
   {
-    cerr << "*** ERROR: " << name() << "/DESCRIPTION to long (>20 chars)" 
+    cerr << "*** ERROR: " << name() << "/DESCRIPTION to long (>20 chars)"
          << endl;
-    return false;      
+    return false;
   }
   while (m_description.length() < 20)
   {
     m_description += ' ';
   }
-  
+
     // configure the time slots
   string slot;
   if (cfg().getValue(name(), "SLOT1", slot))
@@ -315,7 +315,7 @@ bool DmrLogic::initialize(void)
   {
     m_slot2 = true;
   }
-  
+
   // the url of the own node
   if (!cfg().getValue(name(), "URL", m_url))
   {
@@ -323,22 +323,22 @@ bool DmrLogic::initialize(void)
   }
   if (m_url.length() > 124)
   {
-    cerr << "*** ERROR: " << name() << "/URL to long: " 
+    cerr << "*** ERROR: " << name() << "/URL to long: "
          << m_url << endl;
-    return false;      
+    return false;
   }
   while (m_url.length() < 124)
   {
     m_url += ' ';
   }
-  
+
   m_swid += "linux:SvxLink v";
   m_swid += SVXLINK_VERSION;
   while (m_swid.length() < 40)
   {
     m_swid += ' ';
   }
-  
+
   // the hardware of the own node
   if (!cfg().getValue(name(), "HARDWARE", m_pack))
   {
@@ -348,32 +348,33 @@ bool DmrLogic::initialize(void)
   {
     m_pack += ' ';
   }
-    
+
   m_ping_timer.setEnable(false);
   m_ping_timer.expired.connect(
      mem_fun(*this, &DmrLogic::pingHandler));
- 
+
   // create the Dmr recoder device, DV3k USB stick or DSD lib
-  string ambe_handler;
+  string m_ambe_handler;
   if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
   {
-    cerr << "*** ERROR: " << name() << "/AMBE_HANDLER not valid, must be" 
+    cerr << "*** ERROR: " << name() << "/AMBE_HANDLER not valid, must be"
          << " DV3k or SwDsd" << endl;
-    return false;   
+    return false;
   }
-  
-  m_logic_con = Async::AudioRecoder::create(m_ambe_handler);
-    
-  if (m_logic_con == 0)
+
+  m_logic_con_in = Async::AudioRecoder::create(m_ambe_handler);
+
+  if (m_logic_con_in == 0)
   {
     cerr << "*** ERROR: Failed to initialize DMR recoder" << endl;
     return false;
   }
-  m_logic_con->writeEncodedSamples.connect(
+
+  m_logic_con_in->writeEncodedSamples.connect(
                mem_fun(*this, &DmrLogic::sendEncodedAudio));
-  m_logic_con->flushEncodedSamples.connect(
+  m_logic_con_in->flushEncodedSamples.connect(
                mem_fun(*this, &DmrLogic::flushEncodedAudio));
-  
+
   // create a Fifo
   m_logic_con_fifo = new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
   m_logic_con_fifo->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
@@ -382,14 +383,13 @@ bool DmrLogic::initialize(void)
     cerr << "*** ERROR: Failed to initialize DMR fifo" << endl;
     return false;
   }
-  
-  m_logic_con->registerSink(m_logic_con_fifo);
-  m_logig_con->allEncodedSamplesFlushed.connect(
+
+  m_logic_con_out->registerSink(m_logic_con_fifo);
+  m_logic_con_out->allDecodedSamplesFlushed.connect(
       mem_fun(*this, &DmrLogic::allEncodedSamplesFlushed));
-  
-  
+
   // sending options to audio decoder
-  string opt_prefix(m_dec->name());
+  string opt_prefix(m_logic_con_in->name());
   opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
@@ -400,7 +400,8 @@ bool DmrLogic::initialize(void)
       string opt_value;
       cfg().getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      m_login_con->setOption(opt_name, opt_value);
+      m_logic_con_out->setOption(opt_name, opt_value);
+      m_logic_con_in->setOption(opt_name, opt_value);
     }
   }
 
@@ -450,7 +451,7 @@ void DmrLogic::connect(void)
   char msg[13];
   sprintf(msg, "RPTL%s", m_id.c_str());
   sendMsg(msg);
-  
+
   m_state = CONNECTING;
   m_ping_timer.setEnable(true);
 
@@ -520,7 +521,7 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       authPassphrase(pass);
       return;
     }
-    
+
     // passphrase accepted by server
     if (m_state == WAITING_PASS_ACK)
     {
@@ -542,14 +543,14 @@ void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   {
     cout << "Server sent a MSTPONG, OK :)" << endl;
   }
-  
+
     // server sent close command
   if ((found = token.find("MSTCL")) != std::string::npos)
   {
     cout << "Server sent a MSTTCL, closing session :(" << endl;
     sendCloseMessage();
   }
-  
+
     // server sent data command
   if ((found = token.find("DMRD")) != std::string::npos)
   {
@@ -597,7 +598,7 @@ void DmrLogic::sendMsg(std::string msg)
 
   cout << "### sending udp packet to " << ip_addr.toString()
        << ":" << dmr_port << " size=" << msg.length() << endl;
-       
+
   m_udp_sock->write(ip_addr, dmr_port, msg.c_str(), msg.length());
 } /* DmrLogic::sendUdpMsg */
 
@@ -643,7 +644,7 @@ void DmrLogic::sendCloseMessage(void)
   std::string p_msg = "RPTCL";
   p_msg += m_id;
   sendMsg(p_msg);
-  
+
   m_state = DISCONNECTED;
   m_ping_timer.setEnable(false);
 } /* DmrLogic::sendCloseMessage */
@@ -668,33 +669,33 @@ void DmrLogic::sendConfiguration(void)
   p_msg += m_pack;
   cout << "--- sending configuration: " << p_msg << endl;
   cout << "laenge: " << p_msg.length() << endl;
-  sendMsg(p_msg);  
+  sendMsg(p_msg);
 }
 
 
 void DmrLogic::handleDataMessage(std::string dmessage)
 {
   char const *dmsg = dmessage.c_str();
-  int m_sid = (int)&dmsg[0]; // squence number
-  
+  int m_sid = atoi(&dmsg[0]); // squence number
+
   if (++seqId != m_sid)
   {
-    cout << "WARNING: Wrong sequence number " << seqId << "!=" 
+    cout << "WARNING: Wrong sequence number " << seqId << "!="
          << m_sid << endl;
     seqId = m_sid;
   }
 
-  //int srcId = 
-  //int dstId = 
+  //int srcId =
+  //int dstId =
   //int rptId =
   //int slot = &dmsg[12] & 0x80;
   //int calltype = &dmsg[12] & 0x40;
   //int frametype = &dmsg[12] & 0x30;
-  //int datatype = 
+  //int datatype =
   //int voiceseq =
-  //int streamid = 
+  //int streamid =
   //int dmrdata =
-  
+
 } /* DmrLogic::handleDataMessage */
 
 /*
