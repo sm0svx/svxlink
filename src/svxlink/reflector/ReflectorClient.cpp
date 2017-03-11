@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cassert>
 #include <iomanip>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -345,15 +346,25 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 
   if (msg.verify(m_auth_key, m_auth_challenge))
   {
-    m_callsign = msg.callsign();
-    sendMsg(MsgAuthOk());
-    cout << m_callsign << ": Login OK from "
-         << m_con->remoteHost() << ":" << m_con->remotePort()
-         << endl;
-    m_con_state = STATE_CONNECTED;
-    sendMsg(MsgServerInfo(m_client_id));
-    sendNodeList();
-    m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
+    vector<string> connected_nodes;
+    m_reflector->nodeList(connected_nodes);
+    if (find(connected_nodes.begin(), connected_nodes.end(), msg.callsign()) == connected_nodes.end())
+    {
+      m_callsign = msg.callsign();
+      sendMsg(MsgAuthOk());
+      cout << m_callsign << ": Login OK from "
+           << m_con->remoteHost() << ":" << m_con->remotePort()
+           << endl;
+      m_con_state = STATE_CONNECTED;
+      sendMsg(MsgServerInfo(m_client_id));
+      sendNodeList();
+      m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
+    }
+    else
+    {
+      cout << msg.callsign() << ": Already connected" << endl;
+      disconnect("Access denied");
+    }
   }
   else
   {
