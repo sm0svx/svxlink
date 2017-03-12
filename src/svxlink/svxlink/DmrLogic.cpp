@@ -125,7 +125,7 @@ using namespace Async;
 DmrLogic::DmrLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0),
     m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032),
-    m_callsign("N0CALL"), m_id(""), m_ping_timer(60000,
+    m_callsign("N0CALL"), m_id(""), m_ping_timer(10000,
     Timer::TYPE_PERIODIC, false), m_slot1(false), m_slot2(false)
 {
 } /* DmrLogic::DmrLogic */
@@ -136,9 +136,8 @@ DmrLogic::~DmrLogic(void)
   delete m_udp_sock;
   m_ping_timer = 0;
   delete dns;
-  delete m_logic_con_in;
-  delete m_logic_con_out;
-  delete m_logic_con_fifo;
+  delete m_logic_con;
+
 } /* DmrLogic::~DmrLogic */
 
 
@@ -362,34 +361,23 @@ bool DmrLogic::initialize(void)
     return false;
   }
 
-  m_logic_con_in = Async::AudioRecoder::create(m_ambe_handler);
+  m_logic_con = Async::AudioRecoder::create(m_ambe_handler);
 
-  if (m_logic_con_in == 0)
+  if (m_logic_con == 0)
   {
     cerr << "*** ERROR: Failed to initialize DMR recoder" << endl;
     return false;
   }
 
-  m_logic_con_in->writeEncodedSamples.connect(
+  m_logic_con->writeEncodedSamples.connect(
                mem_fun(*this, &DmrLogic::sendEncodedAudio));
-  m_logic_con_in->flushEncodedSamples.connect(
+  m_logic_con->flushEncodedSamples.connect(
                mem_fun(*this, &DmrLogic::flushEncodedAudio));
-
-  // create a Fifo
-  m_logic_con_fifo = new Async::AudioFifo(500 * INTERNAL_SAMPLE_RATE / 1000);
-  m_logic_con_fifo->setPrebufSamples(250 * INTERNAL_SAMPLE_RATE / 1000);
-  if (m_logic_con_fifo == 0)
-  {
-    cerr << "*** ERROR: Failed to initialize DMR fifo" << endl;
-    return false;
-  }
-
-  m_logic_con_out->registerSink(m_logic_con_fifo);
-  m_logic_con_out->allDecodedSamplesFlushed.connect(
+  m_logic_con->allDecodedSamplesFlushed.connect(
       mem_fun(*this, &DmrLogic::allEncodedSamplesFlushed));
 
   // sending options to audio decoder
-  string opt_prefix(m_logic_con_in->name());
+  string opt_prefix(m_logic_con->name());
   opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
@@ -400,8 +388,7 @@ bool DmrLogic::initialize(void)
       string opt_value;
       cfg().getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      m_logic_con_out->setOption(opt_name, opt_value);
-      m_logic_con_in->setOption(opt_name, opt_value);
+      m_logic_con->setOption(opt_name, opt_value);
     }
   }
 

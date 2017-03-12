@@ -226,6 +226,7 @@ class AudioRecoderDV3k : public AudioRecoder
     bool  createDV3k(void);
     bool initDV3k(void);
     void onCharactersReceived(char *buf, int count);
+    void processResponse(char *buf, int count);
 
 };  /* class AudioRecoderDV3k */
 

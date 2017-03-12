@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -113,7 +114,6 @@ using namespace Async;
 
 AudioRecoder *AudioRecoder::create(const std::string &name)
 {
-
   if (name == "DV3k")
   {
     return new AudioRecoderDV3k;

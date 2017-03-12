@@ -142,13 +142,13 @@ class DmrLogic : public LogicBase
      * @brief 	Get the audio pipe sink used for writing audio into this logic
      * @return	Returns an audio pipe sink object
      */
-    virtual Async::AudioSink *logicConIn(void) { return m_logic_con_in; }
+    virtual Async::AudioSink *logicConIn(void) { return m_logic_con; }
 
     /**
      * @brief 	Get the audio pipe source used for reading audio from this logic
      * @return	Returns an audio pipe source object
      */
-    virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
+    virtual Async::AudioSource *logicConOut(void) { return m_logic_con; }
 
   protected:
 
@@ -179,10 +179,8 @@ class DmrLogic : public LogicBase
     Async::Timer          m_reconnect_timer;
     Async::Timer          m_ping_timer;
 
-    Async::AudioRecoder*  m_logic_con_in;
-    Async::AudioRecoder*  m_logic_con_out;
-    Async::AudioFifo*     m_logic_con_fifo;
-    //Async::AudioDecoder*  m_dec;
+    Async::AudioRecoder*  m_logic_con;
+
     std::string           m_rxfreq;
     std::string           m_txfreq;
     std::string           m_power;
