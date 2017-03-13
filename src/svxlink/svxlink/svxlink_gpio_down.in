@@ -12,9 +12,9 @@ GPIO_CONF="@SVX_SYSCONF_INSTALL_DIR@/gpio.conf"
 
 # Unset GPIO IN/OUT pins, if used
 for pin in $GPIO_IN_HIGH $GPIO_IN_LOW $GPIO_OUT_HIGH $GPIO_OUT_LOW; do
-  if [ -e /sys/class/gpio/$pin ]; then
+  if [ -e $GPIO_PATH/$pin ]; then
     # Extract pinnumber from the full pin name (e.g. gpio4_pd0 -> 4)
     pinnum=$(echo "$pin" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
-    echo $pinnum > /sys/class/gpio/unexport
+    echo $pinnum > $GPIO_PATH/unexport
   fi
 done
