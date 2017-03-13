@@ -84,7 +84,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "DummyLogic.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
-#include "DmrLogic.h"
+#include "RewindLogic.h"
 #include "LinkManager.h"
 
 
@@ -747,9 +747,9 @@ static void initialize_logics(Config &cfg)
     {
       logic = new RepeaterLogic(cfg, logic_name);
     }
-    else if (logic_type == "Dmr")
+    else if (logic_type == "Rewind")
     {
-      logic = new DmrLogic(cfg, logic_name);
+      logic = new RewindLogic(cfg, logic_name);
     }
     else if (logic_type == "Dummy")
     {

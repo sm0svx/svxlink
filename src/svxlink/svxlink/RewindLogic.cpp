@@ -1,5 +1,5 @@
 /**
-@file	 DmrLogic.cpp
+@file	 RewindLogic.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
 @date	 2017-02-12
@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DmrLogic.h"
+#include "RewindLogic.h"
 #include "sha256.h"
 #include "version/SVXLINK.h"
 
@@ -122,35 +122,34 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DmrLogic::DmrLogic(Async::Config& cfg, const std::string& name)
+RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0),
-    m_auth_key("passw0rd"),dmr_host(""), dmr_port(62032),
+    m_auth_key("passw0rd"),Rewind_host(""), Rewind_port(62032),
     m_callsign("N0CALL"), m_id(""), m_ping_timer(10000,
     Timer::TYPE_PERIODIC, false), m_slot1(false), m_slot2(false)
 {
-} /* DmrLogic::DmrLogic */
+} /* RewindLogic::RewindLogic */
 
 
-DmrLogic::~DmrLogic(void)
+RewindLogic::~RewindLogic(void)
 {
   delete m_udp_sock;
   m_ping_timer = 0;
   delete dns;
   delete m_logic_con;
+} /* RewindLogic::~RewindLogic */
 
-} /* DmrLogic::~DmrLogic */
 
-
-bool DmrLogic::initialize(void)
+bool RewindLogic::initialize(void)
 {
-  if (!cfg().getValue(name(), "HOST", dmr_host))
+  if (!cfg().getValue(name(), "HOST", Rewind_host))
   {
     cerr << "*** ERROR: " << name() << "/HOST missing in configuration"
          << endl;
     return false;
   }
 
-  cfg().getValue(name(), "PORT", dmr_port);
+  cfg().getValue(name(), "PORT", Rewind_port);
 
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
@@ -315,44 +314,14 @@ bool DmrLogic::initialize(void)
     m_slot2 = true;
   }
 
-  // the url of the own node
-  if (!cfg().getValue(name(), "URL", m_url))
-  {
-    m_url = "http://svxlink.de";
-  }
-  if (m_url.length() > 124)
-  {
-    cerr << "*** ERROR: " << name() << "/URL to long: "
-         << m_url << endl;
-    return false;
-  }
-  while (m_url.length() < 124)
-  {
-    m_url += ' ';
-  }
-
   m_swid += "linux:SvxLink v";
   m_swid += SVXLINK_VERSION;
-  while (m_swid.length() < 40)
-  {
-    m_swid += ' ';
-  }
-
-  // the hardware of the own node
-  if (!cfg().getValue(name(), "HARDWARE", m_pack))
-  {
-    m_pack = "2 x GM1200E";
-  }
-  while (m_pack.length() < 40)
-  {
-    m_pack += ' ';
-  }
 
   m_ping_timer.setEnable(false);
   m_ping_timer.expired.connect(
-     mem_fun(*this, &DmrLogic::pingHandler));
+     mem_fun(*this, &RewindLogic::pingHandler));
 
-  // create the Dmr recoder device, DV3k USB stick or DSD lib
+  // create the Rewind recoder device, DV3k USB stick or DSD lib
   string m_ambe_handler;
   if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
   {
@@ -365,16 +334,16 @@ bool DmrLogic::initialize(void)
 
   if (m_logic_con == 0)
   {
-    cerr << "*** ERROR: Failed to initialize DMR recoder" << endl;
+    cerr << "*** ERROR: Failed to initialize Rewind recoder" << endl;
     return false;
   }
 
   m_logic_con->writeEncodedSamples.connect(
-               mem_fun(*this, &DmrLogic::sendEncodedAudio));
+               mem_fun(*this, &RewindLogic::sendEncodedAudio));
   m_logic_con->flushEncodedSamples.connect(
-               mem_fun(*this, &DmrLogic::flushEncodedAudio));
+               mem_fun(*this, &RewindLogic::flushEncodedAudio));
   m_logic_con->allDecodedSamplesFlushed.connect(
-      mem_fun(*this, &DmrLogic::allEncodedSamplesFlushed));
+      mem_fun(*this, &RewindLogic::allEncodedSamplesFlushed));
 
   // sending options to audio decoder
   string opt_prefix(m_logic_con->name());
@@ -399,7 +368,7 @@ bool DmrLogic::initialize(void)
 
   connect();
   return true;
-} /* DmrLogic::initialize */
+} /* RewindLogic::initialize */
 
 
 
@@ -417,35 +386,33 @@ bool DmrLogic::initialize(void)
  *
  ****************************************************************************/
 
-void DmrLogic::connect(void)
+void RewindLogic::connect(void)
 {
 
   if (ip_addr.isEmpty())
   {
-    dns = new DnsLookup(dmr_host);
-    dns->resultsReady.connect(mem_fun(*this, &DmrLogic::dnsResultsReady));
+    dns = new DnsLookup(Rewind_host);
+    dns->resultsReady.connect(mem_fun(*this, &RewindLogic::dnsResultsReady));
     return;
   }
 
-  cout << name() << ": create UDP socket on port " << dmr_port << endl;
+  cout << name() << ": create UDP socket on port " << Rewind_port << endl;
 
   delete m_udp_sock;
   m_udp_sock = new Async::UdpSocket();
   m_udp_sock->dataReceived.connect(
-      mem_fun(*this, &DmrLogic::onDataReceived));
+      mem_fun(*this, &RewindLogic::onDataReceived));
 
-  // init Login to Server
-  char msg[13];
-  sprintf(msg, "RPTL%s", m_id.c_str());
-  sendMsg(msg);
+   // session initiated by a simple REWIND_TYPE_KEEP_ALIVE message
+  sendPing();
 
   m_state = CONNECTING;
   m_ping_timer.setEnable(true);
 
-} /* DmrLogic::onConnected */
+} /* RewindLogic::onConnected */
 
 
-void DmrLogic::dnsResultsReady(DnsLookup& dns_lookup)
+void RewindLogic::dnsResultsReady(DnsLookup& dns_lookup)
 {
   vector<IpAddress> result = dns->addresses();
 
@@ -460,10 +427,10 @@ void DmrLogic::dnsResultsReady(DnsLookup& dns_lookup)
 
   ip_addr = result[0];
   connect();
-} /* DmrLogic::dnsResultsReady */
+} /* RewindLogic::dnsResultsReady */
 
 
-void DmrLogic::sendEncodedAudio(const void *buf, int count)
+void RewindLogic::sendEncodedAudio(const void *buf, int count)
 {
   //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
   //     << count << endl;
@@ -472,105 +439,80 @@ void DmrLogic::sendEncodedAudio(const void *buf, int count)
     m_flush_timeout_timer.setEnable(false);
   }
   sendUdpMsg(MsgUdpAudio(buf, count));*/
-} /* DmrLogic::sendEncodedAudio */
+} /* RewindLogic::sendEncodedAudio */
 
 
-void DmrLogic::flushEncodedAudio(void)
+void RewindLogic::flushEncodedAudio(void)
 {
-  //cout << "### " << name() << ": DmrLogic::flushEncodedAudio" << endl;
-} /* DmrLogic::sendEncodedAudio */
+  //cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
+} /* RewindLogic::sendEncodedAudio */
 
 
-void DmrLogic::onDataReceived(const IpAddress& addr, uint16_t port,
+void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  cout << "### " << name() << ": DmrLogic::onDataReceived: addr="
+  cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
        << addr << " port=" << port << " count=" << count << endl;
 
-  string token(reinterpret_cast<const char *>(buf));
-  cout << "### " << token << " ###" << endl;
-  size_t found;
-
-   // look for ACK message from server
-  if ((found = token.find("MSTNAK")) != std::string::npos)
+  rd = reinterpret_cast<RewindData*>(buf);
+  
+  switch rd->type
   {
-    cout << "*** ERROR: MSTNAK from server " << addr << endl;
-    return;
-  }
-
-    // got MSTACK from server
-  if ((found = token.find("MSTACK")) != std::string::npos)
-  {
-    if (m_state == CONNECTING)
-    {
-      token.erase(0,14);
-      const char *pass = token.c_str();
-      authPassphrase(pass);
+    case REWIND_TYPE_REPORT:
       return;
-    }
 
-    // passphrase accepted by server
-    if (m_state == WAITING_PASS_ACK)
-    {
-      m_state = AUTHENTICATED;
-      cout << "--- authentified, sending configuration" << endl;
-      sendConfiguration();
-    }
+    case REWIND_TYPE_CHALLENGE:
+      cout << "--- Authentication" << endl;
+      authenticate(m_auth_key);
+      return;
+      
+    case REWIND_TYPE_CLOSE:
+      cout << "*** Disconnect request received." << endl;
+      m_state = DISCONNECTED;
+      m_ping_timer.setEnable(false);
+      return;
+      
+    case REWIND_TYPE_KEEP_ALIVE:
+      sendPing();
+      return;
+    
+    case REWIND_TYPE_FAILURE_CODE:
+      cout << "*** ERROR: sourceCall or destinationCall could not be "
+           << "resolved during processing." << endl;
+      return;
+      
+    default:
+      cout << "*** Unknown data received" << endl;
   }
-
-    // server sent a ping, requesting pong
-  if ((found = token.find("MSTPING")) != std::string::npos)
-  {
-    cout << "Server sent a MSTPING, requesting MSTPONG" << endl;
-    sendPong();
-  }
-
-    // server sent a pong
-  if ((found = token.find("MSTPONG")) != std::string::npos)
-  {
-    cout << "Server sent a MSTPONG, OK :)" << endl;
-  }
-
-    // server sent close command
-  if ((found = token.find("MSTCL")) != std::string::npos)
-  {
-    cout << "Server sent a MSTTCL, closing session :(" << endl;
-    sendCloseMessage();
-  }
-
-    // server sent data command
-  if ((found = token.find("DMRD")) != std::string::npos)
-  {
-    cout << "Server sent a DMRD" << endl;
-    handleDataMessage(token.erase(0,4));
-  }
-} /* DmrLogic::udpDatagramReceived */
+} /* RewindLogic::udpDatagramReceived */
 
 
-void DmrLogic::authPassphrase(const char *pass)
+void RewindLogic::authenticate(const string pass)
 {
-  std::stringstream resp;
-  resp << pass << m_auth_key;
-
-  std::string p_msg = "RPTK";
-  p_msg += m_id;
-  p_msg += sha256(resp.str());
+  RewindData *srd;
+  srd->type = htole16(REWIND_TYPE_AUTHENTICATION);
+  srd->flags = htole16(REWIND_FLAG_NONE);
+  srd->number = htole32(++sequenceNumber);
+  srd->length = htole16(SHA256_DIGEST_LENGTH);
+  srd->data = 
+   
+  std::string p_msg = sha256(pass);
 
   cout << "### sending: " << p_msg << endl;
-  sendMsg(p_msg);
+  sendMsg(srd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
-} /* DmrLogic::authPassphrase */
+} /* RewindLogic::authPassphrase */
 
 
-void DmrLogic::sendMsg(std::string msg)
+void RewindLogic::sendMsg(RewindData *rd, size_t len)
 {
 
   if (ip_addr.isEmpty())
   {
     if (!dns)
     {
-      dns = new DnsLookup(dmr_host);
-      dns->resultsReady.connect(mem_fun(*this, &DmrLogic::dnsResultsReady));
+      dns = new DnsLookup(Rewind_host);
+      dns->resultsReady.connect(mem_fun(*this, &RewindLogic::dnsResultsReady));
     }
     return;
   }
@@ -581,63 +523,83 @@ void DmrLogic::sendMsg(std::string msg)
     return;
   }
 
- // const char *dmr_packet = msg.c_str();
-
   cout << "### sending udp packet to " << ip_addr.toString()
-       << ":" << dmr_port << " size=" << msg.length() << endl;
+       << ":" << rewind_port << " size=" << length << endl;
 
-  m_udp_sock->write(ip_addr, dmr_port, msg.c_str(), msg.length());
-} /* DmrLogic::sendUdpMsg */
+  m_udp_sock->write(ip_addr, rewind_port, rd, length);
+} /* RewindLogic::sendUdpMsg */
 
 
-void DmrLogic::reconnect(Timer *t)
+void RewindLogic::reconnect(Timer *t)
 {
-  cout << "### Reconnecting to DMR server\n";
-} /* DmrLogic::reconnect */
+  cout << "### Reconnecting to Rewind server\n";
+} /* RewindLogic::reconnect */
 
 
-void DmrLogic::allEncodedSamplesFlushed(void)
+void RewindLogic::allEncodedSamplesFlushed(void)
 {
-} /* DmrLogic::allEncodedSamplesFlushed */
+} /* RewindLogic::allEncodedSamplesFlushed */
 
 
-void DmrLogic::pingHandler(Async::Timer *t)
+void RewindLogic::pingHandler(Async::Timer *t)
 {
   // cout << "PING timeout\n";
-  sendPing();
-} /* DmrLogic::heartbeatHandler */
+  sendKeepAlive();
+} /* RewindLogic::heartbeatHandler */
 
 
-void DmrLogic::sendPing(void)
+void RewindLogic::sendVersionData(void)
 {
-  std::string p_msg = "MSTPING";
-  p_msg += m_id;
-  sendMsg(p_msg);
+  RewindVersionData *vd;
+  RewindData *rd;
+  
+   // the appication ID number provided by 
+   // Brandmeister sysops
+  vd->number = strtoul(m_t_id.c_str()); 
+  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION;
+  vd->description = m_swid;
 
+  size_t len = sizeof(struct RewindVersionData) + m_swid.length();
+
+  rd->type = htole16(REWIND_TYPE_KEEP_ALIVE);
+  rd->flags = htole16(REWIND_FLAG_NONE);
+  rd->number = htole32(++sequenceNumber);
+  rd->length = htole16(len);
+  len += sizeof(struct RewindData);
+  
+  sendMsg(rd, len);
   m_ping_timer.reset();
-} /* DmrLogic::sendPing */
+  
+} /* RewindLogic::sendPing */
 
 
-void DmrLogic::sendPong(void)
+void RewindData::sendServiceData(void)
 {
-  std::string p_msg = "MSTPONG";
-  p_msg += m_id;
-  sendMsg(p_msg);
-} /* DmrLogic::sendPong */
+  
+
+} /* RewindData::sendServiceData */
 
 
-void DmrLogic::sendCloseMessage(void)
+void RewindLogic::sendKeepAlive(void)
 {
-  std::string p_msg = "RPTCL";
-  p_msg += m_id;
-  sendMsg(p_msg);
+   RewindData *vd;
+   vd->type = htole16(REWIND_TYPE_KEEP_ALIVE);
+   vd->flags = htole16(REWIND_FLAG_NONE);
+   vd->number = htole32(++sequenceNumber);
+   vd->length = htobe16(length);
+   
+   len += sizeof(struct RewindData);
+} /* RewindLogic::sendPong */
 
+
+void RewindLogic::sendCloseMessage(void)
+{
   m_state = DISCONNECTED;
   m_ping_timer.setEnable(false);
-} /* DmrLogic::sendCloseMessage */
+} /* RewindLogic::sendCloseMessage */
 
 
-void DmrLogic::sendConfiguration(void)
+void RewindLogic::sendConfiguration(void)
 {
   std::string p_msg = "RPTC";
   p_msg += m_callsign;
@@ -660,7 +622,7 @@ void DmrLogic::sendConfiguration(void)
 }
 
 
-void DmrLogic::handleDataMessage(std::string dmessage)
+void RewindLogic::handleDataMessage(std::string dmessage)
 {
   char const *dmsg = dmessage.c_str();
   int m_sid = atoi(&dmsg[0]); // squence number
@@ -681,9 +643,9 @@ void DmrLogic::handleDataMessage(std::string dmessage)
   //int datatype =
   //int voiceseq =
   //int streamid =
-  //int dmrdata =
+  //int Rewinddata =
 
-} /* DmrLogic::handleDataMessage */
+} /* RewindLogic::handleDataMessage */
 
 /*
  * This file has not been truncated
