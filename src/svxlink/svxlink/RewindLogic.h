@@ -96,42 +96,46 @@ namespace Async
  *
  ****************************************************************************/
 
-#define REWIND_KEEP_ALIVE_INTERVAL   5 
-#define REWIND_SIGN_LENGTH           8 
-#define REWIND_PROTOCOL_SIGN         "REWIND01" 
-#define REWIND_CLASS_REWIND_CONTROL  0x0000 
-#define REWIND_CLASS_SYSTEM_CONSOLE  0x0100 
-#define REWIND_CLASS_SERVER_NOTICE   0x0200 
-#define REWIND_CLASS_DEVICE_DATA     0x0800 
-#define REWIND_CLASS_APPLICATION     0x0900 
-#define REWIND_CLASS_KAIROS_DATA     (REWIND_CLASS_DEVICE_DATA + 0x00) 
-#define REWIND_CLASS_HYTERA_DATA     (REWIND_CLASS_DEVICE_DATA + 0x10) 
-#define REWIND_TYPE_KEEP_ALIVE       (REWIND_CLASS_REWIND_CONTROL + 0) 
-#define REWIND_TYPE_CLOSE            (REWIND_CLASS_REWIND_CONTROL + 1) 
-#define REWIND_TYPE_CHALLENGE        (REWIND_CLASS_REWIND_CONTROL + 2) 
-#define REWIND_TYPE_AUTHENTICATION   (REWIND_CLASS_REWIND_CONTROL + 3) 
-#define REWIND_TYPE_REPORT           (REWIND_CLASS_SYSTEM_CONSOLE + 0) 
-#define REWIND_TYPE_BUSY_NOTICE      (REWIND_CLASS_SERVER_NOTICE + 0) 
-#define REWIND_TYPE_ADDRESS_NOTICE   (REWIND_CLASS_SERVER_NOTICE + 1) 
-#define REWIND_TYPE_BINDING_NOTICE   (REWIND_CLASS_SERVER_NOTICE + 2) 
-#define REWIND_TYPE_EXTERNAL_SERVER  (REWIND_CLASS_KAIROS_DATA + 0) 
-#define REWIND_TYPE_REMOTE_CONTROL   (REWIND_CLASS_KAIROS_DATA + 1) 
-#define REWIND_TYPE_SNMP_TRAP        (REWIND_CLASS_KAIROS_DATA + 2) 
-#define REWIND_TYPE_PEER_DATA        (REWIND_CLASS_HYTERA_DATA + 0) 
-#define REWIND_TYPE_RDAC_DATA        (REWIND_CLASS_HYTERA_DATA + 1) 
-#define REWIND_TYPE_MEDIA_DATA       (REWIND_CLASS_HYTERA_DATA + 2) 
-#define REWIND_TYPE_SUBSCRIPTION     (REWIND_CLASS_APPLICATION + 0x00) 
-#define REWIND_TYPE_DMR_DATA_BASE    (REWIND_CLASS_APPLICATION + 0x10) 
-#define REWIND_TYPE_DMR_AUDIO_FRAME  (REWIND_CLASS_APPLICATION + 0x20) 
-#define REWIND_FLAG_NONE             0 
-#define REWIND_FLAG_REAL_TIME_1      (1 << 0) 
-#define REWIND_FLAG_REAL_TIME_2      (1 << 1) 
-#define REWIND_FLAG_DEFAULT_SET      REWIND_FLAG_NONE 
-#define REWIND_ROLE_REPEATER_AGENT   0x10 
-#define REWIND_ROLE_APPLICATION      0x20 
-#define REWIND_SERVICE_CRONOS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 0) 
-#define REWIND_SERVICE_TELLUS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 1) 
-#define REWIND_SERVICE_SIMPLE_APPLICATION  (REWIND_ROLE_APPLICATION    + 0) 
+#define REWIND_KEEP_ALIVE_INTERVAL   5
+#define REWIND_SIGN_LENGTH           8
+#define REWIND_PROTOCOL_SIGN         "REWIND01"
+#define REWIND_CLASS_REWIND_CONTROL  0x0000
+#define REWIND_CLASS_SYSTEM_CONSOLE  0x0100
+#define REWIND_CLASS_SERVER_NOTICE   0x0200
+#define REWIND_CLASS_DEVICE_DATA     0x0800
+#define REWIND_CLASS_APPLICATION     0x0900
+#define REWIND_CLASS_KAIROS_DATA     (REWIND_CLASS_DEVICE_DATA + 0x00)
+#define REWIND_CLASS_HYTERA_DATA     (REWIND_CLASS_DEVICE_DATA + 0x10)
+#define REWIND_TYPE_KEEP_ALIVE       (REWIND_CLASS_REWIND_CONTROL + 0)
+#define REWIND_TYPE_CLOSE            (REWIND_CLASS_REWIND_CONTROL + 1)
+#define REWIND_TYPE_CHALLENGE        (REWIND_CLASS_REWIND_CONTROL + 2)
+#define REWIND_TYPE_AUTHENTICATION   (REWIND_CLASS_REWIND_CONTROL + 3)
+#define REWIND_TYPE_REPORT           (REWIND_CLASS_SYSTEM_CONSOLE + 0)
+#define REWIND_TYPE_BUSY_NOTICE      (REWIND_CLASS_SERVER_NOTICE + 0)
+#define REWIND_TYPE_ADDRESS_NOTICE   (REWIND_CLASS_SERVER_NOTICE + 1)
+#define REWIND_TYPE_BINDING_NOTICE   (REWIND_CLASS_SERVER_NOTICE + 2)
+#define REWIND_TYPE_EXTERNAL_SERVER  (REWIND_CLASS_KAIROS_DATA + 0)
+#define REWIND_TYPE_REMOTE_CONTROL   (REWIND_CLASS_KAIROS_DATA + 1)
+#define REWIND_TYPE_SNMP_TRAP        (REWIND_CLASS_KAIROS_DATA + 2)
+#define REWIND_TYPE_PEER_DATA        (REWIND_CLASS_HYTERA_DATA + 0)
+#define REWIND_TYPE_RDAC_DATA        (REWIND_CLASS_HYTERA_DATA + 1)
+#define REWIND_TYPE_MEDIA_DATA       (REWIND_CLASS_HYTERA_DATA + 2)
+#define REWIND_TYPE_SUBSCRIPTION     (REWIND_CLASS_APPLICATION + 0x00)
+#define REWIND_TYPE_DMR_DATA_BASE    (REWIND_CLASS_APPLICATION + 0x10)
+#define REWIND_TYPE_DMR_AUDIO_FRAME  (REWIND_CLASS_APPLICATION + 0x20)
+#define REWIND_TYPE_DMR_EMBEDDED_DATA (REWIND_CLASS_APPLICATION + 0x27)
+#define REWIND_TYPE_SUPER_HEADER      (REWIND_CLASS_APPLICATION + 0x28)
+#define REWIND_TYPE_FAILURE_CODE      (REWIND_CLASS_APPLICATION + 0x29)
+#define REWIND_FLAG_NONE             0
+#define REWIND_FLAG_REAL_TIME_1      (1 << 0)
+#define REWIND_FLAG_REAL_TIME_2      (1 << 1)
+#define REWIND_FLAG_DEFAULT_SET      REWIND_FLAG_NONE
+#define REWIND_ROLE_REPEATER_AGENT   0x10
+#define REWIND_ROLE_APPLICATION      0x20
+#define REWIND_SERVICE_CRONOS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 0)
+#define REWIND_SERVICE_TELLUS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 1)
+#define REWIND_SERVICE_SIMPLE_APPLICATION  (REWIND_ROLE_APPLICATION    + 0)
+#define SHA256_DIGEST_LENGTH    32
 
 /****************************************************************************
  *
@@ -194,27 +198,27 @@ class RewindLogic : public LogicBase
     struct RewindVersionData
     {
       uint32_t number;
-      uint8_t port;
+      uint8_t service;
       char description[0];
     };
-    
+
     struct RewindAddressData
     {
       struct in_addr address;
       uint16_t port;
     };
-    
+
     struct RewindBindingData
     {
       uint16_t port;
     };
-    
+
     struct RewindSubscriptionData
     {
       uint32_t type;
       uint32_t number;
     };
-    
+
     struct RewindData
     {
       char sign[REWIND_SIGN_LENGTH];
@@ -224,8 +228,6 @@ class RewindLogic : public LogicBase
       uint16_t length;
       uint8_t data[0];
     };
-    
-    RewindData *rd;
 
     enum STATUS {
       DISCONNECTED,
@@ -261,10 +263,10 @@ class RewindLogic : public LogicBase
     std::string           m_height;
     std::string           m_location;
     std::string           m_description;
-    std::string           m_url;
     std::string           m_swid;
-    std::string           m_pack;
-    int                   seqId;
+    std::string           m_tg;
+
+    int                   sequenceNumber;
     bool                  m_slot1;
     bool                  m_slot2;
 
@@ -276,7 +278,7 @@ class RewindLogic : public LogicBase
     void flushEncodedAudio(void);
     void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendMsg(std::string msg, size_t len);
+    void sendMsg(RewindData *rd, size_t len);
     void connect(void);
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
@@ -284,11 +286,12 @@ class RewindLogic : public LogicBase
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t);
     void pingHandler(Async::Timer *t);
-    void authenticate(const string pass);
+    void authenticate(const std::string pass);
     void sendKeepAlive(void);
-    void sendVersionData(void);
-    void sendCloseMessagee(void);
+    void sendServiceData(void);
+    void sendCloseMessage(void);
     void sendConfiguration(void);
+    void mkSHA256(std::string pass, int len, uint8_t hash[]);
     void handleDataMessage(std::string datamessage);
 
 };  /* class RewindLogic */

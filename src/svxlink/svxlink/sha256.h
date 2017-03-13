@@ -1,53 +1,34 @@
+/*********************************************************************
+* Filename:   sha256.h
+* Author:     Brad Conte (brad AT bradconte.com)
+* Copyright:
+* Disclaimer: This code is presented "as is" without any guarantees.
+* Details:    Defines the API for the corresponding SHA1 implementation.
+*********************************************************************/
+
 #ifndef SHA256_H
 #define SHA256_H
-#include <string>
 
-class SHA256
-{
-protected:
-    typedef unsigned char uint8;
-    typedef unsigned int uint32;
-    typedef unsigned long long uint64;
+/*************************** HEADER FILES ***************************/
+#include <stddef.h>
 
-    const static uint32 sha256_k[];
-    static const unsigned int SHA224_256_BLOCK_SIZE = (512/8);
-public:
-    void init();
-    void update(const unsigned char *message, unsigned int len);
-    void final(unsigned char *digest);
-    static const unsigned int DIGEST_SIZE = ( 256 / 8);
+/****************************** MACROS ******************************/
+#define SHA256_BLOCK_SIZE 32            // SHA256 outputs a 32 byte digest
 
-protected:
-    void transform(const unsigned char *message, unsigned int block_nb);
-    unsigned int m_tot_len;
-    unsigned int m_len;
-    unsigned char m_block[2*SHA224_256_BLOCK_SIZE];
-    uint32 m_h[8];
-};
+/**************************** DATA TYPES ****************************/
+typedef unsigned char BYTE;      // 8-bit byte
+typedef unsigned int  WORD;      // 32-bit word, change to "long" for 16-bit machines
 
-std::string sha256(std::string input);
+typedef struct {
+	BYTE data[64];
+	WORD datalen;
+	unsigned long long bitlen;
+	WORD state[8];
+} SHA256_CTX;
 
-#define SHA2_SHFR(x, n)    (x >> n)
-#define SHA2_ROTR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define SHA2_ROTL(x, n)   ((x << n) | (x >> ((sizeof(x) << 3) - n)))
-#define SHA2_CH(x, y, z)  ((x & y) ^ (~x & z))
-#define SHA2_MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
-#define SHA256_F1(x) (SHA2_ROTR(x,  2) ^ SHA2_ROTR(x, 13) ^ SHA2_ROTR(x, 22))
-#define SHA256_F2(x) (SHA2_ROTR(x,  6) ^ SHA2_ROTR(x, 11) ^ SHA2_ROTR(x, 25))
-#define SHA256_F3(x) (SHA2_ROTR(x,  7) ^ SHA2_ROTR(x, 18) ^ SHA2_SHFR(x,  3))
-#define SHA256_F4(x) (SHA2_ROTR(x, 17) ^ SHA2_ROTR(x, 19) ^ SHA2_SHFR(x, 10))
-#define SHA2_UNPACK32(x, str)                 \
-{                                             \
-    *((str) + 3) = (uint8) ((x)      );       \
-    *((str) + 2) = (uint8) ((x) >>  8);       \
-    *((str) + 1) = (uint8) ((x) >> 16);       \
-    *((str) + 0) = (uint8) ((x) >> 24);       \
-}
-#define SHA2_PACK32(str, x)                   \
-{                                             \
-    *(x) =   ((uint32) *((str) + 3)      )    \
-           | ((uint32) *((str) + 2) <<  8)    \
-           | ((uint32) *((str) + 1) << 16)    \
-           | ((uint32) *((str) + 0) << 24);   \
-}
-#endif
+/*********************** FUNCTION DECLARATIONS **********************/
+void sha256_init(SHA256_CTX *ctx);
+void sha256_update(SHA256_CTX *ctx, unsigned char data[], size_t len);
+void sha256_final(SHA256_CTX *ctx, uint8_t hash[]);
+
+#endif   // SHA256_H

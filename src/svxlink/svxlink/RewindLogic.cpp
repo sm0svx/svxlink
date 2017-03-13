@@ -83,6 +83,7 @@ using namespace Async;
 
 
 
+
 /****************************************************************************
  *
  * Local class definitions
@@ -124,9 +125,10 @@ using namespace Async;
 
 RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0),
-    m_auth_key("passw0rd"),Rewind_host(""), Rewind_port(62032),
-    m_callsign("N0CALL"), m_id(""), m_ping_timer(10000,
-    Timer::TYPE_PERIODIC, false), m_slot1(false), m_slot2(false)
+    m_auth_key("passw0rd"), rewind_host(""), rewind_port(54005),
+    m_callsign("N0CALL"), m_id(""), m_ping_timer(5000,
+    Timer::TYPE_PERIODIC, false), m_tg("9"), sequenceNumber(0),
+    m_slot1(false), m_slot2(false)
 {
 } /* RewindLogic::RewindLogic */
 
@@ -142,14 +144,14 @@ RewindLogic::~RewindLogic(void)
 
 bool RewindLogic::initialize(void)
 {
-  if (!cfg().getValue(name(), "HOST", Rewind_host))
+  if (!cfg().getValue(name(), "HOST", rewind_host))
   {
     cerr << "*** ERROR: " << name() << "/HOST missing in configuration"
          << endl;
     return false;
   }
 
-  cfg().getValue(name(), "PORT", Rewind_port);
+  cfg().getValue(name(), "PORT", rewind_port);
 
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
@@ -157,27 +159,22 @@ bool RewindLogic::initialize(void)
          << endl;
     return false;
   }
-  while (m_callsign.length() < 8)
-  {
-    m_callsign += ' ';
-  }
 
-  string m_t_id;
-  if (!cfg().getValue(name(), "ID", m_t_id))
+  if (!cfg().getValue(name(), "ID", m_id))
   {
     cerr << "*** ERROR: " << name() << "/ID missing in configuration"
          << endl;
     return false;
   }
 
-  if (m_t_id.length() < 6 || m_t_id.length() > 7)
+  if (m_id.length() < 6 || m_id.length() > 7)
   {
     cerr << "*** ERROR: " << name() << "/ID is wrong, must have 6 or 7 digits,"
          << "e.g. ID=2620001" << endl;
     return false;
   }
   stringstream ss;
-  ss << std::setfill('0') << std::setw(8) << std::hex << atoi(m_t_id.c_str());
+  ss << std::setfill('0') << std::setw(8) << std::hex << atoi(m_id.c_str());
   m_id = ss.str();
   std::transform(m_id.begin(), m_id.end(), m_id.begin(), ::toupper);
 
@@ -298,11 +295,6 @@ bool RewindLogic::initialize(void)
          << endl;
     return false;
   }
-  while (m_description.length() < 20)
-  {
-    m_description += ' ';
-  }
-
     // configure the time slots
   string slot;
   if (cfg().getValue(name(), "SLOT1", slot))
@@ -312,6 +304,10 @@ bool RewindLogic::initialize(void)
   if (cfg().getValue(name(), "SLOT2", slot))
   {
     m_slot2 = true;
+  }
+  if (cfg().getValue(name(), "TG", m_tg))
+  {
+    m_tg = "9";
   }
 
   m_swid += "linux:SvxLink v";
@@ -391,12 +387,12 @@ void RewindLogic::connect(void)
 
   if (ip_addr.isEmpty())
   {
-    dns = new DnsLookup(Rewind_host);
+    dns = new DnsLookup(rewind_host);
     dns->resultsReady.connect(mem_fun(*this, &RewindLogic::dnsResultsReady));
     return;
   }
 
-  cout << name() << ": create UDP socket on port " << Rewind_port << endl;
+  cout << name() << ": create UDP socket on port " << rewind_port << endl;
 
   delete m_udp_sock;
   m_udp_sock = new Async::UdpSocket();
@@ -404,7 +400,7 @@ void RewindLogic::connect(void)
       mem_fun(*this, &RewindLogic::onDataReceived));
 
    // session initiated by a simple REWIND_TYPE_KEEP_ALIVE message
-  sendPing();
+  sendKeepAlive();
 
   m_state = CONNECTING;
   m_ping_timer.setEnable(true);
@@ -454,9 +450,9 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
        << addr << " port=" << port << " count=" << count << endl;
 
-  rd = reinterpret_cast<RewindData*>(buf);
-  
-  switch rd->type
+  RewindData *rd = reinterpret_cast<RewindData*>(buf);
+
+  switch (rd->type)
   {
     case REWIND_TYPE_REPORT:
       return;
@@ -465,22 +461,22 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       cout << "--- Authentication" << endl;
       authenticate(m_auth_key);
       return;
-      
+
     case REWIND_TYPE_CLOSE:
       cout << "*** Disconnect request received." << endl;
       m_state = DISCONNECTED;
       m_ping_timer.setEnable(false);
       return;
-      
+
     case REWIND_TYPE_KEEP_ALIVE:
-      sendPing();
+      sendKeepAlive();
       return;
-    
+
     case REWIND_TYPE_FAILURE_CODE:
       cout << "*** ERROR: sourceCall or destinationCall could not be "
            << "resolved during processing." << endl;
       return;
-      
+
     default:
       cout << "*** Unknown data received" << endl;
   }
@@ -489,16 +485,13 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
 void RewindLogic::authenticate(const string pass)
 {
-  RewindData *srd;
+  struct RewindData *srd = {};
   srd->type = htole16(REWIND_TYPE_AUTHENTICATION);
   srd->flags = htole16(REWIND_FLAG_NONE);
-  srd->number = htole32(++sequenceNumber);
   srd->length = htole16(SHA256_DIGEST_LENGTH);
-  srd->data = 
-   
-  std::string p_msg = sha256(pass);
 
-  cout << "### sending: " << p_msg << endl;
+  mkSHA256(pass.c_str(), (int)pass.length(), srd->data);
+
   sendMsg(srd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
 } /* RewindLogic::authPassphrase */
@@ -511,7 +504,7 @@ void RewindLogic::sendMsg(RewindData *rd, size_t len)
   {
     if (!dns)
     {
-      dns = new DnsLookup(Rewind_host);
+      dns = new DnsLookup(rewind_host);
       dns->resultsReady.connect(mem_fun(*this, &RewindLogic::dnsResultsReady));
     }
     return;
@@ -523,10 +516,12 @@ void RewindLogic::sendMsg(RewindData *rd, size_t len)
     return;
   }
 
-  cout << "### sending udp packet to " << ip_addr.toString()
-       << ":" << rewind_port << " size=" << length << endl;
+  rd->number = htole32(++sequenceNumber);
 
-  m_udp_sock->write(ip_addr, rewind_port, rd, length);
+  cout << "### sending udp packet to " << ip_addr.toString()
+       << ":" << rewind_port << ", length=" << len << endl;
+
+  m_udp_sock->write(ip_addr, rewind_port, rd, len);
 } /* RewindLogic::sendUdpMsg */
 
 
@@ -548,48 +543,35 @@ void RewindLogic::pingHandler(Async::Timer *t)
 } /* RewindLogic::heartbeatHandler */
 
 
-void RewindLogic::sendVersionData(void)
+void RewindLogic::sendKeepAlive(void)
 {
-  RewindVersionData *vd;
-  RewindData *rd;
-  
-   // the appication ID number provided by 
-   // Brandmeister sysops
-  vd->number = strtoul(m_t_id.c_str()); 
-  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION;
-  vd->description = m_swid;
+  struct RewindVersionData *vd = {};
+  struct RewindData *rd = {};
 
-  size_t len = sizeof(struct RewindVersionData) + m_swid.length();
+   // the appication ID number provided by
+   // Brandmeister sysops
+  vd->number = strtoul(m_id.c_str(), NULL, 0);
+  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION;
+  size_t len = sprintf(vd->description, "%s", m_swid.c_str());
+
+  len = sizeof(struct RewindVersionData) + m_swid.length();
 
   rd->type = htole16(REWIND_TYPE_KEEP_ALIVE);
   rd->flags = htole16(REWIND_FLAG_NONE);
-  rd->number = htole32(++sequenceNumber);
   rd->length = htole16(len);
   len += sizeof(struct RewindData);
-  
+
   sendMsg(rd, len);
   m_ping_timer.reset();
-  
+
 } /* RewindLogic::sendPing */
 
 
-void RewindData::sendServiceData(void)
+void RewindLogic::sendServiceData(void)
 {
-  
+
 
 } /* RewindData::sendServiceData */
-
-
-void RewindLogic::sendKeepAlive(void)
-{
-   RewindData *vd;
-   vd->type = htole16(REWIND_TYPE_KEEP_ALIVE);
-   vd->flags = htole16(REWIND_FLAG_NONE);
-   vd->number = htole32(++sequenceNumber);
-   vd->length = htobe16(length);
-   
-   len += sizeof(struct RewindData);
-} /* RewindLogic::sendPong */
 
 
 void RewindLogic::sendCloseMessage(void)
@@ -601,49 +583,27 @@ void RewindLogic::sendCloseMessage(void)
 
 void RewindLogic::sendConfiguration(void)
 {
-  std::string p_msg = "RPTC";
-  p_msg += m_callsign;
-  p_msg += m_id;
-  p_msg += m_rxfreq;
-  p_msg += m_txfreq;
-  p_msg += m_power;
-  p_msg += m_color;
-  p_msg += m_lat;
-  p_msg += m_lon;
-  p_msg += m_height;
-  p_msg += m_location;
-  p_msg += m_description;
-  p_msg += m_url;
-  p_msg += m_swid;
-  p_msg += m_pack;
-  cout << "--- sending configuration: " << p_msg << endl;
-  cout << "laenge: " << p_msg.length() << endl;
-  sendMsg(p_msg);
-}
+
+} /* RewindLogic::sendConfiguration */
+
+
+void RewindLogic::mkSHA256(std::string pass, int len, uint8_t hash[])
+{
+  uint8_t t_hash;
+  SHA256_CTX context;
+  sha256_init(&context);
+
+  size_t pl = pass.length();
+  unsigned char pbuf[pl];
+
+  copy(pass.begin(), pass.end(), pbuf);
+  sha256_update(&context, pbuf, pl);
+  sha256_final(&context, &t_hash);
+} /* RewindLogic:mkSha256*/
 
 
 void RewindLogic::handleDataMessage(std::string dmessage)
 {
-  char const *dmsg = dmessage.c_str();
-  int m_sid = atoi(&dmsg[0]); // squence number
-
-  if (++seqId != m_sid)
-  {
-    cout << "WARNING: Wrong sequence number " << seqId << "!="
-         << m_sid << endl;
-    seqId = m_sid;
-  }
-
-  //int srcId =
-  //int dstId =
-  //int rptId =
-  //int slot = &dmsg[12] & 0x80;
-  //int calltype = &dmsg[12] & 0x40;
-  //int frametype = &dmsg[12] & 0x30;
-  //int datatype =
-  //int voiceseq =
-  //int streamid =
-  //int Rewinddata =
 
 } /* RewindLogic::handleDataMessage */
 
