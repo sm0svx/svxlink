@@ -124,11 +124,11 @@ using namespace Async;
  ****************************************************************************/
 
 RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_state(DISCONNECTED), m_udp_sock(0),
-    m_auth_key("passw0rd"), rewind_host(""), rewind_port(54005),
-    m_callsign("N0CALL"), m_id(""), m_ping_timer(5000,
-    Timer::TYPE_PERIODIC, false), m_tg("9"), sequenceNumber(0),
-    m_slot1(false), m_slot2(false)
+  : LogicBase(cfg, name),
+    m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
+    rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
+    m_id(""), m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
+    m_tg("9"), sequenceNumber(0), m_slot1(false), m_slot2(false)
 {
 } /* RewindLogic::RewindLogic */
 
@@ -362,6 +362,9 @@ bool RewindLogic::initialize(void)
     return false;
   }
 
+  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+
+   // connect the master server
   connect();
   return true;
 } /* RewindLogic::initialize */
@@ -450,7 +453,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
        << addr << " port=" << port << " count=" << count << endl;
 
-  RewindData *rd = reinterpret_cast<RewindData*>(buf);
+  rd = reinterpret_cast<RewindData*>(buf);
 
   switch (rd->type)
   {
@@ -546,10 +549,7 @@ void RewindLogic::pingHandler(Async::Timer *t)
 void RewindLogic::sendKeepAlive(void)
 {
   struct RewindVersionData *vd = {};
-  struct RewindData *rd = {};
 
-   // the appication ID number provided by
-   // Brandmeister sysops
   vd->number = strtoul(m_id.c_str(), NULL, 0);
   vd->service = REWIND_SERVICE_SIMPLE_APPLICATION;
   size_t len = sprintf(vd->description, "%s", m_swid.c_str());

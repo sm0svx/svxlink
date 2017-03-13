@@ -229,6 +229,8 @@ class RewindLogic : public LogicBase
       uint8_t data[0];
     };
 
+    RewindData *rd;
+
     enum STATUS {
       DISCONNECTED,
       CONNECTING,
