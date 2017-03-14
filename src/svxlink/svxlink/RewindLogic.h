@@ -136,6 +136,7 @@ namespace Async
 #define REWIND_SERVICE_TELLUS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 1)
 #define REWIND_SERVICE_SIMPLE_APPLICATION  (REWIND_ROLE_APPLICATION    + 0)
 #define SHA256_DIGEST_LENGTH    32
+#define BUFFER_SIZE        2048
 
 /****************************************************************************
  *
@@ -199,7 +200,7 @@ class RewindLogic : public LogicBase
     {
       uint32_t number;
       uint8_t service;
-      std::string description;
+      char description[];
     };
 
     struct RewindAddressData
@@ -229,7 +230,7 @@ class RewindLogic : public LogicBase
       uint8_t data[];
     };
 
-    RewindData rd;
+    //struct RewindData* rd;
 
     enum STATUS {
       DISCONNECTED,
@@ -280,7 +281,7 @@ class RewindLogic : public LogicBase
     void flushEncodedAudio(void);
     void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendMsg(RewindData rd, size_t len);
+    void sendMsg(struct RewindData* rd, size_t len);
     void connect(void);
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
