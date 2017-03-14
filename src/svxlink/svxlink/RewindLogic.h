@@ -199,7 +199,7 @@ class RewindLogic : public LogicBase
     {
       uint32_t number;
       uint8_t service;
-      char description[0];
+      std::string description;
     };
 
     struct RewindAddressData
@@ -226,10 +226,10 @@ class RewindLogic : public LogicBase
       uint16_t flags;
       uint32_t number;
       uint16_t length;
-      uint8_t data[0];
+      uint8_t data[];
     };
 
-    RewindData *rd;
+    RewindData rd;
 
     enum STATUS {
       DISCONNECTED,
@@ -280,7 +280,7 @@ class RewindLogic : public LogicBase
     void flushEncodedAudio(void);
     void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void sendMsg(RewindData *rd, size_t len);
+    void sendMsg(RewindData rd, size_t len);
     void connect(void);
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);

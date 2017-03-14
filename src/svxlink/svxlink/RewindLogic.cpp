@@ -1,6 +1,6 @@
 /**
 @file	 RewindLogic.cpp
-@brief   A_brief_description_for_this_file
+@brief   A class to connect a brandmeiseter server with UDP
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
 @date	 2017-02-12
 
@@ -127,8 +127,8 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name),
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
     rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
-    m_id(""), m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
-    m_tg("9"), sequenceNumber(0), m_slot1(false), m_slot2(false)
+    m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
+    sequenceNumber(0), m_slot1(false), m_slot2(false)
 {
 } /* RewindLogic::RewindLogic */
 
@@ -317,6 +317,7 @@ bool RewindLogic::initialize(void)
   m_ping_timer.expired.connect(
      mem_fun(*this, &RewindLogic::pingHandler));
 
+
   // create the Rewind recoder device, DV3k USB stick or DSD lib
   string m_ambe_handler;
   if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
@@ -357,15 +358,18 @@ bool RewindLogic::initialize(void)
     }
   }
 
+
+
   if (!LogicBase::initialize())
   {
     return false;
   }
 
-  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  memcpy(rd.sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
 
    // connect the master server
   connect();
+
   return true;
 } /* RewindLogic::initialize */
 
@@ -453,11 +457,12 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
   cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
        << addr << " port=" << port << " count=" << count << endl;
 
-  rd = reinterpret_cast<RewindData*>(buf);
+  rd = *reinterpret_cast<RewindData*>(buf);
 
-  switch (rd->type)
+  switch (rd.type)
   {
     case REWIND_TYPE_REPORT:
+      cout << "--- server message: " << rd.data << endl;
       return;
 
     case REWIND_TYPE_CHALLENGE:
@@ -488,19 +493,19 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
 void RewindLogic::authenticate(const string pass)
 {
-  struct RewindData *srd = {};
-  srd->type = htole16(REWIND_TYPE_AUTHENTICATION);
-  srd->flags = htole16(REWIND_FLAG_NONE);
-  srd->length = htole16(SHA256_DIGEST_LENGTH);
+  struct RewindData srd = {};
+  srd.type = htole16(REWIND_TYPE_AUTHENTICATION);
+  srd.flags = htole16(REWIND_FLAG_NONE);
+  srd.length = htole16(SHA256_DIGEST_LENGTH);
 
-  mkSHA256(pass.c_str(), (int)pass.length(), srd->data);
+  mkSHA256(pass.c_str(), (int)pass.length(), srd.data);
 
   sendMsg(srd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
 } /* RewindLogic::authPassphrase */
 
 
-void RewindLogic::sendMsg(RewindData *rd, size_t len)
+void RewindLogic::sendMsg(RewindData data, size_t len)
 {
 
   if (ip_addr.isEmpty())
@@ -519,12 +524,16 @@ void RewindLogic::sendMsg(RewindData *rd, size_t len)
     return;
   }
 
-  rd->number = htole32(++sequenceNumber);
+  data.number = htole32(++sequenceNumber);
 
   cout << "### sending udp packet to " << ip_addr.toString()
-       << ":" << rewind_port << ", length=" << len << endl;
+       << ":" << rewind_port << ", length=" << len
+       << " seq: " << sequenceNumber << " type=" << data.type
+       << " inhalt=" << data.number
+       << endl;
 
-  m_udp_sock->write(ip_addr, rewind_port, rd, len);
+
+  m_udp_sock->write(ip_addr, rewind_port, &data, len);
 } /* RewindLogic::sendUdpMsg */
 
 
@@ -548,17 +557,21 @@ void RewindLogic::pingHandler(Async::Timer *t)
 
 void RewindLogic::sendKeepAlive(void)
 {
-  struct RewindVersionData *vd = {};
+  RewindVersionData vd;
 
-  vd->number = strtoul(m_id.c_str(), NULL, 0);
-  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION;
-  size_t len = sprintf(vd->description, "%s", m_swid.c_str());
+  vd.number = strtoul(m_id.c_str(), NULL, 0);
+  vd.service = REWIND_SERVICE_SIMPLE_APPLICATION;
+  vd.description = m_swid;
 
-  len = sizeof(struct RewindVersionData) + m_swid.length();
+  int len = m_swid.length();
 
-  rd->type = htole16(REWIND_TYPE_KEEP_ALIVE);
-  rd->flags = htole16(REWIND_FLAG_NONE);
-  rd->length = htole16(len);
+  len += sizeof(struct RewindVersionData) + m_swid.length();
+
+  RewindData rd;
+
+  rd.type = htole16(REWIND_TYPE_KEEP_ALIVE);
+  rd.flags = htole16(REWIND_FLAG_NONE);
+  rd.length = htole16(len);
   len += sizeof(struct RewindData);
 
   sendMsg(rd, len);
@@ -569,13 +582,15 @@ void RewindLogic::sendKeepAlive(void)
 
 void RewindLogic::sendServiceData(void)
 {
-
-
 } /* RewindData::sendServiceData */
 
 
 void RewindLogic::sendCloseMessage(void)
 {
+  RewindData trd = {};
+  trd.type = REWIND_TYPE_CLOSE;
+  sendMsg(trd, sizeof(struct RewindData));
+
   m_state = DISCONNECTED;
   m_ping_timer.setEnable(false);
 } /* RewindLogic::sendCloseMessage */
