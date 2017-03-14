@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -41,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -79,93 +80,57 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class Async::AudioSelector::Branch : public AudioPassthrough
+class AudioSelector::Branch : public AudioSink, public sigc::trackable
 {
   public:
-    Branch(AudioSelector *selector, AudioSource *source)
-      : selector(selector), auto_select(false), prio(0)
+    Branch(void)
+      : m_state(STATE_IDLE), m_prio(0), m_autoselect(false), m_flush_wait(true)
     {
     }
-    
-    void setSelectionPrio(int prio)
-    {
-      this->prio = prio;
-    }
-    
-    int selectionPrio(void) const
-    {
-      return prio;
-    }
-    
-    void enableAutoSelect(void)
-    {
-      auto_select = true;
-    }
-    
-    void disableAutoSelect(void)
-    {
-      auto_select = false;
-      if (isSelected())
-      {
-      	selector->selectBranch(0);
-      }
-    }
-    
-    bool autoSelectEnabled(void) const
-    {
-      return auto_select;
-    }
-    
-    bool isSelected(void) const
-    {
-      return selector->handler() == this;
-    }
-    
+
+    State state(void) const { return m_state; }
+    void setSelectionPrio(int prio) { m_prio = prio; }
+    int selectionPrio(void) const { return m_prio; }
+    void enableAutoSelect(void) { m_autoselect = true; }
+    void disableAutoSelect(void) { m_autoselect = false; }
+    bool autoSelectEnabled(void) const { return m_autoselect; }
+    void setFlushWait(bool flush_wait) { m_flush_wait = flush_wait; }
+    bool flushWait(void) const { return m_flush_wait; }
+
     virtual int writeSamples(const float *samples, int count)
     {
-      if (auto_select && !isSelected())
+      m_state = STATE_ACTIVE;
+      int ret = sigWriteSamples(const_cast<float *>(samples), count);
+      if (ret <= 0)
       {
-	Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
-	assert(selected_branch != 0);
-	if (selected_branch->selectionPrio() < prio)
-	{
-	  selector->selectBranch(this);
-	}
+        m_state = STATE_STOPPED;
       }
-      return AudioPassthrough::writeSamples(samples, count);
-    }    
-
-    virtual void allSamplesFlushed(void)
-    {
-      if (auto_select && isSelected())
-      {
-      	selector->selectBranch(0);
-      }
-      AudioPassthrough::allSamplesFlushed();
+      return ret;
     }
-    
-  
+
+    virtual void flushSamples(void)
+    {
+      m_state = STATE_FLUSHING;
+      sigFlushSamples();
+    }
+
+    void resumeOutput(void) { sourceResumeOutput(); }
+
+    void allSamplesFlushed(void)
+    {
+      m_state = STATE_IDLE;
+      sourceAllSamplesFlushed();
+    }
+
+    sigc::signal<int, float *, int> sigWriteSamples;
+    sigc::signal<void>              sigFlushSamples;
+
   private:
-    AudioSelector *selector;
-    bool auto_select;
-    int prio;
-    
-}; /* class Async::AudioSelector::Branch */
-
-
-class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
-{
-  public:
-    NullBranch(AudioSelector *selector)
-      : Branch(selector, 0)
-    {
-    }
-    void resumeOutput(void) {}
-    void allSamplesFlushed(void) {}
-
-};
-
-
+    State m_state;
+    int   m_prio;
+    bool  m_autoselect;
+    bool  m_flush_wait;
+}; /* class AudioSelector::Branch */
 
 
 
@@ -201,63 +166,65 @@ class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
  ****************************************************************************/
 
 AudioSelector::AudioSelector(void)
+  : m_selected(0), m_state(STATE_IDLE)
 {
-  null_branch = new NullBranch(this);
-  null_branch->setSelectionPrio(-100000);
-  setHandler(null_branch);
 } /* AudioSelector::AudioSelector */
 
 
 AudioSelector::~AudioSelector(void)
 {
-  //selectSource(0);
-  clearHandler();
+  selectSource(0);
   BranchMap::iterator it;
-  for (it = branch_map.begin(); it != branch_map.end(); ++it)
+  for (it = m_branch_map.begin(); it != m_branch_map.end(); ++it)
   {
     delete (*it).second;
   }
-  delete null_branch;
 } /* AudioSelector::~AudioSelector */
 
 
 void AudioSelector::addSource(Async::AudioSource *source)
 {
-  assert(branch_map.find(source) == branch_map.end());
-  Branch *branch = new Branch(this, source);
+  assert(m_branch_map.find(source) == m_branch_map.end());
+  Branch *branch = new Branch;
   source->registerSink(branch);
-  branch_map[source] = branch;
+  branch->sigWriteSamples.connect(
+      sigc::bind<0>(mem_fun(*this, &AudioSelector::writeSamples), branch));
+  branch->sigFlushSamples.connect(
+      sigc::bind(mem_fun(*this, &AudioSelector::flushSamples), branch));
+  m_branch_map[source] = branch;
 } /* AudioSelector::addSource */
 
 
 void AudioSelector::removeSource(AudioSource *source)
 {
-  assert(branch_map.find(source) != branch_map.end());
-  Branch *branch = branch_map[source];
-  if (branch == handler())
+  BranchMap::iterator it = m_branch_map.find(source);
+  assert(it != m_branch_map.end());
+  Branch *branch = (*it).second;
+  if (branch == m_selected)
   {
     selectBranch(0);
   }
   // FIXME: Erasing a source from the list should be done from a timer
-  branch_map.erase(source);
-  assert(branch_map.find(source) == branch_map.end());
+  m_branch_map.erase(source);
+  assert(m_branch_map.find(source) == m_branch_map.end());
   delete branch;
-  
 } /* AudioSelector::removeSource */
 
 
 void AudioSelector::setSelectionPrio(AudioSource *source, int prio)
 {
-  assert(branch_map.find(source) != branch_map.end());
-  Branch *branch = branch_map[source];
+  BranchMap::iterator it = m_branch_map.find(source);
+  assert(it != m_branch_map.end());
+  Branch *branch = (*it).second;
   branch->setSelectionPrio(prio);
 } /* AudioSelector::setAutoSelectPrio */
 
 
 void AudioSelector::enableAutoSelect(AudioSource *source, int prio)
 {
-  assert(branch_map.find(source) != branch_map.end());
-  Branch *branch = branch_map[source];
+  BranchMap::iterator it = m_branch_map.find(source);
+  assert(it != m_branch_map.end());
+  Branch *branch = (*it).second;
   branch->setSelectionPrio(prio);
   branch->enableAutoSelect();
 } /* AudioSelector::enableAutoSelect */
@@ -265,16 +232,22 @@ void AudioSelector::enableAutoSelect(AudioSource *source, int prio)
 
 void AudioSelector::disableAutoSelect(AudioSource *source)
 {
-  assert(branch_map.find(source) != branch_map.end());
-  Branch *branch = branch_map[source];
+  BranchMap::iterator it = m_branch_map.find(source);
+  assert(it != m_branch_map.end());
+  Branch *branch = (*it).second;
   branch->disableAutoSelect();
+  if (branch == m_selected)
+  {
+    selectBranch(0);
+  }
 } /* AudioSelector::disableAutoSelect */
 
 
 bool AudioSelector::autoSelectEnabled(AudioSource *source)
 {
-  assert(branch_map.find(source) != branch_map.end());
-  const Branch *branch = branch_map[source];
+  BranchMap::iterator it = m_branch_map.find(source);
+  assert(it != m_branch_map.end());
+  Branch *branch = (*it).second;
   return branch->autoSelectEnabled();
 } /* AudioSelector::autoSelectEnabled */
 
@@ -282,22 +255,36 @@ bool AudioSelector::autoSelectEnabled(AudioSource *source)
 void AudioSelector::selectSource(AudioSource *source)
 {
   Branch *branch = 0;
-  
   if (source != 0)
   {
-    assert(branch_map.find(source) != branch_map.end());
-    branch = branch_map[source];
-
-    if (branch == handler())
-    {
-      return;
-    }
+    BranchMap::iterator it = m_branch_map.find(source);
+    assert(it != m_branch_map.end());
+    branch = it->second;
   }
-  
   selectBranch(branch);
-  
 } /* AudioSelector::selectSource */
 
+
+void AudioSelector::setFlushWait(AudioSource *source, bool flush_wait)
+{
+  BranchMap::iterator it = m_branch_map.find(source);
+  assert(it != m_branch_map.end());
+  Branch *branch = (*it).second;
+  branch->setFlushWait(flush_wait);
+} /* AudioSelector::setFlushWait */
+
+
+void AudioSelector::resumeOutput(void)
+{
+  if (m_state == STATE_STOPPED)
+  {
+    m_state = STATE_ACTIVE;
+  }
+  if (m_selected != 0)
+  {
+    m_selected->resumeOutput();
+  }
+} /* AudioSelector::resumeOutput */
 
 
 /****************************************************************************
@@ -306,6 +293,17 @@ void AudioSelector::selectSource(AudioSource *source)
  *
  ****************************************************************************/
 
+void AudioSelector::allSamplesFlushed(void)
+{
+  if (m_state == STATE_FLUSHING)
+  {
+    m_state = STATE_IDLE;
+  }
+  if (m_selected != 0)
+  {
+    m_selected->allSamplesFlushed();
+  }
+} /* AudioSelector::allSamplesFlushed */
 
 
 /****************************************************************************
@@ -314,20 +312,100 @@ void AudioSelector::selectSource(AudioSource *source)
  *
  ****************************************************************************/
 
-void AudioSelector::selectBranch(Branch *branch)
+int AudioSelector::writeSamples(Branch *branch, float *samples, int count)
 {
-  //printf("AudioSelector::selectBranch: branch=%p\n", branch);
-  
-  clearHandler();
-
-  if (branch == 0)
+  if ((branch != m_selected) && branch->autoSelectEnabled() &&
+      ((m_selected == 0 ) ||
+       (branch->selectionPrio() > m_selected->selectionPrio())))
   {
-    setHandler(null_branch);
+    selectBranch(branch);
+  }
+  if (branch == m_selected)
+  {
+    m_state = STATE_ACTIVE;
+    int ret = sinkWriteSamples(samples, count);
+    if (ret <= 0)
+    {
+      m_state = STATE_STOPPED;
+    }
+    return ret;
+  }
+  return count;
+} /* AudioSelector::writeSamples */
+
+
+void AudioSelector::flushSamples(Branch *branch)
+{
+  if (branch == m_selected)
+  {
+    if (branch->flushWait())
+    {
+      m_state = STATE_FLUSHING;
+      sinkFlushSamples();
+    }
+    else
+    {
+      branch->allSamplesFlushed();
+      Branch *new_branch = 0;
+      for (BranchMap::iterator it = m_branch_map.begin();
+           it != m_branch_map.end(); ++it)
+      {
+        Branch *b = (*it).second;
+        if ((b->state() == STATE_ACTIVE) || (b->state() == STATE_STOPPED))
+        {
+          if ((new_branch == 0) ||
+              (b->selectionPrio() > new_branch->selectionPrio()))
+          new_branch = b;
+        }
+      }
+      selectBranch(new_branch);
+    }
     return;
   }
-  
-  setHandler(branch);
+  branch->allSamplesFlushed();
+} /* AudioSelector::flushSamples */
 
+
+void AudioSelector::selectBranch(Branch *branch)
+{
+  if (m_selected == branch)
+  {
+    return;
+  }
+
+  if (m_selected != 0)
+  {
+    Branch *selected = m_selected;
+    m_selected = 0;
+
+    switch (selected->state())
+    {
+      case STATE_STOPPED:
+        selected->resumeOutput();
+        break;
+      case STATE_FLUSHING:
+        selected->allSamplesFlushed();
+        break;
+      default:
+        break;
+    }
+  }
+
+  switch (m_state)
+  {
+    case STATE_ACTIVE:
+    case STATE_STOPPED:
+      if ((branch == 0) || (branch->state() == STATE_IDLE))
+      {
+        m_state = STATE_FLUSHING;
+        sinkFlushSamples();
+      }
+      break;
+    default:
+      break;
+  }
+
+  m_selected = branch;
 } /* AudioSelector::selectBranch */
 
 

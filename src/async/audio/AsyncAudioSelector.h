@@ -170,19 +170,61 @@ class AudioSelector : public AudioSource
      */
     void selectSource(AudioSource *source);
     
-    
+    /**
+     * @brief   Set if this souce want to wait for allSamplesFlushed
+     * @param 	source The audio source to select. 0 = none selected.
+     * @param   flush_wait Set to \em true to wait for flush or else \em false
+     *
+     * Normally after a source signals flush, the audio selector will wait until
+     * the connected sink signals that all samples have been flushed before
+     * any other source with the same or lower priority can be selected.
+     * If flush_wait is set to false, the selector will immediately signal
+     * all samples flushed to the source and if any other source is active,
+     * that source will immediately be switched in without sending a flush
+     * command to the sink.
+     */
+    void setFlushWait(AudioSource *source, bool flush_wait);
+
+    /**
+     * @brief Resume audio output to the sink
+     * 
+     * This function must be reimplemented by the inheriting class. It
+     * will be called when the registered audio sink is ready to accept
+     * more samples.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void resumeOutput(void);
+
   protected:
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function should be implemented by the inheriting class. It
+     * will be called when all samples have been flushed in the
+     * registered sink. If it is not reimplemented, a handler must be set
+     * that handle the function call.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void allSamplesFlushed(void);
     
   private:
+    typedef enum
+    {
+      STATE_IDLE, STATE_ACTIVE, STATE_STOPPED, STATE_FLUSHING
+    } State;
+
     class Branch;
     typedef std::map<Async::AudioSource *, Branch *> BranchMap;
     class NullBranch;
     
-    BranchMap 	branch_map;
-    NullBranch	*null_branch;
+    BranchMap 	m_branch_map;
+    Branch*     m_selected;
+    State       m_state;
     
     AudioSelector(const AudioSelector&);
     AudioSelector& operator=(const AudioSelector&);
+    int writeSamples(Branch *branch, float *samples, int count);
+    void flushSamples(Branch *branch);
     void selectBranch(Branch *branch);
     
     friend class Branch;
