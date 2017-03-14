@@ -70,7 +70,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
 
 # Install targets
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
-install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder svxlink.daemon)
+install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder ${SVXLINK_USER}.${SVXLINK_GROUP})
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}

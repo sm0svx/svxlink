@@ -114,7 +114,7 @@ using namespace Async;
  ****************************************************************************/
 
 PttGpio::PttGpio(void)
-  : active_low(false)
+  : gpio_path("/sys/class/gpio"), active_low(false)
 {
 } /* PttGpio::PttGpio */
 
@@ -126,6 +126,8 @@ PttGpio::~PttGpio(void)
 
 bool PttGpio::initialize(Async::Config &cfg, const std::string name)
 {
+  cfg.getValue(name, "GPIO_PATH", gpio_path);
+
   if (!cfg.getValue(name, "PTT_PIN", gpio_pin) || gpio_pin.empty())
   {
     cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
@@ -139,7 +141,7 @@ bool PttGpio::initialize(Async::Config &cfg, const std::string name)
   }
 
   stringstream ss;
-  ss << "/sys/class/gpio/" << gpio_pin << "/value";
+  ss << gpio_path << "/" << gpio_pin << "/value";
   ofstream gpioval(ss.str().c_str());
   if (gpioval.fail())
   {
@@ -158,7 +160,7 @@ bool PttGpio::setTxOn(bool tx_on)
   //cerr << "### PttGpio::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
 
   stringstream ss;
-  ss << "/sys/class/gpio/" << gpio_pin << "/value";
+  ss << gpio_path << "/" << gpio_pin << "/value";
   ofstream gpioval(ss.str().c_str());
   if (gpioval.fail())
   {
