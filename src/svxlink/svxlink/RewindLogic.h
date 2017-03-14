@@ -135,8 +135,11 @@ namespace Async
 #define REWIND_SERVICE_CRONOS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 0)
 #define REWIND_SERVICE_TELLUS_AGENT        (REWIND_ROLE_REPEATER_AGENT + 1)
 #define REWIND_SERVICE_SIMPLE_APPLICATION  (REWIND_ROLE_APPLICATION    + 0)
-#define SHA256_DIGEST_LENGTH    32
-#define BUFFER_SIZE        2048
+#define SHA256_DIGEST_LENGTH          32
+#define BUFFER_SIZE                   2048
+
+#define SESSION_TYPE_PRIVATE_VOICE    5
+#define SESSION_TYPE_GROUP_VOICE      7
 
 /****************************************************************************
  *

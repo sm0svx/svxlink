@@ -476,6 +476,11 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_KEEP_ALIVE:
+      if (m_state == WAITING_PASS_ACK)
+      {
+        cout << "Authenticated!" << endl;
+        m_state = AUTHENTICATED;
+      }
       sendKeepAlive();
       return;
 
@@ -492,15 +497,23 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
 void RewindLogic::authenticate(const string pass)
 {
-  struct RewindData* srd = {};
-  srd->type = htole16(REWIND_TYPE_AUTHENTICATION);
-  srd->flags = htole16(REWIND_FLAG_NONE);
-  srd->length = htole16(SHA256_DIGEST_LENGTH);
 
-  mkSHA256(pass.c_str(), (int)pass.length(), srd->data);
+  struct RewindData* rd =
+     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
-  sendMsg(srd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH);
+  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  rd->type = htole16(REWIND_TYPE_AUTHENTICATION);  // 0x0000 + 3
+  rd->flags = htole16(REWIND_FLAG_NONE); //
+  rd->length = htole16(SHA256_DIGEST_LENGTH); // 32
+
+  mkSHA256(pass.c_str(), (int)pass.length(), rd->data);
+
+  cout << "Pass=" << pass << " " << rd->data << endl;
+
+
+  sendMsg(rd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
+
 } /* RewindLogic::authPassphrase */
 
 
@@ -561,21 +574,23 @@ void RewindLogic::sendKeepAlive(void)
   struct RewindData* rd =
      (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
+                  // "REWIND01"             8
   memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION;
+
+  vd = (struct RewindVersionData*)rd->data;
+  vd->number = atoi(m_id.c_str());
+  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION; // 0x20 + 0x00
   strcpy(vd->description, m_swid.c_str());
 
-  cout << "nummerID=" << vd->number << endl;
+  rd->type = htole16(REWIND_TYPE_KEEP_ALIVE); // 0x00
+  rd->flags = htole16(REWIND_FLAG_NONE); // 0x00
 
   int len = m_swid.length();
-  len += sizeof(struct RewindVersionData) + m_swid.length();
-
-  rd->type = htole16(REWIND_TYPE_KEEP_ALIVE);
-  rd->flags = htole16(REWIND_FLAG_NONE);
-  rd->length = htole16(len);
-  rd->number = atoi(m_id.c_str());
+  len += sizeof(struct RewindVersionData);
   len += sizeof(struct RewindData);
+  rd->length = htole16(len);
 
+  cout << "nummerID=" << vd->number << " laenge " << len << endl;
   sendMsg(rd, len);
   m_ping_timer.reset();
 
@@ -606,16 +621,16 @@ void RewindLogic::sendConfiguration(void)
 
 void RewindLogic::mkSHA256(std::string pass, int len, uint8_t hash[])
 {
-  uint8_t t_hash;
+  //uint8_t t_hash[];
   SHA256_CTX context;
   sha256_init(&context);
 
   size_t pl = pass.length();
   unsigned char pbuf[pl];
-
   copy(pass.begin(), pass.end(), pbuf);
   sha256_update(&context, pbuf, pl);
-  sha256_final(&context, &t_hash);
+  sha256_final(&context, hash);
+
 } /* RewindLogic:mkSha256*/
 
 
