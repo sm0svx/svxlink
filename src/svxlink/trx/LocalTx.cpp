@@ -242,7 +242,8 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
     fsk_mod(0), fsk_valve(0), input_handler(0), ptt_ctrl(0),
     audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), ptt(0),
-    last_rx_id(Rx::ID_UNKNOWN)
+    last_rx_id(Rx::ID_UNKNOWN), fsk_first_packet_transmitted(false),
+    hdlc_framer_ib(0), fsk_mod_ib(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -258,6 +259,8 @@ LocalTx::~LocalTx(void)
   delete dtmf_encoder;
   delete fsk_mod;
   delete hdlc_framer;
+  delete fsk_mod_ib;
+  delete hdlc_framer_ib;
   delete mixer;
   
   delete txtot;
@@ -481,9 +484,11 @@ bool LocalTx::initialize(void)
     // We need a selector to choose if DTMF or normal audio should be
     // transmitted
   selector = new AudioSelector;
+  //prev_src = new AudioDebugger(prev_src, "content");
   selector->addSource(prev_src);
   selector->enableAutoSelect(prev_src, 0);
   prev_src = selector;
+  //prev_src = new AudioDebugger(prev_src, "selector");
   
     // Create the DTMF encoder
   dtmf_encoder = new DtmfEncoder(INTERNAL_SAMPLE_RATE);
@@ -500,6 +505,7 @@ bool LocalTx::initialize(void)
   dtmf_encoder->registerSink(dtmf_valve, true);
   selector->addSource(dtmf_valve);
   selector->enableAutoSelect(dtmf_valve, 10);
+  selector->setFlushWait(dtmf_valve, false);
   
   if (fsk_enable)
   {
@@ -551,6 +557,22 @@ bool LocalTx::initialize(void)
     selector->addSource(fsk_valve);
     selector->enableAutoSelect(fsk_valve, 20);
     */
+
+      // Create the inband AFSK HDLC framer
+    hdlc_framer_ib = new HdlcFramer;
+
+      // Create the inband AFSK modulator
+    fsk_mod_ib = new AfskModulator(1200, 2200, 1200, -10);
+    hdlc_framer_ib->sendBits.connect(
+        mem_fun(fsk_mod_ib, &AfskModulator::sendBits));
+
+    AudioPacer *pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256, 0);
+    fsk_mod_ib->registerSink(pacer);
+
+      // Connect the inband AFSK modulator to the main audio selector
+    selector->addSource(pacer);
+    selector->enableAutoSelect(pacer, 20);
+    selector->setFlushWait(pacer, false);
   }
   
   /*
@@ -668,11 +690,9 @@ void LocalTx::sendData(const std::vector<uint8_t> &msg)
 
 void LocalTx::setTransmittedSignalStrength(char rx_id, float siglev)
 {
-  /*
-  cout << "### LocalTx::setTransmittedSignalStrength: rx_id=" << rx_id
-       << " siglev=" << siglev
-       << endl;
-  */
+  //cout << "### LocalTx::setTransmittedSignalStrength: rx_id=" << rx_id
+  //     << " siglev=" << siglev
+  //     << endl;
 
 #if INTERNAL_SAMPLE_RATE >= 16000
   if (hdlc_framer != 0)
@@ -876,16 +896,15 @@ void LocalTx::pttHangtimeExpired(Timer *t)
 
 bool LocalTx::preTransmitterStateChange(bool do_transmit)
 {
-  /*
-  cout << name << ": LocalTx::preTransmitterStateChange: do_transmit="
-       << do_transmit << endl;
-  */
+  //cout << name << ": LocalTx::preTransmitterStateChange: do_transmit="
+  //     << do_transmit << endl;
 
   if (do_transmit)
   {
     return false;
   }
 
+  //cout << "### fsk_trailer_transmitted=" << fsk_trailer_transmitted << endl;
   if ((fsk_mod != 0) && !fsk_trailer_transmitted)
   {
     //cout << "  Sending AFSK trailer\n";
@@ -894,6 +913,11 @@ bool LocalTx::preTransmitterStateChange(bool do_transmit)
     sendFskSiglev(last_rx_id, 0);
     last_rx_id = Rx::ID_UNKNOWN;
     return true;
+  }
+  else
+  {
+    //cout << "fsk_first_packet_transmitted = false\n";
+    fsk_first_packet_transmitted = false;
   }
 
   return false;
@@ -914,7 +938,18 @@ void LocalTx::sendFskSiglev(char rxid, uint8_t siglev)
   frame.push_back(DATA_CMD_SIGLEV);
   frame.push_back(static_cast<uint8_t>(rxid));
   frame.push_back(siglev);
-  hdlc_framer->sendBytes(frame);
+  //cout << "### fsk_first_packet_transmitted=" << fsk_first_packet_transmitted
+  //     << endl;
+  if (fsk_first_packet_transmitted || (hdlc_framer_ib == 0))
+  {
+    hdlc_framer->sendBytes(frame);
+  }
+  else
+  {
+    //cout << "### Send first packet ---\n";
+    fsk_first_packet_transmitted = true;
+    hdlc_framer_ib->sendBytes(frame);
+  }
 } /* LocalTx::sendFskSiglev */
 
 

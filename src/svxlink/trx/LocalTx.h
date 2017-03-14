@@ -226,6 +226,9 @@ class LocalTx : public Tx
     Ptt                     *ptt;
     bool                    fsk_trailer_transmitted;
     char                    last_rx_id;
+    bool                    fsk_first_packet_transmitted;
+    HdlcFramer              *hdlc_framer_ib;
+    AfskModulator           *fsk_mod_ib;
     
     void txTimeoutOccured(Async::Timer *t);
     bool setPtt(bool tx, bool with_hangtime=false);

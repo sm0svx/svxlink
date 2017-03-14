@@ -500,6 +500,20 @@ bool LocalRxBase::initialize(void)
     deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceived));
     sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
+
+    AfskDemodulator *fsk_demod_ib = new AfskDemodulator(1200, 2200, 1200);
+    fullband_splitter->addSink(fsk_demod_ib, true);
+    prev_src = fsk_demod_ib;
+
+    Synchronizer *sync_ib = new Synchronizer(1200);
+    prev_src->registerSink(sync_ib, true);
+    prev_src = 0;
+
+    HdlcDeframer *deframer_ib = new HdlcDeframer;
+    deframer_ib->frameReceived.connect(
+        mem_fun(*this, &LocalRxBase::dataFrameReceivedIb));
+    sync_ib->bitsReceived.connect(
+        mem_fun(deframer_ib, &HdlcDeframer::bitsReceived));
   }
 
     // Create a new audio splitter to handle tone detectors
@@ -803,6 +817,13 @@ void LocalRxBase::dataFrameReceived(vector<uint8_t> frame)
     toneDetected(fq);
   }
   dataReceived(frame);
+} /* LocalRxBase::dataFrameReceived */
+
+
+void LocalRxBase::dataFrameReceivedIb(vector<uint8_t> frame)
+{
+  cout << "### Inband data frame received: len=" << frame.size() << endl;
+  dataFrameReceived(frame);
 } /* LocalRxBase::dataFrameReceived */
 
 

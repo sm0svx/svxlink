@@ -304,9 +304,9 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
 {
   AudioSource *prev_src = 0;
 
-  assert(f0 == 5415);
-  assert(f1 == 5585);
-  assert(baudrate == 300);
+  //assert(f0 == 5415);
+  //assert(f1 == 5585);
+  //assert(baudrate == 300);
   assert(sample_rate == 16000);
 
     // Clip the signal to eliminate level differences
@@ -353,22 +353,25 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
     cout << pre_filter_taps[i] << endl;
   }
   */
-  stringstream ss;
-  //ss << "BpBu3/" << (f0 - baudrate/2) << "-" << (f1 + baudrate/2);
-  ss << fixed << setprecision(9);
-  ss << "x";
-  for (int i=0; i<numtaps; ++i)
+  if ((f0 == 5415) && (f1 == 5585) && (baudrate == 300))
   {
-    ss << " " << pre_filter_taps[i];
+    stringstream ss;
+    //ss << "BpBu3/" << (f0 - baudrate/2) << "-" << (f1 + baudrate/2);
+    ss << fixed << setprecision(9);
+    ss << "x";
+    for (int i=0; i<numtaps; ++i)
+    {
+      ss << " " << pre_filter_taps[i];
+    }
+    cout << "AFSK RX Passband filter: " << ss.str() << endl;
+    AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
+    //AudioSink::setHandler(passband_filter);
+    prev_src->registerSink(passband_filter, true);
+    prev_src = passband_filter;
+    AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
+    prev_src->registerSink(passband_filter2, true);
+    prev_src = passband_filter2;
   }
-  cout << "AFSK RX Passband filter: " << ss.str() << endl;
-  AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
-  //AudioSink::setHandler(passband_filter);
-  prev_src->registerSink(passband_filter, true);
-  prev_src = passband_filter;
-  AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
-  prev_src->registerSink(passband_filter2, true);
-  prev_src = passband_filter2;
 
     // Run the sample stream through the correlator
   Correlator *corr = new Correlator(f0, f1, baudrate, sample_rate);
@@ -376,7 +379,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
   prev_src = corr;
 
     // Low pass out the constant component from the correlator
-  ss.str("");
+  stringstream ss("");
   ss << "LpBu5/" << baudrate;
   cout << "Correlator filter: " << ss.str() << endl;
   AudioFilter *corr_filter = new AudioFilter(ss.str(), sample_rate);
