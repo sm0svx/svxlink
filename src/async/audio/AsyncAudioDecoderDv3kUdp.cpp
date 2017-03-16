@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@file	 AudioDecoderDv3kUdp.cpp
+@brief   An audio decoder that use the Dv3kUdp audio codec
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2017-03-16
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,6 +32,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
+#include <iostream>
+#include <cstdlib>
+#include <cmath>
 
 
 /****************************************************************************
@@ -40,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncUdpSocket.h>
 
 
 /****************************************************************************
@@ -48,18 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderNull.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
 #include "AsyncAudioDecoderDv3kUdp.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioDecoderOpus.h"
-#endif
 
 
 /****************************************************************************
@@ -120,65 +114,47 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioDecoder *AudioDecoder::create(const std::string &name)
+AudioDecoderDv3kUdp::AudioDecoderDv3kUdp(void)
+  : port(2604), host("127.0.0.1")
 {
-  if (name == "NULL")
-  {
-    return new AudioDecoderNull;
-  }
-  else if (name == "RAW")
-  {
-    return new AudioDecoderRaw;
-  }
-  else if (name == "S16")
-  {
-    return new AudioDecoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-  else if (name == "DV3KUDP")
-  {
-    return new AudioDecoderDv3kUdp;
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex;
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus;
-  }
-#endif
-  else
-  {
-    return 0;
-  }
-}
+} /* AudioDecoderDv3kUdp::AudioDecoderDv3kUdp */
 
 
-#if 0
-AudioDecoder::AudioDecoder(void)
+AudioDecoderDv3kUdp::~AudioDecoderDv3kUdp(void)
 {
+  delete m_udp_sock;
+  delete dns;
+} /* AudioDecoderDv3kUdp::~AudioDecoderDv3kUdp */
 
-} /* AudioDecoder::AudioDecoder */
 
-
-AudioDecoder::~AudioDecoder(void)
+void AudioDecoderDv3kUdp::setOption(const std::string &name,
+      	      	      	      	  const std::string &value)
 {
+    // AMBESERVER_PORT and AMBESERVER_HOST
+  if (name == "PORT")
+  {
+    port = atoi(name.c_str());
+  }
+  if (name == "HOST")
+  {
+    host = name;
+  }
+} /* AudioDecoderDv3kUdp::setOption */
 
-} /* AudioDecoder::~AudioDecoder */
 
 
-void AudioDecoder::resumeOutput(void)
+bool AudioDecoderDv3kUdp::createDv3kUdp(void)
 {
+  connect();
+  return true;
+} /* AudioDecoderDv3kUdp::setGain */
 
-} /* AudioDecoder::resumeOutput */
-#endif
+
+
+void AudioDecoderDv3kUdp::writeEncodedSamples(void *buf, int size)
+{
+   sendData(buf, size);
+} /* AudioDecoderDv3kUdp::writeEncodedSamples */
 
 
 
@@ -188,13 +164,6 @@ void AudioDecoder::resumeOutput(void)
  *
  ****************************************************************************/
 
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-
-} /* AudioDecoder::allSamplesFlushed */
-#endif
-
 
 
 /****************************************************************************
@@ -202,6 +171,69 @@ void AudioDecoder::allSamplesFlushed(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void AudioDecoderDv3kUdp::connect(void)
+{
+  if (ip_addr.isEmpty())
+  {
+    dns = new DnsLookup(host);
+    dns->resultsReady.connect(mem_fun(*this, &AudioDecoderDv3kUdp::dnsResultsReady));
+    return;
+  }
+
+  cout << name() << ": try to connect AMBEServer on port " << port << endl;
+
+  delete m_udp_sock;
+  m_udp_sock = new Async::UdpHandler(port, ip_addr);
+  m_udp_sock->open();
+  m_udp_sock->dataReceived.connect(
+      mem_fun(*this, &AudioDecoderDv3kUdp::onDataReceived));
+
+} /* AudioDecoderDv3kUdp::connect */
+
+
+
+void AudioDecoderDv3kUdp::dnsResultsReady(DnsLookup& dns_lookup)
+{
+  vector<IpAddress> result = dns->addresses();
+
+  delete dns;
+  dns = 0;
+
+  if (result.empty() || result[0].isEmpty())
+  {
+    ip_addr.clear();
+    return;
+  }
+
+  ip_addr = result[0];
+  connect();
+} /* RewindLogic::dnsResultsReady */
+
+
+void AudioDecoderDv3kUdp::onDataReceived(const IpAddress& addr, uint16_t port,
+                                         void *buf, int count)
+{
+  cout << "### " << name() << ": AudioDecoderDv3kUdpLogic::onDataReceived: "
+       << "addr=" << addr << " port=" << port << " count=" << count << endl;
+
+  float *samples = reinterpret_cast<float*>(buf);
+
+  sinkWriteSamples(samples, count);
+
+} /* AudioDecoderDv3kUdp::onDataReceived */
+
+
+void AudioDecoderDv3kUdp::sendData(void *data, int size)
+{
+  if (!dns)
+  {
+    connect();
+    return;
+  }
+
+  m_udp_sock->write(ip_addr, port, data, size);
+} /* AudioDecoderDv3kUdp::sendData */
 
 
 

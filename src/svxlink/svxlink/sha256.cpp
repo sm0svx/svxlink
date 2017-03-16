@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <stdint.h>
+#include <stdio.h>
 
 using namespace std;
 

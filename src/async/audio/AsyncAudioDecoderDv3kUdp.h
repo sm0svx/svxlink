@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@file	 AsyncAudioDecoderDv3kUdp.h
+@brief   An audio decoder that use the Opus audio codec
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2017-03-16
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef ASYNC_AUDIO_DECODER_DV3KUDP_INCLUDED
+#define ASYNC_AUDIO_DECODER_DV3KUDP_INCLUDED
 
 
 /****************************************************************************
@@ -40,6 +42,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioDecoder.h>
+#include <AsyncDnsLookup.h>
+#include <AsyncTimer.h>
+
 
 
 /****************************************************************************
@@ -48,28 +54,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderNull.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#include "AsyncAudioDecoderDv3kUdp.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioDecoderOpus.h"
-#endif
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
+  class UdpSocket;
+  class DnsLookup;
+};
+
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+namespace Async
+{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
@@ -83,125 +97,91 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
  * Exported Global Variables
  *
  ****************************************************************************/
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	An audio decoder that use the Opus audio codec
+@author Tobias Blomberg / SM0SVX
+@date   2017-03-16
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-AudioDecoder *AudioDecoder::create(const std::string &name)
+This class implements an audio decoder that use the Opus audio codec.
+*/
+class AudioDecoderDv3kUdp : public Async::AudioDecoder
 {
-  if (name == "NULL")
-  {
-    return new AudioDecoderNull;
-  }
-  else if (name == "RAW")
-  {
-    return new AudioDecoderRaw;
-  }
-  else if (name == "S16")
-  {
-    return new AudioDecoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-  else if (name == "DV3KUDP")
-  {
-    return new AudioDecoderDv3kUdp;
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex;
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus;
-  }
-#endif
-  else
-  {
-    return 0;
-  }
-}
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioDecoderDv3kUdp(void);
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioDecoderDv3kUdp(void);
+
+    /**
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
+     */
+    virtual const char *name(void) const { return "AMBESERVER"; }
+
+    /**
+     * @brief 	Set an option for the decoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value);
+
+    /**
+     * @brief Intitialize the AMBEServer decoder
+     */
+    virtual bool createDv3kUdp(void);
+
+    /**
+     * @brief 	Write encoded samples into the decoder
+     * @param 	buf  Buffer containing encoded samples
+     * @param 	size The size of the buffer
+     */
+    virtual void writeEncodedSamples(void *buf, int size);
 
 
-#if 0
-AudioDecoder::AudioDecoder(void)
-{
-
-} /* AudioDecoder::AudioDecoder */
+  protected:
 
 
-AudioDecoder::~AudioDecoder(void)
-{
+  private:
 
-} /* AudioDecoder::~AudioDecoder */
+    int                   port;
+    std::string           host;
+    Async::UdpSocket*     m_udp_sock;
+    Async::IpAddress	  ip_addr;
+    Async::DnsLookup	  *dns;
 
+    AudioDecoderDv3kUdp(const AudioDecoderDv3kUdp&);
+    AudioDecoderDv3kUdp& operator=(const AudioDecoderDv3kUdp&);
 
-void AudioDecoder::resumeOutput(void)
-{
-
-} /* AudioDecoder::resumeOutput */
-#endif
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-
-} /* AudioDecoder::allSamplesFlushed */
-#endif
+    void connect(void);
+    void dnsResultsReady(DnsLookup& dns_lookup);
+    void onDataReceived(const IpAddress& addr, uint16_t port,
+                                         void *buf, int count);
+    void sendData(void *data, int size);
 
 
+};  /* class AudioDecoderDv3kUdp */
 
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+
+} /* namespace */
+
+#endif /* ASYNC_AUDIO_DECODER_DV3KUDP_INCLUDED */
 
 
 

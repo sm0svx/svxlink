@@ -46,7 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncDnsLookup.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
-#include <AsyncAudioRecoder.h>
+#include <AsyncAudioEncoder.h>
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -185,13 +186,14 @@ class RewindLogic : public LogicBase
      * @brief 	Get the audio pipe sink used for writing audio into this logic
      * @return	Returns an audio pipe sink object
      */
-    virtual Async::AudioSink *logicConIn(void) { return m_logic_con; }
+    virtual Async::AudioSink *logicConIn(void) { return m_logic_con_in; }
 
     /**
      * @brief 	Get the audio pipe source used for reading audio from this logic
      * @return	Returns an audio pipe source object
      */
-    virtual Async::AudioSource *logicConOut(void) { return m_logic_con; }
+    virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
+
 
   protected:
 
@@ -257,8 +259,9 @@ class RewindLogic : public LogicBase
     std::string           m_id;
     Async::Timer          m_reconnect_timer;
     Async::Timer          m_ping_timer;
-
-    Async::AudioRecoder*  m_logic_con;
+    Async::AudioEncoder*  m_logic_con_in;
+    Async::AudioSource*   m_logic_con_out;
+    Async::AudioDecoder*  m_dec;
 
     std::string           m_rxfreq;
     std::string           m_txfreq;
@@ -282,6 +285,8 @@ class RewindLogic : public LogicBase
     void handleMsgServerInfo(std::istream& is);
     void sendEncodedAudio(const void *buf, int count);
     void flushEncodedAudio(void);
+
+
     void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void sendMsg(struct RewindData* rd, size_t len);

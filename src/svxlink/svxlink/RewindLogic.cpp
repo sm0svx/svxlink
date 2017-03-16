@@ -138,7 +138,8 @@ RewindLogic::~RewindLogic(void)
   delete m_udp_sock;
   m_ping_timer = 0;
   delete dns;
-  delete m_logic_con;
+  delete m_logic_con_in;
+  delete m_logic_con_out;
 } /* RewindLogic::~RewindLogic */
 
 
@@ -323,23 +324,44 @@ bool RewindLogic::initialize(void)
     return false;
   }
 
-  m_logic_con = Async::AudioRecoder::create(m_ambe_handler);
-
-  if (m_logic_con == 0)
+  m_logic_con_in = Async::AudioEncoder::create(m_ambe_handler);
+  if (m_logic_con_in == 0)
   {
-    cerr << "*** ERROR: Failed to initialize Rewind recoder" << endl;
+    cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
     return false;
   }
+  m_logic_con_in->writeEncodedSamples.connect(
+      mem_fun(*this, &RewindLogic::sendEncodedAudio));
+  m_logic_con_in->flushEncodedSamples.connect(
+      mem_fun(*this, &RewindLogic::flushEncodedAudio));
 
-  m_logic_con->writeEncodedSamples.connect(
-               mem_fun(*this, &RewindLogic::sendEncodedAudio));
-  m_logic_con->flushEncodedSamples.connect(
-               mem_fun(*this, &RewindLogic::flushEncodedAudio));
-  m_logic_con->allDecodedSamplesFlushed.connect(
+    // Create audio decoder
+  m_dec = Async::AudioDecoder::create(m_ambe_handler);
+  if (m_dec == 0)
+  {
+    cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
+    return false;
+  }
+  m_dec->allEncodedSamplesFlushed.connect(
       mem_fun(*this, &RewindLogic::allEncodedSamplesFlushed));
+  AudioSource *prev_src = m_dec;
 
-  // sending options to audio decoder
-  string opt_prefix(m_logic_con->name());
+    // Create jitter FIFO if jitter buffer delay > 0
+  unsigned jitter_buffer_delay = 0;
+  cfg().getValue(name(), "JITTER_BUFFER_DELAY", jitter_buffer_delay);
+  if (jitter_buffer_delay > 0)
+  {
+    AudioFifo *fifo = new Async::AudioFifo(
+        2 * jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
+        //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
+    fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
+    prev_src->registerSink(fifo, true);
+    prev_src = fifo;
+  }
+  m_logic_con_out = prev_src;
+
+  // sending options to audio encoder
+  string opt_prefix(m_logic_con_in->name());
   opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
@@ -350,21 +372,15 @@ bool RewindLogic::initialize(void)
       string opt_value;
       cfg().getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      m_logic_con->setOption(opt_name, opt_value);
+      m_logic_con_in->setOption(opt_name, opt_value);
+      m_dec->setOption(opt_name, opt_value);
     }
   }
-
-
 
   if (!LogicBase::initialize())
   {
     return false;
   }
-
-  //void* controlBuffer = alloca(BUFFER_SIZE);
-  //rd = (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
-
-
 
    // connect the master server
   connect();
@@ -604,9 +620,11 @@ void RewindLogic::sendServiceData(void)
 
 void RewindLogic::sendCloseMessage(void)
 {
-  struct RewindData *trd = {};
-  trd->type = REWIND_TYPE_CLOSE;
-  sendMsg(trd, sizeof(struct RewindData));
+  struct RewindData* rd =
+     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+
+  rd->type = REWIND_TYPE_CLOSE;
+  sendMsg(rd, sizeof(struct RewindData));
 
   m_state = DISCONNECTED;
   m_ping_timer.setEnable(false);
