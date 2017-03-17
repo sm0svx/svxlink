@@ -143,15 +143,15 @@ UdpHandler::~UdpHandler(void)
  * Bugs:
  *------------------------------------------------------------------------
  */
-UdpHandler *UdpHandler::open(const uint16_t &port, const IpAddress &ip_addr)
+UdpHandler *UdpHandler::open(void)
 {
   UdpHandler *dev = 0;
 
-  if (dev_map.count(port) == 0)
+  if (dev_map.count(portnr) == 0)
   {
-    dev_map[port] = new UdpHandler(port, ip_addr);
+    dev_map[portnr] = new UdpHandler(portnr, ip_addr);
   }
-  dev = dev_map[port];
+  dev = dev_map[portnr];
 
   if (dev->use_count++ == 0)
   {

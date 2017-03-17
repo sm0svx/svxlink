@@ -122,7 +122,7 @@ class UdpHandler : public sigc::trackable
   public:
 
 
-    UdpHandler(const uint16_t &port, const IpAddress &ip_addr);
+    explicit UdpHandler(const uint16_t &port, const IpAddress &ip_addr);
 
     ~UdpHandler(void);
 
@@ -135,7 +135,7 @@ class UdpHandler : public sigc::trackable
      * one does not already exist, a new one will be created and
      * the serial port will be opened.
      */
-    static UdpHandler *open(const uint16_t &port, const IpAddress &ip_addr);
+    UdpHandler *open(void);
 
     /**
      * @brief 	Release a UdpHandler object and close the port
@@ -146,7 +146,7 @@ class UdpHandler : public sigc::trackable
      * there are no more users left, the given object will be deleted
      * and the serial port closed.
      */
-    static bool close(UdpHandler *dev);
+    bool close(UdpHandler *dev);
 
     /**
      * @brief   Set a flag to restore port settings on close

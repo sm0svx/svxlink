@@ -185,8 +185,8 @@ void AudioDecoderDv3kUdp::connect(void)
   cout << name() << ": try to connect AMBEServer on port " << port << endl;
 
   delete m_udp_sock;
-  //m_udp_sock = new Async::UdpHandler(port, ip_addr);
-  if (!m_udp_sock->open(port, ip_addr))
+  m_udp_sock = new Async::UdpHandler(port, ip_addr);
+  if (!m_udp_sock->open())
   {
      cout << "*** ERROR: can not open UDP socket on port " << port << endl;
      return;
