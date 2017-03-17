@@ -64,7 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class UdpSocket;
+  class UdpHandler;
   class DnsLookup;
 };
 
@@ -162,7 +162,7 @@ class AudioDecoderDv3kUdp : public Async::AudioDecoder
 
     int                   port;
     std::string           host;
-    Async::UdpSocket*     m_udp_sock;
+    Async::UdpHandler*    m_udp_sock;
     Async::IpAddress	  ip_addr;
     Async::DnsLookup	  *dns;
 

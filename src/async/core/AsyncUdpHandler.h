@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncIpAddress.h>
 
 
 /****************************************************************************
@@ -119,6 +120,12 @@ class FdWatch;
 class UdpHandler : public sigc::trackable
 {
   public:
+
+
+    UdpHandler(const uint16_t &port, const IpAddress &ip_addr);
+
+    ~UdpHandler(void);
+
     /**
      * @brief 	Retrieve a UdpHandler object and open the port
      * @param 	port The name of the port to open
@@ -128,7 +135,7 @@ class UdpHandler : public sigc::trackable
      * one does not already exist, a new one will be created and
      * the serial port will be opened.
      */
-    static UdpHandler *open(uint16_t port, const IpAddress &ip_addr);
+    static UdpHandler *open(const uint16_t &port, const IpAddress &ip_addr);
 
     /**
      * @brief 	Release a UdpHandler object and close the port
@@ -142,48 +149,44 @@ class UdpHandler : public sigc::trackable
     static bool close(UdpHandler *dev);
 
     /**
-     * @brief 	Return the file descriptor associated with this serial device
-     * @return	Returns the file descriptor associated with this serial device
-     */
-    int desc(void) { return fd; }
-
-    /**
      * @brief   Set a flag to restore port settings on close
      *
      * Call this function once, before or after open, to instruct this class
      * to restore port settings, that was saved when opening the port, on
      * closing the port. When the port is closed the flag is reset again.
      */
-    void setRestoreOnClose(void) { restore_on_close = true; }
+    void setRestoreOnClose(void) {  }
 
     /**
-     * @brief 	A signal that is emitted when there is data to read
-     * @param 	buf   A buffer containing the data that has been read
-     * @param 	count The number of bytes that was read
-     * @note  	For maximum buffer size see @ref Serial::READ_BUFSIZE
-     *
-     * This signal is emitted whenever one or more characters has been
-     * received on the serial port. The buffer is always null-terminated
-     * but the null is not included in the count.
+     * @brief 	Write data to the remote host
+     * @param 	remote_ip   The IP-address of the remote host
+     * @param 	remote_port The remote port to use
+     * @param 	buf   	    A buffer containing the data to send
+     * @param 	count       The number of bytes to write
+     * @return	Return \em true on success or \em false on failure
      */
-    sigc::signal<void, char*, int> charactersReceived;
+    bool write(const IpAddress& remote_ip, int remote_port, const void *buf,
+	int count);
+
+    /**
+     * @brief 	A signal that is emitted when data has been received
+     * @param 	ip    The IP-address the data was received from
+     * @param   port  The remote port number
+     * @param 	buf   The buffer containing the read data
+     * @param 	count The number of bytes read
+     */
+    sigc::signal<void, const IpAddress&, uint16_t, void*, int> dataReceived;
 
 
   protected:
 
   private:
-    static std::map<std::string, UdpHandler *>  dev_map;
+    static std::map<uint16_t, UdpHandler *>  dev_map;
 
-    std::string     port_name;
-    int       	    use_count;
-    int       	    fd;
-    struct termios  old_port_settings;
-    FdWatch   	    *rd_watch;
-    bool            restore_on_close;
-
-    UdpHandler(uint16_t port, const IpAddress &ip_addr);
-    ~UdpHandler(void);
-    bool openPort(bool flush);
+    uint16_t               portnr;
+    Async::IpAddress       ip_addr;
+    int                    use_count;
+    bool openPort(void);
     bool closePort(void);
     void onIncomingData(FdWatch *watch);
 

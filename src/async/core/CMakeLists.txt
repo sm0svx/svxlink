@@ -1,13 +1,14 @@
 set(LIBNAME asynccore)
 
 set(EXPINC AsyncApplication.h AsyncFdWatch.h AsyncTimer.h AsyncIpAddress.h
-           AsyncTcpClient.h AsyncDnsLookup.h AsyncUdpSocket.h AsyncTcpServer.h
-           AsyncTcpConnection.h AsyncConfig.h AsyncSerial.h AsyncFileReader.h
-           AsyncAtTimer.h AsyncExec.h AsyncPty.h AsyncPtyStreamBuf.h AsyncMsg.h)
+           AsyncTcpClient.h AsyncDnsLookup.h AsyncUdpSocket.h AsyncUdpHandler.h 
+           AsyncTcpServer.h AsyncTcpConnection.h AsyncConfig.h AsyncSerial.h 
+           AsyncFileReader.h AsyncAtTimer.h AsyncExec.h AsyncPty.h 
+           AsyncPtyStreamBuf.h AsyncMsg.h)
 
 set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp
-           AsyncUdpSocket.cpp AsyncTcpServer.cpp
+           AsyncUdpSocket.cpp AsyncUdpHandler.cpp AsyncTcpServer.cpp
            AsyncTcpConnection.cpp AsyncConfig.cpp AsyncSerial.cpp
            AsyncSerialDevice.cpp AsyncFileReader.cpp
            AsyncAtTimer.cpp AsyncExec.cpp AsyncPty.cpp AsyncPtyStreamBuf.cpp)

@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncUdpSocket.h>
+#include <AsyncUdpHandler.h>
 
 
 /****************************************************************************
@@ -177,20 +177,24 @@ void AudioDecoderDv3kUdp::connect(void)
   if (ip_addr.isEmpty())
   {
     dns = new DnsLookup(host);
-    dns->resultsReady.connect(mem_fun(*this, &AudioDecoderDv3kUdp::dnsResultsReady));
+    dns->resultsReady.connect(mem_fun(*this,
+                &AudioDecoderDv3kUdp::dnsResultsReady));
     return;
   }
 
   cout << name() << ": try to connect AMBEServer on port " << port << endl;
 
   delete m_udp_sock;
-  m_udp_sock = new Async::UdpHandler(port, ip_addr);
-  m_udp_sock->open();
+  //m_udp_sock = new Async::UdpHandler(port, ip_addr);
+  if (!m_udp_sock->open(port, ip_addr))
+  {
+     cout << "*** ERROR: can not open UDP socket on port " << port << endl;
+     return;
+  }
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &AudioDecoderDv3kUdp::onDataReceived));
 
 } /* AudioDecoderDv3kUdp::connect */
-
 
 
 void AudioDecoderDv3kUdp::dnsResultsReady(DnsLookup& dns_lookup)
