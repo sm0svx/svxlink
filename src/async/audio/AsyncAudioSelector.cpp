@@ -362,7 +362,7 @@ int AudioSelector::writeSamples(Branch *branch, float *samples, int count)
        << endl;
   */
   if ((branch != m_selected) && branch->autoSelectEnabled() &&
-      ((m_selected == 0 ) ||
+      ((m_selected == 0) || (m_selected->state() == STATE_IDLE) ||
        (branch->selectionPrio() > m_selected->selectionPrio())))
   {
     selectBranch(branch);
