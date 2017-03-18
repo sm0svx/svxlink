@@ -7,7 +7,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 #include <sigc++/sigc++.h>
 
 
@@ -83,8 +84,9 @@ using namespace Async;
 class AudioSelector::Branch : public AudioSink, public sigc::trackable
 {
   public:
-    Branch(void)
-      : m_state(STATE_IDLE), m_prio(0), m_autoselect(false), m_flush_wait(true)
+    Branch(bool debug=false)
+      : m_state(STATE_IDLE), m_prio(0), m_autoselect(false), m_flush_wait(true),
+        m_debug(debug)
     {
     }
 
@@ -99,18 +101,18 @@ class AudioSelector::Branch : public AudioSink, public sigc::trackable
 
     virtual int writeSamples(const float *samples, int count)
     {
-      m_state = STATE_ACTIVE;
+      setState(STATE_ACTIVE);
       int ret = sigWriteSamples(const_cast<float *>(samples), count);
       if (ret <= 0)
       {
-        m_state = STATE_STOPPED;
+        setState(STATE_STOPPED);
       }
       return ret;
     }
 
     virtual void flushSamples(void)
     {
-      m_state = STATE_FLUSHING;
+      setState(STATE_FLUSHING);
       sigFlushSamples();
     }
 
@@ -118,7 +120,7 @@ class AudioSelector::Branch : public AudioSink, public sigc::trackable
 
     void allSamplesFlushed(void)
     {
-      m_state = STATE_IDLE;
+      setState(STATE_IDLE);
       sourceAllSamplesFlushed();
     }
 
@@ -130,6 +132,20 @@ class AudioSelector::Branch : public AudioSink, public sigc::trackable
     int   m_prio;
     bool  m_autoselect;
     bool  m_flush_wait;
+    bool  m_debug;
+
+    void setState(State state)
+    {
+      if (state != m_state)
+      {
+        m_state = state;
+        if (m_debug)
+        {
+          cout << "### AudioSelector::Branch::setState: state="
+               << AudioSelector::stateToString(m_state) << endl;
+        }
+      }
+    }
 }; /* class AudioSelector::Branch */
 
 
@@ -185,7 +201,7 @@ AudioSelector::~AudioSelector(void)
 void AudioSelector::addSource(Async::AudioSource *source)
 {
   assert(m_branch_map.find(source) == m_branch_map.end());
-  Branch *branch = new Branch;
+  Branch *branch = new Branch(m_debug);
   source->registerSink(branch);
   branch->sigWriteSamples.connect(
       sigc::bind<0>(mem_fun(*this, &AudioSelector::writeSamples), branch));
@@ -278,7 +294,7 @@ void AudioSelector::resumeOutput(void)
 {
   if (m_state == STATE_STOPPED)
   {
-    m_state = STATE_ACTIVE;
+    setState(STATE_ACTIVE);
   }
   if (m_selected != 0)
   {
@@ -295,13 +311,14 @@ void AudioSelector::resumeOutput(void)
 
 void AudioSelector::allSamplesFlushed(void)
 {
-  if (m_state == STATE_FLUSHING)
-  {
-    m_state = STATE_IDLE;
-  }
   if (m_selected != 0)
   {
     m_selected->allSamplesFlushed();
+  }
+  if (m_state == STATE_FLUSHING)
+  {
+    setState(STATE_IDLE);
+    selectHighestPrioActiveBranch();
   }
 } /* AudioSelector::allSamplesFlushed */
 
@@ -311,6 +328,29 @@ void AudioSelector::allSamplesFlushed(void)
  * Private member functions
  *
  ****************************************************************************/
+
+const char *AudioSelector::stateToString(State state)
+{
+  switch (state)
+  {
+    case STATE_IDLE:
+      return "IDLE";
+      break;
+    case STATE_ACTIVE:
+      return "ACTIVE";
+      break;
+    case STATE_STOPPED:
+      return "STOPPED";
+      break;
+    case STATE_FLUSHING:
+      return "FLUSHING";
+      break;
+    default:
+      return "?";
+      break;
+  }
+} /* AudioSelector::stateToString */
+
 
 int AudioSelector::writeSamples(Branch *branch, float *samples, int count)
 {
@@ -322,11 +362,11 @@ int AudioSelector::writeSamples(Branch *branch, float *samples, int count)
   }
   if (branch == m_selected)
   {
-    m_state = STATE_ACTIVE;
+    setState(STATE_ACTIVE);
     int ret = sinkWriteSamples(samples, count);
     if (ret <= 0)
     {
-      m_state = STATE_STOPPED;
+      setState(STATE_STOPPED);
     }
     return ret;
   }
@@ -340,25 +380,13 @@ void AudioSelector::flushSamples(Branch *branch)
   {
     if (branch->flushWait())
     {
-      m_state = STATE_FLUSHING;
+      setState(STATE_FLUSHING);
       sinkFlushSamples();
     }
     else
     {
       branch->allSamplesFlushed();
-      Branch *new_branch = 0;
-      for (BranchMap::iterator it = m_branch_map.begin();
-           it != m_branch_map.end(); ++it)
-      {
-        Branch *b = (*it).second;
-        if ((b->state() == STATE_ACTIVE) || (b->state() == STATE_STOPPED))
-        {
-          if ((new_branch == 0) ||
-              (b->selectionPrio() > new_branch->selectionPrio()))
-          new_branch = b;
-        }
-      }
-      selectBranch(new_branch);
+      selectHighestPrioActiveBranch();
     }
     return;
   }
@@ -366,11 +394,34 @@ void AudioSelector::flushSamples(Branch *branch)
 } /* AudioSelector::flushSamples */
 
 
+void AudioSelector::selectHighestPrioActiveBranch(void)
+{
+  Branch *new_branch = 0;
+  for (BranchMap::iterator it = m_branch_map.begin();
+       it != m_branch_map.end(); ++it)
+  {
+    Branch *b = (*it).second;
+    if ((b->state() == STATE_ACTIVE) || (b->state() == STATE_STOPPED))
+    {
+      if ((new_branch == 0) ||
+          (b->selectionPrio() > new_branch->selectionPrio()))
+      new_branch = b;
+    }
+  }
+  selectBranch(new_branch);
+} /* AudioSelector::selectHighestPrioActiveBranch */
+
+
 void AudioSelector::selectBranch(Branch *branch)
 {
   if (m_selected == branch)
   {
     return;
+  }
+
+  if (m_debug)
+  {
+    cout << "### AudioSelector::selectBranch: " << branch << endl;
   }
 
   if (m_selected != 0)
@@ -397,7 +448,7 @@ void AudioSelector::selectBranch(Branch *branch)
     case STATE_STOPPED:
       if ((branch == 0) || (branch->state() == STATE_IDLE))
       {
-        m_state = STATE_FLUSHING;
+        setState(STATE_FLUSHING);
         sinkFlushSamples();
       }
       break;
@@ -408,6 +459,19 @@ void AudioSelector::selectBranch(Branch *branch)
   m_selected = branch;
 } /* AudioSelector::selectBranch */
 
+
+void AudioSelector::setState(State state)
+{
+  if (state != m_state)
+  {
+    m_state = state;
+    if (m_debug)
+    {
+      cout << "### AudioSelector::setState: state="
+           << stateToString(m_state) << endl;
+    }
+  }
+} /* AudioSelector::setState */
 
 
 /*
