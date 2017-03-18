@@ -484,6 +484,7 @@ bool LocalTx::initialize(void)
     // We need a selector to choose if DTMF or normal audio should be
     // transmitted
   selector = new AudioSelector;
+  //selector->setDebug(true);
   //prev_src = new AudioDebugger(prev_src, "content");
   selector->addSource(prev_src);
   selector->enableAutoSelect(prev_src, 0);
@@ -697,6 +698,8 @@ void LocalTx::setTransmittedSignalStrength(char rx_id, float siglev)
 #if INTERNAL_SAMPLE_RATE >= 16000
   if (hdlc_framer != 0)
   {
+    fsk_trailer_transmitted = false;
+
     uint8_t siglevui;
     if (siglev < 0.0f)
     {
@@ -814,7 +817,7 @@ void LocalTx::transmit(bool do_transmit)
     delete txtot;
     txtot = 0;
     tx_timeout_occured = false;
-    
+
     transmitterStateChange(false);
   }
   
@@ -905,19 +908,21 @@ bool LocalTx::preTransmitterStateChange(bool do_transmit)
   }
 
   //cout << "### fsk_trailer_transmitted=" << fsk_trailer_transmitted << endl;
-  if ((fsk_mod != 0) && !fsk_trailer_transmitted)
-  {
-    //cout << "  Sending AFSK trailer\n";
-    fsk_trailer_transmitted = true;
-    sendFskSiglev(last_rx_id, 0);
-    sendFskSiglev(last_rx_id, 0);
-    last_rx_id = Rx::ID_UNKNOWN;
-    return true;
-  }
-  else
-  {
-    //cout << "fsk_first_packet_transmitted = false\n";
-    fsk_first_packet_transmitted = false;
+  if (fsk_mod != 0) {
+    if (!fsk_trailer_transmitted)
+    {
+      //cout << "  Sending AFSK trailer\n";
+      fsk_trailer_transmitted = true;
+      sendFskSiglev(last_rx_id, 0);
+      sendFskSiglev(last_rx_id, 0);
+      last_rx_id = Rx::ID_UNKNOWN;
+      return true;
+    }
+    else
+    {
+      //cout << "### fsk_first_packet_transmitted = false\n";
+      fsk_first_packet_transmitted = false;
+    }
   }
 
   return false;

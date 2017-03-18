@@ -316,10 +316,12 @@ void RfUplink::uplinkRxSquelchOpen(bool is_open)
     tx->setTransmittedSignalStrength(uplink_rx->sqlRxId(),
                                      uplink_rx->signalStrength());
   }
+  /*
   else
   {
     tx->setTransmittedSignalStrength(uplink_rx->sqlRxId(), 0);
   }
+  */
 } /* RfUplink::uplinkRxSquelchOpen */
 
 
@@ -344,10 +346,12 @@ void RfUplink::rxSquelchOpen(bool is_open)
     uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(),
                                             rx->signalStrength());
   }
+  /*
   else
   {
     uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), 0);
   }
+  */
 } /* RfUplink::rxSquelchOpen  */
 
 
