@@ -334,7 +334,8 @@ void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 
 void RfUplink::uplinkRxSignalLevelUpdated(float siglev)
 {
-  cout << "### RfUplink::uplinkRxSignalLevelUpdated: siglev=" << siglev << endl;
+  //cout << "### RfUplink::uplinkRxSignalLevelUpdated: siglev="
+  //     << siglev << endl;
   tx->setTransmittedSignalStrength('?', siglev);
 } /* RfUplink::uplinkRxSignalLevelUpdated */
 
@@ -357,7 +358,7 @@ void RfUplink::rxSquelchOpen(bool is_open)
 
 void RfUplink::rxSignalLevelUpdated(float siglev)
 {
-  cout << "### RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
+  //cout << "### RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
   if (rx->squelchIsOpen())
   {
     uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), siglev);
