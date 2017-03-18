@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cassert>
 #include <sigc++/sigc++.h>
 
 
@@ -141,7 +142,7 @@ class AudioSelector::Branch : public AudioSink, public sigc::trackable
         m_state = state;
         if (m_debug)
         {
-          cout << "### AudioSelector::Branch::setState: state="
+          cout << "### AudioSelector::Branch::setState[" << this << "]: state="
                << AudioSelector::stateToString(m_state) << endl;
         }
       }
@@ -354,6 +355,12 @@ const char *AudioSelector::stateToString(State state)
 
 int AudioSelector::writeSamples(Branch *branch, float *samples, int count)
 {
+  /*
+  cout << "### AudioSelector::writeSamples: "
+       << "branch=" << branch << " autoSelect=" << branch->autoSelectEnabled()
+       << " m_selected=" << m_selected
+       << endl;
+  */
   if ((branch != m_selected) && branch->autoSelectEnabled() &&
       ((m_selected == 0 ) ||
        (branch->selectionPrio() > m_selected->selectionPrio())))
@@ -385,8 +392,15 @@ void AudioSelector::flushSamples(Branch *branch)
     }
     else
     {
-      branch->allSamplesFlushed();
       selectHighestPrioActiveBranch();
+      if (m_selected == branch)
+      {
+        sinkFlushSamples();
+      }
+      else
+      {
+        branch->allSamplesFlushed();
+      }
     }
     return;
   }
@@ -401,14 +415,18 @@ void AudioSelector::selectHighestPrioActiveBranch(void)
        it != m_branch_map.end(); ++it)
   {
     Branch *b = (*it).second;
-    if ((b->state() == STATE_ACTIVE) || (b->state() == STATE_STOPPED))
+    assert(b->state() != STATE_STOPPED);
+    if ((b->autoSelectEnabled()) && (b->state() == STATE_ACTIVE))
     {
       if ((new_branch == 0) ||
           (b->selectionPrio() > new_branch->selectionPrio()))
       new_branch = b;
     }
   }
-  selectBranch(new_branch);
+  if (new_branch != 0)
+  {
+    selectBranch(new_branch);
+  }
 } /* AudioSelector::selectHighestPrioActiveBranch */
 
 
