@@ -232,7 +232,7 @@ class NetUplink : public Uplink
     void transmitterStateChange(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
     void heartbeat(Async::Timer *t);
-    void checkSiglev(Async::Timer *t);
+    //void checkSiglev(Async::Timer *t);
     void unmuteTx(Async::Timer *t);
     void setFallbackActive(bool activate);
     void signalLevelUpdated(float siglev);

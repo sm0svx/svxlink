@@ -136,9 +136,10 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   heartbeat_timer->expired.connect(mem_fun(*this, &NetUplink::heartbeat));
 
     // FIXME: Shouldn't we use the updates directly from the receiver instead?
-  siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
-  siglev_check_timer->setEnable(true);
-  siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
+    // Why is this even here?!
+  //siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
+  //siglev_check_timer->setEnable(true);
+  //siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
   
 } /* NetUplink::NetUplink */
 
@@ -793,10 +794,12 @@ void NetUplink::heartbeat(Timer *t)
 } /* NetTrxTcpClient::heartbeat */
 
 
+#if 0
 void NetUplink::checkSiglev(Timer *t)
 {
   squelchOpen(rx->squelchIsOpen());
 } /* NetUplink::checkSiglev */
+#endif
 
 
 void NetUplink::unmuteTx(Timer *t)
