@@ -182,7 +182,7 @@ class AudioSelector::Branch : public AudioSink, public sigc::trackable
  ****************************************************************************/
 
 AudioSelector::AudioSelector(void)
-  : m_selected(0), m_state(STATE_IDLE)
+  : m_selected(0), m_state(STATE_IDLE), m_debug(false)
 {
 } /* AudioSelector::AudioSelector */
 
