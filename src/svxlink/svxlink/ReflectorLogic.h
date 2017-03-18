@@ -1,6 +1,6 @@
 /**
 @file	 ReflectorLogic.h
-@brief   
+@brief   A logic core that connect to the SvxReflector
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-12
 

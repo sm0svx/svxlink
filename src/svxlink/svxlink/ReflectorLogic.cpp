@@ -1,13 +1,11 @@
 /**
 @file	 ReflectorLogic.cpp
-@brief   A_brief_description_for_this_file
+@brief   A logic core that connect to the SvxReflector
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-12
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -138,10 +136,13 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
 ReflectorLogic::~ReflectorLogic(void)
 {
   delete m_udp_sock;
+  m_udp_sock = 0;
   delete m_logic_con_in;
+  m_logic_con_in = 0;
   delete m_dec;
-  //delete m_logic_con_out;
+  m_dec = 0;
   delete m_con;
+  m_con = 0;
 } /* ReflectorLogic::~ReflectorLogic */
 
 
@@ -183,7 +184,8 @@ bool ReflectorLogic::initialize(void)
   m_logic_con_in = Async::AudioEncoder::create(audio_codec);
   if (m_logic_con_in == 0)
   {
-    cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to initialize audio encoder" << endl;
     return false;
   }
   m_logic_con_in->writeEncodedSamples.connect(
@@ -196,7 +198,8 @@ bool ReflectorLogic::initialize(void)
   m_dec = Async::AudioDecoder::create(audio_codec);
   if (m_dec == 0)
   {
-    cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to initialize audio decoder" << endl;
     return false;
   }
   m_dec->allEncodedSamplesFlushed.connect(
@@ -251,13 +254,14 @@ void ReflectorLogic::onConnected(void)
 {
   cout << name() << ": Connection established to " << m_con->remoteHost() << ":"
        << m_con->remotePort() << endl;
-  MsgProtoVer msg;
-  sendMsg(msg);
+  sendMsg(MsgProtoVer());
   m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
   m_heartbeat_timer.setEnable(true);
+  m_next_udp_tx_seq = 0;
+  m_next_udp_rx_seq = 0;
 } /* ReflectorLogic::onConnected */
 
 
@@ -293,7 +297,7 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
     size_t msg_tot_size = header.packedSize();
     if (static_cast<size_t>(len) < msg_tot_size)
     {
-      cout << "### Header data underflow\n";
+      cout << "### " << name() << ": Header data underflow\n";
       return tot_consumed;
     }
 
@@ -302,15 +306,16 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
 
     if (!header.unpack(ss))
     {
-      // FIXME: Disconnect
-      cout << "*** ERROR: Packing failed for TCP message header\n";
+      cout << "*** ERROR[" << name()
+           << "]: Packing failed for TCP message header\n";
+      disconnect();
       return tot_consumed;
     }
 
     msg_tot_size += header.size();
     if (static_cast<size_t>(len) < msg_tot_size)
     {
-      cout << "### Payload data underflow\n";
+      cout << "### " << name() << ": Payload data underflow\n";
       return tot_consumed;
     }
 
@@ -349,7 +354,8 @@ int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
         handleMsgTalkerStop(ss);
         break;
       default:
-        cerr << "*** WARNING: Unknown protocol message received: msg_type="
+        cerr << "*** WARNING[" << name()
+             << "]: Unknown protocol message received: msg_type="
              << header.type() << endl;
         break;
     }
@@ -368,12 +374,11 @@ void ReflectorLogic::handleMsgError(std::istream& is)
   MsgError msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgAuthChallenge\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthChallenge\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgError(\"" << msg.message() << "\")" << endl;
-  // FIXME: Handle reconnection
   disconnect();
 } /* ReflectorLogic::handleMsgError */
 
@@ -383,8 +388,8 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
   MsgAuthChallenge msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgAuthChallenge\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthChallenge\n";
+    disconnect();
     return;
   }
   stringstream ss;
@@ -395,16 +400,14 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
   }
   cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
 
-  MsgAuthResponse response_msg(m_callsign, m_auth_key,
-                               msg.challenge());
-  sendMsg(response_msg);
+  sendMsg(MsgAuthResponse(m_callsign, m_auth_key, msg.challenge()));
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
 void ReflectorLogic::handleMsgAuthOk(void)
 {
   cout << "### " << name() << ": MsgAuthOk()" << endl;
-} /* ReflectorLogic::handleMsgAuthChallenge */
+} /* ReflectorLogic::handleMsgAuthOk */
 
 
 void ReflectorLogic::handleMsgServerInfo(std::istream& is)
@@ -412,8 +415,8 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   MsgServerInfo msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgAuthChallenge\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthChallenge\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgServerInfo(" << msg.clientId() << ")"
@@ -434,8 +437,8 @@ void ReflectorLogic::handleMsgNodeList(std::istream& is)
   MsgNodeList msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgNodeList\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeList\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgNodeList(";
@@ -458,8 +461,8 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
   MsgNodeJoined msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgNodeJoined\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeJoined\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgNodeJoined(" << msg.callsign() << ")"
@@ -473,8 +476,8 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
   MsgNodeLeft msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgNodeLeft\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeLeft\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgNodeLeft(" << msg.callsign() << ")"
@@ -488,8 +491,8 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   MsgTalkerStart msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgTalkerStart\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgTalkerStart\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgTalkerStart(" << msg.callsign() << ")"
@@ -503,8 +506,8 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
   MsgTalkerStop msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgTalkerStop\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgTalkerStop\n";
+    disconnect();
     return;
   }
   cout << "### " << name() << ": MsgTalkerStop(" << msg.callsign() << ")"
@@ -526,8 +529,9 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
   ReflectorMsg header(msg.type(), msg.packedSize());
   if (!header.pack(ss) || !msg.pack(ss))
   {
-    // FIXME: Better error handling
-    cerr << "*** ERROR: Failed to pack reflector TCP message\n";
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack reflector TCP message\n";
+    disconnect();
     return;
   }
   m_con->write(ss.str().data(), ss.str().size());
@@ -560,14 +564,29 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   //cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
   //     << addr << " port=" << port << " count=" << count;
 
+  if (addr != m_con->remoteHost())
+  {
+    cout << "*** WARNING[" << name()
+         << "]: UDP packet received from wrong source address "
+         << addr << ". Should be " << m_con->remoteHost() << "." << endl;
+    return;
+  }
+  if (port != m_con->remotePort())
+  {
+    cout << "*** WARNING[" << name()
+         << "]: UDP packet received with wrong source port number "
+         << port << ". Should be " << m_con->remotePort() << "." << endl;
+    return;
+  }
+
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
 
   ReflectorUdpMsg header;
   if (!header.unpack(ss))
   {
-    // FIXME: Disconnect
-    cout << "*** ERROR: Unpacking failed for UDP message header\n";
+    cout << "*** WARNING[" << name()
+         << "]: Unpacking failed for UDP message header" << endl;
     return;
   }
 
@@ -576,19 +595,27 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   //     << " seq=" << header.sequenceNum()
   //     << std::endl;
 
-  // FIXME: Check remote IP and port number. Maybe also client ID?
+  if (header.clientId() != m_client_id)
+  {
+    cout << "*** WARNING[" << name()
+         << "]: UDP packet received with wrong client id "
+         << header.clientId() << ". Should be " << m_client_id << "." << endl;
+    return;
+  }
 
     // Check sequence number
   uint16_t udp_rx_seq_diff = header.sequenceNum() - m_next_udp_rx_seq;
   if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
   {
-    cout << "### Dropping out of sequence frame with seq="
+    cout << "### " << name()
+         << ": Dropping out of sequence UDP frame with seq="
          << header.sequenceNum() << endl;
     return;
   }
   else if (udp_rx_seq_diff > 0) // Frame lost
   {
-    cout << "### UDP frame(s) lost. Expected seq=" << m_next_udp_rx_seq
+    cout << "### " << name() << ": UDP frame(s) lost. Expected seq="
+         << m_next_udp_rx_seq
          << " but received " << header.sequenceNum()
          << ". Resetting next expected sequence number to "
          << (header.sequenceNum() + 1) << endl;
@@ -606,7 +633,11 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     case MsgUdpAudio::TYPE:
     {
       MsgUdpAudio msg;
-      msg.unpack(ss);
+      if (!msg.unpack(ss))
+      {
+        cerr << "*** WARNING[" << name() << "]: Could not unpack MsgUdpAudio\n";
+        return;
+      }
       if (!msg.audioData().empty())
       {
         m_dec->writeEncodedSamples(
@@ -626,9 +657,9 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       break;
 
     default:
-      cerr << "*** WARNING: Unknown UDP protocol message received: msg_type="
+      cerr << "*** WARNING[" << name()
+           << "]: Unknown UDP protocol message received: msg_type="
            << header.type() << endl;
-      // FIXME: Disconnect or ignore?
       break;
   }
 } /* ReflectorLogic::udpDatagramReceived */
@@ -647,8 +678,8 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
   ostringstream ss;
   if (!header.pack(ss) || !msg.pack(ss))
   {
-    // FIXME: Better error handling
-    cerr << "*** ERROR: Failed to pack reflector TCP message\n";
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack reflector TCP message\n";
     return;
   }
   m_udp_sock->write(m_con->remoteHost(), m_con->remotePort(),
@@ -658,7 +689,7 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 
 void ReflectorLogic::reconnect(Timer *t)
 {
-  cout << "### Reconnecting to reflector server\n";
+  cout << "### " << name() << ": Reconnecting to reflector server\n";
   t->setEnable(false);
   m_con->connect();
 } /* ReflectorLogic::reconnect */
@@ -713,4 +744,3 @@ void ReflectorLogic::heartbeatHandler(Async::Timer *t)
 /*
  * This file has not been truncated
  */
-
