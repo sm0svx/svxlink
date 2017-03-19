@@ -1383,8 +1383,12 @@ In the default configuration file there is a voter section called
 Always "Voter" for a voter.
 .TP
 .B RECEIVERS
-Specify a comma separated list of receivers that the voter should use. Example:
-RECEIVERS=Rx1,Rx2,Rx3
+Specify a comma separated list of receivers that the voter should use.
+Optionally the receiver name may be followed by a colon and a squelch delay
+value. This can be used to adjust the voting delay for receivers that always
+are slower to open for some reason. The delay value given will be subtracted
+from the voting delay if the receiver is the first one to open.
+Example: RECEIVERS=Rx1,Rx2:200,Rx3
 .TP
 .B VOTING_DELAY
 Specify the delay in milliseconds that the voter will wait after the first

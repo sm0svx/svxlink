@@ -317,6 +317,7 @@ class Voter : public Rx
 
       private:
 	void entry(void);
+	void init(SatRx *srx);
 	void exit(void);
 	
     };
