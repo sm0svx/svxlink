@@ -137,6 +137,8 @@ class HdlcFramer : public sigc::trackable
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    void setStartFlagCnt(size_t cnt) { start_flag_cnt = cnt; }
+    size_t startFlagCnt(void) const { return start_flag_cnt; }
     void sendBytes(const std::vector<uint8_t> &frame);
     
     sigc::signal<void, const std::vector<bool>&> sendBits;
@@ -144,10 +146,11 @@ class HdlcFramer : public sigc::trackable
   protected:
     
   private:
-    static const size_t start_flag_cnt = 4;
+    static const size_t DEFAULT_START_FLAG_CNT = 4;
 
-    unsigned ones;
-    bool prev_was_mark;
+    unsigned  ones;
+    bool      prev_was_mark;
+    size_t    start_flag_cnt;
 
     HdlcFramer(const HdlcFramer&);
     HdlcFramer& operator=(const HdlcFramer&);

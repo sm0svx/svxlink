@@ -112,7 +112,7 @@ using namespace std;
  ****************************************************************************/
 
 HdlcFramer::HdlcFramer(void)
-  : ones(0), prev_was_mark(false)
+  : ones(0), prev_was_mark(false), start_flag_cnt(DEFAULT_START_FLAG_CNT)
 {
   
 } /* HdlcFramer::HdlcFramer */

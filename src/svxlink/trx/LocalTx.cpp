@@ -520,6 +520,8 @@ bool LocalTx::initialize(void)
     cfg.getValue(name, "OB_AFSK_VOICE_GAIN", voice_gain);
     float afsk_level = -6;
     cfg.getValue(name, "OB_AFSK_LEVEL", afsk_level);
+    unsigned afsk_tx_delay = 100;
+    cfg.getValue(name, "OB_AFSK_TX_DELAY", afsk_tx_delay);
 
     AudioFilter *voice_filter = new AudioFilter("LpCh10/-0.5/4500");
     voice_filter->setOutputGain(voice_gain);
@@ -536,6 +538,8 @@ bool LocalTx::initialize(void)
 
       // Create the HDLC framer
     hdlc_framer = new HdlcFramer;
+    hdlc_framer->setStartFlagCnt(
+        static_cast<size_t>(ceil(afsk_tx_delay * baudrate / 8000.0)));
 
       // Create the AFSK modulator
     fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
@@ -572,9 +576,13 @@ bool LocalTx::initialize(void)
     cfg.getValue(name, "IB_AFSK_BAUDRATE", baudrate);
     float afsk_level = -6;
     cfg.getValue(name, "IB_AFSK_LEVEL", afsk_level);
+    unsigned afsk_tx_delay = 25;
+    cfg.getValue(name, "IB_AFSK_TX_DELAY", afsk_tx_delay);
 
       // Create the inband HDLC framer
     hdlc_framer_ib = new HdlcFramer;
+    hdlc_framer_ib->setStartFlagCnt(
+        static_cast<size_t>(ceil(afsk_tx_delay * baudrate / 8000.0)));
 
       // Create the inband AFSK modulator
     fsk_mod_ib = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
