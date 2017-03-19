@@ -185,7 +185,7 @@ class NetUplink : public Uplink
     State                   state;
     std::string             auth_key;
     unsigned char           auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
-    Async::Timer      	    *siglev_check_timer;
+    //Async::Timer      	    *siglev_check_timer;
     Async::Timer	    *mute_tx_timer;
     bool		    tx_muted;
     bool                    fallback_enabled;

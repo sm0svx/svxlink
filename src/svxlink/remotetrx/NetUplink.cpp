@@ -155,7 +155,7 @@ NetUplink::~NetUplink(void)
   delete server;
   delete heartbeat_timer;
   delete mute_tx_timer;
-  delete siglev_check_timer;
+  //delete siglev_check_timer;
 } /* NetUplink::~NetUplink */
 
 
