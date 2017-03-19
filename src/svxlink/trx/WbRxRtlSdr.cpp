@@ -176,7 +176,7 @@ WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
   rtl->readyStateChanged.connect(
       mem_fun(*this, &WbRxRtlSdr::rtlReadyStateChanged));
 
-  uint32_t fq_corr = 0;
+  int fq_corr = 0;
   if (cfg.getValue(name, "FQ_CORR", fq_corr) && (fq_corr != 0))
   {
     //cout << "###   FQ_CORR     = " << (int32_t)fq_corr << "ppm\n";
