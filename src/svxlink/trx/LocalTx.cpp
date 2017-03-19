@@ -394,12 +394,12 @@ bool LocalTx::initialize(void)
   }
 #endif
 
-  bool fsk_enable = false;
-  cfg.getValue(name, "OB_AFSK_ENABLE", fsk_enable);
-  if (fsk_enable && (siglev_sine_gen != 0))
+  bool ob_afsk_enable = false;
+  cfg.getValue(name, "OB_AFSK_ENABLE", ob_afsk_enable);
+  if (ob_afsk_enable && (siglev_sine_gen != 0))
   {
     cerr << "*** ERROR: Cannot have both siglev tone (TONE_SIGLEV_MAP) and "
-            "AFSK (OB_AFSK_ENABLE) enabled at the same time for receiver "
+            "AFSK (IB/OB_AFSK_ENABLE) enabled at the same time for receiver "
          << name << ".\n";
       // FIXME: Should we bother to clean up or do we trust that the
       // creator of this object will delete it if the initialization fail?
@@ -508,7 +508,7 @@ bool LocalTx::initialize(void)
   selector->enableAutoSelect(dtmf_valve, 10);
   selector->setFlushWait(dtmf_valve, false);
   
-  if (fsk_enable)
+  if (ob_afsk_enable)
   {
     unsigned fc = 5500;
     cfg.getValue(name, "OB_AFSK_CENTER_FQ", fc);
@@ -558,12 +558,27 @@ bool LocalTx::initialize(void)
     selector->addSource(fsk_valve);
     selector->enableAutoSelect(fsk_valve, 20);
     */
+  }
 
-      // Create the inband AFSK HDLC framer
+  bool ib_afsk_enable = false;
+  cfg.getValue(name, "IB_AFSK_ENABLE", ib_afsk_enable);
+  if (ob_afsk_enable && ib_afsk_enable)
+  {
+    unsigned fc = 1700;
+    cfg.getValue(name, "IB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 1000;
+    cfg.getValue(name, "IB_AFSK_SHIFT", shift);
+    unsigned baudrate = 1200;
+    cfg.getValue(name, "IB_AFSK_BAUDRATE", baudrate);
+    float afsk_level = -6;
+    cfg.getValue(name, "IB_AFSK_LEVEL", afsk_level);
+
+      // Create the inband HDLC framer
     hdlc_framer_ib = new HdlcFramer;
 
       // Create the inband AFSK modulator
-    fsk_mod_ib = new AfskModulator(1200, 2200, 1200, -10);
+    fsk_mod_ib = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
+                                afsk_level);
     hdlc_framer_ib->sendBits.connect(
         mem_fun(fsk_mod_ib, &AfskModulator::sendBits));
 
@@ -575,7 +590,7 @@ bool LocalTx::initialize(void)
     selector->enableAutoSelect(pacer, 20);
     selector->setFlushWait(pacer, false);
   }
-  
+
   /*
   AudioDebugger *d1 = new AudioDebugger;
   prev_src->registerSink(d1, true);

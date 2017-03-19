@@ -475,8 +475,8 @@ bool LocalRxBase::initialize(void)
 
     // Set up out of band AFSK demodulator if configured
   float voice_gain = 0.0f;
-  bool ofsk_enable;
-  if (cfg.getValue(name(), "OB_AFSK_ENABLE", ofsk_enable))
+  bool ob_afsk_enable = false;
+  if (cfg.getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable) && ob_afsk_enable)
   {
     unsigned fc = 5500;
     cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
@@ -500,20 +500,31 @@ bool LocalRxBase::initialize(void)
     deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceived));
     sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
+  }
 
-    AfskDemodulator *fsk_demod_ib = new AfskDemodulator(1200, 2200, 1200);
-    fullband_splitter->addSink(fsk_demod_ib, true);
-    prev_src = fsk_demod_ib;
+  bool ib_afsk_enable = false;
+  if (cfg.getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable) && ib_afsk_enable)
+  {
+    unsigned fc = 1700;
+    cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 1000;
+    cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
+    unsigned baudrate = 1200;
+    cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
 
-    Synchronizer *sync_ib = new Synchronizer(1200);
-    prev_src->registerSink(sync_ib, true);
+    AfskDemodulator *fsk_demod =
+      new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
+    fullband_splitter->addSink(fsk_demod, true);
+    AudioSource *prev_src = fsk_demod;
+
+    Synchronizer *sync = new Synchronizer(baudrate);
+    prev_src->registerSink(sync, true);
     prev_src = 0;
 
-    HdlcDeframer *deframer_ib = new HdlcDeframer;
-    deframer_ib->frameReceived.connect(
+    HdlcDeframer *deframer = new HdlcDeframer;
+    deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceivedIb));
-    sync_ib->bitsReceived.connect(
-        mem_fun(deframer_ib, &HdlcDeframer::bitsReceived));
+    sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
   }
 
     // Create a new audio splitter to handle tone detectors
