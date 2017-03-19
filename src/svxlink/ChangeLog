@@ -52,6 +52,11 @@
   use GPIO. On some hardware platforms the path to control GPIO pins is not
   standard. This configuration variable can be used to set the path.
 
+* Bugfix: Setting FQ_CORR=0 in a WbRx configuration section resulted in an
+  error message
+
+* FQ_CORR can now be negative
+
 
 
  1.5.0 -- 22 Nov 2015
