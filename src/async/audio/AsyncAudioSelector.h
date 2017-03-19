@@ -185,6 +185,10 @@ class AudioSelector : public AudioSource
      */
     void setFlushWait(AudioSource *source, bool flush_wait);
 
+    /**
+     * @brief   Enable debug printouts
+     * @param   debug Set to \em true to enable debug printouts
+     */
     void setDebug(bool debug) { m_debug = debug; }
 
     /**

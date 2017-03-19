@@ -415,12 +415,21 @@ void AudioSelector::selectHighestPrioActiveBranch(void)
        it != m_branch_map.end(); ++it)
   {
     Branch *b = (*it).second;
-    assert(b->state() != STATE_STOPPED);
-    if ((b->autoSelectEnabled()) && (b->state() == STATE_ACTIVE))
+    if (b->autoSelectEnabled())
     {
-      if ((new_branch == 0) ||
-          (b->selectionPrio() > new_branch->selectionPrio()))
-      new_branch = b;
+      if (b->state() == STATE_ACTIVE)
+      {
+        if ((new_branch == 0) ||
+            (b->selectionPrio() > new_branch->selectionPrio()))
+        new_branch = b;
+      }
+      else if (b->state() == STATE_STOPPED)
+      {
+        if ((new_branch == 0) ||
+            (b->selectionPrio() > new_branch->selectionPrio()))
+        new_branch = b;
+        b->resumeOutput();
+      }
     }
   }
   if (new_branch != 0)
