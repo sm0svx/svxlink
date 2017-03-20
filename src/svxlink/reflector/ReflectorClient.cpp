@@ -128,7 +128,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::TcpConnection *con,
     m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET),
     m_udp_heartbeat_tx_cnt(UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
-    m_reflector(ref)
+    m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0)
 {
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorClient::onDataReceived));
   //m_con->disconnected.connect(mem_fun(*this, &ReflectorClient::onDisconnected));
@@ -165,9 +165,14 @@ void ReflectorClient::sendMsg(const ReflectorMsg& msg)
 } /* ReflectorClient::sendMsg */
 
 
-void ReflectorClient::udpMsgReceived(void)
+void ReflectorClient::udpMsgReceived(const ReflectorUdpMsg &header)
 {
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
+
+  if ((m_blocktime > 0) && (header.type() == MsgUdpAudio::TYPE))
+  {
+    m_remaining_blocktime = m_blocktime;
+  }
 } /* ReflectorClient::udpMsgReceived */
 
 
@@ -195,6 +200,11 @@ void ReflectorClient::sendUdpMsg(const ReflectorUdpMsg &msg)
 } /* ReflectorClient::sendUdpMsg */
 
 
+void ReflectorClient::setBlock(unsigned blocktime)
+{
+  m_blocktime = blocktime;
+  m_remaining_blocktime = blocktime;
+} /* ReflectorClient::setBlock */
 
 
 /****************************************************************************
@@ -443,6 +453,19 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
   {
     cout << callsign() << ": UDP heartbeat timeout" << endl;
     disconnect("UDP heartbeat timeout");
+  }
+
+  if (m_blocktime > 0)
+  {
+    if (m_remaining_blocktime == 0)
+    {
+      m_blocktime = 0;
+    }
+    else
+    {
+      m_remaining_blocktime -= 1;
+    }
+
   }
 } /* ReflectorClient::handleHeartbeat */
 

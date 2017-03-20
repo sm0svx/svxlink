@@ -169,6 +169,9 @@ class Reflector : public sigc::trackable
     Async::Timer          m_talker_timeout_timer;
     struct timeval        m_last_talker_timestamp;
     ReflectorClientConMap m_client_con_map;
+    unsigned              m_sql_timeout;
+    unsigned              m_sql_timeout_cnt;
+    unsigned              m_sql_timeout_blocktime;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
@@ -181,6 +184,7 @@ class Reflector : public sigc::trackable
     void broadcastUdpMsgExcept(const ReflectorClient *client,
                                const ReflectorUdpMsg& msg);
     void checkTalkerTimeout(Async::Timer *t);
+    void setTalker(ReflectorClient *client);
 
 };  /* class Reflector */
 
