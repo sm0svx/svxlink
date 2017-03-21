@@ -53,6 +53,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncIpAddress.h>
+#include <AsyncUdpSocket.h>
+#include <AsyncTcpConnection.h>
 
 
 /****************************************************************************
@@ -135,7 +137,7 @@ class UdpHandler : public sigc::trackable
      * one does not already exist, a new one will be created and
      * the serial port will be opened.
      */
-    UdpHandler *open(void);
+    Async::UdpSocket *open(void);
 
     /**
      * @brief 	Release a UdpHandler object and close the port
@@ -177,18 +179,19 @@ class UdpHandler : public sigc::trackable
      */
     sigc::signal<void, const IpAddress&, uint16_t, void*, int> dataReceived;
 
+    void udpDataReceived(const Async::IpAddress& ip_addr,uint16_t port, void *data, int len);
+
 
   protected:
 
+
   private:
-    static std::map<uint16_t, UdpHandler *>  dev_map;
+
+    static std::map<uint16_t, Async::UdpSocket *> dev_map;
 
     uint16_t               portnr;
     Async::IpAddress       ip_addr;
     int                    use_count;
-    bool openPort(void);
-    bool closePort(void);
-    void onIncomingData(FdWatch *watch);
 
 
 };  /* class UdpHandler */

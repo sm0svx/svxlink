@@ -1,8 +1,8 @@
 /**
-@file	 AsyncAudioEncoderAmbe.cpp
-@brief   An audio encoder that encodes samples using the Ambe codec
+@file	 AsyncAudioEncoderDv3kUdp.h
+@brief   An audio encoder that encodes samples using the Dv3kUdp codec
 @author  Tobias Blomberg / SM0SVX
-@date	 2017-03-12
+@date	 2013-10-12
 
 \verbatim
 Async - A library for programming event driven applications
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef ASYNC_AUDIO_ENCODER_DV3KUDP_INCLUDED
+#define ASYNC_AUDIO_ENCODER_DV3KUDP_INCLUDED
 
 
 /****************************************************************************
@@ -32,10 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cassert>
-#include <cstdlib>
-#include <sstream>
 
 
 /****************************************************************************
@@ -44,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioEncoder.h>
 
 
 /****************************************************************************
@@ -52,40 +51,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioEncoderAmbe.h"
+
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Namespace
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
 
 
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,62 +95,76 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	An audio encoder that encodes samples using the Dv3kUdp codec
+@author Tobias Blomberg / SM0SVX
+@date   2013-10-12
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-AudioEncoderAmbe::AudioEncoderAmbe(void)
-  : frame_size(0), sample_buf(0), buf_len(0)
+This class implements an audio encoder that use the Dv3kUdp audio codec.
+*/
+class AudioEncoderDv3kUdp : public AudioEncoder
 {
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioEncoderDv3kUdp(void);
+  
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioEncoderDv3kUdp(void);
+  
+    /**
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
+     */
+    virtual const char *name(void) const { return "AMBESERVER"; }
+  
+     /**
+     * @brief 	Set an option for the encoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value);
+    
  
-} /* AsyncAudioEncoderAmbe::AsyncAudioEncoderAmbe */
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
+     */
+    virtual int writeSamples(const float *samples, int count);
+    
+    
+  protected:
+    
+  private:
+    int           port;
+    std::string   host;
+    int       buf_len;
+    
+    AudioEncoderDv3kUdp(const AudioEncoderDv3kUdp&);
+    AudioEncoderDv3kUdp& operator=(const AudioEncoderDv3kUdp&);
+    
+};  /* class AudioEncoderDv3kUdp */
 
 
-AudioEncoderAmbe::~AudioEncoderAmbe(void)
-{
+} /* namespace */
 
-} /* AsyncAudioEncoderAmbe::~AsyncAudioEncoderAmbe */
-
-
-void AudioEncoderAmbe::setOption(const std::string &name,
-      	      	    	      	 const std::string &value)
-{
-
-} /* AudioEncoderAmbe::setOption */
-
-
-int AudioEncoderAmbe::writeSamples(const float *samples, int count)
-{
-  return count;  
-} /* AudioEncoderAmbe::writeSamples */
-
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* ASYNC_AUDIO_ENCODER_DV3KUDP_INCLUDED */
 
 
 

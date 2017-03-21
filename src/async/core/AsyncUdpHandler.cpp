@@ -112,7 +112,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-map<uint16_t, UdpHandler *> UdpHandler::dev_map;
+map<uint16_t, UdpSocket *> UdpHandler::dev_map;
 
 
 /****************************************************************************
@@ -124,6 +124,7 @@ map<uint16_t, UdpHandler *> UdpHandler::dev_map;
 UdpHandler::UdpHandler(const uint16_t &port, const IpAddress &ip_addr)
   : portnr(port), ip_addr(ip_addr), use_count(0)
 {
+  
 } /* UdpHandler::UdpHandler */
 
 
@@ -143,27 +144,18 @@ UdpHandler::~UdpHandler(void)
  * Bugs:
  *------------------------------------------------------------------------
  */
-UdpHandler *UdpHandler::open(void)
+UdpSocket *UdpHandler::open(void)
 {
-  UdpHandler *dev = 0;
+  Async::UdpSocket *udp_sock = 0;
 
   if (dev_map.count(portnr) == 0)
   {
-    dev_map[portnr] = new UdpHandler(portnr, ip_addr);
+    udp_sock = new UdpSocket(portnr);
+    udp_sock->dataReceived.connect(mem_fun(*this, &UdpHandler::udpDataReceived));
   }
-  dev = dev_map[portnr];
+  udp_sock = dev_map[portnr];
 
-  if (dev->use_count++ == 0)
-  {
-    if (!dev->openPort())
-    {
-      delete dev;
-      dev = 0;
-    }
-  }
-
-  return dev;
-
+  return udp_sock;
 } /* UdpHandler::instance */
 
 
@@ -174,7 +166,7 @@ bool UdpHandler::close(UdpHandler *dev)
   if (--dev->use_count == 0)
   {
     dev_map.erase(dev->portnr);
-    success = dev->closePort();
+    //success = dev->closePort();
     delete dev;
   }
 
@@ -183,6 +175,19 @@ bool UdpHandler::close(UdpHandler *dev)
 } /* UdpHandler::close */
 
 
+bool UdpHandler::write(const IpAddress& remote_ip, int remote_port, const void *buf,
+	int count)
+{
+
+  return true;
+}
+
+
+void UdpHandler::udpDataReceived(const Async::IpAddress& ip_addr, uint16_t port, void *data, int len)
+{
+ // int t;
+ // return t;
+} /* UdpHandler::onDataReceived */
 
 /****************************************************************************
  *
@@ -206,9 +211,6 @@ bool UdpHandler::close(UdpHandler *dev)
 
 
 
-
-
-
 /****************************************************************************
  *
  * Private member functions
@@ -216,31 +218,6 @@ bool UdpHandler::close(UdpHandler *dev)
  ****************************************************************************/
 
 
-bool UdpHandler::openPort(void)
-{
-  return true;
-} /* UdpHandler::openPort */
-
-
-bool UdpHandler::closePort(void)
-{
-  return true;
-} /* UdpHandler::closePort */
-
-
-void UdpHandler::onIncomingData(FdWatch *watch)
-{
-
-
-} /* UdpHandler::onIncomingData */
-
-
-bool UdpHandler::write(const IpAddress& remote_ip, int remote_port, const void *buf,
-	int count)
-{
-
-  return true;
-}
 
 
 /*

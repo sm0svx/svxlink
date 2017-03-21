@@ -320,7 +320,7 @@ bool RewindLogic::initialize(void)
   if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
   {
     cerr << "*** ERROR: " << name() << "/AMBE_HANDLER not valid, must be"
-         << " DV3k or SwDsd" << endl;
+         << " DV3k or AMBESERVER" << endl;
     return false;
   }
 
@@ -334,6 +334,7 @@ bool RewindLogic::initialize(void)
       mem_fun(*this, &RewindLogic::sendEncodedAudio));
   m_logic_con_in->flushEncodedSamples.connect(
       mem_fun(*this, &RewindLogic::flushEncodedAudio));
+  cout << "Loading Encoder " << m_logic_con_in->name() << endl;
 
     // Create audio decoder
   m_dec = Async::AudioDecoder::create(m_ambe_handler);
@@ -344,6 +345,8 @@ bool RewindLogic::initialize(void)
   }
   m_dec->allEncodedSamplesFlushed.connect(
       mem_fun(*this, &RewindLogic::allEncodedSamplesFlushed));
+  cout << "Loading Decoder " << m_dec->name() << endl;
+
   AudioSource *prev_src = m_dec;
 
     // Create jitter FIFO if jitter buffer delay > 0

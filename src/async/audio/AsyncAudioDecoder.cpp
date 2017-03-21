@@ -138,7 +138,7 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
   {
     return new AudioDecoderGsm;
   }
-  else if (name == "DV3KUDP")
+  else if (name == "AMBESERVER")
   {
     return new AudioDecoderDv3kUdp;
   }

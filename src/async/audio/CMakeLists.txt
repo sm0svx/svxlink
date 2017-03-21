@@ -72,8 +72,7 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp
            AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
            AsyncAudioDeviceUDP.cpp AsyncAudioNoiseAdder.cpp
-           AsyncAudioRecoder.cpp AsyncAudioDecoderDv3kUdp.cpp
-           AsyncAudioRecoderDV3k.cpp )
+           AsyncAudioEncoderDv3kUdp.cpp AsyncAudioDecoderDv3kUdp.cpp)
 
 if(Speex_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp)
