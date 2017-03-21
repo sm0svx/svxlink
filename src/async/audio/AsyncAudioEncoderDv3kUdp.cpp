@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncUdpHandler.h>
 
 
 /****************************************************************************
@@ -122,7 +123,8 @@ AudioEncoderDv3kUdp::AudioEncoderDv3kUdp(void)
 
 AudioEncoderDv3kUdp::~AudioEncoderDv3kUdp(void)
 {
-
+  delete m_udp_sock;
+  delete dns;
 } /* AsyncAudioEncoderDv3kUdp::~AsyncAudioEncoderDv3kUdp */
 
 
@@ -146,6 +148,12 @@ int AudioEncoderDv3kUdp::writeSamples(const float *samples, int count)
 } /* AudioEncoderDv3kUdp::writeSamples */
 
 
+bool AudioEncoderDv3kUdp::createDv3kUdp(void)
+{
+  connect();
+  return true;
+} /* AudioEncoderDv3kUdp::createDv3kUdp */
+
 
 
 /****************************************************************************
@@ -162,6 +170,59 @@ int AudioEncoderDv3kUdp::writeSamples(const float *samples, int count)
  *
  ****************************************************************************/
 
+void AudioEncoderDv3kUdp::connect(void)
+{
+  if (ip_addr.isEmpty())
+  {
+    dns = new DnsLookup(host);
+    dns->resultsReady.connect(mem_fun(*this,
+        &AudioEncoderDv3kUdp::dnsResultReady));
+    return;
+  }
+
+  cout << name() << ": try to connect AMBEServer on port " << port << endl;
+
+  delete m_udp_sock;
+  m_udp_sock = new Async::UdpHandler(port, ip_addr);
+  if (!m_udp_sock->open())
+  {
+     cout << "*** ERROR: can not open UDP socket on port " << port << endl;
+     return;
+  }
+  m_udp_sock->dataReceived.connect(
+      mem_fun(*this, &AudioEncoderDv3kUdp::onDataReceived));
+} /* AudioEncoderDv3kUdp::connect */
+
+
+void AudioEncoderDv3kUdp::dnsResultReady(DnsLookup& dns_lookup)
+{
+  vector<IpAddress> result = dns->addresses();
+
+  delete dns;
+  dns = 0;
+
+  if (result.empty() || result[0].isEmpty())
+  {
+    ip_addr.clear();
+    return;
+  }
+
+  ip_addr = result[0];
+  connect();
+} /* AudioEncoderDv3kUdp::dnsResultReady */
+
+
+void AudioEncoderDv3kUdp::onDataReceived(const IpAddress& addr, uint16_t port,
+                                         void *buf, int count)
+{
+  cout << "### " << name() << ": AudioEncoderDv3kUdpLogic::onDataReceived: "
+       << "addr=" << addr << " port=" << port << " count=" << count << endl;
+
+  float *samples = reinterpret_cast<float*>(buf);
+
+//  sinkWriteSamples(samples, count);
+
+} /* AudioDecoderDv3kUdp::onDataReceived */
 
 
 /*

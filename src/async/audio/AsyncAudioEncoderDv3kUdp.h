@@ -43,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioEncoder.h>
+#include <AsyncDnsLookup.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -59,7 +61,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
+namespace Async
+{
+  class UdpHandler;
+  class DnsLookup;
+}
 
 /****************************************************************************
  *
@@ -136,6 +142,11 @@ class AudioEncoderDv3kUdp : public AudioEncoder
     
  
     /**
+    * @brief 	Initialize AMBEServer encoder
+    */ 
+
+    virtual bool createDv3kUdp(void);
+    /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
@@ -152,12 +163,19 @@ class AudioEncoderDv3kUdp : public AudioEncoder
   protected:
     
   private:
-    int           port;
-    std::string   host;
-    int       buf_len;
-    
+    int                port;
+    std::string        host;
+    Async::UdpHandler* m_udp_sock;
+    Async::IpAddress   ip_addr;
+    Async::DnsLookup   *dns;
+    int                buf_len;
+
     AudioEncoderDv3kUdp(const AudioEncoderDv3kUdp&);
     AudioEncoderDv3kUdp& operator=(const AudioEncoderDv3kUdp&);
+
+    void connect(void);
+    void dnsResultReady(DnsLookup& dns_lookup);
+    void onDataReceived(const IpAddress& ip_addr, uint16_t port, void *buf, int count);
     
 };  /* class AudioEncoderDv3kUdp */
 
