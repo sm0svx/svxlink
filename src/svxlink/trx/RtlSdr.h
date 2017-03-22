@@ -354,7 +354,7 @@ class RtlSdr : public sigc::trackable
      * The correction factor is given in parts per million (PPM). That is,
      * how many Hz per MHz the tuner is off.
      */
-    virtual void handleSetFqCorr(uint32_t corr) = 0;
+    virtual void handleSetFqCorr(int corr) = 0;
 
     /**
      * @brief   Enable or disable test mode

@@ -452,7 +452,7 @@ void RtlUsb::handleSetGain(int32_t gain)
 } /* RtlUsb::handleSetGain */
 
 
-void RtlUsb::handleSetFqCorr(uint32_t corr)
+void RtlUsb::handleSetFqCorr(int corr)
 {
   if (dev == NULL)
   {
