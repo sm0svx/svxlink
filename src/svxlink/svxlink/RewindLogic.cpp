@@ -131,7 +131,7 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
     rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
-    sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(false)
+    sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0)
 {
 } /* RewindLogic::RewindLogic */
 
@@ -539,7 +539,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       {
         m_state = AUTHENTICATED;
       }
-      if (!subscribed)
+      if (++subscribed < 3)
       {
         sendSubscription();
       }
@@ -589,11 +589,11 @@ void RewindLogic::authenticate(uint8_t salt[], const string pass)
   memcpy(trd->data, salt, 4);
   memcpy(trd->data + 4, pass.c_str(), (size_t)strlen(pass.c_str()) );
   mkSHA256(trd->data, 4 + (size_t)strlen(pass.c_str()), rd->data);
-
-  cout << "Pass=" << pass << " laenge:" << (size_t)strlen(pass.c_str())
+                            //                         32
+  cout << "Pass=" << pass << " laenge:" << (18 + SHA256_DIGEST_LENGTH)
        << "," << rd->data << endl;
-
-  sendMsg(rd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH - 2);
+            //                              32
+  sendMsg(rd, 18 + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
 
 } /* RewindLogic::authPassphrase */
@@ -672,6 +672,7 @@ void RewindLogic::sendKeepAlive(void)
   len += sizeof(struct RewindData);
   rd->length = htole16(len);
 
+  memcpy(rd->data, vd, len);
   cout << "nummerID=" << vd->number << " laenge " << len << endl;
   sendMsg(rd, len);
   m_ping_timer.reset();
@@ -702,12 +703,12 @@ void RewindLogic::sendSubscription(void)
   struct RewindData* rd =
    (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
-  struct RewindSubscriptionData* vd =
+  struct RewindSubscriptionData* sd =
    (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
                     + BUFFER_SIZE);
 
-  vd->type = htole16(SESSION_TYPE_GROUP_VOICE); // 0x07
-  vd->number = atoi(m_tg.c_str()); // eg 2629
+  sd->type = htole16(SESSION_TYPE_GROUP_VOICE); // 0x07
+  sd->number = atoi(m_tg.c_str()); // eg 2629
 
                   // "REWIND01"             8
   memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
@@ -715,12 +716,11 @@ void RewindLogic::sendSubscription(void)
   rd->type  = htole16(REWIND_TYPE_SUBSCRIPTION); // REWIND_CLASS_APPLICATION + 0x00
   rd->flags = htole16(REWIND_FLAG_NONE); // 0x00
 
-  int len = m_tg.length();
-  len += sizeof(struct RewindSubscriptionData);
-  len += sizeof(struct RewindData);
+  int len = REWIND_SIGN_LENGTH;
+  len += 18;
   rd->length = htole16(len);
 
-  memcpy(rd->data, vd, len);
+  memcpy(rd->data, sd, len);
 
   cout << "sending subscription: " << rd->data << ", laenge=" << len << endl;
   sendMsg(rd, len);

@@ -236,6 +236,21 @@ class RewindLogic : public LogicBase
       uint8_t data[];
     };
 
+    struct RewindSuperHeaderData
+    {
+      uint32_t sessiontype;
+      uint32_t srcid;
+      uint32_t desid;
+      uint8_t srccall[];
+      uint8_t dstcall[];
+    };
+
+
+    struct RewindConfigurationData
+    {
+       uint32_t options;
+    };
+
     //struct RewindData* rd;
 
     enum STATUS {
@@ -280,7 +295,7 @@ class RewindLogic : public LogicBase
     int                   sequenceNumber;
     bool                  m_slot1;
     bool                  m_slot2;
-    bool                  subscribed;
+    int                   subscribed;
 
     RewindLogic(const RewindLogic&);
     RewindLogic& operator=(const RewindLogic&);
