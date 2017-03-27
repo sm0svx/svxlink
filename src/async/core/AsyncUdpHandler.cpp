@@ -124,7 +124,7 @@ map<uint16_t, UdpSocket *> UdpHandler::dev_map;
 UdpHandler::UdpHandler(const uint16_t &port, const IpAddress &ip_addr)
   : portnr(port), ip_addr(ip_addr), use_count(0)
 {
-  
+
 } /* UdpHandler::UdpHandler */
 
 

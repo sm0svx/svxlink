@@ -143,11 +143,6 @@ class AudioDecoderDv3kUdp : public Async::AudioDecoder
     virtual void setOption(const std::string &name, const std::string &value);
 
     /**
-     * @brief Intitialize the AMBEServer decoder
-     */
-    virtual bool createDv3kUdp(void);
-
-    /**
      * @brief 	Write encoded samples into the decoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
@@ -162,7 +157,7 @@ class AudioDecoderDv3kUdp : public Async::AudioDecoder
 
     int                   port;
     std::string           host;
-    Async::UdpHandler*    m_udp_sock;
+    Async::UdpHandler      *m_udp_sock;
     Async::IpAddress	  ip_addr;
     Async::DnsLookup	  *dns;
 

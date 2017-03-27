@@ -83,7 +83,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -121,31 +121,25 @@ class AudioEncoderDv3kUdp : public AudioEncoder
      * @brief 	Default constuctor
      */
     AudioEncoderDv3kUdp(void);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~AudioEncoderDv3kUdp(void);
-  
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "AMBESERVER"; }
-  
+
      /**
      * @brief 	Set an option for the encoder
      * @param 	name The name of the option
      * @param 	value The value of the option
      */
     virtual void setOption(const std::string &name, const std::string &value);
-    
- 
-    /**
-    * @brief 	Initialize AMBEServer encoder
-    */ 
 
-    virtual bool createDv3kUdp(void);
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -158,14 +152,14 @@ class AudioEncoderDv3kUdp : public AudioEncoder
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
-    
-    
+
+
   protected:
-    
+
   private:
     int                port;
     std::string        host;
-    Async::UdpHandler* m_udp_sock;
+    Async::UdpHandler  *m_udp_sock;
     Async::IpAddress   ip_addr;
     Async::DnsLookup   *dns;
     int                buf_len;
@@ -176,7 +170,7 @@ class AudioEncoderDv3kUdp : public AudioEncoder
     void connect(void);
     void dnsResultReady(DnsLookup& dns_lookup);
     void onDataReceived(const IpAddress& ip_addr, uint16_t port, void *buf, int count);
-    
+
 };  /* class AudioEncoderDv3kUdp */
 
 

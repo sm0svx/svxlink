@@ -69,6 +69,7 @@ namespace Async
 {
   class UdpSocket;
   class DnsLookup;
+  class AudioPassthrough;
 };
 
 
@@ -259,7 +260,8 @@ class RewindLogic : public LogicBase
     std::string           m_id;
     Async::Timer          m_reconnect_timer;
     Async::Timer          m_ping_timer;
-    Async::AudioEncoder*  m_logic_con_in;
+    Async::AudioSink*     m_logic_con_in;
+    Async::AudioEncoder*  m_logic_enc;
     Async::AudioSource*   m_logic_con_out;
     Async::AudioDecoder*  m_dec;
 
@@ -278,6 +280,7 @@ class RewindLogic : public LogicBase
     int                   sequenceNumber;
     bool                  m_slot1;
     bool                  m_slot2;
+    bool                  subscribed;
 
     RewindLogic(const RewindLogic&);
     RewindLogic& operator=(const RewindLogic&);
@@ -297,12 +300,12 @@ class RewindLogic : public LogicBase
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t);
     void pingHandler(Async::Timer *t);
-    void authenticate(const std::string pass);
+    void authenticate(uint8_t salt[], const std::string pass);
     void sendKeepAlive(void);
     void sendServiceData(void);
     void sendCloseMessage(void);
-    void sendConfiguration(void);
-    void mkSHA256(std::string pass, int len, uint8_t hash[]);
+    void sendSubscription(void);
+    void mkSHA256(uint8_t pass[], int len, uint8_t hash[]);
     void handleDataMessage(std::string datamessage);
 
 };  /* class RewindLogic */

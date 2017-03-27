@@ -115,7 +115,7 @@ using namespace Async;
  ****************************************************************************/
 
 AudioDecoderDv3kUdp::AudioDecoderDv3kUdp(void)
-  : port(2604), host("127.0.0.1")
+  : port(0), host("")
 {
 } /* AudioDecoderDv3kUdp::AudioDecoderDv3kUdp */
 
@@ -133,27 +133,23 @@ void AudioDecoderDv3kUdp::setOption(const std::string &name,
     // AMBESERVER_PORT and AMBESERVER_HOST
   if (name == "PORT")
   {
-    port = atoi(name.c_str());
+    port = atoi(value.c_str());
   }
   if (name == "HOST")
   {
-    host = name;
+    host = value;
+  }
+
+  if (port > 0 && !host.empty())
+  {
+    connect();
   }
 } /* AudioDecoderDv3kUdp::setOption */
 
 
-
-bool AudioDecoderDv3kUdp::createDv3kUdp(void)
-{
-  connect();
-  return true;
-} /* AudioDecoderDv3kUdp::setGain */
-
-
-
 void AudioDecoderDv3kUdp::writeEncodedSamples(void *buf, int size)
 {
-   sendData(buf, size);
+  sendData(buf, size);
 } /* AudioDecoderDv3kUdp::writeEncodedSamples */
 
 
@@ -182,17 +178,12 @@ void AudioDecoderDv3kUdp::connect(void)
     return;
   }
 
-  cout << name() << ": try to connect AMBEServer on port " << port << endl;
-
-  delete m_udp_sock;
+  cout << name() << ": Decoder try to connect AMBEServer " << ip_addr.toString()
+       << ":" << port << endl;
   m_udp_sock = new Async::UdpHandler(port, ip_addr);
-  if (!m_udp_sock->open())
-  {
-     cout << "*** ERROR: can not open UDP socket on port " << port << endl;
-     return;
-  }
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &AudioDecoderDv3kUdp::onDataReceived));
+  m_udp_sock->open();
 
 } /* AudioDecoderDv3kUdp::connect */
 

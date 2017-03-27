@@ -49,8 +49,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
+#include <AsyncAudioDecimator.h>
+#include <AsyncAudioInterpolator.h>
 #include <AsyncUdpSocket.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -61,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "RewindLogic.h"
 #include "sha256.h"
+#include "multirate_filter_coeff.h"
 #include "version/SVXLINK.h"
 
 
@@ -128,7 +131,7 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
     rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
-    sequenceNumber(0), m_slot1(false), m_slot2(false)
+    sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(false)
 {
 } /* RewindLogic::RewindLogic */
 
@@ -314,6 +317,18 @@ bool RewindLogic::initialize(void)
   m_ping_timer.expired.connect(
      mem_fun(*this, &RewindLogic::pingHandler));
 
+  m_logic_con_in = new AudioSink;
+  AudioSource *prev_sc = new AudioSource;
+  //AudioSource *prev_sc = m_logic_con_in;
+  prev_sc->registerSink(m_logic_con_in,true);
+
+#if INTERNAL_SAMPLE_RATE == 16000
+  {
+    AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
+    prev_sc->registerSink(d1, true);
+    prev_sc = d1;
+  }
+#endif
 
   // create the Rewind recoder device, DV3k USB stick or DSD lib
   string m_ambe_handler;
@@ -324,17 +339,19 @@ bool RewindLogic::initialize(void)
     return false;
   }
 
-  m_logic_con_in = Async::AudioEncoder::create(m_ambe_handler);
-  if (m_logic_con_in == 0)
+  m_logic_enc = Async::AudioEncoder::create(m_ambe_handler);
+  if (m_logic_enc == 0)
   {
     cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
     return false;
   }
-  m_logic_con_in->writeEncodedSamples.connect(
+
+  m_logic_enc->registerSource(prev_sc);
+  m_logic_enc->writeEncodedSamples.connect(
       mem_fun(*this, &RewindLogic::sendEncodedAudio));
-  m_logic_con_in->flushEncodedSamples.connect(
+  m_logic_enc->flushEncodedSamples.connect(
       mem_fun(*this, &RewindLogic::flushEncodedAudio));
-  cout << "Loading Encoder " << m_logic_con_in->name() << endl;
+  cout << "Loading Encoder " << m_logic_enc->name() << endl;
 
     // Create audio decoder
   m_dec = Async::AudioDecoder::create(m_ambe_handler);
@@ -343,10 +360,11 @@ bool RewindLogic::initialize(void)
     cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
     return false;
   }
+
   m_dec->allEncodedSamplesFlushed.connect(
       mem_fun(*this, &RewindLogic::allEncodedSamplesFlushed));
-  cout << "Loading Decoder " << m_dec->name() << endl;
 
+  cout << "Loading Decoder " << m_dec->name() << endl;
   AudioSource *prev_src = m_dec;
 
     // Create jitter FIFO if jitter buffer delay > 0
@@ -363,8 +381,15 @@ bool RewindLogic::initialize(void)
   }
   m_logic_con_out = prev_src;
 
+    // upsampling from 8kHz to 16kHz
+#if INTERNAL_SAMPLE_RATE == 16000
+  AudioInterpolator *up = new AudioInterpolator(2, coeff_16_8, coeff_16_8_taps);
+  m_logic_con_out->registerSink(up, true);
+  m_logic_con_out = up;
+#endif
+
   // sending options to audio encoder
-  string opt_prefix(m_logic_con_in->name());
+  string opt_prefix(m_logic_enc->name());
   opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
@@ -375,7 +400,7 @@ bool RewindLogic::initialize(void)
       string opt_value;
       cfg().getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      m_logic_con_in->setOption(opt_name, opt_value);
+      m_logic_enc->setOption(opt_name, opt_value);
       m_dec->setOption(opt_name, opt_value);
     }
   }
@@ -485,7 +510,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
     case REWIND_TYPE_CHALLENGE:
       cout << "--- Authentication" << endl;
-      authenticate(m_auth_key);
+      authenticate(rd->data, m_auth_key);
       return;
 
     case REWIND_TYPE_CLOSE:
@@ -508,29 +533,67 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
            << "resolved during processing." << endl;
       return;
 
+    case REWIND_TYPE_REMOTE_CONTROL:
+      cout << "    type: remote_control " << endl;
+      if (m_state == WAITING_PASS_ACK)
+      {
+        m_state = AUTHENTICATED;
+      }
+      if (!subscribed)
+      {
+        sendSubscription();
+      }
+      return;
+
+    case REWIND_TYPE_PEER_DATA:
+      cout << "*** type: peer data" << endl;
+      return;
+
+    case REWIND_TYPE_MEDIA_DATA:
+      cout << "*** type: media data" << endl;
+      return;
+
+    case REWIND_TYPE_SUBSCRIPTION:
+      cout << "*** type: subscription" << endl;
+      return;
+
+    case REWIND_TYPE_DMR_DATA_BASE:
+      cout << "*** type: dmr data base" << endl;
+      return;
+
+    case REWIND_TYPE_DMR_EMBEDDED_DATA:
+      cout << "*** dmr embedded data" << endl;
+      return;
+
     default:
       cout << "*** Unknown data received" << endl;
   }
 } /* RewindLogic::udpDatagramReceived */
 
 
-void RewindLogic::authenticate(const string pass)
+void RewindLogic::authenticate(uint8_t salt[], const string pass)
 {
+
+  struct RewindData* trd =
+     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
   struct RewindData* rd =
      (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
+  memcpy(trd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
   memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
   rd->type = htole16(REWIND_TYPE_AUTHENTICATION);  // 0x0000 + 3
-  rd->flags = htole16(REWIND_FLAG_NONE); //
-  rd->length = htole16(SHA256_DIGEST_LENGTH); // 32
+  rd->flags = htole16(REWIND_FLAG_DEFAULT_SET);    //
+  rd->length = htole16(SHA256_DIGEST_LENGTH);      // 32
 
-  mkSHA256(pass.c_str(), (int)pass.length(), rd->data);
+  memcpy(trd->data, salt, 4);
+  memcpy(trd->data + 4, pass.c_str(), (size_t)strlen(pass.c_str()) );
+  mkSHA256(trd->data, 4 + (size_t)strlen(pass.c_str()), rd->data);
 
-  cout << "Pass=" << pass << " " << rd->data << endl;
+  cout << "Pass=" << pass << " laenge:" << (size_t)strlen(pass.c_str())
+       << "," << rd->data << endl;
 
-
-  sendMsg(rd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH);
+  sendMsg(rd, sizeof(struct RewindData) + SHA256_DIGEST_LENGTH - 2);
   m_state = WAITING_PASS_ACK;
 
 } /* RewindLogic::authPassphrase */
@@ -634,24 +697,45 @@ void RewindLogic::sendCloseMessage(void)
 } /* RewindLogic::sendCloseMessage */
 
 
-void RewindLogic::sendConfiguration(void)
+void RewindLogic::sendSubscription(void)
 {
+  struct RewindData* rd =
+   (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+
+  struct RewindSubscriptionData* vd =
+   (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
+                    + BUFFER_SIZE);
+
+  vd->type = htole16(SESSION_TYPE_GROUP_VOICE); // 0x07
+  vd->number = atoi(m_tg.c_str()); // eg 2629
+
+                  // "REWIND01"             8
+  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+
+  rd->type  = htole16(REWIND_TYPE_SUBSCRIPTION); // REWIND_CLASS_APPLICATION + 0x00
+  rd->flags = htole16(REWIND_FLAG_NONE); // 0x00
+
+  int len = m_tg.length();
+  len += sizeof(struct RewindSubscriptionData);
+  len += sizeof(struct RewindData);
+  rd->length = htole16(len);
+
+  memcpy(rd->data, vd, len);
+
+  cout << "sending subscription: " << rd->data << ", laenge=" << len << endl;
+  sendMsg(rd, len);
+
+  subscribed = true;
 
 } /* RewindLogic::sendConfiguration */
 
 
-void RewindLogic::mkSHA256(std::string pass, int len, uint8_t hash[])
+void RewindLogic::mkSHA256(uint8_t pass[], int len, uint8_t hash[])
 {
-  //uint8_t t_hash[];
   SHA256_CTX context;
   sha256_init(&context);
-
-  size_t pl = pass.length();
-  unsigned char pbuf[pl];
-  copy(pass.begin(), pass.end(), pbuf);
-  sha256_update(&context, pbuf, pl);
+  sha256_update(&context, pass, len);
   sha256_final(&context, hash);
-
 } /* RewindLogic:mkSha256*/
 
 

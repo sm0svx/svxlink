@@ -157,8 +157,8 @@ bool AudioRecoderDV3k::createDV3k(void)
 
   if (!dv3kdev->open(true))
   {
-   	cerr << "*** ERROR: opening port " << port << endl;
-	return false;
+    cerr << "*** ERROR: opening port " << port << endl;
+    return false;
   }
 
   dv3kdev->setParams(baud, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
