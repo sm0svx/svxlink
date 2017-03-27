@@ -319,6 +319,7 @@ class RewindLogic : public LogicBase
     void sendKeepAlive(void);
     void sendServiceData(void);
     void sendCloseMessage(void);
+    void sendConfiguration(void);
     void sendSubscription(void);
     void mkSHA256(uint8_t pass[], int len, uint8_t hash[]);
     void handleDataMessage(std::string datamessage);

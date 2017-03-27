@@ -698,6 +698,20 @@ void RewindLogic::sendCloseMessage(void)
 } /* RewindLogic::sendCloseMessage */
 
 
+void RewindLogic::sendConfiguration(void)
+{
+  struct RewindData* rd =
+   (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+
+  struct RewindConfigurationData* cd =
+   (struct RewindConfigurationData*)alloca(sizeof(struct RewindConfigurationData)
+                    + BUFFER_SIZE);
+
+  cd->options = 0;
+
+} /* RewindLogic::sendConfiguration */
+
+
 void RewindLogic::sendSubscription(void)
 {
   struct RewindData* rd =
