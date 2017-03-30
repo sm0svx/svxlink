@@ -308,6 +308,8 @@ class RewindLogic : public LogicBase
 
     std::string           srcCall;
     uint32_t              srcId;
+    std::list<int>        tglist;
+
 
     RewindLogic(const RewindLogic&);
     RewindLogic& operator=(const RewindLogic&);
@@ -321,6 +323,8 @@ class RewindLogic : public LogicBase
                              void *buf, int count);
     void sendMsg(struct RewindData* rd, size_t len);
     void handleSessionData(uint8_t data[]);
+    void handleAudioPacket(uint8_t data[]);
+    void handleDataMessage(uint8_t data[]);
     void connect(void);
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
@@ -333,9 +337,8 @@ class RewindLogic : public LogicBase
     void sendServiceData(void);
     void sendCloseMessage(void);
     void sendConfiguration(void);
-    void sendSubscription(void);
+    void sendSubscription(std::list<int> tglist);
     void mkSHA256(uint8_t pass[], int len, uint8_t hash[]);
-    void handleDataMessage(std::string datamessage);
 
 };  /* class RewindLogic */
 

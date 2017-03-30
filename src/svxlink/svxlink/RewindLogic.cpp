@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioInterpolator.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncAudioPassthrough.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -318,9 +319,18 @@ bool RewindLogic::initialize(void)
   {
     m_slot2 = true;
   }
-  if (!cfg().getValue(name(), "TG", m_tg))
+  if (!cfg().getValue(name(), "TALKGROUPS", m_tg))
   {
     m_tg = "9";
+    cout << "+++ INFO: setting default talkgroup 9" << endl;
+  }
+
+  // subscripting to one or more Talkgroups
+  vector<string> tgs;
+  SvxLink::splitStr(tgs, m_tg, ",");
+  for(vector<string>::iterator it = tgs.begin(); it != tgs.end(); ++it)
+  {
+    tglist.push_back(atoi((*it).c_str()));
   }
 
   m_swid += "linux:SvxLink v";
@@ -491,13 +501,8 @@ void RewindLogic::dnsResultsReady(DnsLookup& dns_lookup)
 
 void RewindLogic::sendEncodedAudio(const void *buf, int count)
 {
-  //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
-  //     << count << endl;
-/*  if (m_flush_timeout_timer.isEnabled())
-  {
-    m_flush_timeout_timer.setEnable(false);
-  }
-  sendUdpMsg(MsgUdpAudio(buf, count));*/
+
+
 } /* RewindLogic::sendEncodedAudio */
 
 
@@ -510,8 +515,8 @@ void RewindLogic::flushEncodedAudio(void)
 void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
-       << addr << " port=" << port << " count=" << count << endl;
+  //cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
+  //     << addr << " port=" << port << " count=" << count << endl;
 
   struct RewindData* rd = reinterpret_cast<RewindData*>(buf);
 
@@ -522,7 +527,6 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_CHALLENGE:
-      cout << "--- INFO: Authentication pending" << endl;
       authenticate(rd->data, m_auth_key);
       return;
 
@@ -536,13 +540,12 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
     case REWIND_TYPE_KEEP_ALIVE:
       if (m_state == WAITING_PASS_ACK)
       {
-        cout << "--- INFO: Authenticated!" << endl;
+        cout << "--- Authenticated on " << rewind_host << endl;
         m_state = AUTHENTICATED;
       }
       if (m_state == AUTHENTICATED && ++subscribed < 3)
       {
-        sendSubscription();
-        subscribed = 3;
+        sendSubscription(tglist);
       }
       return;
 
@@ -569,7 +572,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_SUBSCRIPTION:
-      cout << "--- Successful subscription" << endl;
+      cout << "--- Successful subscription, TG's=" << m_tg << endl;
       subscribed = 3;
       sendConfiguration();
       m_state = AUTH_SUBSCRIBED;
@@ -581,10 +584,12 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
     case REWIND_TYPE_DMR_EMBEDDED_DATA:
       cout << "*** dmr embedded data" << endl;
+      handleDataMessage(rd->data);
       return;
 
     case REWIND_TYPE_DMR_AUDIO_FRAME:
       cout << "-- dmr audio frame received" << endl;
+      handleAudioPacket(rd->data);
       return;
 
     case REWIND_TYPE_SUPER_HEADER:
@@ -610,12 +615,32 @@ void RewindLogic::handleSessionData(uint8_t data[])
 {
   struct RewindSuperHeaderData* shd
        = reinterpret_cast<RewindSuperHeaderData*>(data);
-  cout << "SourceCall=" << shd->srccall << " srcid=" << shd->srcid
-       << ", DestCall=" << shd->dstcall << " dstid=" << shd->desid
+  cout << "SourceCall=" << shd->srccall << " (" << shd->srcid
+       << "), DestCall=" << shd->dstcall << " dstid=" << shd->desid
        << endl;
   srcCall = (char*)shd->srccall;
   srcId = shd->srcid;
 } /* RewindLogic::handleSessionData */
+
+
+void RewindLogic::handleAudioPacket(uint8_t data[])
+{
+  struct RewindData* ad
+       = reinterpret_cast<RewindData*>(data);
+  char buf[28];
+  memcpy(buf, ad->data, 27);
+
+  m_dec->writeEncodedSamples(buf, 27);
+} /* RewindLogic::handleAudioPacket */
+
+
+void RewindLogic::handleDataMessage(uint8_t data[])
+{
+  struct RewindData* dm
+       = reinterpret_cast<RewindData*>(data);
+
+  //cout << ">" << dm->data << "<" << endl;
+} /* RewindLogic::handleDataMessage */
 
 
 void RewindLogic::authenticate(uint8_t salt[], const string pass)
@@ -637,8 +662,6 @@ void RewindLogic::authenticate(uint8_t salt[], const string pass)
   memcpy(trd->data + 4, pass.c_str(), (size_t)strlen(pass.c_str()) );
   mkSHA256(trd->data, 4 + (size_t)strlen(pass.c_str()), rd->data);
                             //                         32
-  //cout << "Pass=" << pass << " laenge:" << (18 + SHA256_DIGEST_LENGTH)
-  //     << "," << rd->data << endl;
             //                              32
   sendMsg(rd, 18 + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
@@ -667,12 +690,12 @@ void RewindLogic::sendMsg(struct RewindData* data, size_t len)
 
   data->number = htole32(++sequenceNumber);
 
-  cout << "### sending udp packet to " << ip_addr.toString()
+  /*cout << "### sending udp packet to " << ip_addr.toString()
        << ":" << rewind_port << ", length=" << len
        << " seq: " << sequenceNumber << " type=" << data->type
        << " inhalt=" << data->number
        << endl;
-
+  */
   m_udp_sock->write(ip_addr, rewind_port, data, len);
 
 } /* RewindLogic::sendUdpMsg */
@@ -764,12 +787,11 @@ void RewindLogic::sendConfiguration(void)
   size_t len = sizeof(RewindData) + 2;
   memcpy(rd->data, cd, sizeof(RewindConfigurationData));
 
-  cout << "sending configuration\n";
   sendMsg(rd, len);
 } /* RewindLogic::sendConfiguration */
 
 
-void RewindLogic::sendSubscription(void)
+void RewindLogic::sendSubscription(std::list<int> tglist)
 {
   struct RewindData* rd =
    (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
@@ -784,14 +806,15 @@ void RewindLogic::sendSubscription(void)
    (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
                     + BUFFER_SIZE);
 
-  sd->type = htole32(SESSION_TYPE_GROUP_VOICE); // 5 (private voice ) or 7 (group)
-  sd->number = htole32(atoi(m_tg.c_str()));     // eg 2629
-
+  sd->type = htole32(SESSION_TYPE_GROUP_VOICE); // 5 (private voice) + 7 (group)
   size_t len = sizeof(RewindData) + 6;
-  memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
 
-  sendMsg(rd, len);
-
+  for (std::list<int>::iterator it = tglist.begin(); it!=tglist.end(); it++)
+  {
+    sd->number = htole32(*it);
+    memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
+    sendMsg(rd, len);
+  }
 } /* RewindLogic::sendConfiguration */
 
 
@@ -804,10 +827,6 @@ void RewindLogic::mkSHA256(uint8_t pass[], int len, uint8_t hash[])
 } /* RewindLogic:mkSha256*/
 
 
-void RewindLogic::handleDataMessage(std::string dmessage)
-{
-
-} /* RewindLogic::handleDataMessage */
 
 /*
  * This file has not been truncated
