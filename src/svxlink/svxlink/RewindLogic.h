@@ -277,8 +277,8 @@ class RewindLogic : public LogicBase
     uint16_t              rewind_port;
     std::string           m_callsign;
     std::string           m_id;
-    Async::Timer          m_reconnect_timer;
     Async::Timer          m_ping_timer;
+    Async::Timer          m_reconnect_timer;
     Async::AudioSink*     m_logic_con_in;
     Async::AudioEncoder*  m_logic_enc;
     Async::AudioSource*   m_logic_con_out;
@@ -295,6 +295,7 @@ class RewindLogic : public LogicBase
     std::string           m_description;
     std::string           m_swid;
     std::string           m_tg;
+    std::string           m_rc_interval;
 
     int                   sequenceNumber;
     bool                  m_slot1;

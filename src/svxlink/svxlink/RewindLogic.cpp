@@ -131,6 +131,7 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
     rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
+    m_reconnect_timer(30000, Timer::TYPE_PERIODIC, false),
     sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0)
 {
 } /* RewindLogic::RewindLogic */
@@ -227,6 +228,11 @@ bool RewindLogic::initialize(void)
     cerr << "*** ERROR: " << name() << "/POWER wrong length: " << m_power
          << endl;
     return false;
+  }
+
+  if (!cfg().getValue(name(), "RECONNECT_INTERVAL", m_rc_interval))
+  {
+    m_rc_interval = "30000";
   }
 
   if (!cfg().getValue(name(), "COLORCODE", m_color))
@@ -524,6 +530,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       cout << "*** Disconnect request received." << endl;
       m_state = DISCONNECTED;
       m_ping_timer.setEnable(false);
+      subscribed = 0;
       return;
 
     case REWIND_TYPE_KEEP_ALIVE:
@@ -535,6 +542,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       if (m_state == AUTHENTICATED && ++subscribed < 3)
       {
         sendSubscription();
+        subscribed = 3;
       }
       return;
 
@@ -640,6 +648,8 @@ void RewindLogic::sendMsg(struct RewindData* data, size_t len)
 void RewindLogic::reconnect(Timer *t)
 {
   cout << "### Reconnecting to Rewind server\n";
+  connect();
+  m_reconnect_timer.reset();
 } /* RewindLogic::reconnect */
 
 
@@ -740,11 +750,11 @@ void RewindLogic::sendSubscription(void)
    (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
                     + BUFFER_SIZE);
 
-  sd->type = htole16(SESSION_TYPE_GROUP_VOICE); // 5 (private voice ) or 7 (group)
-  sd->number = htole16(atoi(m_tg.c_str()));     // eg 2629
+  sd->type = htole32(SESSION_TYPE_GROUP_VOICE); // 5 (private voice ) or 7 (group)
+  sd->number = htole32(atoi(m_tg.c_str()));     // eg 2629
 
-  size_t len =  sizeof(RewindData) + 8;
-  memcpy(rd->data, sd, 6);
+  size_t len = sizeof(RewindData) + 6;
+  memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
 
   cout << "sending subscription (" << sd->number << "), "
        << rd->data << ", laenge=" << len <<  endl;
