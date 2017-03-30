@@ -306,6 +306,9 @@ class RewindLogic : public LogicBase
     bool                  m_slot2;
     int                   subscribed;
 
+    std::string           srcCall;
+    uint32_t              srcId;
+
     RewindLogic(const RewindLogic&);
     RewindLogic& operator=(const RewindLogic&);
 
@@ -317,6 +320,7 @@ class RewindLogic : public LogicBase
     void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void sendMsg(struct RewindData* rd, size_t len);
+    void handleSessionData(uint8_t data[]);
     void connect(void);
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);

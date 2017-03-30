@@ -589,6 +589,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
     case REWIND_TYPE_SUPER_HEADER:
       cout << "-- super header received" << endl;
+      handleSessionData(rd->data);
       return;
 
     case REWIND_TYPE_DMR_START_FRAME:
@@ -603,6 +604,18 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       cout << "*** Unknown data received, TYPE=" << rd->type << endl;
   }
 } /* RewindLogic::udpDatagramReceived */
+
+
+void RewindLogic::handleSessionData(uint8_t data[])
+{
+  struct RewindSuperHeaderData* shd
+       = reinterpret_cast<RewindSuperHeaderData*>(data);
+  cout << "SourceCall=" << shd->srccall << " srcid=" << shd->srcid
+       << ", DestCall=" << shd->dstcall << " dstid=" << shd->desid
+       << endl;
+  srcCall = (char*)shd->srccall;
+  srcId = shd->srcid;
+} /* RewindLogic::handleSessionData */
 
 
 void RewindLogic::authenticate(uint8_t salt[], const string pass)
