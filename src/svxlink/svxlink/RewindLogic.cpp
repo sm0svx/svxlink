@@ -564,11 +564,15 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_CONFIGURATION:
-      cout << "*** type: configuration" << endl;
+      cout << "--- Successful sent configuration" << endl;
+      m_state = AUTH_CONFIGURATION;
       return;
 
     case REWIND_TYPE_SUBSCRIPTION:
-      cout << "*** type: subscription" << endl;
+      cout << "--- Successful subscription" << endl;
+      subscribed = 3;
+      sendConfiguration();
+      m_state = AUTH_SUBSCRIBED;
       return;
 
     case REWIND_TYPE_DMR_DATA_BASE:
@@ -579,8 +583,24 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       cout << "*** dmr embedded data" << endl;
       return;
 
+    case REWIND_TYPE_DMR_AUDIO_FRAME:
+      cout << "-- dmr audio frame received" << endl;
+      return;
+
+    case REWIND_TYPE_SUPER_HEADER:
+      cout << "-- super header received" << endl;
+      return;
+
+    case REWIND_TYPE_DMR_START_FRAME:
+      cout << "--> qso begin" << endl;
+      return;
+
+    case REWIND_TYPE_DMR_STOP_FRAME:
+      cout << "--> qso end" << endl;
+      return;
+
     default:
-      cout << "*** Unknown data received" << endl;
+      cout << "*** Unknown data received, TYPE=" << rd->type << endl;
   }
 } /* RewindLogic::udpDatagramReceived */
 
@@ -717,21 +737,22 @@ void RewindLogic::sendConfiguration(void)
   struct RewindData* rd =
    (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
-  struct RewindConfigurationData* cd =
-   (struct RewindConfigurationData*)alloca(sizeof(struct RewindConfigurationData)
-                    + BUFFER_SIZE);
-
   memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
   rd->type   = htole16(REWIND_TYPE_CONFIGURATION);
   rd->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
   rd->length = htole16(4);
 
-  cd->options = REWIND_OPTION_SUPER_HEADER;
-  memcpy(rd->data, cd, sizeof(RewindConfigurationData) + 4);
+  struct RewindConfigurationData* cd =
+   (struct RewindConfigurationData*)alloca(sizeof(struct RewindConfigurationData)
+                    + BUFFER_SIZE);
+
+  cd->options = htole32(REWIND_OPTION_SUPER_HEADER);
+
+  size_t len = sizeof(RewindData) + 2;
+  memcpy(rd->data, cd, sizeof(RewindConfigurationData));
 
   cout << "sending configuration\n";
-
-  sendMsg(rd, sizeof(RewindData) + sizeof(RewindConfigurationData) + 4);
+  sendMsg(rd, len);
 } /* RewindLogic::sendConfiguration */
 
 
@@ -756,8 +777,6 @@ void RewindLogic::sendSubscription(void)
   size_t len = sizeof(RewindData) + 6;
   memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
 
-  cout << "sending subscription (" << sd->number << "), "
-       << rd->data << ", laenge=" << len <<  endl;
   sendMsg(rd, len);
 
 } /* RewindLogic::sendConfiguration */
