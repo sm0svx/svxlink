@@ -144,6 +144,12 @@ namespace Async
 #define BUFFER_SIZE                   2048
 #define REWIND_CALL_LENGTH 10
 
+#define DV3000_START_BYTE             0x61U
+#define DV3000_TYPE_CONTROL           0x00U
+#define DV3000_TYPE_AMBE              0x01U
+#define DV3000_TYPE_AUDIO             0x02U
+#define DV3000_HEADER_LEN             4U
+
 #define REWIND_OPTION_SUPER_HEADER  (1 << 0)
 #define REWIND_OPTION_LINEAR_FRAME  (1 << 1)
 

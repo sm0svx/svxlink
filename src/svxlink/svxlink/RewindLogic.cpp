@@ -627,10 +627,18 @@ void RewindLogic::handleAudioPacket(uint8_t data[])
 {
   struct RewindData* ad
        = reinterpret_cast<RewindData*>(data);
-  char buf[28];
-  memcpy(buf, ad->data, 27);
+  char buf[33];
 
-  m_dec->writeEncodedSamples(buf, 27);
+  // encapsulate it into the packet format of AMBE3000(TM) without parity
+  // start   length      type   fields...............
+  //  0x61   0xXX 0xXX   0xXX   0xXX(0) ... 0xXX(N-1)
+  buf[0] = DV3000_START_BYTE;  // start byte always 0x61
+  buf[1] = 0x00;  // length
+  buf[2] = 0x1b;  // length
+  buf[3] = DV3000_TYPE_AUDIO;  // type 0x02 = decode // 0x01 = encode
+  memcpy(buf + DV3000_HEADER_LEN, ad->data, 27);
+
+  m_dec->writeEncodedSamples(buf, 32);
 } /* RewindLogic::handleAudioPacket */
 
 
