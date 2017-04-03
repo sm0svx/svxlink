@@ -52,7 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncUdpSocket.h>
-#include <AsyncAudioPassthrough.h>
 #include <common.h>
 
 
@@ -142,9 +141,11 @@ RewindLogic::~RewindLogic(void)
 {
   delete m_udp_sock;
   m_ping_timer = 0;
+  m_reconnect_timer = 0;
   delete dns;
   delete m_logic_con_in;
   delete m_logic_con_out;
+  delete m_logic_enc;
   delete m_dec;
 } /* RewindLogic::~RewindLogic */
 
@@ -750,6 +751,8 @@ void RewindLogic::sendKeepAlive(void)
   len += sizeof(struct RewindVersionData);
   len += sizeof(struct RewindData);
   rd->length = htole16(len);
+
+  cout << "sending keepalive\n";
 
   memcpy(rd->data, vd, len);
   sendMsg(rd, len);

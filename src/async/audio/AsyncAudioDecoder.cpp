@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioDecoderS16.h"
 #include "AsyncAudioDecoderGsm.h"
 #include "AsyncAudioDecoderDv3kUdp.h"
+#include "AsyncAudioDecoderDv3k.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioDecoderSpeex.h"
 #endif
@@ -137,6 +138,10 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
   else if (name == "GSM")
   {
     return new AudioDecoderGsm;
+  }
+  else if (name == "DV3K")
+  {
+    return new AudioDecoderDv3k;
   }
   else if (name == "AMBESERVER")
   {

@@ -69,7 +69,6 @@ namespace Async
 {
   class UdpSocket;
   class DnsLookup;
-  class AudioPassthrough;
 };
 
 

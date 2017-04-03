@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioEncoderRaw.h"
 #include "AsyncAudioEncoderS16.h"
 #include "AsyncAudioEncoderGsm.h"
+#include "AsyncAudioEncoderDv3k.h"
 #include "AsyncAudioEncoderDv3kUdp.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioEncoderSpeex.h"
@@ -137,6 +138,10 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
   else if (name == "GSM")
   {
     return new AudioEncoderGsm;
+  }
+  else if (name == "DV3K")
+  {
+    return new AudioEncoderDv3k;
   }
   else if (name == "AMBESERVER")
   {
