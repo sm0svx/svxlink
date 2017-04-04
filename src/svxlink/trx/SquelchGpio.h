@@ -142,6 +142,7 @@ class SquelchGpio : public Squelch
     int           fd;
     Async::Timer  *timer;
     bool          active_low;
+    std::string   gpio_path;
 
     SquelchGpio(const SquelchGpio&);
     SquelchGpio& operator=(const SquelchGpio&);

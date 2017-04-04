@@ -7,7 +7,9 @@
   locking issues. Patch by Steve/DH1DM.
 
 * Bugfix in AsyncTcpClient: An assertion error could occur if the connect
-  mthod was called twice.
+  method was called twice.
+
+* Bugfix in AsyncTcpServer: Fix memory leak
 
 * UdpSocket: The dataReceived signal now also provide the remote UDP port
   number

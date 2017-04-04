@@ -5,7 +5,7 @@
 #############################################################################
 
 # The user to run the SvxLink server as
-RUNASUSER=svxlink
+RUNASUSER=@SVXLINK_USER@
 
 # Specify which configuration file to use
 CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/remotetrx.conf

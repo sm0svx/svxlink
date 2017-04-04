@@ -35,22 +35,22 @@ Bağlantı kurulamadı</translation>
     </message>
     <message>
         <source>Could not open mic audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Mikrofon ses aygıtı açılamadı</translation>
     </message>
     <message>
         <source>Could not open speaker audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoparlör ses aygıtı açılamadı</translation>
     </message>
     <message>
         <source>Could not create connection to</source>
-        <translation type="unfinished"></translation>
+        <translation>Buraya bağlantı sağlanamadı</translation>
     </message>
 </context>
 <context>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Iletisim Diyaloğu</translation>
+        <translation>İletisim Diyaloğu</translation>
     </message>
     <message>
         <source>Station Information</source>
@@ -133,27 +133,27 @@ Bağlantı kurulamadı</translation>
     <name>EchoLinkDirectoryModel</name>
     <message>
         <source>Callsign</source>
-        <translation type="unfinished">Çağrı İşareti</translation>
+        <translation>Çağrı İşareti</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation type="unfinished">Konum/Tanım</translation>
+        <translation>Konum/Tanım</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Durum</translation>
+        <translation>Durum</translation>
     </message>
     <message>
         <source>Local Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Yerel Zaman</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation type="unfinished">Node Numarası</translation>
+        <translation>Node Numarası</translation>
     </message>
     <message>
         <source>IP Address</source>
-        <translation type="unfinished"></translation>
+        <translation>IP adresi</translation>
     </message>
 </context>
 <context>
@@ -180,7 +180,7 @@ Bağlantı kurulamadı</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: IP adresine baðlan</translation>
+        <translation>Qtel: IP adresine bağlan</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
@@ -188,42 +188,44 @@ Bağlantı kurulamadı</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation type="unfinished">Sık Kullanılanlar</translation>
+        <translation>Sık Kullanılanlar</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation type="unfinished">Linkler</translation>
+        <translation>Linkler</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation type="unfinished">Röleler</translation>
+        <translation>Röleler</translation>
     </message>
     <message>
         <source>Conferences</source>
-        <translation type="unfinished">Konferanslar</translation>
+        <translation>Konferanslar</translation>
     </message>
     <message>
         <source>Stations</source>
-        <translation type="unfinished">İstasyonlar</translation>
+        <translation>İstasyonlar</translation>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation type="unfinished">Qtel Hakkında</translation>
+        <translation>Qtel Hakkında</translation>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation type="unfinished">Qtel v</translation>
+        <translation>Qtel v</translation>
     </message>
     <message>
         <source> - Qt EchoLink client.
 </source>
-        <translation type="unfinished"></translation>
+        <translation> - Qt Echolink İstemci</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
 Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel için HİÇ BİR GARANTİ verilmemektedir. Bu bir serbest yazılımdır,ve onu GNU GPL (Genel Kamu Lisansı) sürüm 2 veya sonraki versiyonlarındaki kayıt ve koşullara uygun olarak yeniden dağıtabilirsiniz. </translation>
     </message>
 </context>
 <context>
@@ -358,51 +360,51 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>Incoming Connections</source>
-        <translation type="unfinished"></translation>
+        <translation>Gelen bağlantılar</translation>
     </message>
     <message>
         <source>&amp;Station</source>
-        <translation type="unfinished"></translation>
+        <translation>İstasyon</translation>
     </message>
     <message>
         <source>S&amp;ettings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ayarlar</translation>
     </message>
     <message>
         <source>Connect to &amp;selected...</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili olana bağlan</translation>
     </message>
     <message>
         <source>Connect to &amp;IP...</source>
-        <translation type="unfinished"></translation>
+        <translation>IP adresine bağlan</translation>
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel Ayarları</translation>
     </message>
     <message>
         <source>F5</source>
-        <translation type="unfinished">F5</translation>
+        <translation>F5</translation>
     </message>
     <message>
         <source>Add Selected To &amp;Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili olanı sık kullanılanlara ekle</translation>
     </message>
     <message>
         <source>Add the selected station in the station list to the bookmarks menu</source>
-        <translation type="unfinished"></translation>
+        <translation>İstasyon listesi içinde seçili olanı sık kullanılanlar menüsüne ekle</translation>
     </message>
     <message>
         <source>Ctrl+U</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+U</translation>
     </message>
     <message>
         <source>&amp;Remove Selected From Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili olanı sık kullanılanlardan çıkar</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks list</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili olan istasyonu sık kullanılanlar listesinden çıkar</translation>
     </message>
     <message>
         <source>Add &amp;Named Station To Bookmarks</source>
@@ -410,171 +412,170 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>Ctrl+Q</source>
-        <translation type="unfinished">Ctrl+Q</translation>
+        <translation>Ctrl+Q</translation>
     </message>
     <message>
         <source>Connect to the selected station</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili olan istasyona bağlan</translation>
     </message>
     <message>
         <source>Connect to local station using IP address or hostname</source>
-        <translation type="unfinished"></translation>
+        <translation>Yerel bir istasyona IP adresi veya anamakina adı kullanarak bağlan</translation>
     </message>
     <message>
         <source>Immediately refresh the station list</source>
-        <translation type="unfinished"></translation>
+        <translation>İstasyon listesini şimdi güncelle</translation>
     </message>
     <message>
         <source>Add selected station to the bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili istasyonu sık kullanılanlara ekle</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçili istasyonu sık kullanılanlardan çıkar</translation>
     </message>
     <message>
         <source>Add a station to the bookmarks by entering a callsign</source>
-        <translation type="unfinished"></translation>
+        <translation>Bir çağrı işareti girerek Sık kullanılanlara istasyon ekle</translation>
     </message>
     <message>
         <source>Show the about dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Hakkında diyaloğunu göster</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation type="unfinished">Qtel: Ayarlar</translation>
+        <translation>Qtel: Ayarlar</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation type="unfinished">Kullanıcı Bilgisi</translation>
+        <translation>Kullanıcı Bilgisi</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation type="unfinished">Kullanıcı Bilgileri</translation>
+        <translation>Kullanıcı Bilgileri</translation>
     </message>
     <message>
-        <source>Info
-Message</source>
-        <translation type="unfinished">Bilgi Mesajı</translation>
+        <source>Info Message</source>
+        <translation>Bilgi Mesajı</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished">Konum</translation>
+        <translation>Konum</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation type="unfinished">Çağrı İşareti</translation>
+        <translation>Çağrı İşareti</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation type="unfinished">Parola</translation>
+        <translation>Parola</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation type="unfinished">Parola Tekrarı</translation>
+        <translation>Parola Tekrarı</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Ad</translation>
+        <translation>Ad</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation type="unfinished">Dizin Sunucusu Ayarları</translation>
+        <translation>Dizin Sunucusu Ayarları</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation type="unfinished">Sunucu</translation>
+        <translation>Sunucu</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation type="unfinished">Tazeleme Süresi</translation>
+        <translation>Tazeleme Süresi</translation>
     </message>
     <message>
         <source>min</source>
-        <translation type="unfinished">min</translation>
+        <translation>dk</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation type="unfinished">Dakika olarak istasyon listesi tazeleme süresi</translation>
+        <translation>Dakika olarak istasyon listesi tazeleme süresi</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation type="unfinished">Program başladığında meşgul olarak kaydol</translation>
+        <translation>Program başladığında meşgul olarak kaydol</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation type="unfinished">Meşgul Olarak Başlat</translation>
+        <translation>Meşgul Olarak Başlat</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation type="unfinished">Ses</translation>
+        <translation>Ses</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation type="unfinished">Çift yönlü</translation>
+        <translation>Tam Çift yönlü</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation type="unfinished">Çift yönlü aktarım için bu kutuyu seçin</translation>
+        <translation>Tam Çift yönlü aktarım için bu kutuyu seçin</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation type="unfinished">Bağlandı bilgisi ses dosyası</translation>
+        <translation>Bağlandı bilgisi ses dosyası</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation type="unfinished">Gelen EchoLink bağlantılarında kullanılacak ses dosyası</translation>
+        <translation>Gelen EchoLink bağlantılarında kullanılacak ses dosyası</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation type="unfinished">Gözat...</translation>
+        <translation>Gözat...</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation type="unfinished">Tamam</translation>
+        <translation>Tamam</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">İptal</translation>
+        <translation>İptal</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="unfinished">Raw ses dosyası (*.raw)</translation>
+        <translation>Raw ses dosyası (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="unfinished">Bağlandı bilgisi ses dosyası seçin</translation>
+        <translation>Bağlandı bilgisi ses dosyası seçin</translation>
     </message>
     <message>
         <source>Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Çince</translation>
     </message>
     <message>
         <source>Japanese</source>
-        <translation type="unfinished"></translation>
+        <translation>Japonca</translation>
     </message>
     <message>
         <source>Korean</source>
-        <translation type="unfinished"></translation>
+        <translation>Korece</translation>
     </message>
     <message>
         <source>Tamil</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamilce</translation>
     </message>
     <message>
         <source>Unicode, 8-bit</source>
-        <translation type="unfinished"></translation>
+        <translation>Unicode, 8-bit</translation>
     </message>
     <message>
         <source>Russian</source>
-        <translation type="unfinished"></translation>
+        <translation>Rusça</translation>
     </message>
     <message>
         <source>Ukrainian</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukraynaca</translation>
     </message>
     <message>
         <source>Western</source>
@@ -582,143 +583,143 @@ Message</source>
     </message>
     <message>
         <source>Central European</source>
-        <translation type="unfinished"></translation>
+        <translation>Orta Avrupa</translation>
     </message>
     <message>
         <source>Baltic</source>
-        <translation type="unfinished"></translation>
+        <translation>Baltık Dili</translation>
     </message>
     <message>
         <source>Cyrillic</source>
-        <translation type="unfinished"></translation>
+        <translation>İslav dili</translation>
     </message>
     <message>
         <source>Arabic</source>
-        <translation type="unfinished"></translation>
+        <translation>Arapça</translation>
     </message>
     <message>
         <source>Greek</source>
-        <translation type="unfinished"></translation>
+        <translation>Rumca</translation>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>İbranice, görsel sıralanmış</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>İbranice, Mantıksal sıralanmış</translation>
     </message>
     <message>
         <source>Turkish</source>
-        <translation type="unfinished"></translation>
+        <translation>Türkçe</translation>
     </message>
     <message>
         <source>Hebrew</source>
-        <translation type="unfinished"></translation>
+        <translation>İbranice</translation>
     </message>
     <message>
         <source>Thai</source>
-        <translation type="unfinished"></translation>
+        <translation>Tai dili</translation>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel: Parolalar eşleşmiyor</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
-        <translation type="unfinished"></translation>
+        <translation>Parolalar eşleşmedi</translation>
     </message>
     <message>
         <source>Sound Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ses Ayarları</translation>
     </message>
     <message>
         <source>Mic audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Mikrofon ses aygıtı</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation type="unfinished"></translation>
+        <translation>Kullanılacak ses aygıtı (örn: alsa:default)</translation>
     </message>
     <message>
         <source>Speaker audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoparlör ses aygıtı</translation>
     </message>
     <message>
         <source>QSO</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO</translation>
     </message>
     <message>
         <source>QSO Dialog Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO diyalog ayarları</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
+        <translation>Sohbet dil kodlaması</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Ağ</translation>
     </message>
     <message>
         <source>Servers</source>
-        <translation type="unfinished"></translation>
+        <translation>Sunucular</translation>
     </message>
     <message>
         <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Kullanılacak olan Echolink dizin sunucularının boşluklarla ayrılmış ana makine adları veya Ip adresleri.</translation>
     </message>
     <message>
         <source>EchoLink Proxy Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Echolink Proxy Ayarları</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Etkinleştir</translation>
     </message>
     <message>
         <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
-        <translation type="unfinished"></translation>
+        <translation>Echolink proxy etkinleştirilir ise bir proxy sunucu adresi veya IP adresi belirtmelisiniz.</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink proxy server to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Kullanılacak olan Echolink Proxy sunucusu adresi veya IP adresi</translation>
     </message>
     <message>
         <source>TCP Port</source>
-        <translation type="unfinished"></translation>
+        <translation>TCP portu</translation>
     </message>
     <message>
         <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
-        <translation type="unfinished"></translation>
+        <translation>Echolink proxy sunucuya bağlanılacak TCP portu, varsayılan 8100</translation>
     </message>
     <message>
         <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
-        <translation type="unfinished"></translation>
+        <translation>Echolink proxy şifresi, Sizin Echolink şifreniz değil. Herkese açık proxy sunucular için boş bırakın.</translation>
     </message>
     <message>
         <source>Sampling Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Örnekleme Oranı</translation>
     </message>
     <message>
         <source>EchoLink proxy configuration problem</source>
-        <translation type="unfinished"></translation>
+        <translation>Echolink proxy yapılandırma problemi</translation>
     </message>
     <message>
         <source>EchoLink proxy enabled but no server given</source>
-        <translation type="unfinished"></translation>
+        <translation>Echolink Proxy etkinleştirildi fakat hiç bir sunucu belirtilmedi</translation>
     </message>
     <message>
         <source>Bind address</source>
-        <translation type="unfinished"></translation>
+        <translation>Bağlama adresi</translation>
     </message>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Hiçbiri</translation>
     </message>
 </context>
 </TS>

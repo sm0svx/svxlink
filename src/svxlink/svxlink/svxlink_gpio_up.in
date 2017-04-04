@@ -29,12 +29,12 @@ gpio_in_setup()
   if [ -n "$PIN" -a ! -e /sys/class/gpio/$PIN ]; then
     # Extract pinnumber from the full pin name (e.g. gpio4_pd0 -> 4)
     local pinnum=$(echo "$PIN" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
-    echo $pinnum > /sys/class/gpio/export && \
-      echo "in" > /sys/class/gpio/$PIN/direction && \
-      echo "$ACTIVE_LOW" > /sys/class/gpio/$PIN/active_low
-    [ -n "$GPIO_USER" ] && chown "$GPIO_USER" /sys/class/gpio/$PIN/value
-    [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" /sys/class/gpio/$PIN/value
-    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" /sys/class/gpio/$PIN/value
+    echo $pinnum > $GPIO_PATH/export && \
+      echo "in" > $GPIO_PATH/$PIN/direction && \
+      echo "$ACTIVE_LOW" > $GPIO_PATH/$PIN/active_low
+    [ -n "$GPIO_USER" ] && chown "$GPIO_USER" $GPIO_PATH/$PIN/value
+    [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" $GPIO_PATH/$PIN/value
+    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" $GPIOPATH/$PIN/value
   fi
 }
 
@@ -53,17 +53,17 @@ gpio_out_setup()
   else
     local ACTIVE_LOW="0"
   fi
-  
-  if [ -n "$PIN" -a ! -e /sys/class/gpio/$PIN ]; then
+
+  if [ -n "$PIN" -a ! -e $GPIO_PATH/$PIN ]; then
     # Extract pinnumber from the full pin name (e.g. gpio4_pd0 -> 4)
     local pinnum=$(echo "$PIN" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
-    echo $pinnum > /sys/class/gpio/export && \
-      echo "out" > /sys/class/gpio/$PIN/direction && \
-      echo "$ACTIVE_LOW" > /sys/class/gpio/$PIN/active_low && \
-      echo 0 > /sys/class/gpio/$PIN/value
-    [ -n "$GPIO_USER" ] && chown "$GPIO_USER" /sys/class/gpio/$PIN/value
-    [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" /sys/class/gpio/$PIN/value
-    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" /sys/class/gpio/$PIN/value
+    echo $pinnum > $GPIO_PATH/export && \
+      echo "out" > $GPIO_PATH/$PIN/direction && \
+      echo "$ACTIVE_LOW" > $GPIO_PATH/$PIN/active_low && \
+      echo 0 > $GPIO_PATH/$PIN/value
+    [ -n "$GPIO_USER" ] && chown "$GPIO_USER" $GPIO_PATH/$PIN/value
+    [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" $GPIO_PATH/$PIN/value
+    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" $GPIO_PATH/$PIN/value
   fi
 }
 

@@ -197,7 +197,7 @@ class RtlUsb : public RtlSdr
      * The correction factor is given in parts per million (PPM). That is,
      * how many Hz per MHz the tuner is off.
      */
-    virtual void handleSetFqCorr(uint32_t corr);
+    virtual void handleSetFqCorr(int corr);
 
     /**
      * @brief   Enable or disable test mode

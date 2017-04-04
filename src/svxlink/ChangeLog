@@ -48,6 +48,15 @@
 * New command PTY for injecting DTMF digits into a logic core. Use
   configuration variable DTMF_CTRL_PTY to set the path to the PTY.
 
+* New configuration variable GPIO_PATH for PTT and squelch configurations that
+  use GPIO. On some hardware platforms the path to control GPIO pins is not
+  standard. This configuration variable can be used to set the path.
+
+* Bugfix: Setting FQ_CORR=0 in a WbRx configuration section resulted in an
+  error message
+
+* FQ_CORR can now be negative
+
 
 
  1.5.0 -- 22 Nov 2015
