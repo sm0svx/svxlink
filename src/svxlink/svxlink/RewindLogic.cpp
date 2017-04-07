@@ -343,7 +343,7 @@ bool RewindLogic::initialize(void)
 
   m_logic_con_in = new AudioSink;
   AudioSource *prev_sc = new AudioSource;
-  //AudioSource *prev_sc = m_logic_con_in;
+ // AudioSource *prev_sc = m_logic_con_in;
   prev_sc->registerSink(m_logic_con_in,true);
 
 #if INTERNAL_SAMPLE_RATE == 16000
@@ -359,11 +359,11 @@ bool RewindLogic::initialize(void)
   if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
   {
     cerr << "*** ERROR: " << name() << "/AMBE_HANDLER not valid, must be"
-         << " DV3k or AMBESERVER" << endl;
+         << " DV3K or AMBESERVER" << endl;
     return false;
   }
 
-  m_logic_enc = Async::AudioEncoder::create(m_ambe_handler);
+/*  m_logic_enc = Async::AudioEncoder::create(m_ambe_handler);
   if (m_logic_enc == 0)
   {
     cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
@@ -376,7 +376,7 @@ bool RewindLogic::initialize(void)
   m_logic_enc->flushEncodedSamples.connect(
       mem_fun(*this, &RewindLogic::flushEncodedAudio));
   cout << "Loading Encoder " << m_logic_enc->name() << endl;
-
+*/
     // Create audio decoder
   m_dec = Async::AudioDecoder::create(m_ambe_handler);
   if (m_dec == 0)
@@ -398,7 +398,7 @@ bool RewindLogic::initialize(void)
   {
     AudioFifo *fifo = new Async::AudioFifo(
         2 * jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
-        //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
+    //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
     fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
     prev_src->registerSink(fifo, true);
     prev_src = fifo;
@@ -413,7 +413,7 @@ bool RewindLogic::initialize(void)
 #endif
 
   // sending options to audio encoder
-  string opt_prefix(m_logic_enc->name());
+  string opt_prefix(m_dec->name());
   opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
@@ -424,8 +424,9 @@ bool RewindLogic::initialize(void)
       string opt_value;
       cfg().getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      m_logic_enc->setOption(opt_name, opt_value);
+//      m_logic_enc->setOption(opt_name, opt_value);
       m_dec->setOption(opt_name, opt_value);
+      cout << "name "<< opt_name << ", val=" << opt_value << endl;
     }
   }
 
@@ -589,8 +590,8 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_DMR_AUDIO_FRAME:
-      cout << "-- dmr audio frame received" << endl;
-      handleAudioPacket(rd->data);
+      //cout << "-- dmr audio frame received" << endl;
+      handleAmbeAudiopacket(rd);
       return;
 
     case REWIND_TYPE_SUPER_HEADER:
@@ -624,22 +625,9 @@ void RewindLogic::handleSessionData(uint8_t data[])
 } /* RewindLogic::handleSessionData */
 
 
-void RewindLogic::handleAudioPacket(uint8_t data[])
+void RewindLogic::handleAmbeAudiopacket(struct RewindData* ad)
 {
-  struct RewindData* ad
-       = reinterpret_cast<RewindData*>(data);
-  char buf[33];
-
-  // encapsulate it into the packet format of AMBE3000(TM) without parity
-  // start   length      type   fields...............
-  //  0x61   0xXX 0xXX   0xXX   0xXX(0) ... 0xXX(N-1)
-  buf[0] = DV3000_START_BYTE;  // start byte always 0x61
-  buf[1] = 0x00;  // length
-  buf[2] = 0x1b;  // length
-  buf[3] = DV3000_TYPE_AUDIO;  // type 0x02 = decode // 0x01 = encode
-  memcpy(buf + DV3000_HEADER_LEN, ad->data, 27);
-
-  m_dec->writeEncodedSamples(buf, 32);
+  m_dec->writeEncodedSamples(ad->data, ad->length);
 } /* RewindLogic::handleAudioPacket */
 
 

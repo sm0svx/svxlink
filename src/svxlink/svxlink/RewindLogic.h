@@ -328,7 +328,7 @@ class RewindLogic : public LogicBase
                              void *buf, int count);
     void sendMsg(struct RewindData* rd, size_t len);
     void handleSessionData(uint8_t data[]);
-    void handleAudioPacket(uint8_t data[]);
+    void handleAmbeAudiopacket(struct RewindData* rd);
     void handleDataMessage(uint8_t data[]);
     void connect(void);
     void reconnect(Async::Timer *t);

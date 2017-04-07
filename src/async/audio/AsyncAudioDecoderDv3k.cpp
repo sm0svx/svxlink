@@ -117,7 +117,7 @@ using namespace sigc;
  ****************************************************************************/
 
 AudioDecoderDv3k::AudioDecoderDv3k(void) :
-  device(""), baudrate(0), dv3kfd(0)
+  device(""), baudrate(0), dv3kfd(0), outcnt(0)
 {
 } /* AudioDecoderDv3k::AudioDecoderDv3k */
 
@@ -143,7 +143,6 @@ void AudioDecoderDv3k::setOption(const std::string &name,
 
   if (!device.empty() && baudrate > 0)
   {
-    cout << "open\n";
     openDv3k();
   }
 } /* AudioDecoderDv3k::setOption */
@@ -152,6 +151,22 @@ void AudioDecoderDv3k::setOption(const std::string &name,
 void AudioDecoderDv3k::writeEncodedSamples(void *buf, int size)
 {
 
+  unsigned char *tbuf = (unsigned char *)buf;
+
+  // decode ambe stream received from network to raw
+  // audio stream by sending dmr to Dv3k
+  if (outcnt + size < 160)
+  {
+    memcpy(outbuf+outcnt, tbuf, size);
+    outcnt += size;
+    return;
+  }
+
+  int diff = 160-outcnt;
+  memcpy(outbuf+outcnt, tbuf, diff);
+  sendToDv3k(outbuf, outcnt+diff);
+  outcnt = size - diff;
+  memcpy(outbuf, tbuf+diff, size-diff);
 } /* AudioDecoderDv3k::writeEncodedSamples */
 
 
@@ -172,7 +187,12 @@ void AudioDecoderDv3k::writeEncodedSamples(void *buf, int size)
 
 void AudioDecoderDv3k::openDv3k(void)
 {
+
   dv3kfd = new Async::Serial(device);
+  if (!dv3kfd->open())
+  {
+    cout << "*** ERROR: Can not open DV3K" << endl;
+  }
   dv3kfd->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
   dv3kfd->charactersReceived.connect(
           mem_fun(*this, &AudioDecoderDv3k::charactersReceived));
@@ -186,7 +206,7 @@ void AudioDecoderDv3k::charactersReceived(char *buf, int len)
 
   if (buf[0] != 0x61 || len < 4)
   {
-    cout << "*** ERROR: invalid response from DV3K" << endl;
+    cout << "*** ERROR: Decoder invalid response from DV3K" << endl;
     return;
   }
 
@@ -195,24 +215,24 @@ void AudioDecoderDv3k::charactersReceived(char *buf, int len)
   if (tlen-4 != len)
   {
     cout << "*** ERROR: length in DV3K message != length received" << endl;
-    return;
   }
 
   int type = buf[3];
-  char *tbuf = 0;
-  memcpy(buf+4, tbuf, len-4);
+  char *tbuf = buf + 4;
 
   switch (type) {
     case DV3000_TYPE_CONTROL:
+      cout << "CONTROL received\n";
       handleControl(tbuf, len-4);
       return;
 
     case DV3000_TYPE_AMBE:
-      handleAmbe(tbuf, len-4);
+      cout << "AMBE received\n";
       return;
 
     case DV3000_TYPE_AUDIO:
-      handleAudio(tbuf, len-4);
+      cout << "AUDIO received\n";
+      sendAudio(tbuf, len-4);
       return;
 
     default:
@@ -227,17 +247,25 @@ void AudioDecoderDv3k::handleControl(char *buf, int len)
   if (m_state == PROD_ID)
   {
     cout << "--- Response from DV3k: " << buf << endl;
+    dv3kfd->write(DV3000_REQ_RATEP, DV3000_REQ_RATEP_LEN);
+    m_state = RATEP;
+    return;
   }
 } /* AudioDecoderDv3k::handleControl */
 
 
-void AudioDecoderDv3k::handleAmbe(char *buf, int len)
+void AudioDecoderDv3k::sendToDv3k(unsigned char *buf, int len)
 {
+  unsigned char out[175];
 
-} /* AudioDecoderDv3k::handleAmbe */
+  memcpy(out, DV3000_AMBE_HEADER, DV3000_AMBE_HEADER_LEN);
+  memcpy(out + DV3000_AMBE_HEADER_LEN, buf, len);
+  cout << "sending to DV3K:" << len << " BUF:" << out << endl;
+  dv3kfd->write((char*)out, len + DV3000_AMBE_HEADER_LEN);
+} /* AudioDecoderDv3k::sendToDv3k */
 
 
-void AudioDecoderDv3k::handleAudio(char *buf, int len)
+void AudioDecoderDv3k::sendAudio(char *buf, int len)
 {
   char *audio = reinterpret_cast<char *>(buf);
   int count = len / sizeof(char);
@@ -248,7 +276,7 @@ void AudioDecoderDv3k::handleAudio(char *buf, int len)
     samples[i] = static_cast<float>((audio[i]<<8) | (audio[i+1]<<0)) / 32768.0;
   }
   sinkWriteSamples(samples, count);
-} /* AudioDecoderDv3k::handleControl */
+} /* AudioDecoderDv3k::sendAudio */
 
 
 /*

@@ -129,14 +129,14 @@ using namespace Async;
 
 /*
  *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *------------------------------------------------------------------------
  */
 Serial::Serial(const string& serial_port)
@@ -229,7 +229,7 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
       errno = EINVAL;
       return false;
   }
-  
+
   speed_t serial_speed;
   switch (speed)
   {
@@ -287,11 +287,14 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
     case 230400:
       serial_speed = B230400;
       break;
+    case 460800:
+      serial_speed = B460800;
+      break;
     default:
       errno = EINVAL;
       return false;
   }
-  
+
   if (cfsetospeed(&port_settings, serial_speed) == -1)
   {
     return false;
@@ -300,7 +303,7 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
   {
     return false;
   }
-  
+
   if (tcsetattr(fd, TCSANOW, &port_settings) == -1)
   {
     int errno_tmp = errno;
@@ -309,11 +312,11 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
     errno = errno_tmp;
     return false;
   }
-  
+
   setCanonical(canonical);
-  
+
   return true;
-  
+
 } /* Serial::setParams */
 
 
@@ -323,7 +326,7 @@ bool Serial::open(bool flush)
   {
     return true;
   }
-  
+
   dev = SerialDevice::open(serial_port, flush);
   if (dev == NULL)
   {
@@ -331,9 +334,9 @@ bool Serial::open(bool flush)
   }
   fd = dev->desc();
   dev->charactersReceived.connect(charactersReceived.make_slot());
-  
+
   return true;
-  
+
 } /* Serial::open */
 
 
@@ -343,20 +346,20 @@ bool Serial::close(void)
   {
     return true;
   }
-  
+
   bool success = SerialDevice::close(dev);
   dev = 0;
   fd = -1;
-  
+
   return success;
-  
+
 } /* Serial::close */
 
 
 bool Serial::setCanonical(bool canonical)
 {
   this->canonical = canonical;
-  
+
   if (fd != -1)
   {
     if (canonical)
@@ -375,9 +378,9 @@ bool Serial::setCanonical(bool canonical)
       return false;
     }
   }
-   
+
   return true;
-  
+
 } /* Serial::setCanonical */
 
 
@@ -390,53 +393,53 @@ bool Serial::stopInput(bool stop)
 bool Serial::setPin(Pin pin, bool set)
 {
   int the_pin;
-  
+
   switch (pin)
   {
     case PIN_DTR:
       the_pin = TIOCM_DTR;
       break;
-      
+
     case PIN_RTS:
       the_pin = TIOCM_RTS;
       break;
 
     case PIN_NONE:
       return true;
-    
+
     default:
       errno = EINVAL;
       return false;
   }
-  
+
   if (ioctl(fd, set ? TIOCMBIS : TIOCMBIC, &the_pin) == -1)
   {
      return false;
   }
-  
+
   return true;
-  
+
 } /* Serial::setPin */
 
 
 bool Serial::getPin(Pin pin, bool &is_set)
 {
   int the_pin;
-  
+
   switch (pin)
   {
     case PIN_CTS:
       the_pin = TIOCM_CTS;
       break;
-      
+
     case PIN_DSR:
       the_pin = TIOCM_DSR;
       break;
-    
+
     case PIN_DCD:
       the_pin = TIOCM_CD;
       break;
-    
+
     case PIN_RI:
       the_pin = TIOCM_RI;
       break;
@@ -449,17 +452,17 @@ bool Serial::getPin(Pin pin, bool &is_set)
       errno = EINVAL;
       return false;
   }
-  
+
   int pins = 0;
   if (ioctl(fd, TIOCMGET, &pins) == -1)
   {
      return false;
   }
-  
+
   is_set = (pins & the_pin);
-  
+
   return true;
-  
+
 } /* Serial::getPin */
 
 
@@ -474,14 +477,14 @@ bool Serial::getPin(Pin pin, bool &is_set)
 
 /*
  *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *------------------------------------------------------------------------
  */
 
@@ -499,14 +502,14 @@ bool Serial::getPin(Pin pin, bool &is_set)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 

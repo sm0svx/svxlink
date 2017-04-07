@@ -172,6 +172,10 @@ int AudioEncoderDv3k::writeSamples(const float *samples, int count)
 void AudioEncoderDv3k::openDv3k(void)
 {
   dv3kfd = new Async::Serial(device);
+  if (!dv3kfd->open())
+  {
+    cout << "*** ERROR: Can not open DV3K" << endl;
+  }
   dv3kfd->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
   dv3kfd->charactersReceived.connect(
           mem_fun(*this, &AudioEncoderDv3k::charactersReceived));
@@ -184,33 +188,35 @@ void AudioEncoderDv3k::charactersReceived(char *buf, int len)
 {
   if (buf[0] != 0x61 || len < 4)
   {
-    cout << "*** ERROR: invalid response from DV3K" << endl;
+    cout << "*** ERROR: Encoder invalid response from DV3K" << endl;
     return;
   }
 
   int tlen = buf[2] + buf[1] * 256;
 
-  if (tlen-4 != len)
+  if (tlen-1 != len)
   {
-    cout << "*** ERROR: length in DV3K message != length received" << endl;
-    return;
+    cout << "*** ERROR: dv3k-length " << tlen << ", length " << len << endl;
+  //  return;
   }
 
   int type = buf[3];
-  char *tbuf = 0;
-  memcpy(buf+4, tbuf, len-4);
+  char *tbuf = buf + 4;
 
   switch (type) {
     case DV3000_TYPE_CONTROL:
-      handleControl(tbuf, len-4);
+      cout << "TYP=CONTROL" << endl;
+      handleControl(tbuf, tlen-4);
       return;
 
     case DV3000_TYPE_AMBE:
-      handleAmbe(tbuf, len-4);
+      cout << "TYP=AMBE" << endl;
+      handleAmbe(tbuf, tlen-4);
       return;
 
     case DV3000_TYPE_AUDIO:
-      handleAudio(tbuf, len-4);
+      cout << "TYP=AUDIO" << endl;
+      handleAudio(tbuf, tlen-4);
       return;
 
     default:

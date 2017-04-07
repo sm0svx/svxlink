@@ -104,7 +104,7 @@ const unsigned int DVD_REQ_NAME_LEN = 4U;
 const char DV3000_REQ_PRODID[] = {DV3000_START_BYTE, 0x00U, 0x01U, DV3000_TYPE_CONTROL, DV3000_CONTROL_PRODID};
 const unsigned int DV3000_REQ_PRODID_LEN    = 5U;
 
-const unsigned char DV3000_REQ_RATEP[] = {DV3000_START_BYTE, 0x00U, 0x0DU, DV3000_TYPE_CONTROL, DV3000_CONTROL_RATEP, 0x01U, 0x30U, 0x07U, 0x63U, 0x40U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x48U};
+const char DV3000_REQ_RATEP[] = {DV3000_START_BYTE, 0x00U, 0x0DU, DV3000_TYPE_CONTROL, DV3000_CONTROL_RATEP, 0x01U, 0x30U, 0x07U, 0x63U, 0x40U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x48U};
 const unsigned int DV3000_REQ_RATEP_LEN     = 17U;
 
 const unsigned char DV3000_AUDIO_HEADER[] = {DV3000_START_BYTE, 0x01U, 0x42U, DV3000_TYPE_AUDIO, 0x00U, 0xA0U};
@@ -190,12 +190,14 @@ class AudioDecoderDv3k : public Async::AudioDecoder
     };
 
     STATE m_state;
+    unsigned char outbuf[200];
+    int outcnt;
 
     void openDv3k(void);
     void charactersReceived(char *buf, int len);
     void handleControl(char *buf, int len);
-    void handleAudio(char *buf, int len);
-    void handleAmbe(char *buf, int len);
+    void sendAudio(char *buf, int len);
+    void sendToDv3k(unsigned char *buf, int len);
 
 };  /* class AudioDecoderDv3k */
 
