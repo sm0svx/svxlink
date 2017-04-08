@@ -149,7 +149,7 @@ class ModuleMetarInfo : public Module
     typedef std::map<std::string, std::string> Repdefs;
     Repdefs repstr;
 
-    Async::TcpClient *con;
+    Async::TcpClient<> *con;
     std::string html;
     std::string type;
     std::string server;
@@ -163,8 +163,8 @@ class ModuleMetarInfo : public Module
     void dtmfCmdReceivedWhenIdle(const std::string& cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
-    void onDisconnected(Async::TcpClient::TcpConnection *con,
-                        Async::TcpClient::DisconnectReason reason);
+    void onDisconnected(Async::TcpClient<>::TcpConnection *con,
+                        Async::TcpClient<>::DisconnectReason reason);
     void onConnected(void);
     void openConnection(void);
     std::string getSlp(std::string token);
@@ -177,7 +177,7 @@ class ModuleMetarInfo : public Module
     std::string getPrecipitation(std::string token);
     std::string getCloudType(std::string token);
     void isRwyState(std::string &retval, std::string token);
-    int  onDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
+    int  onDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
               int count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);

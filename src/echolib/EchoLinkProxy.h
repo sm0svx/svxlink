@@ -348,15 +348,15 @@ class Proxy : public sigc::trackable
 
     static Proxy *the_instance;
 
-    Async::TcpClient  con;
-    const std::string callsign;
-    std::string       password;
-    ProxyState        state;
-    TcpState          tcp_state;
-    uint8_t           recv_buf[recv_buf_size];
-    int               recv_buf_cnt;
-    Async::Timer      reconnect_timer;
-    Async::Timer      cmd_timer;
+    Async::TcpClient<>  con;
+    const std::string   callsign;
+    std::string         password;
+    ProxyState          state;
+    TcpState            tcp_state;
+    uint8_t             recv_buf[recv_buf_size];
+    int                 recv_buf_cnt;
+    Async::Timer        reconnect_timer;
+    Async::Timer        cmd_timer;
 
     Proxy(const Proxy&);
     Proxy& operator=(const Proxy&);
@@ -366,7 +366,7 @@ class Proxy : public sigc::trackable
     void onConnected(void);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void onDisconnected(Async::TcpConnection *con,
-        Async::TcpClient::DisconnectReason reason);
+        Async::TcpClient<>::DisconnectReason reason);
     void disconnectHandler(void);
     int handleAuthentication(const unsigned char *buf, int len);
     int parseProxyMessageBlock(unsigned char *buf, int len);

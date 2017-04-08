@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioDecoder.h>
 #include <AsyncAudioEncoder.h>
-#include <AsyncTcpConnection.h>
+#include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 //#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioFifo.h>
@@ -67,7 +67,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class TcpClient;
   class UdpSocket;
 };
 
@@ -161,7 +160,7 @@ class ReflectorLogic : public LogicBase
     static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
     static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
 
-    Async::TcpClient*     m_con;
+    Async::TcpClient<>*   m_con;
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
     uint32_t              m_client_id;

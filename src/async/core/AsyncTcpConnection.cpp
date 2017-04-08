@@ -236,12 +236,20 @@ int TcpConnection::write(const void *buf, int count)
   int cnt = ::write(sock, buf, count);
   if (cnt == -1)
   {
-    int errno_tmp = errno;
-    disconnect();
-    errno = errno_tmp;
-    disconnected(this, DR_SYSTEM_ERROR);
+    if (errno == EAGAIN)
+    {
+      cnt = 0;
+    }
+    else
+    {
+      int errno_tmp = errno;
+      disconnect();
+      errno = errno_tmp;
+      onDisconnected(DR_SYSTEM_ERROR);
+    }
   }
-  else if (cnt < count)
+
+  if (cnt < count)
   {
     sendBufferFull(true);
     wr_watch->setEnabled(true);
@@ -348,7 +356,7 @@ void TcpConnection::recvHandler(FdWatch *watch)
   if (recv_buf_cnt == recv_buf_len)
   {
     disconnect();
-    disconnected(this, DR_RECV_BUFFER_OVERFLOW);
+    onDisconnected(DR_RECV_BUFFER_OVERFLOW);
     return;
   }
   
@@ -358,19 +366,19 @@ void TcpConnection::recvHandler(FdWatch *watch)
     int errno_tmp = errno;
     disconnect();
     errno = errno_tmp;
-    disconnected(this, DR_SYSTEM_ERROR);
+    onDisconnected(DR_SYSTEM_ERROR);
     return;
   }
   else if (cnt == 0)
   {
     //cout << "Connection closed by remote host!\n";
     disconnect();
-    disconnected(this, DR_REMOTE_DISCONNECTED);
+    onDisconnected(DR_REMOTE_DISCONNECTED);
     return;
   }
   
   recv_buf_cnt += cnt;
-  size_t processed = dataReceived(this, recv_buf, recv_buf_cnt);
+  size_t processed = onDataReceived(recv_buf, recv_buf_cnt);
   //cout << "processed=" << processed << endl;
   if (processed >= recv_buf_cnt)
   {

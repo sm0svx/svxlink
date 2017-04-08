@@ -225,7 +225,7 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
-  m_con = new TcpClient(reflector_host, reflector_port);
+  m_con = new TcpClient<>(reflector_host, reflector_port);
   m_con->connected.connect(mem_fun(*this, &ReflectorLogic::onConnected));
   m_con->disconnected.connect(mem_fun(*this, &ReflectorLogic::onDisconnected));
   m_con->dataReceived.connect(mem_fun(*this, &ReflectorLogic::onDataReceived));

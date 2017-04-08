@@ -127,7 +127,8 @@ create and use the connections. An example usage is shown below.
 
 \include AsyncTcpClient_demo.cpp
 */
-class TcpClient : public TcpConnection
+template <typename ConT=TcpConnection>
+class TcpClient : public ConT
 {
   public:
     /**
@@ -140,7 +141,7 @@ class TcpClient : public TcpConnection
      * When using this variant of the constructor the connect method which
      * take host and port must be used.
      */
-    explicit TcpClient(size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+    explicit TcpClient(size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN);
     
     /**
      * @brief 	Constructor
@@ -153,7 +154,7 @@ class TcpClient : public TcpConnection
      * (see @ref TcpClient::connect) is called.
      */
     TcpClient(const std::string& remote_host, uint16_t remote_port,
-      	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+              size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN);
     
     /**
      * @brief 	Constructor
@@ -166,7 +167,7 @@ class TcpClient : public TcpConnection
      * (see @ref TcpClient::connect) is called.
      */
     TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
-      	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+              size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN);
     
     /**
      * @brief 	Destructor
@@ -228,7 +229,7 @@ class TcpClient : public TcpConnection
      *
      * A connection being idle means that it is not connected nor connecting.
      */
-    bool isIdle(void) const { return TcpConnection::isIdle() && (sock == -1); }
+    bool isIdle(void) const { return ConT::isIdle() && (sock == -1); }
     
     /**
      * @brief 	A signal that is emitted when a connection has been established

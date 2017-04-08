@@ -171,7 +171,7 @@ bool Reflector::initialize(Async::Config &cfg)
 
   std::string listen_port("5300");
   cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
-  srv = new TcpServer(listen_port);
+  srv = new TcpServer<>(listen_port);
   srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
   srv->clientDisconnected.connect(

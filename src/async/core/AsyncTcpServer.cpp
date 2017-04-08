@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncFdWatch.h>
 #include <AsyncApplication.h>
+#include <AsyncFramedTcpConnection.h>
 
 
 /****************************************************************************
@@ -90,6 +91,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
+template class TcpServer<TcpConnection>;
+template class TcpServer<FramedTcpConnection>;
 
 
 /****************************************************************************
@@ -139,7 +142,9 @@ void delete_connection(TcpConnection *con);
  * Bugs:      
  *------------------------------------------------------------------------
  */
-TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
+template <typename ConT>
+TcpServer<ConT>::TcpServer(const string& port_str,
+                           const Async::IpAddress &bind_ip)
   : sock(-1), rd_watch(0)
 {
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -234,7 +239,8 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-TcpServer::~TcpServer(void)
+template <typename ConT>
+TcpServer<ConT>::~TcpServer(void)
 {
   cleanup();
 } /* TcpServer::~TcpServer */
@@ -252,7 +258,8 @@ TcpServer::~TcpServer(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int TcpServer::numberOfClients(void)
+template <typename ConT>
+int TcpServer<ConT>::numberOfClients(void)
 {
   return tcpConnectionList.size();
 } /* TcpServer::numberOfClients */
@@ -270,7 +277,8 @@ int TcpServer::numberOfClients(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-TcpConnection *TcpServer::getClient(unsigned int index)
+template <typename ConT>
+TcpConnection *TcpServer<ConT>::getClient(unsigned int index)
 {
   if ((numberOfClients() > 0) && (index < tcpConnectionList.size()))
   {
@@ -295,7 +303,8 @@ TcpConnection *TcpServer::getClient(unsigned int index)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int TcpServer::writeAll(const void *buf, int count)
+template <typename ConT>
+int TcpServer<ConT>::writeAll(const void *buf, int count)
 {
   if (tcpConnectionList.empty())
   {
@@ -327,7 +336,8 @@ int TcpServer::writeAll(const void *buf, int count)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int TcpServer::writeOnly(TcpConnection *con, const void *buf, int count)
+template <typename ConT>
+int TcpServer<ConT>::writeOnly(TcpConnection *con, const void *buf, int count)
 {
   if (tcpConnectionList.empty())
   {
@@ -358,7 +368,8 @@ int TcpServer::writeOnly(TcpConnection *con, const void *buf, int count)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int TcpServer::writeExcept(TcpConnection *con, const void *buf, int count)
+template <typename ConT>
+int TcpServer<ConT>::writeExcept(TcpConnection *con, const void *buf, int count)
 {
   if (tcpConnectionList.empty())
   {
@@ -425,7 +436,8 @@ int TcpServer::writeExcept(TcpConnection *con, const void *buf, int count)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void TcpServer::cleanup(void)
+template <typename ConT>
+void TcpServer<ConT>::cleanup(void)
 {
   delete rd_watch;
   rd_watch = 0;
@@ -459,7 +471,8 @@ void TcpServer::cleanup(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void TcpServer::onConnection(FdWatch *watch)
+template <typename ConT>
+void TcpServer<ConT>::onConnection(FdWatch *watch)
 {
   int client_sock;
   struct sockaddr_in client;
@@ -498,8 +511,8 @@ void TcpServer::onConnection(FdWatch *watch)
   }
   
     // Create client object, add signal handling, add to client list
-  TcpConnection *con = new TcpConnection(client_sock,
-      	  IpAddress(client.sin_addr), ntohs(client.sin_port));
+  ConT *con = new ConT(client_sock, IpAddress(client.sin_addr),
+                       ntohs(client.sin_port));
   con->disconnected.connect(mem_fun(*this, &TcpServer::onDisconnected));
   tcpConnectionList.push_back(con);
   
@@ -521,8 +534,8 @@ void TcpServer::onConnection(FdWatch *watch)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void TcpServer::onDisconnected(TcpConnection *con,
-      	      	       	       TcpConnection::DisconnectReason reason)
+template <typename ConT>
+void TcpServer<ConT>::onDisconnected(ConT *con, typename ConT::DisconnectReason reason)
 {
     // Emit signal on client disconnection
   clientDisconnected(con, reason);

@@ -64,6 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncFdWatch.h"
 #include "AsyncDnsLookup.h"
 #include "AsyncTcpClient.h"
+#include "AsyncFramedTcpConnection.h"
 
 
 
@@ -92,6 +93,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
+template class TcpClient<TcpConnection>;
+template class TcpClient<FramedTcpConnection>;
 
 
 /****************************************************************************
@@ -126,38 +129,42 @@ using namespace Async;
  ****************************************************************************/
 
 
-TcpClient::TcpClient(size_t recv_buf_len)
-  : TcpConnection(recv_buf_len), dns(0), sock(-1), wr_watch(0)
+template <typename ConT>
+TcpClient<ConT>::TcpClient(size_t recv_buf_len)
+  : ConT(recv_buf_len), dns(0), sock(-1), wr_watch(0)
 {
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
 } /* TcpClient::TcpClient */
 
 
-TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
+template <typename ConT>
+TcpClient<ConT>::TcpClient(const string& remote_host, uint16_t remote_port,
     size_t recv_buf_len)
-  : TcpConnection(recv_buf_len), dns(0), remote_host(remote_host),
+  : ConT(recv_buf_len), dns(0), remote_host(remote_host),
     sock(-1), wr_watch(0)
 {
   wr_watch = new FdWatch;
-  wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
-  setRemotePort(remote_port);
+  wr_watch->activity.connect(mem_fun(*this, &TcpClient<ConT>::connectHandler));
+  ConT::setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
 
 
-TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
+template <typename ConT>
+TcpClient<ConT>::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
     size_t recv_buf_len)
-  : TcpConnection(recv_buf_len), dns(0), remote_host(remote_ip.toString()),
+  : ConT(recv_buf_len), dns(0), remote_host(remote_ip.toString()),
     sock(-1), wr_watch(0)
 {
   wr_watch = new FdWatch;
-  wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
-  setRemoteAddr(remote_ip);
-  setRemotePort(remote_port);
+  wr_watch->activity.connect(mem_fun(*this, &TcpClient<ConT>::connectHandler));
+  ConT::setRemoteAddr(remote_ip);
+  ConT::setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
 
 
-TcpClient::~TcpClient(void)
+template <typename ConT>
+TcpClient<ConT>::~TcpClient(void)
 {
   disconnect();
   delete wr_watch;
@@ -165,43 +172,47 @@ TcpClient::~TcpClient(void)
 } /* TcpClient::~TcpClient */
 
 
-void TcpClient::bind(const IpAddress& bind_ip)
+template <typename ConT>
+void TcpClient<ConT>::bind(const IpAddress& bind_ip)
 {
   this->bind_ip = bind_ip;
 } /* TcpClient::bind */
 
 
-void TcpClient::connect(const string &remote_host, uint16_t remote_port)
+template <typename ConT>
+void TcpClient<ConT>::connect(const string &remote_host, uint16_t remote_port)
 {
   this->remote_host = remote_host;
-  setRemotePort(remote_port);
+  ConT::setRemotePort(remote_port);
   connect();
 } /* TcpClient::connect */
 
 
-void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
+template <typename ConT>
+void TcpClient<ConT>::connect(const IpAddress& remote_ip, uint16_t remote_port)
 {
-  setRemoteAddr(remote_ip);
+  ConT::setRemoteAddr(remote_ip);
   remote_host = remote_ip.toString();
-  setRemotePort(remote_port);
+  ConT::setRemotePort(remote_port);
   connect();
 } /* TcpClient::connect */
 
 
-void TcpClient::connect(void)
+template <typename ConT>
+void TcpClient<ConT>::connect(void)
 {
     // Do nothing if DNS lookup is pending, connection is pending or if the
     // connection is already established
-  if ((dns != 0) || (sock != -1) || (socket() != -1))
+  if ((dns != 0) || (sock != -1) || (ConT::socket() != -1))
   {
     return;
   }
 
-  if (remoteHost().isEmpty())
+  if (ConT::remoteHost().isEmpty())
   {
     assert(!remote_host.empty());
     dns = new DnsLookup(remote_host);
-    dns->resultsReady.connect(mem_fun(*this, &TcpClient::dnsResultsReady));
+    dns->resultsReady.connect(mem_fun(*this, &TcpClient<ConT>::dnsResultsReady));
   }
   else
   {
@@ -210,9 +221,10 @@ void TcpClient::connect(void)
 } /* TcpClient::connect */
 
 
-void TcpClient::disconnect(void)
+template <typename ConT>
+void TcpClient<ConT>::disconnect(void)
 {
-  TcpConnection::disconnect();
+  ConT::disconnect();
 
   wr_watch->setEnabled(false);
 
@@ -273,7 +285,8 @@ void TcpClient::disconnect(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
+template <typename ConT>
+void TcpClient<ConT>::dnsResultsReady(DnsLookup& dns_lookup)
 {
   vector<IpAddress> result = dns->addresses();
   
@@ -283,32 +296,33 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
   if (result.empty() || result[0].isEmpty())
   {
     disconnect();
-    disconnected(this, DR_HOST_NOT_FOUND);
+    ConT::disconnected(this, ConT::DR_HOST_NOT_FOUND);
     return;
   }
   
-  setRemoteAddr(result[0]);
+  ConT::setRemoteAddr(result[0]);
   
   connectToRemote();
   
 } /* TcpClient::dnsResultsReady */
 
 
-void TcpClient::connectToRemote(void)
+template <typename ConT>
+void TcpClient<ConT>::connectToRemote(void)
 {
   assert(sock == -1);
   
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(remotePort());
-  addr.sin_addr = remoteHost().ip4Addr();
+  addr.sin_port = htons(ConT::remotePort());
+  addr.sin_addr = ConT::remoteHost().ip4Addr();
 
     /* Create a TCP/IP socket to use */
   sock = ::socket(PF_INET, SOCK_STREAM, 0);
   if (sock == -1)
   {
-    disconnected(this, DR_SYSTEM_ERROR);
+    ConT::disconnected(this, ConT::DR_SYSTEM_ERROR);
     return;
   }
 
@@ -318,7 +332,7 @@ void TcpClient::connectToRemote(void)
     int errno_tmp = errno;
     disconnect();
     errno = errno_tmp;
-    disconnected(this, DR_SYSTEM_ERROR);
+    ConT::disconnected(this, ConT::DR_SYSTEM_ERROR);
     return;
   }
 
@@ -333,7 +347,7 @@ void TcpClient::connectToRemote(void)
       int errno_tmp = errno;
       disconnect();
       errno = errno_tmp;
-      disconnected(this, DR_SYSTEM_ERROR);
+      ConT::disconnected(this, ConT::DR_SYSTEM_ERROR);
       return;
     }
   }
@@ -353,13 +367,13 @@ void TcpClient::connectToRemote(void)
       int errno_tmp = errno;
       disconnect();
       errno = errno_tmp;
-      disconnected(this, DR_SYSTEM_ERROR);
+      ConT::disconnected(this, ConT::DR_SYSTEM_ERROR);
       return;
     }
   }
   else
   {
-    setSocket(sock);
+    ConT::setSocket(sock);
     sock = -1;
     
     connected();
@@ -368,7 +382,8 @@ void TcpClient::connectToRemote(void)
 } /* TcpClient::connectToRemote */
 
 
-void TcpClient::connectHandler(FdWatch *watch)
+template <typename ConT>
+void TcpClient<ConT>::connectHandler(FdWatch *watch)
 {
   wr_watch->setEnabled(false);
   
@@ -379,18 +394,18 @@ void TcpClient::connectHandler(FdWatch *watch)
     int errno_tmp = errno;
     disconnect();
     errno = errno_tmp;
-    disconnected(this, DR_SYSTEM_ERROR);
+    ConT::disconnected(this, ConT::DR_SYSTEM_ERROR);
     return;
   }
   if (error)
   {
     disconnect();
     errno = error;
-    disconnected(this, DR_SYSTEM_ERROR);
+    ConT::disconnected(this, ConT::DR_SYSTEM_ERROR);
     return;
   }
   
-  setSocket(sock);
+  ConT::setSocket(sock);
   sock = -1;
   
   connected();

@@ -123,6 +123,7 @@ actual communication. An example of how to use it is shown below.
 
 \include AsyncTcpServer_demo.cpp
 */
+template <typename ConT=TcpConnection>
 class TcpServer : public sigc::trackable
 {
   public:
@@ -182,15 +183,15 @@ class TcpServer : public sigc::trackable
      * @brief 	A signal that is emitted when a client connect to the server
      * @param 	con The connected TcpConnection object
      */
-    sigc::signal<void, TcpConnection *>  clientConnected;
+    sigc::signal<void, ConT*>  clientConnected;
   
     /**
      * @brief 	A signal that is emitted when a client disconnect from the
      *	      	server
      * @param 	con The disconnected TcpConnection object
      */
-    sigc::signal<void, TcpConnection *,TcpConnection::DisconnectReason>
-      	    clientDisconnected;
+    sigc::signal<void, ConT*, typename ConT::DisconnectReason>
+            clientDisconnected;
   
   
   protected:
@@ -204,8 +205,7 @@ class TcpServer : public sigc::trackable
     
     void cleanup(void);
     void onConnection(FdWatch *watch);
-    void onDisconnected(TcpConnection *con,
-      	      	      	TcpConnection::DisconnectReason reason);
+    void onDisconnected(ConT *con, typename ConT::DisconnectReason reason);
     
 };  /* class TcpServer */
 

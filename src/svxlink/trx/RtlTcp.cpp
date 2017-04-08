@@ -126,7 +126,7 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
   con.connect();
 
   reconnect_timer.expired.connect(
-      hide(mem_fun(con, &Async::TcpClient::connect)));
+      hide(mem_fun(con, &Async::TcpClient<>::connect)));
 } /* RtlTcp::RtlTcp */
 
 

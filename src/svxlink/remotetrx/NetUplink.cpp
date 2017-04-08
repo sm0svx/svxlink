@@ -202,7 +202,7 @@ bool NetUplink::initialize(void)
     mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
   }
   
-  server = new TcpServer(listen_port);
+  server = new TcpServer<>(listen_port);
   server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
       mem_fun(*this, &NetUplink::clientDisconnected));

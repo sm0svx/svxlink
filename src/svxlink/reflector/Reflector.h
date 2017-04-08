@@ -53,7 +53,7 @@ An example of how to use the Reflector class
  *
  ****************************************************************************/
 
-#include <AsyncTcpConnection.h>
+#include <AsyncTcpServer.h>
 #include <AsyncTimer.h>
 
 
@@ -73,7 +73,6 @@ An example of how to use the Reflector class
 
 namespace Async
 {
-  class TcpServer;
   class UdpSocket;
   class Config;
 };
@@ -161,7 +160,7 @@ class Reflector : public sigc::trackable
     typedef std::map<Async::TcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
 
-    Async::TcpServer*     srv;
+    Async::TcpServer<>*   srv;
     Async::UdpSocket*     udp_sock;
     ReflectorClientMap    client_map;
     std::string           m_auth_key;

@@ -825,11 +825,11 @@ void Directory::ctrlSockDisconnected(void)
 
   switch (reason)
   {
-    case Async::TcpClient::DR_HOST_NOT_FOUND:
+    case Async::TcpClient<>::DR_HOST_NOT_FOUND:
       error("EchoLink directory server DNS lookup failed\n");
       break;
     
-    case Async::TcpClient::DR_REMOTE_DISCONNECTED:
+    case Async::TcpClient<>::DR_REMOTE_DISCONNECTED:
       if (com_state != CS_IDLE)
       {
         error("The directory server closed the connection before all data was "
@@ -837,16 +837,16 @@ void Directory::ctrlSockDisconnected(void)
       }
       break;
       
-    case Async::TcpClient::DR_SYSTEM_ERROR:
+    case Async::TcpClient<>::DR_SYSTEM_ERROR:
       error(string("Directory server communications error: ")
             + strerror(errno));
       break;
       
-    case Async::TcpClient::DR_RECV_BUFFER_OVERFLOW:
+    case Async::TcpClient<>::DR_RECV_BUFFER_OVERFLOW:
       error("Directory server receiver buffer overflow!\n");
       break;
     
-    case Async::TcpClient::DR_ORDERED_DISCONNECT:
+    case Async::TcpClient<>::DR_ORDERED_DISCONNECT:
       break;
   }
   
