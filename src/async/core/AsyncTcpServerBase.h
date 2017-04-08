@@ -1,14 +1,12 @@
 /**
-@file	 AsyncTcpServer.h
-@brief   A class for creating a TCP server
+@file	 AsyncTcpServerBase.h
+@brief   The base class for creating a TCP server
 @author  Tobias Blomberg
-@date	 2003-12-07
-
-This class is used to create a TCP server that listens to a TCP-port.
+@date    2003-12-07
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,13 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AsyncTcpServer_demo.cpp
-An example of how to use the Async::TcpServer class
-*/
-
-
-#ifndef ASYNC_TCP_SERVER_INCLUDED
-#define ASYNC_TCP_SERVER_INCLUDED
+#ifndef ASYNC_TCP_SERVER_BASE_INCLUDED
+#define ASYNC_TCP_SERVER_BASE_INCLUDED
 
 
 /****************************************************************************
@@ -52,7 +45,7 @@ An example of how to use the Async::TcpServer class
  *
  ****************************************************************************/
 
-#include <AsyncTcpServerBase.h>
+#include <AsyncTcpConnection.h>
 
 
 /****************************************************************************
@@ -87,7 +80,7 @@ namespace Async
  ****************************************************************************/
 
 class FdWatch;
-  
+
 
 /****************************************************************************
  *
@@ -112,19 +105,11 @@ class FdWatch;
  ****************************************************************************/
 
 /**
-@brief	A class for creating a TCP server
+@brief	The base class for creating a TCP server
 @author Tobias Blomberg
 @date   2003-12-07
-
-This class is used to create a TCP server that listens to a TCP-port. To use it,
-just create an instance and specify the TCP-port to listen to. When a client
-connects, a new Async::TcpConnection object is created which is used to do the
-actual communication. An example of how to use it is shown below.
-
-\include AsyncTcpServer_demo.cpp
 */
-template <typename ConT=TcpConnection>
-class TcpServer : public TcpServerBase
+class TcpServerBase : public sigc::trackable
 {
   public:
     /**
@@ -132,66 +117,75 @@ class TcpServer : public TcpServerBase
      * @param 	port_str A port number or service name to listen to
      * @param 	bind_ip The IP to bind the server to
      */
-    TcpServer(const std::string& port_str,
-              const Async::IpAddress &bind_ip=IpAddress())
-      : TcpServerBase(port_str, bind_ip)
-    {
-    }
-  
+    TcpServerBase(const std::string& port_str,
+                  const Async::IpAddress &bind_ip);
+
     /**
      * @brief 	Destructor
      */
-    virtual ~TcpServer(void) {}
-  
+    virtual ~TcpServerBase(void);
+
+    /**
+     * @brief 	Get the number of clients that is connected to the server
+     * @return 	The number of connected clients
+     */
+    int numberOfClients(void);
+
     /**
      * @brief 	Get the client object pointer from the server
      * @param 	index The wanted client by number 0 - numberOfClients()-1
      * @return 	The TcpConnection pointer to the client (zero if not found)
      */
-    ConT *getClient(unsigned int index)
-    {
-      TcpConnection *con = TcpServerBase::getClient(index);
-      return dynamic_cast<ConT*>(con);
-    }
+    TcpConnection *getClient(unsigned int index);
 
     /**
-     * @brief 	A signal that is emitted when a client connect to the server
-     * @param 	con The connected TcpConnection object
+     * @brief 	Write data to all connected clients 
+     * @param 	buf   The data buffer
+     * @param 	count The number of bytes in the data buffer
+     * @return 	The number of bytes sent
      */
-    sigc::signal<void, ConT*>  clientConnected;
-  
+    int writeAll(const void *buf, int count);
+
     /**
-     * @brief 	A signal that is emitted when a client disconnect from the
-     *	      	server
-     * @param 	con The disconnected TcpConnection object
+     * @brief 	Send data only to the given client
+     * @param 	con   The TcpConnection object to send to
+     * @param 	buf   The data buffer
+     * @param 	count The number of bytes in data buffer
+     * @return 	The number of bytes sent
      */
-    sigc::signal<void, ConT*, typename ConT::DisconnectReason>
-            clientDisconnected;
-  
+    int writeOnly(TcpConnection *con, const void *buf, int count);
+
+    /**
+     * @brief 	Send data to all connected clients except the given client
+     * @param 	con   The TcpConnection object not to send to
+     * @param 	buf   The data buffer
+     * @param 	count The number of bytes in the data buffer
+     * @return 	The number of bytes sent
+     */
+    int writeExcept(TcpConnection *con, const void *buf, int count);
+
   protected:
     virtual void createConnection(int sock, const IpAddress& remote_addr,
-                                  uint16_t remote_port)
-    {
-      ConT *con = new ConT(sock, remote_addr, remote_port);
-      con->disconnected.connect(
-          mem_fun(*this, &TcpServer<ConT>::onDisconnected));
-      addConnection(con);
-      clientConnected(con);
-    }
-    
+                                  uint16_t remote_port) = 0;
+    void addConnection(TcpConnection *con);
+    void removeConnection(TcpConnection *con);
+
   private:
-    void onDisconnected(ConT *con, typename ConT::DisconnectReason reason)
-    {
-      clientDisconnected(con, reason);
-      removeConnection(con);
-    }
-    
-};  /* class TcpServer */
+    typedef std::vector<TcpConnection*> TcpConnectionList;
+
+    int       	      sock;
+    FdWatch   	      *rd_watch;
+    TcpConnectionList tcpConnectionList;
+
+    void cleanup(void);
+    void onConnection(FdWatch *watch);
+
+};  /* class TcpServerBase */
 
 
 } /* namespace */
 
-#endif /* ASYNC_TCP_SERVER_INCLUDED */
+#endif /* ASYNC_TCP_SERVER_BASE_INCLUDED */
 
 
 

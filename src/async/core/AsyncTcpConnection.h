@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2017 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -323,6 +323,8 @@ class TcpConnection : public sigc::trackable
     }
     
   private:
+    friend class TcpClientBase;
+
     IpAddress remote_addr;
     uint16_t  remote_port;
     size_t    recv_buf_len;
