@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -178,6 +179,7 @@ class ReflectorLogic : public LogicBase
     unsigned              m_udp_heartbeat_rx_cnt;
     unsigned              m_tcp_heartbeat_tx_cnt;
     unsigned              m_tcp_heartbeat_rx_cnt;
+    struct timeval        m_last_talker_timestamp;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -204,7 +206,7 @@ class ReflectorLogic : public LogicBase
     void disconnect(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t);
-    void heartbeatHandler(Async::Timer *t);
+    void handleTimerTick(Async::Timer *t);
 
 };  /* class ReflectorLogic */
 

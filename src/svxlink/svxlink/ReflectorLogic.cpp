@@ -127,9 +127,10 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
   m_heartbeat_timer.expired.connect(
-      mem_fun(*this, &ReflectorLogic::heartbeatHandler));
+      mem_fun(*this, &ReflectorLogic::handleTimerTick));
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &ReflectorLogic::flushTimeout));
+  timerclear(&m_last_talker_timestamp);
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -262,6 +263,7 @@ void ReflectorLogic::onConnected(void)
   m_heartbeat_timer.setEnable(true);
   m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
+  timerclear(&m_last_talker_timestamp);
 } /* ReflectorLogic::onConnected */
 
 
@@ -281,6 +283,11 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   {
     m_flush_timeout_timer.setEnable(false);
     m_logic_con_in->allEncodedSamplesFlushed();
+  }
+  if (timerisset(&m_last_talker_timestamp))
+  {
+    m_dec->flushEncodedSamples();
+    timerclear(&m_last_talker_timestamp);
   }
 } /* ReflectorLogic::onDisconnected */
 
@@ -640,6 +647,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       }
       if (!msg.audioData().empty())
       {
+        gettimeofday(&m_last_talker_timestamp, NULL);
         m_dec->writeEncodedSamples(
             &msg.audioData().front(), msg.audioData().size());
       }
@@ -649,6 +657,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     case MsgUdpFlushSamples::TYPE:
       //cout << "### " << name() << ": MsgUdpFlushSamples()" << endl;
       m_dec->flushEncodedSamples();
+      timerclear(&m_last_talker_timestamp);
       break;
 
     case MsgUdpAllSamplesFlushed::TYPE:
@@ -715,8 +724,21 @@ void ReflectorLogic::flushTimeout(Async::Timer *t)
 } /* ReflectorLogic::flushTimeout */
 
 
-void ReflectorLogic::heartbeatHandler(Async::Timer *t)
+void ReflectorLogic::handleTimerTick(Async::Timer *t)
 {
+  if (timerisset(&m_last_talker_timestamp))
+  {
+    struct timeval now, diff;
+    gettimeofday(&now, NULL);
+    timersub(&now, &m_last_talker_timestamp, &diff);
+    if (diff.tv_sec > 3)
+    {
+      cout << "### " << name() << ": Talker audio timeout" << endl;
+      m_dec->flushEncodedSamples();
+      timerclear(&m_last_talker_timestamp);
+    }
+  }
+
   if (--m_udp_heartbeat_tx_cnt == 0)
   {
     sendUdpMsg(MsgUdpHeartbeat());
@@ -738,7 +760,7 @@ void ReflectorLogic::heartbeatHandler(Async::Timer *t)
     cout << name() << ": Heartbeat timeout" << endl;
     disconnect();
   }
-} /* ReflectorLogic::heartbeatHandler */
+} /* ReflectorLogic::handleTimerTick */
 
 
 /*
