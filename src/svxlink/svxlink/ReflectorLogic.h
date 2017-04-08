@@ -205,7 +205,7 @@ class ReflectorLogic : public LogicBase
     void reconnect(Async::Timer *t);
     void disconnect(void);
     void allEncodedSamplesFlushed(void);
-    void flushTimeout(Async::Timer *t);
+    void flushTimeout(Async::Timer *t=0);
     void handleTimerTick(Async::Timer *t);
 
 };  /* class ReflectorLogic */

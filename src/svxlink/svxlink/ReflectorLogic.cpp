@@ -549,6 +549,11 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 {
   //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
   //     << count << endl;
+  if (!m_con->isConnected())
+  {
+    return;
+  }
+
   if (m_flush_timeout_timer.isEnabled())
   {
     m_flush_timeout_timer.setEnable(false);
@@ -560,9 +565,14 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 void ReflectorLogic::flushEncodedAudio(void)
 {
   //cout << "### " << name() << ": ReflectorLogic::flushEncodedAudio" << endl;
+  if (!m_con->isConnected())
+  {
+    flushTimeout();
+    return;
+  }
   sendUdpMsg(MsgUdpFlushSamples());
   m_flush_timeout_timer.setEnable(true);
-} /* ReflectorLogic::sendEncodedAudio */
+} /* ReflectorLogic::flushEncodedAudio */
 
 
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
