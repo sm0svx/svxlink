@@ -226,10 +226,10 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
-  m_con = new TcpClient<>(reflector_host, reflector_port);
+  m_con = new TcpClient<FramedTcpConnection>(reflector_host, reflector_port);
   m_con->connected.connect(mem_fun(*this, &ReflectorLogic::onConnected));
   m_con->disconnected.connect(mem_fun(*this, &ReflectorLogic::onDisconnected));
-  m_con->dataReceived.connect(mem_fun(*this, &ReflectorLogic::onDataReceived));
+  m_con->frameReceived.connect(mem_fun(*this, &ReflectorLogic::onFrameReceived));
   m_con->connect();
 
   return true;
@@ -292,88 +292,67 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
 } /* ReflectorLogic::onDisconnected */
 
 
-int ReflectorLogic::onDataReceived(TcpConnection *con, void *data, int len)
+void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
+                                     std::vector<uint8_t>& data)
 {
-  //cout << "### ReflectorLogic::onDataReceived: len=" << len << endl;
+  char *buf = reinterpret_cast<char*>(&data.front());
+  int len = data.size();
 
-  char *buf = reinterpret_cast<char*>(data);
-  int tot_consumed = 0;
-  while (len > 0)
+  //cout << "### ReflectorLogic::onFrameReceived: len=" << len << endl;
+
+  stringstream ss;
+  ss.write(buf, len);
+
+  ReflectorMsg header;
+  if (!header.unpack(ss))
   {
-    ReflectorMsg header;
-    size_t msg_tot_size = header.packedSize();
-    if (static_cast<size_t>(len) < msg_tot_size)
-    {
-      cout << "### " << name() << ": Header data underflow\n";
-      return tot_consumed;
-    }
-
-    stringstream ss;
-    ss.write(buf, len);
-
-    if (!header.unpack(ss))
-    {
-      cout << "*** ERROR[" << name()
-           << "]: Packing failed for TCP message header\n";
-      disconnect();
-      return tot_consumed;
-    }
-
-    msg_tot_size += header.size();
-    if (static_cast<size_t>(len) < msg_tot_size)
-    {
-      cout << "### " << name() << ": Payload data underflow\n";
-      return tot_consumed;
-    }
-
-    m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
-
-    switch (header.type())
-    {
-      case MsgHeartbeat::TYPE:
-        //cout << "### " << name() << ": MsgHeartbeat()" << endl;
-        break;
-      case MsgError::TYPE:
-        handleMsgError(ss);
-        break;
-      case MsgAuthChallenge::TYPE:
-        handleMsgAuthChallenge(ss);
-        break;
-      case MsgAuthOk::TYPE:
-        handleMsgAuthOk();
-        break;
-      case MsgServerInfo::TYPE:
-        handleMsgServerInfo(ss);
-        break;
-      case MsgNodeList::TYPE:
-        handleMsgNodeList(ss);
-        break;
-      case MsgNodeJoined::TYPE:
-        handleMsgNodeJoined(ss);
-        break;
-      case MsgNodeLeft::TYPE:
-        handleMsgNodeLeft(ss);
-        break;
-      case MsgTalkerStart::TYPE:
-        handleMsgTalkerStart(ss);
-        break;
-      case MsgTalkerStop::TYPE:
-        handleMsgTalkerStop(ss);
-        break;
-      default:
-        cerr << "*** WARNING[" << name()
-             << "]: Unknown protocol message received: msg_type="
-             << header.type() << endl;
-        break;
-    }
-
-    buf += msg_tot_size;
-    len -= msg_tot_size;
-    tot_consumed += msg_tot_size;
+    cout << "*** ERROR[" << name()
+         << "]: Unpacking failed for TCP message header\n";
+    disconnect();
+    return;
   }
 
-  return tot_consumed;
-} /* ReflectorLogic::onDataReceived */
+  m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
+
+  switch (header.type())
+  {
+    case MsgHeartbeat::TYPE:
+      //cout << "### " << name() << ": MsgHeartbeat()" << endl;
+      break;
+    case MsgError::TYPE:
+      handleMsgError(ss);
+      break;
+    case MsgAuthChallenge::TYPE:
+      handleMsgAuthChallenge(ss);
+      break;
+    case MsgAuthOk::TYPE:
+      handleMsgAuthOk();
+      break;
+    case MsgServerInfo::TYPE:
+      handleMsgServerInfo(ss);
+      break;
+    case MsgNodeList::TYPE:
+      handleMsgNodeList(ss);
+      break;
+    case MsgNodeJoined::TYPE:
+      handleMsgNodeJoined(ss);
+      break;
+    case MsgNodeLeft::TYPE:
+      handleMsgNodeLeft(ss);
+      break;
+    case MsgTalkerStart::TYPE:
+      handleMsgTalkerStart(ss);
+      break;
+    case MsgTalkerStop::TYPE:
+      handleMsgTalkerStop(ss);
+      break;
+    default:
+      cerr << "*** WARNING[" << name()
+           << "]: Unknown protocol message received: msg_type="
+           << header.type() << endl;
+      break;
+  }
+} /* ReflectorLogic::onFrameReceived */
 
 
 void ReflectorLogic::handleMsgError(std::istream& is)
@@ -533,7 +512,7 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
 
   ostringstream ss;
-  ReflectorMsg header(msg.type(), msg.packedSize());
+  ReflectorMsg header(msg.type());
   if (!header.pack(ss) || !msg.pack(ss))
   {
     cerr << "*** ERROR[" << name()

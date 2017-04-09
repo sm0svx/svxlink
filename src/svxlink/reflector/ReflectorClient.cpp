@@ -118,7 +118,7 @@ uint32_t ReflectorClient::next_client_id = 0;
  *
  ****************************************************************************/
 
-ReflectorClient::ReflectorClient(Reflector *ref, Async::TcpConnection *con,
+ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
                                  const std::string& auth_key)
   : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
@@ -131,9 +131,10 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::TcpConnection *con,
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
     m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0)
 {
-  m_con->dataReceived.connect(mem_fun(*this, &ReflectorClient::onDataReceived));
-  //m_con->disconnected.connect(mem_fun(*this, &ReflectorClient::onDisconnected));
-  m_disc_timer.expired.connect(mem_fun(*this, &ReflectorClient::onDiscTimeout));
+  m_con->frameReceived.connect(
+      mem_fun(*this, &ReflectorClient::onFrameReceived));
+  m_disc_timer.expired.connect(
+      mem_fun(*this, &ReflectorClient::onDiscTimeout));
   m_heartbeat_timer.expired.connect(
       mem_fun(*this, &ReflectorClient::handleHeartbeat));
 } /* ReflectorClient::ReflectorClient */
@@ -155,7 +156,7 @@ int ReflectorClient::sendMsg(const ReflectorMsg& msg)
 
   m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
 
-  ReflectorMsg header(msg.type(), msg.packedSize());
+  ReflectorMsg header(msg.type());
   ostringstream ss;
   if (!header.pack(ss) || !msg.pack(ss))
   {
@@ -223,73 +224,51 @@ void ReflectorClient::setBlock(unsigned blocktime)
  *
  ****************************************************************************/
 
-int ReflectorClient::onDataReceived(TcpConnection *con, void *data, int len)
+void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
+                                      std::vector<uint8_t>& data)
 {
-  //cout << "### ReflectorClient::onDataReceived: len=" << len << endl;
+  int len = data.size();
+  //cout << "### ReflectorClient::onFrameReceived: len=" << len << endl;
 
   assert(len >= 0);
 
   if ((m_con_state == STATE_DISCONNECTED) ||
       (m_con_state == STATE_EXPECT_DISCONNECT))
   {
-    return len;
+    return;
   }
 
-  char *buf = reinterpret_cast<char*>(data);
-  int tot_consumed = 0;
-  while ((len > 0) && (m_con_state != STATE_DISCONNECTED))
+  char *buf = reinterpret_cast<char*>(&data.front());
+  stringstream ss;
+  ss.write(buf, len);
+
+  ReflectorMsg header;
+  if (!header.unpack(ss))
   {
-    ReflectorMsg header;
-    size_t msg_tot_size = header.packedSize();
-    if (static_cast<size_t>(len) < msg_tot_size)
-    {
-      cout << "### Header data underflow\n";
-      return tot_consumed;
-    }
-
-    stringstream ss;
-    ss.write(buf, len);
-
-    if (!header.unpack(ss))
-    {
-      // FIXME: Disconnect
-      cout << "*** ERROR: Packing failed for TCP message header\n";
-      return tot_consumed;
-    }
-
-    msg_tot_size += header.size();
-    if (static_cast<size_t>(len) < msg_tot_size)
-    {
-      cout << "### Payload data underflow\n";
-      return tot_consumed;
-    }
-
-    m_heartbeat_rx_cnt = HEARTBEAT_RX_CNT_RESET;
-
-    switch (header.type())
-    {
-      case MsgHeartbeat::TYPE:
-        //cout << "### " << callsign() << ": MsgHeartbeat()" << endl;
-        break;
-      case MsgProtoVer::TYPE:
-        handleMsgProtoVer(ss);
-        break;
-      case MsgAuthResponse::TYPE:
-        handleMsgAuthResponse(ss);
-        break;
-      default:
-        cerr << "*** WARNING: Unknown protocol message received: msg_type="
-             << header.type() << endl;
-        break;
-    }
-
-    buf += msg_tot_size;
-    len -= msg_tot_size;
-    tot_consumed += msg_tot_size;
+    cout << "*** ERROR: Unpacking failed for TCP message header\n";
+    disconnect("Protocol message header too short");
+    return;
   }
 
-  return tot_consumed;
-} /* ReflectorClient::onDataReceived */
+  m_heartbeat_rx_cnt = HEARTBEAT_RX_CNT_RESET;
+
+  switch (header.type())
+  {
+    case MsgHeartbeat::TYPE:
+      //cout << "### " << callsign() << ": MsgHeartbeat()" << endl;
+      break;
+    case MsgProtoVer::TYPE:
+      handleMsgProtoVer(ss);
+      break;
+    case MsgAuthResponse::TYPE:
+      handleMsgAuthResponse(ss);
+      break;
+    default:
+      cerr << "*** WARNING: Unknown protocol message received: msg_type="
+           << header.type() << endl;
+      break;
+  }
+} /* ReflectorClient::onFrameReceived */
 
 
 void ReflectorClient::handleMsgProtoVer(std::istream& is)
@@ -360,7 +339,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   {
     vector<string> connected_nodes;
     m_reflector->nodeList(connected_nodes);
-    if (find(connected_nodes.begin(), connected_nodes.end(), msg.callsign()) == connected_nodes.end())
+    if (find(connected_nodes.begin(), connected_nodes.end(),
+             msg.callsign()) == connected_nodes.end())
     {
       m_callsign = msg.callsign();
       sendMsg(MsgAuthOk());
@@ -429,7 +409,7 @@ void ReflectorClient::onDiscTimeout(Timer *t)
   assert(m_con_state == STATE_EXPECT_DISCONNECT);
   m_con->disconnect();
   m_con_state = STATE_DISCONNECTED;
-  m_con->disconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
+  m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
 } /* ReflectorClient::onDiscTimeout */
 
 

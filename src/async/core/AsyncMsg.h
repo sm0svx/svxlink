@@ -103,7 +103,7 @@ namespace Async
     } \
     size_t packedSizeParent(void) const \
     { \
-      return _BASE_CLASS_::packedSize(os); \
+      return _BASE_CLASS_::packedSize(); \
     } \
     bool unpackParent(std::istream& is) \
     { \

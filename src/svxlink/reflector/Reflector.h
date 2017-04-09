@@ -54,6 +54,7 @@ An example of how to use the Reflector class
  ****************************************************************************/
 
 #include <AsyncTcpServer.h>
+#include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
 
 
@@ -157,10 +158,11 @@ class Reflector : public sigc::trackable
 
   private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
-    typedef std::map<Async::TcpConnection*,
+    typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
+    typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
 
-    Async::TcpServer<>*   srv;
+    FramedTcpServer*      srv;
     Async::UdpSocket*     udp_sock;
     ReflectorClientMap    client_map;
     std::string           m_auth_key;
@@ -174,9 +176,9 @@ class Reflector : public sigc::trackable
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
-    void clientConnected(Async::TcpConnection *con);
-    void clientDisconnected(Async::TcpConnection *con,
-                            Async::TcpConnection::DisconnectReason reason);
+    void clientConnected(Async::FramedTcpConnection *con);
+    void clientDisconnected(Async::FramedTcpConnection *con,
+                            Async::FramedTcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     //void sendUdpMsg(ReflectorClient *client, const ReflectorUdpMsg& msg);

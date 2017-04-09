@@ -122,8 +122,8 @@ class ReflectorMsg : public Async::Msg
      * @param 	type The message type
      * @param   size The payload size
      */
-    ReflectorMsg(uint16_t type=0, uint16_t size=0)
-      : m_type(type), m_size(size) {}
+    ReflectorMsg(uint16_t type=0)
+      : m_type(type) {}
 
     /**
      * @brief 	Destructor
@@ -135,14 +135,11 @@ class ReflectorMsg : public Async::Msg
      * @return	Returns the message type
      */
     uint16_t type(void) const { return m_type; }
-    void setSize(uint16_t size) { m_size = size; }
-    uint16_t size(void) const { return m_size; }
 
-    ASYNC_MSG_MEMBERS(m_type, m_size)
+    ASYNC_MSG_MEMBERS(m_type)
 
   private:
     uint16_t m_type;
-    uint16_t m_size;
 
 };  /* class ReflectorMsg */
 
@@ -210,7 +207,7 @@ class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
     static const uint16_t MAJOR = 0;
-    static const uint16_t MINOR = 5;
+    static const uint16_t MINOR = 6;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }

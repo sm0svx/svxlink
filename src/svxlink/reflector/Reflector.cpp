@@ -171,7 +171,7 @@ bool Reflector::initialize(Async::Config &cfg)
 
   std::string listen_port("5300");
   cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
-  srv = new TcpServer<>(listen_port);
+  srv = new TcpServer<FramedTcpConnection>(listen_port);
   srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
   srv->clientDisconnected.connect(
@@ -259,7 +259,7 @@ void Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
  *
  ****************************************************************************/
 
-void Reflector::clientConnected(Async::TcpConnection *con)
+void Reflector::clientConnected(Async::FramedTcpConnection *con)
 {
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " connected" << endl;
@@ -269,8 +269,8 @@ void Reflector::clientConnected(Async::TcpConnection *con)
 } /* Reflector::clientConnected */
 
 
-void Reflector::clientDisconnected(Async::TcpConnection *con,
-                                   Async::TcpConnection::DisconnectReason reason)
+void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
+                           Async::FramedTcpConnection::DisconnectReason reason)
 {
   ReflectorClientConMap::iterator it = m_client_con_map.find(con);
   assert(it != m_client_con_map.end());
@@ -433,32 +433,6 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       break;
   }
 } /* Reflector::udpDatagramReceived */
-
-
-#if 0
-void Reflector::sendUdpMsg(ReflectorClient *client,
-                           const ReflectorUdpMsg &msg)
-{
-  if (client->remoteUdpPort() == 0)
-  {
-    return;
-  }
-
-  //cout << "### Reflector::sendUdpMsg: " << client->remoteHost() << ":"
-  //     << client->remoteUdpPort() << endl;
-
-  ReflectorUdpMsg header(msg.type(), client->clientId(), client->nextUdpTxSeq());
-  ostringstream ss;
-  if (!header.pack(ss) || !msg.pack(ss))
-  {
-    // FIXME: Better error handling
-    cerr << "*** ERROR: Failed to pack reflector UDP message\n";
-    return;
-  }
-  udp_sock->write(client->remoteHost(), client->remoteUdpPort(),
-                  ss.str().data(), ss.str().size());
-} /* ReflectorLogic::sendUdpMsg */
-#endif
 
 
 void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,

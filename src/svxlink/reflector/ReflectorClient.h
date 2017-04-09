@@ -50,7 +50,7 @@ An example of how to use the ReflectorClient class
  *
  ****************************************************************************/
 
-#include <AsyncTcpConnection.h>
+#include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
 
 
@@ -127,7 +127,7 @@ class ReflectorClient
     /**
      * @brief 	Constructor
      */
-    ReflectorClient(Reflector *ref, Async::TcpConnection *con,
+    ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
                     const std::string& auth_key);
 
     /**
@@ -173,7 +173,7 @@ class ReflectorClient
     static const unsigned UDP_HEARTBEAT_TX_CNT_RESET  = 15;
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 120;
 
-    Async::TcpConnection* m_con;
+    Async::FramedTcpConnection* m_con;
     unsigned              m_msg_type;
     unsigned char         m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
     ConState              m_con_state;
@@ -195,13 +195,14 @@ class ReflectorClient
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
-    int onDataReceived(Async::TcpConnection *con, void *data, int len);
+    void onFrameReceived(Async::FramedTcpConnection *con,
+                         std::vector<uint8_t>& data);
     void handleMsgProtoVer(std::istream& is);
     void sendNodeList(void);
     void handleMsgAuthResponse(std::istream& is);
     void disconnect(const std::string& msg);
-    //void onDisconnected(Async::TcpConnection*,
-    //                    Async::TcpConnection::DisconnectReason);
+    //void onDisconnected(Async::FramedTcpConnection*,
+    //                    Async::FramedTcpConnection::DisconnectReason);
     void onDiscTimeout(Async::Timer *t);
     void handleHeartbeat(Async::Timer *t);
 

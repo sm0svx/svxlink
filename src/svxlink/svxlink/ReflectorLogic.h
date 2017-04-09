@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDecoder.h>
 #include <AsyncAudioEncoder.h>
 #include <AsyncTcpClient.h>
+#include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
 //#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioFifo.h>
@@ -156,12 +157,14 @@ class ReflectorLogic : public LogicBase
   protected:
 
   private:
+    typedef Async::TcpClient<Async::FramedTcpConnection> FramedTcpClient;
+
     static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 15;
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET = 60;
     static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
     static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
 
-    Async::TcpClient<>*   m_con;
+    FramedTcpClient*      m_con;
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
     uint32_t              m_client_id;
@@ -186,7 +189,8 @@ class ReflectorLogic : public LogicBase
     void onConnected(void);
     void onDisconnected(Async::TcpConnection *con,
                         Async::TcpConnection::DisconnectReason reason);
-    int onDataReceived(Async::TcpConnection *con, void *data, int len);
+    void onFrameReceived(Async::FramedTcpConnection *con,
+                         std::vector<uint8_t>& data);
     void handleMsgError(std::istream& is);
     void handleMsgAuthChallenge(std::istream& is);
     void handleMsgNodeList(std::istream& is);

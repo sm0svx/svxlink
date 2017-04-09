@@ -8,7 +8,7 @@ LIBECHOLIB=1.3.2
 LIBASYNC=1.4.99.2-svxreflector
 
 # SvxLink versions
-SVXLINK=1.5.99.8-svxreflector
+SVXLINK=1.5.99.9-svxreflector
 MODULE_HELP=1.0.0
 MODULE_PARROT=1.1.1
 MODULE_ECHOLINK=1.3.99.0
@@ -33,4 +33,4 @@ DEVCAL=1.0.0
 SVXSERVER=0.0.5.99.0
 
 # Version for SvxReflector
-SVXREFLECTOR=0.1.99.2-svxreflector
+SVXREFLECTOR=0.1.99.3-svxreflector
