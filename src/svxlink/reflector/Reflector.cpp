@@ -286,6 +286,12 @@ void Reflector::clientDisconnected(Async::TcpConnection *con,
 
   client_map.erase(client->clientId());
   m_client_con_map.erase(it);
+
+  if (client == m_talker)
+  {
+    setTalker(0);
+  }
+
   if (!client->callsign().empty())
   {
     broadcastMsgExcept(MsgNodeLeft(client->callsign()), client);
@@ -506,7 +512,7 @@ void Reflector::setTalker(ReflectorClient *client)
   if (client == 0)
   {
     broadcastMsgExcept(MsgTalkerStop(m_talker->callsign()));
-    broadcastUdpMsgExcept(client, MsgUdpFlushSamples());
+    broadcastUdpMsgExcept(m_talker, MsgUdpFlushSamples());
     m_sql_timeout_cnt = 0;
     m_talker = 0;
   }

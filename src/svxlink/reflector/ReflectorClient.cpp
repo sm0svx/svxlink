@@ -143,12 +143,13 @@ ReflectorClient::~ReflectorClient(void)
 } /* ReflectorClient::~ReflectorClient */
 
 
-void ReflectorClient::sendMsg(const ReflectorMsg& msg)
+int ReflectorClient::sendMsg(const ReflectorMsg& msg)
 {
   if (((m_con_state != STATE_CONNECTED) && (msg.type() >= 100)) ||
       !m_con->isConnected())
   {
-    return;
+    errno = ENOTCONN;
+    return -1;
   }
 
   m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
@@ -157,11 +158,11 @@ void ReflectorClient::sendMsg(const ReflectorMsg& msg)
   ostringstream ss;
   if (!header.pack(ss) || !msg.pack(ss))
   {
-    // FIXME: Better error handling
     cerr << "*** ERROR: Failed to pack TCP message\n";
-    return;
+    errno = EBADMSG;
+    return -1;
   }
-  m_con->write(ss.str().data(), ss.str().size());
+  return m_con->write(ss.str().data(), ss.str().size());
 } /* ReflectorClient::sendMsg */
 
 

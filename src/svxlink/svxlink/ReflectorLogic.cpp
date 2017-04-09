@@ -541,7 +541,10 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
     disconnect();
     return;
   }
-  m_con->write(ss.str().data(), ss.str().size());
+  if (m_con->write(ss.str().data(), ss.str().size()) == -1)
+  {
+    disconnect();
+  }
 } /* ReflectorLogic::sendMsg */
 
 

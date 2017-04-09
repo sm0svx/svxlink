@@ -472,15 +472,15 @@ void NetTrxTcpClient::sendMsgP(Msg *msg)
   {
     if (written == -1)
     {
-      cerr << "*** ERROR: TCP write error\n";
+      cerr << "*** ERROR: TCP write error: " << strerror(errno) << "\n";
     }
     else
     {
       cerr << "*** ERROR: TCP transmit buffer overflow. Disconnecting from "
          << remoteHost().toString() << ":" << remotePort() << "...\n";
-      disconnect();
-      disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
     }
+    disconnect();
+    disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
   }
   
   delete msg;

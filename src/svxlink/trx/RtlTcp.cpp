@@ -215,7 +215,12 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
     msg[3] = (param >> 8) & 0xff;
     msg[2] = (param >> 16) & 0xff;
     msg[1] = (param >> 24) & 0xff;
-    con.write(msg, sizeof(msg));
+    if (con.write(msg, sizeof(msg)) == -1)
+    {
+      cout << "*** ERROR: RtlTcp socket write error: " << strerror(errno) << endl;
+      con.disconnect();
+      disconnected(&con, TcpConnection::DR_SYSTEM_ERROR);
+    }
   }
 } /* RtlTcp::sendCommand */
 

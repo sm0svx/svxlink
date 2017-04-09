@@ -151,7 +151,7 @@ class ReflectorClient
     uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
     uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq; }
     void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
-    void sendMsg(const ReflectorMsg& msg);
+    int sendMsg(const ReflectorMsg& msg);
     void udpMsgReceived(const ReflectorUdpMsg &header);
     void sendUdpMsg(const ReflectorUdpMsg &msg);
     void setBlock(unsigned blocktime);

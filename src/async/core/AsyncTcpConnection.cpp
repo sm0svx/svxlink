@@ -233,20 +233,14 @@ void TcpConnection::disconnect(void)
 int TcpConnection::write(const void *buf, int count)
 {
   assert(sock != -1);
-  int cnt = ::write(sock, buf, count);
-  if (cnt == -1)
+  int cnt = ::send(sock, buf, count, MSG_NOSIGNAL);
+  if (cnt < 0)
   {
-    if (errno == EAGAIN)
+    if (errno != EAGAIN)
     {
-      cnt = 0;
+      return -1;
     }
-    else
-    {
-      int errno_tmp = errno;
-      disconnect();
-      errno = errno_tmp;
-      onDisconnected(DR_SYSTEM_ERROR);
-    }
+    cnt = 0;
   }
 
   if (cnt < count)
