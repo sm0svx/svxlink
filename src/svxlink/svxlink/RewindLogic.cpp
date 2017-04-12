@@ -539,11 +539,17 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       subscribed = 0;
       return;
 
+    case REWIND_TYPE_CANCELLING:
+      cout << ">>> Subscription canceled\n" << endl;
+      return;
+
     case REWIND_TYPE_KEEP_ALIVE:
       if (m_state == WAITING_PASS_ACK)
       {
         cout << "--- Authenticated on " << rewind_host << endl;
         m_state = AUTHENTICATED;
+        cancelSubscription();
+        return;
       }
       if (m_state == AUTHENTICATED && ++subscribed < 3)
       {
@@ -586,7 +592,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
     case REWIND_TYPE_DMR_EMBEDDED_DATA:
       cout << "*** dmr embedded data" << endl;
-      handleDataMessage(rd->data);
+      handleDataMessage(rd);
       return;
 
     case REWIND_TYPE_DMR_AUDIO_FRAME:
@@ -631,12 +637,49 @@ void RewindLogic::handleAmbeAudiopacket(struct RewindData* ad)
 } /* RewindLogic::handleAudioPacket */
 
 
-void RewindLogic::handleDataMessage(uint8_t data[])
+void RewindLogic::handleDataMessage(struct RewindData* dm)
 {
-  struct RewindData* dm
-       = reinterpret_cast<RewindData*>(data);
+  uint8_t data[11];
+  memcpy(data, dm->data, 10);
+  uint8_t sp[11];
+  std::string ts; 
 
-  //cout << ">" << dm->data << "<" << endl;
+  cout << ">" << dec 
+  << data[0] << "," 
+  << data[1] << ","
+  << data[2] << ","
+  << data[3] << ","
+  << data[4] << ","
+  << data[5] << ","
+  << data[6] << ","
+  << data[7] << ","
+  << data[8] << ","
+  << data[9] << "," << endl;
+  printf("%d %d %d %d %d %d %d %d %d %d\n",data[0],data[1],data[2],data[3],
+                                            data[4],data[5],data[6],data[7],
+                                            data[8],data[9]);
+  if (stninfo.find(srcId) == stninfo.end())
+  {
+    stninfo.insert ( std::pair<int, std::string>(srcId, "                     ") );
+  }
+  switch (data[0]) {
+    case 0x04:
+      memcpy(sp,data+3,6);
+      ts = (char*)sp;
+      (stninfo.find(srcId)->second).replace(0, 6, ts);
+      break;
+    case 0x05:
+      memcpy(sp,data+2,7);
+      ts = (char*)sp;
+      (stninfo.find(srcId)->second).replace(6, 7, ts);
+      break;
+    case 0x06:
+      memcpy(sp,data+2,7);
+      ts = (char*)sp;
+      (stninfo.find(srcId)->second).replace(13, 7, ts);
+      cout << "STATIONINFO: " << stninfo.find(srcId)->second << endl;
+      break;
+  }
 } /* RewindLogic::handleDataMessage */
 
 
@@ -759,7 +802,7 @@ void RewindLogic::sendCloseMessage(void)
   struct RewindData* rd =
      (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
-  rd->type = REWIND_TYPE_CLOSE;
+  rd->type = htole16(REWIND_TYPE_CLOSE);
   sendMsg(rd, sizeof(struct RewindData));
 
   m_state = DISCONNECTED;
@@ -815,6 +858,19 @@ void RewindLogic::sendSubscription(std::list<int> tglist)
     sendMsg(rd, len);
   }
 } /* RewindLogic::sendConfiguration */
+
+
+void RewindLogic::cancelSubscription(void)
+{
+  struct RewindData* rd =
+   (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+
+  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  rd->type = htole16(REWIND_TYPE_CANCELLING);
+
+  cout << "sending cancel subscription" << endl;
+  sendMsg(rd, sizeof(RewindData));
+} /* RewindLogic::cancelSubscription */
 
 
 void RewindLogic::mkSHA256(uint8_t pass[], int len, uint8_t hash[])

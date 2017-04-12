@@ -123,6 +123,7 @@ namespace Async
 #define REWIND_TYPE_MEDIA_DATA        (REWIND_CLASS_HYTERA_DATA + 2)
 #define REWIND_TYPE_CONFIGURATION     (REWIND_CLASS_APPLICATION + 0x00)
 #define REWIND_TYPE_SUBSCRIPTION      (REWIND_CLASS_APPLICATION + 0x01)
+#define REWIND_TYPE_CANCELLING        (REWIND_CLASS_APPLICATION + 0x02)
 #define REWIND_TYPE_DMR_DATA_BASE     (REWIND_CLASS_APPLICATION + 0x10)
 #define REWIND_TYPE_DMR_START_FRAME   (REWIND_CLASS_APPLICATION + 0x11)
 #define REWIND_TYPE_DMR_STOP_FRAME    (REWIND_CLASS_APPLICATION + 0x12)
@@ -274,7 +275,7 @@ class RewindLogic : public LogicBase
     };
 
     STATUS m_state;
-
+    std::map<int, std::string> stninfo;
 
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
@@ -329,7 +330,7 @@ class RewindLogic : public LogicBase
     void sendMsg(struct RewindData* rd, size_t len);
     void handleSessionData(uint8_t data[]);
     void handleAmbeAudiopacket(struct RewindData* rd);
-    void handleDataMessage(uint8_t data[]);
+    void handleDataMessage(struct RewindData* dm);
     void connect(void);
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
@@ -343,6 +344,7 @@ class RewindLogic : public LogicBase
     void sendCloseMessage(void);
     void sendConfiguration(void);
     void sendSubscription(std::list<int> tglist);
+    void cancelSubscription(void);
     void mkSHA256(uint8_t pass[], int len, uint8_t hash[]);
 
 };  /* class RewindLogic */
