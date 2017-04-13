@@ -179,9 +179,9 @@ void RtlTcp::handleSetGain(int32_t gain)
 } /* RtlTcp::handleSetGain */
 
 
-void RtlTcp::handleSetFqCorr(uint32_t corr)
+void RtlTcp::handleSetFqCorr(int corr)
 {
-  sendCommand(5, corr);
+  sendCommand(5, static_cast<uint32_t>(corr));
 } /* RtlTcp::handleSetFqCorr */
 
 
