@@ -426,7 +426,6 @@ bool RewindLogic::initialize(void)
       string opt_name((*nit).substr(opt_prefix.size()));
 //      m_logic_enc->setOption(opt_name, opt_value);
       m_dec->setOption(opt_name, opt_value);
-      cout << "name "<< opt_name << ", val=" << opt_value << endl;
     }
   }
 
@@ -518,7 +517,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
   //cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
-  //     << addr << " port=" << port << " count=" << count << endl;
+    //   << addr << " port=" << port << " count=" << count << endl;
 
   struct RewindData* rd = reinterpret_cast<RewindData*>(buf);
 
@@ -540,7 +539,10 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_CANCELLING:
-      cout << ">>> Subscription canceled\n" << endl;
+      cout << ">>> Subscription canceled" << endl;
+      sendSubscription(tglist);
+      subscribed = 0;
+      m_state = AUTHENTICATED;
       return;
 
     case REWIND_TYPE_KEEP_ALIVE:
@@ -548,8 +550,6 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       {
         cout << "--- Authenticated on " << rewind_host << endl;
         m_state = AUTHENTICATED;
-        cancelSubscription();
-        return;
       }
       if (m_state == AUTHENTICATED && ++subscribed < 3)
       {
@@ -642,6 +642,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   uint8_t data[11];
   memcpy(data, dm->data, 10);
   uint8_t sp[11];
+  int off;
   std::string ts; 
 
   cout << ">" << dec 
@@ -658,6 +659,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   printf("%d %d %d %d %d %d %d %d %d %d\n",data[0],data[1],data[2],data[3],
                                             data[4],data[5],data[6],data[7],
                                             data[8],data[9]);
+  
   if (stninfo.find(srcId) == stninfo.end())
   {
     stninfo.insert ( std::pair<int, std::string>(srcId, "                     ") );
@@ -672,11 +674,13 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
       memcpy(sp,data+2,7);
       ts = (char*)sp;
       (stninfo.find(srcId)->second).replace(6, 7, ts);
-      break;
+      break;    
     case 0x06:
+    case 0x07:
       memcpy(sp,data+2,7);
       ts = (char*)sp;
-      (stninfo.find(srcId)->second).replace(13, 7, ts);
+      off = 7 * (data[0] - 4) - 1;
+      (stninfo.find(srcId)->second).replace(off, 7, ts);
       cout << "STATIONINFO: " << stninfo.find(srcId)->second << endl;
       break;
   }
@@ -701,8 +705,7 @@ void RewindLogic::authenticate(uint8_t salt[], const string pass)
   memcpy(trd->data, salt, 4);
   memcpy(trd->data + 4, pass.c_str(), (size_t)strlen(pass.c_str()) );
   mkSHA256(trd->data, 4 + (size_t)strlen(pass.c_str()), rd->data);
-                            //                         32
-            //                              32
+            //                       32
   sendMsg(rd, 18 + SHA256_DIGEST_LENGTH);
   m_state = WAITING_PASS_ACK;
 
@@ -782,8 +785,6 @@ void RewindLogic::sendKeepAlive(void)
   len += sizeof(struct RewindVersionData);
   len += sizeof(struct RewindData);
   rd->length = htole16(len);
-
-  cout << "sending keepalive\n";
 
   memcpy(rd->data, vd, len);
   sendMsg(rd, len);
@@ -865,11 +866,22 @@ void RewindLogic::cancelSubscription(void)
   struct RewindData* rd =
    (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
+                  // "REWIND01"             8
   memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  rd->type = htole16(REWIND_TYPE_CANCELLING);
+  rd->type   = htole16(REWIND_TYPE_CANCELLING); // REWIND_CLASS_APPLICATION + 0x01
+  rd->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
+  rd->length = htole16(0);
 
-  cout << "sending cancel subscription" << endl;
-  sendMsg(rd, sizeof(RewindData));
+  struct RewindSubscriptionData* sd =
+   (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
+                    + BUFFER_SIZE);
+
+  sd->type = htole32(SESSION_TYPE_GROUP_VOICE); // 5 (private voice) + 7 (group)
+  size_t len = sizeof(RewindData) + 6;
+
+  sd->number = 0;
+  memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
+  sendMsg(rd, len);
 } /* RewindLogic::cancelSubscription */
 
 

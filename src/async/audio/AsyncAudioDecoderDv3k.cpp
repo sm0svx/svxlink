@@ -206,7 +206,7 @@ void AudioDecoderDv3k::charactersReceived(char *buf, int len)
 
   if (buf[0] != 0x61 || len < 4)
   {
-    cout << "*** ERROR: Decoder invalid response from DV3K" << endl;
+//    cout << "*** ERROR: Decoder invalid response from DV3K" << endl;
     return;
   }
 
@@ -214,7 +214,7 @@ void AudioDecoderDv3k::charactersReceived(char *buf, int len)
 
   if (tlen-4 != len)
   {
-    cout << "*** ERROR: length in DV3K message != length received" << endl;
+//    cout << "*** ERROR: length in DV3K message != length received" << endl;
   }
 
   int type = buf[3];
@@ -222,7 +222,7 @@ void AudioDecoderDv3k::charactersReceived(char *buf, int len)
 
   switch (type) {
     case DV3000_TYPE_CONTROL:
-      cout << "CONTROL received\n";
+     // cout << "CONTROL received\n";
       handleControl(tbuf, len-4);
       return;
 
@@ -246,7 +246,7 @@ void AudioDecoderDv3k::handleControl(char *buf, int len)
 {
   if (m_state == PROD_ID)
   {
-    cout << "--- Response from DV3k: " << buf << endl;
+//    cout << "--- Response from DV3k: " << buf << endl;
     dv3kfd->write(DV3000_REQ_RATEP, DV3000_REQ_RATEP_LEN);
     m_state = RATEP;
     return;
@@ -260,7 +260,7 @@ void AudioDecoderDv3k::sendToDv3k(unsigned char *buf, int len)
 
   memcpy(out, DV3000_AMBE_HEADER, DV3000_AMBE_HEADER_LEN);
   memcpy(out + DV3000_AMBE_HEADER_LEN, buf, len);
-  cout << "sending to DV3K:" << len << " BUF:" << out << endl;
+//  cout << "sending to DV3K:" << len << " BUF:" << out << endl;
   dv3kfd->write((char*)out, len + DV3000_AMBE_HEADER_LEN);
 } /* AudioDecoderDv3k::sendToDv3k */
 
