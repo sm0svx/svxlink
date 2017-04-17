@@ -7,8 +7,9 @@
 #
 ##############################################################################
 
-GPIO_CONF="@SVX_SYSCONF_INSTALL_DIR@/gpio.conf"
-[ -r "$GPIO_CONF" ] && . "$GPIO_CONF"
+if [ -r @SVX_SYSCONF_INSTALL_DIR@/gpio.conf ]; then
+. @SVX_SYSCONF_INSTALL_DIR@/gpio.conf
+fi
 
 # Unset GPIO IN/OUT pins, if used
 for pin in $GPIO_IN_HIGH $GPIO_IN_LOW $GPIO_OUT_HIGH $GPIO_OUT_LOW; do
