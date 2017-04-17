@@ -1,5 +1,4 @@
 lib/systemd/system/svxlink.service
-lib/systemd/system/svxlink_gpio_setup.service
 usr/bin/svxlink
 usr/bin/siglevdetcal
 usr/sbin/svxlink_gpio_up
