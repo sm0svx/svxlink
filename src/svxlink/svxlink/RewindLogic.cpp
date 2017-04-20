@@ -1,7 +1,7 @@
 /**
 @file	 RewindLogic.cpp
 @brief   A class to connect a brandmeiseter server with UDP
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@author  Artem Prilutskiy / R3ABM & Tobias Blomberg / SM0SVX
 @date	 2017-02-12
 
 A_detailed_description_for_this_file
@@ -516,8 +516,8 @@ void RewindLogic::flushEncodedAudio(void)
 void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  //cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
-    //   << addr << " port=" << port << " count=" << count << endl;
+  cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
+       << addr << " port=" << port << " count=" << count << endl;
 
   struct RewindData* rd = reinterpret_cast<RewindData*>(buf);
 
@@ -528,7 +528,9 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_CHALLENGE:
+      cout << "*** rewind type Challenge" << endl;
       authenticate(rd->data, m_auth_key);
+      subscribed = 0;
       return;
 
     case REWIND_TYPE_CLOSE:
@@ -581,7 +583,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
     case REWIND_TYPE_SUBSCRIPTION:
       cout << "--- Successful subscription, TG's=" << m_tg << endl;
-      subscribed = 3;
+      subscribed = 0;
       sendConfiguration();
       m_state = AUTH_SUBSCRIBED;
       return;
@@ -596,7 +598,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_DMR_AUDIO_FRAME:
-      //cout << "-- dmr audio frame received" << endl;
+      cout << "-- dmr audio frame received" << endl;
       handleAmbeAudiopacket(rd);
       return;
 
@@ -621,13 +623,13 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
 void RewindLogic::handleSessionData(uint8_t data[])
 {
-  struct RewindSuperHeaderData* shd
-       = reinterpret_cast<RewindSuperHeaderData*>(data);
-  cout << "SourceCall=" << shd->srccall << " (" << shd->srcid
-       << "), DestCall=" << shd->dstcall << " dstid=" << shd->desid
+  struct RewindSuperHeader* shd
+       = reinterpret_cast<RewindSuperHeader*>(data);
+  cout << "SourceCall=" << shd->sourceCall << " (" << shd->sourceID
+       << "), DestCall=" << shd->destinationCall << " dstid=" << shd->destinationID
        << endl;
-  srcCall = (char*)shd->srccall;
-  srcId = shd->srcid;
+  srcCall = (char*)shd->sourceCall;
+  srcId = shd->sourceID;
 } /* RewindLogic::handleSessionData */
 
 
@@ -643,10 +645,10 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   memcpy(data, dm->data, 10);
   uint8_t sp[11];
   int off;
-  std::string ts; 
+  std::string ts;
 
-  cout << ">" << dec 
-  << data[0] << "," 
+  cout << ">" << dec
+  << data[0] << ","
   << data[1] << ","
   << data[2] << ","
   << data[3] << ","
@@ -659,7 +661,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   printf("%d %d %d %d %d %d %d %d %d %d\n",data[0],data[1],data[2],data[3],
                                             data[4],data[5],data[6],data[7],
                                             data[8],data[9]);
-  
+
   if (stninfo.find(srcId) == stninfo.end())
   {
     stninfo.insert ( std::pair<int, std::string>(srcId, "                     ") );
@@ -674,7 +676,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
       memcpy(sp,data+2,7);
       ts = (char*)sp;
       (stninfo.find(srcId)->second).replace(6, 7, ts);
-      break;    
+      break;
     case 0x06:
     case 0x07:
       memcpy(sp,data+2,7);
@@ -690,25 +692,23 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
 void RewindLogic::authenticate(uint8_t salt[], const string pass)
 {
 
-  struct RewindData* trd =
-     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+  size_t size = sizeof(struct RewindData) + SHA256_DIGEST_LENGTH;
+  struct RewindData* data = (struct RewindData*)alloca(size);
 
-  struct RewindData* rd =
-     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+  memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  data->type   = htole16(REWIND_TYPE_AUTHENTICATION);
+  data->flags  = htole16(REWIND_FLAG_DEFAULT_SET);
+  data->length = htole16(SHA256_DIGEST_LENGTH);
 
-  memcpy(trd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  rd->type = htole16(REWIND_TYPE_AUTHENTICATION);  // 0x0000 + 3
-  rd->flags = htole16(REWIND_FLAG_DEFAULT_SET);    //
-  rd->length = htole16(SHA256_DIGEST_LENGTH);      // 32
+  size_t length = pass.size() + sizeof(uint32_t);
+  uint8_t* buffer = (uint8_t*)alloca(length);
 
-  memcpy(trd->data, salt, 4);
-  memcpy(trd->data + 4, pass.c_str(), (size_t)strlen(pass.c_str()) );
-  mkSHA256(trd->data, 4 + (size_t)strlen(pass.c_str()), rd->data);
-            //                       32
-  sendMsg(rd, 18 + SHA256_DIGEST_LENGTH);
+  memcpy(buffer, salt, sizeof(uint32_t));
+  memcpy(buffer + sizeof(uint32_t), pass.c_str(), pass.size());
+  mkSHA256(buffer, length, data->data);
+
+  sendMsg(data, size);
   m_state = WAITING_PASS_ACK;
-
 } /* RewindLogic::authPassphrase */
 
 
@@ -765,29 +765,23 @@ void RewindLogic::pingHandler(Async::Timer *t)
 
 void RewindLogic::sendKeepAlive(void)
 {
-  struct RewindVersionData* vd =
-     (struct RewindVersionData*)alloca(sizeof(struct RewindVersionData) + BUFFER_SIZE);
-  struct RewindData* rd =
-     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+  struct RewindData* data = (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
 
-                  // "REWIND01"             8
-  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  struct RewindVersionData* version = (struct RewindVersionData*)data->data;
+  size_t size = m_swid.length();
 
-  vd = (struct RewindVersionData*)rd->data;
-  vd->number = atoi(m_id.c_str());
-  vd->service = REWIND_SERVICE_SIMPLE_APPLICATION; // 0x20 + 0x00
-  strcpy(vd->description, m_swid.c_str());
+  version->number = atoi(m_id.c_str());
+  version->service = REWIND_SERVICE_SIMPLE_APPLICATION;
+  strcpy(version->description, m_swid.c_str());
+  size += sizeof(struct RewindVersionData);
 
-  rd->type = htole16(REWIND_TYPE_KEEP_ALIVE); // 0x00
-  rd->flags = htole16(REWIND_FLAG_NONE); // 0x00
+  memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  data->type   = htole16(REWIND_TYPE_KEEP_ALIVE);
+  data->flags  = htole16(REWIND_FLAG_NONE);
+  data->length = htole16(size);
 
-  int len = m_swid.length();
-  len += sizeof(struct RewindVersionData);
-  len += sizeof(struct RewindData);
-  rd->length = htole16(len);
-
-  memcpy(rd->data, vd, len);
-  sendMsg(rd, len);
+  size += sizeof(struct RewindData);
+  sendMsg(data, size);
   m_ping_timer.reset();
 
 } /* RewindLogic::sendPing */
@@ -800,11 +794,15 @@ void RewindLogic::sendServiceData(void)
 
 void RewindLogic::sendCloseMessage(void)
 {
-  struct RewindData* rd =
-     (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+  size_t size = sizeof(struct RewindData);
+  struct RewindData* data = (struct RewindData*)alloca(size);
 
-  rd->type = htole16(REWIND_TYPE_CLOSE);
-  sendMsg(rd, sizeof(struct RewindData));
+  memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  data->type   = htole16(REWIND_TYPE_CLOSE);
+  data->flags  = htole16(REWIND_FLAG_NONE);
+  data->length = 0;
+
+  sendMsg(data, size);
 
   m_state = DISCONNECTED;
   m_ping_timer.setEnable(false);
@@ -813,75 +811,54 @@ void RewindLogic::sendCloseMessage(void)
 
 void RewindLogic::sendConfiguration(void)
 {
-  struct RewindData* rd =
-   (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+  size_t size = sizeof(struct RewindData) + sizeof(struct RewindConfigurationData);
+  struct RewindData* data = (struct RewindData*)alloca(size);
 
-  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  rd->type   = htole16(REWIND_TYPE_CONFIGURATION);
-  rd->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
-  rd->length = htole16(4);
+  memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  data->type   = htole16(REWIND_TYPE_CONFIGURATION);
+  data->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
+  data->length = htole16(sizeof(struct RewindConfigurationData));
 
-  struct RewindConfigurationData* cd =
-   (struct RewindConfigurationData*)alloca(sizeof(struct RewindConfigurationData)
-                    + BUFFER_SIZE);
+  struct RewindConfigurationData* configuration = (struct RewindConfigurationData*)data->data;
+  configuration->options = htole32(REWIND_OPTION_SUPER_HEADER);
 
-  cd->options = htole32(REWIND_OPTION_SUPER_HEADER);
-
-  size_t len = sizeof(RewindData) + 2;
-  memcpy(rd->data, cd, sizeof(RewindConfigurationData));
-
-  sendMsg(rd, len);
+  sendMsg(data, size);
 } /* RewindLogic::sendConfiguration */
 
 
 void RewindLogic::sendSubscription(std::list<int> tglist)
 {
-  struct RewindData* rd =
-   (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+ size_t size1 = sizeof(struct RewindSubscriptionData);
+ size_t size2 = sizeof(struct RewindData) + size1;
+ struct RewindData* data = (struct RewindData*)alloca(size2);
+ struct RewindSubscriptionData* subscription = (struct RewindSubscriptionData*)data->data;
 
-                  // "REWIND01"             8
-  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  rd->type   = htole16(REWIND_TYPE_SUBSCRIPTION); // REWIND_CLASS_APPLICATION + 0x01
-  rd->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
-  rd->length = htole16(8);
+ memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+ data->type   = htole16(REWIND_TYPE_SUBSCRIPTION);
+ data->flags  = htole16(REWIND_FLAG_NONE);
+ data->length = htole16(size1);
 
-  struct RewindSubscriptionData* sd =
-   (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
-                    + BUFFER_SIZE);
+ subscription->type = htole32(SESSION_TYPE_GROUP_VOICE);
 
-  sd->type = htole32(SESSION_TYPE_GROUP_VOICE); // 5 (private voice) + 7 (group)
-  size_t len = sizeof(RewindData) + 6;
-
-  for (std::list<int>::iterator it = tglist.begin(); it!=tglist.end(); it++)
-  {
-    sd->number = htole32(*it);
-    memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
-    sendMsg(rd, len);
-  }
+ for (std::list<int>::iterator it = tglist.begin(); it!=tglist.end(); it++)
+ {
+   subscription->number = htole32(*it);
+   sendMsg(data, size2);
+ }
 } /* RewindLogic::sendConfiguration */
 
 
 void RewindLogic::cancelSubscription(void)
 {
-  struct RewindData* rd =
-   (struct RewindData*)alloca(sizeof(struct RewindData) + BUFFER_SIZE);
+  size_t size = sizeof(struct RewindData);
+  struct RewindData* data = (struct RewindData*)alloca(size);
 
-                  // "REWIND01"             8
-  memcpy(rd->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-  rd->type   = htole16(REWIND_TYPE_CANCELLING); // REWIND_CLASS_APPLICATION + 0x01
-  rd->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
-  rd->length = htole16(0);
+  memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  data->type   = htole16(REWIND_TYPE_CANCELLING);
+  data->flags  = htole16(REWIND_FLAG_NONE);
+  data->length = 0;
 
-  struct RewindSubscriptionData* sd =
-   (struct RewindSubscriptionData*)alloca(sizeof(struct RewindSubscriptionData)
-                    + BUFFER_SIZE);
-
-  sd->type = htole32(SESSION_TYPE_GROUP_VOICE); // 5 (private voice) + 7 (group)
-  size_t len = sizeof(RewindData) + 6;
-
-  sd->number = 0;
-  memcpy(rd->data, sd, sizeof(RewindSubscriptionData));
-  sendMsg(rd, len);
+  sendMsg(data, size);
 } /* RewindLogic::cancelSubscription */
 
 
