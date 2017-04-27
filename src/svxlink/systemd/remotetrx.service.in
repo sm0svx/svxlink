@@ -4,7 +4,7 @@
 Description=SvxLink remote transceiver repeater control software
 Requires=svxlink_gpio_setup.service
 After=network.target remote-fs.target syslog.target time.target
-After=svxlink_gpio_setup.service
+After=svxlink.service
 
 [Service]
 EnvironmentFile=/etc/default/remotetrx
