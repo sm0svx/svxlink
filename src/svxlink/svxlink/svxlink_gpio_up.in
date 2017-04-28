@@ -8,9 +8,12 @@
 #
 ##############################################################################
 
-if [ -r @SVX_SYSCONF_INSTALL_DIR@/gpio.conf ]; then
-. @SVX_SYSCONF_INSTALL_DIR@/gpio.conf
+if [ -r /etc/default/svxlink ]; then
+. /etc/default/svxlink
+else
+. /etc/svxlink/gpio.conf
 fi
+
 
 # Set up the given GPIO input pin.
 # Enable the given GPIO pin, set direction to input and set active state

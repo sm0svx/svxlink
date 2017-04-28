@@ -7,9 +7,12 @@
 #
 ##############################################################################
 
-if [ -r @SVX_SYSCONF_INSTALL_DIR@/gpio.conf ]; then
-. @SVX_SYSCONF_INSTALL_DIR@/gpio.conf
+if [ -r /etc/default/svxlink ]; then
+. /etc/default/svxlink
+else
+. /etc/svxlink/gpio.conf
 fi
+
 
 # Unset GPIO IN/OUT pins, if used
 for pin in $GPIO_IN_HIGH $GPIO_IN_LOW $GPIO_OUT_HIGH $GPIO_OUT_LOW; do
