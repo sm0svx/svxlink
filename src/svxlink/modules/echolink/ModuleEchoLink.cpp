@@ -1107,6 +1107,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(
           mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
+  qso->infoMsgReceived.connect(
+          mem_fun(*this, &ModuleEchoLink::onInfoMsgReceived));
   qso->isReceiving.connect(mem_fun(*this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceivedRaw.connect(
       	  mem_fun(*this, &ModuleEchoLink::audioFromRemoteRaw));
@@ -1271,6 +1273,37 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
   ss << "}]";
   processEvent(ss.str());
 } /* onChatMsgReceived */
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    onInfoMsgReceived
+ * Purpose:   Called by the EchoLink::Qso object when a info message has been
+ *    	      received from the remote station.
+ * Input:     qso - The QSO object
+ *    	      msg - The received message
+ * Output:    None
+ * Author:    Tobias Blomberg / SM0SVX
+ * Created:   2017-05-13
+ * Remarks:
+ * Bugs:
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::onInfoMsgReceived(QsoImpl *qso, const string& msg)
+{
+    // Escape TCL control characters
+  string escaped(msg);
+  replaceAll(escaped, "\\", "\\\\");
+  replaceAll(escaped, "{", "\\{");
+  replaceAll(escaped, "}", "\\}");
+  stringstream ss;
+    // FIXME: This TCL specific code should not be here
+  ss << "info_received \"" << qso->remoteCallsign()
+     << "\" [subst -nocommands -novariables {";
+  ss << escaped;
+  ss << "}]";
+  processEvent(ss.str());
+} /* onInfoMsgReceived */
 
 
 /*
@@ -1479,6 +1512,8 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
     qso->chatMsgReceived.connect(
         mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
+    qso->infoMsgReceived.connect(
+        mem_fun(*this, &ModuleEchoLink::onInfoMsgReceived));
     qso->isReceiving.connect(mem_fun(*this, &ModuleEchoLink::onIsReceiving));
     qso->audioReceivedRaw.connect(
       	    mem_fun(*this, &ModuleEchoLink::audioFromRemoteRaw));
