@@ -16,6 +16,14 @@ configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
 #message(STATUS "Configured systemd unit file:svxlink.service")
 
+configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.service.in
+               ${PROJECT_BINARY_DIR}/systemd/svxrefelector.service)
+#message(STATUS "Configured systemd unit file:svxreflector.service")
+
+configure_file(${SYSTEMD_SOURCE_DIR}/svxserver.service.in
+               ${PROJECT_BINARY_DIR}/systemd/svxserver.service)
+#message(STATUS "Configured systemd unit file:svxserver.service")
+
 configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.service.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx.service)
 #message(STATUS "Configured systemd unit file:remotetrx.service")
@@ -32,12 +40,20 @@ install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
+install(FILES ${PROJECT_BINARY_DIR}/systemd/svxreflector.service
+        DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
+install(FILES ${PROJECT_BINARY_DIR}/systemd/svxserver.service
+        DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})        
 install(FILES ${PROJECT_BINARY_DIR}/systemd/remotetrx.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
 message(STATUS "Systemd unit files will be installed to "
         "${SYSTEMD_CONFIGURATIONS_FILES_DIR} after make install")
 
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink
+        DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
+install(FILES ${PROJECT_BINARY_DIR}/systemd/svxreflector
+        DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
+install(FILES ${PROJECT_BINARY_DIR}/systemd/svxserver
         DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
 install(FILES ${PROJECT_BINARY_DIR}/systemd/remotetrx
         DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )

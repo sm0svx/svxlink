@@ -1,0 +1,24 @@
+;;;;; Author: Richard Neese<kb3vgw@gmail.com>
+
+[Unit]
+Description=SvxLink repeater control software
+Requires=svxlink_gpio_setup.service
+After=network.target remote-fs.target syslog.target time.target
+After=svxlink_gpio_setup.service
+
+[Service]
+EnvironmentFile=/etc/default/svxlink
+PIDFile=/run/svxlink.pid
+ExecStartPre=-/bin/touch /var/log/svxlink
+ExecStartPre=-/bin/chown $RUNASUSER /var/log/svxlink
+ExecStart=/bin/sh -c '@BIN_INSTALL_DIR@/svxlink --logfile=/var/log/svxlink --config=$CFGFILE --pidfile=/run/svxlink.pid --runasuser=$RUNASUSER'
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+TimeoutStartSec=60
+#WatchdogSec=@SVX_WatchdogSec@
+#NotifyAccess=main
+LimitCORE=infinity
+WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
+
+[Install]
+WantedBy=multi-user.target
