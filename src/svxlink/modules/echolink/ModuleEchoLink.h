@@ -235,6 +235,7 @@ class ModuleEchoLink : public Module
       	    const std::string& priv);
     void onStateChange(QsoImpl *qso, EchoLink::Qso::State qso_state);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
+    void onInfoMsgReceived(QsoImpl *qso, const std::string& msg);
     void onIsReceiving(bool is_receiving, QsoImpl *qso);
     void destroyQsoObject(QsoImpl *qso);
 
