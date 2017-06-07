@@ -1,0 +1,3 @@
+usr/lib/*/libasyncqt.so
+usr/lib/*/libasyncqt.a
+usr/include/svxlink/AsyncQt*.h

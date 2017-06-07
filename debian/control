@@ -1,0 +1,429 @@
+Source: svxlink
+Section: hamradio
+Priority: optional
+Maintainer: Richard Neese <kb3vw@gmail.com>
+Build-Depends: debhelper (>= 9), dh-systemd (>= 1.3)
+Build-Depends-Indep: quilt, cmake, doxygen, libsigc++-2.0-dev (>= 2.2.10-0.2), 
+ libpopt-dev, libgcrypt20-dev, libgsm1-dev, libspeex-dev,  libspeexdsp-dev, libopus-dev, 
+ opus-tools, libasound2-dev, qtbase5-dev, qttools5-dev, qttools5-dev-tools, tcl8.6-dev, 
+ tk-dev, librtlsdr-dev, flite, alsa-base, groff
+Standards-Version: 3.9.6
+Homepage: http://www.svxlink.org
+Vcs-Browser: https://github.com/sm0svx/svxlink
+Vcs-Git: https://github.com/sm0svx/svxlink.git
+
+Package: svxlink-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: remotetrx (= ${binary:Version})
+Description: Voice-over-IP server for ham radio operators
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ svxlink-server is normally used together with the 'remotetrx'
+ package, which allows the remote control of a radio transceiver.
+ .
+ For a client program implementing the EchoLink® protocol, please
+ have a look at the 'qtel' package.
+ .
+ This package contains the SvxLink server.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: svxlink-server-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: svxlink-server (= ${binary:Version}), ${misc:Depends}
+Description: Voice-over-IP server for ham radio operators (debug symbols)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ SvxLink is normally used together with the 'remotetrx' package,
+ which allows the remote control of a radio transceiver.
+ .
+ For a client program implementing the EchoLink® protocol, please
+ have a look at the 'qtel' package.
+ .
+ This package contains the debug symbols for the SvxLink server.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: svxserver
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Description: Server to allow svxlink repeaters to linkup without 
+ EchoLink® protocol.
+
+Package: svxserver-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: svxserver (= ${binary:Version}), ${misc:Depends}
+Description: svxserver (debug symbols)
+
+Package: remotetrx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: svxlink-server (= ${binary:Version})
+Description: Remote controller for radio transceivers
+ RemoteTrx facilitates remote control of ham radio transceivers via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The RemoteTrx server provides remote control of a connected radio
+ transceiver.
+ .
+ RemoteTrx is normally used together with the 'svxlink-server'
+ package, which allows for world-wide access via the Internet.
+ .
+ This package contains the RemoteTrx remote control server.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: remotetrx-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: remotetrx (= ${binary:Version}), ${misc:Depends}
+Description: Remote controller for radio transceivers (debug symbols)
+ RemoteTrx facilitates remote control of ham radio transceivers via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The RemoteTrx server provides remote control of a connected radio
+ transceiver.
+ .
+ RemoteTrx would normally be used together with the 'svxlink-server'
+ package, which allows for world-wide access via the Internet.
+ .
+ This package contains the debugging symbols for RemoteTrx.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: qtel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Graphical client for the EchoLink® protocol
+ Qtel is a graphical client program for the EchoLink® ham radio
+ protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ By connecting into a server connected to a repeater, an operator
+ can call into a local radio net via the Internet while traveling
+ out of the area.
+ .
+ This package contains the graphical client application Qtel.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: qtel-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: qtel (= ${binary:Version}), ${misc:Depends}
+Description: Graphical client for the EchoLink® protocol (debug symbols)
+ Qtel is a graphical client program for the EchoLink® ham radio
+ protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ By connecting into a server connected to a repeater, an operator
+ can call into a local radio net via the Internet while traveling
+ out of the area.
+ .
+ This package contains the debugging symbols for Qtel.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasynccpp1.3
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AsyncCpp library for SvxLink
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the AsyncCpp library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasynccpp-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${misc:Depends}, libasynccpp1.3 (= ${binary:Version})
+Description: AsyncCpp library for SvxLink (debug symbols)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the debug symbols for the AsyncCpp library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasynccpp-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}, libasynccpp1.3 (= ${binary:Version})
+Description: AsyncCpp library for SvxLink (development files)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the static version and the header files for the
+ AsyncCpp library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasyncaudio1.3
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AsyncAudio library for SvxLink
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the AsyncAudio library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasyncaudio-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${misc:Depends}, libasyncaudio1.3 (= ${binary:Version})
+Description: AsyncAudio library for SvxLink (debug symbols)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the debug symbols for the AsyncAudio library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasyncaudio-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}, libasyncaudio1.3 (= ${binary:Version})
+Description: AsyncAudio library for SvxLink (development files)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the static version and the header files for the
+ AsyncAudio library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libecholib1.3
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: EchoLib library for SvxLink
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains EchoLib, a library for EchoLink communications.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libecholib-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${misc:Depends}, libecholib1.3 (= ${binary:Version})
+Description: EchoLib library for SvxLink (debug symbols)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the debug symbols for the EchoLib library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libecholib-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}, libecholib1.3 (= ${binary:Version})
+Description: EchoLib library for SvxLink (development files)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the static version and the header files for the
+ EchoLib library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasyncqt1.3
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AsyncQt library for SvxLink
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the AsyncQt library for event-driven
+ Qt applications using the Async classes.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasyncqt-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${misc:Depends}, libasyncqt1.3 (= ${binary:Version})
+Description: AsyncQt library for SvxLink (debug symbols)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the debug symbols for the AsyncQt library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasyncqt-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}, libasyncqt1.3 (= ${binary:Version})
+Description: AsyncQt library for SvxLink (development files)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the static version and the header files
+ for the AsyncQt library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasynccore1.3
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AsyncCore library for SvxLink
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the AsyncCore library for event-driven
+ applications that use Async classes. 
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasynccore-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${misc:Depends}, libasynccore1.3 (= ${binary:Version})
+Description: AsyncCore library for SvxLink (debug symbols)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the debug symbols for the AsyncCore library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
+
+Package: libasynccore-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}, libasynccore1.3 (= ${binary:Version})
+Description: AsyncCore library for SvxLink (development files)
+ The SvxLink server provides access to a ham radio transceiver via
+ the EchoLink® protocol.
+ .
+ EchoLink® allows licensed amateur radio operators to communicate
+ over the Internet, including remote access to station equipment.
+ The server can act as a repeater controller or operate on a simplex
+ channel. Based on a modular design, the server can be configured to
+ provide voice mail and echo (talkback) service.
+ .
+ This package contains the static version and the header files
+ for the AsyncCore library.
+ .
+ EchoLink® is a registered trademark of Synergenics, LLC.
