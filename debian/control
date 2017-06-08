@@ -71,7 +71,7 @@ Package: svxreflector-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: svxserver (= ${binary:Version}), ${misc:Depends}
+Depends: svxreflector (= ${binary:Version}), ${misc:Depends}
 Description: svxreflector (debug symbols)
 
 Package: remotetrx
