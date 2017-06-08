@@ -18,7 +18,6 @@ export DEB_BUILD_HARDENING=1
 
 %:
 	dh $@ \
-	--with=systemd \
 	--parallel \
 	--buildsystem=cmake \
 	--sourcedirectory=src \
@@ -26,6 +25,7 @@ export DEB_BUILD_HARDENING=1
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
+	-DWITH_SYSTEMD=ON \
 	-DBUILD_STATIC_LIBS=YES  \
 	-DCMAKE_VERBOSE_MAKEFILE=ON \
 	-DSYSCONF_INSTALL_DIR=/etc \
