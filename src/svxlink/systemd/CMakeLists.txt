@@ -30,7 +30,7 @@ configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.default.in
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.default.in
                ${PROJECT_BINARY_DIR}/systemd/svxreflector)
-#message(STATUS "Configured systemd unit file:sxreflector")
+#message(STATUS "Configured systemd unit file:sxvreflector")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx)
