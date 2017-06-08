@@ -17,7 +17,7 @@ configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.in
 message(STATUS "Configured systemd unit file:svxlink.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.service.in
-               ${PROJECT_BINARY_DIR}/systemd/svxrefelector.service)
+               ${PROJECT_BINARY_DIR}/systemd/svxreflector.service)
 message(STATUS "Configured systemd unit file:svxreflector.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.service.in
