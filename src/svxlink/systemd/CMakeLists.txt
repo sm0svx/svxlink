@@ -10,31 +10,31 @@ set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio_setup.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service)
-#message(STATUS "Configured systemd unit file:svxlink_gpio_setup.service")
+message(STATUS "Configured systemd unit file:svxlink_gpio_setup.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
-#message(STATUS "Configured systemd unit file:svxlink.service")
+message(STATUS "Configured systemd unit file:svxlink.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxrefelector.service)
-#message(STATUS "Configured systemd unit file:svxreflector.service")
+message(STATUS "Configured systemd unit file:svxreflector.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.service.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx.service)
-#message(STATUS "Configured systemd unit file:remotetrx.service")
+message(STATUS "Configured systemd unit file:remotetrx.service")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.default.in
                ${PROJECT_BINARY_DIR}/systemd/svxlink)
-#message(STATUS "Configured systemd unit file:svxlink")
+message(STATUS "Configured systemd unit file:svxlink")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.default.in
                ${PROJECT_BINARY_DIR}/systemd/svxreflector)
-#message(STATUS "Configured systemd unit file:sxvreflector")
+message(STATUS "Configured systemd unit file:sxvreflector")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx)
-#message(STATUS "Configured systemd unit file:remotetrx")
+message(STATUS "Configured systemd unit file:remotetrx")
 
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
