@@ -1,15 +1,14 @@
 /**
-@file	 svxserver.cpp
-@brief   Main file for the svxserver remote transceiver for SvxLink
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2017-01-17
+@file	 svxreflector.cpp
+@brief   Main source file for the SvxReflector application
+@author  Tobias Blomberg / SM0SVX
+@date	 2017-02-11
 
-This is the main file for the svxserver remote transceiver for the
-SvxLink server. It is used to link in remote transceivers to the SvxLink
-server core (e.g. via a TCP/IP network).
+The SvxReflector application is a central hub used to connect multiple SvxLink
+nodes together.
 
 \verbatim
-svxserver - A remote receiver for the SvxLink server
+SvxReflector - An audio reflector for connecting SvxLink Servers
 Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -36,25 +35,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <unistd.h>
-#include <cassert>
+#include <locale.h>
 #include <signal.h>
-#include <termios.h>
-#include <dirent.h>
-#include <popt.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
-#include <pwd.h>
+#include <sys/types.h>
 #include <grp.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <termios.h>
+#include <errno.h>
 
+#include <popt.h>
+#include <sigc++/sigc++.h>
+
+#include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <iomanip>
-#include <cstring>
-#include <cstdlib>
-#include <vector>
-#include <map>
 
 
 /****************************************************************************
@@ -64,10 +63,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncCppApplication.h>
-#include <AsyncConfig.h>
 #include <AsyncFdWatch.h>
-#include <common.h>
-
+#include <AsyncConfig.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -76,8 +74,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXSERVER.h"
-#include "server.h"
+#include "version/SVXREFLECTOR.h"
+#include "Reflector.h"
 
 
 /****************************************************************************
@@ -88,9 +86,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace sigc;
-using namespace SvxLink;
-
 
 
 /****************************************************************************
@@ -99,7 +94,7 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
-#define PROGRAM_NAME "svxserver"
+#define PROGRAM_NAME "SvxReflector"
 
 
 /****************************************************************************
@@ -118,11 +113,15 @@ using namespace SvxLink;
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
-static void write_to_logfile(const char *buf);
 static void stdout_handler(FdWatch *w);
 static void sighup_handler(int signal);
 static void sigterm_handler(int signal);
-static bool open_logfile(void);
+static void handle_unix_signal(int signum);
+static bool logfile_open(void);
+static void logfile_reopen(const char *reason);
+static bool logfile_write_timestamp(void);
+static void logfile_write(const char *buf);
+static void logfile_flush(void);
 
 
 /****************************************************************************
@@ -130,7 +129,6 @@ static bool open_logfile(void);
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -149,9 +147,6 @@ static int    	      	logfd = -1;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
-static struct sigaction sighup_oldact, sigint_oldact, sigterm_oldact;
-static volatile bool  	reopen_log = false;
-
 
 
 /****************************************************************************
@@ -159,7 +154,6 @@ static volatile bool  	reopen_log = false;
  * MAIN
  *
  ****************************************************************************/
-
 
 /*
  *----------------------------------------------------------------------------
@@ -171,57 +165,29 @@ static volatile bool  	reopen_log = false;
  *    	      	      program name.
  * Output:    Return 0 on success, else non-zero.
  * Author:    Tobias Blomberg, SM0SVX
- * Created:   2006-04-14
- * Remarks:
- * Bugs:
+ * Created:   2017-02-11
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
-int main(int argc, char **argv)
+int main(int argc, const char *argv[])
 {
   setlocale(LC_ALL, "");
 
   CppApplication app;
+  app.catchUnixSignal(SIGHUP);
+  app.catchUnixSignal(SIGINT);
+  app.catchUnixSignal(SIGTERM);
+  app.unixSignalCaught.connect(sigc::ptr_fun(&handle_unix_signal));
 
   parse_arguments(argc, const_cast<const char **>(argv));
-
-  struct sigaction act;
-  memset(&act, '\0', sizeof(act));
-  act.sa_handler = sighup_handler;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  if (sigaction(SIGHUP, &act, &sighup_oldact) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
-
-  act.sa_handler = sigterm_handler;
-  if (sigaction(SIGTERM, &act, &sigterm_oldact) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
-
-  act.sa_handler = sigterm_handler;
-  if (sigaction(SIGINT, &act, &sigint_oldact) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
-
-  act.sa_handler = SIG_IGN;
-  if (sigaction(SIGPIPE, &act, NULL) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
 
   int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
   {
       /* Open the logfile */
-    if (!open_logfile())
+    if (!logfile_open())
     {
       exit(1);
     }
@@ -232,9 +198,19 @@ int main(int argc, char **argv)
       perror("pipe");
       exit(1);
     }
+    int flags = fcntl(pipefd[0], F_GETFL);
+    if (flags == -1)
+    {
+      perror("fcntl(..., F_GETFL)");
+      exit(1);
+    }
+    flags |= O_NONBLOCK;
+    if (fcntl(pipefd[0], F_SETFL, flags) == -1)
+    {
+      perror("fcntl(..., F_SETFL)");
+      exit(1);
+    }
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
       /* Redirect stdout to the logpipe */
@@ -271,6 +247,8 @@ int main(int argc, char **argv)
       exit(1);
     }
 
+    atexit(logfile_flush);
+
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
@@ -299,6 +277,7 @@ int main(int argc, char **argv)
     fclose(pidfile);
   }
 
+  const char *home_dir = 0;
   if (runasuser != NULL)
   {
       // Setup supplementary group IDs
@@ -314,16 +293,6 @@ int main(int argc, char **argv)
       perror("getpwnam");
       exit(1);
     }
-
-    int rc = fchown(logfd, passwd->pw_uid, passwd->pw_gid);
-    if (rc != 0)
-    {
-      char str[256];
-      sprintf(str, "chown returns:%d uid:%d gid:%d", rc, 
-              passwd->pw_uid, passwd->pw_gid);
-      perror(str);
-    }
-
     if (setgid(passwd->pw_gid) == -1)
     {
       perror("setgid");
@@ -334,10 +303,14 @@ int main(int argc, char **argv)
       perror("setuid");
       exit(1);
     }
+    home_dir = passwd->pw_dir;
   }
 
-  const char *home_dir = getenv("HOME");
-  if (home_dir == NULL)
+  if (home_dir == 0)
+  {
+    home_dir = getenv("HOME");
+  }
+  if (home_dir == 0)
   {
     home_dir = ".";
   }
@@ -352,29 +325,35 @@ int main(int argc, char **argv)
     if (!cfg.open(cfg_filename))
     {
       cerr << "*** ERROR: Could not open configuration file: "
-      	   << config << endl;
+           << config << endl;
       exit(1);
     }
   }
   else
   {
     cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/svxserver.conf";
+    cfg_filename += "/.svxlink/svxreflector.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = "/etc/svxlink/svxserver.conf";
+      cfg_filename = SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf";
       if (!cfg.open(cfg_filename))
       {
-	cfg_filename = "/etc/svxserver.conf";
+	cfg_filename = SYSCONF_INSTALL_DIR "/svxreflector.conf";
 	if (!cfg.open(cfg_filename))
 	{
-	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
-      	       << "\t" << home_dir << "/.svxlink/svxserver.conf\n"
-      	       << "\t/etc/svxlink/svxserver.conf\n"
-	       << "\t/etc/svxserver.conf\n"
-	       << "Possible reasons for failure are: None of the files exist,\n"
-	       << "you do not have permission to read the file or there was a\n"
-	       << "syntax error in the file\n";
+	  cerr << "*** ERROR: Could not open configuration file";
+          if (errno != 0)
+          {
+            cerr << " (" << strerror(errno) << ")";
+          }
+          cerr << ".\n";
+	  cerr << "Tried the following paths:\n"
+               << "\t" << home_dir << "/.svxlink/svxreflector.conf\n"
+               << "\t" SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
+               << "\t" SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
+               << "Possible reasons for failure are: None of the files exist,\n"
+               << "you do not have permission to read the file or there was a\n"
+               << "syntax error in the file.\n";
 	  exit(1);
 	}
       }
@@ -390,11 +369,11 @@ int main(int argc, char **argv)
       int slash_pos = main_cfg_filename.rfind('/');
       if (slash_pos != -1)
       {
-      	cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
+        cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
       }
       else
       {
-      	cfg_dir = string("./") + cfg_dir;
+        cfg_dir = string("./") + cfg_dir;
       }
     }
 
@@ -402,7 +381,7 @@ int main(int argc, char **argv)
     if (dir == NULL)
     {
       cerr << "*** ERROR: Could not read from directory spcified by "
-      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+           << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
       exit(1);
     }
 
@@ -412,7 +391,7 @@ int main(int argc, char **argv)
       char *dot = strrchr(dirent->d_name, '.');
       if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
       {
-      	continue;
+        continue;
       }
       cfg_filename = cfg_dir + "/" + dirent->d_name;
       if (!cfg.open(cfg_filename))
@@ -426,15 +405,15 @@ int main(int argc, char **argv)
     if (closedir(dir) == -1)
     {
       cerr << "*** ERROR: Error closing directory specified by"
-      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+           << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
       exit(1);
     }
   }
 
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
 
-  cout << PROGRAM_NAME " v" SVXSERVER_VERSION " (" __DATE__
-          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
+          " Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "
@@ -443,8 +422,7 @@ int main(int argc, char **argv)
 
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
 
-
-  struct termios org_termios;
+  struct termios org_termios = {0};
   if (logfile_name == 0)
   {
     struct termios termios;
@@ -454,13 +432,20 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
 
-  SvxServer my_server(cfg);
-  app.exec();
+  Reflector ref;
+  if (ref.initialize(cfg))
+  {
+    app.exec();
+  }
+  else
+  {
+    cerr << ":-(" << endl;
+  }
+
+  logfile_flush();
 
   if (stdin_watch != 0)
   {
@@ -480,26 +465,8 @@ int main(int argc, char **argv)
     close(logfd);
   }
 
-  if (sigaction(SIGHUP, &sighup_oldact, NULL) == -1)
-  {
-    perror("sigaction");
-  }
-
-  if (sigaction(SIGHUP, &sigterm_oldact, NULL) == -1)
-  {
-    perror("sigaction");
-  }
-
-  if (sigaction(SIGHUP, &sigint_oldact, NULL) == -1)
-  {
-    perror("sigaction");
-  }
-
   return 0;
-
 } /* main */
-
-
 
 
 /****************************************************************************
@@ -517,8 +484,8 @@ int main(int argc, char **argv)
  * Output:    Returns 0 if all is ok, otherwise -1.
  * Author:    Tobias Blomberg, SM0SVX
  * Created:   2000-06-13
- * Remarks:
- * Bugs:
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 static void parse_arguments(int argc, const char **argv)
@@ -607,124 +574,41 @@ static void stdinHandler(FdWatch *w)
     case '\n':
       putchar('\n');
       break;
-    /*
-    case '0': case '1': case '2': case '3':
-    case '4': case '5': case '6': case '7':
-    case '8': case '9': case 'A': case 'B':
-    case 'C': case 'D': case '*': case '#':
-      logic->dtmfDigitDetected(buf[0]);
-      break;
-    */
+
     default:
       break;
   }
-}
-
-
-static void write_to_logfile(const char *buf)
-{
-  if (logfd == -1)
-  {
-    cout << buf;
-    return;
-  }
-
-  const char *ptr = buf;
-  ssize_t ret;
-  while (*ptr != 0)
-  {
-    static bool print_timestamp = true;
-
-    if (print_timestamp)
-    {
-      if (!tstamp_format.empty())
-      {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        string fmt(tstamp_format);
-        const string frac_code("%f");
-        size_t pos = fmt.find(frac_code);
-        if (pos != string::npos)
-        {
-          stringstream ss;
-          ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
-          fmt.replace(pos, frac_code.length(), ss.str());
-        }
-	struct tm *tm = localtime(&tv.tv_sec);
-	char tstr[256];
-	size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(), tm);
-	ret = write(logfd, tstr, tlen);
-        assert(ret == static_cast<ssize_t>(tlen));
-	ret = write(logfd, ": ", 2);
-        assert(ret == 2);
-	print_timestamp = false;
-      }
-
-      if (reopen_log)
-      {
-	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
-        const size_t reopen_txt_len = strlen(reopen_txt);
-	ret = write(logfd, reopen_txt, reopen_txt_len);
-        assert(ret == static_cast<ssize_t>(reopen_txt_len));
-	open_logfile();
-	reopen_log = false;
-	print_timestamp = true;
-	continue;
-      }
-    }
-
-    size_t write_len = 0;
-    const char *nl = strchr(ptr, '\n');
-    if (nl != 0)
-    {
-      write_len = nl-ptr+1;
-      print_timestamp = true;
-    }
-    else
-    {
-      write_len = strlen(ptr);
-    }
-    ret = write(logfd, ptr, write_len);
-    assert(ret == static_cast<ssize_t>(write_len));
-    ptr += write_len;
-  }
-} /* write_to_logfile */
+} /* stdinHandler */
 
 
 static void stdout_handler(FdWatch *w)
 {
-  char buf[256];
-  ssize_t len = read(w->fd(), buf, sizeof(buf)-1);
-  if (len == -1)
+  ssize_t len =  0;
+  do
   {
-    return;
-  }
-  buf[len] = 0;
-
-  write_to_logfile(buf);
-
+    char buf[256];
+    len = read(w->fd(), buf, sizeof(buf)-1);
+    if (len > 0)
+    {
+      buf[len] = 0;
+      logfile_write(buf);
+    }
+  } while (len > 0);
 } /* stdout_handler  */
 
 
-void sighup_handler(int signal)
+static void sighup_handler(int signal)
 {
-  ssize_t ret;
-
   if (logfile_name == 0)
   {
-    ret = write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
-    assert(ret == 16);
+    cout << "Ignoring SIGHUP\n";
     return;
   }
-
-  ret = write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
-  assert(ret == 34);
-  reopen_log = true;
-
+  logfile_reopen("SIGHUP received");
 } /* sighup_handler */
 
 
-void sigterm_handler(int signal)
+static void sigterm_handler(int signal)
 {
   const char *signame = 0;
   switch (signal)
@@ -742,12 +626,27 @@ void sigterm_handler(int signal)
   string msg("\n");
   msg += signame;
   msg += " received. Shutting down application...\n";
-  write_to_logfile(msg.c_str());
+  logfile_write(msg.c_str());
   Application::app().quit();
 } /* sigterm_handler */
 
 
-bool open_logfile(void)
+static void handle_unix_signal(int signum)
+{
+  switch (signum)
+  {
+    case SIGHUP:
+      sighup_handler(signum);
+      break;
+    case SIGINT:
+    case SIGTERM:
+      sigterm_handler(signum);
+      break;
+  }
+} /* handle_unix_signal */
+
+
+static bool logfile_open(void)
 {
   if (logfd != -1)
   {
@@ -757,17 +656,121 @@ bool open_logfile(void)
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
-    char str[256] = "open(\"";
-    strcat(str, logfile_name);
-    strcat(str, "\")");
-    perror(str);
+    ostringstream ss;
+    ss << "open(\"" << logfile_name << "\")";
+    perror(ss.str().c_str());
     return false;
   }
 
   return true;
 
-} /* open_logfile */
+} /* logfile_open */
 
+
+static void logfile_reopen(const char *reason)
+{
+  logfile_write_timestamp();
+  string msg(reason);
+  msg += ". Reopening logfile\n";
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
+
+  logfile_open();
+
+  logfile_write_timestamp();
+  msg = reason;
+  msg += ". Logfile reopened\n";
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
+} /* logfile_reopen */
+
+
+static bool logfile_write_timestamp(void)
+{
+  if (!tstamp_format.empty())
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    string fmt(tstamp_format);
+    const string frac_code("%f");
+    size_t pos = fmt.find(frac_code);
+    if (pos != string::npos)
+    {
+      stringstream ss;
+      ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
+      fmt.replace(pos, frac_code.length(), ss.str());
+    }
+    struct tm *tm = localtime(&tv.tv_sec);
+    char tstr[256];
+    size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(), tm);
+    ssize_t ret = write(logfd, tstr, tlen);
+    if (ret != static_cast<ssize_t>(tlen))
+    {
+      return false;
+    }
+    ret = write(logfd, ": ", 2);
+    if (ret != 2)
+    {
+      return false;
+    }
+  }
+  return true;
+} /* logfile_write_timestamp */
+
+
+static void logfile_write(const char *buf)
+{
+  if (logfd == -1)
+  {
+    cout << buf;
+    return;
+  }
+
+  const char *ptr = buf;
+  while (*ptr != 0)
+  {
+    static bool print_timestamp = true;
+    ssize_t ret;
+
+    if (print_timestamp)
+    {
+      if (!logfile_write_timestamp())
+      {
+        logfile_reopen("Write error");
+        return;
+      }
+      print_timestamp = false;
+    }
+
+    size_t write_len = 0;
+    const char *nl = strchr(ptr, '\n');
+    if (nl != 0)
+    {
+      write_len = nl-ptr+1;
+      print_timestamp = true;
+    }
+    else
+    {
+      write_len = strlen(ptr);
+    }
+    ret = write(logfd, ptr, write_len);
+    if (ret != static_cast<ssize_t>(write_len))
+    {
+      logfile_reopen("Write error");
+      return;
+    }
+    ptr += write_len;
+  }
+} /* logfile_write */
+
+
+static void logfile_flush(void)
+{
+  cout.flush();
+  cerr.flush();
+  if (stdout_watch != 0)
+  {
+    stdout_handler(stdout_watch);
+  }
+} /*  logfile_flush */
 
 
 /*

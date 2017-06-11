@@ -310,7 +310,8 @@ void AudioDeviceUDP::closeDevice(void)
  ****************************************************************************/
 
 
-void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, void *buf, int count)
+void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, uint16_t port,
+                                      void *buf, int count)
 {
   for (unsigned i=0; i < count / (channels * sizeof(int16_t)); ++i)
   {

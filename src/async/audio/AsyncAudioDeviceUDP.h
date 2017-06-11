@@ -194,7 +194,8 @@ class AudioDeviceUDP : public Async::AudioDevice
     uint16_t            port;
     Async::Timer        *pace_timer;
     
-    void audioReadHandler(const Async::IpAddress &ip, void *buf, int count);
+    void audioReadHandler(const Async::IpAddress &ip, uint16_t port,
+                          void *buf, int count);
     void audioWriteHandler(void);
     
 };  /* class AudioDeviceUDP */

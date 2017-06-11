@@ -12,9 +12,3 @@ if(WITH_CONTRIB_MODULE_TCL_SSTV)
   add_subdirectory(module_tclsstv)
 endif(WITH_CONTRIB_MODULE_TCL_SSTV)
 
-option(WITH_CONTRIB_SVXSERVER
-  "Set to ON to build and install contributed application svxserver")
-if(WITH_CONTRIB_SVXSERVER)
-  message(STATUS "Building experimental application svxserver")
-  add_subdirectory(svxserver)
-endif(WITH_CONTRIB_SVXSERVER)

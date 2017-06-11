@@ -1,11 +1,11 @@
 #############################################################################
 #
-# Configuration file for the SvxServer systemd unit file
+# Configuration file for the RemoteTrx systemd unit file
 #
 #############################################################################
 
-# The user to run the SvxServer as
+# The user to run the SvxLink server as
 RUNASUSER=@SVXLINK_USER@
 
 # Specify which configuration file to use
-CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxserver.conf
+CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxreflector.conf

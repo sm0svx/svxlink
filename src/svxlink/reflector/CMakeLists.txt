@@ -11,27 +11,22 @@ include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
 
 # Add project libraries
-set(LIBS ${LIBS} trx asynccpp asyncaudio asynccore)
+set(LIBS ${LIBS} asynccpp asyncaudio asynccore)
 
 # Add targets for version files
 set(VERSION_DEPENDS)
-add_version_target(SVXSERVER VERSION_DEPENDS)
+add_version_target(SVXREFLECTOR VERSION_DEPENDS)
 
 # Build the executable
-add_executable(svxserver
-  svxserver.cpp
-  server.cpp
+add_executable(svxreflector
+  svxreflector.cpp Reflector.cpp ReflectorClient.cpp
   ${VERSION_DEPENDS}
 )
-target_link_libraries(svxserver ${LIBS})
-set_target_properties(svxserver PROPERTIES
+target_link_libraries(svxreflector ${LIBS})
+set_target_properties(svxreflector PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
 # Install targets
-install(TARGETS svxserver DESTINATION ${BIN_INSTALL_DIR})
-install_if_not_exists(svxserver.conf ${SVX_SYSCONF_INSTALL_DIR})
-
-if(WITH_SYSTEMD)
-  add_subdirectory(systemd)
-endif(WITH_SYSTEMD)
+install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})
+install_if_not_exists(svxreflector.conf ${SVX_SYSCONF_INSTALL_DIR})
