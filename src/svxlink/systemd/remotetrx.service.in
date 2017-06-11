@@ -11,12 +11,10 @@ EnvironmentFile=/etc/default/remotetrx
 PIDFile=/run/remotetrx.pid
 ExecStartPre=-/bin/touch /var/log/remotetrx
 ExecStartPre=-/bin/chown $RUNASUSER /var/log/remotetrx
-ExecStart=/bin/sh -c '@CMAKE_INSTALL_PREFIX@/bin/remotetrx --pidfile=/run/remotetrx.pid --logfile=/var/log/remotetrx --config=$CFGFILE --runasuser=$RUNASUSER'
+ExecStart=/bin/sh -c '@BIN_INSTALL_DIR@/remotetrx --pidfile=/run/remotetrx.pid --logfile=/var/log/remotetrx --config=$CFGFILE --runasuser=$RUNASUSER'
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
-User=root
-Group=daemon
 #WatchdogSec=@SVX_WatchdogSec@
 #NotifyAccess=main
 LimitCORE=infinity
