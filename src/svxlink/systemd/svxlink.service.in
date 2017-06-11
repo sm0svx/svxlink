@@ -15,6 +15,8 @@ ExecStart=/bin/sh -c '@BIN_INSTALL_DIR@/svxlink --logfile=/var/log/svxlink --con
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
+User=root
+Group=daemon
 #WatchdogSec=@SVX_WatchdogSec@
 #NotifyAccess=main
 LimitCORE=infinity

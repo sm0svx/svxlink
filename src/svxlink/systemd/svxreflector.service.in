@@ -13,6 +13,8 @@ ExecStart=/bin/sh -c '/usr/bin/svxreflector --logfile=/var/log/svxreflector --co
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
+User=root
+Group=daemon
 LimitCORE=infinity
 WorkingDirectory=/etc/svxlink
 
