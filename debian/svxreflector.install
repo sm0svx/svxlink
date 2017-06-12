@@ -1,4 +1,5 @@
 lib/systemd/system/svxreflector.service
 usr/bin/svxreflector
+etc/default/svxreflector
 etc/svxlink/svxreflector.conf
 
