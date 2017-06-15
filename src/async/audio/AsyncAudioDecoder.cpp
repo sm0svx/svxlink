@@ -121,48 +121,53 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioDecoder *AudioDecoder::create(const std::string &name)
+AudioDecoder *AudioDecoder::create(const std::string &name, const std::map<std::string,std::string> &options)
 {
+  AudioDecoder *decoder = NULL;
   if (name == "NULL")
   {
-    return new AudioDecoderNull;
+    decoder = new AudioDecoderNull;
   }
   else if (name == "RAW")
   {
-    return new AudioDecoderRaw;
+    decoder = new AudioDecoderRaw;
   }
   else if (name == "S16")
   {
-    return new AudioDecoderS16;
+    decoder = new AudioDecoderS16;
   }
   else if (name == "GSM")
   {
-    return new AudioDecoderGsm;
+    decoder = new AudioDecoderGsm;
   }
   else if (name == "DV3K")
   {
-    return new AudioDecoderDv3k;
+    decoder = new AudioDecoderDv3k;
   }
   else if (name == "AMBESERVER")
   {
-    return new AudioDecoderDv3kUdp;
+    decoder = new AudioDecoderDv3kUdp;
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
-    return new AudioDecoderSpeex;
+    decoder = new AudioDecoderSpeex;
   }
 #endif
 #ifdef OPUS_MAJOR
   else if (name == "OPUS")
   {
-    return new AudioDecoderOpus;
+    decoder = new AudioDecoderOpus;
   }
 #endif
-  else
+
+  if( decoder != NULL )
   {
-    return 0;
+    for( std::map<std::string,std::string>::const_iterator it = options.begin(); it != options.end(); ++it )
+      decoder->setOption(it->first,it->second);
   }
+
+  return decoder;
 }
 
 

@@ -377,8 +377,26 @@ bool RewindLogic::initialize(void)
       mem_fun(*this, &RewindLogic::flushEncodedAudio));
   cout << "Loading Encoder " << m_logic_enc->name() << endl;
 */
+
+  // sending options to audio encoder
+  string opt_prefix(m_dec->name());
+  opt_prefix += "_";
+  list<string> names = cfg().listSection(name());
+  list<string>::const_iterator nit;
+  map<string,string> m_dec_options;
+  for (nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg().getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      m_dec_options[opt_name]=opt_value;
+    }
+  }
+
     // Create audio decoder
-  m_dec = Async::AudioDecoder::create(m_ambe_handler);
+  m_dec = Async::AudioDecoder::create(m_ambe_handler,m_dec_options);
   if (m_dec == 0)
   {
     cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
@@ -411,23 +429,6 @@ bool RewindLogic::initialize(void)
   m_logic_con_out->registerSink(up, true);
   m_logic_con_out = up;
 #endif
-
-  // sending options to audio encoder
-  string opt_prefix(m_dec->name());
-  opt_prefix += "_";
-  list<string> names = cfg().listSection(name());
-  list<string>::const_iterator nit;
-  for (nit=names.begin(); nit!=names.end(); ++nit)
-  {
-    if ((*nit).find(opt_prefix) == 0)
-    {
-      string opt_value;
-      cfg().getValue(name(), *nit, opt_value);
-      string opt_name((*nit).substr(opt_prefix.size()));
-//      m_logic_enc->setOption(opt_name, opt_value);
-      m_dec->setOption(opt_name, opt_value);
-    }
-  }
 
   if (!LogicBase::initialize())
   {

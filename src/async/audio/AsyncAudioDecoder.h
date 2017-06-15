@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <map>
 #include <sigc++/sigc++.h>
 
 
@@ -113,8 +114,8 @@ This is the base class for an audio decoder.
 class AudioDecoder : public AudioSource, public sigc::trackable
 {
   public:
-    static AudioDecoder *create(const std::string &name);
     
+    static AudioDecoder *create(const std::string &name, const std::map<std::string,std::string> &options);
     /**
      * @brief 	Default constuctor
      */

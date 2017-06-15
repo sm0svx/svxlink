@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 #include <string>
-
+#include <map>
 
 /****************************************************************************
  *
@@ -113,8 +113,8 @@ This is the base class for implementing an audio encoder.
 class AudioEncoder : public AudioSink, public sigc::trackable
 {
   public:
-    static AudioEncoder *create(const std::string &name);
     
+    static AudioEncoder *create(const std::string &name, const std::map<std::string,std::string> &options);
     /**
      * @brief 	Default constuctor
      */
