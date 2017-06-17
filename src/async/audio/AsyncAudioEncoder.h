@@ -113,8 +113,10 @@ This is the base class for implementing an audio encoder.
 class AudioEncoder : public AudioSink, public sigc::trackable
 {
   public:
-    
-    static AudioEncoder *create(const std::string &name, const std::map<std::string,std::string> &options);
+    typedef std::map<std::string,std::string> Options;
+
+    static AudioEncoder *create(const std::string &name, const Options &options);
+
     /**
      * @brief 	Default constuctor
      */
@@ -130,13 +132,6 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const = 0;
-    
-    /**
-     * @brief 	Set an option for the encoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value) {}
 
     /**
      * @brief Print codec parameter settings
@@ -172,7 +167,20 @@ class AudioEncoder : public AudioSink, public sigc::trackable
     
   
   protected:
-    
+    /**
+     * @brief 	Set an option for the encoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value) {}
+
+    /**
+     * @brief 	Set all option for the decoder during initialization
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOptions(const Options &options);
+
   private:
     AudioEncoder(const AudioEncoder&);
     AudioEncoder& operator=(const AudioEncoder&);

@@ -123,52 +123,46 @@ using namespace Async;
 
 AudioEncoder *AudioEncoder::create(const std::string &name, const std::map<std::string,std::string> &options)
 {
-  AudioEncoder *encoder = NULL;
-
   if (name == "NULL")
   {
-    encoder = new AudioEncoderNull;
+    return new AudioEncoderNull;
   }
   else if (name == "RAW")
   {
-    encoder = new AudioEncoderRaw;
+    return new AudioEncoderRaw;
   }
   else if (name == "S16")
   {
-    encoder = new AudioEncoderS16;
+    return new AudioEncoderS16;
   }
   else if (name == "GSM")
   {
-    encoder = new AudioEncoderGsm;
+    return new AudioEncoderGsm;
   }
   else if (name == "DV3K")
   {
-    encoder = new AudioEncoderDv3k;
+    return new AudioEncoderDv3k;
   }
   else if (name == "AMBESERVER")
   {
-    encoder = new AudioEncoderDv3kUdp;
+    return new AudioEncoderDv3kUdp;
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
-    encoder = new AudioEncoderSpeex;
+    return new AudioEncoderSpeex(options);
   }
 #endif
 #ifdef OPUS_MAJOR
   else if (name == "OPUS")
   {
-    encoder = new AudioEncoderOpus;
+    return new AudioEncoderOpus(options);
   }
 #endif
-
-  if(encoder != NULL)
+  else
   {
-    for( std::map<std::string,std::string>::const_iterator it = options.begin(); it != options.end(); ++it )
-      encoder->setOption(it->first,it->second);
+    return NULL;
   }
-
-  return encoder;
 } /* AudioEncoder::create */
 
 
@@ -194,7 +188,11 @@ AudioEncoder::~AudioEncoder(void)
  *
  ****************************************************************************/
 
-
+void AudioEncoder::setOptions(const Options &options) {
+    for(Options::const_iterator it = options.begin(); it != options.end(); ++it) {
+        setOption(it->first,it->second);
+    }
+}
 
 /****************************************************************************
  *

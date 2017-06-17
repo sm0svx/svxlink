@@ -123,51 +123,46 @@ using namespace Async;
 
 AudioDecoder *AudioDecoder::create(const std::string &name, const std::map<std::string,std::string> &options)
 {
-  AudioDecoder *decoder = NULL;
   if (name == "NULL")
   {
-    decoder = new AudioDecoderNull;
+    return new AudioDecoderNull;
   }
   else if (name == "RAW")
   {
-    decoder = new AudioDecoderRaw;
+    return new AudioDecoderRaw;
   }
   else if (name == "S16")
   {
-    decoder = new AudioDecoderS16;
+    return new AudioDecoderS16;
   }
   else if (name == "GSM")
   {
-    decoder = new AudioDecoderGsm;
+    return new AudioDecoderGsm;
   }
   else if (name == "DV3K")
   {
-    decoder = new AudioDecoderDv3k;
+    return new AudioDecoderDv3k;
   }
   else if (name == "AMBESERVER")
   {
-    decoder = new AudioDecoderDv3kUdp;
+    return new AudioDecoderDv3kUdp;
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
-    decoder = new AudioDecoderSpeex;
+    return new AudioDecoderSpeex(options);
   }
 #endif
 #ifdef OPUS_MAJOR
   else if (name == "OPUS")
   {
-    decoder = new AudioDecoderOpus;
+    return new AudioDecoderOpus(options);
   }
 #endif
-
-  if( decoder != NULL )
+  else
   {
-    for( std::map<std::string,std::string>::const_iterator it = options.begin(); it != options.end(); ++it )
-      decoder->setOption(it->first,it->second);
+    return NULL;
   }
-
-  return decoder;
 }
 
 
@@ -197,6 +192,12 @@ void AudioDecoder::resumeOutput(void)
  * Protected member functions
  *
  ****************************************************************************/
+
+void AudioDecoder::setOptions(const Options &options) {
+    for(Options::const_iterator it = options.begin(); it != options.end(); ++it) {
+        setOption(it->first,it->second);
+    }
+}
 
 #if 0
 void AudioDecoder::allSamplesFlushed(void)

@@ -114,8 +114,10 @@ This is the base class for an audio decoder.
 class AudioDecoder : public AudioSource, public sigc::trackable
 {
   public:
-    
-    static AudioDecoder *create(const std::string &name, const std::map<std::string,std::string> &options);
+    typedef std::map<std::string,std::string> Options;
+
+    static AudioDecoder *create(const std::string &name, const Options &options);
+
     /**
      * @brief 	Default constuctor
      */
@@ -131,13 +133,6 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const = 0;
-  
-    /**
-     * @brief 	Set an option for the decoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value) {}
 
     /**
      * @brief Print codec parameter settings
@@ -172,6 +167,20 @@ class AudioDecoder : public AudioSource, public sigc::trackable
     
 
   protected:
+    /**
+     * @brief 	Set an option for the decoder during initialization
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value) {}
+
+    /**
+     * @brief 	Set all option for the decoder during initialization
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOptions(const Options &options);
+
     /**
      * @brief The registered sink has flushed all samples
      *
