@@ -1,11 +1,13 @@
 #include <AsyncAudioCodecAmbe.h>
 #include <AsyncSerial.h>
-#include <AsyncUdpHandler.h>
 
 #include <string>
 #include <map>
 
+#include <cassert>
+
 using namespace Async;
+using namespace std;
 
 namespace {
     /*
@@ -19,7 +21,7 @@ namespace {
         Foo::destroyAll();
      */
 
-    template <typename T, typename Key = std::map<std::string,std::string>>
+    template <typename T, typename Key = map<string,string>>
     class Multiton
     {
     public:
@@ -77,20 +79,26 @@ namespace {
      */
     class AudioCodecAmbeDv3k : public AudioCodecAmbe, public Multiton<AudioCodecAmbe,AudioCodecAmbe::Options> {
     public:
+        template <typename T = void>
+        struct Buffer {
+            Buffer(T *data = NULL, size_t length = 0) : data(data), length(length) {}
+            T *data;
+            size_t length;
+        };
+
         static AudioCodecAmbeDv3k *create(const Options &options);
 
         virtual void init()
         {
-            void *init_frame = NULL /* TODO */;
-            void size = 0 /* TODO */;
-            send(init_frame,size);
+            assert(!"unimplemented");
+            send(Buffer<>());
         }
 
-        virtual std::pair<void*,int> packForDecoding(void* buf, int size) { /* TODO */ }
-        virtual std::pair<void*,int> unpackDecoded(void* buf, int size) { /* TODO */ }
+        virtual Buffer<> packForDecoding(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
+        virtual Buffer<> unpackDecoded(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
 
-        virtual std::pair<void*,int> packForEncoding(void* buf, int size) { /* TODO */ }
-        virtual std::pair<void*,int> unpackDecoded(void* buf, int size) { /* TODO */ }
+        virtual Buffer<> packForEncoding(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
+        virtual Buffer<> unpackEncoded(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
 
         /**
          * @brief 	Write encoded samples into the decoder
@@ -99,49 +107,43 @@ namespace {
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-            (frame,count) = packForDecoding(buf,size);
-            send(frame,count);
+            Buffer<> packet = packForDecoding(Buffer<>(buf,size));
+            send(packet);
         }
 
-        virtual void send(void *frame, int size);
+        virtual void send(const Buffer<> &packet);
 
-        virtual void callback(void *frame, int size)
+        virtual void callback(const Buffer<> &buffer)
         {
-            if(frame is encoded frame)
+            if(0/*test if buffer contains encoded frame*/)
             {
                 // unpack decoded frame
-                (samples,count) = unpackEncoded(frame,size);
-                // ..
-                AudioEncoder::writeEncodedSamples(buf, sizeof(buf));(samples, count);
+                Buffer<> unpacked = unpackEncoded(buffer);
+
+                // forward encoded samples
+                AudioEncoder::writeEncodedSamples(unpacked.data, unpacked.length);
             }
-            else if(frame is decoded frame)
+            else if(1/*test if buffer contains decoded frame*/)
             {
                 // unpack decoded frame
-                (samples,count) = unpackDecoded(frame,size);
-                // ..
-                AudioDecoder::sinkWriteSamples(samples, count);
+                Buffer<> unpacked = unpackDecoded(buffer);
+
+                // pass decoded samples into sink
+                assert(!"invalid conversion from float * to void *");
+                AudioDecoder::sinkWriteSamples((float *)unpacked.data, unpacked.length);
             }
             else
             {
                 // deal with result of initialization or with errors if necessarry
+                assert(!"unimplemented");
             }
         }
 
         virtual int writeSamples(const float *samples, int count)
         {
-          if (count > std::numeric_limits<uint16_t>::max())
-          {
-            count = std::numeric_limits<uint16_t>::max();
-          }
-          else if (count < 0)
-          {
-            return -1;
-          }
-          uint8_t buf[2];
-          buf[0] = static_cast<uint8_t>(count & 0xff);
-          buf[1] = static_cast<uint8_t>(count >> 8);
-          packForEncoding(...);
-          AudioEncoder::writeEncodedSamples(buf, sizeof(buf));
+          assert(!"unimplemented");
+          Buffer<> packet = packForEncoding(Buffer<>((void*)samples,count));
+          send(packet);
           return count;
         }
 
@@ -165,7 +167,9 @@ namespace {
       * @brief  Default constuctor
       *         TODO: parse options for IP and PORT
       */
-      AudioCodecAmbeDv3kAmbeServer(const Options &options) {}
+      AudioCodecAmbeDv3kAmbeServer(const Options &options) {
+
+      }
 
       virtual void send(void *frame, int size) { /* TODO: Send via UDP */ }
 
@@ -183,17 +187,25 @@ namespace {
       * @brief 	Default constuctor
       */
       AudioCodecAmbeDv3kTty(const Options &options) {
+        assert(!"implementation incomplete");
         // TODO: parse options for TTY and BAUDRATE
         serial = new Serial(options.find("TTY")->second);
-        serial->Serial(const std::string& serial_port);
         //TODO: serial->setParams(int speed, Parity parity, int bits, int stop_bits, Flow flow);
         serial->open(true);
-        serial->charactersReceived.connect(sigc::mem_fun(*this, &AudioCodecAmbeDv3kTty::callback));
+        serial->charactersReceived.connect(sigc::mem_fun(*this, &AudioCodecAmbeDv3kTty::callbackTty));
         init();
       }
 
       virtual void send(void *frame, int size) {
-        serial->write(frame, size);
+        assert(!"invalid conversion from void * to char *");
+        serial->write((char *)frame, size);
+      }
+
+    protected:
+      virtual void callbackTty(const char *buf, int count)
+      {
+        assert(!"conversion unimplemented");
+        callback(Buffer<>((void*)buf,count));
       }
 
     private:
