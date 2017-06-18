@@ -53,8 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioDecoderRaw.h"
 #include "AsyncAudioDecoderS16.h"
 #include "AsyncAudioDecoderGsm.h"
-#include "AsyncAudioDecoderDv3kUdp.h"
-#include "AsyncAudioDecoderDv3k.h"
+#include "AsyncAudioDecoderAmbe.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioDecoderSpeex.h"
 #endif
@@ -139,13 +138,9 @@ AudioDecoder *AudioDecoder::create(const std::string &name, const std::map<std::
   {
     return new AudioDecoderGsm;
   }
-  else if (name == "DV3K")
+  else if (name == "AMBE")
   {
-    return new AudioDecoderDv3k;
-  }
-  else if (name == "AMBESERVER")
-  {
-    return new AudioDecoderDv3kUdp;
+    return AudioDecoderAmbe::create(options);
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
@@ -219,4 +214,3 @@ void AudioDecoder::allSamplesFlushed(void)
 /*
  * This file has not been truncated
  */
-
