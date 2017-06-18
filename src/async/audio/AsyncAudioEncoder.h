@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for implementing an audio encoder.
 */
-class AudioEncoder : public AudioSink, public sigc::trackable
+class AudioEncoder : public AudioSink, virtual public sigc::trackable
 {
   public:
     typedef std::map<std::string,std::string> Options;
