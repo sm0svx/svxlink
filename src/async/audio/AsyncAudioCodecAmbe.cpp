@@ -77,7 +77,7 @@ namespace {
      * @brief Implement shared Dv3k code here
      * (e.g. initialiation and protocol)
      */
-    class AudioCodecAmbeDv3k : public AudioCodecAmbe, public Multiton<AudioCodecAmbe,AudioCodecAmbe::Options> {
+    class AudioCodecAmbeDv3k : public AudioCodecAmbe, public Multiton<AudioCodecAmbeDv3k,AudioCodecAmbe::Options> {
     public:
         template <typename T = void>
         struct Buffer {
@@ -111,7 +111,7 @@ namespace {
             send(packet);
         }
 
-        virtual void send(const Buffer<> &packet);
+        virtual void send(const Buffer<> &packet) = 0;
 
         virtual void callback(const Buffer<> &buffer)
         {
@@ -171,7 +171,7 @@ namespace {
 
       }
 
-      virtual void send(void *frame, int size) { /* TODO: Send via UDP */ }
+      virtual void send(const Buffer<> &packet) { /* TODO: Send via UDP */ }
 
     private:
       AudioCodecAmbeDv3kAmbeServer(const AudioCodecAmbeDv3kAmbeServer&);
@@ -196,9 +196,9 @@ namespace {
         init();
       }
 
-      virtual void send(void *frame, int size) {
+      virtual void send(const Buffer<> &packet) {
         assert(!"invalid conversion from void * to char *");
-        serial->write((char *)frame, size);
+        serial->write((char *) packet.data, packet.length);
       }
 
     protected:
