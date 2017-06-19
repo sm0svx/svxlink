@@ -27,14 +27,14 @@ namespace {
     public:
         static void destroyAll()
         {
-            for (auto it = instances.begin(); it != instances.end(); ++it)
+            for (typename map<Key, T*>::const_iterator it = instances.begin(); it != instances.end(); ++it)
                 delete (*it).second;
             instances.clear();
         }
 
         static void destroy(const Key &key)
         {
-            auto it = instances.find(key);
+            typename map<Key, T*>::iterator it = instances.find(key);
 
             if (it != instances.end()) {
                 delete (*it).second;
@@ -44,7 +44,7 @@ namespace {
 
         static T* getPtr(const Key &key)
         {
-            const auto it = instances.find(key);
+            const typename map<Key, T*>::const_iterator it = instances.find(key);
 
             if (it != instances.end())
                 return (T*)(it->second);
@@ -216,7 +216,7 @@ namespace {
     };
 
     AudioCodecAmbeDv3k *AudioCodecAmbeDv3k::create(const Options &options) {
-        auto type_it = options.find("TYPE");
+        Options::const_iterator type_it = options.find("TYPE");
         if(type_it!=options.end())
         {
             if(type_it->second=="AMBESERVER")
@@ -233,7 +233,7 @@ namespace {
 
 
 AudioCodecAmbe *AudioCodecAmbe::create(const Options &options) {
-    auto type_it = options.find("TYPE");
+    Options::const_iterator type_it = options.find("TYPE");
     if(type_it!=options.end())
     {
         if(type_it->second=="AMBESERVER" || type_it->second=="TTY")
