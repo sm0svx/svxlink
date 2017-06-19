@@ -379,7 +379,7 @@ bool RewindLogic::initialize(void)
 */
 
   // sending options to audio encoder
-  string opt_prefix(m_dec->name());
+  string opt_prefix(m_ambe_handler);
   opt_prefix += "_";
   list<string> names = cfg().listSection(name());
   list<string>::const_iterator nit;
