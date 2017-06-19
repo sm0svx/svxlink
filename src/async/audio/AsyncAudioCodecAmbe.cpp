@@ -67,11 +67,11 @@ namespace {
         Multiton(const Multiton&);
         Multiton& operator=(const Multiton&);
 
-        static std::map<Key, T*> instances;
+        static map<Key, T*> instances;
     };
 
     template <typename T, typename Key>
-    std::map<Key, T*> Multiton<T, Key>::instances;
+    map<Key, T*> Multiton<T, Key>::instances;
 
     /**
      * @brief Implement shared Dv3k code here
