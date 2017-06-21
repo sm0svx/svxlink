@@ -3,6 +3,8 @@
 
 #include <string>
 #include <map>
+#include <iostream>
+#include <iostream>
 
 #include <cassert>
 
@@ -79,9 +81,9 @@ namespace {
      */
     class AudioCodecAmbeDv3k : public AudioCodecAmbe, public Multiton<AudioCodecAmbeDv3k,AudioCodecAmbe::Options> {
     public:
-        template <typename T = void>
+        template <typename T = char>
         struct Buffer {
-            Buffer(T *data = NULL, size_t length = 0) : data(data), length(length) {}
+            Buffer(T *data = (T*) NULL, size_t length = 0) : data(data), length(length) {}
             T *data;
             size_t length;
         };
@@ -90,8 +92,9 @@ namespace {
 
         virtual void init()
         {
-            assert(!"unimplemented");
-            send(Buffer<>());
+            char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
+            Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
+            send(init_packet);
         }
 
         virtual Buffer<> packForDecoding(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
@@ -107,7 +110,7 @@ namespace {
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-            Buffer<> packet = packForDecoding(Buffer<>(buf,size));
+            Buffer<> packet = packForDecoding(Buffer<>((char*)buf,size));
             send(packet);
         }
 
@@ -129,31 +132,47 @@ namespace {
                 Buffer<> unpacked = unpackDecoded(buffer);
 
                 // pass decoded samples into sink
-                assert(!"invalid conversion from float * to void *");
+                assert(!"invalid conversion from float * to char *");
                 AudioDecoder::sinkWriteSamples((float *)unpacked.data, unpacked.length);
             }
             else
             {
-                // deal with result of initialization or with errors if necessarry
-                assert(!"unimplemented");
+                // deal with result of initialization or with errors if necessary
+                cout << "Dv3k initialized";
+                device_initialized = true;
             }
         }
 
         virtual int writeSamples(const float *samples, int count)
         {
           assert(!"unimplemented");
-          Buffer<> packet = packForEncoding(Buffer<>((void*)samples,count));
+          Buffer<> packet = packForEncoding(Buffer<>((char*)samples,count));
           send(packet);
           return count;
         }
 
     protected:
+      static const char DV3K_TYPE_CONTROL = 0x00;
+      static const char DV3K_TYPE_AMBE = 0x01;
+      static const char DV3K_TYPE_AUDIO = 0x02;
+
+      static const char DV3K_START_BYTE = 0x61;
+
+      static const char DV3K_CONTROL_RATEP  = 0x0A;
+      static const char DV3K_CONTROL_PRODID = 0x30;
+      static const char DV3K_CONTROL_VERSTRING = 0x31;
+      static const char DV3K_CONTROL_RESET = 0x33;
+      static const char DV3K_CONTROL_READY = 0x39;
+      static const char DV3K_CONTROL_CHANFMT = 0x15;
+
       /**
       * @brief 	Default constuctor
       */
-      AudioCodecAmbeDv3k(void) {}
+      AudioCodecAmbeDv3k(void) : device_initialized(false) {}
 
     private:
+      bool device_initialized;
+
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
       AudioCodecAmbeDv3k& operator=(const AudioCodecAmbeDv3k&);
     };
@@ -187,25 +206,39 @@ namespace {
       * @brief 	Default constuctor
       */
       AudioCodecAmbeDv3kTty(const Options &options) {
-        assert(!"implementation incomplete");
-        // TODO: parse options for TTY and BAUDRATE
-        serial = new Serial(options.find("TTY")->second);
-        //TODO: serial->setParams(int speed, Parity parity, int bits, int stop_bits, Flow flow);
+        Options::const_iterator it;
+        int baudrate;
+        string device;
+        if((it=options.find("TTY_DEVICE"))!=options.end())
+            device = (*it).second;
+        else
+            throw "TODO: error handling";
+        if((it=options.find("TTY_BAUDRATE"))!=options.end())
+            baudrate = atoi((*it).second.c_str());
+        else
+            throw "TODO: error handling";
+
+        serial = new Serial(device);
+        serial->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
         serial->open(true);
         serial->charactersReceived.connect(sigc::mem_fun(*this, &AudioCodecAmbeDv3kTty::callbackTty));
         init();
       }
 
       virtual void send(const Buffer<> &packet) {
-        assert(!"invalid conversion from void * to char *");
-        serial->write((char *) packet.data, packet.length);
+        serial->write(packet.data, packet.length);
+      }
+
+      ~AudioCodecAmbeDv3kTty()
+      {
+          serial->close();
+          delete serial;
       }
 
     protected:
       virtual void callbackTty(const char *buf, int count)
       {
-        assert(!"conversion unimplemented");
-        callback(Buffer<>((void*)buf,count));
+        callback(Buffer<>(const_cast<char *>(buf),count));
       }
 
     private:
