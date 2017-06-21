@@ -53,8 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioDecoderRaw.h"
 #include "AsyncAudioDecoderS16.h"
 #include "AsyncAudioDecoderGsm.h"
-#include "AsyncAudioDecoderDv3kUdp.h"
-#include "AsyncAudioDecoderDv3k.h"
+#include "AsyncAudioDecoderAmbe.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioDecoderSpeex.h"
 #endif
@@ -121,7 +120,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioDecoder *AudioDecoder::create(const std::string &name)
+AudioDecoder *AudioDecoder::create(const std::string &name, const std::map<std::string,std::string> &options)
 {
   if (name == "NULL")
   {
@@ -139,29 +138,25 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
   {
     return new AudioDecoderGsm;
   }
-  else if (name == "DV3K")
+  else if (name == "AMBE")
   {
-    return new AudioDecoderDv3k;
-  }
-  else if (name == "AMBESERVER")
-  {
-    return new AudioDecoderDv3kUdp;
+    return AudioDecoderAmbe::create(options);
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
-    return new AudioDecoderSpeex;
+    return new AudioDecoderSpeex(options);
   }
 #endif
 #ifdef OPUS_MAJOR
   else if (name == "OPUS")
   {
-    return new AudioDecoderOpus;
+    return new AudioDecoderOpus(options);
   }
 #endif
   else
   {
-    return 0;
+    return NULL;
   }
 }
 
@@ -193,6 +188,12 @@ void AudioDecoder::resumeOutput(void)
  *
  ****************************************************************************/
 
+void AudioDecoder::setOptions(const Options &options) {
+    for(Options::const_iterator it = options.begin(); it != options.end(); ++it) {
+        setOption(it->first,it->second);
+    }
+}
+
 #if 0
 void AudioDecoder::allSamplesFlushed(void)
 {
@@ -213,4 +214,3 @@ void AudioDecoder::allSamplesFlushed(void)
 /*
  * This file has not been truncated
  */
-

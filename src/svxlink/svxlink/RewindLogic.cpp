@@ -355,13 +355,7 @@ bool RewindLogic::initialize(void)
 #endif
 
   // create the Rewind recoder device, DV3k USB stick or DSD lib
-  string m_ambe_handler;
-  if (!cfg().getValue(name(), "AMBE_HANDLER", m_ambe_handler))
-  {
-    cerr << "*** ERROR: " << name() << "/AMBE_HANDLER not valid, must be"
-         << " DV3K or AMBESERVER" << endl;
-    return false;
-  }
+  string m_ambe_handler = "AMBE";
 
 /*  m_logic_enc = Async::AudioEncoder::create(m_ambe_handler);
   if (m_logic_enc == 0)
@@ -377,12 +371,34 @@ bool RewindLogic::initialize(void)
       mem_fun(*this, &RewindLogic::flushEncodedAudio));
   cout << "Loading Encoder " << m_logic_enc->name() << endl;
 */
-    // Create audio decoder
-  m_dec = Async::AudioDecoder::create(m_ambe_handler);
-  if (m_dec == 0)
+
+  // sending options to audio encoder
+  string opt_prefix = m_ambe_handler + "_";
+  list<string> names = cfg().listSection(name());
+  list<string>::const_iterator nit;
+  map<string,string> m_dec_options;
+  for (nit=names.begin(); nit!=names.end(); ++nit)
   {
-    cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
-    return false;
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg().getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      m_dec_options[opt_name]=opt_value;
+    }
+  }
+
+    // Create audio decoder
+  try {
+    m_dec = Async::AudioDecoder::create(m_ambe_handler,m_dec_options);
+    if (m_dec == 0)
+    {
+      cerr << "*** ERROR: Failed to initialize audio decoder" << endl;
+      return false;
+    }
+  } catch(const char *e) {
+      cerr << e << endl;
+      return false;
   }
 
   m_dec->allEncodedSamplesFlushed.connect(
@@ -411,23 +427,6 @@ bool RewindLogic::initialize(void)
   m_logic_con_out->registerSink(up, true);
   m_logic_con_out = up;
 #endif
-
-  // sending options to audio encoder
-  string opt_prefix(m_dec->name());
-  opt_prefix += "_";
-  list<string> names = cfg().listSection(name());
-  list<string>::const_iterator nit;
-  for (nit=names.begin(); nit!=names.end(); ++nit)
-  {
-    if ((*nit).find(opt_prefix) == 0)
-    {
-      string opt_value;
-      cfg().getValue(name(), *nit, opt_value);
-      string opt_name((*nit).substr(opt_prefix.size()));
-//      m_logic_enc->setOption(opt_name, opt_value);
-      m_dec->setOption(opt_name, opt_value);
-    }
-  }
 
   if (!LogicBase::initialize())
   {

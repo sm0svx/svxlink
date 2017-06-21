@@ -558,14 +558,24 @@ void NetUplink::handleMsg(Msg *msg)
     
     case MsgRxAudioCodecSelect::TYPE:
     {
-      MsgRxAudioCodecSelect *codec_msg = 
+      MsgRxAudioCodecSelect *codec_msg =
           reinterpret_cast<MsgRxAudioCodecSelect *>(msg);
       if (audio_enc != 0)
       {
 	rx_splitter->removeSink(audio_enc);
 	delete audio_enc;
       }
-      audio_enc = AudioEncoder::create(codec_msg->name());
+
+      MsgRxAudioCodecSelect::Opts opts;
+      codec_msg->options(opts);
+      MsgRxAudioCodecSelect::Opts::const_iterator it;
+      map<string,string> enc_options;
+      for (it=opts.begin(); it!=opts.end(); ++it)
+      {
+        enc_options[(*it).first] = (*it).second;
+      }
+
+      audio_enc = AudioEncoder::create(codec_msg->name(),enc_options);
       if (audio_enc != 0)
       {
         audio_enc->writeEncodedSamples.connect(
@@ -576,14 +586,8 @@ void NetUplink::handleMsg(Msg *msg)
 	rx_splitter->addSink(audio_enc);
         cout << name << ": Using CODEC \"" << audio_enc->name()
              << "\" to encode RX audio\n";
-	
-	MsgRxAudioCodecSelect::Opts opts;
-	codec_msg->options(opts);
-	MsgRxAudioCodecSelect::Opts::const_iterator it;
-	for (it=opts.begin(); it!=opts.end(); ++it)
-	{
-	  audio_enc->setOption((*it).first, (*it).second);
-	}
+
+
 	audio_enc->printCodecParams();
       }
       else
@@ -593,13 +597,23 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-    
+
     case MsgTxAudioCodecSelect::TYPE:
     {
-      MsgTxAudioCodecSelect *codec_msg = 
+      MsgTxAudioCodecSelect *codec_msg =
           reinterpret_cast<MsgTxAudioCodecSelect *>(msg);
       delete audio_dec;
-      audio_dec = AudioDecoder::create(codec_msg->name());
+
+      MsgRxAudioCodecSelect::Opts opts;
+      codec_msg->options(opts);
+      MsgTxAudioCodecSelect::Opts::const_iterator it;
+      map<string,string> dec_options;
+      for (it=opts.begin(); it!=opts.end(); ++it)
+      {
+        dec_options[(*it).first] = (*it).second;
+      }
+
+      audio_dec = AudioDecoder::create(codec_msg->name(),dec_options);
       if (audio_dec != 0)
       {
         audio_dec->registerSink(fifo);
@@ -607,15 +621,9 @@ void NetUplink::handleMsg(Msg *msg)
             mem_fun(*this, &NetUplink::allEncodedSamplesFlushed));
         cout << name << ": Using CODEC \"" << audio_dec->name()
              << "\" to decode TX audio\n";
-	
-	MsgRxAudioCodecSelect::Opts opts;
-	codec_msg->options(opts);
-	MsgTxAudioCodecSelect::Opts::const_iterator it;
-	for (it=opts.begin(); it!=opts.end(); ++it)
-	{
-	  audio_dec->setOption((*it).first, (*it).second);
-	}
-	audio_dec->printCodecParams();
+
+
+      audio_dec->printCodecParams();
       }
       else
       {

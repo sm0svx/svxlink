@@ -53,8 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioEncoderRaw.h"
 #include "AsyncAudioEncoderS16.h"
 #include "AsyncAudioEncoderGsm.h"
-#include "AsyncAudioEncoderDv3k.h"
-#include "AsyncAudioEncoderDv3kUdp.h"
+#include "AsyncAudioEncoderAmbe.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioEncoderSpeex.h"
 #endif
@@ -121,7 +120,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioEncoder *AudioEncoder::create(const std::string &name)
+AudioEncoder *AudioEncoder::create(const std::string &name, const std::map<std::string,std::string> &options)
 {
   if (name == "NULL")
   {
@@ -139,29 +138,25 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
   {
     return new AudioEncoderGsm;
   }
-  else if (name == "DV3K")
+  else if (name == "AMBE")
   {
-    return new AudioEncoderDv3k;
-  }
-  else if (name == "AMBESERVER")
-  {
-    return new AudioEncoderDv3kUdp;
+    return AudioCodecAmbe::create(options);
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
-    return new AudioEncoderSpeex;
+    return new AudioEncoderSpeex(options);
   }
 #endif
 #ifdef OPUS_MAJOR
   else if (name == "OPUS")
   {
-    return new AudioEncoderOpus;
+    return new AudioEncoderOpus(options);
   }
 #endif
   else
   {
-    return 0;
+    return NULL;
   }
 } /* AudioEncoder::create */
 
@@ -188,7 +183,11 @@ AudioEncoder::~AudioEncoder(void)
  *
  ****************************************************************************/
 
-
+void AudioEncoder::setOptions(const Options &options) {
+    for(Options::const_iterator it = options.begin(); it != options.end(); ++it) {
+        setOption(it->first,it->second);
+    }
+}
 
 /****************************************************************************
  *
@@ -201,4 +200,3 @@ AudioEncoder::~AudioEncoder(void)
 /*
  * This file has not been truncated
  */
-

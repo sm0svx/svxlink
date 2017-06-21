@@ -113,7 +113,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioEncoderSpeex::AudioEncoderSpeex(void)
+AudioEncoderSpeex::AudioEncoderSpeex(const Options& options)
   : buf_len(0), frames_per_packet(4), frame_cnt(0)
 {
   speex_bits_init(&bits);
@@ -133,6 +133,8 @@ AudioEncoderSpeex::AudioEncoderSpeex(void)
   //setAbr(8000);
   //setVbrMaxBitrate(32000);
   //enableHighpass(false);
+
+  setOptions(options);
 } /* AsyncAudioEncoderSpeex::AsyncAudioEncoderSpeex */
 
 
