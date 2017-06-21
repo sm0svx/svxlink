@@ -111,7 +111,7 @@ namespace Async
 
 This is the base class for an audio decoder.
 */
-class AudioDecoder : public AudioSource, public sigc::trackable
+class AudioDecoder : public AudioSource, virtual public sigc::trackable
 {
   public:
     typedef std::map<std::string,std::string> Options;

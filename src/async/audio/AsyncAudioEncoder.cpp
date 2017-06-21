@@ -53,8 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioEncoderRaw.h"
 #include "AsyncAudioEncoderS16.h"
 #include "AsyncAudioEncoderGsm.h"
-#include "AsyncAudioEncoderDv3k.h"
-#include "AsyncAudioEncoderDv3kUdp.h"
+#include "AsyncAudioEncoderAmbe.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioEncoderSpeex.h"
 #endif
@@ -139,13 +138,9 @@ AudioEncoder *AudioEncoder::create(const std::string &name, const std::map<std::
   {
     return new AudioEncoderGsm;
   }
-  else if (name == "DV3K")
+  else if (name == "AMBE")
   {
-    return new AudioEncoderDv3k;
-  }
-  else if (name == "AMBESERVER")
-  {
-    return new AudioEncoderDv3kUdp;
+    return AudioCodecAmbe::create(options);
   }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
@@ -205,4 +200,3 @@ void AudioEncoder::setOptions(const Options &options) {
 /*
  * This file has not been truncated
  */
-
