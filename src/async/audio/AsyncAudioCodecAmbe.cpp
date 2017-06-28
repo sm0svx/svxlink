@@ -224,7 +224,7 @@ namespace {
                   
             t_b = t_buffer.length;
 
-            /* decoded audio frames are 160 bytes long / 164 baytes with header
+            /* decoded audio frames are 160 bytes long / 164 bytes with header
                cut after 164 bytes and send them to the 
                packForDecoder + AudioDecoder::sinkWriteSamples */
             if (t_buffer.length >= stored_bufferlen + DV3K_HEADER_LEN)
