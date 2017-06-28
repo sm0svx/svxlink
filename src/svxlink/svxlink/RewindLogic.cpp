@@ -145,7 +145,7 @@ RewindLogic::~RewindLogic(void)
   delete dns;
   delete m_logic_con_in;
   delete m_logic_con_out;
-  delete m_logic_enc;
+ // delete m_logic_enc;
   delete m_dec;
 } /* RewindLogic::~RewindLogic */
 

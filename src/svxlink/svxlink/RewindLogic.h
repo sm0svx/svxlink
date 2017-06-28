@@ -194,7 +194,7 @@ class RewindLogic : public LogicBase
     Async::Timer          m_ping_timer;
     Async::Timer          m_reconnect_timer;
     Async::AudioSink*     m_logic_con_in;
-    Async::AudioEncoder*  m_logic_enc;
+  //  Async::AudioEncoder*  m_logic_enc;
     Async::AudioSource*   m_logic_con_out;
     Async::AudioDecoder*  m_dec;
 
