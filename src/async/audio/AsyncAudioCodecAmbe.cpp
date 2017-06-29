@@ -99,6 +99,7 @@ namespace {
         {
             char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
             Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
+            m_state = RESET;
             send(init_packet);
         }
         
@@ -165,63 +166,33 @@ namespace {
         {
           
           uint32_t tlen = 0;
-          uint32_t t = 0;
           int type = 0;
-          
-          Buffer<> dv3k_buffer = buffer;
-          
-          // check if the data buffer contain valid data
-          if (buffer.length < 4)
-          {
-            cout << "*** ERROR: DV3k frame to short, re-init." << endl;
-            init();
-            return;
-          }
-          
-          if (buffer.data[0] == DV3K_START_BYTE)
+          Buffer<> dv3k_buffer = Buffer<>(new char[1024], 1024);
+
+          if (buffer.data[0] == DV3K_START_BYTE 
+                           && buffer.length >= DV3K_HEADER_LEN)
           {
             tlen = buffer.data[2] + buffer.data[1] * 256;
             type = buffer.data[3];
+            stored_bufferlen = 0;
             
-             // is it only a part of the 160byte audio frame
+             // is it only a part of the 160byte audio frame?
             if (tlen + DV3K_HEADER_LEN > buffer.length)
             {
-              stored_bufferlen = tlen; /* store the number of data (chars) in frame
-                                       sent in the dv3k protocol, length ist defined in position 1 and 2.
-                                       In most cases the frame received by the callback 
-                                       (sigc, charactersReceived method) is only a part of the datastream 
-                                       so we must concat them when all data defined in stored_bufferlen 
-                                       has been reeived */
-              t_buffer = Buffer<>(buffer.data, buffer.length); /* try to store the partially received
-                                                                data into the temporary buffer. It shall collect
-                                                                all further data, concat with each callup of
-                                                                callback method */
-
-              cout << "1st" << endl;
-              for (t=0; t<t_buffer.length; t++)
-              { 
-                cout << hex << t_buffer.data[t];
-              }                             /* shows that buffer and t_buffer are identical */
-              cout << endl;
+               // store incoming data to a temporary buffer
+              t_buffer = Buffer<>(new char[1024], 1024);
+              memcpy(t_buffer.data, buffer.data, buffer.length);
+              t_buffer.length = buffer.length;          
+              stored_bufferlen = tlen; 
               return;
             }
-            else 
-            {
-              stored_bufferlen = 0;
-              t_buffer = Buffer<>(buffer.data, buffer.length);
-            }
+            dv3k_buffer.data = buffer.data;
+            dv3k_buffer.length = buffer.length;
           }
           else if (stored_bufferlen > 0)
           {
-            cout << "2nd/3rd callup:" << endl;
-            for (t=0; t < t_buffer.length; t++)
-            {
-              cout << hex << t_buffer.data[t]; /* the t_buffer data from 1st callup has been lost :/ */
-            }
-            cout << endl;
             memcpy(t_buffer.data + t_buffer.length, buffer.data, buffer.length);
             t_buffer.length += buffer.length;
-                  
             t_b = t_buffer.length;
 
             /* decoded audio frames are 160 bytes long / 164 bytes with header
@@ -229,12 +200,10 @@ namespace {
                packForDecoder + AudioDecoder::sinkWriteSamples */
             if (t_buffer.length >= stored_bufferlen + DV3K_HEADER_LEN)
             {
+
               // prepare a complete frame to be handled by following methods
-              cout << "stored_bufferlen=" << stored_bufferlen << ", t_buffer.len=" 
-                << t_buffer.length << endl;
               memcpy(dv3k_buffer.data, t_buffer.data, stored_bufferlen + DV3K_HEADER_LEN);
               dv3k_buffer.length = stored_bufferlen + DV3K_HEADER_LEN;
-              
 
               // move the rest of the buffer in t_buffer to the begin
               memmove(t_buffer.data, t_buffer.data + (stored_bufferlen + DV3K_HEADER_LEN), 
@@ -242,47 +211,39 @@ namespace {
         
               t_buffer.length = t_b - stored_bufferlen - DV3K_HEADER_LEN;
               t_buffer.data[t_buffer.length - stored_bufferlen - DV3K_HEADER_LEN + 1] = '\0';
+              stored_bufferlen = t_buffer.data[2] + t_buffer.data[1] * 256;
             }
             else return;
           } 
           else
           {
-             return;
+            cout << "*** ERROR: DV3k frame to short, re-init." << endl;
+            cout << "stored_bufferlen=" << stored_bufferlen << ",buffer.len="
+                << buffer.length << ", t_buffer.len=" << t_buffer.length << endl;
+            init();
+            return;
           }
 
-          tlen = dv3k_buffer.data[2] + dv3k_buffer.data[1] * 256;
           type = dv3k_buffer.data[3];
-          
-          uint32_t a;
 
           /* test the type of incoming frame */
           if (type == DV3K_TYPE_CONTROL)
           {
             if (m_state == RESET)
             {
-              cout << "--- Device: Reset OK" << endl;
+              cout << "--- DV3K: Reset OK" << endl;
               prodid();
             }
             else if (m_state == PRODID)
             {
               m_state = VERSID;          /* give out product id of DV3k */
-              cout << "--- Device: ";
-              for (a=5; a < dv3k_buffer.length; a++)
-              {
-                cout << hex << dv3k_buffer.data[a];
-              } 
-              cout << endl;
+              cout << "--- DV3K (ProdID): "  << dv3k_buffer.data+5 << endl;
               versid();
             }
             else if (m_state == VERSID)
             {
               m_state = READY;            /* give out version of DV3k */
-              cout << "--- Device: " << endl;
-              for (a=5; a < dv3k_buffer.length; a++)
-              {
-                cout << hex << dv3k_buffer.data[a];
-              }
-              cout << endl;
+              cout << "--- DV3K (VersID): " << dv3k_buffer.data+5 << endl;
             }
           }
           /* test if buffer contains encoded frame (AMBE) */
@@ -295,8 +256,7 @@ namespace {
             AudioEncoder::writeEncodedSamples(unpacked.data, unpacked.length);                        
           }
           else if (type == DV3K_TYPE_AUDIO)
-          {
-            // unpack decoded frame
+          {// unpack decoded frame
             Buffer<> unpacked = unpackDecoded(dv3k_buffer);
             // pass decoded samples into sink
             AudioDecoder::sinkWriteSamples((float *)unpacked.data, unpacked.length);
