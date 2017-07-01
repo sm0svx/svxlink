@@ -97,10 +97,10 @@ namespace {
 
         virtual void init()
         {
-            char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
-            Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
-            m_state = RESET;
-            send(init_packet);
+          char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
+          Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
+          m_state = RESET;
+          send(init_packet);
         }
         
         virtual void prodid()
@@ -120,6 +120,17 @@ namespace {
           send(versid_packet);
           m_state = VERSID;  /* state is requesting version-id of Stick */
         } /* versid */
+         
+        virtual void ratep()
+        {
+          char DV3K_REQ_RATEP[] = {DV3K_START_BYTE, 0x00, 0x07, 
+                                   DV3K_TYPE_CONTROL, 0x40, 0x0b, 0x03, 
+                                   0x09, 0x21, 0x32, 0x00};
+          Buffer<> ratep_packet = Buffer<>(DV3K_REQ_RATEP,sizeof(DV3K_REQ_RATEP));
+          send(ratep_packet);
+          m_state = RATEP;  /* state is requesting version-id of Stick */
+        } /* versid */
+
  
         /* method to prepare incoming frames from BM network to be decoded later */       
         virtual Buffer<> packForDecoding(const Buffer<> &buffer) { return buffer; }
@@ -133,7 +144,7 @@ namespace {
           size_t b = 0;
           for (int a=4; a < (int)buffer.length; a+=2)
           {
-            uint16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
+            int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
             t[b++] =  (float)w / 32768.0;
           }
           Buffer<float> audiobuf(t, b);
@@ -155,11 +166,16 @@ namespace {
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-          const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
-          const int DV3K_AMBE_HEADERFRAME_LEN = 6;
+         // const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
+          const int DV3K_AMBE_HEADERFRAME_LEN = 7;
           const int AMBE_FRAME_LEN = 9;
-
-          char ambe_to_dv3k[DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN];
+          const unsigned char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0e, 
+                                                          DV3K_TYPE_AMBE, 0x40, 0x01, 0x48};
+          
+          const unsigned char DV3K_WAIT[] = {0x03, 0xa0};
+          const int DV3K_WAIT_LEN = 2;
+          
+          char ambe_to_dv3k[DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN + DV3K_WAIT_LEN];
           Buffer<> buffer;
           buffer.data = reinterpret_cast<char*>(buf);
           buffer.length = size;
@@ -170,7 +186,8 @@ namespace {
           {
             memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME, DV3K_AMBE_HEADERFRAME_LEN);
             memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAME_LEN, buffer.data+a, AMBE_FRAME_LEN);
-            ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN);
+            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN, DV3K_WAIT, DV3K_WAIT_LEN);
+            ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN + DV3K_WAIT_LEN);
             // sending HEADER + 9 bytes to DV3K-Adapter
             send(ambe_frame);
           }
@@ -248,15 +265,19 @@ namespace {
               prodid();
             }
             else if (m_state == PRODID)
-            {
-              m_state = VERSID;          /* give out product id of DV3k */
+            { /* give out product name of DV3k */
               cout << "--- DV3K (ProdID): "  << dv3k_buffer.data+5 << endl;
               versid();
             }
             else if (m_state == VERSID)
-            {
-              m_state = READY;            /* give out version of DV3k */
+            { /* give out version of DV3k */
               cout << "--- DV3K (VersID): " << dv3k_buffer.data+5 << endl;
+              ratep();
+            }
+            else if (m_state == RATEP)
+            {
+              cout << "--- DV3k: Ready" << endl;
+              m_state = READY;            
             }
           }
           /* test if buffer contains encoded frame (AMBE) */
@@ -313,7 +334,7 @@ namespace {
       AudioCodecAmbeDv3k(void) : m_state(OFFLINE) {}
 
     private:
-      enum STATE {OFFLINE, RESET, INIT, PRODID, VERSID, READY, WARNING, ERROR};
+      enum STATE {OFFLINE, RESET, INIT, PRODID, VERSID, RATEP, READY, WARNING, ERROR};
       STATE m_state;
       uint32_t stored_bufferlen;
       int act_framelen;
