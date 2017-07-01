@@ -422,12 +422,12 @@ bool RewindLogic::initialize(void)
   m_logic_con_out = prev_src;
 
     // upsampling from 8kHz to 16kHz
-#if INTERNAL_SAMPLE_RATE == 16000
+//#if INTERNAL_SAMPLE_RATE == 16000
   AudioInterpolator *up = new AudioInterpolator(2, coeff_16_8, coeff_16_8_taps);
   m_logic_con_out->registerSink(up, true);
   m_logic_con_out = up;
-#endif
-
+//#endif
+          
   if (!LogicBase::initialize())
   {
     return false;
@@ -515,8 +515,8 @@ void RewindLogic::flushEncodedAudio(void)
 void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
-       << addr << " port=" << port << " count=" << count << endl;
+ // cout << "### " << name() << ": RewindLogic::onDataReceived: addr="
+   //    << addr << " port=" << port << " count=" << count << endl;
 
   struct RewindData* rd = reinterpret_cast<RewindData*>(buf);
 
@@ -597,8 +597,9 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_DMR_AUDIO_FRAME:
-      cout << "-- dmr audio frame received" << endl;
+     // cout << "-- dmr audio frame received" << endl;
       handleAmbeAudiopacket(rd);
+      m_dec->flushEncodedSamples();
       return;
 
     case REWIND_TYPE_SUPER_HEADER:
@@ -612,6 +613,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
 
     case REWIND_TYPE_DMR_STOP_FRAME:
       cout << "--> qso end" << endl;
+      m_dec->flushEncodedSamples();
       return;
 
     default:
@@ -629,6 +631,14 @@ void RewindLogic::handleSessionData(uint8_t data[])
        << endl;
   srcCall = (char*)shd->sourceCall;
   srcId = shd->sourceID;
+  
+ /* std::map<int, std::string>::iterator it = stninfo.find(srcId);
+  if (it == stninfo.end())
+  {
+    cout << "insert srcId=" << srcId << "|" << endl;  
+    stninfo.insert ( std::pair<int, std::string>(srcId, "                           ") );
+  }
+  */
 } /* RewindLogic::handleSessionData */
 
 
@@ -645,26 +655,28 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   uint8_t sp[11];
   int off;
   std::string ts;
-
-  cout << ">" << dec
-  << data[0] << ","
-  << data[1] << ","
-  << data[2] << ","
-  << data[3] << ","
-  << data[4] << ","
-  << data[5] << ","
-  << data[6] << ","
-  << data[7] << ","
-  << data[8] << ","
-  << data[9] << "," << endl;
-  printf("%d %d %d %d %d %d %d %d %d %d\n",data[0],data[1],data[2],data[3],
-                                            data[4],data[5],data[6],data[7],
-                                            data[8],data[9]);
-
-  if (stninfo.find(srcId) == stninfo.end())
+  cout << ">" << dec <<
+  data[0] << "," <<
+  data[1] << "," <<
+  data[2] << "," << 
+  data[3] << "," <<
+  data[4] << "," <<
+  data[5] << "," <<
+  data[6] << "," <<
+  data[7] << "," <<
+  data[8] << "," <<
+  data[9] << endl;
+  printf("%d, ", data[0]);
+  cout << "SRCID=" << srcId << "???"<< endl; 
+  
+  std::map<int, std::string>::iterator it = stninfo.find(srcId);
+  
+  if (it == stninfo.end())
   {
-    stninfo.insert ( std::pair<int, std::string>(srcId, "                     ") );
+    stninfo.insert ( std::pair<int, std::string>(srcId, "                           ") );
+    cout << "insert:" << srcId << ",      " << endl; 
   }
+  
   switch (data[0]) {
     case 0x04:
       memcpy(sp,data+3,6);
@@ -672,16 +684,12 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
       (stninfo.find(srcId)->second).replace(0, 6, ts);
       break;
     case 0x05:
-      memcpy(sp,data+2,7);
-      ts = (char*)sp;
-      (stninfo.find(srcId)->second).replace(6, 7, ts);
-      break;
     case 0x06:
     case 0x07:
       memcpy(sp,data+2,7);
       ts = (char*)sp;
       off = 7 * (data[0] - 4) - 1;
-      (stninfo.find(srcId)->second).replace(off, 7, ts);
+    //  (stninfo.find(srcId)->second).replace(off, 7, ts);
       cout << "STATIONINFO: " << stninfo.find(srcId)->second << endl;
       break;
   }
@@ -753,6 +761,7 @@ void RewindLogic::reconnect(Timer *t)
 
 void RewindLogic::allEncodedSamplesFlushed(void)
 {
+ // m_dec->allEncodedSamplesFlushed();
 } /* RewindLogic::allEncodedSamplesFlushed */
 
 
