@@ -92,7 +92,7 @@ namespace {
             T *data;
             size_t length;
         };
-
+        
         static AudioCodecAmbeDv3k *create(const Options &options);
 
         virtual void init()
@@ -125,11 +125,28 @@ namespace {
         virtual Buffer<> packForDecoding(const Buffer<> &buffer) { return buffer; }
 
         /* method to handle prepared encoded Data from BM network and send them to AudioSink */
-        virtual Buffer<> unpackDecoded(const Buffer<> &buffer) { return buffer; }
+        virtual Buffer<float> unpackDecoded(const Buffer<> &buffer)
+        { 
+          unsigned char *s8_samples = reinterpret_cast<unsigned char *>(buffer.data);
+          int count = buffer.length / 2;
+          float t[count];
+          size_t b = 0;
+          for (int a=4; a < (int)buffer.length; a+=2)
+          {
+            uint16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
+            t[b++] =  (float)w / 32768.0;
+          }
+          Buffer<float> audiobuf(t, b);
+          return audiobuf; 
+        }
 
         /* method to prepare incoming Audio frames from local RX to be encoded later */
         virtual Buffer<> packForEncoding(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
-        virtual Buffer<> unpackEncoded(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
+        virtual Buffer<> unpackEncoded(const Buffer<> &buffer) 
+        { 
+          cout << "unimplemented" << endl; 
+          return Buffer<>();
+        }
 
         /**
          * @brief 	Write encoded samples into the decoder
@@ -138,23 +155,22 @@ namespace {
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-          const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0c, DV3K_TYPE_AMBE, 0x01, 0x48};
+          const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
           const int DV3K_AMBE_HEADERFRAME_LEN = 6;
-          const int AMBE_BYTE_LEN = 9;
+          const int AMBE_FRAME_LEN = 9;
 
-          char ambe_to_dv3k[16];
-          Buffer<> b;
+          char ambe_to_dv3k[DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN];
+          Buffer<> buffer;
+          buffer.data = reinterpret_cast<char*>(buf);
+          buffer.length = size;
           Buffer<>ambe_frame;
-          b.data = (char*)buf;
-          b.length = (size_t)size;
-          Buffer<> buffer = packForDecoding(b);
 
            // devide the 27 bytes into a 9 byte long frame, sends them to the dv3k-decoder
-          for (int a=0; a<=27; a+=9)
+          for (int a=0; a<27; a+=AMBE_FRAME_LEN)
           {
             memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME, DV3K_AMBE_HEADERFRAME_LEN);
-            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAME_LEN, buffer.data+a, AMBE_BYTE_LEN);
-            ambe_frame = Buffer<>(ambe_to_dv3k, sizeof(ambe_to_dv3k));
+            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAME_LEN, buffer.data+a, AMBE_FRAME_LEN);
+            ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN);
             // sending HEADER + 9 bytes to DV3K-Adapter
             send(ambe_frame);
           }
@@ -164,23 +180,21 @@ namespace {
 
         virtual void callback(const Buffer<> &buffer)
         {
-          
           uint32_t tlen = 0;
           int type = 0;
-          Buffer<> dv3k_buffer = Buffer<>(new char[1024], 1024);
+          Buffer<> dv3k_buffer = Buffer<>(new char[512], sizeof(size_t));
 
           if (buffer.data[0] == DV3K_START_BYTE 
                            && buffer.length >= DV3K_HEADER_LEN)
           {
             tlen = buffer.data[2] + buffer.data[1] * 256;
-            type = buffer.data[3];
             stored_bufferlen = 0;
             
              // is it only a part of the 160byte audio frame?
             if (tlen + DV3K_HEADER_LEN > buffer.length)
             {
                // store incoming data to a temporary buffer
-              t_buffer = Buffer<>(new char[1024], 1024);
+              t_buffer = Buffer<>(new char[512], sizeof(size_t));
               memcpy(t_buffer.data, buffer.data, buffer.length);
               t_buffer.length = buffer.length;          
               stored_bufferlen = tlen; 
@@ -195,8 +209,8 @@ namespace {
             t_buffer.length += buffer.length;
             t_b = t_buffer.length;
 
-            /* decoded audio frames are 160 bytes long / 164 bytes with header
-               cut after 164 bytes and send them to the 
+            /* decoded audio frames are 320 bytes long / 324 bytes with header
+               cut after 324 bytes and send them to the 
                packForDecoder + AudioDecoder::sinkWriteSamples */
             if (t_buffer.length >= stored_bufferlen + DV3K_HEADER_LEN)
             {
@@ -210,17 +224,16 @@ namespace {
                         t_buffer.length - stored_bufferlen - DV3K_HEADER_LEN);
         
               t_buffer.length = t_b - stored_bufferlen - DV3K_HEADER_LEN;
-              t_buffer.data[t_buffer.length - stored_bufferlen - DV3K_HEADER_LEN + 1] = '\0';
               stored_bufferlen = t_buffer.data[2] + t_buffer.data[1] * 256;
             }
             else return;
           } 
           else
           {
-            cout << "*** ERROR: DV3k frame to short, re-init." << endl;
+            cout << "*** ERROR: DV3k frame to short." << endl;
             cout << "stored_bufferlen=" << stored_bufferlen << ",buffer.len="
                 << buffer.length << ", t_buffer.len=" << t_buffer.length << endl;
-            init();
+            //init();
             return;
           }
 
@@ -256,10 +269,12 @@ namespace {
             AudioEncoder::writeEncodedSamples(unpacked.data, unpacked.length);                        
           }
           else if (type == DV3K_TYPE_AUDIO)
-          {// unpack decoded frame
-            Buffer<> unpacked = unpackDecoded(dv3k_buffer);
+          {
+            // unpack decoded frame
+            Buffer<float> unpacked = unpackDecoded(dv3k_buffer);
+
             // pass decoded samples into sink
-            AudioDecoder::sinkWriteSamples((float *)unpacked.data, unpacked.length);
+            AudioDecoder::sinkWriteSamples(unpacked.data, unpacked.length);
           }
           else
           {
@@ -280,6 +295,7 @@ namespace {
       static const char DV3K_TYPE_AMBE = 0x01;
       static const char DV3K_TYPE_AUDIO = 0x02;
       static const char DV3K_HEADER_LEN = 0x04;
+      static const char DSTAR_AUDIO_BLOCK_SIZE=160;
       
       static const char DV3K_START_BYTE = 0x61;
 
@@ -338,15 +354,13 @@ namespace {
         {
           throw "*** ERROR: Parameter AMBESERVER_PORT not defined.";
         }
+        cout << "init udp\n";
         udpInit();
       }
 
       /* initialize the udp socket */
       void udpInit(void)
       {
-        ambesock = new UdpSocket(ambeport);
-        ambesock->dataReceived.connect(mem_fun(*this, &AudioCodecAmbeDv3kAmbeServer::callbackUdp));
-
         if (ip_addr.isEmpty())
         {
           dns = new DnsLookup(ambehost);
@@ -354,6 +368,11 @@ namespace {
                 &AudioCodecAmbeDv3kAmbeServer::dnsResultsReady));
           return;
         }
+
+        delete ambesock;
+        ambesock = new UdpSocket();
+        ambesock->dataReceived.connect(mem_fun(*this, 
+                         &AudioCodecAmbeDv3kAmbeServer::callbackUdp));
 
         init();
       } /* udpInit */
@@ -368,9 +387,11 @@ namespace {
         if (result.empty() || result[0].isEmpty())
         {
           ip_addr.clear();
+          cout << "*** ERROR: Could not found host." << endl;
           return;
         }
         ip_addr = result[0];
+        udpInit();
       } /* dnsResultReady */
 
       virtual void send(const Buffer<> &packet) 
@@ -389,7 +410,7 @@ namespace {
       virtual void callbackUdp(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
       {
-        callback(Buffer<>(static_cast<char *>(buf),count));
+        callback(Buffer<>(reinterpret_cast<char *>(buf), count));
       }
     
     private:
