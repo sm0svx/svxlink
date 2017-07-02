@@ -145,14 +145,19 @@ namespace {
           for (int a=4; a < (int)buffer.length; a+=2)
           {
             int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
-            t[b++] =  (float)w / 32768.0;
+            t[b++] =  (float)w / 16384.0;
           }
           Buffer<float> audiobuf(t, b);
-          return audiobuf; 
+          return audiobuf;
         }
 
         /* method to prepare incoming Audio frames from local RX to be encoded later */
-        virtual Buffer<> packForEncoding(const Buffer<> &buffer) { assert(!"unimplemented"); return Buffer<>(); }
+        virtual Buffer<> packForEncoding(const Buffer<> &buffer) 
+        { 
+          
+          return buffer;
+        }
+        
         virtual Buffer<> unpackEncoded(const Buffer<> &buffer) 
         { 
           cout << "unimplemented" << endl; 
@@ -249,7 +254,8 @@ namespace {
           {
             cout << "*** ERROR: DV3k frame to short." << endl;
             cout << "stored_bufferlen=" << stored_bufferlen << ",buffer.len="
-                << buffer.length << ", t_buffer.len=" << t_buffer.length << endl;
+                 << buffer.length << ", t_buffer.len=" << t_buffer.length 
+                 << endl;
             //init();
             return;
           }
@@ -260,23 +266,27 @@ namespace {
           if (type == DV3K_TYPE_CONTROL)
           {
             if (m_state == RESET)
-            {
+            { 
+              /* reset the device just bto be sure */
               cout << "--- DV3K: Reset OK" << endl;
               prodid();
             }
             else if (m_state == PRODID)
-            { /* give out product name of DV3k */
+            { 
+              /* give out product name of DV3k */
               cout << "--- DV3K (ProdID): "  << dv3k_buffer.data+5 << endl;
               versid();
             }
             else if (m_state == VERSID)
-            { /* give out version of DV3k */
+            { 
+              /* give out version of DV3k */
               cout << "--- DV3K (VersID): " << dv3k_buffer.data+5 << endl;
               ratep();
             }
             else if (m_state == RATEP)
-            {
-              cout << "--- DV3k: Ready" << endl;
+            { 
+              /* sending configuration/rate params to DV3k was OK*/
+              cout << "--- DV3K: Ready" << endl;
               m_state = READY;            
             }
           }
@@ -287,8 +297,9 @@ namespace {
             Buffer<> unpacked = unpackEncoded(dv3k_buffer);
             
             // forward encoded samples
-            AudioEncoder::writeEncodedSamples(unpacked.data, unpacked.length);                        
-          }
+            AudioEncoder::writeEncodedSamples(unpacked.data, unpacked.length);
+          } 
+          /* or is a raw 8kHz audio frame */
           else if (type == DV3K_TYPE_AUDIO)
           {
             // unpack decoded frame
@@ -299,14 +310,26 @@ namespace {
           }
           else
           {
+            /* frame is unknown */
             cout << "--- WARNING: received unkown DV3K type." << endl;
           }
         }
-
+        
+        /* method is called up to send encoded AMBE frames to BM network */
         virtual int writeSamples(const float *samples, int count)
         {
-          assert(!"unimplemented");
-          Buffer<> packet = packForEncoding(Buffer<>((char*)samples,count));
+          Buffer<> ambe_buf;
+          size_t len = 0;
+          
+          for (uint16_t a=0; a<count; a++)
+          {
+            int16_t w = (int) (samples[a] * 32768);
+            ambe_buf.data[len++] = w >> 8;
+            ambe_buf.data[len++] = w & 0xff;
+          }
+          ambe_buf.length = len - 1;
+           
+          Buffer<> packet = packForEncoding(ambe_buf);
           send(packet);
           return count;
         }
@@ -334,7 +357,9 @@ namespace {
       AudioCodecAmbeDv3k(void) : m_state(OFFLINE) {}
 
     private:
-      enum STATE {OFFLINE, RESET, INIT, PRODID, VERSID, RATEP, READY, WARNING, ERROR};
+      enum STATE {
+        OFFLINE, RESET, INIT, PRODID, VERSID, RATEP, READY, WARNING, ERROR
+      };
       STATE m_state;
       uint32_t stored_bufferlen;
       int act_framelen;
@@ -375,7 +400,6 @@ namespace {
         {
           throw "*** ERROR: Parameter AMBESERVER_PORT not defined.";
         }
-        cout << "init udp\n";
         udpInit();
       }
 
@@ -395,6 +419,8 @@ namespace {
         ambesock->dataReceived.connect(mem_fun(*this, 
                          &AudioCodecAmbeDv3kAmbeServer::callbackUdp));
 
+        cout << "--- DV3k: UdpSocket " << ambehost << ":" << ambeport 
+             << " created." << endl;
         init();
       } /* udpInit */
       
