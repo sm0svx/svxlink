@@ -132,7 +132,8 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
     m_reconnect_timer(30000, Timer::TYPE_PERIODIC, false),
-    sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0)
+    sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0),
+    inTransmission(false)
 {
 } /* RewindLogic::RewindLogic */
 
@@ -502,6 +503,32 @@ void RewindLogic::dnsResultsReady(DnsLookup& dns_lookup)
 void RewindLogic::sendEncodedAudio(const void *buf, int count)
 {
 
+   // if not in transmission sending SuperHeader 3 times
+  if (!inTransmission)
+  {
+    size_t size = sizeof(struct RewindData) + sizeof(struct RewindSuperHeader);
+    struct RewindData* data = (struct RewindData*)alloca(size);
+    
+    memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+    data->type   = htole16(REWIND_OPTION_SUPER_HEADER);
+    data->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
+    data->length = htole16(sizeof(struct RewindSuperHeader));
+    
+    struct RewindSuperHeader* shd = (struct RewindSuperHeader*)data->data;
+    memcpy(shd->destinationCall, "\0", 1);
+    memcpy(shd->sourceCall, m_callsign.c_str(), m_callsign.length());
+    shd->type = 0;
+    shd->sourceID = atoi(m_id.c_str());
+
+    for (int a=0; a<3; a++)
+    {
+      sendMsg(data, size);
+    }
+    inTransmission = true;
+  }
+  
+  //
+  
 
 } /* RewindLogic::sendEncodedAudio */
 
@@ -666,8 +693,9 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   data[7] << "," <<
   data[8] << "," <<
   data[9] << endl;
-  printf("%d, ", data[0]);
-  cout << "SRCID=" << srcId << "???"<< endl; 
+  printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n", 
+     data[0], data[1],data[2],data[3],data[4], data[5],data[6],data[7],data[8],data[9]);
+  cout << "SRCID=" << srcId << endl; 
   
   std::map<int, std::string>::iterator it = stninfo.find(srcId);
   
