@@ -57,8 +57,8 @@ set(EXPINC AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h
            AsyncAudioDecoder.h AsyncAudioRecorder.h
            AsyncAudioJitterFifo.h AsyncAudioDeviceFactory.h
            AsyncAudioDevice.h AsyncAudioNoiseAdder.h AsyncAudioGenerator.h
-           AsyncAudioRecoder.h AsyncAudioCodecAmbe.h
-           AsyncAudioEncoderAmbe.h AsyncAudioDecoderAmbe.h)
+           AsyncAudioCodecAmbe.h AsyncAudioEncoderAmbe.h 
+           AsyncAudioDecoderAmbe.h)
 
 set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioProcessor.cpp AsyncAudioCompressor.cpp

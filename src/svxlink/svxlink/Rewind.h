@@ -77,7 +77,7 @@ extern "C"
 #define REWIND_OPTION_SUPER_HEADER  (1 << 0)
 #define REWIND_OPTION_LINEAR_FRAME  (1 << 1)
 
-#define REWIND_CALL_LENGTH  10
+#define REWIND_DMR_AUDIO_FRAME_LENGTH  9
 
 struct RewindVersionData
 {
