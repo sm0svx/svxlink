@@ -219,6 +219,7 @@ class RewindLogic : public LogicBase
     std::string           srcCall;
     uint32_t              srcId;
     std::list<int>        tglist;
+    bool                  inTransmission;
 
 
     RewindLogic(const RewindLogic&);
