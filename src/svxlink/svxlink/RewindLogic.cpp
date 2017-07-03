@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioInterpolator.h>
+#include <AsyncAudioPassthrough.h>
 #include <AsyncUdpSocket.h>
 #include <common.h>
 
@@ -146,7 +147,7 @@ RewindLogic::~RewindLogic(void)
   delete dns;
   delete m_logic_con_in;
   delete m_logic_con_out;
- // delete m_logic_enc;
+  delete m_logic_enc;
   delete m_dec;
 } /* RewindLogic::~RewindLogic */
 
@@ -342,36 +343,8 @@ bool RewindLogic::initialize(void)
   m_ping_timer.expired.connect(
      mem_fun(*this, &RewindLogic::pingHandler));
 
-  m_logic_con_in = new AudioSink;
-  AudioSource *prev_sc = new AudioSource;
- // AudioSource *prev_sc = m_logic_con_in;
-  prev_sc->registerSink(m_logic_con_in,true);
-
-#if INTERNAL_SAMPLE_RATE == 16000
-  {
-    AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
-    prev_sc->registerSink(d1, true);
-    prev_sc = d1;
-  }
-#endif
-
   // create the Rewind recoder device, DV3k USB stick or DSD lib
   string m_ambe_handler = "AMBE";
-
-/*  m_logic_enc = Async::AudioEncoder::create(m_ambe_handler);
-  if (m_logic_enc == 0)
-  {
-    cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
-    return false;
-  }
-
-  m_logic_enc->registerSource(prev_sc);
-  m_logic_enc->writeEncodedSamples.connect(
-      mem_fun(*this, &RewindLogic::sendEncodedAudio));
-  m_logic_enc->flushEncodedSamples.connect(
-      mem_fun(*this, &RewindLogic::flushEncodedAudio));
-  cout << "Loading Encoder " << m_logic_enc->name() << endl;
-*/
 
   // sending options to audio encoder
   string opt_prefix = m_ambe_handler + "_";
@@ -387,6 +360,42 @@ bool RewindLogic::initialize(void)
       string opt_name((*nit).substr(opt_prefix.size()));
       m_dec_options[opt_name]=opt_value;
     }
+  }
+
+  AudioSource *prev_sc = new AudioSource;
+  m_logic_con_in = new AudioSink;
+  prev_sc->registerSink(m_logic_con_in);
+
+
+#if INTERNAL_SAMPLE_RATE == 16000
+  {
+    AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
+    prev_sc->registerSink(d1, true);
+    prev_sc = d1;
+  }
+#endif
+
+  //AudioSource *prev_sc = new AudioSource;
+  //AudioSource *prev_sc = m_logic_con_in;
+  // prev_sc->registerSink(m_logic_con_in, true);
+
+  try {
+    m_logic_enc = Async::AudioEncoder::create(m_ambe_handler,m_dec_options);
+    if (m_logic_enc == 0)
+    {
+      cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
+      return false;
+    }
+
+    m_logic_enc->registerSource(prev_sc);
+    m_logic_enc->writeEncodedSamples.connect(
+        mem_fun(*this, &RewindLogic::sendEncodedAudio));
+    m_logic_enc->flushEncodedSamples.connect(
+        mem_fun(*this, &RewindLogic::flushEncodedAudio));
+    cout << "Loading Encoder " << m_logic_enc->name() << endl;
+  } catch(const char *f) {
+    cerr << f << endl;
+    return false;
   }
 
     // Create audio decoder
@@ -428,7 +437,7 @@ bool RewindLogic::initialize(void)
   m_logic_con_out->registerSink(up, true);
   m_logic_con_out = up;
 //#endif
-          
+
   if (!LogicBase::initialize())
   {
     return false;
@@ -503,21 +512,22 @@ void RewindLogic::dnsResultsReady(DnsLookup& dns_lookup)
 void RewindLogic::sendEncodedAudio(const void *buf, int count)
 {
 
+  cout << "sendEncodedAudio\n";
    // if not in transmission sending SuperHeader 3 times
   if (!inTransmission)
   {
     size_t size = sizeof(struct RewindData) + sizeof(struct RewindSuperHeader);
     struct RewindData* data = (struct RewindData*)alloca(size);
-    
+
     memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
     data->type   = htole16(REWIND_OPTION_SUPER_HEADER);
     data->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
     data->length = htole16(sizeof(struct RewindSuperHeader));
-    
+
     struct RewindSuperHeader* shd = (struct RewindSuperHeader*)data->data;
     memcpy(shd->destinationCall, "\0", 1);
     memcpy(shd->sourceCall, m_callsign.c_str(), m_callsign.length());
-    shd->type = 0;
+    shd->type = SESSION_TYPE_GROUP_VOICE;
     shd->sourceID = atoi(m_id.c_str());
 
     for (int a=0; a<3; a++)
@@ -526,10 +536,16 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
     }
     inTransmission = true;
   }
-  
-  //
-  
 
+  size_t fsize = sizeof(struct RewindData);
+  struct RewindData* fdata = (struct RewindData*)alloca(fsize);
+
+  memcpy(fdata->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  fdata->type   = htole16(REWIND_TYPE_DMR_AUDIO_FRAME);
+  fdata->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
+  fdata->length = htole16(REWIND_DMR_AUDIO_FRAME_LENGTH);
+
+  sendMsg(fdata, fsize);
 } /* RewindLogic::sendEncodedAudio */
 
 
@@ -554,7 +570,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_CHALLENGE:
-      cout << "*** rewind type Challenge" << endl;
+      cout << "*** rewind type challenge" << endl;
       authenticate(rd->data, m_auth_key);
       subscribed = 0;
       return;
@@ -658,11 +674,11 @@ void RewindLogic::handleSessionData(uint8_t data[])
        << endl;
   srcCall = (char*)shd->sourceCall;
   srcId = shd->sourceID;
-  
+
  /* std::map<int, std::string>::iterator it = stninfo.find(srcId);
   if (it == stninfo.end())
   {
-    cout << "insert srcId=" << srcId << "|" << endl;  
+    cout << "insert srcId=" << srcId << "|" << endl;
     stninfo.insert ( std::pair<int, std::string>(srcId, "                           ") );
   }
   */
@@ -685,7 +701,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   cout << ">" << dec <<
   data[0] << "," <<
   data[1] << "," <<
-  data[2] << "," << 
+  data[2] << "," <<
   data[3] << "," <<
   data[4] << "," <<
   data[5] << "," <<
@@ -693,18 +709,18 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   data[7] << "," <<
   data[8] << "," <<
   data[9] << endl;
-  printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n", 
+  printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
      data[0], data[1],data[2],data[3],data[4], data[5],data[6],data[7],data[8],data[9]);
-  cout << "SRCID=" << srcId << endl; 
-  
+  cout << "SRCID=" << srcId << endl;
+
   std::map<int, std::string>::iterator it = stninfo.find(srcId);
-  
+
   if (it == stninfo.end())
   {
     stninfo.insert ( std::pair<int, std::string>(srcId, "                           ") );
-    cout << "insert:" << srcId << ",      " << endl; 
+    cout << "insert:" << srcId << ",      " << endl;
   }
-  
+
   switch (data[0]) {
     case 0x04:
       memcpy(sp,data+3,6);
