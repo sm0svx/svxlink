@@ -155,7 +155,19 @@ namespace {
         /* method to prepare incoming Audio frames from local RX to be encoded later */
         virtual Buffer<> packForEncoding(const Buffer<> &buffer)
         {
-          return buffer;
+          const unsigned char DV3K_VOICE_FRAME[] = {DV3K_START_BYTE, 0x00, 0xA0,
+                                               DV3K_TYPE_AUDIO};
+         // const int DV3K_VOICE_FRAME_LEN = DSTAR_AUDIO_BLOCK_SIZE + 4;
+          
+          Buffer<> dv3k_buffer = 
+               Buffer<>(new char[DSTAR_AUDIO_BLOCK_SIZE*2 + 4], sizeof(size_t));
+          
+          memcpy(dv3k_buffer.data, DV3K_VOICE_FRAME, sizeof(DV3K_VOICE_FRAME));
+          memcpy(dv3k_buffer.data + sizeof(DV3K_VOICE_FRAME), buffer.data, 
+              DSTAR_AUDIO_BLOCK_SIZE);
+          dv3k_buffer.length = DSTAR_AUDIO_BLOCK_SIZE;
+          
+          return dv3k_buffer;
         }
 
         virtual Buffer<> unpackEncoded(const Buffer<> &buffer)
@@ -318,21 +330,32 @@ namespace {
         /* method is called up to send encoded AMBE frames to BM network */
         virtual int writeSamples(const float *samples, int count)
         {
-          cout << "size =" << count << endl;
+          
           Buffer<> ambe_buf;
-          size_t len = 0;
-          char t_data[count * 2];
+          char t_data[160];
           int32_t w;
-          for (uint16_t a=0; a < count; a++)
+          
+          cout << "size =" << count << endl;
+           // sore incoming floats in a buffer until 160 or more samples 
+           // are reached
+          memcpy(inbuf + bufcnt, samples, count);
+          bufcnt+=count;
+          
+          while(bufcnt >= 320)
           {
-            w = (int32_t) (samples[a] * 16384.0);
-            t_data[len++] = (char) ((w & 0xff00) >> 8);
-            t_data[len++] = (char) (w & 0x00ff);
+            for (uint16_t a=0; a < 320; a+=2)
+            {
+              w = (int32_t) (inbuf[a] + inbuf[a+1]) * 8192.0;
+              t_data[a] = (char) ((w & 0xff00) >> 8);
+              t_data[a+1] = (char) (w & 0x00ff);
+            }
+            ambe_buf.data=t_data;
+            ambe_buf.length = 320;
+            Buffer<> packet = packForEncoding(ambe_buf);
+            send(packet);
+            bufcnt -= 320;
+            memmove(inbuf, inbuf+320, bufcnt);
           }
-          ambe_buf.data=t_data;
-          ambe_buf.length = len - 1;
-          Buffer<> packet = packForEncoding(ambe_buf);
-          send(packet);
           return count;
         }
 
@@ -367,6 +390,8 @@ namespace {
       int act_framelen;
       Buffer<> t_buffer;
       int t_b;
+      float *inbuf;
+      uint32_t bufcnt;
 
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
       AudioCodecAmbeDv3k& operator=(const AudioCodecAmbeDv3k&);
