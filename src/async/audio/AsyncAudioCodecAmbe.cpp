@@ -1,4 +1,5 @@
 #include <AsyncAudioCodecAmbe.h>
+#include <AsyncAudioDecimator.h>
 #include <AsyncSerial.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncIpAddress.h>
@@ -129,7 +130,7 @@ namespace {
           Buffer<> ratep_packet = Buffer<>(DV3K_REQ_RATEP,sizeof(DV3K_REQ_RATEP));
           send(ratep_packet);
           m_state = RATEP;  /* state is requesting version-id of Stick */
-        } /* versid */
+        } /* ratep */
 
 
         /* method to prepare incoming frames from BM network to be decoded later */
@@ -317,17 +318,19 @@ namespace {
         /* method is called up to send encoded AMBE frames to BM network */
         virtual int writeSamples(const float *samples, int count)
         {
+          cout << "size =" << count << endl;
           Buffer<> ambe_buf;
           size_t len = 0;
-
-          for (uint16_t a=0; a<count; a++)
+          char t_data[count * 2];
+          int32_t w;
+          for (uint16_t a=0; a < count; a++)
           {
-            int16_t w = (int) (samples[a] * 32768);
-            ambe_buf.data[len++] = w >> 8;
-            ambe_buf.data[len++] = w & 0xff;
+            w = (int32_t) (samples[a] * 16384.0);
+            t_data[len++] = (char) ((w & 0xff00) >> 8);
+            t_data[len++] = (char) (w & 0x00ff);
           }
+          ambe_buf.data=t_data;
           ambe_buf.length = len - 1;
-
           Buffer<> packet = packForEncoding(ambe_buf);
           send(packet);
           return count;
