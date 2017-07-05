@@ -132,22 +132,24 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
     rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
-    m_reconnect_timer(30000, Timer::TYPE_PERIODIC, false),
+    m_reconnect_timer(15000, Timer::TYPE_PERIODIC, false),
     sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0),
-    inTransmission(false)
+    inTransmission(false),
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
 {
+  m_reconnect_timer.expired.connect(mem_fun(*this, &RewindLogic::reconnect));
+  m_flush_timeout_timer.expired.connect(
+      mem_fun(*this, &RewindLogic::flushTimeout));
 } /* RewindLogic::RewindLogic */
 
 
 RewindLogic::~RewindLogic(void)
 {
   delete m_udp_sock;
-  m_ping_timer = 0;
-  m_reconnect_timer = 0;
   delete dns;
   delete m_logic_con_in;
   delete m_logic_con_out;
-  delete m_logic_enc;
+  //delete m_logic_enc;
   delete m_dec;
 } /* RewindLogic::~RewindLogic */
 
@@ -197,7 +199,12 @@ bool RewindLogic::initialize(void)
     return false;
   }
 
-  if (!cfg().getValue(name(), "RX_FREQU", m_rxfreq))
+  if (!cfg().getValue(name(), "RECONNECT_INTERVAL", m_rc_interval))
+  {
+    m_rc_interval = "16000";
+  }
+
+  /*if (!cfg().getValue(name(), "RX_FREQU", m_rxfreq))
   {
     cerr << "*** ERROR: " << name() << "/RX_FREQU missing in configuration"
          << ", e.g. RX_FREQU=430500000"  << endl;
@@ -232,11 +239,6 @@ bool RewindLogic::initialize(void)
     cerr << "*** ERROR: " << name() << "/POWER wrong length: " << m_power
          << endl;
     return false;
-  }
-
-  if (!cfg().getValue(name(), "RECONNECT_INTERVAL", m_rc_interval))
-  {
-    m_rc_interval = "30000";
   }
 
   if (!cfg().getValue(name(), "COLORCODE", m_color))
@@ -285,7 +287,7 @@ bool RewindLogic::initialize(void)
     cerr << "*** ERROR: " << name() << "/HEIGHT wrong: " << m_height
          << endl;
     return false;
-  }
+  } */
 
   if (!cfg().getValue(name(), "LOCATION", m_location))
   {
@@ -362,41 +364,32 @@ bool RewindLogic::initialize(void)
     }
   }
 
-  AudioSource *prev_sc = new AudioSource;
-  m_logic_con_in = new AudioSink;
-  prev_sc->registerSink(m_logic_con_in);
-
-
-#if INTERNAL_SAMPLE_RATE == 16000
+/*#if INTERNAL_SAMPLE_RATE == 16000
   {
     AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
     prev_sc->registerSink(d1, true);
     prev_sc = d1;
   }
-#endif
-
-  //AudioSource *prev_sc = new AudioSource;
-  //AudioSource *prev_sc = m_logic_con_in;
-  // prev_sc->registerSink(m_logic_con_in, true);
+#endif*/
 
   try {
-    m_logic_enc = Async::AudioEncoder::create(m_ambe_handler,m_dec_options);
-    if (m_logic_enc == 0)
+    m_logic_con_in = Async::AudioEncoder::create(m_ambe_handler,m_dec_options);
+    if (m_logic_con_in == 0)
     {
       cerr << "*** ERROR: Failed to initialize audio encoder" << endl;
       return false;
     }
 
-    m_logic_enc->registerSource(prev_sc);
-    m_logic_enc->writeEncodedSamples.connect(
-        mem_fun(*this, &RewindLogic::sendEncodedAudio));
-    m_logic_enc->flushEncodedSamples.connect(
-        mem_fun(*this, &RewindLogic::flushEncodedAudio));
-    cout << "Loading Encoder " << m_logic_enc->name() << endl;
   } catch(const char *f) {
     cerr << f << endl;
     return false;
   }
+
+  m_logic_con_in->writeEncodedSamples.connect(
+      mem_fun(*this, &RewindLogic::sendEncodedAudio));
+  m_logic_con_in->flushEncodedSamples.connect(
+      mem_fun(*this, &RewindLogic::flushEncodedAudio));
+  cout << "Loading Encoder " << m_logic_con_in->name() << endl;
 
     // Create audio decoder
   try {
@@ -440,9 +433,11 @@ bool RewindLogic::initialize(void)
 
   if (!LogicBase::initialize())
   {
+    cerr << "*** ERROR: Failed to initialize RewindLogic" << endl;
     return false;
   }
 
+  m_reconnect_timer.setEnable(true);
    // connect the master server
   connect();
 
@@ -551,7 +546,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
 
 void RewindLogic::flushEncodedAudio(void)
 {
-  //cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
+  cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
 } /* RewindLogic::sendEncodedAudio */
 
 
@@ -599,6 +594,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       {
         sendSubscription(tglist);
       }
+      m_reconnect_timer.reset();
       return;
 
     case REWIND_TYPE_FAILURE_CODE:
@@ -675,13 +671,14 @@ void RewindLogic::handleSessionData(uint8_t data[])
   srcCall = (char*)shd->sourceCall;
   srcId = shd->sourceID;
 
- /* std::map<int, std::string>::iterator it = stninfo.find(srcId);
+  std::map<int, sinfo>::iterator it = stninfo.find(srcId);
   if (it == stninfo.end())
   {
-    cout << "insert srcId=" << srcId << "|" << endl;
-    stninfo.insert ( std::pair<int, std::string>(srcId, "                           ") );
+    sinfo z;
+    z.callsign = srcCall;
+    z.description = "                      ";
+    stninfo[srcId] = z;
   }
-  */
 } /* RewindLogic::handleSessionData */
 
 
@@ -695,8 +692,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
 {
   uint8_t data[11];
   memcpy(data, dm->data, 10);
-  uint8_t sp[11];
-  int off;
+  int off = 0;
   std::string ts;
   cout << ">" << dec <<
   data[0] << "," <<
@@ -712,31 +708,46 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
      data[0], data[1],data[2],data[3],data[4], data[5],data[6],data[7],data[8],data[9]);
   cout << "SRCID=" << srcId << endl;
-
-  std::map<int, std::string>::iterator it = stninfo.find(srcId);
-
-  if (it == stninfo.end())
-  {
-    stninfo.insert ( std::pair<int, std::string>(srcId, "                           ") );
-    cout << "insert:" << srcId << ",      " << endl;
-  }
+  sinfo z;
+  std::string  call;
+  std::string  desc;
 
   switch (data[0]) {
     case 0x04:
-      memcpy(sp,data+3,6);
-      ts = (char*)sp;
-      (stninfo.find(srcId)->second).replace(0, 6, ts);
+      call = (char*)(data+3);
       break;
     case 0x05:
     case 0x06:
     case 0x07:
-      memcpy(sp,data+2,7);
-      ts = (char*)sp;
-      off = 7 * (data[0] - 4) - 1;
-    //  (stninfo.find(srcId)->second).replace(off, 7, ts);
-      cout << "STATIONINFO: " << stninfo.find(srcId)->second << endl;
-      break;
+      off = 7 * (data[0] - 5) + 1;
+      desc = (char*)(data+2);
   }
+
+  z.description = "                           ";
+  z.callsign = srcCall;
+  std::map<int, sinfo>::iterator it = stninfo.find(srcId);
+  if (it == stninfo.end())
+  {
+    stninfo[srcId] = z;
+  }
+  else
+  {
+    z.description = (it)->second.description;
+    z.callsign = (it)->second.callsign;
+    if ((it)->second.callsign.empty())
+    {
+      z.callsign = srcCall;
+    }
+
+    if (off > 0)
+    {
+      z.description.replace(off - 1, desc.length(), desc);
+    }
+    stninfo[srcId] = z;
+  }
+  it = stninfo.find(srcId);
+  cout << srcId << "," << (it)->second.callsign << ","
+       << (it)->second.description << endl;
 } /* RewindLogic::handleDataMessage */
 
 
@@ -784,12 +795,6 @@ void RewindLogic::sendMsg(struct RewindData* data, size_t len)
 
   data->number = htole32(++sequenceNumber);
 
-  /*cout << "### sending udp packet to " << ip_addr.toString()
-       << ":" << rewind_port << ", length=" << len
-       << " seq: " << sequenceNumber << " type=" << data->type
-       << " inhalt=" << data->number
-       << endl;
-  */
   m_udp_sock->write(ip_addr, rewind_port, data, len);
 
 } /* RewindLogic::sendUdpMsg */
@@ -798,14 +803,15 @@ void RewindLogic::sendMsg(struct RewindData* data, size_t len)
 void RewindLogic::reconnect(Timer *t)
 {
   cout << "### Reconnecting to Rewind server\n";
-  connect();
   m_reconnect_timer.reset();
+  m_logic_con_in->allEncodedSamplesFlushed();
+  connect();
 } /* RewindLogic::reconnect */
 
 
 void RewindLogic::allEncodedSamplesFlushed(void)
 {
- // m_dec->allEncodedSamplesFlushed();
+//  m_dec->allEncodedSamplesFlushed();
 } /* RewindLogic::allEncodedSamplesFlushed */
 
 
@@ -922,6 +928,12 @@ void RewindLogic::mkSHA256(uint8_t pass[], int len, uint8_t hash[])
   sha256_final(&context, hash);
 } /* RewindLogic:mkSha256*/
 
+
+void RewindLogic::flushTimeout(Async::Timer *t)
+{
+  m_flush_timeout_timer.setEnable(false);
+  m_logic_con_in->allEncodedSamplesFlushed();
+} /* ReflectorLogic::flushTimeout */
 
 
 /*

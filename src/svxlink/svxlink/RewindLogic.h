@@ -179,7 +179,12 @@ class RewindLogic : public LogicBase
     };
 
     STATUS m_state;
-    std::map<int, std::string> stninfo;
+    struct sinfo {
+      std::string callsign;
+      std::string description;
+    };
+
+    std::map<int, sinfo> stninfo;
 
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
@@ -193,8 +198,7 @@ class RewindLogic : public LogicBase
     std::string           m_id;
     Async::Timer          m_ping_timer;
     Async::Timer          m_reconnect_timer;
-    Async::AudioSink*     m_logic_con_in;
-    Async::AudioEncoder*  m_logic_enc;
+    Async::AudioEncoder*  m_logic_con_in;
     Async::AudioSource*   m_logic_con_out;
     Async::AudioDecoder*  m_dec;
 
@@ -220,6 +224,7 @@ class RewindLogic : public LogicBase
     uint32_t              srcId;
     std::list<int>        tglist;
     bool                  inTransmission;
+    Async::Timer          m_flush_timeout_timer;
 
 
     RewindLogic(const RewindLogic&);
@@ -241,7 +246,6 @@ class RewindLogic : public LogicBase
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
     void disconnect(void);
     void allEncodedSamplesFlushed(void);
-    void flushTimeout(Async::Timer *t);
     void pingHandler(Async::Timer *t);
     void authenticate(uint8_t salt[], const std::string pass);
     void sendKeepAlive(void);
@@ -251,6 +255,7 @@ class RewindLogic : public LogicBase
     void sendSubscription(std::list<int> tglist);
     void cancelSubscription(void);
     void mkSHA256(uint8_t pass[], int len, uint8_t hash[]);
+    void flushTimeout(Async::Timer *t);
 
 };  /* class RewindLogic */
 
