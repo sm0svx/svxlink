@@ -146,7 +146,7 @@ namespace {
           for (int a=4; a < (int)buffer.length; a+=2)
           {
             int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
-            t[b++] =  (float)w / 16384.0;
+            t[b++] = (float)w / 16384.0;
           }
           Buffer<float> audiobuf(t, b);
           return audiobuf;
@@ -155,25 +155,27 @@ namespace {
         /* method to prepare incoming Audio frames from local RX to be encoded later */
         virtual Buffer<> packForEncoding(const Buffer<> &buffer)
         {
-          const unsigned char DV3K_VOICE_FRAME[] = {DV3K_START_BYTE, 0x00, 0xA0,
-                                               DV3K_TYPE_AUDIO};
-         // const int DV3K_VOICE_FRAME_LEN = DSTAR_AUDIO_BLOCK_SIZE + 4;
-          
-          Buffer<> dv3k_buffer = 
-               Buffer<>(new char[DSTAR_AUDIO_BLOCK_SIZE*2 + 4], sizeof(size_t));
-          
+          const unsigned char DV3K_VOICE_FRAME[] =
+             {DV3K_START_BYTE, 0x01, 0x42, DV3K_TYPE_AUDIO, 0x00, 0xa0};
+          int DV3K_VOICE_FRAME_LEN = 6;
+
+          if (DV3K_AUDIO_LEN != buffer.length)
+          {
+            cerr << "*** ERROR: Buffer invalid!" << endl;
+          }
+
+          Buffer<> dv3k_buffer =
+               Buffer<>(new char[330], sizeof(size_t));
+
           memcpy(dv3k_buffer.data, DV3K_VOICE_FRAME, sizeof(DV3K_VOICE_FRAME));
-          memcpy(dv3k_buffer.data + sizeof(DV3K_VOICE_FRAME), buffer.data, 
-              DSTAR_AUDIO_BLOCK_SIZE);
-          dv3k_buffer.length = DSTAR_AUDIO_BLOCK_SIZE;
-          
+          memcpy(dv3k_buffer.data + DV3K_VOICE_FRAME_LEN, buffer.data, buffer.length);
+          dv3k_buffer.length = DV3K_VOICE_FRAME_LEN + DV3K_AUDIO_LEN;
           return dv3k_buffer;
         }
 
         virtual Buffer<> unpackEncoded(const Buffer<> &buffer)
         {
-          cout << "unimplemented" << endl;
-          return Buffer<>();
+          return buffer;
         }
 
         /**
@@ -330,32 +332,34 @@ namespace {
         /* method is called up to send encoded AMBE frames to BM network */
         virtual int writeSamples(const float *samples, int count)
         {
-          
+
           Buffer<> ambe_buf;
-          char t_data[160];
-          int32_t w;
-          
-          cout << "size =" << count << endl;
-           // sore incoming floats in a buffer until 160 or more samples 
+
+          float tf[bufcnt + count];
+          memcpy(tf, inbuf, bufcnt);
+          memcpy(tf + bufcnt, samples, count);
+
+           // sore incoming floats in a buffer until 160 or more samples
            // are reached
-          memcpy(inbuf + bufcnt, samples, count);
-          bufcnt+=count;
-          
-          while(bufcnt >= 320)
+          bufcnt += count;
+          char t_data[bufcnt];
+
+          while (bufcnt >= DV3K_AUDIO_LEN)
           {
-            for (uint16_t a=0; a < 320; a+=2)
+            for (uint16_t a=0; a < DV3K_AUDIO_LEN; a+=2)
             {
-              w = (int32_t) (inbuf[a] + inbuf[a+1]) * 8192.0;
-              t_data[a] = (char) ((w & 0xff00) >> 8);
-              t_data[a+1] = (char) (w & 0x00ff);
+              int32_t w = (int32_t) (inbuf[a] + inbuf[a+1]) * 8192.0;
+              t_data[a] = (char) (w >> 8);
+              t_data[a+1] = (char) (w & 0xff);
             }
-            ambe_buf.data=t_data;
-            ambe_buf.length = 320;
+            ambe_buf.data = t_data;
+            ambe_buf.length = DV3K_AUDIO_LEN;
             Buffer<> packet = packForEncoding(ambe_buf);
             send(packet);
-            bufcnt -= 320;
-            memmove(inbuf, inbuf+320, bufcnt);
+            bufcnt -= DV3K_AUDIO_LEN;
+            memmove(tf, tf + DV3K_AUDIO_LEN, bufcnt);
           }
+          inbuf = tf;
           return count;
         }
 
@@ -375,11 +379,13 @@ namespace {
       static const char DV3K_CONTROL_READY = 0x39;
       static const char DV3K_CONTROL_CHANFMT = 0x15;
 
+      static const uint16_t DV3K_AUDIO_LEN = 320;
+
       /**
       * @brief 	Default constuctor
       */
       //AudioCodecAmbeDv3k(void) : device_initialized(false) {}
-      AudioCodecAmbeDv3k(void) : m_state(OFFLINE) {}
+      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), inbuf(0), bufcnt(0) {}
 
     private:
       enum STATE {
