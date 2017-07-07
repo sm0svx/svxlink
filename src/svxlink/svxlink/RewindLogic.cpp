@@ -507,7 +507,6 @@ void RewindLogic::dnsResultsReady(DnsLookup& dns_lookup)
 void RewindLogic::sendEncodedAudio(const void *buf, int count)
 {
 
-  cout << "sendEncodedAudio\n";
    // if not in transmission sending SuperHeader 3 times
   if (!inTransmission)
   {
@@ -528,17 +527,22 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
     for (int a=0; a<3; a++)
     {
       sendMsg(data, size);
+      cout << "sending session init " << endl;
     }
     inTransmission = true;
   }
 
-  size_t fsize = sizeof(struct RewindData);
+  uint8_t* bufdata = (uint8_t*)alloca(count);
+  memcpy(bufdata, buf, count);
+
+  size_t fsize = sizeof(struct RewindData) + count;
   struct RewindData* fdata = (struct RewindData*)alloca(fsize);
 
   memcpy(fdata->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
   fdata->type   = htole16(REWIND_TYPE_DMR_AUDIO_FRAME);
   fdata->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
   fdata->length = htole16(REWIND_DMR_AUDIO_FRAME_LENGTH);
+  memcpy(fdata->data, htole16(bufdata), count);
 
   sendMsg(fdata, fsize);
 } /* RewindLogic::sendEncodedAudio */
@@ -547,6 +551,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
 void RewindLogic::flushEncodedAudio(void)
 {
   cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
+  inTransmission = false;
 } /* RewindLogic::sendEncodedAudio */
 
 
@@ -690,6 +695,12 @@ void RewindLogic::handleAmbeAudiopacket(struct RewindData* ad)
 
 void RewindLogic::handleDataMessage(struct RewindData* dm)
 {
+
+  /*
+  // comment out for now since we have problems with different
+  // locale's
+  // will possibly be implemented later
+
   uint8_t data[11];
   memcpy(data, dm->data, 10);
   int off = 0;
@@ -748,6 +759,7 @@ void RewindLogic::handleDataMessage(struct RewindData* dm)
   it = stninfo.find(srcId);
   cout << srcId << "," << (it)->second.callsign << ","
        << (it)->second.description << endl;
+  */
 } /* RewindLogic::handleDataMessage */
 
 
