@@ -175,8 +175,6 @@ namespace {
 
         virtual Buffer<> unpackEncoded(const Buffer<> &buffer)
         {
-  /*        memmove(buffer.data, buffer.data + DV3K_AMBE_HEADERFRAME_LEN, 9);
-          buffer.length -= DV3K_AMBE_HEADERFRAME_LEN;*/
           return buffer;
         }
 
@@ -188,27 +186,25 @@ namespace {
         virtual void writeEncodedSamples(void *buf, int size)
         {
          // const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
-          const int DV3K_AMBE_HEADERFRAME_LEN = 7;
-          const int AMBE_FRAME_LEN = 9;
-          const unsigned char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0e,
-                                                          DV3K_TYPE_AMBE, 0x40, 0x01, 0x48};
 
+          const unsigned char DV3K_AMBE_HEADERFRAMEOUT[] = {DV3K_START_BYTE, 0x00, 0x0e,
+                                                          DV3K_TYPE_AMBE, 0x40, 0x01, 0x48};
           const unsigned char DV3K_WAIT[] = {0x03, 0xa0};
           const int DV3K_WAIT_LEN = 2;
 
-          char ambe_to_dv3k[DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN + DV3K_WAIT_LEN];
+          char ambe_to_dv3k[DV3K_AMBE_HEADER_OUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN];
           Buffer<> buffer;
           buffer.data = reinterpret_cast<char*>(buf);
           buffer.length = size;
           Buffer<>ambe_frame;
 
            // devide the 27 bytes into a 9 byte long frame, sends them to the dv3k-decoder
-          for (int a=0; a<27; a+=AMBE_FRAME_LEN)
+          for (int a=0; a<27; a+=DV3K_AMBE_FRAME_LEN)
           {
-            memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME, DV3K_AMBE_HEADERFRAME_LEN);
-            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAME_LEN, buffer.data+a, AMBE_FRAME_LEN);
-            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN, DV3K_WAIT, DV3K_WAIT_LEN);
-            ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADERFRAME_LEN + AMBE_FRAME_LEN + DV3K_WAIT_LEN);
+            memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT, DV3K_AMBE_HEADER_OUT_LEN);
+            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADER_OUT_LEN, buffer.data+a, DV3K_AMBE_FRAME_LEN);
+            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADER_OUT_LEN + DV3K_AMBE_FRAME_LEN, DV3K_WAIT, DV3K_WAIT_LEN);
+            ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADER_OUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN);
             // sending HEADER + 9 bytes to DV3K-Adapter
             send(ambe_frame);
           }
@@ -312,18 +308,18 @@ namespace {
             // prepare encoded Frames to be send to BM network
            // Buffer<> unpacked = unpackEncoded(dv3k_buffer);
             // use only the dmr audio frame, not the DV3k-header from dongle
-            memcpy(r_buf + r_bufcnt, buffer.data + DV3K_AMBE_HEADERFRAME_LEN, DV3K_AMBE_HEADER_LEN);
-            r_bufcnt += DV3K_AMBE_HEADER_LEN;
+            memcpy(r_buf + r_bufcnt, buffer.data + DV3K_AMBE_HEADER_IN_LEN, DV3K_AMBE_FRAME_LEN);
+            r_bufcnt += DV3K_AMBE_FRAME_LEN;
             
             // collect at least 27 bytes
-            while (r_bufcnt >= REWIND_DATA_FRAME_LEN)
+            while (r_bufcnt >= REWIND_DMR_AUDIO_FRAME_LENGTH)
             {
-              char rt[REWIND_DATA_FRAME_LEN];
-              memcpy(rt, r_buf, REWIND_DATA_FRAME_LEN);
+              char rt[REWIND_DMR_AUDIO_FRAME_LENGTH];
+              memcpy(rt, r_buf, REWIND_DMR_AUDIO_FRAME_LENGTH);
                // forward encoded samples
-              AudioEncoder::writeEncodedSamples(rt, REWIND_DATA_FRAME_LEN);
-              r_bufcnt -= REWIND_DATA_FRAME_LEN;
-              memmove(rt, rt+REWIND_DATA_FRAME_LEN, r_bufcnt);
+              AudioEncoder::writeEncodedSamples(rt, REWIND_DMR_AUDIO_FRAME_LENGTH);
+              r_bufcnt -= REWIND_DMR_AUDIO_FRAME_LENGTH;
+              memmove(r_buf, r_buf + REWIND_DMR_AUDIO_FRAME_LENGTH, r_bufcnt);
             }
           }
           /* or is a raw 8kHz audio frame */
@@ -393,9 +389,10 @@ namespace {
       static const char DV3K_CONTROL_CHANFMT = 0x15;
 
       static const uint16_t DV3K_AUDIO_LEN = 320;
-      static const uint16_t DV3K_AMBE_HEADERFRAME_LEN = 6;
-      static const uint16_t DV3K_AMBE_HEADER_LEN = 9;      
-      static const uint16_t REWIND_DATA_FRAME_LEN = 27;
+      static const uint16_t DV3K_AMBE_HEADER_IN_LEN = 6;
+      static const uint16_t DV3K_AMBE_HEADER_OUT_LEN = 7;
+      static const uint16_t DV3K_AMBE_FRAME_LEN = 9;     
+      static const uint16_t REWIND_DMR_AUDIO_FRAME_LENGTH = 27;
 
       /**
       * @brief 	Default constuctor
