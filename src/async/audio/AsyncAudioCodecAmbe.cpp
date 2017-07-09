@@ -175,6 +175,8 @@ namespace {
 
         virtual Buffer<> unpackEncoded(const Buffer<> &buffer)
         {
+  /*        memmove(buffer.data, buffer.data + DV3K_AMBE_HEADERFRAME_LEN, 9);
+          buffer.length -= DV3K_AMBE_HEADERFRAME_LEN;*/
           return buffer;
         }
 
@@ -308,10 +310,21 @@ namespace {
           else if (type == DV3K_TYPE_AMBE)
           {
             // prepare encoded Frames to be send to BM network
-            Buffer<> unpacked = unpackEncoded(dv3k_buffer);
-
-            // forward encoded samples
-            AudioEncoder::writeEncodedSamples(unpacked.data, unpacked.length);
+           // Buffer<> unpacked = unpackEncoded(dv3k_buffer);
+            // use only the dmr audio frame, not the DV3k-header from dongle
+            memcpy(r_buf + r_bufcnt, buffer.data + DV3K_AMBE_HEADERFRAME_LEN, DV3K_AMBE_HEADER_LEN);
+            r_bufcnt += DV3K_AMBE_HEADER_LEN;
+            
+            // collect at least 27 bytes
+            while (r_bufcnt >= REWIND_DATA_FRAME_LEN)
+            {
+              char rt[REWIND_DATA_FRAME_LEN];
+              memcpy(rt, r_buf, REWIND_DATA_FRAME_LEN);
+               // forward encoded samples
+              AudioEncoder::writeEncodedSamples(rt, REWIND_DATA_FRAME_LEN);
+              r_bufcnt -= REWIND_DATA_FRAME_LEN;
+              memmove(rt, rt+REWIND_DATA_FRAME_LEN, r_bufcnt);
+            }
           }
           /* or is a raw 8kHz audio frame */
           else if (type == DV3K_TYPE_AUDIO)
@@ -339,7 +352,7 @@ namespace {
           memcpy(tf, inbuf, bufcnt);
           memcpy(tf + bufcnt, samples, count);
 
-           // sore incoming floats in a buffer until 160 or more samples
+           // store incoming floats in a buffer until 160 or more samples
            // are reached
           bufcnt += count;
           char t_data[bufcnt];
@@ -380,12 +393,16 @@ namespace {
       static const char DV3K_CONTROL_CHANFMT = 0x15;
 
       static const uint16_t DV3K_AUDIO_LEN = 320;
+      static const uint16_t DV3K_AMBE_HEADERFRAME_LEN = 6;
+      static const uint16_t DV3K_AMBE_HEADER_LEN = 9;      
+      static const uint16_t REWIND_DATA_FRAME_LEN = 27;
 
       /**
       * @brief 	Default constuctor
       */
       //AudioCodecAmbeDv3k(void) : device_initialized(false) {}
-      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), inbuf(0), bufcnt(0) {}
+      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), inbuf(0), bufcnt(0), 
+      r_bufcnt(0) {}
 
     private:
       enum STATE {
@@ -398,6 +415,8 @@ namespace {
       int t_b;
       float *inbuf;
       uint32_t bufcnt;
+      uint32_t r_bufcnt;
+      char r_buf[100];
 
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
       AudioCodecAmbeDv3k& operator=(const AudioCodecAmbeDv3k&);
