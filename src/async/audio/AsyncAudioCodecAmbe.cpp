@@ -357,7 +357,7 @@ namespace {
           {
             for (uint16_t a=0; a < DV3K_AUDIO_LEN; a+=2)
             {
-              int32_t w = (int32_t) (inbuf[a] + inbuf[a+1]) * 8192.0;
+              int32_t w = (int32_t) (inbuf[a] + inbuf[a+1]) * 2.0;
               t_data[a] = (char) (w >> 8);
               t_data[a+1] = (char) (w & 0xff);
             }
