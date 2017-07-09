@@ -212,7 +212,8 @@ class RewindLogic : public LogicBase
     std::string           m_location;
     std::string           m_description;
     std::string           m_swid;
-    std::string           m_tg;
+    std::string           m_rxtg;
+    std::string           m_txtg;
     std::string           m_rc_interval;
 
     int                   sequenceNumber;

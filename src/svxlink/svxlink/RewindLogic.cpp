@@ -327,15 +327,20 @@ bool RewindLogic::initialize(void)
     return false;
   }
 
-  if (!cfg().getValue(name(), "TALKGROUPS", m_tg))
+  if (!cfg().getValue(name(), "RX_TALKGROUPS", m_rxtg))
   {
-    m_tg = "9";
-    cout << "+++ INFO: setting default talkgroup 9" << endl;
+    m_rxtg = "9";
+    cout << "+++ INFO: setting RX_TALKGROUP(s) to default TG 9." << endl;
   }
-
+  
+  if (!cfg().getValue(name(), "TX_TALKGROUP", m_txtg))
+  {
+    m_txtg = "9";
+    cout << "+++ INFO: setting TX_TALKGROUP to default TG 9." << endl;
+  }
   // subscripting to one or more Talkgroups
   vector<string> tgs;
-  SvxLink::splitStr(tgs, m_tg, ",");
+  SvxLink::splitStr(tgs, m_rxtg, ",");
   for(vector<string>::iterator it = tgs.begin(); it != tgs.end(); ++it)
   {
     tglist.push_back(atoi((*it).c_str()));
@@ -526,6 +531,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
     memcpy(shd->sourceCall, m_callsign.c_str(), m_callsign.length());
     shd->type = SESSION_TYPE_GROUP_VOICE;
     shd->sourceID = atoi(m_id.c_str());
+    shd->destinationID = atoi(m_txtg.c_str());
 
     for (int a=0; a<3; a++)
     {
@@ -555,9 +561,9 @@ void RewindLogic::flushEncodedAudio(void)
 {
   cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
   inTransmission = false;
-   // test
+
   m_dec->allEncodedSamplesFlushed();
-    m_logic_con_in->allEncodedSamplesFlushed();
+  m_logic_con_in->allEncodedSamplesFlushed();
 } /* RewindLogic::flushEncodedAudio */
 
 
@@ -631,7 +637,7 @@ void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
       return;
 
     case REWIND_TYPE_SUBSCRIPTION:
-      cout << "--- Successful subscription, TG's=" << m_tg << endl;
+      cout << "--- Successful subscription, TG's=" << m_rxtg << endl;
       subscribed = 0;
       sendConfiguration();
       m_state = AUTH_SUBSCRIBED;
