@@ -287,7 +287,19 @@ bool RewindLogic::initialize(void)
     cerr << "*** ERROR: " << name() << "/HEIGHT wrong: " << m_height
          << endl;
     return false;
-  } */
+  } 
+  
+   // configure the time slots
+  string slot;
+  if (cfg().getValue(name(), "SLOT1", slot))
+  {
+    m_slot1 = true;
+  }
+  if (cfg().getValue(name(), "SLOT2", slot))
+  {
+    m_slot2 = true;
+  }  
+  */
 
   if (!cfg().getValue(name(), "LOCATION", m_location))
   {
@@ -314,16 +326,7 @@ bool RewindLogic::initialize(void)
          << endl;
     return false;
   }
-    // configure the time slots
-  string slot;
-  if (cfg().getValue(name(), "SLOT1", slot))
-  {
-    m_slot1 = true;
-  }
-  if (cfg().getValue(name(), "SLOT2", slot))
-  {
-    m_slot2 = true;
-  }
+
   if (!cfg().getValue(name(), "TALKGROUPS", m_tg))
   {
     m_tg = "9";
@@ -514,7 +517,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
     struct RewindData* data = (struct RewindData*)alloca(size);
 
     memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
-    data->type   = htole16(REWIND_OPTION_SUPER_HEADER);
+    data->type   = htole16(REWIND_TYPE_SUPER_HEADER);
     data->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
     data->length = htole16(sizeof(struct RewindSuperHeader));
 
@@ -544,8 +547,6 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
   fdata->length = htole16(REWIND_DMR_AUDIO_FRAME_LENGTH);
   memcpy(fdata->data, htole16(bufdata), count);
   
-  cout << "sending " << count << "bytes." << endl;
-  
   sendMsg(fdata, fsize);
 } /* RewindLogic::sendEncodedAudio */
 
@@ -554,6 +555,9 @@ void RewindLogic::flushEncodedAudio(void)
 {
   cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
   inTransmission = false;
+   // test
+  m_dec->allEncodedSamplesFlushed();
+    m_logic_con_in->allEncodedSamplesFlushed();
 } /* RewindLogic::flushEncodedAudio */
 
 
