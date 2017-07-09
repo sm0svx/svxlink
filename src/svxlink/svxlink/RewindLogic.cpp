@@ -543,7 +543,9 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
   fdata->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
   fdata->length = htole16(REWIND_DMR_AUDIO_FRAME_LENGTH);
   memcpy(fdata->data, htole16(bufdata), count);
-
+  
+  cout << "sending " << count << "bytes." << endl;
+  
   sendMsg(fdata, fsize);
 } /* RewindLogic::sendEncodedAudio */
 
@@ -552,7 +554,7 @@ void RewindLogic::flushEncodedAudio(void)
 {
   cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
   inTransmission = false;
-} /* RewindLogic::sendEncodedAudio */
+} /* RewindLogic::flushEncodedAudio */
 
 
 void RewindLogic::onDataReceived(const IpAddress& addr, uint16_t port,
