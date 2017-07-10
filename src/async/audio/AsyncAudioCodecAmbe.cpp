@@ -1,21 +1,127 @@
-#include <AsyncAudioCodecAmbe.h>
-#include <AsyncAudioDecimator.h>
-#include <AsyncSerial.h>
-#include <AsyncUdpSocket.h>
-#include <AsyncIpAddress.h>
-#include <AsyncDnsLookup.h>
+/**
+@file	 AsyncAudioCodecAmbe.cpp
+@brief   Contains a class to encode/decode ambe to/from voice
+@author  Christian Stussak / Imaginary & Tobias Blomberg / SM0SVX 
+         & Adi Bier / DL1HRC
+@date	 2017-07-10
+
+\verbatim
+Async - A library for programming event driven applications
+Copyright (C) 2004-2017 Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
+
+
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
 
 #include <string>
 #include <map>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-
-
 #include <cassert>
+
+
+
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+#include <AsyncSerial.h>
+#include <AsyncUdpSocket.h>
+#include <AsyncIpAddress.h>
+#include <AsyncDnsLookup.h>
+
+
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
+#include <AsyncAudioCodecAmbe.h>
+#include <AsyncAudioDecimator.h>
+
+
+
+/****************************************************************************
+ *
+ * Namespaces to use
+ *
+ ****************************************************************************/
+
 
 using namespace Async;
 using namespace std;
+
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
 
 namespace {
     /*
@@ -97,7 +203,8 @@ namespace {
         static AudioCodecAmbeDv3k *create(const Options &options);
 
         virtual void init()
-        {
+        { 
+          // init the Dv3k stick (ThumbDV dongle)
           char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
           Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
           m_state = RESET;
@@ -106,6 +213,7 @@ namespace {
 
         virtual void prodid()
         {
+          // reads the product id from dv3k stick, just to give it out for debug purposes
           char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01,
                                    DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
           Buffer<> prodid_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
@@ -115,6 +223,7 @@ namespace {
 
         virtual void versid()
         {
+          // reads the version id from dv3k stick, just to give it out for debug purposes
           char DV3K_REQ_VERSID[] = {DV3K_START_BYTE, 0x00, 0x01,
                                    DV3K_TYPE_CONTROL, DV3K_CONTROL_VERSTRING};
           Buffer<> versid_packet = Buffer<>(DV3K_REQ_VERSID,sizeof(DV3K_REQ_VERSID));
@@ -124,6 +233,7 @@ namespace {
 
         virtual void ratep()
         {
+          // set the rate and some other params (bausrate, codec, ....) to the Dv3k stick.
           char DV3K_REQ_RATEP[] = {DV3K_START_BYTE, 0x00, 0x07,
                                    DV3K_TYPE_CONTROL, 0x40, 0x0b, 0x03,
                                    0x09, 0x21, 0x32, 0x00};
@@ -143,10 +253,14 @@ namespace {
           int count = buffer.length / 2;
           float t[count];
           size_t b = 0;
+          // starts with 4 to omit the DV3K-HEADER
           for (int a=4; a < (int)buffer.length; a+=2)
           {
             int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
-            t[b++] = (float)w / 16384.0;
+            // 16384.0 has been calculated experimental, is a subject to change!
+            // maybe a simple audio compressor/clipper could be implemented here
+            // by analyzing the decoded audio level
+            t[b++] = (float) (w / 16384.0);
           }
           Buffer<float> audiobuf(t, b);
           return audiobuf;
@@ -187,6 +301,7 @@ namespace {
         {
          // const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
 
+          // this defines had been provided by Artem/R3ABM, thank you!
           const unsigned char DV3K_AMBE_HEADERFRAMEOUT[] = {DV3K_START_BYTE, 0x00, 0x0e,
                                                           DV3K_TYPE_AMBE, 0x40, 0x01, 0x48};
           const unsigned char DV3K_WAIT[] = {0x03, 0xa0};
@@ -199,7 +314,8 @@ namespace {
           Buffer<>ambe_frame;
 
            // devide the 27 bytes into a 9 byte long frame, sends them to the dv3k-decoder
-          for (int a=0; a<27; a+=DV3K_AMBE_FRAME_LEN)
+           // REWIND_DMR_AUDIO_FRAME_LENGTH=27, DV3K_AMBE_FRAME_LEN=9
+          for (int a=0; a<REWIND_DMR_AUDIO_FRAME_LENGTH; a+=DV3K_AMBE_FRAME_LEN)
           {
             memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT, DV3K_AMBE_HEADER_OUT_LEN);
             memcpy(ambe_to_dv3k + DV3K_AMBE_HEADER_OUT_LEN, buffer.data+a, DV3K_AMBE_FRAME_LEN);
@@ -216,11 +332,19 @@ namespace {
         {
           uint32_t tlen = 0;
           int type = 0;
+          
+          // create a new buffer to handle the received data
           Buffer<> dv3k_buffer = Buffer<>(new char[512], sizeof(size_t));
 
+          // a typical Dv3K-Header will start with 0x61, the length (2 bytes) and the 
+          // type (0x00, 0x00, 0x02) will follow.
+          // if not it maybe following data from the serial line/AMBEServer to feed the
+          // ring buffer... 
+          // if not - we have a problem :/
           if (buffer.data[0] == DV3K_START_BYTE
                            && buffer.length >= DV3K_HEADER_LEN)
           {
+            // we passed the 0x61, next is the length (2 bytes) of the data
             tlen = buffer.data[2] + buffer.data[1] * 256;
             stored_bufferlen = 0;
 
@@ -264,6 +388,8 @@ namespace {
           }
           else
           {
+            // we have a problem, check the serial communication to the DV3K stick if is happen
+            // often!
             cout << "*** ERROR: DV3k frame to short." << endl;
             cout << "stored_bufferlen=" << stored_bufferlen << ",buffer.len="
                  << buffer.length << ", t_buffer.len=" << t_buffer.length
@@ -272,6 +398,10 @@ namespace {
             return;
           }
 
+          // we have 3 types:
+          // 0x00 - Command byte
+          // 0x01 - AMBE encoded stream
+          // 0x02 - Audiostream
           type = dv3k_buffer.data[3];
 
           /* test the type of incoming frame */
@@ -306,16 +436,18 @@ namespace {
           else if (type == DV3K_TYPE_AMBE)
           {
             // prepare encoded Frames to be send to BM network
-           // Buffer<> unpacked = unpackEncoded(dv3k_buffer);
+            // Buffer<> unpacked = unpackEncoded(dv3k_buffer);
             // use only the dmr audio frame, not the DV3k-header from dongle
             memcpy(r_buf + r_bufcnt, buffer.data + DV3K_AMBE_HEADER_IN_LEN, DV3K_AMBE_FRAME_LEN);
             r_bufcnt += DV3K_AMBE_FRAME_LEN;
             
-            // collect at least 27 bytes
+            // collect at least 27 bytes since the bm network send and expect 27 chars of 
+            // ambe encoded audio, REWIND_DMR_AUDIO_FRAME_LENGTH = 27
             while (r_bufcnt >= REWIND_DMR_AUDIO_FRAME_LENGTH)
             {
               char rt[REWIND_DMR_AUDIO_FRAME_LENGTH];
               memcpy(rt, r_buf, REWIND_DMR_AUDIO_FRAME_LENGTH);
+
                // forward encoded samples
               AudioEncoder::writeEncodedSamples(rt, REWIND_DMR_AUDIO_FRAME_LENGTH);
               r_bufcnt -= REWIND_DMR_AUDIO_FRAME_LENGTH;
@@ -342,7 +474,7 @@ namespace {
         virtual int writeSamples(const float *samples, int count)
         {
            // store incoming floats in a buffer until 160 or more samples
-           // are reached
+           // are received
           Buffer<> ambe_buf;
           
           memcpy(inbuf + bufcnt, samples, sizeof(float)*count);
@@ -352,6 +484,12 @@ namespace {
           {
             for (int a = 0; a<DV3K_AUDIO_LEN; a++)
             {
+              // This is a HACK!
+              // the INTERNAL_SAMPLE_RATE is normaly 16000 but the DV3k stick 
+              // expects 8000. In the Logic class an Encoder instance must be 
+              // created that the audio stream from linked logics could be 
+              // received
+              // its working for now, but it can not be the goal
               int32_t w = (int) ( (inbuf[a] + inbuf[a+1]) * 2048.0);
         //      if (w > 1000 || w < -1000) cout << w << ",";
               t_data[a] = w >> 8;
@@ -361,6 +499,8 @@ namespace {
             ambe_buf.data = t_data;
             ambe_buf.length = DV3K_AUDIO_LEN;
             Buffer<> packet = packForEncoding(ambe_buf);
+            
+            // sends the ambe stream to the brandmeister network
             send(packet);
 
             bufcnt -= DV3K_AUDIO_LEN;
