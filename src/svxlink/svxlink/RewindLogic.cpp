@@ -130,7 +130,7 @@ using namespace Async;
 RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name),
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
-    rewind_host(""), rewind_port(54005), m_callsign("N0CALL"),
+    rewind_host(""), rewind_port(54005), m_callsign("N0CALL    "),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
     m_reconnect_timer(15000, Timer::TYPE_PERIODIC, false),
     sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0),
@@ -171,11 +171,15 @@ bool RewindLogic::initialize(void)
          << endl;
     return false;
   }
-  if (m_callsign.length() > 9)
+  if (m_callsign.length() > 10)
   {
     cerr << "*** ERROR: CALLSIGN=" << m_callsign << " is to long"
          << endl;
     return false;
+  }
+   while (m_callsign.length() < 10)
+  {
+    m_callsign += ' ';
   }
 
   if (!cfg().getValue(name(), "ID", m_id))
@@ -518,6 +522,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
    // if not in transmission sending SuperHeader 3 times
   if (!inTransmission)
   {
+    cout << "Initiate group call on TG " << atoi(m_txtg.c_str()) << endl;
     size_t size = sizeof(struct RewindData) + sizeof(struct RewindSuperHeader);
     struct RewindData* data = (struct RewindData*)alloca(size);
 
@@ -536,7 +541,6 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
     for (int a=0; a<3; a++)
     {
       sendMsg(data, size);
-      cout << "sending session init " << endl;
     }
     inTransmission = true;
   }
