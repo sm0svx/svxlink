@@ -341,34 +341,32 @@ namespace {
         /* method is called up to send encoded AMBE frames to BM network */
         virtual int writeSamples(const float *samples, int count)
         {
-
-          Buffer<> ambe_buf;
-
-          float tf[bufcnt + count];
-          memcpy(tf, inbuf, bufcnt);
-          memcpy(tf + bufcnt, samples, count);
-
            // store incoming floats in a buffer until 160 or more samples
            // are reached
+          Buffer<> ambe_buf;
+          
+          memcpy(inbuf + bufcnt, samples, sizeof(float)*count);
           bufcnt += count;
           char t_data[bufcnt];
-
           while (bufcnt >= DV3K_AUDIO_LEN)
           {
-            for (uint16_t a=0; a < DV3K_AUDIO_LEN; a+=2)
+            for (int a = 0; a<DV3K_AUDIO_LEN; a++)
             {
-              int32_t w = (int32_t) (inbuf[a] + inbuf[a+1]) * 2.0;
-              t_data[a] = (char) (w >> 8);
-              t_data[a+1] = (char) (w & 0xff);
+              int32_t w = (int) ( (inbuf[a] + inbuf[a+1]) * 2048.0);
+        //      if (w > 1000 || w < -1000) cout << w << ",";
+              t_data[a] = w >> 8;
+              t_data[a+1] = w & 0x00ff;
             }
+
             ambe_buf.data = t_data;
             ambe_buf.length = DV3K_AUDIO_LEN;
             Buffer<> packet = packForEncoding(ambe_buf);
             send(packet);
+
             bufcnt -= DV3K_AUDIO_LEN;
-            memmove(tf, tf + DV3K_AUDIO_LEN, bufcnt);
+            memmove(inbuf, inbuf + DV3K_AUDIO_LEN-1, bufcnt);
           }
-          inbuf = tf;
+          inbuf[bufcnt] = '\0';
           return count;
         }
 
@@ -398,7 +396,7 @@ namespace {
       * @brief 	Default constuctor
       */
       //AudioCodecAmbeDv3k(void) : device_initialized(false) {}
-      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), inbuf(0), bufcnt(0), 
+      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), bufcnt(0), 
       r_bufcnt(0) {}
 
     private:
@@ -410,7 +408,7 @@ namespace {
       int act_framelen;
       Buffer<> t_buffer;
       int t_b;
-      float *inbuf;
+      float inbuf[640];
       uint32_t bufcnt;
       uint32_t r_bufcnt;
       char r_buf[100];
