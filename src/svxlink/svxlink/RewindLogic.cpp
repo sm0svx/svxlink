@@ -130,7 +130,7 @@ using namespace Async;
 RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name),
     m_state(DISCONNECTED), m_udp_sock(0), m_auth_key("passw0rd"),
-    rewind_host(""), rewind_port(54005), m_callsign("N0CALL    "),
+    rewind_host(""),  m_callsign("N0CALL    "),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
     m_reconnect_timer(15000, Timer::TYPE_PERIODIC, false),
     sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0),
@@ -163,7 +163,12 @@ bool RewindLogic::initialize(void)
     return false;
   }
 
-  cfg().getValue(name(), "PORT", rewind_port);
+  if (!cfg().getValue(name(), "PORT", rewind_port))
+  {
+    cout << "--- WARNING: " << name() 
+         << "/PORT not defined, setting to default(54005)." << endl;
+    rewind_port = 54005;  
+  }
 
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
@@ -436,7 +441,7 @@ bool RewindLogic::initialize(void)
   }
   m_logic_con_out = prev_src;
 
-    // upsampling from 8kHz to 16kHz
+    // upsampling from 8kHz to 16kHz if the INTERNAL_SAMPLE_RATE is >8000
 //#if INTERNAL_SAMPLE_RATE == 16000
   AudioInterpolator *up = new AudioInterpolator(2, coeff_16_8, coeff_16_8_taps);
   m_logic_con_out->registerSink(up, true);
@@ -520,6 +525,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
 {
 
    // if not in transmission sending SuperHeader 3 times
+   // advice from Artem/R3ABM
   if (!inTransmission)
   {
     cout << "Initiate group call on TG " << atoi(m_txtg.c_str()) << endl;
