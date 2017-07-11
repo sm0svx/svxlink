@@ -1,8 +1,8 @@
 /**
 @file	 RewindLogic.cpp
-@brief   A class to connect a brandmeiseter server with UDP
+@brief   A class to connect a brandmeister server with UDP
 @author  Artem Prilutskiy / R3ABM & Tobias Blomberg / SM0SVX
-@date	 2017-02-12
+@date	 2017-05-12
 
 A_detailed_description_for_this_file
 
@@ -165,9 +165,9 @@ bool RewindLogic::initialize(void)
 
   if (!cfg().getValue(name(), "PORT", rewind_port))
   {
-    cout << "--- WARNING: " << name() 
+    cout << "--- WARNING: " << name()
          << "/PORT not defined, setting to default(54005)." << endl;
-    rewind_port = 54005;  
+    rewind_port = 54005;
   }
 
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
@@ -296,8 +296,8 @@ bool RewindLogic::initialize(void)
     cerr << "*** ERROR: " << name() << "/HEIGHT wrong: " << m_height
          << endl;
     return false;
-  } 
-  
+  }
+
    // configure the time slots
   string slot;
   if (cfg().getValue(name(), "SLOT1", slot))
@@ -307,7 +307,7 @@ bool RewindLogic::initialize(void)
   if (cfg().getValue(name(), "SLOT2", slot))
   {
     m_slot2 = true;
-  }  
+  }
   */
 
   if (!cfg().getValue(name(), "LOCATION", m_location))
@@ -341,7 +341,7 @@ bool RewindLogic::initialize(void)
     m_rxtg = "9";
     cout << "+++ INFO: setting RX_TALKGROUP(s) to default TG 9." << endl;
   }
-  
+
   if (!cfg().getValue(name(), "TX_TALKGROUP", m_txtg))
   {
     m_txtg = "9";
@@ -562,7 +562,7 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
   fdata->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
   fdata->length = htole16(REWIND_DMR_AUDIO_FRAME_LENGTH);
   memcpy(fdata->data, htole16(bufdata), count);
-  
+
   sendMsg(fdata, fsize);
 } /* RewindLogic::sendEncodedAudio */
 

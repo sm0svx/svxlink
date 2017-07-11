@@ -1,5 +1,8 @@
 /**
-@author Artem Prilutskiy / R3ABM
+@file	 Rewind.h
+@brief   A class to connect a brandmeister server with UDP
+@author  Artem Prilutskiy / R3ABM
+@date	 2017-05-12
 **/
 
 #ifndef REWIND_H

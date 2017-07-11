@@ -1,8 +1,8 @@
 /**
-@file	 RewindLogic.h
-@brief
-@author  Artem Prilutskiy / R3ABM  & Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2017-03-12
+@file	 RewindLogic.cpp
+@brief   Header definitions for accessing brandmeister network
+@author  Artem Prilutskiy / R3ABM & Tobias Blomberg / SM0SVX
+@date	 2017-05-12
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
