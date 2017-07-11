@@ -548,7 +548,7 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
     return false;
   }
 
-  if (::abs(real_rate - sample_rate) > 100)
+  if (::abs(static_cast<int>(real_rate) - sample_rate) > 100)
   {
     cerr << "*** ERROR: The sample rate could not be set to "
          << sample_rate << "Hz for ALSA device \"" << dev_name << "\". "

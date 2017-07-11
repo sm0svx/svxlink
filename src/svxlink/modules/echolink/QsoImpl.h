@@ -285,6 +285,13 @@ class QsoImpl
     sigc::signal<void, QsoImpl*, const std::string&> chatMsgReceived;
     
     /**
+     * @brief A signal that is emitted when an info message is received
+     * @param qso The QSO object
+     * @param msg The received info message
+     */
+    sigc::signal<void, QsoImpl*, const std::string&> infoMsgReceived;
+
+    /**
      * @brief A signal that is emitted when the audio receive state changes
      * @param is_receiving  Is \em true when audio is being received and
      *                      \em false when not

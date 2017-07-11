@@ -711,6 +711,8 @@ The GPIO squelch detector read a pin on the GPIO Port. Depending on the level
 of the pin, the squelch is switched. A HIGH (3.3V) at the pin set the squelch
 to open and a LOW (GND) level will set the squelch to closed.
 Specify which squelch pin to use with the GPIO_SQL_PIN configuration variable.
+On some devices, like the Orange Pi, you also need to set the GPIO_PATH
+configuration variable.
 
 The SIGLEV squelch detector use signal level measurements to determine if the
 squelch is open or not. Which signal level detector to use is determined by the
@@ -922,6 +924,11 @@ value for the event you want to use to close the squelch. For example if
 type is 1, code is 163 and value is 0, set this config variable to
 1,163,0. If you set the same type,code,value combination for both
 EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
+.TP
+.B GPIO_PATH
+Use this configuration variable to set the path to the sys control devices for
+GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
+Pi, the path is /sys/class/gpio_sw.
 .TP
 .B GPIO_SQL_PIN
 If SQL_DET is set to GPIO this configuration variable is used to choose which
@@ -1620,7 +1627,13 @@ name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
 Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
 the USING GPIO section for information on how to set up the operating system.
 Normally, the pin will be active high but if the pin name is prefixed with an
-exclamation mark it will be active low instead.
+exclamation mark it will be active low instead. For some hardware platforms you
+may need to also set the GPIO_PATH configuration variable.
+.TP
+.B GPIO_PATH
+Use this configuration variable to set the path to the sys control devices for
+GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
+Pi, the path is /sys/class/gpio_sw.
 .TP
 .B PTT_PTY
 If PTT_TYPE is set to "PTY" this configuration variable will set the path for
@@ -2094,30 +2107,11 @@ be chosen using the CARD_SAMPLE_RATE config variable as usual.
 .
 GPIO (General Purpose IO) is used to access hardware pins that are made
 available for example on an embedded system. Before starting to use a pin in
-SvxLink some setup need to be done in the operating system. The example below
-will set up pin 31 as an output for PTT use and pin 30 is used as input for
-squelch. Make sure that the commands are run as user root.
-
-  Enable the PTT pin for GPIO:
-  echo 31 > /sys/class/gpio/export
-
-  Set the direction to output for the pin:
-  echo out > /sys/class/gpio/gpio31/direction
-
-  Make sure that the svxlink user can write to the GPIO pin:
-  chown svxlink /sys/class/gpio31/value
-
-  Enable the squelch pin for GPIO:
-  echo 30 > /sys/class/gpio/export
-
-  Set the direction to input for the pin:
-  echo in > /sys/class/gpio/gpio30/direction
-
-  Make sure that the svxlink user can read from the GPIO pin:
-  chown svxlink /sys/class/gpio30/value
-
-These steps have to be performed whenever the system is rebooted. Putting the
-commands in a script is recommended.
+SvxLink some setup need to be done in the operating system. With the standard
+distribution of SvxLink there is a pair of scripts that help with setting up
+and taking down the GPIO pins. The scripts are named svxlink_gpio_up and
+svxlink_gpio_down. The configuration file, which can be found among the other
+SvxLink configuration files (typically in /etc/svxlink), is called gpio.conf.
 .
 .SH CALIBRATING THE SIGNAL LEVEL DETECTOR
 .
