@@ -57,6 +57,9 @@
 
 * FQ_CORR can now be negative
 
+* New TCL event handing function EchoLink::info_received that is called when
+  an info message is received from a remote EchoLink station.
+
 
 
  1.5.0 -- 22 Nov 2015

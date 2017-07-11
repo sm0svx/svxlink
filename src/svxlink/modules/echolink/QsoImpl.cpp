@@ -451,6 +451,7 @@ void QsoImpl::onInfoMsgReceived(const string& msg)
 	 << " ---" << endl
 	 << msg << endl;
     last_info_msg = msg;
+    infoMsgReceived(this, msg);
   }  
 } /* onInfoMsgReceived */
 

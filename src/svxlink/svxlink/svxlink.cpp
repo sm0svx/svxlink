@@ -758,7 +758,7 @@ static void initialize_logics(Config &cfg)
     else
     {
       cerr << "*** ERROR: Unknown logic type \"" << logic_type
-      	   << "\"specified for logic " << logic_name << ".\n";
+           << "\" specified for logic " << logic_name << ".\n";
       continue;
     }
     if ((logic == 0) || !logic->initialize())
