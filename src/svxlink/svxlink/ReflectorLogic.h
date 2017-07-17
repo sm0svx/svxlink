@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sys/time.h>
+#include <string>
 
 
 /****************************************************************************
@@ -164,6 +165,8 @@ class ReflectorLogic : public LogicBase
     static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
     static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
 
+    std::string           m_reflector_host;
+    uint16_t              m_reflector_port;
     FramedTcpClient*      m_con;
     unsigned              m_msg_type;
     Async::UdpSocket*     m_udp_sock;
@@ -207,6 +210,7 @@ class ReflectorLogic : public LogicBase
                              void *buf, int count);
     void sendUdpMsg(const ReflectorUdpMsg& msg);
     void reconnect(Async::Timer *t);
+    void connect(void);
     void disconnect(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);

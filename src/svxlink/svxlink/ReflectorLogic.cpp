@@ -149,15 +149,14 @@ ReflectorLogic::~ReflectorLogic(void)
 
 bool ReflectorLogic::initialize(void)
 {
-  string reflector_host;
-  if (!cfg().getValue(name(), "HOST", reflector_host))
+  if (!cfg().getValue(name(), "HOST", m_reflector_host))
   {
     cerr << "*** ERROR: " << name() << "/HOST missing in configuration" << endl;
     return false;
   }
 
-  uint16_t reflector_port = 5300;
-  cfg().getValue(name(), "PORT", reflector_port);
+  m_reflector_port = 5300;
+  cfg().getValue(name(), "PORT", m_reflector_port);
 
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
@@ -226,11 +225,7 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
-  m_con = new TcpClient<FramedTcpConnection>(reflector_host, reflector_port);
-  m_con->connected.connect(mem_fun(*this, &ReflectorLogic::onConnected));
-  m_con->disconnected.connect(mem_fun(*this, &ReflectorLogic::onDisconnected));
-  m_con->frameReceived.connect(mem_fun(*this, &ReflectorLogic::onFrameReceived));
-  m_con->connect();
+  connect();
 
   return true;
 } /* ReflectorLogic::initialize */
@@ -504,7 +499,7 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
 
 void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 {
-  if (!m_con->isConnected())
+  if ((m_con == 0) || !m_con->isConnected())
   {
     return;
   }
@@ -531,7 +526,7 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 {
   //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
   //     << count << endl;
-  if (!m_con->isConnected())
+  if ((m_con == 0) || !m_con->isConnected())
   {
     return;
   }
@@ -547,7 +542,7 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 void ReflectorLogic::flushEncodedAudio(void)
 {
   //cout << "### " << name() << ": ReflectorLogic::flushEncodedAudio" << endl;
-  if (!m_con->isConnected())
+  if ((m_con == 0) || !m_con->isConnected())
   {
     flushTimeout();
     return;
@@ -562,6 +557,10 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 {
   //cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
   //     << addr << " port=" << port << " count=" << count;
+  if ((m_con == 0) || !m_con->isConnected())
+  {
+    return;
+  }
 
   if (addr != m_con->remoteHost())
   {
@@ -668,6 +667,11 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
 void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 {
+  if ((m_con == 0) || (!m_con->isConnected()))
+  {
+    return;
+  }
+
   m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
 
   if (m_udp_sock == 0)
@@ -692,14 +696,30 @@ void ReflectorLogic::reconnect(Timer *t)
 {
   cout << "### " << name() << ": Reconnecting to reflector server\n";
   t->setEnable(false);
-  m_con->connect();
+  connect();
 } /* ReflectorLogic::reconnect */
+
+
+void ReflectorLogic::connect(void)
+{
+  disconnect();
+  m_con = new TcpClient<FramedTcpConnection>(m_reflector_host, m_reflector_port);
+  m_con->connected.connect(mem_fun(*this, &ReflectorLogic::onConnected));
+  m_con->disconnected.connect(mem_fun(*this, &ReflectorLogic::onDisconnected));
+  m_con->frameReceived.connect(mem_fun(*this, &ReflectorLogic::onFrameReceived));
+  m_con->connect();
+} /* ReflectorLogic::connect */
 
 
 void ReflectorLogic::disconnect(void)
 {
-  m_con->disconnect();
-  onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
+  if (m_con != 0)
+  {
+    m_con->disconnect();
+    onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
+    delete m_con;
+    m_con = 0;
+  }
 } /* ReflectorLogic::disconnect */
 
 
