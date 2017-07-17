@@ -220,6 +220,7 @@ class Logic : public sigc::trackable
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
     virtual void selcallSequenceDetected(std::string sequence);
+    virtual void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
 
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
@@ -308,7 +309,6 @@ class Logic : public sigc::trackable
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
     void publishStateEvent(const std::string &event_name,
                            const std::string &msg);
-    void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
 
 };  /* class Logic */
 
