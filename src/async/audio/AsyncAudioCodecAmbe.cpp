@@ -1,7 +1,7 @@
 /**
 @file	 AsyncAudioCodecAmbe.cpp
 @brief   Contains a class to encode/decode ambe to/from voice
-@author  Christian Stussak / Imaginary & Tobias Blomberg / SM0SVX 
+@author  Christian Stussak / Imaginary & Tobias Blomberg / SM0SVX
          & Adi Bier / DL1HRC
 @date	 2017-07-10
 
@@ -203,7 +203,7 @@ namespace {
         static AudioCodecAmbeDv3k *create(const Options &options);
 
         virtual void init()
-        { 
+        {
           // init the Dv3k stick (ThumbDV dongle)
           char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
           Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
@@ -252,17 +252,21 @@ namespace {
           unsigned char *s8_samples = reinterpret_cast<unsigned char *>(buffer.data);
           int count = buffer.length / 2;
           float t[count];
+          float avg = 0.0;
           size_t b = 0;
           // starts with 4 to omit the DV3K-HEADER
-          for (int a=4; a < (int)buffer.length; a+=2)
+          for (int a=4; a < (int)buffer.length-2; a+=2)
           {
             int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
             // 16384.0 has been calculated experimental, is a subject to change!
             // maybe a simple audio compressor/clipper could be implemented here
             // by analyzing the decoded audio level
-            t[b++] = (float) (w / 16384.0);
+            //t[b++] = (float) (w / 16384.0);
+            t[b++] = (float) (w / rxavg);
+            avg += (t[b-1] * t[b-1]);
           }
-          Buffer<float> audiobuf(t, b);
+          rxavg = 12000.0 * (1 + avg / 5);
+          Buffer<float> audiobuf(t, b-1);
           return audiobuf;
         }
 
@@ -332,14 +336,14 @@ namespace {
         {
           uint32_t tlen = 0;
           int type = 0;
-          
+
           // create a new buffer to handle the received data
           Buffer<> dv3k_buffer = Buffer<>(new char[512], sizeof(size_t));
 
-          // a typical Dv3K-Header will start with 0x61, the length (2 bytes) and the 
+          // a typical Dv3K-Header will start with 0x61, the length (2 bytes) and the
           // type (0x00, 0x00, 0x02) will follow.
           // if not it maybe following data from the serial line/AMBEServer to feed the
-          // ring buffer... 
+          // ring buffer...
           // if not - we have a problem :/
           if (buffer.data[0] == DV3K_START_BYTE
                            && buffer.length >= DV3K_HEADER_LEN)
@@ -440,8 +444,8 @@ namespace {
             // use only the dmr audio frame, not the DV3k-header from dongle
             memcpy(r_buf + r_bufcnt, buffer.data + DV3K_AMBE_HEADER_IN_LEN, DV3K_AMBE_FRAME_LEN);
             r_bufcnt += DV3K_AMBE_FRAME_LEN;
-            
-            // collect at least 27 bytes since the bm network send and expect 27 chars of 
+
+            // collect at least 27 bytes since the bm network send and expect 27 chars of
             // ambe encoded audio, REWIND_DMR_AUDIO_FRAME_LENGTH = 27
             while (r_bufcnt >= REWIND_DMR_AUDIO_FRAME_LENGTH)
             {
@@ -476,7 +480,7 @@ namespace {
            // store incoming floats in a buffer until 160 or more samples
            // are received
           Buffer<> ambe_buf;
-          
+
           memcpy(inbuf + bufcnt, samples, sizeof(float)*count);
           bufcnt += count;
           char t_data[bufcnt];
@@ -485,9 +489,9 @@ namespace {
             for (int a = 0; a<DV3K_AUDIO_LEN; a++)
             {
               // This is a HACK!
-              // the INTERNAL_SAMPLE_RATE is normaly 16000 but the DV3k stick 
-              // expects 8000. In the Logic class an Encoder instance must be 
-              // created that the audio stream from linked logics could be 
+              // the INTERNAL_SAMPLE_RATE is normaly 16000 but the DV3k stick
+              // expects 8000. In the Logic class an Encoder instance must be
+              // created that the audio stream from linked logics could be
               // received
               // its working for now, but it can not be the goal
               int32_t w = (int) ( (inbuf[a] + inbuf[a+1]) * 2048.0);
@@ -499,7 +503,7 @@ namespace {
             ambe_buf.data = t_data;
             ambe_buf.length = DV3K_AUDIO_LEN;
             Buffer<> packet = packForEncoding(ambe_buf);
-            
+
             // sends the ambe stream to the brandmeister network
             send(packet);
 
@@ -529,15 +533,15 @@ namespace {
       static const uint16_t DV3K_AUDIO_LEN = 320;
       static const uint16_t DV3K_AMBE_HEADER_IN_LEN = 6;
       static const uint16_t DV3K_AMBE_HEADER_OUT_LEN = 7;
-      static const uint16_t DV3K_AMBE_FRAME_LEN = 9;     
+      static const uint16_t DV3K_AMBE_FRAME_LEN = 9;
       static const uint16_t REWIND_DMR_AUDIO_FRAME_LENGTH = 27;
 
       /**
       * @brief 	Default constuctor
       */
       //AudioCodecAmbeDv3k(void) : device_initialized(false) {}
-      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), bufcnt(0), 
-      r_bufcnt(0) {}
+      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), bufcnt(0),
+      r_bufcnt(0), rxavg(16384.0) {}
 
     private:
       enum STATE {
@@ -552,6 +556,7 @@ namespace {
       uint32_t bufcnt;
       uint32_t r_bufcnt;
       char r_buf[100];
+      float rxavg;
 
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
       AudioCodecAmbeDv3k& operator=(const AudioCodecAmbeDv3k&);
