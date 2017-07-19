@@ -133,8 +133,8 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     rewind_host(""),  m_callsign("N0CALL    "),
     m_ping_timer(5000, Timer::TYPE_PERIODIC, false),
     m_reconnect_timer(15000, Timer::TYPE_PERIODIC, false),
-    sequenceNumber(0), m_slot1(false), m_slot2(false), subscribed(0),
-    inTransmission(false),
+    sequenceNumber(0), rtSequenceNumber(0),  m_slot1(false), m_slot2(false),
+    subscribed(0), inTransmission(false),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &RewindLogic::reconnect));
@@ -182,7 +182,7 @@ bool RewindLogic::initialize(void)
          << endl;
     return false;
   }
-   while (m_callsign.length() < 10)
+  while (m_callsign.length() < 10)
   {
     m_callsign += ' ';
   }
@@ -212,103 +212,6 @@ bool RewindLogic::initialize(void)
   {
     m_rc_interval = "16000";
   }
-
-  /*if (!cfg().getValue(name(), "RX_FREQU", m_rxfreq))
-  {
-    cerr << "*** ERROR: " << name() << "/RX_FREQU missing in configuration"
-         << ", e.g. RX_FREQU=430500000"  << endl;
-    return false;
-  }
-  if (m_rxfreq.length() != 9)
-  {
-    cerr << "*** ERROR: " << name() << "/RX_FREQU wrong length: " << m_rxfreq
-         << ", e.g. RX_FREQU=430500000" << endl;
-    return false;
-  }
-
-  if (!cfg().getValue(name(), "TX_FREQU", m_txfreq))
-  {
-    cerr << "*** ERROR: " << name() << "/TX_FREQU missing in configuration"
-         << ", e.g. TX_FREQU=430500000" << endl;
-    return false;
-  }
-  if (m_txfreq.length() != 9)
-  {
-    cerr << "*** ERROR: " << name() << "/TX_FREQU wrong length: " << m_txfreq
-         << ", e.g. TX_FREQU=430500000" << endl;
-    return false;
-  }
-
-  if (!cfg().getValue(name(), "POWER", m_power))
-  {
-    m_power = "01";
-  }
-  if (m_power.length() != 2)
-  {
-    cerr << "*** ERROR: " << name() << "/POWER wrong length: " << m_power
-         << endl;
-    return false;
-  }
-
-  if (!cfg().getValue(name(), "COLORCODE", m_color))
-  {
-    m_color = "01";
-  }
-  if (m_color.length() != 2 || atoi(m_color.c_str()) <= 0)
-  {
-    cerr << "*** ERROR: " << name() << "/COLORCODE wrong: " << m_color
-         << endl;
-    return false;
-  }
-
-  if (!cfg().getValue(name(), "LATITUDE", m_lat))
-  {
-    cerr << "*** ERROR: " << name() << "/LATITUDE not set."
-         << endl;
-    return false;
-  }
-  if (m_lat.length() != 8)
-  {
-    cerr << "*** ERROR: " << name() << "/LATITUDE wrong length: "
-         << m_lat << endl;
-    return false;
-  }
-
-  if (!cfg().getValue(name(), "LONGITUDE", m_lon))
-  {
-    cerr << "*** ERROR: " << name() << "/LONGITUDE not set."
-         << endl;
-    return false;
-  }
-  if (m_lon.length() != 9)
-  {
-    cerr << "*** ERROR: " << name() << "/LONGITUDE wrong length: "
-         << m_lon << endl;
-    return false;
-  }
-
-  if (!cfg().getValue(name(), "HEIGHT", m_height))
-  {
-    m_height = "001";
-  }
-  if (m_height.length() != 3)
-  {
-    cerr << "*** ERROR: " << name() << "/HEIGHT wrong: " << m_height
-         << endl;
-    return false;
-  }
-
-   // configure the time slots
-  string slot;
-  if (cfg().getValue(name(), "SLOT1", slot))
-  {
-    m_slot1 = true;
-  }
-  if (cfg().getValue(name(), "SLOT2", slot))
-  {
-    m_slot2 = true;
-  }
-  */
 
   if (!cfg().getValue(name(), "LOCATION", m_location))
   {
@@ -528,7 +431,8 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
    // advice from Artem/R3ABM
   if (!inTransmission)
   {
-    cout << "Initiate group call on TG " << atoi(m_txtg.c_str()) << endl;
+    cout << "Initiate group call " << m_callsign << " on TG "
+         << atoi(m_txtg.c_str()) << endl;
     size_t size = sizeof(struct RewindData) + sizeof(struct RewindSuperHeader);
     struct RewindData* data = (struct RewindData*)alloca(size);
 
@@ -546,7 +450,8 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
 
     for (int a=0; a<3; a++)
     {
-      sendMsg(data, size);
+      rtSequenceNumber++;
+      sendRtMsg(data, size);
     }
     inTransmission = true;
   }
@@ -559,21 +464,23 @@ void RewindLogic::sendEncodedAudio(const void *buf, int count)
 
   memcpy(fdata->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
   fdata->type   = htole16(REWIND_TYPE_DMR_AUDIO_FRAME);
-  fdata->flags  = htole16(REWIND_FLAG_NONE);         // 0x00
+  fdata->flags  = htole16(REWIND_FLAG_REAL_TIME_1);
   fdata->length = htole16(REWIND_DMR_AUDIO_FRAME_LENGTH);
   memcpy(fdata->data, htole16(bufdata), count);
 
-  sendMsg(fdata, fsize);
+  rtSequenceNumber++;
+  sendRtMsg(fdata, fsize);
 } /* RewindLogic::sendEncodedAudio */
 
 
 void RewindLogic::flushEncodedAudio(void)
 {
   cout << "### " << name() << ": RewindLogic::flushEncodedAudio" << endl;
-  inTransmission = false;
-
   m_dec->allEncodedSamplesFlushed();
   m_logic_con_in->allEncodedSamplesFlushed();
+  m_flush_timeout_timer.reset();
+  m_flush_timeout_timer.setEnable(true);
+  callTransmissionTerminate();
 } /* RewindLogic::flushEncodedAudio */
 
 
@@ -808,6 +715,32 @@ void RewindLogic::authenticate(uint8_t salt[], const string pass)
 } /* RewindLogic::authPassphrase */
 
 
+void RewindLogic::sendRtMsg(struct RewindData* data, size_t len)
+{
+
+  if (ip_addr.isEmpty())
+  {
+    if (!dns)
+    {
+      dns = new DnsLookup(rewind_host);
+      dns->resultsReady.connect(mem_fun(*this, &RewindLogic::dnsResultsReady));
+    }
+    return;
+  }
+
+  if (m_udp_sock == 0)
+  {
+    cerr << "*** ERROR: No Udp socket available" << endl;
+    return;
+  }
+
+  data->number = htole32(rtSequenceNumber);
+
+  m_udp_sock->write(ip_addr, rewind_port, data, len);
+
+} /* RewindLogic::sendUdpMsg */
+
+
 void RewindLogic::sendMsg(struct RewindData* data, size_t len)
 {
 
@@ -836,7 +769,7 @@ void RewindLogic::sendMsg(struct RewindData* data, size_t len)
 
 void RewindLogic::reconnect(Timer *t)
 {
-  cout << "### Reconnecting to Rewind server\n";
+  cout << "### Keepalive timeout. Reconnecting to Rewind server\n";
   m_reconnect_timer.reset();
   m_logic_con_in->allEncodedSamplesFlushed();
   connect();
@@ -845,7 +778,7 @@ void RewindLogic::reconnect(Timer *t)
 
 void RewindLogic::allEncodedSamplesFlushed(void)
 {
-//  m_dec->allEncodedSamplesFlushed();
+  //callTransmissionTerminate();
 } /* RewindLogic::allEncodedSamplesFlushed */
 
 
@@ -882,6 +815,26 @@ void RewindLogic::sendKeepAlive(void)
 void RewindLogic::sendServiceData(void)
 {
 } /* RewindData::sendServiceData */
+
+
+void RewindLogic::callTransmissionTerminate(void)
+{
+  size_t size = sizeof(struct RewindData);
+  struct RewindData* data = (struct RewindData*)alloca(size);
+
+  memcpy(data->sign, REWIND_PROTOCOL_SIGN, REWIND_SIGN_LENGTH);
+  data->type   = htole16(REWIND_TYPE_DMR_STOP_FRAME);
+  data->flags  = htole16(REWIND_FLAG_REAL_TIME_1);
+  data->length = 0;
+
+  rtSequenceNumber++;
+  for (int a=0; a<3; a++)
+  {
+    sendRtMsg(data, size);
+  }
+  inTransmission = false;
+  cout << "call end\n";
+} /* RewindLogic::callTransmissionTerminate */
 
 
 void RewindLogic::sendCloseMessage(void)
@@ -967,6 +920,7 @@ void RewindLogic::flushTimeout(Async::Timer *t)
 {
   m_flush_timeout_timer.setEnable(false);
   m_logic_con_in->allEncodedSamplesFlushed();
+  callTransmissionTerminate();
 } /* ReflectorLogic::flushTimeout */
 
 
