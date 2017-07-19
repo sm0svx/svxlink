@@ -217,6 +217,7 @@ class RewindLogic : public LogicBase
     std::string           m_rc_interval;
 
     int                   sequenceNumber;
+    int                   rtSequenceNumber;
     bool                  m_slot1;
     bool                  m_slot2;
     int                   subscribed;
@@ -239,6 +240,7 @@ class RewindLogic : public LogicBase
     void onDataReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void sendMsg(struct RewindData* rd, size_t len);
+    void sendRtMsg(struct RewindData* data, size_t len);
     void handleSessionData(uint8_t data[]);
     void handleAmbeAudiopacket(struct RewindData* rd);
     void handleDataMessage(struct RewindData* dm);
@@ -255,6 +257,7 @@ class RewindLogic : public LogicBase
     void sendConfiguration(void);
     void sendSubscription(std::list<int> tglist);
     void cancelSubscription(void);
+    void callTransmissionTerminate(void);
     void mkSHA256(uint8_t pass[], int len, uint8_t hash[]);
     void flushTimeout(Async::Timer *t);
 
