@@ -256,6 +256,7 @@ void ReflectorLogic::onConnected(void)
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
   m_heartbeat_timer.setEnable(true);
+  m_reconnect_timer.setEnable(false);
   m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
   timerclear(&m_last_talker_timestamp);
