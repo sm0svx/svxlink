@@ -241,7 +241,7 @@ class FramedTcpConnection : public TcpConnection
         *ptr++ = (static_cast<uint32_t>(count)) & 0xff;
         std::memcpy(ptr, buf, count);
       }
-      ~QueueItem(void) { delete m_buf; }
+      ~QueueItem(void) { delete [] m_buf; }
     };
     typedef std::deque<QueueItem*> TxQueue;
 
