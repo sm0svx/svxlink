@@ -209,9 +209,9 @@ class ReflectorLogic : public LogicBase
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void sendUdpMsg(const ReflectorUdpMsg& msg);
-    void reconnect(Async::Timer *t);
     void connect(void);
     void disconnect(void);
+    void reconnect(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
     void handleTimerTick(Async::Timer *t);

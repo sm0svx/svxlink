@@ -5,10 +5,10 @@ QTEL=1.2.2.99.1
 LIBECHOLIB=1.3.2
 
 # Version for the Async library
-LIBASYNC=1.4.99.2-svxreflector
+LIBASYNC=1.4.99.3-svxreflector
 
 # SvxLink versions
-SVXLINK=1.5.99.11-svxreflector
+SVXLINK=1.5.99.12-svxreflector
 MODULE_HELP=1.0.0
 MODULE_PARROT=1.1.1
 MODULE_ECHOLINK=1.3.99.0

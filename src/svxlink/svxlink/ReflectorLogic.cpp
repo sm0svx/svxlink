@@ -125,7 +125,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0)
 {
-  m_reconnect_timer.expired.connect(mem_fun(*this, &ReflectorLogic::reconnect));
+  m_reconnect_timer.expired.connect(
+      sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
   m_heartbeat_timer.expired.connect(
       mem_fun(*this, &ReflectorLogic::handleTimerTick));
   m_flush_timeout_timer.expired.connect(
@@ -692,22 +693,23 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 } /* ReflectorLogic::sendUdpMsg */
 
 
-void ReflectorLogic::reconnect(Timer *t)
-{
-  cout << "### " << name() << ": Reconnecting to reflector server\n";
-  t->setEnable(false);
-  connect();
-} /* ReflectorLogic::reconnect */
-
-
 void ReflectorLogic::connect(void)
 {
-  disconnect();
-  m_con = new TcpClient<FramedTcpConnection>(m_reflector_host, m_reflector_port);
-  m_con->connected.connect(mem_fun(*this, &ReflectorLogic::onConnected));
-  m_con->disconnected.connect(mem_fun(*this, &ReflectorLogic::onDisconnected));
-  m_con->frameReceived.connect(mem_fun(*this, &ReflectorLogic::onFrameReceived));
-  m_con->connect();
+  if ((m_con == 0) || (!m_con->isConnected()))
+  {
+    cout << "### " << name() << ": Connecting to "
+         << m_reflector_host << ":" << m_reflector_port << "\n";
+    m_reconnect_timer.setEnable(false);
+    m_con = new TcpClient<FramedTcpConnection>(m_reflector_host,
+                                               m_reflector_port);
+    m_con->connected.connect(
+        mem_fun(*this, &ReflectorLogic::onConnected));
+    m_con->disconnected.connect(
+        mem_fun(*this, &ReflectorLogic::onDisconnected));
+    m_con->frameReceived.connect(
+        mem_fun(*this, &ReflectorLogic::onFrameReceived));
+    m_con->connect();
+  }
 } /* ReflectorLogic::connect */
 
 
@@ -715,12 +717,23 @@ void ReflectorLogic::disconnect(void)
 {
   if (m_con != 0)
   {
-    m_con->disconnect();
-    onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
+    if (m_con->isConnected())
+    {
+      m_con->disconnect();
+      onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
+    }
     delete m_con;
     m_con = 0;
   }
 } /* ReflectorLogic::disconnect */
+
+
+void ReflectorLogic::reconnect(void)
+{
+  cout << "### " << name() << ": Reconnecting to reflector server\n";
+  disconnect();
+  connect();
+} /* ReflectorLogic::reconnect */
 
 
 void ReflectorLogic::allEncodedSamplesFlushed(void)
