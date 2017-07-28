@@ -357,8 +357,8 @@ bool Qso::sendInfoData(const string& info)
   }
   replace(info_msg.begin(), info_msg.end(), '\n', '\r');
 
-  bool success = Dispatcher::instance()->sendAudioMsg(remote_ip, info_msg.c_str(),
-      info_msg.length()+1);
+  bool success = Dispatcher::instance()->sendAudioMsg(
+      remote_ip, info_msg.c_str(), info_msg.length()+1);
   if (!success)
   {
     perror("sendAudioMsg in Qso::sendInfoData");
