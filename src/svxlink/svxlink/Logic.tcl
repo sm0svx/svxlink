@@ -370,9 +370,10 @@ proc dtmf_digit_received {digit duration} {
 proc dtmf_cmd_received {cmd} {
   #global active_module
 
-  # Example: Ignore all commands starting with 3 in the EchoLink module
+  # Example: Ignore all commands starting with 3 in the EchoLink module.
+  #          Allow commands that have four or more digits.
   #if {$active_module == "EchoLink"} {
-  #  if {[string index $cmd 0] == "3"} {
+  #  if {[string length $cmd] < 4 && [string index $cmd 0] == "3"} {
   #    puts "Ignoring random connect command for module EchoLink: $cmd"
   #    return 1
   #  }
