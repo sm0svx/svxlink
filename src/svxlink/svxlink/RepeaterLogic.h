@@ -175,6 +175,7 @@ class RepeaterLogic : public Logic
   protected:
     virtual void allMsgsWritten(void);
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
+    virtual void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
 
 
   private:

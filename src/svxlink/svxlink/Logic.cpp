@@ -996,6 +996,21 @@ void Logic::transmitterStateChange(bool is_transmitting)
 } /* Logic::transmitterStateChange */
 
 
+void Logic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<count; ++i)
+  {
+    const char &ch = buffer[i];
+    if (::isdigit(ch) || (ch == '*') || (ch == '#') ||
+        ((ch >= 'A') && (ch <= 'F')))
+    {
+      dtmfDigitDetectedP(ch, 100);
+    }
+  }
+} /* Logic::dtmfCtrlPtyCmdReceived */
+
+
 void Logic::clearPendingSamples(void)
 {
   msg_handler->clear();
@@ -1589,21 +1604,6 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
 } /* Logic::publishStateEvent */
-
-
-void Logic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
-{
-  const char *buffer = reinterpret_cast<const char*>(buf);
-  for (size_t i=0; i<count; ++i)
-  {
-    const char &ch = buffer[i];
-    if (::isdigit(ch) || (ch == '*') || (ch == '#') ||
-        ((ch >= 'A') && (ch <= 'F')))
-    {
-      dtmfDigitDetectedP(ch, 100);
-    }
-  }
-} /* Logic::dtmfCtrlPtyCmdReceived */
 
 
 /*

@@ -522,7 +522,9 @@ void QsoImpl::onStateChange(Qso::State state)
 	}
 	else
 	{
-	  module->processEvent("connected");
+          stringstream ss;
+          ss << "connected " << remoteCallsign();
+          module->processEvent(ss.str());
 	}
       }
       break;

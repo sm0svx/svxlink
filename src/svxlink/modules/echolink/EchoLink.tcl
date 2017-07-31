@@ -243,8 +243,10 @@ proc remote_connected {call} {
 
 #
 # Executed when an outgoing connection has been established.
+#   call - The callsign of the remote station
 #
-proc connected {} {
+proc connected {call} {
+  #puts "Outgoing Echolink connection to $call established"
   playMsg "connected";
   playSilence 500;
 }
