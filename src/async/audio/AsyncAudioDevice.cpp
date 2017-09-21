@@ -288,7 +288,7 @@ void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
 
 int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
 {
-  unsigned block_size = blocksize();
+  unsigned block_size = writeBlocksize();
   unsigned frames_to_write = block_cnt * block_size;
   memset(buf, 0, channels * frames_to_write * sizeof(*buf));
   
