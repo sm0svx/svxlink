@@ -440,6 +440,16 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 } /* Logic::audioStreamStateChange */
 
 
+void RepeaterLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
+{
+  if (!repeater_is_up)
+  {
+    setUp(true, "PTY_DTMF_CMD");
+  }
+  Logic::dtmfCtrlPtyCmdReceived(buf, count);
+} /* RepeaterLogic::dtmfCtrlPtyCmdReceived */
+
+
 #if 0
 bool RepeaterLogic::getIdleState(void) const
 {

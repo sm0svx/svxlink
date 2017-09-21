@@ -60,6 +60,9 @@
 * New TCL event handing function EchoLink::info_received that is called when
   an info message is received from a remote EchoLink station.
 
+* ModuleEchoLink: The connected TCL event handling function now also is given
+  the callsign.
+
 
 
  1.5.0 -- 22 Nov 2015

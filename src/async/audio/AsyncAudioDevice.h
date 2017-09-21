@@ -184,10 +184,16 @@ class AudioDevice : public sigc::trackable
     }
     
     /**
-     * @brief 	Find out what the blocksize is set to
+     * @brief 	Find out what the read (recording) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int blocksize(void) = 0;
+    virtual int readBlocksize(void) = 0;
+
+    /**
+     * @brief 	Find out what the write (playback) blocksize is set to
+     * @return	Returns the currently set blocksize in samples per channel
+     */
+    virtual int writeBlocksize(void) = 0;
     
     /**
      * @brief 	Set the buffer count used when opening audio devices

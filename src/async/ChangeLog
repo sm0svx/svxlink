@@ -14,6 +14,10 @@
 * UdpSocket: The dataReceived signal now also provide the remote UDP port
   number
 
+* Bugfix in AsyncAudioDeviceAlsa/AsyncAudioIO: Assertion for some sound boards
+  in Async::Timer::setEnable due to the AudioDeviceAlsa::samplesToWrite
+  function returning a negative value.
+
 
 
  1.4.0 -- 22 Nov 2015
