@@ -151,6 +151,9 @@ RewindLogic::~RewindLogic(void)
   delete m_logic_con_out;
   //delete m_logic_enc;
   delete m_dec;
+  m_flush_timeout_timer = 0;
+  m_reconnect_timer = 0;
+  m_ping_timer = 0;
 } /* RewindLogic::~RewindLogic */
 
 
