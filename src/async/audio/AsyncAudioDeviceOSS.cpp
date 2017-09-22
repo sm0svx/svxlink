@@ -130,11 +130,18 @@ REGISTER_AUDIO_DEVICE_TYPE("oss", AudioDeviceOSS);
  *
  ****************************************************************************/
 
-int AudioDeviceOSS::blocksize(void)
+int AudioDeviceOSS::readBlocksize(void)
 {
   assert(fd != -1);
   return frag_size / (channels * sizeof(int16_t));
-} /* AudioDeviceOSS::blocksize */
+} /* AudioDeviceOSS::readBlocksize */
+
+
+int AudioDeviceOSS::writeBlocksize(void)
+{
+  assert(fd != -1);
+  return frag_size / (channels * sizeof(int16_t));
+} /* AudioDeviceOSS::writeBlocksize */
 
 
 bool AudioDeviceOSS::isFullDuplexCapable(void)

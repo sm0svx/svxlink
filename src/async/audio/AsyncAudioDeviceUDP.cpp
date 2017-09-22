@@ -125,10 +125,16 @@ REGISTER_AUDIO_DEVICE_TYPE("udp", AudioDeviceUDP);
  *
  ****************************************************************************/
 
-int AudioDeviceUDP::blocksize(void)
+int AudioDeviceUDP::readBlocksize(void)
 {
   return block_size;
-} /* AudioDeviceUDP::blocksize */
+} /* AudioDeviceUDP::readBlocksize */
+
+
+int AudioDeviceUDP::writeBlocksize(void)
+{
+  return block_size;
+} /* AudioDeviceUDP::writeBlocksize */
 
 
 bool AudioDeviceUDP::isFullDuplexCapable(void)
