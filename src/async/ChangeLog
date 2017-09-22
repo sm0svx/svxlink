@@ -11,9 +11,6 @@
 
 * Bugfix in AsyncTcpServer: Fix memory leak
 
-* UdpSocket: The dataReceived signal now also provide the remote UDP port
-  number
-
 
 
  1.4.0 -- 22 Nov 2015
