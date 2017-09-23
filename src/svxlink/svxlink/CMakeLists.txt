@@ -30,10 +30,10 @@ set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
 include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
 
-# Find the dl library
-#find_package(DL REQUIRED)
-#set(LIBS ${LIBS} ${DL_LIBRARIES})
-#include_directories(${DL_INCLUDES})
+# Find the dl library - only for Linux, not required for FreeBSD
+find_package(DL)
+set(LIBS ${LIBS} ${DL_LIBRARIES})
+include_directories(${DL_INCLUDES})
 
 # Add project libraries
 set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore)
