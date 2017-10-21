@@ -182,11 +182,11 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   // DL1HRC>;EL-242660*111111z4900.05NE00823.29E0434.687MHz T123 R10k   DA0AAA
 
     // Geographic position
-  char pos[20];
+  char pos[128];
   posStr(pos);
 
     // APRS message
-  char aprsmsg[200];
+  char aprsmsg[256];
   sprintf(aprsmsg, "%s>%s,%s:;%s%-6.6s*111111z%s%s\r\n",
           el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
           el_prefix.c_str(), el_call.c_str(), pos, msg);
@@ -259,7 +259,7 @@ void AprsTcpClient::posStr(char *pos)
 void AprsTcpClient::sendAprsBeacon(Timer *t)
 {
     // Geographic position
-  char pos[20];
+  char pos[128];
   posStr(pos);
 
     // CTCSS/1750Hz tone

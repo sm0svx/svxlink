@@ -38,7 +38,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 # Add project libraries
-set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore)
+set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
 
 # Add targets for version files
 set(VERSION_DEPENDS)
