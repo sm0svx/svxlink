@@ -110,8 +110,9 @@ class Async::AudioIO::InputFifo : public AudioFifo
       {
         return count;
       }
+      int ret = AudioFifo::writeSamples(samples, count);
       audio_dev->audioToWriteAvailable();
-      return AudioFifo::writeSamples(samples, count);
+      return ret;
     }
     
     virtual void flushSamples(void)
@@ -339,8 +340,8 @@ bool AudioIO::open(Mode mode)
   if (open_ok)
   {
     io_mode = mode;
-    input_fifo->setSize(audio_dev->readBlocksize() * 2 + 1);
-    input_fifo->setPrebufSamples(audio_dev->readBlocksize() * 2 + 1);
+    input_fifo->setSize(audio_dev->writeBlocksize() * 2 + 1);
+    input_fifo->setPrebufSamples(audio_dev->writeBlocksize() * 2 + 1);
   }
   
   input_valve->setOpen(true);
