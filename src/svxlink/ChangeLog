@@ -63,6 +63,9 @@
 * ModuleEchoLink: The connected TCL event handling function now also is given
   the callsign.
 
+* Bugfix: The squelch detector was not able to handle larger audio blocks than
+  256 bytes. It now can.
+
 
 
  1.5.0 -- 22 Nov 2015
