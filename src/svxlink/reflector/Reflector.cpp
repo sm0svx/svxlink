@@ -342,7 +342,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   uint16_t udp_rx_seq_diff = header.sequenceNum() - client->nextUdpRxSeq();
   if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
   {
-    cout << "### " << client->callsign()
+    cout << client->callsign()
          << ": Dropping out of sequence frame with seq="
          << header.sequenceNum() << ". Expected seq="
          << client->nextUdpRxSeq() << endl;
@@ -350,7 +350,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
   else if (udp_rx_seq_diff > 0) // Frame(s) lost
   {
-    cout << "### " << client->callsign()
+    cout << client->callsign()
          << ": UDP frame(s) lost. Expected seq=" << client->nextUdpRxSeq()
          << ". Received seq=" << header.sequenceNum() << endl;
   }
@@ -375,7 +375,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
           if (m_talker == 0)
           {
             setTalker(client);
-            cout << "### " << m_talker->callsign() << ": Talker start" << endl;
+            cout << m_talker->callsign() << ": Talker start" << endl;
           }
           if (m_talker == client)
           {
@@ -384,7 +384,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
           }
           else
           {
-            cout << "### " << client->callsign() << ": " << m_talker->callsign()
+            cout << client->callsign() << ": " << m_talker->callsign()
                  << " is already talking...\n";
           }
         }
@@ -397,7 +397,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       //cout << "### " << client->callsign() << ": MsgUdpFlushSamples()" << endl;
       if (client == m_talker)
       {
-        cout << "### " << m_talker->callsign() << ": Talker stop" << endl;
+        cout << m_talker->callsign() << ": Talker stop" << endl;
         setTalker(0);
       }
         // To be 100% correct the reflector should wait for all connected
@@ -450,14 +450,14 @@ void Reflector::checkTalkerTimeout(Async::Timer *t)
     timersub(&now, &m_last_talker_timestamp, &diff);
     if (diff.tv_sec > 3)
     {
-      cout << "### " << m_talker->callsign() << ": Talker audio timeout"
+      cout << m_talker->callsign() << ": Talker audio timeout"
            << endl;
       setTalker(0);
     }
 
     if ((m_sql_timeout_cnt > 0) && (--m_sql_timeout_cnt == 0))
     {
-      cout << "### " << m_talker->callsign() << ": Talker squelch timeout"
+      cout << m_talker->callsign() << ": Talker squelch timeout"
            << endl;
       m_talker->setBlock(m_sql_timeout_blocktime);
       setTalker(0);

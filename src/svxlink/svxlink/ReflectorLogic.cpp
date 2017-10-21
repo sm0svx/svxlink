@@ -360,7 +360,9 @@ void ReflectorLogic::handleMsgError(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgError(\"" << msg.message() << "\")" << endl;
+  //cout << "### " << name() << ": MsgError(\"" << msg.message() << "\")" << endl;
+  cout << name() << ": Error message received from server: " << msg.message()
+       << endl;
   disconnect();
 } /* ReflectorLogic::handleMsgError */
 
@@ -380,7 +382,7 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
   {
     ss << (int)msg.challenge()[i];
   }
-  cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
+  //cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
 
   sendMsg(MsgAuthResponse(m_callsign, m_auth_key, msg.challenge()));
 } /* ReflectorLogic::handleMsgAuthChallenge */
@@ -388,7 +390,8 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
 
 void ReflectorLogic::handleMsgAuthOk(void)
 {
-  cout << "### " << name() << ": MsgAuthOk()" << endl;
+  //cout << "### " << name() << ": MsgAuthOk()" << endl;
+  cout << name() << ": Authentication OK" << endl;
 } /* ReflectorLogic::handleMsgAuthOk */
 
 
@@ -401,8 +404,8 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgServerInfo(" << msg.clientId() << ")"
-       << endl;
+  //cout << "### " << name() << ": MsgServerInfo(" << msg.clientId() << ")"
+  //     << endl;
   m_client_id = msg.clientId();
 
   delete m_udp_sock;
@@ -423,7 +426,7 @@ void ReflectorLogic::handleMsgNodeList(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgNodeList(";
+  cout << name() << ": Connected nodes: ";
   const vector<string>& nodes = msg.nodes();
   if (!nodes.empty())
   {
@@ -434,7 +437,7 @@ void ReflectorLogic::handleMsgNodeList(std::istream& is)
       cout << ", " << *it;
     }
   }
-  cout << ")" << endl;
+  cout << endl;
 } /* ReflectorLogic::handleMsgNodeList */
 
 
@@ -447,8 +450,7 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgNodeJoined(" << msg.callsign() << ")"
-       << endl;
+  cout << name() << ": Node joined: " << msg.callsign() << endl;
 
 } /* ReflectorLogic::handleMsgNodeJoined */
 
@@ -462,8 +464,7 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgNodeLeft(" << msg.callsign() << ")"
-       << endl;
+  cout << name() << ": Node left: " << msg.callsign() << endl;
 
 } /* ReflectorLogic::handleMsgNodeLeft */
 
@@ -477,8 +478,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgTalkerStart(" << msg.callsign() << ")"
-       << endl;
+  cout << name() << ": Talker start: " << msg.callsign() << endl;
 
 } /* ReflectorLogic::handleMsgTalkerStart */
 
@@ -492,8 +492,7 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
     disconnect();
     return;
   }
-  cout << "### " << name() << ": MsgTalkerStop(" << msg.callsign() << ")"
-       << endl;
+  cout << name() << ": Talker stop: " << msg.callsign() << endl;
 
 } /* ReflectorLogic::handleMsgTalkerStop */
 
@@ -606,14 +605,14 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   uint16_t udp_rx_seq_diff = header.sequenceNum() - m_next_udp_rx_seq;
   if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
   {
-    cout << "### " << name()
+    cout << name()
          << ": Dropping out of sequence UDP frame with seq="
          << header.sequenceNum() << endl;
     return;
   }
   else if (udp_rx_seq_diff > 0) // Frame lost
   {
-    cout << "### " << name() << ": UDP frame(s) lost. Expected seq="
+    cout << name() << ": UDP frame(s) lost. Expected seq="
          << m_next_udp_rx_seq
          << " but received " << header.sequenceNum()
          << ". Resetting next expected sequence number to "
@@ -697,8 +696,8 @@ void ReflectorLogic::connect(void)
 {
   if ((m_con == 0) || (!m_con->isConnected()))
   {
-    cout << "### " << name() << ": Connecting to "
-         << m_reflector_host << ":" << m_reflector_port << "\n";
+    cout << name() << ": Connecting to " << m_reflector_host << ":"
+         << m_reflector_port << endl;
     m_reconnect_timer.setEnable(false);
     m_con = new TcpClient<FramedTcpConnection>(m_reflector_host,
                                                m_reflector_port);
@@ -730,7 +729,7 @@ void ReflectorLogic::disconnect(void)
 
 void ReflectorLogic::reconnect(void)
 {
-  cout << "### " << name() << ": Reconnecting to reflector server\n";
+  //cout << "### " << name() << ": Reconnecting to reflector server\n";
   disconnect();
   connect();
 } /* ReflectorLogic::reconnect */
@@ -758,7 +757,7 @@ void ReflectorLogic::handleTimerTick(Async::Timer *t)
     timersub(&now, &m_last_talker_timestamp, &diff);
     if (diff.tv_sec > 3)
     {
-      cout << "### " << name() << ": Talker audio timeout" << endl;
+      cout << name() << ": Last talker audio timeout" << endl;
       m_dec->flushEncodedSamples();
       timerclear(&m_last_talker_timestamp);
     }

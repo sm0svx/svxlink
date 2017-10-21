@@ -286,9 +286,9 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
     cerr << "*** ERROR: Could not unpack MsgProtoVer\n";
     return;
   }
-  cout << "### " << m_con->remoteHost() << ":" << m_con->remotePort()
-       << ": MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
-       << ")" << endl;
+  //cout << "### " << m_con->remoteHost() << ":" << m_con->remotePort()
+  //     << ": MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
+  //     << ")" << endl;
   if ((msg.majorVer() != MsgProtoVer::MAJOR) ||
       (msg.minorVer() != MsgProtoVer::MINOR))
   {
@@ -332,8 +332,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   {
     ss << (int)msg.digest()[i];
   }
-  cout << "### " << msg.callsign() << ": MsgAuthResponse(" << ss.str() << ")"
-       << endl;
+  //cout << "### " << msg.callsign() << ": MsgAuthResponse(" << ss.str() << ")"
+  //     << endl;
 
   string auth_key = lookupUserKey(msg.callsign());
   if (msg.verify(auth_key, m_auth_challenge))
@@ -377,7 +377,7 @@ void ReflectorClient::sendNodeList(void)
 
 void ReflectorClient::disconnect(const std::string& msg)
 {
-  cout << "### ReflectorClient::disconnect: " << msg << endl;
+  //cout << "### ReflectorClient::disconnect: " << msg << endl;
   sendMsg(MsgError(msg));
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
@@ -406,7 +406,7 @@ void ReflectorClient::onDisconnected(TcpConnection* con,
 
 void ReflectorClient::onDiscTimeout(Timer *t)
 {
-  cout << "### ReflectorClient::onDiscTimeout" << endl;
+  //cout << "### ReflectorClient::onDiscTimeout" << endl;
   assert(m_con_state == STATE_EXPECT_DISCONNECT);
   m_con->disconnect();
   m_con_state = STATE_DISCONNECTED;
