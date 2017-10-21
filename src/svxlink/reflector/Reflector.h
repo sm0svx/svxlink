@@ -165,7 +165,6 @@ class Reflector : public sigc::trackable
     FramedTcpServer*      srv;
     Async::UdpSocket*     udp_sock;
     ReflectorClientMap    client_map;
-    std::string           m_auth_key;
     ReflectorClient*      m_talker;
     Async::Timer          m_talker_timeout_timer;
     struct timeval        m_last_talker_timestamp;

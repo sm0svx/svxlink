@@ -190,18 +190,6 @@ bool Reflector::initialize(Async::Config &cfg)
   udp_sock->dataReceived.connect(
       mem_fun(*this, &Reflector::udpDatagramReceived));
 
-  if (!cfg.getValue("GLOBAL", "AUTH_KEY", m_auth_key) || m_auth_key.empty())
-  {
-    cerr << "*** ERROR: GLOBAL/AUTH_KEY must be specified\n";
-    return false;
-  }
-  if (m_auth_key == "Change this key now!")
-  {
-    cerr << "*** ERROR: You must change GLOBAL/AUTH_KEY from the "
-            "default value" << endl;
-    return false;
-  }
-
   cfg.getValue("GLOBAL", "SQL_TIMEOUT", m_sql_timeout);
   cfg.getValue("GLOBAL", "SQL_TIMEOUT_BLOCKTIME", m_sql_timeout_blocktime);
   m_sql_timeout_blocktime = max(m_sql_timeout_blocktime, 1U);
