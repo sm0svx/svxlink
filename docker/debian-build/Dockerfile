@@ -2,19 +2,17 @@
 #   docker build --pull -t svxlink-debian-build .
 #
 # Run with:
-#   docker run -it --rm --hostname debian-build \
-#              --privileged -v /dev/snd:/dev/snd \
-#              svxlink-debian-build
+#   docker run -it --rm --hostname debian-build svxlink-debian-build
 #
 # For using sound inside the docker container add:
-#              --privileged -v /dev/snd:/dev/snd \
-#              -e HOSTAUDIO_GID=$(stat -c "%g" /dev/snd/timer) \
+#              --privileged -v /dev/snd:/dev/snd
+#              -e HOSTAUDIO_GID=$(stat -c "%g" /dev/snd/timer)
 #
 # To import your git config add (mileage may vary):
-#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro \
+#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro
 #
 # To use a specific git repositoty instead of the default one:
-#              -e GIT_URL=username@your.repo:/path/to/svxlink.git \
+#              -e GIT_URL=username@your.repo:/path/to/svxlink.git
 #
 # To build another branch than master:
 #              -e GIT_BRANCH=the_branch
