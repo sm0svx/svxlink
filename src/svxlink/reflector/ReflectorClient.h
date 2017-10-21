@@ -52,6 +52,7 @@ An example of how to use the ReflectorClient class
 
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -128,7 +129,7 @@ class ReflectorClient
      * @brief 	Constructor
      */
     ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
-                    const std::string& auth_key);
+                    Async::Config* cfg);
 
     /**
      * @brief 	Destructor
@@ -181,7 +182,7 @@ class ReflectorClient
     std::string           m_callsign;
     uint32_t              m_client_id;
     uint16_t              m_remote_udp_port;
-    std::string           m_auth_key;
+    Async::Config*        m_cfg;
     uint16_t              m_next_udp_tx_seq;
     uint16_t              m_next_udp_rx_seq;
     Async::Timer          m_heartbeat_timer;
@@ -205,6 +206,7 @@ class ReflectorClient
     //                    Async::FramedTcpConnection::DisconnectReason);
     void onDiscTimeout(Async::Timer *t);
     void handleHeartbeat(Async::Timer *t);
+    std::string lookupUserKey(const std::string& callsign);
 
 };  /* class ReflectorClient */
 

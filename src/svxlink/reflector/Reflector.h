@@ -173,6 +173,7 @@ class Reflector : public sigc::trackable
     unsigned              m_sql_timeout;
     unsigned              m_sql_timeout_cnt;
     unsigned              m_sql_timeout_blocktime;
+    Async::Config*        m_cfg;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);

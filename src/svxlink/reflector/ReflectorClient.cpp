@@ -119,10 +119,10 @@ uint32_t ReflectorClient::next_client_id = 0;
  ****************************************************************************/
 
 ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
-                                 const std::string& auth_key)
+                                 Async::Config *cfg)
   : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
-    m_client_id(next_client_id++), m_remote_udp_port(0), m_auth_key(auth_key),
+    m_client_id(next_client_id++), m_remote_udp_port(0), m_cfg(cfg),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC),
     m_heartbeat_tx_cnt(HEARTBEAT_TX_CNT_RESET),
@@ -335,7 +335,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   cout << "### " << msg.callsign() << ": MsgAuthResponse(" << ss.str() << ")"
        << endl;
 
-  if (msg.verify(m_auth_key, m_auth_challenge))
+  string auth_key = lookupUserKey(msg.callsign());
+  if (msg.verify(auth_key, m_auth_challenge))
   {
     vector<string> connected_nodes;
     m_reflector->nodeList(connected_nodes);
@@ -450,6 +451,27 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
 
   }
 } /* ReflectorClient::handleHeartbeat */
+
+
+std::string ReflectorClient::lookupUserKey(const std::string& callsign)
+{
+  string auth_group;
+  if (!m_cfg->getValue("USERS", callsign, auth_group) || auth_group.empty())
+  {
+    cout << "*** WARNING: Unknown user \"" << callsign << "\" in SvxReflector"
+         << endl;
+    return "";
+  }
+  string auth_key;
+  if (!m_cfg->getValue("PASSWORDS", auth_group, auth_key) || auth_key.empty())
+  {
+    cout << "*** ERROR: User \"" << callsign << "\" found in SvxReflector "
+         << "configuration but password with groupname \"" << auth_group
+         << "\" not found." << endl;
+    return "";
+  }
+  return auth_key;
+} /* ReflectorClient::lookupUserKey */
 
 
 /*

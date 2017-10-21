@@ -147,6 +147,8 @@ Reflector::~Reflector(void)
 
 bool Reflector::initialize(Async::Config &cfg)
 {
+  m_cfg = &cfg;
+
     // Initialize the GCrypt library if not already initialized
   if (!gcry_control(GCRYCTL_INITIALIZATION_FINISHED_P))
   {
@@ -263,7 +265,7 @@ void Reflector::clientConnected(Async::FramedTcpConnection *con)
 {
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " connected" << endl;
-  ReflectorClient *rc = new ReflectorClient(this, con, m_auth_key);
+  ReflectorClient *rc = new ReflectorClient(this, con, m_cfg);
   client_map[rc->clientId()] = rc;
   m_client_con_map[con] = rc;
 } /* Reflector::clientConnected */
