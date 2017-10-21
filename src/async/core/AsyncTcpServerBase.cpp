@@ -187,7 +187,7 @@ TcpServerBase::TcpServerBase(const string& port_str,
   {
     addr.sin_addr = bind_ip.ip4Addr();
   }
-  if (bind(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
+  if (::bind(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
   {
     perror("bind");
     cleanup();

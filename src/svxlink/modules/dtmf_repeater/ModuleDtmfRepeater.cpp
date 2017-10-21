@@ -212,7 +212,7 @@ bool ModuleDtmfRepeater::initialize(void)
     return false;
   }
   
-  int repeat_delay;
+  int repeat_delay = -1;
   if (cfg().getValue(cfgName(), "REPEAT_DELAY", repeat_delay))
   {
     repeat_delay_timer.setTimeout(repeat_delay);

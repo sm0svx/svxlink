@@ -116,7 +116,7 @@ namespace SvxLink
  * success.
  */
 template <typename ValueType>
-static bool setValueFromString(ValueType &val, const std::string &str)
+bool setValueFromString(ValueType &val, const std::string &str)
 {
   std::istringstream ss(str);
   ss >> std::noskipws >> val;
@@ -134,20 +134,12 @@ static bool setValueFromString(ValueType &val, const std::string &str)
  * @param   str The sting to set the value from
  * @returns Returns \em true if the operation succeeded or \em false if not
  *
- * This function is a specialization for std::string of the more general
- * template function. It just copies the incoming string to the outgoing value.
- * If streaming were to be used for strings, white space would be
- * unconditionally ignored.
+ * This function overload the more general template function when the value
+ * to be set is an std::string. It just copies the incoming string to the
+ * outgoing value. If streaming were to be used for strings, white space
+ * would be unconditionally ignored.
  */
-template <>
-#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ < 403)
-static
-#endif
-bool setValueFromString(std::string &val, const std::string &str)
-{
-  val = str;
-  return true;
-} /* setValueFromString */
+bool setValueFromString(std::string &val, const std::string &str);
 
 
 /**
