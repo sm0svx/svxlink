@@ -189,8 +189,7 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
     {
       addr.sin_addr = bind_ip.ip4Addr();
     }
-    if(bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr))
-	== -1)
+    if(::bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
     {
       perror("bind");
       cleanup();
