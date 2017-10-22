@@ -316,7 +316,7 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
 {
   public:
     static const int      ALGO        = GCRY_MD_SHA1;
-    static const int      DIGEST_LEN  = 20;
+    static const size_t   DIGEST_LEN  = 20;
     MsgAuthResponse(void) {}
 
     /**
