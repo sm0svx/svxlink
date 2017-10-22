@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
@@ -123,7 +121,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
-    m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0)
+    m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
+    m_con_state(STATE_DISCONNECTED)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -179,7 +178,16 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
-  string audio_codec("OPUS");
+  string audio_codec("GSM");
+  if (AudioDecoder::isAvailable("OPUS") && AudioEncoder::isAvailable("OPUS"))
+  {
+    audio_codec = "OPUS";
+  }
+  else if (AudioDecoder::isAvailable("SPEEX") &&
+           AudioEncoder::isAvailable("SPEEX"))
+  {
+    audio_codec = "SPEEX";
+  }
   cfg().getValue(name(), "AUDIO_CODEC", audio_codec);
 
   m_logic_con_in = Async::AudioEncoder::create(audio_codec);
@@ -260,6 +268,8 @@ void ReflectorLogic::onConnected(void)
   m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
   timerclear(&m_last_talker_timestamp);
+  m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
+  m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
 } /* ReflectorLogic::onConnected */
 
 
@@ -285,6 +295,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
     m_dec->flushEncodedSamples();
     timerclear(&m_last_talker_timestamp);
   }
+  m_con_state = STATE_DISCONNECTED;
 } /* ReflectorLogic::onDisconnected */
 
 
@@ -293,8 +304,6 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
 {
   char *buf = reinterpret_cast<char*>(&data.front());
   int len = data.size();
-
-  //cout << "### ReflectorLogic::onFrameReceived: len=" << len << endl;
 
   stringstream ss;
   ss.write(buf, len);
@@ -308,12 +317,19 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
     return;
   }
 
+  if ((header.type() > 100) && (m_con_state != STATE_CONNECTED))
+  {
+    cerr << "*** ERROR[" << name() << "]: Unexpected protocol message received"
+         << endl;
+    disconnect();
+    return;
+  }
+
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
 
   switch (header.type())
   {
     case MsgHeartbeat::TYPE:
-      //cout << "### " << name() << ": MsgHeartbeat()" << endl;
       break;
     case MsgError::TYPE:
       handleMsgError(ss);
@@ -343,9 +359,12 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
       handleMsgTalkerStop(ss);
       break;
     default:
-      cerr << "*** WARNING[" << name()
-           << "]: Unknown protocol message received: msg_type="
-           << header.type() << endl;
+      // Better just ignoring unknown messages for easier addition of protocol
+      // messages while being backwards compatible
+
+      //cerr << "*** WARNING[" << name()
+      //     << "]: Unknown protocol message received: msg_type="
+      //     << header.type() << endl;
       break;
   }
 } /* ReflectorLogic::onFrameReceived */
@@ -356,11 +375,10 @@ void ReflectorLogic::handleMsgError(std::istream& is)
   MsgError msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthChallenge\n";
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthError" << endl;
     disconnect();
     return;
   }
-  //cout << "### " << name() << ": MsgError(\"" << msg.message() << "\")" << endl;
   cout << name() << ": Error message received from server: " << msg.message()
        << endl;
   disconnect();
@@ -369,6 +387,13 @@ void ReflectorLogic::handleMsgError(std::istream& is)
 
 void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
 {
+  if (m_con_state != STATE_EXPECT_AUTH_CHALLENGE)
+  {
+    cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthChallenge\n";
+    disconnect();
+    return;
+  }
+
   MsgAuthChallenge msg;
   if (!msg.unpack(is))
   {
@@ -376,36 +401,47 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
     disconnect();
     return;
   }
-  stringstream ss;
-  ss << hex << setw(2) << setfill('0');
-  for (int i=0; i<MsgAuthChallenge::CHALLENGE_LEN; ++i)
+  const uint8_t *challenge = msg.challenge();
+  if (challenge == 0)
   {
-    ss << (int)msg.challenge()[i];
+    cerr << "*** ERROR[" << name() << "]: Illegal challenge received\n";
+    disconnect();
+    return;
   }
-  //cout << "### " << name() << ": MsgAuthChallenge(" << ss.str() << ")" << endl;
-
-  sendMsg(MsgAuthResponse(m_callsign, m_auth_key, msg.challenge()));
+  sendMsg(MsgAuthResponse(m_callsign, m_auth_key, challenge));
+  m_con_state = STATE_EXPECT_AUTH_OK;
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
 void ReflectorLogic::handleMsgAuthOk(void)
 {
-  //cout << "### " << name() << ": MsgAuthOk()" << endl;
+  if (m_con_state != STATE_EXPECT_AUTH_OK)
+  {
+    cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthOk\n";
+    disconnect();
+    return;
+  }
   cout << name() << ": Authentication OK" << endl;
+  m_con_state = STATE_EXPECT_SERVER_INFO;
+  m_con->setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
 } /* ReflectorLogic::handleMsgAuthOk */
 
 
 void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 {
-  MsgServerInfo msg;
-  if (!msg.unpack(is))
+  if (m_con_state != STATE_EXPECT_SERVER_INFO)
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthChallenge\n";
+    cerr << "*** ERROR[" << name() << "]: Unexpected MsgServerInfo\n";
     disconnect();
     return;
   }
-  //cout << "### " << name() << ": MsgServerInfo(" << msg.clientId() << ")"
-  //     << endl;
+  MsgServerInfo msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgServerInfo\n";
+    disconnect();
+    return;
+  }
   m_client_id = msg.clientId();
 
   delete m_udp_sock;
@@ -414,6 +450,7 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
   sendUdpMsg(MsgUdpHeartbeat());
+  m_con_state = STATE_CONNECTED;
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
@@ -451,7 +488,6 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
     return;
   }
   cout << name() << ": Node joined: " << msg.callsign() << endl;
-
 } /* ReflectorLogic::handleMsgNodeJoined */
 
 
@@ -465,7 +501,6 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
     return;
   }
   cout << name() << ": Node left: " << msg.callsign() << endl;
-
 } /* ReflectorLogic::handleMsgNodeLeft */
 
 
@@ -479,7 +514,6 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     return;
   }
   cout << name() << ": Talker start: " << msg.callsign() << endl;
-
 } /* ReflectorLogic::handleMsgTalkerStart */
 
 
@@ -493,7 +527,6 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
     return;
   }
   cout << name() << ": Talker stop: " << msg.callsign() << endl;
-
 } /* ReflectorLogic::handleMsgTalkerStop */
 
 
@@ -524,8 +557,6 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 
 void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 {
-  //cout << "### " << name() << ": ReflectorLogic::sendEncodedAudio: count="
-  //     << count << endl;
   if ((m_con == 0) || !m_con->isConnected())
   {
     return;
@@ -541,7 +572,6 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 
 void ReflectorLogic::flushEncodedAudio(void)
 {
-  //cout << "### " << name() << ": ReflectorLogic::flushEncodedAudio" << endl;
   if ((m_con == 0) || !m_con->isConnected())
   {
     flushTimeout();
@@ -555,9 +585,7 @@ void ReflectorLogic::flushEncodedAudio(void)
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  //cout << "### " << name() << ": ReflectorLogic::udpDatagramReceived: addr="
-  //     << addr << " port=" << port << " count=" << count;
-  if ((m_con == 0) || !m_con->isConnected())
+  if ((m_con == 0) || !m_con->isConnected() || (m_con_state != STATE_CONNECTED))
   {
     return;
   }
@@ -587,11 +615,6 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
          << "]: Unpacking failed for UDP message header" << endl;
     return;
   }
-
-  //cout << " msg_type=" << header.type()
-  //     << " client_id=" << header.clientId()
-  //     << " seq=" << header.sequenceNum()
-  //     << std::endl;
 
   if (header.clientId() != m_client_id)
   {
@@ -625,7 +648,6 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
-      //cout << "### " << name() << ": MsgUdpHeartbeat()" << endl;
       break;
 
     case MsgUdpAudio::TYPE:
@@ -646,20 +668,21 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     }
 
     case MsgUdpFlushSamples::TYPE:
-      //cout << "### " << name() << ": MsgUdpFlushSamples()" << endl;
       m_dec->flushEncodedSamples();
       timerclear(&m_last_talker_timestamp);
       break;
 
     case MsgUdpAllSamplesFlushed::TYPE:
-      //cout << "### " << name() << ": MsgUdpAllSamplesFlushed()" << endl;
       m_logic_con_in->allEncodedSamplesFlushed();
       break;
 
     default:
-      cerr << "*** WARNING[" << name()
-           << "]: Unknown UDP protocol message received: msg_type="
-           << header.type() << endl;
+      // Better ignoring unknown protocol messages for easier addition of new
+      // messages while still being backwards compatible
+
+      //cerr << "*** WARNING[" << name()
+      //     << "]: Unknown UDP protocol message received: msg_type="
+      //     << header.type() << endl;
       break;
   }
 } /* ReflectorLogic::udpDatagramReceived */
@@ -667,7 +690,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
 void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 {
-  if ((m_con == 0) || (!m_con->isConnected()))
+  if ((m_con == 0) || !m_con->isConnected() || (m_con_state != STATE_CONNECTED))
   {
     return;
   }
@@ -723,13 +746,13 @@ void ReflectorLogic::disconnect(void)
     }
     delete m_con;
     m_con = 0;
+    m_con_state = STATE_DISCONNECTED;
   }
 } /* ReflectorLogic::disconnect */
 
 
 void ReflectorLogic::reconnect(void)
 {
-  //cout << "### " << name() << ": Reconnecting to reflector server\n";
   disconnect();
   connect();
 } /* ReflectorLogic::reconnect */

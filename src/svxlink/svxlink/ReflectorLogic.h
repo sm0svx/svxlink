@@ -49,7 +49,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpClient.h>
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
-//#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioFifo.h>
 
 
@@ -75,16 +74,6 @@ namespace Async
 
 class ReflectorMsg;
 class ReflectorUdpMsg;
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-//namespace MyNameSpace
-//{
 
 
 /****************************************************************************
@@ -118,7 +107,7 @@ class ReflectorUdpMsg;
  ****************************************************************************/
 
 /**
-@brief	
+@brief	A logic core that connect to the SvxReflector
 @author Tobias Blomberg / SM0SVX
 @date   2017-02-12
 */
@@ -158,6 +147,12 @@ class ReflectorLogic : public LogicBase
   protected:
 
   private:
+    typedef enum
+    {
+      STATE_DISCONNECTED, STATE_EXPECT_AUTH_CHALLENGE, STATE_EXPECT_AUTH_OK,
+      STATE_EXPECT_SERVER_INFO, STATE_CONNECTED
+    } ConState;
+
     typedef Async::TcpClient<Async::FramedTcpConnection> FramedTcpClient;
 
     static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 15;
@@ -186,6 +181,7 @@ class ReflectorLogic : public LogicBase
     unsigned              m_tcp_heartbeat_tx_cnt;
     unsigned              m_tcp_heartbeat_rx_cnt;
     struct timeval        m_last_talker_timestamp;
+    ConState              m_con_state;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -218,8 +214,6 @@ class ReflectorLogic : public LogicBase
 
 };  /* class ReflectorLogic */
 
-
-//} /* namespace */
 
 #endif /* REFLECTOR_LOGIC_INCLUDED */
 

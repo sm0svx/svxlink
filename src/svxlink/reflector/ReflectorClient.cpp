@@ -129,7 +129,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
     m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0)
 {
-  m_con->setMaxFrameSize(MAX_PREAUTH_FRAME_SIZE);
+  m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
   m_con->frameReceived.connect(
       mem_fun(*this, &ReflectorClient::onFrameReceived));
   m_disc_timer.expired.connect(
@@ -342,7 +342,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     if (find(connected_nodes.begin(), connected_nodes.end(),
              msg.callsign()) == connected_nodes.end())
     {
-      m_con->setMaxFrameSize(MAX_POSTAUTH_FRAME_SIZE);
+      m_con->setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
       m_callsign = msg.callsign();
       sendMsg(MsgAuthOk());
       cout << m_callsign << ": Login OK from "

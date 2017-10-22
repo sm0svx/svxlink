@@ -223,9 +223,6 @@ class ReflectorClient
     bool isBlocked(void) const { return (m_remaining_blocktime > 0); }
 
   private:
-    static const uint32_t MAX_PREAUTH_FRAME_SIZE = 64;
-    static const uint32_t MAX_POSTAUTH_FRAME_SIZE = 16384;
-
     static uint32_t next_client_id;
 
     typedef enum

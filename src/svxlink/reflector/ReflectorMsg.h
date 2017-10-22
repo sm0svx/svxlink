@@ -103,6 +103,9 @@ the argument type for functions that take a TCP message as argument.
 class ReflectorMsg : public Async::Msg
 {
   public:
+    static const uint32_t MAX_PREAUTH_FRAME_SIZE = 64;
+    static const uint32_t MAX_POSTAUTH_FRAME_SIZE = 16384;
+
     /**
      * @brief 	Constuctor
      * @param 	type The message type
@@ -280,7 +283,14 @@ class MsgAuthChallenge : public ReflectorMsgBase<10>
       gcry_create_nonce(&m_challenge.front(), CHALLENGE_LEN);
     }
 
-    const uint8_t *challenge(void) const { return &m_challenge[0]; }
+    const uint8_t *challenge(void) const
+    {
+      if (m_challenge.size() != CHALLENGE_LEN)
+      {
+        return 0;
+      }
+      return &m_challenge[0];
+    }
 
     ASYNC_MSG_MEMBERS(m_challenge);
 
