@@ -118,7 +118,7 @@ void delete_client(ReflectorClient *client);
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : srv(0), udp_sock(0), m_talker(0),
+  : m_srv(0), m_udp_sock(0), m_talker(0),
     m_talker_timeout_timer(1000, Timer::TYPE_PERIODIC),
     m_sql_timeout(0), m_sql_timeout_cnt(0), m_sql_timeout_blocktime(60)
 {
@@ -130,11 +130,11 @@ Reflector::Reflector(void)
 
 Reflector::~Reflector(void)
 {
-  delete udp_sock;
-  delete srv;
+  delete m_udp_sock;
+  delete m_srv;
 
-  for (ReflectorClientMap::iterator it = client_map.begin();
-       it != client_map.end(); ++it)
+  for (ReflectorClientMap::iterator it = m_client_map.begin();
+       it != m_client_map.end(); ++it)
   {
     delete (*it).second;
   }
@@ -169,21 +169,21 @@ bool Reflector::initialize(Async::Config &cfg)
 
   std::string listen_port("5300");
   cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
-  srv = new TcpServer<FramedTcpConnection>(listen_port);
-  srv->clientConnected.connect(
+  m_srv = new TcpServer<FramedTcpConnection>(listen_port);
+  m_srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
-  srv->clientDisconnected.connect(
+  m_srv->clientDisconnected.connect(
       mem_fun(*this, &Reflector::clientDisconnected));
 
   uint16_t udp_listen_port = 5300;
   cfg.getValue("GLOBAL", "LISTEN_PORT", udp_listen_port);
-  udp_sock = new UdpSocket(udp_listen_port);
-  if ((udp_sock == 0) || !udp_sock->initOk())
+  m_udp_sock = new UdpSocket(udp_listen_port);
+  if ((m_udp_sock == 0) || !m_udp_sock->initOk())
   {
     cerr << "*** ERROR: Could not initialize UDP socket" << endl;
     return false;
   }
-  udp_sock->dataReceived.connect(
+  m_udp_sock->dataReceived.connect(
       mem_fun(*this, &Reflector::udpDatagramReceived));
 
   cfg.getValue("GLOBAL", "SQL_TIMEOUT", m_sql_timeout);
@@ -196,8 +196,9 @@ bool Reflector::initialize(Async::Config &cfg)
 
 void Reflector::nodeList(std::vector<std::string>& nodes) const
 {
-  for (ReflectorClientMap::const_iterator it = client_map.begin();
-       it != client_map.end(); ++it)
+  nodes.clear();
+  for (ReflectorClientMap::const_iterator it = m_client_map.begin();
+       it != m_client_map.end(); ++it)
   {
     const std::string& callsign = (*it).second->callsign();
     if (!callsign.empty())
@@ -211,23 +212,22 @@ void Reflector::nodeList(std::vector<std::string>& nodes) const
 void Reflector::broadcastMsgExcept(const ReflectorMsg& msg,
                                    ReflectorClient *client)
 {
-  ReflectorClientMap::const_iterator it = client_map.begin();
-  for (; it != client_map.end(); ++it)
+  ReflectorClientMap::const_iterator it = m_client_map.begin();
+  for (; it != m_client_map.end(); ++it)
   {
     if ((*it).second != client)
     {
-      //cout << "### Reflector::broadcastMsgExcept: "
-      //     << (*it).second->callsign() << endl;
       (*it).second->sendMsg(msg);
     }
   }
 } /* Reflector::broadcastMsgExcept */
 
 
-void Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
+bool Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
                                 size_t count)
 {
-  udp_sock->write(client->remoteHost(), client->remoteUdpPort(), buf, count);
+  return m_udp_sock->write(client->remoteHost(), client->remoteUdpPort(), buf,
+                           count);
 } /* Reflector::sendUdpDatagram */
 
 
@@ -250,7 +250,7 @@ void Reflector::clientConnected(Async::FramedTcpConnection *con)
   cout << "Client " << con->remoteHost() << ":" << con->remotePort()
        << " connected" << endl;
   ReflectorClient *rc = new ReflectorClient(this, con, m_cfg);
-  client_map[rc->clientId()] = rc;
+  m_client_map[rc->clientId()] = rc;
   m_client_con_map[con] = rc;
 } /* Reflector::clientConnected */
 
@@ -266,11 +266,14 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
   {
     cout << client->callsign() << ": ";
   }
-  cout << "Client " << con->remoteHost() << ":" << con->remotePort()
-       << " disconnected: " << TcpConnection::disconnectReasonStr(reason)
+  else
+  {
+    cout << "Client " << con->remoteHost() << ":" << con->remotePort() << " ";
+  }
+  cout << "disconnected: " << TcpConnection::disconnectReasonStr(reason)
        << endl;
 
-  client_map.erase(client->clientId());
+  m_client_map.erase(client->clientId());
   m_client_con_map.erase(it);
 
   if (client == m_talker)
@@ -289,27 +292,18 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
 void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                     void *buf, int count)
 {
-  //cout << "### Reflector::udpDatagramReceived: addr=" << addr
-  //     << " port=" << port << " count=" << count;
-
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
 
   ReflectorUdpMsg header;
   if (!header.unpack(ss))
   {
-    // FIXME: Disconnect
-    cout << "*** ERROR: Unpacking failed for UDP message header\n";
+    cout << "*** WARNING: Unpacking failed for UDP message header\n";
     return;
   }
 
-  //cout << " msg_type=" << header.type()
-  //     << " client_id=" << header.clientId()
-  //     << " seq=" << header.sequenceNum()
-  //     << std::endl;
-
-  ReflectorClientMap::iterator it = client_map.find(header.clientId());
-  if (it == client_map.end())
+  ReflectorClientMap::iterator it = m_client_map.find(header.clientId());
+  if (it == m_client_map.end())
   {
     cerr << "*** WARNING: Incoming UDP packet has invalid client id" << endl;
     return;
@@ -356,7 +350,6 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
-      //cout << "### " << client->callsign() << ": MsgUdpHeartbeat()" << endl;
       break;
 
     case MsgUdpAudio::TYPE:
@@ -364,7 +357,12 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       if (!client->isBlocked())
       {
         MsgUdpAudio msg;
-        msg.unpack(ss);
+        if (!msg.unpack(ss))
+        {
+          cerr << "*** WARNING[" << client->callsign()
+               << "]: Could not unpack incoming MsgUdpAudio message" << endl;
+          return;
+        }
         if (!msg.audioData().empty())
         {
           if (m_talker == 0)
@@ -377,11 +375,6 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
             gettimeofday(&m_last_talker_timestamp, NULL);
             broadcastUdpMsgExcept(client, msg);
           }
-          else
-          {
-            cout << client->callsign() << ": " << m_talker->callsign()
-                 << " is already talking...\n";
-          }
         }
       }
       break;
@@ -389,7 +382,6 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
     case MsgUdpFlushSamples::TYPE:
     {
-      //cout << "### " << client->callsign() << ": MsgUdpFlushSamples()" << endl;
       if (client == m_talker)
       {
         cout << m_talker->callsign() << ": Talker stop" << endl;
@@ -405,16 +397,16 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     }
 
     case MsgUdpAllSamplesFlushed::TYPE:
-      //cout << "### " << client->callsign() << ": MsgUdpAllSamplesFlushed()"
-      //     << endl;
       // Ignore
       break;
 
     default:
-      cerr << "*** WARNING[" << client->callsign()
-           << "]: Unknown UDP protocol message received: msg_type="
-           << header.type() << endl;
-      // FIXME: Disconnect client or ignore?
+      // Better ignoring unknown messages to make it easier to add messages to
+      // the protocol but still be backwards compatible
+
+      //cerr << "*** WARNING[" << client->callsign()
+      //     << "]: Unknown UDP protocol message received: msg_type="
+      //     << header.type() << endl;
       break;
   }
 } /* Reflector::udpDatagramReceived */
@@ -423,8 +415,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
                                       const ReflectorUdpMsg& msg)
 {
-  for (ReflectorClientMap::iterator it = client_map.begin();
-       it != client_map.end(); ++it)
+  for (ReflectorClientMap::iterator it = m_client_map.begin();
+       it != m_client_map.end(); ++it)
   {
     if ((*it).second != client)
     {
@@ -436,14 +428,12 @@ void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
 
 void Reflector::checkTalkerTimeout(Async::Timer *t)
 {
-  //cout << "### Reflector::checkTalkerTimeout\n";
-
   if (m_talker != 0)
   {
     struct timeval now, diff;
     gettimeofday(&now, NULL);
     timersub(&now, &m_last_talker_timestamp, &diff);
-    if (diff.tv_sec > 3)
+    if (diff.tv_sec > TALKER_AUDIO_TIMEOUT)
     {
       cout << m_talker->callsign() << ": Talker audio timeout"
            << endl;

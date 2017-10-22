@@ -5,7 +5,7 @@
 @date	 2017-02-11
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxReflector - An audio reflector for connecting SvxLink Servers
 Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -60,16 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-//namespace MyNameSpace
-//{
 
 
 /****************************************************************************
@@ -359,7 +349,8 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
     {
       unsigned char digest[DIGEST_LEN];
       bool ok = calcDigest(digest, key.c_str(), key.size(), challenge);
-      return ok && (memcmp(&m_digest.front(), digest, DIGEST_LEN) == 0);
+      return ok && (m_digest.size() == DIGEST_LEN) &&
+             (memcmp(&m_digest.front(), digest, DIGEST_LEN) == 0);
     }
 
     ASYNC_MSG_MEMBERS(m_callsign, m_digest);
@@ -640,8 +631,6 @@ class MsgUdpAllSamplesFlushed : public ReflectorUdpMsgBase<103>
     ASYNC_MSG_NO_MEMBERS
 }; /* MsgUdpAllSamplesFlushed */
 
-
-//} /* namespace */
 
 #endif /* REFLECTOR_MSG_INCLUDED */
 

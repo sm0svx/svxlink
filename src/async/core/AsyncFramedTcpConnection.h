@@ -154,6 +154,16 @@ class FramedTcpConnection : public TcpConnection
     virtual ~FramedTcpConnection(void);
 
     /**
+     * @brief   Set the maximum frame size
+     * @param   frame_size The maximum frame size in bytes
+     *
+     * Use this function to set the maximum allowed frame size. If a frame size
+     * number larger than this is received a disconnection is immediately
+     * issued. The default maximum frame size is DEFAULT_MAX_FRAME_SIZE.
+     */
+    void setMaxFrameSize(uint32_t frame_size) { m_max_frame_size = frame_size; }
+
+    /**
      * @brief 	Disconnect from the remote host
      *
      * Call this function to disconnect from the remote host. If already
@@ -224,6 +234,8 @@ class FramedTcpConnection : public TcpConnection
     virtual int onDataReceived(void *buf, int count);
 
   private:
+    static const uint32_t DEFAULT_MAX_FRAME_SIZE = 1024 * 1024; // 1MB
+
     struct QueueItem
     {
       char* m_buf;
@@ -245,6 +257,7 @@ class FramedTcpConnection : public TcpConnection
     };
     typedef std::deque<QueueItem*> TxQueue;
 
+    uint32_t              m_max_frame_size;
     bool                  m_size_received;
     uint32_t              m_frame_size;
     std::vector<uint8_t>  m_frame;

@@ -129,6 +129,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
     m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0)
 {
+  m_con->setMaxFrameSize(MAX_PREAUTH_FRAME_SIZE);
   m_con->frameReceived.connect(
       mem_fun(*this, &ReflectorClient::onFrameReceived));
   m_disc_timer.expired.connect(
@@ -186,20 +187,12 @@ void ReflectorClient::sendUdpMsg(const ReflectorUdpMsg &msg)
     return;
   }
 
-  //cout << "### ReflectorClient::sendUdpMsg: " << client->remoteHost() << ":"
-  //     << client->remoteUdpPort() << endl;
-
   m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
 
   ReflectorUdpMsg header(msg.type(), clientId(), nextUdpTxSeq());
   ostringstream ss;
-  if (!header.pack(ss) || !msg.pack(ss))
-  {
-    // FIXME: Better error handling
-    cerr << "*** ERROR: Failed to pack reflector UDP message\n";
-    return;
-  }
-  m_reflector->sendUdpDatagram(this, ss.str().data(), ss.str().size());
+  assert(header.pack(ss) && msg.pack(ss));
+  (void)m_reflector->sendUdpDatagram(this, ss.str().data(), ss.str().size());
 } /* ReflectorClient::sendUdpMsg */
 
 
@@ -245,8 +238,16 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
   ReflectorMsg header;
   if (!header.unpack(ss))
   {
-    cout << "*** ERROR: Unpacking failed for TCP message header\n";
-    disconnect("Protocol message header too short");
+    if (!m_callsign.empty())
+    {
+      cout << m_callsign << ": ";
+    }
+    else
+    {
+      cout << m_con->remoteHost() << ":" << m_con->remotePort() << " ";
+    }
+    cout << "ERROR: Unpacking failed for TCP message header" << endl;
+    sendError("Protocol message header too short");
     return;
   }
 
@@ -255,7 +256,6 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
   switch (header.type())
   {
     case MsgHeartbeat::TYPE:
-      //cout << "### " << callsign() << ": MsgHeartbeat()" << endl;
       break;
     case MsgProtoVer::TYPE:
       handleMsgProtoVer(ss);
@@ -263,9 +263,15 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgAuthResponse::TYPE:
       handleMsgAuthResponse(ss);
       break;
+    case MsgError::TYPE:
+      handleMsgError(ss);
+      break;
     default:
-      cerr << "*** WARNING: Unknown protocol message received: msg_type="
-           << header.type() << endl;
+      // Better just ignoring unknown protocol messages for making it easier to
+      // add messages to the protocol and still be backwards compatible.
+
+      //cerr << "*** WARNING: Unknown protocol message received: msg_type="
+      //     << header.type() << endl;
       break;
   }
 } /* ReflectorClient::onFrameReceived */
@@ -275,30 +281,29 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
 {
   if (m_con_state != STATE_EXPECT_PROTO_VER)
   {
-    disconnect("Protocol version expected");
+    sendError("Protocol version expected");
     return;
   }
 
   MsgProtoVer msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgProtoVer\n";
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgProtoVer\n";
+    sendError("Illegal MsgProtoVer protocol message received");
     return;
   }
-  //cout << "### " << m_con->remoteHost() << ":" << m_con->remotePort()
-  //     << ": MsgProtoVer(" << msg.majorVer() << ", " << msg.minorVer()
-  //     << ")" << endl;
   if ((msg.majorVer() != MsgProtoVer::MAJOR) ||
       (msg.minorVer() != MsgProtoVer::MINOR))
   {
-    cerr << "*** ERROR: Incompatible protocol version: "
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " Incompatible protocol version: "
          << msg.majorVer() << "." << msg.minorVer() << ". Should be "
-         << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR << endl;
+         << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR << "." << endl;
     stringstream ss;
     ss << "Unsupported protocol version " << msg.majorVer() << "."
        << msg.minorVer();
-    disconnect(ss.str());
+    sendError(ss.str());
     return;
   }
 
@@ -314,26 +319,20 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 {
   if (m_con_state != STATE_EXPECT_AUTH_RESPONSE)
   {
-    disconnect("Authentication response expected");
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " Authentication response unexpected" << endl;
+    sendError("Authentication response unexpected");
     return;
   }
 
   MsgAuthResponse msg;
   if (!msg.unpack(is))
   {
-    // FIXME: Disconnect
-    cerr << "*** ERROR: Could not unpack MsgAuthResponse\n";
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgAuthResponse" << endl;
+    sendError("Illegal MsgAuthResponse protocol message received");
     return;
   }
-
-  stringstream ss;
-  ss << hex << setw(2) << setfill('0');
-  for (int i=0; i<MsgAuthResponse::DIGEST_LEN; ++i)
-  {
-    ss << (int)msg.digest()[i];
-  }
-  //cout << "### " << msg.callsign() << ": MsgAuthResponse(" << ss.str() << ")"
-  //     << endl;
 
   string auth_key = lookupUserKey(msg.callsign());
   if (msg.verify(auth_key, m_auth_challenge))
@@ -343,6 +342,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     if (find(connected_nodes.begin(), connected_nodes.end(),
              msg.callsign()) == connected_nodes.end())
     {
+      m_con->setMaxFrameSize(MAX_POSTAUTH_FRAME_SIZE);
       m_callsign = msg.callsign();
       sendMsg(MsgAuthOk());
       cout << m_callsign << ": Login OK from "
@@ -356,15 +356,38 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     else
     {
       cout << msg.callsign() << ": Already connected" << endl;
-      disconnect("Access denied");
+      sendError("Access denied");
     }
   }
   else
   {
-    cout << msg.callsign() << ": Access denied" << endl;
-    disconnect("Access denied");
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " Authentication failed for user \"" << msg.callsign()
+         << "\"" << endl;
+    sendError("Access denied");
   }
 } /* ReflectorClient::handleMsgProtoVer */
+
+
+void ReflectorClient::handleMsgError(std::istream& is)
+{
+  MsgError msg;
+  string message;
+  if (msg.unpack(is))
+  {
+    message = msg.message();
+  }
+  if (!m_callsign.empty())
+  {
+    cout << m_callsign << ": ";
+  }
+  else
+  {
+    cout << m_con->remoteHost() << ":" << m_con->remotePort() << " ";
+  }
+  cout << "Error message received from remote peer: " << message << endl;
+  disconnect();
+} /* ReflectorClient::handleMsgError */
 
 
 void ReflectorClient::sendNodeList(void)
@@ -375,43 +398,31 @@ void ReflectorClient::sendNodeList(void)
 } /* ReflectorClient::sendNodeList */
 
 
-void ReflectorClient::disconnect(const std::string& msg)
+void ReflectorClient::sendError(const std::string& msg)
 {
-  //cout << "### ReflectorClient::disconnect: " << msg << endl;
   sendMsg(MsgError(msg));
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
   m_disc_timer.setEnable(true);
   m_con_state = STATE_EXPECT_DISCONNECT;
-} /* ReflectorClient::disconnect */
-
-
-#if 0
-void ReflectorClient::onDisconnected(TcpConnection* con,
-                                     TcpConnection::DisconnectReason)
-{
-  if (!m_callsign.empty())
-  {
-    cout << m_callsign << ": ";
-  }
-  cout << "Client " << con->remoteHost() << ":" << con->remotePort()
-       << " disconnected" << endl;
-  m_heartbeat_timer.setEnable(false);
-  m_remote_udp_port = 0;
-  m_disc_timer.setEnable(false);
-  m_con_state = STATE_DISCONNECTED;
-} /* ReflectorClient::onDisconnected */
-#endif
+} /* ReflectorClient::sendError */
 
 
 void ReflectorClient::onDiscTimeout(Timer *t)
 {
-  //cout << "### ReflectorClient::onDiscTimeout" << endl;
   assert(m_con_state == STATE_EXPECT_DISCONNECT);
+  disconnect();
+} /* ReflectorClient::onDiscTimeout */
+
+
+void ReflectorClient::disconnect(void)
+{
+  m_heartbeat_timer.setEnable(false);
+  m_remote_udp_port = 0;
   m_con->disconnect();
   m_con_state = STATE_DISCONNECTED;
   m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
-} /* ReflectorClient::onDiscTimeout */
+} /* ReflectorClient::disconnect */
 
 
 void ReflectorClient::handleHeartbeat(Async::Timer *t)
@@ -428,14 +439,32 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
 
   if (--m_heartbeat_rx_cnt == 0)
   {
-    cout << callsign() << ": Heartbeat timeout" << endl;
-    disconnect("Heartbeat timeout");
+    if (!callsign().empty())
+    {
+      cout << callsign() << ": ";
+    }
+    else
+    {
+      cout << "Client " << m_con->remoteHost() << ":"
+           << m_con->remotePort() << " ";
+    }
+    cout << "TCP heartbeat timeout" << endl;
+    sendError("TCP heartbeat timeout");
   }
 
   if (--m_udp_heartbeat_rx_cnt == 0)
   {
-    cout << callsign() << ": UDP heartbeat timeout" << endl;
-    disconnect("UDP heartbeat timeout");
+    if (!callsign().empty())
+    {
+      cout << callsign() << ": ";
+    }
+    else
+    {
+      cout << "Client " << m_con->remoteHost() << ":"
+           << m_con->remotePort() << " ";
+    }
+    cout << "UDP heartbeat timeout" << endl;
+    sendError("UDP heartbeat timeout");
   }
 
   if (m_blocktime > 0)
@@ -448,7 +477,6 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
     {
       m_remaining_blocktime -= 1;
     }
-
   }
 } /* ReflectorClient::handleHeartbeat */
 
@@ -458,7 +486,7 @@ std::string ReflectorClient::lookupUserKey(const std::string& callsign)
   string auth_group;
   if (!m_cfg->getValue("USERS", callsign, auth_group) || auth_group.empty())
   {
-    cout << "*** WARNING: Unknown user \"" << callsign << "\" in SvxReflector"
+    cout << "*** WARNING: Unknown user \"" << callsign << "\""
          << endl;
     return "";
   }

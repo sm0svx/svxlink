@@ -132,7 +132,8 @@ class TcpConnection : public sigc::trackable
       DR_REMOTE_DISCONNECTED,  ///< The remote host disconnected
       DR_SYSTEM_ERROR,	       ///< A system error occured (check errno)
       DR_RECV_BUFFER_OVERFLOW, ///< Receiver buffer overflow
-      DR_ORDERED_DISCONNECT    ///< Disconnect ordered locally
+      DR_ORDERED_DISCONNECT,   ///< Disconnect ordered locally
+      DR_PROTOCOL_ERROR        ///< Protocol error
     } DisconnectReason;
     
     /**

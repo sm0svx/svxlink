@@ -67,16 +67,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /****************************************************************************
  *
- * Namespace
- *
- ****************************************************************************/
-
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
  * Forward declarations of classes inside of the declared namespace
  *
  ****************************************************************************/
@@ -233,6 +223,9 @@ class ReflectorClient
     bool isBlocked(void) const { return (m_remaining_blocktime > 0); }
 
   private:
+    static const uint32_t MAX_PREAUTH_FRAME_SIZE = 64;
+    static const uint32_t MAX_POSTAUTH_FRAME_SIZE = 16384;
+
     static uint32_t next_client_id;
 
     typedef enum
@@ -273,20 +266,17 @@ class ReflectorClient
     void handleMsgProtoVer(std::istream& is);
     void sendNodeList(void);
     void handleMsgAuthResponse(std::istream& is);
-    void disconnect(const std::string& msg);
-    //void onDisconnected(Async::FramedTcpConnection*,
-    //                    Async::FramedTcpConnection::DisconnectReason);
+    void handleMsgError(std::istream& is);
+    void sendError(const std::string& msg);
     void onDiscTimeout(Async::Timer *t);
+    void disconnect(void);
     void handleHeartbeat(Async::Timer *t);
     std::string lookupUserKey(const std::string& callsign);
 
 };  /* class ReflectorClient */
 
 
-//} /* namespace */
-
 #endif /* REFLECTOR_CLIENT_INCLUDED */
-
 
 
 /*

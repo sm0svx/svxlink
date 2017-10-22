@@ -112,7 +112,8 @@ using namespace Async;
  ****************************************************************************/
 
 FramedTcpConnection::FramedTcpConnection(size_t recv_buf_len)
-  : TcpConnection(recv_buf_len), m_size_received(false)
+  : TcpConnection(recv_buf_len), m_max_frame_size(DEFAULT_MAX_FRAME_SIZE),
+    m_size_received(false)
 {
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &FramedTcpConnection::onSendBufferFull));
@@ -123,7 +124,7 @@ FramedTcpConnection::FramedTcpConnection(
     int sock, const IpAddress& remote_addr, uint16_t remote_port,
     size_t recv_buf_len)
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
-    m_size_received(false)
+    m_max_frame_size(DEFAULT_MAX_FRAME_SIZE), m_size_received(false)
 {
 } /* FramedTcpConnection::FramedTcpConnection */
 
@@ -147,6 +148,11 @@ int FramedTcpConnection::write(const void *buf, int count)
   if (count < 0)
   {
     return 0;
+  }
+  else if (static_cast<uint32_t>(count) > m_max_frame_size)
+  {
+    errno = EMSGSIZE;
+    return -1;
   }
 
   QueueItem *qi = new QueueItem(buf, count);
@@ -214,6 +220,12 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       m_frame_size |= static_cast<uint32_t>(*ptr++) << 16;
       m_frame_size |= static_cast<uint32_t>(*ptr++) << 8;
       m_frame_size |= static_cast<uint32_t>(*ptr++);
+      if (m_frame_size > m_max_frame_size)
+      {
+        disconnect();
+        disconnected(this, DR_PROTOCOL_ERROR);
+        return orig_count - count;
+      }
       m_frame.clear();
       m_frame.reserve(m_frame_size);
       count -= sizeof(m_frame_size);

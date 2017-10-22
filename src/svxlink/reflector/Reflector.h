@@ -78,16 +78,6 @@ class ReflectorUdpMsg;
 
 /****************************************************************************
  *
- * Namespace
- *
- ****************************************************************************/
-
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
  * Forward declarations of classes inside of the declared namespace
  *
  ****************************************************************************/
@@ -170,18 +160,21 @@ class Reflector : public sigc::trackable
      * @param   client The client to the send datagram to
      * @param   buf The payload to send
      * @param   count The number of bytes in the payload
+     * @return  Returns \em true on success or else \em false
      */
-    void sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
+    bool sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
   private:
+    static const time_t TALKER_AUDIO_TIMEOUT = 3;   // Max three seconds gap
+
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
 
-    FramedTcpServer*      srv;
-    Async::UdpSocket*     udp_sock;
-    ReflectorClientMap    client_map;
+    FramedTcpServer*      m_srv;
+    Async::UdpSocket*     m_udp_sock;
+    ReflectorClientMap    m_client_map;
     ReflectorClient*      m_talker;
     Async::Timer          m_talker_timeout_timer;
     struct timeval        m_last_talker_timestamp;
@@ -205,8 +198,6 @@ class Reflector : public sigc::trackable
 
 };  /* class Reflector */
 
-
-//} /* namespace */
 
 #endif /* REFLECTOR_INCLUDED */
 
