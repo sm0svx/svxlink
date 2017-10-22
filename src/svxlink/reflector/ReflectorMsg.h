@@ -1,10 +1,8 @@
 /**
 @file	 ReflectorMsg.h
-@brief   A_brief_description_for_this_file
+@brief   Reflector protocol message definitions
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-11
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Template_demo.cpp
-An example of how to use the ReflectorMsg class
-*/
-
 
 #ifndef REFLECTOR_MSG_INCLUDED
 #define REFLECTOR_MSG_INCLUDED
@@ -110,9 +103,12 @@ An example of how to use the ReflectorMsg class
  ****************************************************************************/
 
 /**
-@brief	Base class for Reflector network messages
+@brief	Base class for Reflector TCP network messages
 @author Tobias Blomberg / SM0SVX
 @date   2017-02-12
+
+This is the top most base class for TCP messages. It is typically used as
+the argument type for functions that take a TCP message as argument.
 */
 class ReflectorMsg : public Async::Msg
 {
@@ -120,10 +116,8 @@ class ReflectorMsg : public Async::Msg
     /**
      * @brief 	Constuctor
      * @param 	type The message type
-     * @param   size The payload size
      */
-    ReflectorMsg(uint16_t type=0)
-      : m_type(type) {}
+    ReflectorMsg(uint16_t type=0) : m_type(type) {}
 
     /**
      * @brief 	Destructor
@@ -144,6 +138,14 @@ class ReflectorMsg : public Async::Msg
 };  /* class ReflectorMsg */
 
 
+/**
+@brief	 Intermediate template base class for Reflector TCP network messages
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This class should be used as the base when implementing new TCP network
+protocol messages. The message type is given as the template argument.
+*/
 template <unsigned msg_type>
 class ReflectorMsgBase : public ReflectorMsg
 {
@@ -156,6 +158,14 @@ class ReflectorMsgBase : public ReflectorMsg
 }; /* ReflectorMsgBase */
 
 
+/**
+ * @brief   The base class for UDP network messages
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2017-02-12
+
+This is the top most base class for UDP messages. It is typically used as
+the argument type for functions that take a UDP message as argument.
+ */
 class ReflectorUdpMsg : public Async::Msg
 {
   public:
@@ -177,7 +187,17 @@ class ReflectorUdpMsg : public Async::Msg
      * @return	Returns the message type
      */
     uint16_t type(void) const { return m_type; }
+
+    /**
+     * @brief   Get the clientId
+     * @return  Returns the client ID
+     */
     uint16_t clientId(void) const { return m_client_id; }
+
+    /**
+     * @brief   Get the sequence number
+     * @return  Returns the message sequence number
+     */
     uint16_t sequenceNum(void) const { return m_seq; }
 
     ASYNC_MSG_MEMBERS(m_type, m_client_id, m_seq)
@@ -189,6 +209,14 @@ class ReflectorUdpMsg : public Async::Msg
 };
 
 
+/**
+@brief	 Intermediate template base class for Reflector UDP network messages
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This class should be used as the base when implementing new UDP network
+protocol messages. The message type is given as the template argument.
+*/
 template <unsigned msg_type>
 class ReflectorUdpMsgBase : public ReflectorUdpMsg
 {
@@ -203,6 +231,15 @@ class ReflectorUdpMsgBase : public ReflectorUdpMsg
 
 /************************** Administrative Messages **************************/
 
+/**
+@brief	 Protocol version TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This is the first message exchanged between the client and the server. It tells
+the server what protocol version that the client supports. If the client use a
+protocol version that the server does not support, the client is denied access.
+*/
 class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
@@ -220,6 +257,14 @@ class MsgProtoVer : public ReflectorMsgBase<5>
 }; /* MsgProtoVer */
 
 
+/**
+@brief	 Heartbeat TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by both client and server to indicate to the other side
+that the connection is still up.
+*/
 class MsgHeartbeat : public ReflectorMsgBase<1>
 {
   public:
@@ -227,6 +272,15 @@ class MsgHeartbeat : public ReflectorMsgBase<1>
 };  /* MsgHeartbeat */
 
 
+/**
+@brief	 Authentication challenge TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+The authentication challenge is what initizlizes the authentication process. It
+is sent by the server to the client and essentially it's just a very large
+random number. When received by the client, a MsgAuthResponse message is sent.
+*/
 class MsgAuthChallenge : public ReflectorMsgBase<10>
 {
   public:
@@ -245,12 +299,32 @@ class MsgAuthChallenge : public ReflectorMsgBase<10>
 }; /* MsgAuthChallenge */
 
 
+/**
+@brief	 Authentication response TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+The authentication response message is sent by the client as an answer to the
+MsgAuthChallenge message. The received challenge is essentially just a very
+large random number which is combined with the authentication key (the clear
+text password) into a 'digest'. The digest is sent to the server and the server
+can do similar calculations to verify that the authentication key is correct.
+Using this mechanism, the clear text password never have to be transmitted over
+the network.
+*/
 class MsgAuthResponse : public ReflectorMsgBase<11>
 {
   public:
     static const int      ALGO        = GCRY_MD_SHA1;
     static const int      DIGEST_LEN  = 20;
     MsgAuthResponse(void) {}
+
+    /**
+     * @brief   Constructor
+     * @param   callsign The callsign (username) of the client
+     * @param   key The authentication key (clear text password)
+     * @param   challenge The authentication challenge received from the server
+     */
     MsgAuthResponse(const std::string& callsign, const std::string &key,
                     const unsigned char *challenge)
       : m_digest(DIGEST_LEN), m_callsign(callsign)
@@ -261,9 +335,26 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
       }
     }
 
+    /**
+     * @brief   Get the digest
+     */
     const uint8_t *digest(void) const { return &m_digest.front(); }
+
+    /**
+     * @brief   Get the callsign
+     */
     const std::string& callsign(void) const { return m_callsign; }
 
+    /**
+     * @brief   Verify that the given key and challenge match the digest
+     * @param   key The authentication key
+     * @param   challenge The previously transmitted authentication challenge
+     *
+     * This function will verify that the given key and challenge match the
+     * digest that is embedded in this protocol message. Typically this
+     * function is used by the server to verify that the received digest is
+     * correct.
+     */
     bool verify(const std::string &key, const unsigned char *challenge) const
     {
       unsigned char digest[DIGEST_LEN];
@@ -302,6 +393,15 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
 }; /* MsgAuthResponse */
 
 
+/**
+@brief	 Authentication success TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+The authentication ok message is sent by the server to the client on successful
+authentication. After this message has been received by the client, the server
+will start accepting other protocol messages.
+*/
 class MsgAuthOk : public ReflectorMsgBase<12>
 {
   public:
@@ -309,6 +409,14 @@ class MsgAuthOk : public ReflectorMsgBase<12>
 };  /* MsgAuthOk */
 
 
+/**
+@brief	 Protocol error TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent when a protocol error is discovered. The receiving part
+should immediately terminate the connection upon receiving this message.
+*/
 class MsgError : public ReflectorMsgBase<13>
 {
   public:
@@ -322,6 +430,14 @@ class MsgError : public ReflectorMsgBase<13>
 }; /* MsgError */
 
 
+/**
+@brief	 Server information TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the client to inform about server and
+connection properties.
+*/
 class MsgServerInfo : public ReflectorMsgBase<100>
 {
   public:
@@ -335,6 +451,14 @@ class MsgServerInfo : public ReflectorMsgBase<100>
 }; /* MsgServerInfo */
 
 
+/**
+@brief	 Node list TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the client at the start of the connection
+to inform about what nodes are connected at the moment.
+*/
 class MsgNodeList : public ReflectorMsgBase<101>
 {
   public:
@@ -347,6 +471,14 @@ class MsgNodeList : public ReflectorMsgBase<101>
 }; /* MsgNodeList */
 
 
+/**
+@brief	 Node joined TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the clients to inform about that a new
+node has connected to the reflector.
+*/
 class MsgNodeJoined : public ReflectorMsgBase<102>
 {
   public:
@@ -361,6 +493,14 @@ class MsgNodeJoined : public ReflectorMsgBase<102>
 }; /* MsgNodeJoined */
 
 
+/**
+@brief	 Node left TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the clients to inform about that a node
+has disconnected from the reflector.
+*/
 class MsgNodeLeft : public ReflectorMsgBase<103>
 {
   public:
@@ -375,6 +515,16 @@ class MsgNodeLeft : public ReflectorMsgBase<103>
 }; /* MsgNodeLeft */
 
 
+/**
+@brief	 Talker start TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the clients to inform about that the
+specified node is now the talker. Other nodes starting to send audio will be
+ignored. Note that UDP audio messages may be received before this message has
+been received. This message is meant to be informational only.
+*/
 class MsgTalkerStart : public ReflectorMsgBase<104>
 {
   public:
@@ -389,6 +539,16 @@ class MsgTalkerStart : public ReflectorMsgBase<104>
 }; /* MsgTalkerStart */
 
 
+/**
+@brief	 Talker stop TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the clients to inform about that the
+specified node has stopped talking. Note that audio packets may be received
+even after this message has been received. It should be used for informational
+purposes only.
+*/
 class MsgTalkerStop : public ReflectorMsgBase<105>
 {
   public:
@@ -408,6 +568,15 @@ class MsgTalkerStop : public ReflectorMsgBase<105>
 
 /***************************** UDP Messages *****************************/
 
+/**
+@brief	 Heartbeat UDP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+The UDP heartbeat message is sent by both the client and the server to inform
+the other side that the UDP connection is still up. It also serves the purpose
+to keep the path open through firewalls.
+*/
 class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
 {
   public:
@@ -415,6 +584,13 @@ class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
 };  /* MsgUdpHeartbeat */
 
 
+/**
+@brief	 Audio UDP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This is the message used to transmit audio to the other side.
+*/
 class MsgUdpAudio : public ReflectorUdpMsgBase<101>
 {
   public:
@@ -436,6 +612,13 @@ class MsgUdpAudio : public ReflectorUdpMsgBase<101>
 }; /* MsgUdpAudio */
 
 
+/**
+@brief	 Audio flush UDP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is used to indicate 'end of audio stream' to the other side.
+*/
 class MsgUdpFlushSamples : public ReflectorUdpMsgBase<102>
 {
   public:
@@ -443,6 +626,14 @@ class MsgUdpFlushSamples : public ReflectorUdpMsgBase<102>
 }; /* MsgUdpFlushSamples */
 
 
+/**
+@brief	 All audio flushed UDP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is used to indicate to the other side that all audio has been
+written to the final destination.
+*/
 class MsgUdpAllSamplesFlushed : public ReflectorUdpMsgBase<103>
 {
   public:

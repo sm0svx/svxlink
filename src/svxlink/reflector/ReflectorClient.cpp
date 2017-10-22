@@ -1,10 +1,8 @@
 /**
 @file	 ReflectorClient.cpp
-@brief   A_brief_description_for_this_file
+@brief   Represents one client connection
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-11
-
-A_detailed_description_for_this_file
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers

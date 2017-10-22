@@ -1,10 +1,8 @@
 /**
 @file	 ReflectorClient.h
-@brief   A_brief_description_for_this_file
+@brief   Represents one client connection
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-11
-
-A_detailed_description_for_this_file
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Template_demo.cpp
-An example of how to use the ReflectorClient class
-*/
-
 
 #ifndef REFLECTOR_CLIENT_INCLUDED
 #define REFLECTOR_CLIENT_INCLUDED
@@ -114,19 +107,22 @@ class Reflector;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Represents one client connection
 @author Tobias Blomberg / SM0SVX
 @date   2017-02-11
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This class represents one client connection. When a client connects, an
+instance of this class will be created that will persist for the lifetime of
+the client connection.
 */
 class ReflectorClient
 {
   public:
     /**
      * @brief 	Constructor
+     * @param   ref The associated Reflector object
+     * @param   con The associated FramedTcpConnection object
+     * @param   cfg The associated configuration file object
      */
     ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
                     Async::Config* cfg);
@@ -137,28 +133,105 @@ class ReflectorClient
     ~ReflectorClient(void);
 
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Return the client ID
+     * @return	Returns the client ID
+     *
+     * The client ID is a unique number assigned to each connected client.
+     * It is for example used to associate incoming audio with the correct
+     * client.
      */
     uint32_t clientId(void) const { return m_client_id; }
+
+    /**
+     * @brief   Return the remote IP address
+     * @return  Returns the IP address of the client
+     */
     const Async::IpAddress& remoteHost(void) const
     {
       return m_con->remoteHost();
     }
+
+    /**
+     * @brief   Return the remote port number
+     * @return  Returns the local port number used by the client
+     */
     uint16_t remoteUdpPort(void) const { return m_remote_udp_port; }
+
+    /**
+     * @brief   Set the remote port number
+     * @param   The port number used by the client
+     *
+     * The Reflector use this function to set the port number used by the
+     * client so that UDP packets can be send to the client and check that
+     * incoming packets originate from the correct port.
+     */
     void setRemoteUdpPort(uint16_t port) { m_remote_udp_port = port; }
+
+    /**
+     * @brief   Get the callsign for this connection
+     * @return  Returns the callsign associated with this coinnection
+     */
     const std::string& callsign(void) const { return m_callsign; }
+
+    /**
+     * @brief   Return the next UDP packet transmit sequence number
+     * @return  Returns the UDP packet sequence number that should be used next
+     *
+     * This function will return the UDP packet sequence number that should be
+     * used next. The squence number is incremented when this function is called
+     * so it can only be called one time per packet. The sequence number is
+     * used by the receiver to find out if a packet is out of order or if a
+     * packet has been lost in transit.
+     */
     uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
+
+    /**
+     * @brief   Get the next expected UDP packet sequence number
+     * @return  Returns the next expected UDP packet sequence number
+     *
+     * This function will return the next expected UDP sequence number, which
+     * is simply the previously received sequence number plus one.
+     */
     uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq; }
     void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
-    int sendMsg(const ReflectorMsg& msg);
-    void udpMsgReceived(const ReflectorUdpMsg &header);
-    void sendUdpMsg(const ReflectorUdpMsg &msg);
-    void setBlock(unsigned blocktime);
-    bool isBlocked(void) const { return (m_remaining_blocktime > 0); }
 
-  protected:
+    /**
+     * @brief   Send a TCP message to the remote end
+     * @param   The mesage to send
+     * @return  On success 0 is returned or else -1
+     */
+    int sendMsg(const ReflectorMsg& msg);
+
+    /**
+     * @brief   Handle a received UDP message
+     * @param   The received UDP message
+     *
+     * This function is called by the Reflector when a UDP packet is received.
+     * The purpose is to handle packet related timers and sequence numbers.
+     */
+    void udpMsgReceived(const ReflectorUdpMsg &header);
+
+    /**
+     * @brief   Send a UDP message to the client
+     * @param   The message to send
+     */
+    void sendUdpMsg(const ReflectorUdpMsg &msg);
+
+    /**
+     * @brief   Block client audio for the specified time
+     * @param   The number of seconds to block
+     *
+     * This function is used to block the client from sending audio for the
+     * specified time. This is used by the Reflector if a client has been
+     * talking for too long.
+     */
+    void setBlock(unsigned blocktime);
+
+    /**
+     * @brief   Check if a client is blocked
+     * @return  Returns \em true if the client is blocked or else \em false
+     */
+    bool isBlocked(void) const { return (m_remaining_blocktime > 0); }
 
   private:
     static uint32_t next_client_id;

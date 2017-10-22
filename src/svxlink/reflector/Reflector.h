@@ -1,10 +1,8 @@
 /**
 @file	 Reflector.h
-@brief   A_brief_description_for_this_file
+@brief   The main reflector class
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-11
-
-A_detailed_description_for_this_file
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Template_demo.cpp
-An example of how to use the Reflector class
-*/
-
 
 #ifndef REFLECTOR_INCLUDED
 #define REFLECTOR_INCLUDED
@@ -124,17 +117,18 @@ class ReflectorUdpMsg;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	The main reflector class
 @author Tobias Blomberg / SM0SVX
 @date   2017-02-11
 
-A_detailed_class_description
+This is the main class for the reflector. It handles all network traffic and
+the dispatching of incoming messages to the correct ReflectorClient object.
 */
 class Reflector : public sigc::trackable
 {
   public:
     /**
-     * @brief 	Constructor
+     * @brief 	Default constructor
      */
     Reflector(void);
 
@@ -144,17 +138,40 @@ class Reflector : public sigc::trackable
     ~Reflector(void);
 
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the reflector
+     * @param 	cfg A previously initialized configuration object
+     * @return	Return \em true on success or else \em false
      */
     bool initialize(Async::Config &cfg);
 
+    /**
+     * @brief   Return a list of all connected nodes
+     * @param   nodes The vector to return the result in
+     *
+     * This function is used to get a list of the callsigns of all connected
+     * nodes.
+     */
     void nodeList(std::vector<std::string>& nodes) const;
-    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *client=0);
-    void sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
-  protected:
+    /**
+     * @brief   Broadcast a TCP message to all connected clients except one
+     * @param   msg The message to broadcast
+     * @param   client The client to exclude from the broadcast
+     *
+     * This function is used to broadcast a message to all connected clients,
+     * possibly excluding one client. The excluded client is most often the one
+     * where the message originate from. The message is not really a IP
+     * broadcast but rather unicast to all connected clients.
+     */
+    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *client=0);
+
+    /**
+     * @brief   Send a UDP datagram to the specificed ReflectorClient
+     * @param   client The client to the send datagram to
+     * @param   buf The payload to send
+     * @param   count The number of bytes in the payload
+     */
+    void sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
   private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
@@ -181,7 +198,6 @@ class Reflector : public sigc::trackable
                             Async::FramedTcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    //void sendUdpMsg(ReflectorClient *client, const ReflectorUdpMsg& msg);
     void broadcastUdpMsgExcept(const ReflectorClient *client,
                                const ReflectorUdpMsg& msg);
     void checkTalkerTimeout(Async::Timer *t);

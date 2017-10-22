@@ -1,10 +1,8 @@
 /**
 @file	 Reflector.cpp
-@brief   A_brief_description_for_this_file
+@brief   The main reflector class
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-11
-
-A_detailed_description_for_this_file
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
@@ -25,8 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 
 /****************************************************************************
  *
