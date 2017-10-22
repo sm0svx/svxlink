@@ -119,6 +119,19 @@ using namespace Async;
  *
  ****************************************************************************/
 
+bool AudioEncoder::isAvailable(const std::string &name)
+{
+  return (name == "RAW") || (name == "S16") || (name == "GSM") ||
+#ifdef SPEEX_MAJOR
+         (name == "SPEEX") ||
+#endif
+#ifdef OPUS_MAJOR
+         (name == "OPUS") ||
+#endif
+         (name == "NULL");
+} /* AudioEncoder::isAvailable */
+
+
 AudioEncoder *AudioEncoder::create(const std::string &name)
 {
   if (name == "NULL")

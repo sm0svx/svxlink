@@ -18,6 +18,9 @@
   in Async::Timer::setEnable due to the AudioDeviceAlsa::samplesToWrite
   function returning a negative value.
 
+* Now possible to ask the AudioEncoder and AudioDecoder if a codec is
+  supported or not.
+
 
 
  1.4.0 -- 22 Nov 2015
