@@ -277,7 +277,7 @@ random number. When received by the client, a MsgAuthResponse message is sent.
 class MsgAuthChallenge : public ReflectorMsgBase<10>
 {
   public:
-    static const int CHALLENGE_LEN  = 20;
+    static const size_t CHALLENGE_LEN  = 20;
     MsgAuthChallenge(void) : m_challenge(CHALLENGE_LEN)
     {
       gcry_create_nonce(&m_challenge.front(), CHALLENGE_LEN);
