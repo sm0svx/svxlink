@@ -89,6 +89,23 @@ examples of format specifiers are:
 So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
 "29 Nov 2005 22:31:59".
 .RE
+.TP
+.B LISTEN_PORT
+The TCP and UDP port number to use for network communications. The default is
+5300. Make sure to open this port for incoming traffic to the server on both
+TCP and UDP. Clients do not have to open any ports in their firewalls.
+.TP
+.B SQL_TIMEOUT
+Use this configuration variable to set a time in seconds after which a clients
+audio is blocked if he has been talking for too long. The default is 0
+(disabled).
+.TP
+.B SQL_TIMEOUT_BLOCKTIME
+If a client has been talking for longer than the time specified in the
+.B SQL_TIMEOUT
+configuration variable he will not be able to talk again until the time in this
+configuration variable have elapsed. If not specified, the default is one
+second.
 .
 .SS USERS and PASSWORDS sections
 .
