@@ -338,24 +338,19 @@ int main(int argc, const char *argv[])
       cfg_filename = SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf";
       if (!cfg.open(cfg_filename))
       {
-	cfg_filename = SYSCONF_INSTALL_DIR "/svxreflector.conf";
-	if (!cfg.open(cfg_filename))
-	{
-	  cerr << "*** ERROR: Could not open configuration file";
-          if (errno != 0)
-          {
-            cerr << " (" << strerror(errno) << ")";
-          }
-          cerr << ".\n";
-	  cerr << "Tried the following paths:\n"
-               << "\t" << home_dir << "/.svxlink/svxreflector.conf\n"
-               << "\t" SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
-               << "\t" SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
-               << "Possible reasons for failure are: None of the files exist,\n"
-               << "you do not have permission to read the file or there was a\n"
-               << "syntax error in the file.\n";
-	  exit(1);
-	}
+        cerr << "*** ERROR: Could not open configuration file";
+        if (errno != 0)
+        {
+          cerr << " (" << strerror(errno) << ")";
+        }
+        cerr << ".\n";
+        cerr << "Tried the following paths:\n"
+             << "\t" << home_dir << "/.svxlink/svxreflector.conf\n"
+             << "\t" SVX_SYSCONF_INSTALL_DIR "/svxreflector.conf\n"
+             << "Possible reasons for failure are: None of the files exist,\n"
+             << "you do not have permission to read the file or there was a\n"
+             << "syntax error in the file.\n";
+        exit(1);
       }
     }
   }
