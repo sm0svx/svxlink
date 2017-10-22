@@ -193,7 +193,6 @@ class ReflectorClient
      * is simply the previously received sequence number plus one.
      */
     uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq; }
-    void setNextUdpRxSeq(uint16_t seq) { m_next_udp_rx_seq = seq; }
 
     /**
      * @brief   Send a TCP message to the remote end

@@ -350,7 +350,6 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
          << ": UDP frame(s) lost. Expected seq=" << client->nextUdpRxSeq()
          << ". Received seq=" << header.sequenceNum() << endl;
   }
-  client->setNextUdpRxSeq(header.sequenceNum() + 1);
 
   client->udpMsgReceived(header);
 

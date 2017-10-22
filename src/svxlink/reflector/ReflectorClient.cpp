@@ -168,6 +168,8 @@ int ReflectorClient::sendMsg(const ReflectorMsg& msg)
 
 void ReflectorClient::udpMsgReceived(const ReflectorUdpMsg &header)
 {
+  m_next_udp_rx_seq = header.sequenceNum() + 1;
+
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
 
   if ((m_blocktime > 0) && (header.type() == MsgUdpAudio::TYPE))
