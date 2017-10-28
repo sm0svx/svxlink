@@ -153,7 +153,7 @@ class Reflector : public sigc::trackable
      * where the message originate from. The message is not really a IP
      * broadcast but rather unicast to all connected clients.
      */
-    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *client=0);
+    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *except=0);
 
     /**
      * @brief   Send a UDP datagram to the specificed ReflectorClient
@@ -191,7 +191,7 @@ class Reflector : public sigc::trackable
                             Async::FramedTcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void broadcastUdpMsgExcept(const ReflectorClient *client,
+    void broadcastUdpMsgExcept(const ReflectorClient *except,
                                const ReflectorUdpMsg& msg);
     void checkTalkerTimeout(Async::Timer *t);
     void setTalker(ReflectorClient *client);

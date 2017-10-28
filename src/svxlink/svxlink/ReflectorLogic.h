@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -160,28 +161,29 @@ class ReflectorLogic : public LogicBase
     static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
     static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
 
-    std::string           m_reflector_host;
-    uint16_t              m_reflector_port;
-    FramedTcpClient*      m_con;
-    unsigned              m_msg_type;
-    Async::UdpSocket*     m_udp_sock;
-    uint32_t              m_client_id;
-    std::string           m_auth_key;
-    std::string           m_callsign;
-    Async::AudioEncoder*  m_logic_con_in;
-    Async::AudioSource*   m_logic_con_out;
-    Async::Timer          m_reconnect_timer;
-    uint16_t              m_next_udp_tx_seq;
-    uint16_t              m_next_udp_rx_seq;
-    Async::Timer          m_heartbeat_timer;
-    Async::AudioDecoder*  m_dec;
-    Async::Timer          m_flush_timeout_timer;
-    unsigned              m_udp_heartbeat_tx_cnt;
-    unsigned              m_udp_heartbeat_rx_cnt;
-    unsigned              m_tcp_heartbeat_tx_cnt;
-    unsigned              m_tcp_heartbeat_rx_cnt;
-    struct timeval        m_last_talker_timestamp;
-    ConState              m_con_state;
+    std::string               m_reflector_host;
+    uint16_t                  m_reflector_port;
+    FramedTcpClient*          m_con;
+    unsigned                  m_msg_type;
+    Async::UdpSocket*         m_udp_sock;
+    uint32_t                  m_client_id;
+    std::string               m_auth_key;
+    std::string               m_callsign;
+    Async::AudioPassthrough*  m_logic_con_in;
+    Async::AudioSource*       m_logic_con_out;
+    Async::Timer              m_reconnect_timer;
+    uint16_t                  m_next_udp_tx_seq;
+    uint16_t                  m_next_udp_rx_seq;
+    Async::Timer              m_heartbeat_timer;
+    Async::AudioDecoder*      m_dec;
+    Async::Timer              m_flush_timeout_timer;
+    unsigned                  m_udp_heartbeat_tx_cnt;
+    unsigned                  m_udp_heartbeat_rx_cnt;
+    unsigned                  m_tcp_heartbeat_tx_cnt;
+    unsigned                  m_tcp_heartbeat_rx_cnt;
+    struct timeval            m_last_talker_timestamp;
+    ConState                  m_con_state;
+    Async::AudioEncoder*      m_enc;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -211,6 +213,8 @@ class ReflectorLogic : public LogicBase
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
     void handleTimerTick(Async::Timer *t);
+    bool setAudioCodec(const std::string& codec_name);
+    bool codecIsAvailable(const std::string &codec_name);
 
 };  /* class ReflectorLogic */
 

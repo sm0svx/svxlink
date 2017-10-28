@@ -237,7 +237,7 @@ class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
     static const uint16_t MAJOR = 0;
-    static const uint16_t MINOR = 6;
+    static const uint16_t MINOR = 7;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }
@@ -442,13 +442,19 @@ connection properties.
 class MsgServerInfo : public ReflectorMsgBase<100>
 {
   public:
-    MsgServerInfo(uint32_t client_id=0) : m_client_id(client_id) {}
-    uint32_t clientId(void) { return m_client_id; }
+    MsgServerInfo(uint32_t client_id=0,
+                  std::vector<std::string> codecs=std::vector<std::string>())
+      : m_client_id(client_id), m_codecs(codecs) {}
+    uint32_t clientId(void) const { return m_client_id; }
+    std::vector<std::string>& nodes(void) { return m_nodes; }
+    std::vector<std::string>& codecs(void) { return m_codecs; }
 
-    ASYNC_MSG_MEMBERS(m_client_id)
+    ASYNC_MSG_MEMBERS(m_client_id, m_nodes, m_codecs)
 
   private:
-    uint32_t  m_client_id;
+    uint32_t                  m_client_id;
+    std::vector<std::string>  m_nodes;
+    std::vector<std::string>  m_codecs;
 }; /* MsgServerInfo */
 
 
@@ -463,6 +469,8 @@ to inform about what nodes are connected at the moment.
 class MsgNodeList : public ReflectorMsgBase<101>
 {
   public:
+    MsgNodeList(void) {}
+    MsgNodeList(const std::vector<std::string>& nodes) : m_nodes(nodes) {}
     std::vector<std::string>& nodes(void) { return m_nodes; }
 
     ASYNC_MSG_MEMBERS(m_nodes);

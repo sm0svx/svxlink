@@ -44,6 +44,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTimer.h>
+#include <AsyncAudioEncoder.h>
+#include <AsyncAudioDecoder.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -136,6 +139,35 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
       mem_fun(*this, &ReflectorClient::onDiscTimeout));
   m_heartbeat_timer.expired.connect(
       mem_fun(*this, &ReflectorClient::handleHeartbeat));
+
+  string codecs;
+  if (m_cfg->getValue("GLOBAL", "CODECS", codecs))
+  {
+    SvxLink::splitStr(m_supported_codecs, codecs, ",");
+  }
+  if (m_supported_codecs.size() > 1)
+  {
+    m_supported_codecs.erase(m_supported_codecs.begin()+1,
+                             m_supported_codecs.end());
+    cout << "*** WARNING: The GLOBAL/CODECS configuration "
+            "variable can only take one codec at the moment. Using the first "
+            "one: \"" << m_supported_codecs.front() << "\"" << endl;
+  }
+  else if (m_supported_codecs.empty())
+  {
+    string codec = "GSM";
+    if (AudioDecoder::isAvailable("OPUS") &&
+        AudioEncoder::isAvailable("OPUS"))
+    {
+      codec = "OPUS";
+    }
+    else if (AudioDecoder::isAvailable("SPEEX") &&
+             AudioEncoder::isAvailable("SPEEX"))
+    {
+      codec = "SPEEX";
+    }
+    m_supported_codecs.push_back(codec);
+  }
 } /* ReflectorClient::ReflectorClient */
 
 
@@ -293,8 +325,10 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
     sendError("Illegal MsgProtoVer protocol message received");
     return;
   }
-  if ((msg.majorVer() != MsgProtoVer::MAJOR) ||
-      (msg.minorVer() != MsgProtoVer::MINOR))
+  m_client_proto_ver.major_ver = msg.majorVer();
+  m_client_proto_ver.minor_ver = msg.minorVer();
+  if (m_client_proto_ver < ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER) ||
+      m_client_proto_ver > ProtoVer(MsgProtoVer::MAJOR, MsgProtoVer::MINOR))
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
          << " Incompatible protocol version: "
@@ -347,10 +381,18 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       sendMsg(MsgAuthOk());
       cout << m_callsign << ": Login OK from "
            << m_con->remoteHost() << ":" << m_con->remotePort()
+           << " with protocol version " << m_client_proto_ver.major_ver
+           << "." << m_client_proto_ver.minor_ver
            << endl;
       m_con_state = STATE_CONNECTED;
-      sendMsg(MsgServerInfo(m_client_id));
-      sendNodeList();
+      MsgServerInfo msg_srv_info(m_client_id, m_supported_codecs);
+      m_reflector->nodeList(msg_srv_info.nodes());
+      sendMsg(msg_srv_info);
+      if (m_client_proto_ver < ProtoVer(0, 7))
+      {
+        MsgNodeList msg_node_list(msg_srv_info.nodes());
+        sendMsg(msg_node_list);
+      }
       m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
     }
     else
@@ -366,7 +408,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
          << "\"" << endl;
     sendError("Access denied");
   }
-} /* ReflectorClient::handleMsgProtoVer */
+} /* ReflectorClient::handleMsgAuthResponse */
 
 
 void ReflectorClient::handleMsgError(std::istream& is)
@@ -388,14 +430,6 @@ void ReflectorClient::handleMsgError(std::istream& is)
   cout << "Error message received from remote peer: " << message << endl;
   disconnect();
 } /* ReflectorClient::handleMsgError */
-
-
-void ReflectorClient::sendNodeList(void)
-{
-  MsgNodeList msg;
-  m_reflector->nodeList(msg.nodes());
-  sendMsg(msg);
-} /* ReflectorClient::sendNodeList */
 
 
 void ReflectorClient::sendError(const std::string& msg)

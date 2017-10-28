@@ -81,11 +81,10 @@ IDLE_SOUND_INTERVAL=3000
 
 [ReflectorLogic]
 TYPE=Reflector
-HOST=localhost
-PORT=5300
-AUTH_KEY="Change this key now!"
+HOST=reflector.example.com
+#PORT=5300
 CALLSIGN="MYCALL"
-#AUDIO_CODEC=OPUS
+AUTH_KEY="Change this key now!"
 #JITTER_BUFFER_DELAY=0
 
 [LinkToR4]

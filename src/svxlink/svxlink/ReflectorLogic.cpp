@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
+#include <iterator>
 
 
 /****************************************************************************
@@ -43,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTcpClient.h>
 #include <AsyncUdpSocket.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -122,7 +125,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
-    m_con_state(STATE_DISCONNECTED)
+    m_con_state(STATE_DISCONNECTED), m_enc(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -140,6 +143,8 @@ ReflectorLogic::~ReflectorLogic(void)
   m_udp_sock = 0;
   delete m_logic_con_in;
   m_logic_con_in = 0;
+  delete m_enc;
+  m_enc = 0;
   delete m_dec;
   m_dec = 0;
   delete m_con;
@@ -178,6 +183,7 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
+#if 0
   string audio_codec("GSM");
   if (AudioDecoder::isAvailable("OPUS") && AudioEncoder::isAvailable("OPUS"))
   {
@@ -189,30 +195,13 @@ bool ReflectorLogic::initialize(void)
     audio_codec = "SPEEX";
   }
   cfg().getValue(name(), "AUDIO_CODEC", audio_codec);
+#endif
 
-  m_logic_con_in = Async::AudioEncoder::create(audio_codec);
-  if (m_logic_con_in == 0)
-  {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to initialize audio encoder" << endl;
-    return false;
-  }
-  m_logic_con_in->writeEncodedSamples.connect(
-      mem_fun(*this, &ReflectorLogic::sendEncodedAudio));
-  m_logic_con_in->flushEncodedSamples.connect(
-      mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
+    // Create logic connection incoming audio passthrough
+  m_logic_con_in = new Async::AudioPassthrough;
 
-
-    // Create audio decoder
-  m_dec = Async::AudioDecoder::create(audio_codec);
-  if (m_dec == 0)
-  {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to initialize audio decoder" << endl;
-    return false;
-  }
-  m_dec->allEncodedSamplesFlushed.connect(
-      mem_fun(*this, &ReflectorLogic::allEncodedSamplesFlushed));
+    // Create dummy audio codec used before setting the real encoder
+  if (!setAudioCodec("DUMMY")) { return false; }
   AudioSource *prev_src = m_dec;
 
     // Create jitter FIFO if jitter buffer delay > 0
@@ -226,6 +215,12 @@ bool ReflectorLogic::initialize(void)
     fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
     prev_src->registerSink(fifo, true);
     prev_src = fifo;
+  }
+  else
+  {
+    AudioPassthrough *passthrough = new AudioPassthrough;
+    prev_src->registerSink(passthrough);
+    prev_src = passthrough;
   }
   m_logic_con_out = prev_src;
 
@@ -288,7 +283,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   if (m_flush_timeout_timer.isEnabled())
   {
     m_flush_timeout_timer.setEnable(false);
-    m_logic_con_in->allEncodedSamplesFlushed();
+    m_enc->allEncodedSamplesFlushed();
   }
   if (timerisset(&m_last_talker_timestamp))
   {
@@ -443,6 +438,51 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
     return;
   }
   m_client_id = msg.clientId();
+
+  //cout << "### MsgServerInfo: clientId=" << msg.clientId()
+  //     << " codecs=";
+  //std::copy(msg.codecs().begin(), msg.codecs().end(),
+  //     std::ostream_iterator<std::string>(cout, " "));
+  //cout << " nodes=";
+  //std::copy(msg.nodes().begin(), msg.nodes().end(),
+  //     std::ostream_iterator<std::string>(cout, " "));
+  //cout << endl;
+
+  cout << name() << ": Connected nodes: ";
+  const vector<string>& nodes = msg.nodes();
+  if (!nodes.empty())
+  {
+    vector<string>::const_iterator it = nodes.begin();
+    cout << *it++;
+    for (; it != nodes.end(); ++it)
+    {
+      cout << ", " << *it;
+    }
+  }
+  cout << endl;
+
+  string selected_codec;
+  for (vector<string>::const_iterator it = msg.codecs().begin();
+       it != msg.codecs().end();
+       ++it)
+  {
+    if (codecIsAvailable(*it))
+    {
+      selected_codec = *it;
+      setAudioCodec(selected_codec);
+      break;
+    }
+  }
+  cout << name() << ": ";
+  if (!selected_codec.empty())
+  {
+    cout << "Using audio codec \"" << selected_codec << "\"";
+  }
+  else
+  {
+    cout << "No supported codec :-(";
+  }
+  cout << endl;
 
   delete m_udp_sock;
   m_udp_sock = new UdpSocket;
@@ -673,7 +713,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       break;
 
     case MsgUdpAllSamplesFlushed::TYPE:
-      m_logic_con_in->allEncodedSamplesFlushed();
+      m_enc->allEncodedSamplesFlushed();
       break;
 
     default:
@@ -767,7 +807,7 @@ void ReflectorLogic::allEncodedSamplesFlushed(void)
 void ReflectorLogic::flushTimeout(Async::Timer *t)
 {
   m_flush_timeout_timer.setEnable(false);
-  m_logic_con_in->allEncodedSamplesFlushed();
+  m_enc->allEncodedSamplesFlushed();
 } /* ReflectorLogic::flushTimeout */
 
 
@@ -808,6 +848,59 @@ void ReflectorLogic::handleTimerTick(Async::Timer *t)
     disconnect();
   }
 } /* ReflectorLogic::handleTimerTick */
+
+
+bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
+{
+  delete m_enc;
+  m_enc = Async::AudioEncoder::create(codec_name);
+  if (m_enc == 0)
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to initialize " << codec_name
+         << " audio encoder" << endl;
+    m_enc = Async::AudioEncoder::create("DUMMY");
+    assert(m_enc != 0);
+    return false;
+  }
+  m_enc->writeEncodedSamples.connect(
+      mem_fun(*this, &ReflectorLogic::sendEncodedAudio));
+  m_enc->flushEncodedSamples.connect(
+      mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
+  m_logic_con_in->registerSink(m_enc, false);
+
+  AudioSink *sink = 0;
+  if (m_dec != 0)
+  {
+    sink = m_dec->sink();
+    delete m_dec;
+  }
+  m_dec = Async::AudioDecoder::create(codec_name);
+  if (m_dec == 0)
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to initialize " << codec_name
+         << " audio decoder" << endl;
+    m_dec = Async::AudioDecoder::create("DUMMY");
+    assert(m_dec != 0);
+    return false;
+  }
+  m_dec->allEncodedSamplesFlushed.connect(
+      mem_fun(*this, &ReflectorLogic::allEncodedSamplesFlushed));
+  if (sink != 0)
+  {
+    m_dec->registerSink(sink, false);
+  }
+
+  return true;
+} /* ReflectorLogic::setAudioCodec */
+
+
+bool ReflectorLogic::codecIsAvailable(const std::string &codec_name)
+{
+  return AudioEncoder::isAvailable(codec_name) &&
+         AudioDecoder::isAvailable(codec_name);
+} /* ReflectorLogic::codecIsAvailable */
 
 
 /*

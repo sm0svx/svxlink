@@ -108,6 +108,12 @@ the client connection.
 class ReflectorClient
 {
   public:
+    typedef enum
+    {
+      STATE_DISCONNECTED, STATE_EXPECT_PROTO_VER, STATE_EXPECT_AUTH_RESPONSE,
+      STATE_CONNECTED, STATE_EXPECT_DISCONNECT
+    } ConState;
+
     /**
      * @brief 	Constructor
      * @param   ref The associated Reflector object
@@ -222,14 +228,52 @@ class ReflectorClient
      */
     bool isBlocked(void) const { return (m_remaining_blocktime > 0); }
 
-  private:
-    static uint32_t next_client_id;
+    /**
+     * @brief   Get the state of the connection
+     * @return  Returns the state of the connection
+     */
+    ConState conState(void) const { return m_con_state; }
 
-    typedef enum
+  private:
+    struct ProtoVer
     {
-      STATE_DISCONNECTED, STATE_EXPECT_PROTO_VER, STATE_EXPECT_AUTH_RESPONSE,
-      STATE_CONNECTED, STATE_EXPECT_DISCONNECT
-    } ConState;
+      uint16_t major_ver;
+      uint16_t minor_ver;
+
+      ProtoVer(void) : major_ver(0), minor_ver(0) {}
+      ProtoVer(uint16_t major_ver, uint16_t minor_ver)
+        : major_ver(major_ver), minor_ver(minor_ver) {}
+      bool operator ==(const ProtoVer& rhs) const
+      {
+        return (major_ver == rhs.major_ver) && (minor_ver == rhs.minor_ver);
+      }
+      bool operator !=(const ProtoVer& rhs) const
+      {
+        return !(major_ver == rhs.major_ver);
+      }
+      bool operator <(const ProtoVer& rhs) const
+      {
+        return (major_ver < rhs.major_ver) ||
+               ((major_ver == rhs.major_ver) && (minor_ver < rhs.minor_ver));
+      }
+      bool operator >(const ProtoVer& rhs) const
+      {
+        return (major_ver > rhs.major_ver) ||
+               ((major_ver == rhs.major_ver) && (minor_ver > rhs.minor_ver));
+      }
+      bool operator <=(const ProtoVer& rhs) const
+      {
+        return (*this == rhs) || (*this < rhs);
+      }
+      bool operator >=(const ProtoVer& rhs) const
+      {
+        return (*this == rhs) || (*this > rhs);
+      }
+    };
+
+    static const uint16_t MIN_MAJOR_VER = 0;
+    static const uint16_t MIN_MINOR_VER = 6;
+    static uint32_t next_client_id;
 
     static const unsigned HEARTBEAT_TX_CNT_RESET      = 10;
     static const unsigned HEARTBEAT_RX_CNT_RESET      = 15;
@@ -237,31 +281,32 @@ class ReflectorClient
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 120;
 
     Async::FramedTcpConnection* m_con;
-    unsigned              m_msg_type;
-    unsigned char         m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
-    ConState              m_con_state;
-    Async::Timer          m_disc_timer;
-    std::string           m_callsign;
-    uint32_t              m_client_id;
-    uint16_t              m_remote_udp_port;
-    Async::Config*        m_cfg;
-    uint16_t              m_next_udp_tx_seq;
-    uint16_t              m_next_udp_rx_seq;
-    Async::Timer          m_heartbeat_timer;
-    unsigned              m_heartbeat_tx_cnt;
-    unsigned              m_heartbeat_rx_cnt;
-    unsigned              m_udp_heartbeat_tx_cnt;
-    unsigned              m_udp_heartbeat_rx_cnt;
-    Reflector*            m_reflector;
-    unsigned              m_blocktime;
-    unsigned              m_remaining_blocktime;
+    unsigned                  m_msg_type;
+    unsigned char             m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
+    ConState                  m_con_state;
+    Async::Timer              m_disc_timer;
+    std::string               m_callsign;
+    uint32_t                  m_client_id;
+    uint16_t                  m_remote_udp_port;
+    Async::Config*            m_cfg;
+    uint16_t                  m_next_udp_tx_seq;
+    uint16_t                  m_next_udp_rx_seq;
+    Async::Timer              m_heartbeat_timer;
+    unsigned                  m_heartbeat_tx_cnt;
+    unsigned                  m_heartbeat_rx_cnt;
+    unsigned                  m_udp_heartbeat_tx_cnt;
+    unsigned                  m_udp_heartbeat_rx_cnt;
+    Reflector*                m_reflector;
+    unsigned                  m_blocktime;
+    unsigned                  m_remaining_blocktime;
+    ProtoVer                  m_client_proto_ver;
+    std::vector<std::string>  m_supported_codecs;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
     void onFrameReceived(Async::FramedTcpConnection *con,
                          std::vector<uint8_t>& data);
     void handleMsgProtoVer(std::istream& is);
-    void sendNodeList(void);
     void handleMsgAuthResponse(std::istream& is);
     void handleMsgError(std::istream& is);
     void sendError(const std::string& msg);

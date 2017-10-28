@@ -210,12 +210,14 @@ void Reflector::nodeList(std::vector<std::string>& nodes) const
 
 
 void Reflector::broadcastMsgExcept(const ReflectorMsg& msg,
-                                   ReflectorClient *client)
+                                   ReflectorClient *except)
 {
   ReflectorClientMap::const_iterator it = m_client_map.begin();
   for (; it != m_client_map.end(); ++it)
   {
-    if ((*it).second != client)
+    ReflectorClient *client = (*it).second;
+    if ((client != except) &&
+        (client->conState() == ReflectorClient::STATE_CONNECTED))
     {
       (*it).second->sendMsg(msg);
     }
@@ -412,13 +414,15 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 } /* Reflector::udpDatagramReceived */
 
 
-void Reflector::broadcastUdpMsgExcept(const ReflectorClient *client,
+void Reflector::broadcastUdpMsgExcept(const ReflectorClient *except,
                                       const ReflectorUdpMsg& msg)
 {
   for (ReflectorClientMap::iterator it = m_client_map.begin();
        it != m_client_map.end(); ++it)
   {
-    if ((*it).second != client)
+    ReflectorClient *client = (*it).second;
+    if ((client != except) &&
+        (client->conState() == ReflectorClient::STATE_CONNECTED))
     {
       (*it).second->sendUdpMsg(msg);
     }

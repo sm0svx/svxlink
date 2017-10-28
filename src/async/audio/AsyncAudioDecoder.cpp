@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AsyncAudioDecoder.h"
+#include "AsyncAudioDecoderDummy.h"
 #include "AsyncAudioDecoderNull.h"
 #include "AsyncAudioDecoderRaw.h"
 #include "AsyncAudioDecoderS16.h"
@@ -121,14 +122,15 @@ using namespace Async;
 
 bool AudioDecoder::isAvailable(const std::string &name)
 {
-  return (name == "RAW") || (name == "S16") || (name == "GSM") ||
+  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
+         (name == "GSM") ||
 #ifdef SPEEX_MAJOR
          (name == "SPEEX") ||
 #endif
 #ifdef OPUS_MAJOR
          (name == "OPUS") ||
 #endif
-         (name == "NULL");
+         (name == "DUMMY");
 } /* AudioDecoder::isAvailable */
 
 
@@ -137,6 +139,10 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
   if (name == "NULL")
   {
     return new AudioDecoderNull;
+  }
+  else if (name == "DUMMY")
+  {
+    return new AudioDecoderDummy;
   }
   else if (name == "RAW")
   {
@@ -169,39 +175,11 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
 }
 
 
-#if 0
-AudioDecoder::AudioDecoder(void)
-{
-  
-} /* AudioDecoder::AudioDecoder */
-
-
-AudioDecoder::~AudioDecoder(void)
-{
-  
-} /* AudioDecoder::~AudioDecoder */
-
-
-void AudioDecoder::resumeOutput(void)
-{
-  
-} /* AudioDecoder::resumeOutput */
-#endif
-
-
-
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
-
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-  
-} /* AudioDecoder::allSamplesFlushed */
-#endif
 
 
 

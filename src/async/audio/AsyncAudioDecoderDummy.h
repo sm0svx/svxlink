@@ -1,12 +1,12 @@
 /**
-@file	 AudioEncoder.cpp
-@brief   Base class for an audio decoder
+@file	 AsyncAudioDecoderDummy.h
+@brief   An audio "decoder" used when audio should just be thrown away
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@date	 2017-10-28
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef ASYNC_AUDIO_DECODER_DUMMY_INCLUDED
+#define ASYNC_AUDIO_DECODER_DUMMY_INCLUDED
 
 
 /****************************************************************************
@@ -40,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -48,28 +51,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioEncoder.h"
-#include "AsyncAudioEncoderDummy.h"
-#include "AsyncAudioEncoderNull.h"
-#include "AsyncAudioEncoderRaw.h"
-#include "AsyncAudioEncoderS16.h"
-#include "AsyncAudioEncoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioEncoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioEncoderOpus.h"
-#endif
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+namespace Async
+{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
@@ -83,115 +89,74 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
  * Exported Global Variables
  *
  ****************************************************************************/
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	An audio "decoder" used when audio should just be thrown away
+@author Tobias Blomberg / SM0SVX
+@date   2017-10-28
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-bool AudioEncoder::isAvailable(const std::string &name)
+This class implements an audio "decoder" that will just throw away incoming
+encoded audio. It may be good to use as a placeholder before a real audio
+codec has been chosen.
+*/
+class AudioDecoderDummy : public AudioDecoder
 {
-  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
-         (name == "GSM") ||
-#ifdef SPEEX_MAJOR
-         (name == "SPEEX") ||
-#endif
-#ifdef OPUS_MAJOR
-         (name == "OPUS") ||
-#endif
-         (name == "DUMMY");
-} /* AudioEncoder::isAvailable */
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioDecoderDummy(void) {}
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioDecoderDummy(void) {}
+
+    /**
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
+     */
+    virtual const char *name(void) const { return "DUMMY"; }
+
+    /**
+     * @brief 	Write encoded samples into the decoder
+     * @param 	buf  Buffer containing encoded samples
+     * @param 	size The size of the buffer
+     *
+     * This DUMMY decoder will just throw away incoming encoded samples.
+     */
+    virtual void writeEncodedSamples(void*, int) {}
+
+    /**
+     * @brief Call this function when all encoded samples have been received
+     *
+     * This DUMMY decoder will just ignore the flush request.
+     */
+    virtual void flushEncodedSamples(void) {}
+
+  private:
+    AudioDecoderDummy(const AudioDecoderDummy&);
+    AudioDecoderDummy& operator=(const AudioDecoderDummy&);
+
+};  /* class AudioDecoderDummy */
 
 
-AudioEncoder *AudioEncoder::create(const std::string &name)
-{
-  if (name == "NULL")
-  {
-    return new AudioEncoderNull;
-  }
-  else if (name == "DUMMY")
-  {
-    return new AudioEncoderDummy;
-  }
-  else if (name == "RAW")
-  {
-    return new AudioEncoderRaw;
-  }
-  else if (name == "S16")
-  {
-    return new AudioEncoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioEncoderGsm;
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioEncoderSpeex;
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioEncoderOpus;
-  }
-#endif
-  else
-  {
-    return 0;
-  }
-} /* AudioEncoder::create */
+} /* namespace */
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
+#endif /* ASYNC_AUDIO_DECODER_DUMMY_INCLUDED */
 
 
 /*
  * This file has not been truncated
  */
-
