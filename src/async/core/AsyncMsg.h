@@ -4,6 +4,91 @@
 @author  Tobias Blomberg / SM0SVX
 @date	 2017-02-25
 
+This is a message packing framework for use when for example sending network
+messages or storing structured binary data to a file. Messages are defined as
+classes which can be packed (serialized) and unpacked (deserialized) to/from a
+stream. This is a simple example class:
+
+\code{.cpp}
+class MsgBase : public Async::Msg
+{
+  public:
+    int         a;
+    std::string str;
+
+    ASYNC_MSG_MEMBERS(a, str)
+};
+\endcode
+
+The most common types may be packed, like number types, std::string,
+std::vector, std::map. Adding new types are rather simple. This is an example
+implementing support for the std::pair type:
+
+\code{.cpp}
+namespace Async
+{
+  template <typename First, typename Second>
+  class MsgPacker<std::pair<First, Second> >
+  {
+    public:
+      static bool pack(std::ostream& os, const std::pair<First, Second>& p)
+      {
+        return MsgPacker<First>::pack(os, p.first) &&
+               MsgPacker<Second>::pack(os, p.second);
+      }
+      static size_t packedSize(const std::pair<First, Second>& p)
+      {
+        return MsgPacker<First>::packedSize(p.first) +
+               MsgPacker<Second>::packedSize(p.second);
+      }
+      static bool unpack(std::istream& is, std::pair<First, Second>& p)
+      {
+        return MsgPacker<First>::unpack(is, p.first) &&
+               MsgPacker<Second>::unpack(is, p.second);
+        return true;
+      }
+  };
+};
+\endcode
+
+Inheritance is also possible. If you want the base class to also be packed when
+the derived class is packed, use the ASYNC_MSG_DERIVED_FROM macro. The use of
+the std::pair extension is also demonstrated here.
+
+\code{.cpp}
+class MsgDerived : public MsgBase
+{
+  public:
+    float                       f;
+    std::vector<int>            vec;
+    std::pair<int, std::string> p;
+
+    ASYNC_MSG_DERIVED_FROM(MsgBase)
+    ASYNC_MSG_MEMBERS(f, vec, p)
+};
+\endcode
+
+These classes can be used in the usual way but with the extra property that
+they can be serialized/deserialized to/from a stream.
+
+\code{.cpp}
+MsgDerived d1;
+d1.a = 42;
+d1.str = "Fourtytwo";
+d1.f = 3.14;
+d1.vec.push_back(4711);
+d1.p.first = 100;
+d1.p.second = "THE STRING";
+std::stringstream ss;
+d1.pack(ss);
+
+MsgDerived d2;
+d2.unpack(ss);
+\endcode
+
+For a working example, have a look at the demo application,
+\ref AsyncMsg_demo.cpp.
+
 \verbatim
 Async - A library for programming event driven applications
 Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
@@ -96,19 +181,34 @@ namespace Async
  *
  ****************************************************************************/
 
-#define ASYNC_MSG_DERIVED_FROM(_BASE_CLASS_) \
+/**
+ * @brief   Define which class is the baseclass
+ * @param   BASE_CLASS The name of the baseclass
+ *
+ * Use this macro in a class definition to define which class is the base
+ * class. Multiple inheritance is not supported.
+ */
+#define ASYNC_MSG_DERIVED_FROM(BASE_CLASS) \
     bool packParent(std::ostream& os) const \
     { \
-      return _BASE_CLASS_::pack(os); \
+      return BASE_CLASS::pack(os); \
     } \
     size_t packedSizeParent(void) const \
     { \
-      return _BASE_CLASS_::packedSize(); \
+      return BASE_CLASS::packedSize(); \
     } \
     bool unpackParent(std::istream& is) \
     { \
-      return _BASE_CLASS_::unpack(is); \
+      return BASE_CLASS::unpack(is); \
     }
+
+/**
+ * @brief   Define which members of the class that should be packed
+ *
+ * Use this macro to define which members of the class that should be packed.
+ * Variables not listed here will not be included in the serialized version of
+ * the class.
+ */
 #define ASYNC_MSG_MEMBERS(...) \
     bool pack(std::ostream& os) const \
     { \
@@ -122,6 +222,12 @@ namespace Async
     { \
       return unpackParent(is) && Msg::unpack(is, __VA_ARGS__); \
     }
+
+/**
+ * @brief   Specify that this class have no members to pack
+ *
+ * If the class have no members to pack, this macro must be used.
+ */
 #define ASYNC_MSG_NO_MEMBERS \
     bool pack(std::ostream& os) const \
     { \
@@ -446,10 +552,6 @@ class MsgPacker<std::map<Tag,Value> >
 @brief	Base class for all messages
 @author Tobias Blomberg / SM0SVX
 @date   2017-02-25
-
-A_detailed_class_description
-
-\include Template_demo.cpp
 */
 class Msg
 {

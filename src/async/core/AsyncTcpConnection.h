@@ -305,7 +305,6 @@ class TcpConnection : public sigc::trackable
 
     /**
      * @brief 	Called when data has been received on the connection
-     * @param   con   The connection object
      * @param 	buf   A buffer containg the read data
      * @param 	count The number of bytes in the buffer
      * @return	Return the number of processed bytes

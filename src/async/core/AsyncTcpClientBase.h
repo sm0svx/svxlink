@@ -123,7 +123,7 @@ class TcpClientBase
   public:
     /**
      * @brief   Constructor
-     * @param 	recv_buf_len  The length of the receiver buffer to use
+     * @param 	con The connection object associated with this client
      *
      * The object will be constructed and variables will be initialized but
      * no connection will be created until the connect function
@@ -135,9 +135,9 @@ class TcpClientBase
 
     /**
      * @brief 	Constructor
+     * @param 	con           The connection object associated with this client
      * @param 	remote_host   The hostname of the remote host
      * @param 	remote_port   The port on the remote host to connect to
-     * @param 	recv_buf_len  The length of the receiver buffer to use
      *
      * The object will be constructed and variables will be initialized but
      * no connection will be created until the connect function
@@ -148,9 +148,9 @@ class TcpClientBase
 
     /**
      * @brief 	Constructor
+     * @param 	con           The connection object associated with this client
      * @param 	remote_ip     The IP address of the remote host
      * @param 	remote_port   The port on the remote host to connect to
-     * @param 	recv_buf_len  The length of the receiver buffer to use
      *
      * The object will be constructed and variables will be initialized but
      * no connection will be created until the connect function

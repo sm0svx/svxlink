@@ -174,7 +174,7 @@ class FramedTcpConnection : public TcpConnection
 
     /**
      * @brief 	Send a frame on the TCP connection
-     * @param 	frame The buffer containing the frame to send
+     * @param 	buf The buffer containing the frame to send
      * @param 	count The number of bytes in the frame
      * @return	Return bytes written or -1 on failure
      *
@@ -218,7 +218,6 @@ class FramedTcpConnection : public TcpConnection
 
     /**
      * @brief 	Called when data has been received on the connection
-     * @param   con   The connection object
      * @param 	buf   A buffer containg the read data
      * @param 	count The number of bytes in the buffer
      * @return	Return the number of processed bytes
