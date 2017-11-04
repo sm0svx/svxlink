@@ -24,11 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example EchoLinkProxy_demo.cpp
-An example of how to use the EchoLinkProxy class
-*/
-
-
 #ifndef ECHOLINK_PROXY_INCLUDED
 #define ECHOLINK_PROXY_INCLUDED
 
@@ -122,8 +117,6 @@ proxy server. This is of most use when the two UDP ports cannot be forwarded
 to your local EchoLink computer for one or the other reason, like when being
 on a public network. Instead of your computer listening directly to the two
 UDP ports, the EchoLink proxy server will do it for you.
-
-\include EchoLinkProxy_demo.cpp
 */
 class Proxy : public sigc::trackable
 {
