@@ -66,6 +66,10 @@
 * Bugfix: The squelch detector was not able to handle larger audio blocks than
   256 bytes. It now can.
 
+* Bugfix: Could not handle WAV files that contained other subchunks than 'fmt'
+  or 'data'. Reading would fail for WAV files containing for example 'LIST'
+  or 'id3' subchunks.
+
 
 
  1.5.0 -- 22 Nov 2015
