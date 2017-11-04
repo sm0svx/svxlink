@@ -51,6 +51,7 @@ extern "C" {
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <cerrno>
 
 
 
