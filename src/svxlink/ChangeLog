@@ -70,6 +70,10 @@
   or 'data'. Reading would fail for WAV files containing for example 'LIST'
   or 'id3' subchunks.
 
+* New application SvxReflector that is used to link multiple SvxLink nodes
+  together. On the SvxLink node side the new ReflectorLogic logic core is used
+  to connect to the SvxReflector server.
+
 
 
  1.5.0 -- 22 Nov 2015
