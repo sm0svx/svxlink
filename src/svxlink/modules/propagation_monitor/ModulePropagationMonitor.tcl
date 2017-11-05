@@ -177,7 +177,7 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
-  # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13�)
+  # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13º)
   # Example: Possible Sporadic-E from JO89 on 6m. Try towards JN61 (191 degrees)
   set match [regexp \
 	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) \((\d+) degrees\)$} \
@@ -205,9 +205,11 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
-  # Example: Aurora active on 6m. down to 57� of Lat. / SM7GVF(JO77GA)
+  # Example: Aurora active on 6m. down to 55 deg. of Lat. / LY2X/P(KO25MO)
+  # Example: Aurora active on 6m. down to 56 deg. of Lat. / OZ4VV(JO46)
+  # Example: Aurora active on 6m. down to 57º of Lat. / SM7GVF(JO77GA)
   set match [regexp \
-	{^Aurora active on (\d+c?m)\. down to (\d+).* of Lat. / (.*?)\((\w\w\d\d\w\w)\)$} \
+	{^Aurora active on (\d+c?m)\. down to (\d+).* of Lat. / (.*?)\((\w\w\d\d(?:\w\w)?)\)$} \
 	$subject -> band lat call loc]
   if {$match} {
     processEvent "vhfdx_aurora_opening $band $lat $call $loc"

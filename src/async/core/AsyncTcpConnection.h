@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2017 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -132,7 +132,8 @@ class TcpConnection : public sigc::trackable
       DR_REMOTE_DISCONNECTED,  ///< The remote host disconnected
       DR_SYSTEM_ERROR,	       ///< A system error occured (check errno)
       DR_RECV_BUFFER_OVERFLOW, ///< Receiver buffer overflow
-      DR_ORDERED_DISCONNECT    ///< Disconnect ordered locally
+      DR_ORDERED_DISCONNECT,   ///< Disconnect ordered locally
+      DR_PROTOCOL_ERROR        ///< Protocol error
     } DisconnectReason;
     
     /**
@@ -185,7 +186,7 @@ class TcpConnection : public sigc::trackable
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    void disconnect(void);
+    virtual void disconnect(void);
     
     /**
      * @brief 	Write data to the TCP connection
@@ -193,7 +194,7 @@ class TcpConnection : public sigc::trackable
      * @param 	count The number of bytes to send from the buffer
      * @return	Returns the number of bytes written or -1 on failure
      */
-    int write(const void *buf, int count);
+    virtual int write(const void *buf, int count);
     
     /**
      * @brief 	Return the IP-address of the remote host
@@ -290,8 +291,40 @@ class TcpConnection : public sigc::trackable
      */
     int socket(void) const { return sock; }
     
+    /**
+     * @brief 	Called when a connection has been terminated
+     * @param 	reason  The reason for the disconnect
+     *
+     * This function will be called when the connection has been terminated.
+     * The default action for this function is to emit the disconnected signal.
+     */
+    virtual void onDisconnected(DisconnectReason reason)
+    {
+      disconnected(this, reason);
+    }
+
+    /**
+     * @brief 	Called when data has been received on the connection
+     * @param 	buf   A buffer containg the read data
+     * @param 	count The number of bytes in the buffer
+     * @return	Return the number of processed bytes
+     *
+     * This function is called when data has been received on this connection.
+     * The buffer will contain the bytes read from the operating system.
+     * The function will return the number of bytes that has been processed. The
+     * bytes not processed will be stored in the receive buffer for this class
+     * and presented again to the slot when more data arrives. The new data
+     * will be appended to the old data.
+     * The default action for this function is to emit the dataReceived signal.
+     */
+    virtual int onDataReceived(void *buf, int count)
+    {
+      return dataReceived(this, buf, count);
+    }
     
   private:
+    friend class TcpClientBase;
+
     IpAddress remote_addr;
     uint16_t  remote_port;
     size_t    recv_buf_len;

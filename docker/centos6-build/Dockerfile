@@ -3,7 +3,6 @@
 #
 # Run with:
 #   docker run -it --rm --hostname centos6-build \
-#              --privileged -v /dev/snd:/dev/snd \
 #              svxlink-centos6-build
 #
 # For using sound inside the docker container add:

@@ -125,10 +125,16 @@ REGISTER_AUDIO_DEVICE_TYPE("udp", AudioDeviceUDP);
  *
  ****************************************************************************/
 
-int AudioDeviceUDP::blocksize(void)
+int AudioDeviceUDP::readBlocksize(void)
 {
   return block_size;
-} /* AudioDeviceUDP::blocksize */
+} /* AudioDeviceUDP::readBlocksize */
+
+
+int AudioDeviceUDP::writeBlocksize(void)
+{
+  return block_size;
+} /* AudioDeviceUDP::writeBlocksize */
 
 
 bool AudioDeviceUDP::isFullDuplexCapable(void)
@@ -310,7 +316,8 @@ void AudioDeviceUDP::closeDevice(void)
  ****************************************************************************/
 
 
-void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, void *buf, int count)
+void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, uint16_t port,
+                                      void *buf, int count)
 {
   for (unsigned i=0; i < count / (channels * sizeof(int16_t)); ++i)
   {

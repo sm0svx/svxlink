@@ -172,10 +172,16 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
     static void setBlocksize(int size);
 
     /**
-     * @brief 	Find out what the blocksize is set to
+     * @brief 	Find out what the read (recording) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    int blocksize(void);
+    int readBlocksize(void);
+
+    /**
+     * @brief 	Find out what the write (playback) blocksize is set to
+     * @return	Returns the currently set blocksize in samples per channel
+     */
+    int writeBlocksize(void);
     
     /**
      * @brief 	Set the block count used when opening audio devices

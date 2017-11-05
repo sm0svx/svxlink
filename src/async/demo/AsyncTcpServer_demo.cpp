@@ -10,7 +10,7 @@ class MyClass : public sigc::trackable
   public:
     MyClass(void)
     {
-      server = new TcpServer("12345");
+      server = new TcpServer<>("12345");
       server->clientConnected.connect(
         mem_fun(*this, &MyClass::onClientConnected));
       server->clientDisconnected.connect(
@@ -25,7 +25,7 @@ class MyClass : public sigc::trackable
     }
 
   private:
-    TcpServer *server;
+    TcpServer<>* server;
     
     void onClientConnected(TcpConnection *con)
     {

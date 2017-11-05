@@ -133,7 +133,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     LocationInfo::Cfg   &loc_cfg;
     std::string		server;
     int			port;
-    Async::TcpClient 	*con;
+    Async::TcpClient<>* con;
     Async::Timer        *beacon_timer;
     Async::Timer        *reconnect_timer;
     Async::Timer        *offset_timer;
@@ -152,10 +152,10 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     void  aprsLogin(void);
     short getPasswd(const std::string& call);
 
-    int   tcpDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
+    int   tcpDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
                           int count);
-    void  tcpDisconnected(Async::TcpClient::TcpConnection *con,
-                          Async::TcpClient::DisconnectReason reason);
+    void  tcpDisconnected(Async::TcpClient<>::TcpConnection *con,
+                          Async::TcpClient<>::DisconnectReason reason);
     void  reconnectAprsServer(Async::Timer *t);
     void  startNormalSequence(Async::Timer *t);
 

@@ -1,4 +1,4 @@
- 1.4.1 -- ?? ??? 2017
+ 1.5.0 -- ?? ??? 2017
 ----------------------
 
 * Support for Qt5 added. Patch contributed by Richard Neese.
@@ -7,7 +7,19 @@
   locking issues. Patch by Steve/DH1DM.
 
 * Bugfix in AsyncTcpClient: An assertion error could occur if the connect
-  mthod was called twice.
+  method was called twice.
+
+* Bugfix in AsyncTcpServer: Fix memory leak
+
+* UdpSocket: The dataReceived signal now also provide the remote UDP port
+  number
+
+* Bugfix in AsyncAudioDeviceAlsa/AsyncAudioIO: Assertion for some sound boards
+  in Async::Timer::setEnable due to the AudioDeviceAlsa::samplesToWrite
+  function returning a negative value.
+
+* Now possible to ask the AudioEncoder and AudioDecoder if a codec is
+  supported or not.
 
 
 

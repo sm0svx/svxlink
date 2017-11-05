@@ -327,6 +327,11 @@ set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
 # Find the chown utility
 include(FindCHOWN)
 
+set(SVXLINK_USER "svxlink" CACHE STRING "Set SvxLink system user")
+set(SVXLINK_GROUP "daemon" CACHE STRING "Set SvxLink system group")
+message(STATUS "SvxLink user = ${SVXLINK_USER}")
+message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
+
 # Add directories to build
 add_subdirectory(async)
 add_subdirectory(misc)
@@ -337,3 +342,21 @@ if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
 add_subdirectory(doc)
+
+# Experimental CPack package building
+set(CPACK_SET_DESTDIR "ON")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+  "Advanced voice services system for ham radio use")
+execute_process(
+  COMMAND git describe --tags
+  COMMAND tr - .
+  COMMAND tr -d '\n'
+  OUTPUT_VARIABLE CPACK_PACKAGE_VERSION)
+message(STATUS "Package Version = ${CPACK_PACKAGE_VERSION}")
+#set(CPACK_PACKAGE_VERSION "0.1.3")
+set(CPACK_PACKAGE_DESCRIPTION
+  "The SvxLink project develops an advanced voice services system for ham radio use. It can be run on a simplex frequency or act as a repeaster controller.")
+set(CPACK_PACKAGE_CONTACT
+  "SvxLink Community <svxlink-devel@lists.sourceforge.net>")
+#set(CPACK_GENERATOR "DEB")
+include(CPack)

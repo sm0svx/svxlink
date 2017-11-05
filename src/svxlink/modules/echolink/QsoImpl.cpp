@@ -451,6 +451,7 @@ void QsoImpl::onInfoMsgReceived(const string& msg)
 	 << " ---" << endl
 	 << msg << endl;
     last_info_msg = msg;
+    infoMsgReceived(this, msg);
   }  
 } /* onInfoMsgReceived */
 
@@ -521,7 +522,9 @@ void QsoImpl::onStateChange(Qso::State state)
 	}
 	else
 	{
-	  module->processEvent("connected");
+          stringstream ss;
+          ss << "connected " << remoteCallsign();
+          module->processEvent(ss.str());
 	}
       }
       break;

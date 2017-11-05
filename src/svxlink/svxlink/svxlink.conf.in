@@ -79,6 +79,14 @@ IDLE_SOUND_INTERVAL=3000
 #STATE_PTY=/var/run/svxlink/state
 #DTMF_CTRL_PTY=/dev/shm/repeater_dtmf_ctrl
 
+[ReflectorLogic]
+TYPE=Reflector
+HOST=reflector.example.com
+#PORT=5300
+CALLSIGN="MYCALL"
+AUTH_KEY="Change this key now!"
+#JITTER_BUFFER_DELAY=0
+
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD
 #DEFAULT_ACTIVE=1
@@ -183,6 +191,7 @@ SERIAL_PIN=CTS
 #EVDEV_DEVNAME=/dev/input/by-id/usb-SYNIC_SYNIC_Wireless_Audio-event-if03
 #EVDEV_OPEN=1,163,1
 #EVDEV_CLOSE=1,163,0
+#GPIO_PATH=/sys/class/gpio
 #GPIO_SQL_PIN=gpio30
 #PTY_PATH=/tmp/rx1_sql
 #HID_DEVICE=/dev/hidraw3
@@ -244,6 +253,7 @@ PTT_PIN=DTRRTS
 #HID_DEVICE=/dev/hidraw3
 #HID_PTT_PIN=GPIO3
 #SERIAL_SET_PINS=DTR!RTS
+#GPIO_PATH=/sys/class/gpio
 #PTT_HANGTIME=1000
 TIMEOUT=300
 TX_DELAY=500

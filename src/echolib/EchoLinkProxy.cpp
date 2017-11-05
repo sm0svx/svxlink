@@ -150,7 +150,7 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
   con.disconnected.connect(mem_fun(*this, &Proxy::onDisconnected));
 
   reconnect_timer.setEnable(false);
-  reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient::connect)));
+  reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient<>::connect)));
 
   cmd_timer.setEnable(false);
   cmd_timer.expired.connect(hide(mem_fun(*this, &Proxy::cmdTimeout)));
@@ -346,7 +346,7 @@ int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
 
 
 void Proxy::onDisconnected(TcpConnection *con,
-                           Async::TcpClient::DisconnectReason reason)
+                           Async::TcpClient<>::DisconnectReason reason)
 {
   reconnect_timer.setEnable(true);
   disconnectHandler();
@@ -624,7 +624,7 @@ void Proxy::handleUdpDataMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 {
   if (len > 0)
   {
-    udpDataReceived(remote_ip, buf, len);
+    udpDataReceived(remote_ip, 0, buf, len);
   }
 } /* Proxy::handleUdpDataMsg */
 
@@ -633,7 +633,7 @@ void Proxy::handleUdpCtrlMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 {
   if (len > 0)
   {
-    udpCtrlReceived(remote_ip, buf, len);
+    udpCtrlReceived(remote_ip, 0, buf, len);
   }
 } /* Proxy::handleUdpCtrlMsg */
 

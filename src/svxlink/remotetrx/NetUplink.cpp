@@ -203,7 +203,7 @@ bool NetUplink::initialize(void)
     mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
   }
   
-  server = new TcpServer(listen_port);
+  server = new TcpServer<>(listen_port);
   server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
       mem_fun(*this, &NetUplink::clientDisconnected));
@@ -674,6 +674,7 @@ void NetUplink::sendMsg(Msg *msg)
     {
       cerr << "*** ERROR: TCP transmit error in NetUplink \"" << name
            << "\": " << strerror(errno) << ".\n";
+      forceDisconnect();
     }
     else if (written != static_cast<int>(msg->size()))
     {

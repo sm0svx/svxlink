@@ -69,7 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class Config;
-  class TcpServer;
+  template <typename ConT> class TcpServer;
   class AudioFifo;
   class Timer;
   class AudioEncoder;
@@ -165,7 +165,7 @@ class NetUplink : public Uplink
       STATE_DISC, STATE_CON_SETUP, STATE_READY, STATE_DISC_CLEANUP
     } State;
     
-    Async::TcpServer  	    *server;
+    Async::TcpServer<Async::TcpConnection>*  server;
     Async::TcpConnection    *con;
     char      	      	    recv_buf[4096];
     unsigned       	    recv_cnt;

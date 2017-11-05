@@ -194,7 +194,7 @@ bool ModuleParrot::initialize(void)
     cerr << "*** Error: Config variable " << cfgName() << "/FIFO_LEN not set\n";
     return false;
   }
-  int repeat_delay;
+  int repeat_delay = -1;
   if (cfg().getValue(cfgName(), "REPEAT_DELAY", repeat_delay))
   {
     repeat_delay_timer.setTimeout(repeat_delay);
