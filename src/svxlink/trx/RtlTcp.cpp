@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <sstream>
 #include <cassert>
+#include <cerrno>
 
 
 /****************************************************************************
@@ -126,7 +127,7 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
   con.connect();
 
   reconnect_timer.expired.connect(
-      hide(mem_fun(con, &Async::TcpClient::connect)));
+      hide(mem_fun(con, &Async::TcpClient<>::connect)));
 } /* RtlTcp::RtlTcp */
 
 
@@ -215,7 +216,12 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
     msg[3] = (param >> 8) & 0xff;
     msg[2] = (param >> 16) & 0xff;
     msg[1] = (param >> 24) & 0xff;
-    con.write(msg, sizeof(msg));
+    if (con.write(msg, sizeof(msg)) == -1)
+    {
+      cout << "*** ERROR: RtlTcp socket write error: " << strerror(errno) << endl;
+      con.disconnect();
+      disconnected(&con, TcpConnection::DR_SYSTEM_ERROR);
+    }
   }
 } /* RtlTcp::sendCommand */
 

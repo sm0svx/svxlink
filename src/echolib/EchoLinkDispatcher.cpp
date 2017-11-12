@@ -318,7 +318,8 @@ Dispatcher::Dispatcher(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
+void Dispatcher::ctrlDataReceived(const IpAddress& ip, uint16_t port,
+                                  void *buf, int len)
 {
   unsigned char *recv_buf = static_cast<unsigned char *>(buf);
   
@@ -361,7 +362,8 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
 } /* Dispatcher::ctrldDataReceived */
 
 
-void Dispatcher::audioDataReceived(const IpAddress& ip, void *buf, int len)
+void Dispatcher::audioDataReceived(const IpAddress& ip, uint16_t port,
+                                   void *buf, int len)
 {
   unsigned char *recv_buf = static_cast<unsigned char *>(buf);
   

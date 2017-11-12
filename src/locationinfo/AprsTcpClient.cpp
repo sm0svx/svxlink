@@ -128,7 +128,7 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    el_call = loc_cfg.mycall;  // the EchoLink callsign
    el_prefix = "E" + loc_cfg.prefix + "-"; // the EchoLink prefix ER- od EL-
 
-   con = new TcpClient(server, port);
+   con = new TcpClient<>(server, port);
    con->connected.connect(mem_fun(*this, &AprsTcpClient::tcpConnected));
    con->disconnected.connect(mem_fun(*this, &AprsTcpClient::tcpDisconnected));
    con->dataReceived.connect(mem_fun(*this, &AprsTcpClient::tcpDataReceived));
@@ -360,7 +360,7 @@ void AprsTcpClient::startNormalSequence(Timer *t)
 
 // ToDo: possible interaction of SvxLink on commands sended via
 //       APRS-net
-int AprsTcpClient::tcpDataReceived(TcpClient::TcpConnection *con,
+int AprsTcpClient::tcpDataReceived(TcpClient<>::TcpConnection *con,
                                    void *buf, int count)
 {
    return count;                                // do nothing...
@@ -368,8 +368,8 @@ int AprsTcpClient::tcpDataReceived(TcpClient::TcpConnection *con,
 
 
 
-void AprsTcpClient::tcpDisconnected(TcpClient::TcpConnection *con,
-                                    TcpClient::DisconnectReason reason)
+void AprsTcpClient::tcpDisconnected(TcpClient<>::TcpConnection *con,
+                                    TcpClient<>::DisconnectReason reason)
 {
   cout << "*** WARNING: Disconnected from APRS server" << endl;
 

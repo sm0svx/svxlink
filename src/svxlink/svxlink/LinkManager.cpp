@@ -253,10 +253,14 @@ bool LinkManager::initialize(const Async::Config &cfg,
 } /* LinkManager::initialize */
 
 
-void LinkManager::addLogic(Logic *logic)
+void LinkManager::addLogic(LogicBase *logic)
 {
     // Make sure that we have not added this logic before
   assert(logic_map.find(logic->name()) == logic_map.end());
+
+    // Make sure that the logic connection objects have been created
+  assert(logic->logicConOut() != 0);
+  assert(logic->logicConIn() != 0);
 
     // Create a splitter to split the source audio from the logic being added
     // to all other logics.
@@ -307,20 +311,24 @@ void LinkManager::addLogic(Logic *logic)
   logic_map[logic->name()] = logic_info;
 
     // Create command objects associated with this logic
-  for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
+  Logic *cmd_logic = dynamic_cast<Logic*>(logic);
+  if (cmd_logic != 0)
   {
-    Link &link = it->second;
-    LogicPropMap::const_iterator prop_it(link.logic_props.find(logic->name()));
-    if (prop_it != link.logic_props.end())
+    for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
     {
-      const LogicProperties &logic_props = prop_it->second;
-      if (atoi(logic_props.cmd.c_str()) > 0)
+      Link &link = it->second;
+      LogicPropMap::const_iterator prop_it(link.logic_props.find(logic->name()));
+      if (prop_it != link.logic_props.end())
       {
-        LinkCmd *link_cmd = new LinkCmd(logic, link);
-        if (!link_cmd->initialize(logic_props.cmd))
+        const LogicProperties &logic_props = prop_it->second;
+        if (atoi(logic_props.cmd.c_str()) > 0)
         {
-          cout << "*** WARNING: Can not setup command " << logic_props.cmd
-               << " for the logic " << logic->name() << endl;
+          LinkCmd *link_cmd = new LinkCmd(cmd_logic, link);
+          if (!link_cmd->initialize(logic_props.cmd))
+          {
+            cout << "*** WARNING: Can not setup command " << logic_props.cmd
+                 << " for the logic " << logic->name() << endl;
+          }
         }
       }
     }
@@ -328,7 +336,7 @@ void LinkManager::addLogic(Logic *logic)
 } /* LinkManager::addLogic */
 
 
-void LinkManager::deleteLogic(Logic *logic)
+void LinkManager::deleteLogic(LogicBase *logic)
 {
   LogicMap::iterator lmit = logic_map.find(logic->name());
   if (lmit == logic_map.end())
@@ -418,7 +426,7 @@ void LinkManager::allLogicsStarted(void)
 } /* LinkManager::allLogicsStarted */
 
 
-string LinkManager::cmdReceived(LinkRef link, Logic *logic,
+string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
                                 const string &subcmd)
 {
   /* cout << "### LinkManager::cmdReceived: link=" << link.name
@@ -713,7 +721,7 @@ void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 } /* LinkManager::linkTimeout */
 
 
-void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
+void LinkManager::logicIdleStateChanged(bool is_idle, const LogicBase *logic)
 {
   /* cout << "### LinkManager::logicIdleStateChanged:"
        << " is_idle=" << is_idle
@@ -777,7 +785,7 @@ void LinkManager::checkTimeoutTimer(Link &link)
     const string &logic_name = (*cpit).first;
     LogicMap::iterator lmit = logic_map.find(logic_name);
     assert(lmit != logic_map.end());
-    Logic *logic = (*lmit).second.logic;
+    LogicBase *logic = (*lmit).second.logic;
     all_logics_idle &= logic->isIdle();
   }
 

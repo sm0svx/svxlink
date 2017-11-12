@@ -52,7 +52,7 @@ An example of how to use the Async::TcpServer class
  *
  ****************************************************************************/
 
-#include <AsyncTcpConnection.h>
+#include <AsyncTcpServerBase.h>
 
 
 /****************************************************************************
@@ -123,7 +123,8 @@ actual communication. An example of how to use it is shown below.
 
 \include AsyncTcpServer_demo.cpp
 */
-class TcpServer : public sigc::trackable
+template <typename ConT=TcpConnection>
+class TcpServer : public TcpServerBase
 {
   public:
     /**
@@ -132,80 +133,58 @@ class TcpServer : public sigc::trackable
      * @param 	bind_ip The IP to bind the server to
      */
     TcpServer(const std::string& port_str,
-              const Async::IpAddress &bind_ip=IpAddress());
+              const Async::IpAddress &bind_ip=IpAddress())
+      : TcpServerBase(port_str, bind_ip)
+    {
+    }
   
     /**
      * @brief 	Destructor
      */
-    ~TcpServer(void);
+    virtual ~TcpServer(void) {}
   
-    /**
-     * @brief 	Get the number of clients that is connected to the server
-     * @return 	The number of connected clients
-     */
-    int numberOfClients(void);
-
     /**
      * @brief 	Get the client object pointer from the server
      * @param 	index The wanted client by number 0 - numberOfClients()-1
      * @return 	The TcpConnection pointer to the client (zero if not found)
      */
-    TcpConnection *getClient(unsigned int index);
-
-    /**
-     * @brief 	Write data to all connected clients 
-     * @param 	buf   The data buffer
-     * @param 	count The number of bytes in the data buffer
-     * @return 	The number of bytes sent
-     */
-    int writeAll(const void *buf, int count);
-
-    /**
-     * @brief 	Send data only to the given client
-     * @param 	con   The TcpConnection object to send to
-     * @param 	buf   The data buffer
-     * @param 	count The number of bytes in data buffer
-     * @return 	The number of bytes sent
-     */
-    int writeOnly(TcpConnection *con, const void *buf, int count);
-
-    /**
-     * @brief 	Send data to all connected clients except the given client
-     * @param 	con   The TcpConnection object not to send to
-     * @param 	buf   The data buffer
-     * @param 	count The number of bytes in the data buffer
-     * @return 	The number of bytes sent
-     */
-    int writeExcept(TcpConnection *con, const void *buf, int count);
+    ConT *getClient(unsigned int index)
+    {
+      TcpConnection *con = TcpServerBase::getClient(index);
+      return dynamic_cast<ConT*>(con);
+    }
 
     /**
      * @brief 	A signal that is emitted when a client connect to the server
      * @param 	con The connected TcpConnection object
      */
-    sigc::signal<void, TcpConnection *>  clientConnected;
+    sigc::signal<void, ConT*>  clientConnected;
   
     /**
      * @brief 	A signal that is emitted when a client disconnect from the
      *	      	server
      * @param 	con The disconnected TcpConnection object
      */
-    sigc::signal<void, TcpConnection *,TcpConnection::DisconnectReason>
-      	    clientDisconnected;
-  
+    sigc::signal<void, ConT*, typename ConT::DisconnectReason>
+            clientDisconnected;
   
   protected:
+    virtual void createConnection(int sock, const IpAddress& remote_addr,
+                                  uint16_t remote_port)
+    {
+      ConT *con = new ConT(sock, remote_addr, remote_port);
+      con->disconnected.connect(
+          mem_fun(*this, &TcpServer<ConT>::onDisconnected));
+      addConnection(con);
+      clientConnected(con);
+    }
     
   private:
-    typedef std::vector<TcpConnection*> TcpConnectionList;
-    
-    int       	      sock;
-    FdWatch   	      *rd_watch;
-    TcpConnectionList tcpConnectionList;
-    
-    void cleanup(void);
-    void onConnection(FdWatch *watch);
-    void onDisconnected(TcpConnection *con,
-      	      	      	TcpConnection::DisconnectReason reason);
+    void onDisconnected(ConT *con, typename ConT::DisconnectReason reason)
+    {
+      clientDisconnected(con, reason);
+      removeConnection(con);
+    }
     
 };  /* class TcpServer */
 

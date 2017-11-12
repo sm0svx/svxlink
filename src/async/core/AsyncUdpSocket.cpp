@@ -335,7 +335,7 @@ void UdpSocket::handleInput(FdWatch *watch)
     return;
   }
   
-  dataReceived(IpAddress(addr.sin_addr), buf, len);
+  dataReceived(IpAddress(addr.sin_addr), ntohs(addr.sin_port), buf, len);
   
 } /* UdpSocket::handleInput */
 
@@ -374,7 +374,7 @@ void UdpSocket::sendRest(FdWatch *watch)
   send_buf = 0;
   wr_watch->setEnabled(false);
   
-} /* UdpSocket::handleInput */
+} /* UdpSocket::sendRest */
 
 
 
