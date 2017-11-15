@@ -489,8 +489,10 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
-  sendUdpMsg(MsgUdpHeartbeat());
   m_con_state = STATE_CONNECTED;
+
+  sendUdpMsg(MsgUdpHeartbeat());
+
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
