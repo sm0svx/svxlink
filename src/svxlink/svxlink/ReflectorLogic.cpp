@@ -875,6 +875,7 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
   if (m_dec != 0)
   {
     sink = m_dec->sink();
+    m_dec->unregisterSink();
     delete m_dec;
   }
   m_dec = Async::AudioDecoder::create(codec_name);
