@@ -477,6 +477,38 @@ This is the minimum time, in milliseconds, that a transmission must last to
 be considered as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.
 .
+.SS ReflectorLogic
+.
+The ReflectorLogic is used to connect to an SvxReflector server. The
+SvxReflector will distribute all audio to all connected nodes. To actually send
+audio to the reflector from a logic core, set up a link between the two logics
+using LogicLinking. More than one logic core can be connected.
+.TP
+.B TYPE
+The type for a reflector logic core is always
+.BR Reflector .
+.TP
+.B HOST
+The hostname or IP address of the reflector server.
+.TP
+.B PORT
+The TCP/UDP port number used by the server. The client do not need to open any
+ports in the firewall. Default: 5300.
+.TP
+.B CALLSIGN
+The callsign of this node. The callsign also serves as the username when
+authenticating to the SvxReflector server.
+.TP
+.B AUTH_KEY
+The authentication key, or password, used when authenticating to the
+SvxReflector server.
+.TP
+.B JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. Set this configuration
+variable to the number of milliseconds to buffer before starting to process the
+audio. Default: 0.
+.
 .SS QSO Recorder Section
 .
 The QSO recorder is used to record all received audio to files on disk. All

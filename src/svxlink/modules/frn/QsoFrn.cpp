@@ -129,7 +129,7 @@ using namespace FrnUtils;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
-  , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
+  , tcp_client(new TcpClient<>(TCP_BUFFER_SIZE))
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , keepalive_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_PERIODIC))

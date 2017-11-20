@@ -266,16 +266,23 @@ class Squelch : public sigc::trackable, public Async::AudioSink
 	}
       }
 
-      int ret_count = processSamples(samples, count);
-      if (ret_count != count)
+      while (count > 0)
       {
-      	std::cout << ret_count << " samples of " << count
-	      	  << " written to the squelch detctor\n";
+        int ret_count = processSamples(samples, count);
+        if (ret_count <= 0)
+        {
+          std::cout << "*** WARNING: " << count
+                    << " samples dropped in squelch detector for receiver "
+                    << m_name << std::endl;
+          break;
+        }
+        samples += ret_count;
+        count -= ret_count;
       }
 
       if (m_hangtime_left > 0)
       {
-      	m_hangtime_left -= ret_count;
+        m_hangtime_left -= orig_count;
 	if (m_hangtime_left <= 0)
 	{
 	  m_signal_detected_filtered = false;
@@ -285,7 +292,7 @@ class Squelch : public sigc::trackable, public Async::AudioSink
 
       if (m_delay_left > 0)
       {
-      	m_delay_left -= ret_count;
+        m_delay_left -= orig_count;
 	if (m_delay_left <= 0)
 	{
 	  m_signal_detected_filtered = true;
@@ -293,7 +300,7 @@ class Squelch : public sigc::trackable, public Async::AudioSink
 	}
       }
 
-      return ret_count;
+      return orig_count;
     }
 
     /**

@@ -130,7 +130,7 @@ class SvxServer : public sigc::trackable
 
   private:
 
-    Async::TcpServer *server;
+    Async::TcpServer<> *server;
     Async::Timer * heartbeat_timer;
     Async::Timer * sql_timer;
     Async::Timer * sql_resettimer;

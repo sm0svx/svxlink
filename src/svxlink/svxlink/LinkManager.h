@@ -75,7 +75,7 @@ namespace Async
 {
   class AudioPassthrough;
 };
-class Logic;
+class LogicBase;
 
 
 /****************************************************************************
@@ -199,13 +199,13 @@ class LinkManager : public sigc::trackable
      *
      * This function should be called by each logic core upon creation.
      */
-    void addLogic(Logic *logic);
+    void addLogic(LogicBase *logic);
 
     /**
      * @brief Delete a logic core from the link manager
      * @param logic The logic to delete
      */
-    void deleteLogic(Logic *logic);
+    void deleteLogic(LogicBase *logic);
 
     /**
      * @brief Should be called after all logics have been initialized
@@ -225,7 +225,7 @@ class LinkManager : public sigc::trackable
      * @param   subcmd The subcommand
      * @return  Returns an event handler command to be executed by the logic
      */
-    std::string cmdReceived(LinkRef link, Logic *logic,
+    std::string cmdReceived(LinkRef link, LogicBase *logic,
                             const std::string &subcmd);
 
   private:
@@ -270,7 +270,7 @@ class LinkManager : public sigc::trackable
     typedef std::map<std::string, SinkInfo>   SinkMap;
     struct LogicInfo
     {
-      Logic             *logic;
+      LogicBase         *logic;
       sigc::connection  idle_state_changed_con;
     };
     typedef std::map<std::string, LogicInfo> LogicMap;
@@ -297,7 +297,7 @@ class LinkManager : public sigc::trackable
                      const std::string& sink_name);
     */
     void linkTimeout(Async::Timer *t, Link *link);
-    void logicIdleStateChanged(bool is_idle, const Logic *logic);
+    void logicIdleStateChanged(bool is_idle, const LogicBase *logic);
     void checkTimeoutTimer(Link &link);
 
 };  /* class LinkManager */

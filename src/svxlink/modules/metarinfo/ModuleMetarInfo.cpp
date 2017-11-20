@@ -669,7 +669,7 @@ void ModuleMetarInfo::openConnection(void)
 {
   if (con == 0)
   {
-    con = new TcpClient(server, 80);
+    con = new TcpClient<>(server, 80);
     con->connected.connect(mem_fun(*this, &ModuleMetarInfo::onConnected));
     con->disconnected.connect(mem_fun(*this, &ModuleMetarInfo::onDisconnected));
     con->dataReceived.connect(mem_fun(*this, &ModuleMetarInfo::onDataReceived));
@@ -2083,7 +2083,7 @@ void ModuleMetarInfo::onConnected(void)
 
 
 void ModuleMetarInfo::onDisconnected(TcpConnection * /*con*/,
-                     TcpClient::DisconnectReason reason)
+                     TcpClient<>::DisconnectReason reason)
 {
   delete con;
   con = 0;

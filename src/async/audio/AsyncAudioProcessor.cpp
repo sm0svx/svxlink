@@ -320,11 +320,25 @@ void AudioProcessor::writeFromBuf(void)
   do
   {
     written = sinkWriteSamples(buf, buf_cnt);
-    //cout << "buf_cnt=" << buf_cnt << "  written=" << written << endl;
-    buf_cnt -= written;
-    if (buf_cnt > 0)
+    if (written > buf_cnt)
     {
-      memmove(buf, buf+written, buf_cnt * sizeof(*buf));
+      cout << "### AudioProcessor::writeFromBuf: buf_cnt=" << buf_cnt
+           << " written=" << written << endl;
+      written = buf_cnt;
+    }
+    //cout << "buf_cnt=" << buf_cnt << "  written=" << written << endl;
+    if (written > 0)
+    {
+      buf_cnt -= written;
+      if (buf_cnt > 0)
+      {
+        memmove(buf, buf+written, buf_cnt * sizeof(*buf));
+      }
+    }
+    else if (written < 0)
+    {
+      cout << "### AudioProcessor::writeFromBuf: buf_cnt=" << buf_cnt
+           << " written=" << written << endl;
     }
 
     if (do_flush && (buf_cnt == 0))
@@ -355,9 +369,6 @@ void AudioProcessor::writeFromBuf(void)
   output_stopped = (written == 0);
   
 } /* AudioProcessor::writeFromBuf */
-
-
-
 
 
 /*
