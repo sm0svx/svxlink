@@ -1,0 +1,76 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# See https://wiki.debian.org/Hardening
+# Notes_for_packages_using_CMake
+export DEB_BUILD_HARDENING=1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+#CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+#CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS)
+#CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS)
+#LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+%:
+	dh $@ \
+	--parallel \
+	--buildsystem=cmake \
+	--sourcedirectory=src \
+	--builddirectory=build \
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+	-DWITH_SYSTEMD=ON \
+	-DBUILD_STATIC_LIBS=ON \
+	-DSYSCONF_INSTALL_DIR=/etc \
+	-DLOCAL_STATE_DIR=/var \
+	-DUSE_QT=ON \
+	-DWITH_CONTRIB_MODULE_A2D_MCP320X=ON \
+	-DWITH_CONTRIB_MODULE_REMOTE_RELAY=ON \
+	-DWITH_CONTRIB_MODULE_SITE_STATUS=ON \
+	-DWITH_CONTRIB_MODULE_SVXLINKCFG=ON \
+	-DWITH_CONTRIB_MODULE_TCL_SSTV=ON
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip -psvxlink-server --dbgsym-migration='svxlink-server-dbg (<< 15.99-1~)'
+	dh_strip -psvxreflector --dbgsym-migration='svxreflector-dbg (<< 15.99-1~)'
+	dh_strip -premotetrx --dbgsym-migration='remotetrx-dbg (<< 15.99-1~)'
+	dh_strip -pqtel --dbgsym-migration='qtel-dbg (<< 15.99-1~)'
+	dh_strip -plibecholib1.3 --dbgsym-migration='libecholib-dbg (<< 15.99-1~)'
+	dh_strip -plibasynccore1.4 --dbgsym-migration='libasynccore-dbg (<< 15.99-1~)'
+	dh_strip -plibasynccpp1.4 --dbgsym-migration='libasynccpp-dbg (<< 15.99-1~)'
+	dh_strip -plibasyncaudio1.4 --dbgsym-migration='libasyncaudio-dbg (<< 15.99-1~)'
+	dh_strip -plibasyncqt1.4 --dbgsym-migration='libasyncqt-dbg (<< 15.99-1~)'
+	
+.PHONY: override_dh_install_init
+override_dh_installinit:
+	dh_installinit -psvxlink-server --name=svxlink
+	
+.PHONY: override_dh_installchangelogs
+override_dh_installchangelogs:
+	dh_installchangelogs -psvxlink-server src/svxlink/ChangeLog
+	dh_installchangelogs -psvxreflector src/svxlink/ChangeLog
+	dh_installchangelogs -premotetrx src/svxlink/ChangeLog
+	dh_installchangelogs -pqtel src/qtel/ChangeLog
+	dh_installchangelogs -plibecholib1.3 src/echolib/ChangeLog
+	dh_installchangelogs -plibecholib-dev src/echolib/ChangeLog
+	dh_installchangelogs -plibasynccore1.4 src/async/ChangeLog
+	dh_installchangelogs -plibasynccore-dev src/async/ChangeLog
+	dh_installchangelogs -plibasyncaudio1.4 src/async/ChangeLog
+	dh_installchangelogs -plibasyncaudio-dev src/async/ChangeLog
+	dh_installchangelogs -plibasynccpp1.4 src/async/ChangeLog
+	dh_installchangelogs -plibasynccpp-dev src/async/ChangeLog
+	dh_installchangelogs -plibasyncqt1.4 src/async/ChangeLog
+	dh_installchangelogs -plibasyncqt-dev src/async/ChangeLog
+
+#.PHONY: override_dh_fixperms
+#override_dh_fixperms:
+#	dh_fixperms
+#	chmod a-x debian/svxlink-server/etc/default/svxlink
+#	chmod a-x debian/svxlink-server/etc/default/svxreflector
+#	chmod a-x debian/remotetrx/etc/default/remotetrx

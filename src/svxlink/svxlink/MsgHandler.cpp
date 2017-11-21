@@ -849,7 +849,7 @@ bool WavFileQueueItem::initialize(void)
         ptr += read16bitValue(ptr, &audio_format);
         if (audio_format != 1)
         {
-          cerr << "*** WARNING: SvxLink can only handle PCM formated WAV files: "
+          cerr << "*** WARNING: SvxLink can only handle PCM formatted WAV files: "
                << filename << "\n";
           return false;
         }
