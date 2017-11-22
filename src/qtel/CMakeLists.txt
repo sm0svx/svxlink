@@ -74,7 +74,9 @@ set_target_properties(${PROG} PROPERTIES
 install(TARGETS ${PROG} DESTINATION ${BIN_INSTALL_DIR})
 install(FILES connect.raw DESTINATION ${SHARE_INSTALL_PREFIX}/qtel/sounds)
 install(FILES qtel.desktop DESTINATION ${SHARE_INSTALL_PREFIX}/applications)
-install(FILES images/link.xpm DESTINATION ${SHARE_INSTALL_PREFIX}/icons)
+install(FILES icons/64x64/qtel.png DESTINATION ${SHARE_INSTALL_PREFIX}/icons/hicolor/64x64/apps)
+install(FILES icons/128x128/qtel.png DESTINATION ${SHARE_INSTALL_PREFIX}/icons/hicolor/128x128/apps)
+install(FILES icons/256x256/qtel.png DESTINATION ${SHARE_INSTALL_PREFIX}/icons/hicolor/256x256/apps)
 
 # Build the translations subdirectory
 add_subdirectory(translations)
