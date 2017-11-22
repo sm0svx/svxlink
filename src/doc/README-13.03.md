@@ -47,7 +47,7 @@ Complete ChangeLog for SvxLink Server version 1.0.0
 * Now possible to have personal greetings on incoming EchoLink connections,
   if desired. Some TCL coding is neccessary to enable it though.
 
-* Improved voter implementation that can vote continously and not only at the
+* Improved voter implementation that can vote continuously and not only at the
   start of a transmission. By default it will check the signal strength for
   all receivers once per second and switch to the strongest one if the
   difference is large enough. New config variables: REVOTE\_INTERVAL,

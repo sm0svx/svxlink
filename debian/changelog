@@ -1,0 +1,29 @@
+svxlink (15.99-1) stable; urgency=low
+
+  * Fixed new icons put in correct place
+  * No Sonames On-Modules
+  * Fixed Hyphen vs Minus in man pages
+  * New Module a2d_mcp320x
+  * New Module svxlinkcfg
+  * New Module a2d_converter
+  * Updated the Debian PKG build
+  * Cleaned up the gpio up/down scripts
+  * Merged Svxreflector branch
+  * Added New Phonetic/Non-Phonetic Callsign
+  * Added new 12/24 hour clock setting
+  * Add upstream patch to fix FTBFS with gcc 7. (Closes: #853672)
+  * Bugfix release
+  * Referred to $(CURDIR) in rules (Closes: #846703)
+  * Build-Depends: debhelper (>= 10); bumped compat to 10
+  * Dropped Build-Depends: quilt
+  * Switched to new style dbgsym packages
+  * Updated Standards-Version: to 3.9.8
+  * svxlink-server & remotetrx Depend:lsb-base (>= 3.0-6) b/c init scripts
+  * Shipping systemd service files (tested)
+  * Shipping new qtel icons; used them in qtel.desktop (LP: #1591112)
+  * Library packages are Multi-Arch:same
+  * Fixed more spelling errors
+  * Enabled hardening
+
+ -- Richard Neese <kb3vgw@gmail.com>  Mon, 30 Nov 2015 10:33:40 -0600
+ 

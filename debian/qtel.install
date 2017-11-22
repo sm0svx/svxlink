@@ -1,0 +1,6 @@
+usr/bin/qtel
+usr/share/qtel/*
+usr/share/applications/qtel.desktop
+usr/share/icons/hicolor/64x64/apps/qtel.png
+usr/share/icons/hicolor/128x128/apps/qtel.png
+usr/share/icons/hicolor/256x256/apps/qtel.png

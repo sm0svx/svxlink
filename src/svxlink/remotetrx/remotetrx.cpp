@@ -388,9 +388,8 @@ int main(int argc, char **argv)
   }
   else
   {
-    cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/remotetrx.conf";
-    if (!cfg.open(cfg_filename))
+    if (home_dir != NULL &&
+	!cfg.open(cfg_filename = string(home_dir) + "/.svxlink/remotetrx.conf"))
     {
       cfg_filename = SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf";
       if (!cfg.open(cfg_filename))
