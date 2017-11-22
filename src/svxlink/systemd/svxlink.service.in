@@ -7,7 +7,7 @@ After=network.target remote-fs.target syslog.target time.target
 After=svxlink_gpio_setup.service
 
 [Service]
-EnvironmentFile=/etc/default/svxlink
+EnvironmentFile=-/etc/default/svxlink
 PIDFile=/run/svxlink.pid
 ExecStartPre=-/bin/touch /var/log/svxlink
 ExecStartPre=-/bin/chown $RUNASUSER /var/log/svxlink
@@ -15,9 +15,9 @@ ExecStart=/bin/sh -c '@BIN_INSTALL_DIR@/svxlink --logfile=/var/log/svxlink --con
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
-#WatchdogSec=@SVX_WatchdogSec@
-#NotifyAccess=main
 LimitCORE=infinity
+RUNASUSER=root
+RUNASGROUP=daemon
 WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
 
 [Install]

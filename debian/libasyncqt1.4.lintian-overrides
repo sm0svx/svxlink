@@ -1,0 +1,2 @@
+# symbols files are fragile for C++ libraries
+libasyncqt1.4: no-symbols-control-file usr/lib/*/libasyncqt.so.1.4.0
