@@ -136,7 +136,7 @@ SvxServer::SvxServer(Async::Config &cfg)
   cout << "--- starting SERVER on port " << port << endl;
 
    // create the server instance
-  server = new Async::TcpServer(port);
+  server = new Async::TcpServer<>(port);
   server->clientConnected.connect(mem_fun(*this, &SvxServer::clientConnected));
   server->clientDisconnected.connect(
       mem_fun(*this, &SvxServer::clientDisconnected));

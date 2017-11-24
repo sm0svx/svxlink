@@ -128,23 +128,21 @@ const char *TcpConnection::disconnectReasonStr(DisconnectReason reason)
   {
     case DR_HOST_NOT_FOUND:
       return "Host not found";
-      break;
 
     case DR_REMOTE_DISCONNECTED:
       return "Connection closed by remote peer";
-      break;
 
     case DR_SYSTEM_ERROR:
       return strerror(errno);
-      break;
 
     case DR_RECV_BUFFER_OVERFLOW:
       return "Receiver buffer overflow";
-      break;
 
     case DR_ORDERED_DISCONNECT:
       return "Locally ordered disconnect";
-      break;
+
+    case DR_PROTOCOL_ERROR:
+      return "Protocol error";
   }
   
   return "Unknown disconnect reason";
@@ -233,15 +231,17 @@ void TcpConnection::disconnect(void)
 int TcpConnection::write(const void *buf, int count)
 {
   assert(sock != -1);
-  int cnt = ::write(sock, buf, count);
-  if (cnt == -1)
+  int cnt = ::send(sock, buf, count, MSG_NOSIGNAL);
+  if (cnt < 0)
   {
-    int errno_tmp = errno;
-    disconnect();
-    errno = errno_tmp;
-    disconnected(this, DR_SYSTEM_ERROR);
+    if (errno != EAGAIN)
+    {
+      return -1;
+    }
+    cnt = 0;
   }
-  else if (cnt < count)
+
+  if (cnt < count)
   {
     sendBufferFull(true);
     wr_watch->setEnabled(true);
@@ -348,7 +348,7 @@ void TcpConnection::recvHandler(FdWatch *watch)
   if (recv_buf_cnt == recv_buf_len)
   {
     disconnect();
-    disconnected(this, DR_RECV_BUFFER_OVERFLOW);
+    onDisconnected(DR_RECV_BUFFER_OVERFLOW);
     return;
   }
   
@@ -358,19 +358,19 @@ void TcpConnection::recvHandler(FdWatch *watch)
     int errno_tmp = errno;
     disconnect();
     errno = errno_tmp;
-    disconnected(this, DR_SYSTEM_ERROR);
+    onDisconnected(DR_SYSTEM_ERROR);
     return;
   }
   else if (cnt == 0)
   {
     //cout << "Connection closed by remote host!\n";
     disconnect();
-    disconnected(this, DR_REMOTE_DISCONNECTED);
+    onDisconnected(DR_REMOTE_DISCONNECTED);
     return;
   }
   
   recv_buf_cnt += cnt;
-  size_t processed = dataReceived(this, recv_buf, recv_buf_cnt);
+  size_t processed = onDataReceived(recv_buf, recv_buf_cnt);
   //cout << "processed=" << processed << endl;
   if (processed >= recv_buf_cnt)
   {

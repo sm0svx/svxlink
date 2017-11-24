@@ -48,7 +48,7 @@ add_version_target(SVXLINK VERSION_DEPENDS)
 add_executable(svxlink
   MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
   EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
-  DtmfDigitHandler.cpp
+  DtmfDigitHandler.cpp ReflectorLogic.cpp
   ${VERSION_DEPENDS}
 )
 target_link_libraries(svxlink ${LIBS})

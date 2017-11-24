@@ -1,8 +1,9 @@
 # Set up which man pages to build and install
-set(MAN_PAGES svxlink.1 remotetrx.1 siglevdetcal.1 svxlink.conf.5
-  ModuleHelp.conf.5 remotetrx.conf.5 ModuleParrot.conf.5 ModuleEchoLink.conf.5
+set(MAN_PAGES svxlink.1 svxlink.conf.5 remotetrx.1 remotetrx.conf.5
+  siglevdetcal.1 devcal.1 svxreflector.1 svxreflector.conf.5 qtel.1
+  ModuleHelp.conf.5 ModuleParrot.conf.5 ModuleEchoLink.conf.5
   ModuleTclVoiceMail.conf.5 ModuleDtmfRepeater.conf.5
-  ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5 qtel.1 devcal.1
+  ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5
   ModuleFrn.conf.5
 )
 

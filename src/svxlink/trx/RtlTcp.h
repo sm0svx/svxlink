@@ -222,8 +222,8 @@ class RtlTcp : public RtlSdr
 
     
   private:
-    Async::TcpClient  con;
-    Async::Timer      reconnect_timer;
+    Async::TcpClient<>  con;
+    Async::Timer        reconnect_timer;
 
     RtlTcp(const RtlTcp&);
     RtlTcp& operator=(const RtlTcp&);
