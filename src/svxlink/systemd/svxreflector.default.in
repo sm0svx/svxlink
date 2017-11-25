@@ -1,0 +1,11 @@
+#############################################################################
+#
+# Configuration file for the RemoteTrx systemd unit file
+#
+#############################################################################
+
+# The user to run the SvxLink server as
+RUNASUSER=
+
+# Specify which configuration file to use
+CFGFILE=

@@ -1,0 +1,3 @@
+#Type Path        Mode UID  GID  Age Argument
+d /run/svxlink   0755 svxlink daemon 5d -
+f /var/log/svxlink   0644 svxlink daemon 5d -

@@ -1,0 +1,3 @@
+usr/lib/*/libecholib.so
+usr/lib/*/libecholib.a
+usr/include/svxlink/EchoLink*.h

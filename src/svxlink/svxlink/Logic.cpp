@@ -6,7 +6,7 @@
 
 This is the logic core of the SvxLink Server application. This is where
 everything is tied together. It is also the base class for implementing
-specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
+specific logic core classes (e.g. SimplexLogic and DuplexLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use

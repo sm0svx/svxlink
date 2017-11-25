@@ -83,7 +83,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "DummyLogic.h"
 #include "SimplexLogic.h"
-#include "RepeaterLogic.h"
+#include "DuplexLogic.h"
 #include "ReflectorLogic.h"
 #include "LinkManager.h"
 
@@ -745,7 +745,7 @@ static void initialize_logics(Config &cfg)
     }
     else if (logic_type == "Repeater")
     {
-      logic = new RepeaterLogic(cfg, logic_name);
+      logic = new DuplexLogic(cfg, logic_name);
     }
     else if (logic_type == "Reflector")
     {

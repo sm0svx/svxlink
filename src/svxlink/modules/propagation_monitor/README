@@ -31,7 +31,7 @@ To enable Procmail to write to the spool directory we need to run a couple of
 commands as user root.
 
 semanage fcontext -a -t user_home_t "/var/spool/svxlink/propagation_monitor(/.*)?"
-restorecon -r /var/spool/svxlink/propagation_monitor
+restorecon \-r /var/spool/svxlink/propagation_monitor
 
 This was tested on CentOS 5.
 

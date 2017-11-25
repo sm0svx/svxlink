@@ -1,0 +1,27 @@
+svxlink (15.99-1) stable; urgency=low
+
+  * Updated systemd 
+  * Added debian pkg build into src for current vesrion build.
+  * Changed RepeaterLogic to Duplex logic Naming convention
+  * No Sonames On-Modules
+  * Changed /src/svxlink/contrib to contrib_modules
+  * Fixed Hyphen vs Minus in man pages
+  * New Module Site_Status
+  * New Module a2d_mcp320x
+  * New Module svxlinkcfg
+  * Updated the Debian PKG build
+  * Cleaned up the gpio up/down scripts
+  * Add upstream patch to fix FTBFS with gcc 7. (Closes: #853672)
+  * Bugfix release
+  * Referred to $(CURDIR) in rules (Closes: #846703)
+  * Build-Depends: debhelper (>= 10); bumped compat to 10
+  * Dropped Build-Depends: quilt
+  * Switched to new style dbgsym packages
+  * Updated Standards-Version: to 3.9.8
+  * svxlink-server & remotetrx Depend:lsb-base (>= 3.0-6) b/c init scripts
+  * Shipping new qtel icons; used them in qtel.desktop (LP: #1591112)
+  * Fixed more spelling errors
+  * Enabled hardening
+
+ -- Richard Neese <kb3vgw@gmail.com>  Mon, 30 Nov 2015 10:33:40 -0600
+ 

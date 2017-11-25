@@ -14,13 +14,13 @@ proc spellWord {word} {
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
     if {$char == "*"} {
-      playMsg "Default" "star";
+      playMsg "Core" "star";
     } elseif {$char == "/"} {
-      playMsg "Default" "slash";
+      playMsg "Core" "slash";
     } elseif {$char == "-"} {
-      playMsg "Default" "dash";
+      playMsg "Core" "dash";
     } elseif {[regexp {[a-z0-9]} $char]} {
-      playMsg "Default" "phonetic_$char";
+      playMsg "Core" "phonetic_$char";
     }
   }
 }
@@ -33,9 +33,9 @@ proc spellNumber {number} {
   for {set i 0} {$i < [string length $number]} {set i [expr $i + 1]} {
     set ch [string index $number $i];
     if {$ch == "."} {
-      playMsg "Default" "decimal";
+      playMsg "Core" "decimal";
     } else {
-      playMsg "Default" "$ch";
+      playMsg "Core" "$ch";
     }
   }
 }
@@ -52,15 +52,15 @@ proc playTwoDigitNumber {number} {
   
   set first [string index $number 0];
   if {($first == "0") || ($first == "O")} {
-    playMsg "Default" $first;
-    playMsg "Default" [string index $number 1];
+    playMsg "Core" $first;
+    playMsg "Core" [string index $number 1];
   } elseif {$first == "1"} {
-    playMsg "Default" $number;
+    playMsg "Core" $number;
   } elseif {[string index $number 1] == "0"} {
-    playMsg "Default" $number;
+    playMsg "Core" $number;
   } else {
-    playMsg "Default" "[string index $number 0]X";
-    playMsg "Default" "[string index $number 1]";
+    playMsg "Core" "[string index $number 0]X";
+    playMsg "Core" "[string index $number 1]";
   }
 }
 
@@ -79,13 +79,13 @@ proc playThreeDigitNumber {number} {
     spellNumber $number
   } else {
     append first "00";
-    playMsg "Default" $first;
+    playMsg "Core" $first;
     if {[string index $number 1] != "0"} {
-      playMsg "Default" "and"
+      playMsg "Core" "and"
       playTwoDigitNumber [string range $number 1 2];
     } elseif {[string index $number 2] != "0"} {
-      playMsg "Default" "and"
-      playMsg "Default" [string index $number 2];
+      playMsg "Core" "and"
+      playMsg "Core" [string index $number 2];
     }
   }
 }
@@ -104,7 +104,7 @@ proc playThreeDigitNumber {number} {
 proc playNumber {number} {
   if {[regexp {(\d+)\.(\d+)?} $number -> integer fraction]} {
     playNumber $integer;
-    playMsg "Default" "decimal";
+    playMsg "Core" "decimal";
     spellNumber $fraction;
     return;
   }
@@ -112,7 +112,7 @@ proc playNumber {number} {
   while {[string length $number] > 0} {
     set len [string length $number];
     if {$len == 1} {
-      playMsg "Default" $number;
+      playMsg "Core" $number;
       set number "";
     } elseif {$len % 2 == 0} {
       playTwoDigitNumber [string range $number 0 1];
@@ -149,7 +149,7 @@ proc playTime {hour minute} {
     }
   };
   
-  playMsg "Default" [expr $hour];
+  playMsg "Core" [expr $hour];
 
   if {$minute != 0} {
     if {[string length $minute] == 1} {

@@ -290,10 +290,8 @@ proc logic_online {online} {
   Logic::logic_online $online
 }
 
-
 # end of namespace
 }
-
 
 #
 # This file has not been truncated

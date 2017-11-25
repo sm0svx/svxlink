@@ -116,7 +116,7 @@ proc manual_identification {} {
       }
     }
   }
-  playMsg "Default" "press_0_for_help"
+  playMsg "Core" "press_0_for_help"
   playSilence 250;
 }
 

@@ -1,0 +1,4 @@
+lib/systemd/system/remotetrx.service
+usr/bin/remotetrx
+etc/svxlink/remotetrx.conf
+etc/tmpfiles.d/remotetrx.conf
