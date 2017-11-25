@@ -32,7 +32,7 @@ Complete ChangeLog for SvxLink Server version 1.0.0
 
 * Now possible to set RTS and/or DTR to a static state by configuration
   if needed. Have a look at the SERIAL\_SET\_PINS config variable for the
-  LocalRx and LocalTx sections in the svxlink.conf.5 manual page.
+  LocalRx and LocalTx sections in the open-link.conf.5 manual page.
 
 * Improved the SigLevTone detector using the same techniques that was
   used to improve the CTCSS decoder.

@@ -35,7 +35,7 @@ string(TOUPPER MODULE_${MODNAME} VERNAME)
 # Add targets for version files
 set(VERSION_DEPENDS)
 add_version_target(${VERNAME} VERSION_DEPENDS)
-add_version_target(SVXLINK VERSION_DEPENDS)
+add_version_target(Open-Link VERSION_DEPENDS)
 
 # Build the plugin
 add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}
@@ -49,5 +49,5 @@ target_link_libraries(Module${MODNAME} ${LIBS})
 install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})
 install(FILES ${MODNAME}.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d)
 install_if_not_exists(Module${MODNAME}.conf
-  ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d
+  ${SVX_SYSCONF_INSTALL_DIR}/open-link.d
   )

@@ -9,10 +9,10 @@
 ##############################################################################
 
 
-if [ -r /etc/default/svxlink ]; then
-	. /etc/default/svxlink
+if [ -r /etc/default/open-link ]; then
+	. /etc/default/open-link
 else
-	. /etc/svxlink/svxlink_gpio.conf
+	. /etc/open-link/open-link_gpio.conf
 fi
 
 # Set up the given GPIO input pin.

@@ -10,18 +10,23 @@
 # Spell the specified word using a phonetic alphabet
 #
 proc spellWord {word} {
+  global phonetic_spelling
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
-    if {$char == "*"} {
-      playMsg "Core" "star";
+    if {[regexp {[a-z0-9]} $char]} {
+        if {$phonetic_spelling == 0} {
+			playMsg "Core" "$char";
+        } else {
+			playMsg "Core" "phonetic_$char";
+        }
     } elseif {$char == "/"} {
       playMsg "Core" "slash";
     } elseif {$char == "-"} {
       playMsg "Core" "dash";
-    } elseif {[regexp {[a-z0-9]} $char]} {
-      playMsg "Core" "phonetic_$char";
-    }
+    } elseif {$char == "*"} {
+      playMsg "Core" "star";
+        }
   }
 }
 

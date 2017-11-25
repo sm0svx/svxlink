@@ -14,10 +14,10 @@ man-page describe the configuration file format for it.
 SvxReflector look for configuration files in a number of places. First it tries
 to find a user specific configuration file. It will look for a user specific
 configuration file in:
-.BR $HOME/.svxlink/svxreflector.conf .
+.BR $HOME/.open-link/svxreflector.conf .
 If no user specific configuration file can be found, svxreflector will look
 for the system wide configuration file
-.BR /etc/svxlink/svxreflector.conf .
+.BR /etc/open-link/svxreflector.conf .
 The
 .B --config
 command line option may also be used to specify an arbitrary configuration file.
@@ -141,13 +141,13 @@ in the PASSWORDS section. User
 .SH FILES
 .
 .TP
-.I /etc/svxlink/svxreflector.conf
+.I /etc/open-link/svxreflector.conf
 The system wide configuration file.
 .TP
-.I ~/.svxlink/svxreflector.conf
+.I ~/.open-link/svxreflector.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink/svxreflector.d/*
+.I /etc/open-link/svxreflector.d/*
 Additional configuration files. This directory is setup by the CFG_DIR
 configuration variable.
 .
@@ -158,5 +158,5 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .SH "SEE ALSO"
 .
 .BR svxreflector (1),
-.BR svxlink (1),
-.BR svxlink.conf (5),
+.BR open-link (1),
+.BR open-link.conf (5),

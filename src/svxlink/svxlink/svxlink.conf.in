@@ -4,10 +4,10 @@
 #   One channel radio transponder                   #
 #####################################################
 [GLOBAL]
-#MODULE_PATH=/usr/lib/arm-linux-gnueabihf/svxlink
+#MODULE_PATH=/usr/lib/arm-linux-gnueabihf/open-link
 LOGICS=SimplexLogic #DuplexLogic ReflectorLogic
 #LINKS=ReflectorLink
-CFG_DIR=svxlink.d
+CFG_DIR=open-link.d
 TRX = NetUplinkTrx
 TIMESTAMP_FORMAT="%c"
 CARD_SAMPLE_RATE=48000
@@ -40,7 +40,7 @@ FX_GAIN_LOW=-12
 #ONLINE_CMD=998877
 #MUTE_RX_ON_TX=1
 #MUTE_TX_ON_RX=1
-#STATE_PTY=/var/run/svxlink/state
+#STATE_PTY=/var/run/open-link/state
 #DTMF_CTRL_PTY=/dev/shm/simplex_dtmf_ctrl
 
 [DuplexLogic]
@@ -195,7 +195,7 @@ TYPE=Repeater
 RX=NetRx1 
 TX=NetTx1
 CALLSIGN=NONE 
-EVENT_HANDLER=/usr/share/svxlink/events.tcl 
+EVENT_HANDLER=/usr/share/open-link/events.tcl 
 DEFAULT_LANG=en_US
 OPEN_ON_SQL=50 
 OPEN_SQL_FLANK=OPEN 
@@ -296,7 +296,7 @@ RX=LocalMic
 TX=LocalSpkr
 DEFAULT_LANG=en_US
 CALLSIGN=MYCall
-EVENT_HANDLER=/usr/share/svxlink/events.tcl
+EVENT_HANDLER=/usr/share/open-link/events.tcl
 
 [LocalMic]
 TYPE=Local
@@ -331,10 +331,10 @@ CALLSIGN=ER-MYCALL
 #PATH=WIDE1-1
 #BEACON_INTERVAL=10
 #TONE=136
-#COMMENT=SvxLink by SM0SVX (svxlink.org)
+#COMMENT=SvxLink by SM0SVX (open-link.org)
 
 [QsoRecorder]
-REC_DIR=/var/spool/svxlink/qso_recorder
+REC_DIR=/var/spool/open-link/qso_recorder
 #MIN_TIME=1000
 MAX_TIME=3600
 SOFT_TIME=300

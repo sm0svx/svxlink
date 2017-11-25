@@ -5,7 +5,7 @@
 #############################################################################
 
 # The user to run the SvxLink server as
-RUNASUSER=svxlink
+RUNASUSER=open-link
 
 # Specify which configuration file to use
 CFGFILE=

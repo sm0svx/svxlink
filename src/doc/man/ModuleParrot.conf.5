@@ -6,7 +6,7 @@ ModuleParrot.conf \- Configuration file for the SvxLink server Parrot module
 .
 .SH DESCRIPTION
 .
-.B svxlink
+.B open-link
 is a general purpose voice service system for ham radio use. This man-page
 describe the SvxLink server configuration for the Parrot module.
 .P
@@ -18,7 +18,7 @@ back. This can be used as a simplex repeater or for tests. It also plays back
 .
 There are a couple of configuration variables that are common to all modules.
 The documentation for these can be found in the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page.
 .P
 Here is the description of all module specific configuration
@@ -41,17 +41,17 @@ signals.
 .SH FILES
 .
 .TP
-.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+.IR /etc/open-link/open-link.conf " (or deprecated " /etc/open-link.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf
+.IR ~/.open-link/open-link.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink/svxlink.d/ModuleParrot.conf
+.I /etc/open-link/open-link.d/ModuleParrot.conf
 Global modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .TP
-.I ~/.svxlink/svxlink.d/ModuleParrot.conf
+.I ~/.open-link/open-link.d/ModuleParrot.conf
 Per user modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .
@@ -61,4 +61,4 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink.conf (5)
+.BR open-link.conf (5)

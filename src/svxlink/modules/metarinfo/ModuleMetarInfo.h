@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
+#include "version/Open-Link.h"
 
 
 /****************************************************************************
@@ -124,7 +124,7 @@ class ModuleMetarInfo : public Module
   public:
     ModuleMetarInfo(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleMetarInfo(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return Open-Link_VERSION; }
 
   protected:
     virtual void resumeOutput(void);

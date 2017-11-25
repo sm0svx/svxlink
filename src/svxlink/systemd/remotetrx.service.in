@@ -1,17 +1,17 @@
 ;;;;; Author: Richard Neese<kb3vgw@gmail.com>
 
 [Unit]
-Description=svxlink repeater reflector software
-Documentation="man:svxlink"
+Description=open-link repeater reflector software
+Documentation="man:open-link"
 After=network.target remote-fs.target time.target sound.target
 
 [Service]
 Type=simple
-User=svxlink
+User=open-link
 Group=daemon
 EnvironmentFile=-/etc/default/svxreflector
-Environment=CFGFILE=/etc/svxlink/svxreflector.conf
-RuntimeDirectory=svxlink
+Environment=CFGFILE=/etc/open-link/svxreflector.conf
+RuntimeDirectory=open-link
 ExecStart=/usr/bin/svxreflector --config $CFGFILE
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure

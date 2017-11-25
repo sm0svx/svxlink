@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <Rx.h>
 
-#include "version/SVXLINK.h"
+#include "version/Open-Link.h"
 #include "Logic.h"
 #include "Module.h"
 
@@ -63,11 +63,11 @@ Module::~Module(void)
 
 bool Module::initialize(void)
 {
-  if (strcmp(compiledForVersion(), SVXLINK_VERSION) != 0)
+  if (strcmp(compiledForVersion(), Open-Link_VERSION) != 0)
   {
     cerr << "*** ERROR: This module is compiled for version "
          << compiledForVersion() << " of SvxLink but the running version "
-         << "of the SvxLink core is " << SVXLINK_VERSION << ".\n";
+         << "of the SvxLink core is " << Open-Link_VERSION << ".\n";
     return false;
   }
 

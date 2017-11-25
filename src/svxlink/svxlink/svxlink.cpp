@@ -1,5 +1,5 @@
 /**
-@file	 svxlink.cpp
+@file	 open-link.cpp
 @brief   The main file for the SvxLink server
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-28
@@ -79,7 +79,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
+#include "version/Open-Link.h"
 #include "MsgHandler.h"
 #include "DummyLogic.h"
 #include "SimplexLogic.h"
@@ -349,13 +349,13 @@ int main(int argc, char **argv)
   else
   {
     cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/svxlink.conf";
+    cfg_filename += "/.open-link/open-link.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = SVX_SYSCONF_INSTALL_DIR "/svxlink.conf";
+      cfg_filename = SVX_SYSCONF_INSTALL_DIR "/open-link.conf";
       if (!cfg.open(cfg_filename))
       {
-	cfg_filename = SYSCONF_INSTALL_DIR "/svxlink.conf";
+	cfg_filename = SYSCONF_INSTALL_DIR "/open-link.conf";
 	if (!cfg.open(cfg_filename))
 	{
 	  cerr << "*** ERROR: Could not open configuration file";
@@ -365,9 +365,9 @@ int main(int argc, char **argv)
           }
           cerr << ".\n";
 	  cerr << "Tried the following paths:\n"
-      	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
-      	       << "\t" SVX_SYSCONF_INSTALL_DIR "/svxlink.conf\n"
-	       << "\t" SYSCONF_INSTALL_DIR "/svxlink.conf\n"
+      	       << "\t" << home_dir << "/.open-link/open-link.conf\n"
+      	       << "\t" SVX_SYSCONF_INSTALL_DIR "/open-link.conf\n"
+	       << "\t" SYSCONF_INSTALL_DIR "/open-link.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
 	       << "syntax error in the file.\n";
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION
+  cout << PROGRAM_NAME " v" Open-Link_VERSION
           " Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";

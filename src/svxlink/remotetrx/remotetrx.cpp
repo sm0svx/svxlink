@@ -389,7 +389,7 @@ int main(int argc, char **argv)
   else
   {
     if (home_dir != NULL &&
-	!cfg.open(cfg_filename = string(home_dir) + "/.svxlink/remotetrx.conf"))
+	!cfg.open(cfg_filename = string(home_dir) + "/.open-link/remotetrx.conf"))
     {
       cfg_filename = SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf";
       if (!cfg.open(cfg_filename))
@@ -404,7 +404,7 @@ int main(int argc, char **argv)
           }
           cerr << ".\n";
 	  cerr << "Tried the following paths:\n"
-      	       << "\t" << home_dir << "/.svxlink/remotetrx.conf\n"
+      	       << "\t" << home_dir << "/.open-link/remotetrx.conf\n"
       	       << "\t" SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf\n"
 	       << "\t" SYSCONF_INSTALL_DIR "/remotetrx.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"

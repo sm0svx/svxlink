@@ -103,7 +103,7 @@ the calibration.
 Devcal need a receiver configuration file to work so such a file must be
 created before this utility can be used. Read the Ddr Receiver Section and the
 Wideband Receiver Section in the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page for information on how to set it up.
 
 A first coarse calibration should be done in wideband mode so that the
@@ -113,7 +113,7 @@ modulated or not. Use your own transceiver or a repeater for example. If the
 frequency calibration is unknown for the transmitter being used it may be wise
 to test with multiple transmitters. The command line may look like this:
 
-  devcal -Mw /path/to/svxlink.conf RxRtl
+  devcal -Mw /path/to/open-link.conf RxRtl
 
 The utility will print, among other things, the carrier frequency error. It may look something like:
 
@@ -159,7 +159,7 @@ falls down to zero. If you own a CW receiver that covers the frequency of
 interest you can use that to listen to the carrier. Start devcal in transmitter
 calibration mode using a command looking like the one below.
 
- devcal -t /path/to/svxlink.conf Tx1
+ devcal -t /path/to/open-link.conf Tx1
 
 In another window, start the alsamixer utility or some other utility to adjust
 the audio output level. Set the output level to zero. Go back to the devcal
@@ -179,7 +179,7 @@ possible, the transmitter that was calibrated above can be used. If it's not
 possible, another transmitter can be calibrated in the same way to be used as a
 calibration transmitter. Start the devcal utility something like this:
 
-  devcal -r /path/to/svxlink.conf Rx1
+  devcal -r /path/to/open-link.conf Rx1
 
 Start alsamixer in another window and adjust the input level to get as close 
 as possible to the expected deviation. Use the 0, + and - keys to adjust PREAMP
@@ -200,7 +200,7 @@ single tone, it seems. If using DTMF, try using the code "A" (1633Hz) or "3"
 
 Use the DVB-T dongle to measure the deviation of the 1750Hz tone.
 
-  devcal -M -f1750 /path/to/svxlink.conf RxRtl
+  devcal -M -f1750 /path/to/open-link.conf RxRtl
 
 Start transmitting with the calibration transmitter and wait for the values to
 stablilize. Take a note of the value for "tone dev". It may be something like
@@ -209,7 +209,7 @@ need it later on.
 
 On the system being calibrated, start the receiver calibration.
 
-  devcal -r -f1750 /path/to/svxlink.conf Rx1
+  devcal -r -f1750 /path/to/open-link.conf Rx1
 
 Transmit using the calibration transmitter and adjust the input level using
 alsamixer and PREAMP to the correct level for "tone dev".
@@ -218,7 +218,7 @@ Make sure that devcal is started in measurement mode like when the deviation on
 the calibration transmitter was measured above. Then, on the system being
 calibrated, start the transmitter calibration.
 
-  devcal -t -f1750 -d3200 /path/to/svxlink.conf RxRtl
+  devcal -t -f1750 -d3200 /path/to/open-link.conf RxRtl
 
 The value of 3200 was the one we measured in the first step. Adjust it to match
 your own measurements. Adjust the output level using alsamixer and MASTER_GAIN
@@ -248,11 +248,11 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH REPORTING BUGS
 .
-SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+SvxLink Devel <open-link-devel at lists dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink (1),
+.BR open-link (1),
 .BR remotetrx.conf (5),
-.BR svxlink.conf (5),
+.BR open-link.conf (5),
 .BR siglevdetcal (1)

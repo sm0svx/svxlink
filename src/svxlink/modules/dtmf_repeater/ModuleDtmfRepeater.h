@@ -5,7 +5,7 @@
 @date	 2006-08-05
 
 \verbatim
-A module (plugin) for the svxlink server, a multi purpose tranciever
+A module (plugin) for the open-link server, a multi purpose tranciever
 frontend system.
 Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
@@ -57,7 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
+#include "version/Open-Link.h"
 
 
 /****************************************************************************
@@ -118,7 +118,7 @@ class ModuleDtmfRepeater : public Module
   public:
     ModuleDtmfRepeater(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleDtmfRepeater(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return Open-Link_VERSION; }
 
   protected:
     virtual void resumeOutput(void);

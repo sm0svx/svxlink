@@ -159,14 +159,14 @@
 * The install path for libraries are now automatically discovered which may
   make libraries install in a another directory than before. For example, on
   normal 64 bit x86_64 systems they will end up in /usr/lib64 and the plugins
-  will be placed in /usr/lib64/svxlink. On other platforms the paths may be a
+  will be placed in /usr/lib64/open-link. On other platforms the paths may be a
   bit stranger, like /usr/lib/arm-linux-gnueabihf on the Cubieboard.
   This may require that the MODULE_PATH config variable is changed for the
   plugins to be found. The best is to comment out the MODULE_PATH
   configuration variable and let SvxLink determine what to use.
   The old LIB_SUFFIX CMake variable is not used anymore.
 
-* New configuration variable in svxlink.conf for remote transmitters and
+* New configuration variable in open-link.conf for remote transmitters and
   receivers, LOG_DISCONNECTS_ONCE, that can be set to 1 to not log reconnect
   attempts.  This may be of use if a RemoteTrx is missing for a long time or if
   it's only used from time to time.
@@ -176,7 +176,7 @@
   were ignored. This was not true but is now. The man-page was also lacking
   information on that all files not ending in ".conf" are ignored.
 
-* The default PTT type is now NONE so that svxlink and remotetrx can start
+* The default PTT type is now NONE so that open-link and remotetrx can start
   out of the box without reconfiguring them.
 
 * Bugfix in the GPIO squelch detector. The usage of "!" in GPIO_SQL_PIN to get
@@ -483,7 +483,7 @@
 
 * Now possible to set RTS and/or DTR to a static state by configuration
   if needed. Have a look at the SERIAL_SET_PINS config variable for the
-  LocalRx and LocalTx sections in the svxlink.conf.5 manual page.
+  LocalRx and LocalTx sections in the open-link.conf.5 manual page.
 
 * Improved the SigLevTone detector using the same techniques that was
   used to improve the CTCSS decoder.
@@ -692,7 +692,7 @@
 * Support for selcall activated functions added. New config variables:
   Logic/SEL5_MACRO_RANGE, DuplexLogic/OPEN_ON_SEL5,
   LocalRx/SEL5_TYPE and LocalRx/SEL5_DEC_TYPE. Have a look in the
-  svxlink.conf (5) manual page for more details.
+  open-link.conf (5) manual page for more details.
 
 * New module SelCallEnc. This module is used to send selective calling
   sequences out on the frequency upon user request.
@@ -732,13 +732,13 @@
 * Configuration variable VOX_LIMIT has been renamed to VOX_THRESH.
 
 * SvxLink system global configuration files are now by default stored in
-  the /etc/svxlink directory.
+  the /etc/open-link directory.
 
 * New directory layout for event scripts and sound clips. The main event
-  scripts are now stored in /usr/share/svxlink/events.d. The sound clip
-  files are now stored in /usr/share/svxlink/sounds/<langcode>. TCL
+  scripts are now stored in /usr/share/open-link/events.d. The sound clip
+  files are now stored in /usr/share/open-link/sounds/<langcode>. TCL
   modules have been separated from the event handlers and are now stored
-  in /usr/share/svxlink/modules.d
+  in /usr/share/open-link/modules.d
 
 * New configuration variable DEFAULT_LANG that points out the default
   language to use.
@@ -1034,22 +1034,22 @@
   state.
 
 * ModuleTclVoiceMail: Voice mails are now stored in
-  /var/spool/svxlink/voice_mail.
+  /var/spool/open-link/voice_mail.
 
-* Added a logrotate config file: /etc/logrotate.d/svxlink. It rotates the
-  logfile /var/log/svxlink.
+* Added a logrotate config file: /etc/logrotate.d/open-link. It rotates the
+  logfile /var/log/open-link.
 
-* Added a startup script /etc/init.d/svxlink that can be used to start
+* Added a startup script /etc/init.d/open-link that can be used to start
   the SvxLink server at boot. It also have a configuration file:
-  /etc/sysconfig/svxlink.
+  /etc/sysconfig/open-link.
 
 * Now possible to point out a configuration file on the command line using
   the --config command line option.
 
-* Now also looking for the configuration file at $HOME/.svxlink/svxlink.conf
+* Now also looking for the configuration file at $HOME/.open-link/open-link.conf
 
 * New configuration variable GLOBAL/CFG_DIR. It should point out a directory
-  (e.g. /etc/svxlink.d) where additional configuration files can be found.
+  (e.g. /etc/open-link.d) where additional configuration files can be found.
   This will make it possible for each module to have its own configuration
   file. Good for modularity and it's easier to install third party modules.
 
@@ -1114,7 +1114,7 @@
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 
-* Manual pages added for svxlink, remoterx, all plugins and
+* Manual pages added for open-link, remoterx, all plugins and
   configuration files.
 
 * SvxLink now announce the current time at manual identification.
@@ -1146,15 +1146,15 @@
   dtmf_cmd_received.
 
 * Added files to set full access permissions on the serial and OSS audio
-  devices: /etc/udev/rules.d/10-svxlink.rules and
-  /etc/security/console.perms.d/90-svxlink.perms.
+  devices: /etc/udev/rules.d/10-open-link.rules and
+  /etc/security/console.perms.d/90-open-link.perms.
 
 
 
  0.7.0 -- 02 Dec 2005
 ----------------------
 
-* Bugfix: An uninitialized variable caused svxlink to crash. This bug
+* Bugfix: An uninitialized variable caused open-link to crash. This bug
   showed itself when using the TclVoiceMail module.
 
 * The PTT_PIN configuration variable now accept multiple pins. Also, it
@@ -1166,7 +1166,7 @@
   GLOBAL/TIMESTAMP_FORMAT. Some formats are affected by the setting of the
   LC_TIME, LC_ALL and LANG environment variables. Have a look at the manual
   page for "strftime" for how to construct the format string.
-  The log file will be reopened if svxlink is sent the SIGHUP UNIX signal.
+  The log file will be reopened if open-link is sent the SIGHUP UNIX signal.
   This can be used when setting up logrotate to automatically rotate the
   SvxLink logs.
 
@@ -1223,7 +1223,7 @@
   written in TCL.
 
 * Added a template for writing modules in C++. It can be found in
-  svxlink/modules/template in the source code tree.
+  open-link/modules/template in the source code tree.
 
 * Removed configuration variable IDENT_INTERVAL and replaced it with
   two new variables: SHORT_IDENT_INTERVAL and LONG_IDENT_INTERVAL.
@@ -1341,7 +1341,7 @@
   Example: A112B3C = 1223, AC = empty command = #.
 
 * Bugfix in the Parrot module: The module timeout timer kept running after
-  the module had been manually deactivated. This caused svxlink to crash when
+  the module had been manually deactivated. This caused open-link to crash when
   the timeout occured.
 
 * ModuleEchoLink: Added support for multiple echolink connections. Two new
@@ -1419,11 +1419,11 @@
 
 * Initial revision
 
-* New application: svxlink, a multi purpose voice services frontend.
+* New application: open-link, a multi purpose voice services frontend.
 
-* New module: A Help module for svxlink.
+* New module: A Help module for open-link.
 
-* New module: A Parrot module for svxlink that echos back everything you say.
+* New module: A Parrot module for open-link that echos back everything you say.
 
-* New module: An EchoLink module for svxlink to handle EchoLink connections.
+* New module: An EchoLink module for open-link to handle EchoLink connections.
 

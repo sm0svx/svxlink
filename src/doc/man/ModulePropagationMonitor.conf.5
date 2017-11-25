@@ -7,7 +7,7 @@ PropagationMonitor module
 .
 .SH DESCRIPTION
 .
-.B svxlink
+.B open-link
 is a general purpose voice service system for ham radio use. This man-page
 describe the SvxLink server configuration for the PropagationMonitor module.
 .P
@@ -28,7 +28,7 @@ directory.
 .
 There are a couple of configuration variables that are common to all modules.
 The documentation for these can be found in the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page.
 .P
 Here is the description of all module specific configuration
@@ -39,7 +39,7 @@ variables that the SvxLink PropagationMonitor module understands.
 .TP
 .B SPOOL_DIR
 Specify which directory to read incoming emails from. The default is
-.IR /var/spool/svxlink/propagation_monitor .
+.IR /var/spool/open-link/propagation_monitor .
 .
 .SH RECEIVING THE ALERT EMAILS
 .
@@ -58,7 +58,7 @@ monitor spool directory. This is done using the
 utility. When an incoming email is received, the mail server call procmail
 which look for a configuration file in the destination users home directory.
 For SvxLink, the home directory should be set to
-.IR /etc/svxlink .
+.IR /etc/open-link .
 In that directory a procmail configuration file,
 .BR .procmailrc ,
 is installed by default. The syntax is a bit cryptic but the file contains
@@ -80,32 +80,32 @@ propagation monitor spool directory. To fix this, run the following commands:
 .RS 4
 semanage fcontext \-a \-t user_home_t \\
 .RS 0
-         "/var/spool/svxlink/propagation_monitor(/.*)?"
+         "/var/spool/open-link/propagation_monitor(/.*)?"
 .RS 0
-restorecon \-r /var/spool/svxlink/propagation_monitor
+restorecon \-r /var/spool/open-link/propagation_monitor
 .
 .SH FILES
 .
 .TP
-.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+.IR /etc/open-link/open-link.conf " (or deprecated " /etc/open-link.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf
+.IR ~/.open-link/open-link.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink/svxlink.d/ModulePropagationMonitor.conf
+.I /etc/open-link/open-link.d/ModulePropagationMonitor.conf
 Global modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .TP
-.I ~/.svxlink/svxlink.d/ModulePropagationMonitor.conf
+.I ~/.open-link/open-link.d/ModulePropagationMonitor.conf
 Per user modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .TP
-.I /var/spool/svxlink/propagation_monitor
+.I /var/spool/open-link/propagation_monitor
 Spool directory for alert mails. This is the default path. What path is
 actually used is determined by the SPOOL_DIR configuration variable.
 .TP
-.I /etc/svxlink/.procmailrc
+.I /etc/open-link/.procmailrc
 The configuration file for procmail. Procmail is used to write incoming
 alert emails into files in the spool directory.
 .
@@ -115,7 +115,7 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink.conf (5),
+.BR open-link.conf (5),
 .BR procmail (1),
 .BR procmailrc (5),
 .BR procmailex (5),

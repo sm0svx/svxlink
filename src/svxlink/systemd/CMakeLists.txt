@@ -7,20 +7,20 @@ set(SYSTEMD_DEFAULTS_FILES_DIR "${SVX_SHARE_INSTALL_DIR}/default" CACHE PATH
   "Path to systemd unit configuration files")
 set(SYSTEMD_TMPFILES_DIR "${SYSCONF_INSTALL_DIR}/tmpfiles.d" CACHE PATH
   "Path to systemd tmpfiles.d configuration files")
-set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/svxlink/systemd" CACHE PATH
+set(SYSTEMD_SOURCE_DIR "${CMAKE_SOURCE_DIR}/open-link/systemd" CACHE PATH
   "Path to systemd source files")
 
-configure_file(${SYSTEMD_SOURCE_DIR}/svxlink_gpio_setup.service.in
-               ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service)
-message(STATUS "Configured systemd unit file:svxlink_gpio_setup.service")
+configure_file(${SYSTEMD_SOURCE_DIR}/open-link_gpio_setup.service.in
+               ${PROJECT_BINARY_DIR}/systemd/open-link_gpio_setup.service)
+message(STATUS "Configured systemd unit file:open-link_gpio_setup.service")
 
-configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.service.in
-               ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
-message(STATUS "Configured systemd unit file:svxlink.service")
+configure_file(${SYSTEMD_SOURCE_DIR}/open-link.service.in
+               ${PROJECT_BINARY_DIR}/systemd/open-link.service)
+message(STATUS "Configured systemd unit file:open-link.service")
 
-configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.conf.in
-               ${PROJECT_BINARY_DIR}/systemd/svxlink.conf)
-message(STATUS "Configured systemd unit file:svxlink.conf")
+configure_file(${SYSTEMD_SOURCE_DIR}/open-link.conf.in
+               ${PROJECT_BINARY_DIR}/systemd/open-link.conf)
+message(STATUS "Configured systemd unit file:open-link.conf")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.service.in
                ${PROJECT_BINARY_DIR}/systemd/svxreflector.service)
@@ -38,9 +38,9 @@ configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.conf.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx.conf)
 message(STATUS "Configured systemd unit file:remotetrx.conf")
 
-configure_file(${SYSTEMD_SOURCE_DIR}/svxlink.default.in
-               ${PROJECT_BINARY_DIR}/systemd/svxlink)
-message(STATUS "Configured systemd unit file:svxlink")
+configure_file(${SYSTEMD_SOURCE_DIR}/open-link.default.in
+               ${PROJECT_BINARY_DIR}/systemd/open-link)
+message(STATUS "Configured systemd unit file:open-link")
 
 configure_file(${SYSTEMD_SOURCE_DIR}/svxreflector.default.in
                ${PROJECT_BINARY_DIR}/systemd/svxreflector)
@@ -50,9 +50,9 @@ configure_file(${SYSTEMD_SOURCE_DIR}/remotetrx.default.in
                ${PROJECT_BINARY_DIR}/systemd/remotetrx)
 message(STATUS "Configured systemd unit file:remotetrx")
 
-install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.service
+install(FILES ${PROJECT_BINARY_DIR}/systemd/open-link_gpio_setup.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
-install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service
+install(FILES ${PROJECT_BINARY_DIR}/systemd/open-link.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxreflector.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
@@ -60,7 +60,7 @@ install(FILES ${PROJECT_BINARY_DIR}/systemd/remotetrx.service
         DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
 message(STATUS "Systemd unit files will be installed to "
         "${SYSTEMD_CONFIGURATIONS_FILES_DIR} after make install")
-install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.conf
+install(FILES ${PROJECT_BINARY_DIR}/systemd/open-link.conf
         DESTINATION ${SYSTEMD_TMPFILES_DIR} )
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxreflector.conf
         DESTINATION ${SYSTEMD_TMPFILES_DIR} )
@@ -68,7 +68,7 @@ install(FILES ${PROJECT_BINARY_DIR}/systemd/remotetrx.conf
         DESTINATION ${SYSTEMD_TMPFILES_DIR} )
 message(STATUS "Systemd unit files will be installed to "
         "/etc/tmpfiles.d after make install")		
-install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink
+install(FILES ${PROJECT_BINARY_DIR}/systemd/open-link
         DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
 install(FILES ${PROJECT_BINARY_DIR}/systemd/svxreflector
         DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )

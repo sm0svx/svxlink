@@ -6,7 +6,7 @@ ModuleMetarInfo.conf \- Configuration file for the SvxLink server MetarInfo modu
 .
 .SH DESCRIPTION
 .
-.B svxlink
+.B open-link
 is a general purpose voice service system for ham radio use. This man-page
 describe the SvxLink server configuration for the MetarInfo module.
 .P
@@ -18,7 +18,7 @@ http://de.wikipedia.org/wiki/METAR or http://www.icao.int/
 .
 There are a couple of configuration variables that are common to all modules.
 The documentation for these can be found in the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page.
 .P
 Here is the description of all module specific configuration
@@ -61,17 +61,17 @@ for KLAX and so on.
 .SH FILES
 .
 .TP
-.I /etc/svxlink.conf
+.I /etc/open-link.conf
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+.IR ~/.open-link/open-link.conf " or " ~/.open-linkrc
 Per user configuration file.
 .TP
-.I /etc/svxlink.d/ModuleMetarInfo.conf
+.I /etc/open-link.d/ModuleMetarInfo.conf
 Global modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .TP
-.I ~/.svxlink/svxlink.d/ModuleMetarInfo.conf
+.I ~/.open-link/open-link.d/ModuleMetarInfo.conf
 Per user modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .
@@ -81,4 +81,4 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink.conf (5)
+.BR open-link.conf (5)

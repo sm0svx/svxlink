@@ -61,7 +61,7 @@ endif (RTLSDR_FOUND)
 
 # Add targets for version files
 set(VERSION_DEPENDS)
-add_version_target(SVXLINK VERSION_DEPENDS)
+add_version_target(Open-Link VERSION_DEPENDS)
 
 # Build only a static library
 add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})

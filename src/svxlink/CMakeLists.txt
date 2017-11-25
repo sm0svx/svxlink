@@ -1,4 +1,4 @@
-include_directories(trx svxlink)
+include_directories(trx open-link)
 
 option(WITH_SYSTEMD "Set to ON to include systemd support" OFF)
 message(STATUS "With Systemd = ${WITH_SYSTEMD}")
@@ -7,7 +7,7 @@ if(WITH_SYSTEMD)
 endif(WITH_SYSTEMD)
 
 add_subdirectory(trx)
-add_subdirectory(svxlink)
+add_subdirectory(open-link)
 add_subdirectory(modules)
 add_subdirectory(remotetrx)
 add_subdirectory(reflector)

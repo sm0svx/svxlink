@@ -28,10 +28,10 @@ just the name for the link up to the main SvxLink server.
 RemoteTrx look for configuration files in a number of places. First it tries to
 find a user specific configuration file. It will look for a user specific
 configuration file in two places:
-.BR $HOME/.svxlink/remotetrx.conf .
+.BR $HOME/.open-link/remotetrx.conf .
 If no user specific configuration file can be found, remotetrx will look
 for the system wide configuration file
-.BR /etc/svxlink/remotetrx.conf .
+.BR /etc/open-link/remotetrx.conf .
 The
 .B --config
 command line option may also be used to specify an arbitrary configuration file.
@@ -150,14 +150,14 @@ Always "Net" for a network uplink transceiver configuration section.
 Point out the receiver configuration section to use. Set to NONE if no RX is
 used. A receiver is configured in the exact same way as in the SvxLink server.
 Have a look at
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 for more information on how to configure a receiver.
 .TP
 .B TX
 Point out the transmitter configuration section to use. Set to NONE if no TX is
 used. A transmitter is configured in the exact same way as in the SvxLink
 server. Have a look at
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 for more information on how to configure a transmitter.
 .TP
 .B LISTEN_PORT
@@ -203,14 +203,14 @@ Always "RF" for an RF uplink transceiver configuration section.
 Point out the receiver configuration section to use. Set to NONE if no RX is
 used. A receiver is configured in the exact same way as in the SvxLink server.
 Have a look at
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 for more information on how to configure a receiver.
 .TP
 .B TX
 Point out the transmitter configuration section to use. Set to NONE if no TX is
 used. A transmitter is configured in the exact same way as in the SvxLink
 server. Have a look at
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 for more information on how to configure a transmitter.
 .TP
 .B UPLINK_TX
@@ -247,13 +247,13 @@ or set to 0 to disable it. Default is 0.
 .SH FILES
 .
 .TP
-.IR /etc/svxlink/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
+.IR /etc/open-link/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/remotetrx.conf
+.IR ~/.open-link/remotetrx.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink/remotetrx.d/*
+.I /etc/open-link/remotetrx.d/*
 Additional configuration files.
 .
 .SH AUTHOR
@@ -262,7 +262,7 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink (1),
-.BR svxlink.conf (1),
+.BR open-link (1),
+.BR open-link.conf (1),
 .BR remotetrx (1),
 .BR siglevdetcal (1)

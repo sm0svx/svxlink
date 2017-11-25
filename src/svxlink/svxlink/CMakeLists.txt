@@ -42,42 +42,42 @@ set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
 
 # Add targets for version files
 set(VERSION_DEPENDS)
-add_version_target(SVXLINK VERSION_DEPENDS)
+add_version_target(Open-Link VERSION_DEPENDS)
 
 # Build the executable
-add_executable(svxlink
+add_executable(open-link
   MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp DuplexLogic.cpp
-  EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
+  EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp open-link.cpp
   DtmfDigitHandler.cpp ReflectorLogic.cpp
   ${VERSION_DEPENDS}
 )
-target_link_libraries(svxlink ${LIBS})
-set_target_properties(svxlink PROPERTIES
+target_link_libraries(open-link ${LIBS})
+set_target_properties(open-link PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
 # Generate config file with correct paths
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/open-link.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/open-link.conf
   @ONLY
   )
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio.conf.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/open-link_gpio.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/open-link_gpio.conf
   @ONLY
   )
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_up.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_up)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_down)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/open-link_gpio_up.in
+  ${CMAKE_CURRENT_BINARY_DIR}/open-link_gpio_up)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/open-link_gpio_down.in
+  ${CMAKE_CURRENT_BINARY_DIR}/open-link_gpio_down)
 
 # Install targets
-install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
-install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder ${SVXLINK_USER}:${SVXLINK_GROUP})
+install(TARGETS open-link DESTINATION ${BIN_INSTALL_DIR})
+install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder ${Open-Link_USER}:${Open-Link_GROUP})
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
-install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/open-link.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
-install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio.conf
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/open-link_gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
@@ -85,9 +85,9 @@ install(FILES DuplexLogic.tcl SimplexLogic.tcl Module.tcl Logic.tcl CW.tcl
   SelCall.tcl locale.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
   )
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_up
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/open-link_gpio_up
   DESTINATION ${SBIN_INSTALL_DIR}
   )
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_down
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/open-link_gpio_down
   DESTINATION ${SBIN_INSTALL_DIR}
   )

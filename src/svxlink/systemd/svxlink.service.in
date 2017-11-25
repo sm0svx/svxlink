@@ -1,19 +1,19 @@
 ;;;;; Author: Richard Neese<kb3vgw@gmail.com>
 
 [Unit]
-Description=svxlink repeater control software
-Documentation="man:svxlink"
-Requires=svxlink_gpio_setup.service
-After=network.target remote-fs.target time.target sound.target svxlink_gpio_setup.service
+Description=open-link repeater control software
+Documentation="man:open-link"
+Requires=open-link_gpio_setup.service
+After=network.target remote-fs.target time.target sound.target open-link_gpio_setup.service
 
 [Service]
 Type=simple
-User=svxlink
+User=open-link
 Group=daemon
-EnvironmentFile=-/etc/default/svxlink
-Environment=CFGFILE=/etc/svxlink/svxlink.conf
-RuntimeDirectory=svxlink
-ExecStart=/usr/bin/svxlink --config $CFGFILE
+EnvironmentFile=-/etc/default/open-link
+Environment=CFGFILE=/etc/open-link/open-link.conf
+RuntimeDirectory=open-link
+ExecStart=/usr/bin/open-link --config $CFGFILE
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60

@@ -50,7 +50,7 @@ set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
 set cfg_home ""
 if {[info exists ::env(HOME)]} {
-  set cfg_relative_home ".svxlink/TclVoiceMail.conf";
+  set cfg_relative_home ".open-link/TclVoiceMail.conf";
 }
 
 

@@ -19,12 +19,12 @@ if(WITH_CONTRIB_MODULE_SITE_STATUS)
   add_subdirectory(module_site_status)
 endif(WITH_CONTRIB_MODULE_SITE_STATUS)
 
-option(WITH_CONTRIB_MODULE_SVXLINKCFG
-  "Set to ON to build and install contributed module SVXLINKCFG")
-if(WITH_CONTRIB_MODULE_SVXLINKCFG)
-  message(STATUS "Building experimental module SVXLINKCFG")
-  add_subdirectory(module_svxlinkcfg)
-endif(WITH_CONTRIB_MODULE_SVXLINKCFG)
+option(WITH_CONTRIB_MODULE_Open-LinkCFG
+  "Set to ON to build and install contributed module Open-LinkCFG")
+if(WITH_CONTRIB_MODULE_Open-LinkCFG)
+  message(STATUS "Building experimental module Open-LinkCFG")
+  add_subdirectory(module_open-linkcfg)
+endif(WITH_CONTRIB_MODULE_Open-LinkCFG)
 
 option(WITH_CONTRIB_MODULE_TCL_SSTV
   "Set to ON to build and install contributed module TclSSTV")

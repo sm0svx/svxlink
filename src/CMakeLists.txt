@@ -21,7 +21,7 @@
 # Project setup
 ##############################################################################
 cmake_minimum_required(VERSION 2.8)
-project(svxlink C CXX)
+project(open-link C CXX)
 #enable_testing()
 
 # The path to the project global include directory
@@ -131,7 +131,7 @@ endif(NOT DEFINED MAN_INSTALL_DIR)
 
 # Where to install documentation
 if(NOT DEFINED DOC_INSTALL_DIR)
-  #set(DOC_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/doc/svxlink)
+  #set(DOC_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/doc/open-link)
   set(DOC_INSTALL_DIR ${CMAKE_INSTALL_FULL_DOCDIR})
 endif(NOT DEFINED DOC_INSTALL_DIR)
 
@@ -142,27 +142,27 @@ endif(NOT DEFINED INIT_D_INSTALL_DIR)
 
 # Where to install SvxLink config files
 if(NOT DEFINED SVX_SYSCONF_INSTALL_DIR)
-  set(SVX_SYSCONF_INSTALL_DIR ${SYSCONF_INSTALL_DIR}/svxlink)
+  set(SVX_SYSCONF_INSTALL_DIR ${SYSCONF_INSTALL_DIR}/open-link)
 endif(NOT DEFINED SVX_SYSCONF_INSTALL_DIR)
 
 # Where to install SvxLink spool files
 if(NOT DEFINED SVX_SPOOL_INSTALL_DIR)
-  set(SVX_SPOOL_INSTALL_DIR ${LOCAL_STATE_DIR}/spool/svxlink)
+  set(SVX_SPOOL_INSTALL_DIR ${LOCAL_STATE_DIR}/spool/open-link)
 endif(NOT DEFINED SVX_SPOOL_INSTALL_DIR)
 
 # Where to install SvxLink architecture independent files
 if(NOT DEFINED SVX_SHARE_INSTALL_DIR)
-  set(SVX_SHARE_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/svxlink)
+  set(SVX_SHARE_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/open-link)
 endif(NOT DEFINED SVX_SHARE_INSTALL_DIR)
 
 # Where to install include files
 if(NOT DEFINED SVX_INCLUDE_INSTALL_DIR)
-  set(SVX_INCLUDE_INSTALL_DIR ${INCLUDE_INSTALL_DIR}/svxlink)
+  set(SVX_INCLUDE_INSTALL_DIR ${INCLUDE_INSTALL_DIR}/open-link)
 endif(NOT DEFINED SVX_INCLUDE_INSTALL_DIR)
 
 # Where to install SvxLink modules
 if(NOT DEFINED SVX_MODULE_INSTALL_DIR)
-  set(SVX_MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/svxlink)
+  set(SVX_MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/open-link)
 endif(NOT DEFINED SVX_MODULE_INSTALL_DIR)
 
 
@@ -327,17 +327,17 @@ set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
 # Find the chown utility
 include(FindCHOWN)
 
-set(SVXLINK_USER "svxlink" CACHE STRING "Set SvxLink system user")
-set(SVXLINK_GROUP "daemon" CACHE STRING "Set SvxLink system group")
-message(STATUS "SvxLink user = ${SVXLINK_USER}")
-message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
+set(Open-Link_USER "open-link" CACHE STRING "Set SvxLink system user")
+set(Open-Link_GROUP "daemon" CACHE STRING "Set SvxLink system group")
+message(STATUS "SvxLink user = ${Open-Link_USER}")
+message(STATUS "SvxLink group = ${Open-Link_GROUP}")
 
 # Add directories to build
 add_subdirectory(async)
 add_subdirectory(misc)
 add_subdirectory(echolib)
 add_subdirectory(locationinfo)
-add_subdirectory(svxlink)
+add_subdirectory(open-link)
 if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
@@ -357,6 +357,6 @@ message(STATUS "Package Version = ${CPACK_PACKAGE_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION
   "The SvxLink project develops an advanced voice services system for ham radio use. It can be run on a simplex frequency or act as a repeaster controller.")
 set(CPACK_PACKAGE_CONTACT
-  "SvxLink Community <svxlink-devel@lists.sourceforge.net>")
+  "SvxLink Community <open-link-devel@lists.sourceforge.net>")
 #set(CPACK_GENERATOR "DEB")
 include(CPack)

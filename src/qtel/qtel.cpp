@@ -147,7 +147,7 @@ int main(int argc, char **argv)
   app.installTranslator(&translator);
 
   QCoreApplication::setOrganizationName("SvxLink");
-  QCoreApplication::setOrganizationDomain("svxlink.org");
+  QCoreApplication::setOrganizationDomain("open-link.org");
   QCoreApplication::setApplicationName("Qtel");
 	
   Settings *settings = Settings::instance();

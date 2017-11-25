@@ -22,7 +22,7 @@ via RF from a link site where network is available.
 .P
 The setup is pretty straight forward. The setup of a receiver or transmitter is
 done in the same way as in the SvxLink server so use the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page as a reference for that. The remotetrx specific configuration is
 described in the
 .BR remotetrx.conf (5)
@@ -30,7 +30,7 @@ manual page.
 .P
 On the SvxLink server side you need to configure a networked
 receiver/transmitter. That is described in the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page in the Networked Receiver/Transmitter Section. If using multiple
 receivers you also want to configure a voter and make proper calibration of the
 signal level detector on each receiver.
@@ -61,17 +61,17 @@ Specify which configuration file to use.
 .SH FILES
 .
 .TP
-.IR /etc/svxlink/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
+.IR /etc/open-link/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
 The system wide configuration file. See
 .BR remotetrx.conf (5)
 for further details.
 .TP
-.IR ~/.svxlink/remotetrx.conf
+.IR ~/.open-link/remotetrx.conf
 Per user configuration file. See
 .BR remotetrx.conf (5)
 for further details.
 .TP
-.I /etc/svxlink/remotetrx.d/*
+.I /etc/open-link/remotetrx.d/*
 Additional configuration files. This directory is setup by the CFG_DIR
 configuration variable.
 .
@@ -92,11 +92,11 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH REPORTING BUGS
 .
-SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+SvxLink Devel <open-link-devel at lists dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink (1),
+.BR open-link (1),
 .BR remotetrx.conf (5),
-.BR svxlink.conf (5),
+.BR open-link.conf (5),
 .BR siglevdetcal (1)

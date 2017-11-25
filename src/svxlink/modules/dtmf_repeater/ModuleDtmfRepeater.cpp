@@ -5,7 +5,7 @@
 @date	 2005-08-28
 
 \verbatim
-A module (plugin) for the svxlink server, a multi purpose tranciever
+A module (plugin) for the open-link server, a multi purpose tranciever
 frontend system.
 Copyright (C) 2004-2010 Tobias Blomberg
 

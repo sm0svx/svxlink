@@ -53,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
+#include "version/Open-Link.h"
 #include "AprsTcpClient.h"
 #include "common.h"
 
@@ -309,7 +309,7 @@ void AprsTcpClient::aprsLogin(void)
    const char *format = "user %s pass %d vers SvxLink %s filter m/10\n";
 
    sprintf(loginmsg, format, el_call.c_str(), getPasswd(el_call),
-           SVXLINK_VERSION);
+           Open-Link_VERSION);
    //cout << loginmsg;
    sendMsg(loginmsg);
 

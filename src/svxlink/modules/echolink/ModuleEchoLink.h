@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
+#include "version/Open-Link.h"
 
 
 
@@ -139,7 +139,7 @@ class ModuleEchoLink : public Module
     ModuleEchoLink(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleEchoLink(void);
     bool initialize(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return Open-Link_VERSION; }
 
     
   protected:

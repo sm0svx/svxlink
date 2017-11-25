@@ -3,14 +3,14 @@
 ##############################################################################
 #
 # GPIO teardown script for SvxLink server. Run this script to undo the GPIO
-# configuration done by the svxlink_gpio_up script.
+# configuration done by the open-link_gpio_up script.
 #
 ##############################################################################
 
-if [ -r /etc/default/svxlink ]; then
-. /etc/default/svxlink
+if [ -r /etc/default/open-link ]; then
+. /etc/default/open-link
 else
-. /etc/svxlink/svxlink_gpio.conf
+. /etc/open-link/open-link_gpio.conf
 fi
 
 

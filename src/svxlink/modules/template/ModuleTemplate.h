@@ -5,7 +5,7 @@
 @date	 2005-08-28
 
 \verbatim
-A module (plugin) for the svxlink server, a multi purpose tranciever
+A module (plugin) for the open-link server, a multi purpose tranciever
 frontend system.
 Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
 
@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
-#include <version/SVXLINK.h>
+#include <version/Open-Link.h>
 
 
 
@@ -117,7 +117,7 @@ class ModuleTemplate : public Module
   public:
     ModuleTemplate(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleTemplate(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return Open-Link_VERSION; }
 
   private:
     bool initialize(void);

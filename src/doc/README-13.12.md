@@ -8,11 +8,11 @@ More details about each change can be found in the ChengeLog below.
 Also note that the filename for sound clips have changed a small bit. A sound
 clip archive should now be named:
 
-svxlink-sounds-<lang_code>-<voice name>-<samp rate>-<svxlink ver>.tar.bz2
+open-link-sounds-<lang_code>-<voice name>-<samp rate>-<open-link ver>.tar.bz2
 
 Example:
 
-svxlink-sounds-en_US-heather-16k-13.12.tar.bz2
+open-link-sounds-en_US-heather-16k-13.12.tar.bz2
 
 A new audio codec, Opus (http://www.opus-codec.org/), is now supported for
 RemoteTrx links. The Opus codec is a new IETF standard for encoding audio with

@@ -20,7 +20,7 @@
 #
 namespace eval SvxlinkCfg {
 #define where the config file lives
-#source /usr/share/svxlink/modules.d/CommonCommands.tcl
+#source /usr/share/open-link/modules.d/CommonCommands.tcl
 
 #
 # Check if this module is loaded in the current logic core
@@ -69,287 +69,287 @@ proc activateInit {} {
    # Enabled options 1-enabled, 0-disabled, x-support not planned
    # All config variables should be represented, and will be status printed to the logs
    # so users can see what can be configured and what cant
-  lappend ConfigVariablesList 			Restart 				999 		 1 restart_help 						svxlinkCfg
-  lappend ConfigVariablesList 			CardSampleRate 			$InitialCode 1 card_sample_rate_help 				svxlinkCfg
+  lappend ConfigVariablesList 			Restart 				999 		 1 restart_help 						open-linkCfg
+  lappend ConfigVariablesList 			CardSampleRate 			$InitialCode 1 card_sample_rate_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			LocInfo 				$InitialCode 1 loc_info_help 						svxlinkCfg
+  lappend ConfigVariablesList 			LocInfo 				$InitialCode 1 loc_info_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Links 					$InitialCode X links_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Links 					$InitialCode X links_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Type 					$InitialCode X type_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Type 					$InitialCode X type_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Rx 						$InitialCode X rx_help 								svxlinkCfg
+  lappend ConfigVariablesList 			Rx 						$InitialCode X rx_help 								open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Tx 						$InitialCode X tx_help 								svxlinkCfg
+  lappend ConfigVariablesList 			Tx 						$InitialCode X tx_help 								open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Modules 				$InitialCode 0 modules_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Modules 				$InitialCode 0 modules_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CallSign 				$InitialCode 0 callsign_help 						svxlinkCfg
+  lappend ConfigVariablesList 			CallSign 				$InitialCode 0 callsign_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ShortIdInt 				$InitialCode 1 short_id_int_help 					svxlinkCfg
+  lappend ConfigVariablesList 			ShortIdInt 				$InitialCode 1 short_id_int_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			LongIdInt 				$InitialCode 1 long_id_int_help 					svxlinkCfg
+  lappend ConfigVariablesList 			LongIdInt 				$InitialCode 1 long_id_int_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			IdAfterTx 				$InitialCode 0 id_after_tx_help 					svxlinkCfg
+  lappend ConfigVariablesList 			IdAfterTx 				$InitialCode 0 id_after_tx_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ExecuteCmdOnSqlClose 	$InitialCode 0 execute_cmd_on_sql_close_help 		svxlinkCfg
+  lappend ConfigVariablesList 			ExecuteCmdOnSqlClose 	$InitialCode 0 execute_cmd_on_sql_close_help 		open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			EventHandler 			$InitialCode 0 event_handler_help 					svxlinkCfg
+  lappend ConfigVariablesList 			EventHandler 			$InitialCode 0 event_handler_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DefaultLanguage 		$InitialCode X default_language_help 				svxlinkCfg
+  lappend ConfigVariablesList 			DefaultLanguage 		$InitialCode X default_language_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			RogerSoundDelay 		$InitialCode 1 roger_sound_delay_help 				svxlinkCfg
+  lappend ConfigVariablesList 			RogerSoundDelay 		$InitialCode 1 roger_sound_delay_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ReportCtcss 			$InitialCode 0 report_ctcss_help 					svxlinkCfg
+  lappend ConfigVariablesList 			ReportCtcss 			$InitialCode 0 report_ctcss_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			TxCtcss 				$InitialCode 1 tx_ctcss_help 						svxlinkCfg
+  lappend ConfigVariablesList 			TxCtcss 				$InitialCode 1 tx_ctcss_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Macros 					$InitialCode 0 macros_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Macros 					$InitialCode 0 macros_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			FxGainNormal 			$InitialCode 0 fx_gain_normal_help 					svxlinkCfg
+  lappend ConfigVariablesList 			FxGainNormal 			$InitialCode 0 fx_gain_normal_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			FxGainLow 				$InitialCode 0 fx_gain_low_help 					svxlinkCfg
+  lappend ConfigVariablesList 			FxGainLow 				$InitialCode 0 fx_gain_low_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			QsoRecorder 			$InitialCode 0 qso_recorder_help 					svxlinkCfg
+  lappend ConfigVariablesList 			QsoRecorder 			$InitialCode 0 qso_recorder_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Sel5MacroRange 			$InitialCode 0 sel5_macro_range_help 				svxlinkCfg
+  lappend ConfigVariablesList 			Sel5MacroRange 			$InitialCode 0 sel5_macro_range_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OnlineCmd 				$InitialCode 1 online_cmd_help 						svxlinkCfg
+  lappend ConfigVariablesList 			OnlineCmd 				$InitialCode 1 online_cmd_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			MuteRxOnTx 				$InitialCode 0 mute_rx_on_tx_help 					svxlinkCfg
+  lappend ConfigVariablesList 			MuteRxOnTx 				$InitialCode 0 mute_rx_on_tx_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			NoRepeat 				$InitialCode 0 no_repeat_help 						svxlinkCfg
+  lappend ConfigVariablesList 			NoRepeat 				$InitialCode 0 no_repeat_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			IdleTimeout 			$InitialCode 1 idle_timeout_help 					svxlinkCfg
+  lappend ConfigVariablesList 			IdleTimeout 			$InitialCode 1 idle_timeout_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenOn1750 				$InitialCode 0 open_on_1750_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpenOn1750 				$InitialCode 0 open_on_1750_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenOnCtcss 			$InitialCode 0 open_on_ctcss_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpenOnCtcss 			$InitialCode 0 open_on_ctcss_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenOnDtmf 				$InitialCode 0 open_on_dtmf_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpenOnDtmf 				$InitialCode 0 open_on_dtmf_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenOnSel5 				$InitialCode 0 open_on_sel5_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpenOnSel5 				$InitialCode 0 open_on_sel5_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenOnSql 				$InitialCode 0 open_on_sql_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpenOnSql 				$InitialCode 0 open_on_sql_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenOnSqlAfterRptClose 	$InitialCode 0 open_on_sql_after_rpt_close_help 	svxlinkCfg
+  lappend ConfigVariablesList 			OpenOnSqlAfterRptClose 	$InitialCode 0 open_on_sql_after_rpt_close_help 	open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpenSqlFlank 			$InitialCode 1 open_sql_flank_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpenSqlFlank 			$InitialCode 1 open_sql_flank_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			IdleSoundInterval 		$InitialCode 0 idle_sound_interval_help 			svxlinkCfg
+  lappend ConfigVariablesList 			IdleSoundInterval 		$InitialCode 0 idle_sound_interval_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlFlapSupMinTime 		$InitialCode 0 sql_flap_sup_min_time_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SqlFlapSupMinTime 		$InitialCode 0 sql_flap_sup_min_time_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlFlapSupMaxCount 		$InitialCode 0 sql_flap_sup_max_count_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SqlFlapSupMaxCount 		$InitialCode 0 sql_flap_sup_max_count_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ActivateModuleOnLongCmd $InitialCode 0 activate_module_on_long_cmd_help 	svxlinkCfg
+  lappend ConfigVariablesList 			ActivateModuleOnLongCmd $InitialCode 0 activate_module_on_long_cmd_help 	open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			IdentNagTimeout 		$InitialCode 0 ident_nag_timeout_help 				svxlinkCfg
+  lappend ConfigVariablesList 			IdentNagTimeout 		$InitialCode 0 ident_nag_timeout_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			IdentNagMinTime 		$InitialCode 0 ident_nag_min_time_help 				svxlinkCfg
+  lappend ConfigVariablesList 			IdentNagMinTime 		$InitialCode 0 ident_nag_min_time_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			RecDir 					$InitialCode 0 rec_dir_help 						svxlinkCfg
+  lappend ConfigVariablesList 			RecDir 					$InitialCode 0 rec_dir_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			MinTime 				$InitialCode 0 min_time_help 						svxlinkCfg
+  lappend ConfigVariablesList 			MinTime 				$InitialCode 0 min_time_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			MaxTime 				$InitialCode 0 max_time_help 						svxlinkCfg
+  lappend ConfigVariablesList 			MaxTime 				$InitialCode 0 max_time_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SoftTime 				$InitialCode 0 soft_time_help 						svxlinkCfg
+  lappend ConfigVariablesList 			SoftTime 				$InitialCode 0 soft_time_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			MaxDirSize 				$InitialCode 0 max_dir_size_help 					svxlinkCfg
+  lappend ConfigVariablesList 			MaxDirSize 				$InitialCode 0 max_dir_size_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DefaultActive 			$InitialCode 0 default_active_help 					svxlinkCfg
+  lappend ConfigVariablesList 			DefaultActive 			$InitialCode 0 default_active_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Timeout 				$InitialCode 1 timeout_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Timeout 				$InitialCode 1 timeout_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			QsoTimeout 				$InitialCode 0 qso_timeout_help 					svxlinkCfg
+  lappend ConfigVariablesList 			QsoTimeout 				$InitialCode 0 qso_timeout_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			EncodeCmd 				$InitialCode 0 encode_cmd_help 						svxlinkCfg
+  lappend ConfigVariablesList 			EncodeCmd 				$InitialCode 0 encode_cmd_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ConnectLogics 			$InitialCode 0 connect_logics_help 					svxlinkCfg
+  lappend ConfigVariablesList 			ConnectLogics 			$InitialCode 0 connect_logics_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AutoActivateOnSql 		$InitialCode 0 auto_activate_on_sql_help 			svxlinkCfg
+  lappend ConfigVariablesList 			AutoActivateOnSql 		$InitialCode 0 auto_activate_on_sql_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AudioDev 	 			$InitialCode 0 audio_dev_help 						svxlinkCfg
+  lappend ConfigVariablesList 			AudioDev 	 			$InitialCode 0 audio_dev_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AudioChannel 			$InitialCode 0 audio_channel_help 					svxlinkCfg
+  lappend ConfigVariablesList 			AudioChannel 			$InitialCode 0 audio_channel_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlDet 					$InitialCode 1 sql_detect_help 						svxlinkCfg
+  lappend ConfigVariablesList 			SqlDet 					$InitialCode 1 sql_detect_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlStartDelay 			$InitialCode 1 sql_start_delay_help 				svxlinkCfg
+  lappend ConfigVariablesList 			SqlStartDelay 			$InitialCode 1 sql_start_delay_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlDelay 				$InitialCode 0 sql_delay_help 						svxlinkCfg
+  lappend ConfigVariablesList 			SqlDelay 				$InitialCode 0 sql_delay_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlHangtime 			$InitialCode 1 sql_hangtime_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SqlHangtime 			$InitialCode 1 sql_hangtime_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlExtendedHangtime 	$InitialCode 1 sql_extended_hangtime_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SqlExtendedHangtime 	$InitialCode 1 sql_extended_hangtime_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 		  SqlExtendedHangtimeThresh $InitialCode 0 sql_extended_hangtime_thresh_help 	svxlinkCfg
+  lappend ConfigVariablesList 		  SqlExtendedHangtimeThresh $InitialCode 0 sql_extended_hangtime_thresh_help 	open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlTimeout 				$InitialCode 0 sql_timeout_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SqlTimeout 				$InitialCode 0 sql_timeout_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			VoxFilterDepth 			$InitialCode 0 vox_filter_depth_help 				svxlinkCfg
+  lappend ConfigVariablesList 			VoxFilterDepth 			$InitialCode 0 vox_filter_depth_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			VoxThresh 				$InitialCode 0 vox_thresh_help 						svxlinkCfg
+  lappend ConfigVariablesList 			VoxThresh 				$InitialCode 0 vox_thresh_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssMode 				$InitialCode 0 ctcss_mode_help 						svxlinkCfg
+  lappend ConfigVariablesList 			CtcssMode 				$InitialCode 0 ctcss_mode_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssFq 				$InitialCode 0 ctcss_fq_help 						svxlinkCfg
+  lappend ConfigVariablesList 			CtcssFq 				$InitialCode 0 ctcss_fq_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssOpenThresh 		$InitialCode 0 ctcss_open_Thresh_help 				svxlinkCfg
+  lappend ConfigVariablesList 			CtcssOpenThresh 		$InitialCode 0 ctcss_open_Thresh_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssCloseThresh 		$InitialCode 0 ctcss_close_thresh_help 				svxlinkCfg
+  lappend ConfigVariablesList 			CtcssCloseThresh 		$InitialCode 0 ctcss_close_thresh_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssSnrOffset 			$InitialCode 0 ctcss_snr_offset_help 				svxlinkCfg
+  lappend ConfigVariablesList 			CtcssSnrOffset 			$InitialCode 0 ctcss_snr_offset_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssBpfLow 			$InitialCode 0 ctcss_bpf_low_help 					svxlinkCfg  
+  lappend ConfigVariablesList 			CtcssBpfLow 			$InitialCode 0 ctcss_bpf_low_help 					open-linkCfg  
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssBpfHigh 			$InitialCode 0 ctcss_bpf_high_help 					svxlinkCfg
+  lappend ConfigVariablesList 			CtcssBpfHigh 			$InitialCode 0 ctcss_bpf_high_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SerialPort 				$InitialCode 0 serial_port_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SerialPort 				$InitialCode 0 serial_port_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SerialPin 				$InitialCode 0 serial_pin_help 						svxlinkCfg
+  lappend ConfigVariablesList 			SerialPin 				$InitialCode 0 serial_pin_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SerialSetPins 			$InitialCode 0 serial_set_pins_help 				svxlinkCfg
+  lappend ConfigVariablesList 			SerialSetPins 			$InitialCode 0 serial_set_pins_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			EvdevDevname 			$InitialCode 0 evdev_dev_name_help 					svxlinkCfg
+  lappend ConfigVariablesList 			EvdevDevname 			$InitialCode 0 evdev_dev_name_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			EvdevOpen 				$InitialCode 0 evdev_open_help 						svxlinkCfg
+  lappend ConfigVariablesList 			EvdevOpen 				$InitialCode 0 evdev_open_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			EvdevClose 				$InitialCode 0 evdev_close 							svxlinkCfg
+  lappend ConfigVariablesList 			EvdevClose 				$InitialCode 0 evdev_close 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			GpioSqlPin 				$InitialCode 0 gpio_sql_pin 						svxlinkCfg
+  lappend ConfigVariablesList 			GpioSqlPin 				$InitialCode 0 gpio_sql_pin 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SiglevDet 				$InitialCode 0 siglev_det_help 						svxlinkCfg
+  lappend ConfigVariablesList 			SiglevDet 				$InitialCode 0 siglev_det_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SiglevSlope 			$InitialCode 0 siglev_slope_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SiglevSlope 			$InitialCode 0 siglev_slope_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SiglevOffset 			$InitialCode 0 siglev_offset_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SiglevOffset 			$InitialCode 0 siglev_offset_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ToneSiglevMap 			$InitialCode 0 tone_siglev_map_help 				svxlinkCfg
+  lappend ConfigVariablesList 			ToneSiglevMap 			$InitialCode 0 tone_siglev_map_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SiglevOpenThresh 		$InitialCode 0 siglev_open_thresh_help 				svxlinkCfg
+  lappend ConfigVariablesList 			SiglevOpenThresh 		$InitialCode 0 siglev_open_thresh_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SiglevCloseThresh 		$InitialCode 0 siglev_close_thresh_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SiglevCloseThresh 		$InitialCode 0 siglev_close_thresh_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Deemphasis 				$InitialCode 0 deemphesis_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Deemphasis 				$InitialCode 0 deemphesis_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlTailElim 			$InitialCode 0 sql_tail_elim_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SqlTailElim 			$InitialCode 0 sql_tail_elim_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Preamp 					$InitialCode 0 preamp_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Preamp 					$InitialCode 0 preamp_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			PeakMeter 				$InitialCode 0 peak_meter_help 						svxlinkCfg
+  lappend ConfigVariablesList 			PeakMeter 				$InitialCode 0 peak_meter_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfDecType 			$InitialCode 0 dtmf_dec_type_help 					svxlinkCfg
+  lappend ConfigVariablesList 			DtmfDecType 			$InitialCode 0 dtmf_dec_type_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfMuting 				$InitialCode 0 dtmf_muting_help 					svxlinkCfg
+  lappend ConfigVariablesList 			DtmfMuting 				$InitialCode 0 dtmf_muting_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfHangtime 			$InitialCode 0 dtmf_hangtime_help 					svxlinkCfg
+  lappend ConfigVariablesList 			DtmfHangtime 			$InitialCode 0 dtmf_hangtime_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfSerial 				$InitialCode 0 dtmf_serial_help 					svxlinkCfg
+  lappend ConfigVariablesList 			DtmfSerial 				$InitialCode 0 dtmf_serial_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfMaxFwdTwist 		$InitialCode 0 dtmf_max_fwd_twist_help 				svxlinkCfg
+  lappend ConfigVariablesList 			DtmfMaxFwdTwist 		$InitialCode 0 dtmf_max_fwd_twist_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Tone1750Muting 			$InitialCode 0 tone_1750_muting_help 				svxlinkCfg
+  lappend ConfigVariablesList 			Tone1750Muting 			$InitialCode 0 tone_1750_muting_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Sel5Type 				$InitialCode 0 sel5_type_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Sel5Type 				$InitialCode 0 sel5_type_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Sel5DecType 			$InitialCode 0 sel5_dec_type_help 					svxlinkCfg
+  lappend ConfigVariablesList 			Sel5DecType 			$InitialCode 0 sel5_dec_type_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Receivers 				$InitialCode 0 receivers_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Receivers 				$InitialCode 0 receivers_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			VotingDelay 			$InitialCode 0 voting_delay_help 					svxlinkCfg
+  lappend ConfigVariablesList 			VotingDelay 			$InitialCode 0 voting_delay_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			BufferLength 			$InitialCode 0 buffer_length_help 					svxlinkCfg
+  lappend ConfigVariablesList 			BufferLength 			$InitialCode 0 buffer_length_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			RevoteInterval 			$InitialCode 0 revote_interval_help 				svxlinkCfg
+  lappend ConfigVariablesList 			RevoteInterval 			$InitialCode 0 revote_interval_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Hysteresis				$InitialCode 0 hysteresis_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Hysteresis				$InitialCode 0 hysteresis_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			RxSwitchDelay 			$InitialCode 0 rx_switch_delay_help 				svxlinkCfg
+  lappend ConfigVariablesList 			RxSwitchDelay 			$InitialCode 0 rx_switch_delay_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SqlCloseRevoteDelay 	$InitialCode 0 sql_close_revote_delay_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SqlCloseRevoteDelay 	$InitialCode 0 sql_close_revote_delay_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Host 					$InitialCode 0 host_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Host 					$InitialCode 0 host_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AuthKey 				$InitialCode 0 auth_key_help 						svxlinkCfg
+  lappend ConfigVariablesList 			AuthKey 				$InitialCode 0 auth_key_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Codec 					$InitialCode 0 codec_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Codec 					$InitialCode 0 codec_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncFramesPerPacket $InitialCode 0 speex_enc_frames_per_packet_help 	svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncFramesPerPacket $InitialCode 0 speex_enc_frames_per_packet_help 	open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncQuality 		$InitialCode 0 speex_enc_quality_help 				svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncQuality 		$InitialCode 0 speex_enc_quality_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncBitrate 		$InitialCode 0 speex_enc_bitrate_help 				svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncBitrate 		$InitialCode 0 speex_enc_bitrate_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncComplexity 		$InitialCode 0 speex_enc_complexity_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncComplexity 		$InitialCode 0 speex_enc_complexity_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncVbr 			$InitialCode 0 speex_enc_vbr_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncVbr 			$InitialCode 0 speex_enc_vbr_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncVbrQuality 		$InitialCode 0 speex_enc_vbr_quality_help 			svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncVbrQuality 		$InitialCode 0 speex_enc_vbr_quality_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexEncAbr 			$InitialCode 0 speex_enc_abr_help 					svxlinkCfg
+  lappend ConfigVariablesList 			SpeexEncAbr 			$InitialCode 0 speex_enc_abr_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			SpeexDecEnhancer 		$InitialCode 0 speex_dec_enhancer_help 				svxlinkCfg
+  lappend ConfigVariablesList 			SpeexDecEnhancer 		$InitialCode 0 speex_dec_enhancer_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpusEncComplexity 		$InitialCode 0 opus_enc_complexity_help 			svxlinkCfg
+  lappend ConfigVariablesList 			OpusEncComplexity 		$InitialCode 0 opus_enc_complexity_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpusEncBitrate 			$InitialCode 0 opus_enc_bitrate_help 				svxlinkCfg
+  lappend ConfigVariablesList 			OpusEncBitrate 			$InitialCode 0 opus_enc_bitrate_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			OpusEncVbr 				$InitialCode 0 opus_enc_vbr_help 					svxlinkCfg
+  lappend ConfigVariablesList 			OpusEncVbr 				$InitialCode 0 opus_enc_vbr_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			PttPort 				$InitialCode 0 ptt_port_help 						svxlinkCfg
+  lappend ConfigVariablesList 			PttPort 				$InitialCode 0 ptt_port_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			PttPin 					$InitialCode 0 ptt_pin_help 						svxlinkCfg
+  lappend ConfigVariablesList 			PttPin 					$InitialCode 0 ptt_pin_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			PttHangtime 			$InitialCode 0 ptt_hangtime_help 					svxlinkCfg
+  lappend ConfigVariablesList 			PttHangtime 			$InitialCode 0 ptt_hangtime_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			TxDelay 				$InitialCode 0 tx_delay_help 						svxlinkCfg
+  lappend ConfigVariablesList 			TxDelay 				$InitialCode 0 tx_delay_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			CtcssLevel 				$InitialCode 0 ctcss_level_help 					svxlinkCfg
+  lappend ConfigVariablesList 			CtcssLevel 				$InitialCode 0 ctcss_level_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Preemphesis 			$InitialCode 0 preemphesis_help 					svxlinkCfg
+  lappend ConfigVariablesList 			Preemphesis 			$InitialCode 0 preemphesis_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfToneLength 			$InitialCode 0 dtmf_tone_length 					svxlinkCfg
+  lappend ConfigVariablesList 			DtmfToneLength 			$InitialCode 0 dtmf_tone_length 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfToneSpacing 		$InitialCode 0 dtmf_tone_spacing_help 				svxlinkCfg
+  lappend ConfigVariablesList 			DtmfToneSpacing 		$InitialCode 0 dtmf_tone_spacing_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			DtmfToneAmp 			$InitialCode 0 dtmf_tone_amp_help 					svxlinkCfg
+  lappend ConfigVariablesList 			DtmfToneAmp 			$InitialCode 0 dtmf_tone_amp_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			ToneSiglevLevel 		$InitialCode 0 tone_siglev_level_help 				svxlinkCfg
+  lappend ConfigVariablesList 			ToneSiglevLevel 		$InitialCode 0 tone_siglev_level_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Transmitters 			$InitialCode 0 transmitters_help 					svxlinkCfg
+  lappend ConfigVariablesList 			Transmitters 			$InitialCode 0 transmitters_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			StatusServerList 		$InitialCode 0 status_server_list_help 				svxlinkCfg
+  lappend ConfigVariablesList 			StatusServerList 		$InitialCode 0 status_server_list_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AprsServerList 			$InitialCode 0 aprs_server_list_help 				svxlinkCfg
+  lappend ConfigVariablesList 			AprsServerList 			$InitialCode 0 aprs_server_list_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			LonPosition 			$InitialCode 0 lon_position_help 					svxlinkCfg
+  lappend ConfigVariablesList 			LonPosition 			$InitialCode 0 lon_position_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			LatPosition 			$InitialCode 0 lat_position_help 					svxlinkCfg
+  lappend ConfigVariablesList 			LatPosition 			$InitialCode 0 lat_position_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Frequency 				$InitialCode 0 frequency_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Frequency 				$InitialCode 0 frequency_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			TxPower 				$InitialCode 0 tx_power_help 						svxlinkCfg
+  lappend ConfigVariablesList 			TxPower 				$InitialCode 0 tx_power_help 						open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AntennaGain 			$InitialCode 0 antenna_gain_help 					svxlinkCfg
+  lappend ConfigVariablesList 			AntennaGain 			$InitialCode 0 antenna_gain_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AntennaHeight 			$InitialCode 0 antenna_height_help 					svxlinkCfg
+  lappend ConfigVariablesList 			AntennaHeight 			$InitialCode 0 antenna_height_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			AntennaDir 				$InitialCode 0 antenna_dir_help 					svxlinkCfg
+  lappend ConfigVariablesList 			AntennaDir 				$InitialCode 0 antenna_dir_help 					open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Path 					$InitialCode 0 path_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Path 					$InitialCode 0 path_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			BeaconInterval 			$InitialCode 0 beacon_interval_help 				svxlinkCfg
+  lappend ConfigVariablesList 			BeaconInterval 			$InitialCode 0 beacon_interval_help 				open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Tone 					$InitialCode 0 tone_help 							svxlinkCfg
+  lappend ConfigVariablesList 			Tone 					$InitialCode 0 tone_help 							open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			StatisticsInterval 		$InitialCode 0 statistics_interval_help 			svxlinkCfg
+  lappend ConfigVariablesList 			StatisticsInterval 		$InitialCode 0 statistics_interval_help 			open-linkCfg
   set InitialCode [expr $InitialCode+1]
-  lappend ConfigVariablesList 			Comment 				$InitialCode 0 comment_help 						svxlinkCfg
+  lappend ConfigVariablesList 			Comment 				$InitialCode 0 comment_help 						open-linkCfg
     
-  global svxlinkCfgMenuLayer 
-  set svxlinkCfgMenuLayer 0
+  global open-linkCfgMenuLayer 
+  set open-linkCfgMenuLayer 0
   printInfo "Module activated"
   # Access Variables
   variable CFG_ACCESS_PIN
@@ -400,7 +400,7 @@ proc activateInit {} {
 #
 # Value: the new value to be written to the config file
 #
-# configPath: The location of the svxlink.conf file, full path req'd
+# configPath: The location of the open-link.conf file, full path req'd
 #
 # configSetting: the setting you want to edit, case sensitive, include the "="
 # example: "DTMF_MUTING="
@@ -433,13 +433,13 @@ proc setConfigValue {ChannelNumber value configPath configSetting} {
 }
 #
 # A convenience function for locating the arbitrary name assigned to
-# a given channel in the svxlink.conf file.  Reads the "LOGICS=" field
+# a given channel in the open-link.conf file.  Reads the "LOGICS=" field
 # to determine the names.
 #
 # channel: index (1,2,3, exclude 0) of the channel to locate, only supports
 # 1 & 2 currently.
 #
-# configPath: The location of the svxlink.conf file, full path req'd
+# configPath: The location of the open-link.conf file, full path req'd
 #
 proc findChannelName {channel configPath} {
 	#Get the whole config file
@@ -547,8 +547,8 @@ proc dtmfCmdReceived {cmd} {
   global SvxlinkCfgFunctionName
   global SvxlinkCfgFunctionHelpFile
   global SvxlinkCfgFunctionHelpFileDir
-  global configPath "/etc/svxlink/svxlink.conf"
-  global svxlinkCfgMenuLayer
+  global configPath "/etc/open-link/open-link.conf"
+  global open-linkCfgMenuLayer
   global ConfigVariablesList
   printInfo "DTMF command received: $cmd"
   #printInfo "LIST:$ConfigVariablesList "
@@ -559,10 +559,10 @@ proc dtmfCmdReceived {cmd} {
   ## use 999 to reboot the service with updated configurations
   } elseif {$cmd == "999"} {
 	#	restart the service
-	exec -ignorestderr sudo /usr/sbin/service svxlink restart
+	exec -ignorestderr sudo /usr/sbin/service open-link restart
   }
   
-  if {$svxlinkCfgMenuLayer == 0} {
+  if {$open-linkCfgMenuLayer == 0} {
     set SvxlinkCfgFunctionName ""
 	set SvxlinkCfgModuleFound 0
 	#Get the module number from user
@@ -575,7 +575,7 @@ proc dtmfCmdReceived {cmd} {
 		  set SvxlinkCfgFunctionName $name
 		  set SvxlinkCfgFunctionHelpFile $helpFile
           set SvxlinkCfgFunctionHelpFileDir $helpFileDir
-		  set svxlinkCfgMenuLayer 1
+		  set open-linkCfgMenuLayer 1
 		  # set selection name
 		  playMsg "enter_channel"
 		  set SvxlinkCfgModuleFound 1
@@ -594,19 +594,19 @@ proc dtmfCmdReceived {cmd} {
   
   
   ## we have received a command that should correlate with a Channel Number 
-  if {$svxlinkCfgMenuLayer == 1} {
-	set svxlinkCfgChannel $cmd
-    set svxlinkCfgMenuLayer 2
+  if {$open-linkCfgMenuLayer == 1} {
+	set open-linkCfgChannel $cmd
+    set open-linkCfgMenuLayer 2
 	return
   }
   
   # we know the function,and channel, now to announce the help for the module
-  if {$svxlinkCfgMenuLayer == 2} {
+  if {$open-linkCfgMenuLayer == 2} {
      # old syntax is 'playMsg "filename"'
 	 playMsg "$SvxlinkCfgFunctionHelpFile"
 	 # new syntax is 'playMsg "directory" "filename"' once it gets enabled
 	 # playMsg "SvxlinkCfgFunctionHelpFileDir" "$SvxlinkCfgFunctionHelpFile"
-	 set svxlinkCfgMenuLayer 3
+	 set open-linkCfgMenuLayer 3
   }
   
   # We have the command, channel and now expect the user to input the setting.
@@ -617,7 +617,7 @@ proc dtmfCmdReceived {cmd} {
   # acceptance.
   #
   # Also, be nice to those who follow, keep these entries alphabetized
-  if {$svxlinkCfgMenuLayer == 3} {
+  if {$open-linkCfgMenuLayer == 3} {
     switch -exact -- $SvxlinkCfgFunctionName {
 	  # A
 	  ActivateModuleOnLongCmd {
@@ -1196,7 +1196,7 @@ proc dtmfCmdReceived {cmd} {
 	  # Y
 	  # Z
 	  default {
-	     printInfo "ERROR: svxlinkCfgMenuLayer 3 - entry not found"
+	     printInfo "ERROR: open-linkCfgMenuLayer 3 - entry not found"
 		 playMsg "invalid_configuration_selection"
 	  }
     }

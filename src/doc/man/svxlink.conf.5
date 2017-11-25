@@ -1,22 +1,22 @@
-.TH SVXLINK.CONF 5 "NOVEMBER 2015" Linux "File Formats"
+.TH Open-Link.CONF 5 "NOVEMBER 2015" Linux "File Formats"
 .
 .SH NAME
 .
-svxlink.conf \- Configuration file for the SvxLink server
+open-link.conf \- Configuration file for the SvxLink server
 .
 .SH DESCRIPTION
 .
-.B svxlink
+.B open-link
 is a general purpose voice service system for ham radio use. This man-page
 describe the SvxLink server configuration file format.
 .P
 SvxLink look for configuration files in a number of places. First it try to
 find a user specific configuration file. SvxLink will look for a user specific
 configuration file in:
-.BR $HOME/.svxlink/svxlink.conf .
+.BR $HOME/.open-link/open-link.conf .
 If no user specific configuration file can be found, SvxLink will look for
 the system wide configuration file
-.BR /etc/svxlink/svxlink.conf .
+.BR /etc/open-link/open-link.conf .
 The
 .B --config
 command line option may also be used to specify an arbitrary configuration file.
@@ -57,7 +57,7 @@ The GLOBAL section contains application global configuration data.
 Specify where the SvxLink modules can be found. If MODULE_PATH is not
 specified, the standard search paths for library files will be used. If that
 also fails a hardcoded default will be used. What that default is depend on the
-architecture but typically on a x86_64 system it is /usr/lib64/svxlink.
+architecture but typically on a x86_64 system it is /usr/lib64/open-link.
 Leaving this variable unset should work in most cases.
 .TP
 .B LOGICS
@@ -205,7 +205,7 @@ a value less or equal to zero.
 .B EVENT_HANDLER
 Point out the TCL event handler script to use. The TCL event handler script is
 responsible for playing the correct audio clips when an event occurr.
-The default location is /usr/share/svxlink/events.tcl.
+The default location is /usr/share/open-link/events.tcl.
 .TP
 .B DEFAULT_LANG
 Set the default language to use for announcements. It should be set to an ISO
@@ -517,7 +517,7 @@ not recorded.
 .TP
 .B REC_DIR
 Use this configuration variable to specify in which directory to write the
-audio files. A good place is /var/spool/svxlink/qso_recorder.
+audio files. A good place is /var/spool/open-link/qso_recorder.
 .TP
 .B MIN_TIME
 If the duration of the recorded content for a file is less then MIN_TIME
@@ -2141,9 +2141,9 @@ GPIO (General Purpose IO) is used to access hardware pins that are made
 available for example on an embedded system. Before starting to use a pin in
 SvxLink some setup need to be done in the operating system. With the standard
 distribution of SvxLink there is a pair of scripts that help with setting up
-and taking down the GPIO pins. The scripts are named svxlink_gpio_up and
-svxlink_gpio_down. The configuration file, which can be found among the other
-SvxLink configuration files (typically in /etc/svxlink), is called gpio.conf.
+and taking down the GPIO pins. The scripts are named open-link_gpio_up and
+open-link_gpio_down. The configuration file, which can be found among the other
+SvxLink configuration files (typically in /etc/open-link), is called gpio.conf.
 .
 .SH CALIBRATING THE SIGNAL LEVEL DETECTOR
 .
@@ -2249,13 +2249,13 @@ siglev = The measured signal level
 .SH FILES
 .
 .TP
-.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+.IR /etc/open-link/open-link.conf " (or deprecated " /etc/open-link.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf
+.IR ~/.open-link/open-link.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink/svxlink.d/*
+.I /etc/open-link/open-link.d/*
 Additional configuration files. Typically one configuration file per module.
 .
 .SH AUTHOR
@@ -2264,7 +2264,7 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink (1),
+.BR open-link (1),
 .BR remotetrx (1),
 .BR siglevdetcal (1),
 .BR devcal (1)

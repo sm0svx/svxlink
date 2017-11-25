@@ -1,7 +1,7 @@
 svxlink (15.99-1) stable; urgency=low
 
   * Updated systemd 
-  * Added debian pkg build into src for current vesrion build.
+z  * Added debian pkg build into src for current vesrion build.
   * Changed RepeaterLogic to Duplex logic Naming convention
   * No Sonames On-Modules
   * Changed /src/svxlink/contrib to contrib_modules

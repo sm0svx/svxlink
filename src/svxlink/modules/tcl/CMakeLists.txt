@@ -15,7 +15,7 @@ string(TOUPPER MODULE_${VERNAME} VERNAME)
 # Add targets for version files
 set(VERSION_DEPENDS)
 add_version_target(${VERNAME} VERSION_DEPENDS)
-add_version_target(SVXLINK VERSION_DEPENDS)
+add_version_target(Open-Link VERSION_DEPENDS)
 
 # Build the plugin
 add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}

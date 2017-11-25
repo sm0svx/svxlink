@@ -1,16 +1,16 @@
-.TH SVXLINK 1 "MAY 2011" Linux "User Manuals"
+.TH Open-Link 1 "MAY 2011" Linux "User Manuals"
 .
 .SH NAME
 .
-svxlink \- A general purpose voice services system for ham radio use
+open-link \- A general purpose voice services system for ham radio use
 .
 .SH SYNOPSIS
 .
-.BI "svxlink [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
+.BI "open-link [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
 .
 .SH DESCRIPTION
 .
-.B svxlink
+.B open-link
 is a general purpose voice service system for ham radio use. The 
 SvxLink project contains multiple applications and this man-page
 describe the SvxLink server.
@@ -41,17 +41,17 @@ Specify which configuration file to use.
 .SH FILES
 .
 .TP
-.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+.IR /etc/open-link/open-link.conf " (or deprecated " /etc/open-link.conf ")"
 The system wide configuration file. See
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 for further details.
 .TP
-.IR ~/.svxlink/svxlink.conf
+.IR ~/.open-link/open-link.conf
 Per user configuration file. See
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 for further details.
 .TP
-.I /etc/svxlink/svxlink.d/*
+.I /etc/open-link/open-link.d/*
 Additional configuration files. Typically one configuration file per module.
 .
 .SH ENVIRONMENT
@@ -71,9 +71,9 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH REPORTING BUGS
 .
-SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+SvxLink Devel <open-link-devel at lists dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
-.BR svxlink.conf (5),
+.BR open-link.conf (5),
 .BR remotetrx (1)

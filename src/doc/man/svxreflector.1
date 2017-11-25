@@ -29,7 +29,7 @@ one time to the server. The connections are password protected.
 On the SvxLink node side, a ReflectorLogic should be used to connect to the
 SvxReflector server. The connection to the SvxReflector from other logics in
 that node can be activated and deactivated using standard logic linking. Read more about how to set up a SvxLink node for use with the SvxReflector in the
-.BR svxlink.conf (5)
+.BR open-link.conf (5)
 manual page.
 .
 .SH OPTIONS
@@ -58,17 +58,17 @@ Specify which configuration file to use.
 .SH FILES
 .
 .TP
-.I /etc/svxlink/svxreflector.conf
+.I /etc/open-link/svxreflector.conf
 The system wide configuration file. See
 .BR svxreflector.conf (5)
 for further details.
 .TP
-.I ~/.svxlink/svxreflector.conf
+.I ~/.open-link/svxreflector.conf
 Per user configuration file. See
 .BR svxreflector.conf (5)
 for further details.
 .TP
-.I /etc/svxlink/svxreflector.d/*
+.I /etc/open-link/svxreflector.d/*
 Additional configuration files. This directory is setup by the CFG_DIR
 configuration variable.
 .
@@ -84,10 +84,10 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .SH REPORTING BUGS
 .
-SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+SvxLink Devel <open-link-devel at lists dot sourceforge dot net>
 .
 .SH "SEE ALSO"
 .
 .BR svxreflector.conf (5),
-.BR svxlink (1),
-.BR svxlink.conf (5),
+.BR open-link (1),
+.BR open-link.conf (5),

@@ -185,7 +185,7 @@ class Logic : public LogicBase
     std::list<Module*> moduleList(void) const { return modules; }
 
     const std::string& callsign(void) const { return m_callsign; }
-
+    const std::string& phonetic_spelling(void) const { return m_phonetic_spelling;}
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
@@ -243,17 +243,18 @@ class Logic : public LogicBase
     Module    	      	      	    *active_module;
     std::list<Module*>	      	    modules;
     std::string       	      	    m_callsign;
+	std::string 					m_phonetic_spelling;
     std::list<std::string>    	    cmd_queue;
-    Async::Timer      	      	    exec_cmd_on_sql_close_timer;
+    Async::Timer      	       	    exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    rgr_sound_timer;
-    float       	      	    report_ctcss;
+    float       	      	    	report_ctcss;
     std::map<int, std::string>	    macros;
     EventHandler      	      	    *event_handler;
     Async::AudioSelector      	    *logic_con_out;
-    Async::AudioSplitter	    *logic_con_in;
+    Async::AudioSplitter	    	*logic_con_in;
     CmdParser 	      	      	    cmd_parser;
-    Async::AtTimer      	    every_minute_timer;
-    Async::AudioRecorder  	    *recorder;
+    Async::AtTimer      	    	every_minute_timer;
+    Async::AudioRecorder  	    	*recorder;
     Async::AudioMixer	      	    *tx_audio_mixer;
     Async::AudioAmp   	      	    *fx_gain_ctrl;
     Async::AudioSelector      	    *tx_audio_selector;
@@ -266,12 +267,12 @@ class Logic : public LogicBase
     Async::AudioStreamStateDetector *state_det;
     int                             fx_gain_normal;
     int                             fx_gain_low;
-    unsigned       	      	    long_cmd_digits;
+    unsigned       	      	    	long_cmd_digits;
     std::string       	      	    long_cmd_module;
     bool      	      	      	    report_events_as_idle;
     QsoRecorder                     *qso_recorder;
-    uint8_t			    tx_ctcss;
-    uint8_t			    tx_ctcss_mask;
+    uint8_t			    			tx_ctcss;
+    uint8_t			    			tx_ctcss_mask;
     std::string                     sel5_from;
     std::string                     sel5_to;
     AprsStatistics                  aprs_stats;

@@ -117,7 +117,7 @@ proc send_SSTV {} {
 ###TEST Meteo
 proc read_weather {} {
 printInfo "Lecture meteo"
-source "/usr/share/svxlink/modules.d/Meteo.tcl"
+source "/usr/share/open-link/modules.d/Meteo.tcl"
 #playMsg "temperature_is"
 playNumber $temp_bale ;
  
