@@ -1505,9 +1505,12 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
   dtmfDigitDetected(digit, duration);
 
-  stringstream sd;
-  sd << digit;
-  dtmf_ctrl_pty->write(sd.str().c_str(), 1);
+  if (dtmf_ctrl_pty != 0)
+  {
+    stringstream sd;
+    sd << digit;
+    dtmf_ctrl_pty->write(sd.str().c_str(), 1);
+  }
 
 } /* Logic::dtmfDigitDetectedP */
 
