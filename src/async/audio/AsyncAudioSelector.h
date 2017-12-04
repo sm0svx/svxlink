@@ -162,7 +162,7 @@ class AudioSelector : public AudioSource
      * @return	Returns \em true if auto select is enabled for the given source
      *          or else \em false is returned
      */
-    bool autoSelectEnabled(AudioSource *source);
+    bool autoSelectEnabled(AudioSource *source) const;
 
     /**
      * @brief 	Select one of the previously added audio sources
@@ -186,57 +186,37 @@ class AudioSelector : public AudioSource
     void setFlushWait(AudioSource *source, bool flush_wait);
 
     /**
-     * @brief   Enable debug printouts
-     * @param   debug Set to \em true to enable debug printouts
-     */
-    void setDebug(bool debug) { m_debug = debug; }
-
-    /**
      * @brief Resume audio output to the sink
-     * 
-     * This function must be reimplemented by the inheriting class. It
-     * will be called when the registered audio sink is ready to accept
-     * more samples.
-     * This function is normally only called from a connected sink object.
+     *
+     * This function will be called when the registered audio sink is ready to
+     * accept more samples. It is normally only called from a connected sink
+     * object.
      */
     virtual void resumeOutput(void);
 
   protected:
-    /**
-     * @brief The registered sink has flushed all samples
-     *
-     * This function should be implemented by the inheriting class. It
-     * will be called when all samples have been flushed in the
-     * registered sink. If it is not reimplemented, a handler must be set
-     * that handle the function call.
-     * This function is normally only called from a connected sink object.
-     */
     virtual void allSamplesFlushed(void);
     
   private:
     typedef enum
     {
-      STATE_IDLE, STATE_ACTIVE, STATE_STOPPED, STATE_FLUSHING
-    } State;
+      STATE_IDLE, STATE_WRITING, STATE_STOPPED, STATE_FLUSHING
+    } StreamState;
 
     class Branch;
     typedef std::map<Async::AudioSource *, Branch *> BranchMap;
-    class NullBranch;
     
     BranchMap 	m_branch_map;
-    Branch*     m_selected;
-    State       m_state;
-    bool        m_debug;
+    Branch *    m_selected_branch;
+    StreamState m_stream_state;
     
-    static const char *stateToString(State state);
-
     AudioSelector(const AudioSelector&);
     AudioSelector& operator=(const AudioSelector&);
-    int writeSamples(Branch *branch, float *samples, int count);
-    void flushSamples(Branch *branch);
-    void selectHighestPrioActiveBranch(void);
     void selectBranch(Branch *branch);
-    void setState(State state);
+    Branch *selectedBranch(void) const { return m_selected_branch; }
+    void selectHighestPrioActiveBranch(bool clear_if_no_active);
+    int branchWriteSamples(const float *samples, int count);
+    void branchFlushSamples(void);
     
     friend class Branch;
     
