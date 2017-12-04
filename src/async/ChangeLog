@@ -14,12 +14,18 @@
 * UdpSocket: The dataReceived signal now also provide the remote UDP port
   number
 
-* Bugfix in AsyncAudioDeviceAlsa/AsyncAudioIO: Assertion for some sound boards
-  in Async::Timer::setEnable due to the AudioDeviceAlsa::samplesToWrite
-  function returning a negative value.
+* Bugfix in AsyncAudioDeviceAlsa/AsyncAudioIO: Assertion for some sound
+  boards in Async::Timer::setEnable due to the
+  AudioDeviceAlsa::samplesToWrite function returning a negative value.
 
 * Now possible to ask the AudioEncoder and AudioDecoder if a codec is
   supported or not.
+
+* AudioSelector bugfix: The output was not flushed when disconnecting
+  the active source. This hung the audio stream. In the process of fixing
+  that bug the AudioSelector was to a large part rewritten. The new
+  implementation also made it possible to implement seamless switches (no
+  flush when switching between two active streams).
 
 
 
