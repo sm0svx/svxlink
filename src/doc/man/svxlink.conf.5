@@ -62,7 +62,7 @@ Leaving this variable unset should work in most cases.
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is
-the thing that ties the transciever and the voice services (modules) together. It contains
+the thing that ties the transceiver and the voice services (modules) together. It contains
 the rules for how the radio interface should be handled. The specified name of a logic
 core must have a corresponding section specified in the config file. This is where the
 behaviour of the logic core is specified.
@@ -135,7 +135,7 @@ card in mono mode, both left and right channels transmit/receive the same
 audio.
 .TP
 .B LOCATION_INFO
-Enter the section name that contains information required for transfering
+Enter the section name that contains information required for transferring
 positioning data to location servers. Setting this item makes the system
 visible on the EchoLink link status page and the APRS network.
 .TP
@@ -539,7 +539,7 @@ To not get abrupt breaks in recordings it is possible to set a soft break time.
 Let's say that MAX_TIME is set to 3600 seconds (one hour). If we set SOFT_TIME
 to 300 seconds (five minutes) the QSO recorder try to close the file on a
 squelch close somewhere between 55 and 60 minutes. In this way we may avoid
-getting transmissions splitted between files. Default: 0 (no limit)
+getting transmissions split up between files. Default: 0 (no limit)
 .TP
 .B MAX_DIRSIZE
 Specify the maximum total size in megabytes of the files in the recording
@@ -814,7 +814,7 @@ it will not work as expected.
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limiti, in seconds, for how
 long the squelch is allowed to be open. If the timeout value is exceeded the
-squelch is forced to closed. If the squelch close for real, everthing is back
+squelch is forced to closed. If the squelch close for real, everything is back
 to normal. When it opens the next time a squelch open will be signalled.
 For example, use this feature to make sure that a faulty receiver cannot block
 the system indefinitly.
@@ -1365,7 +1365,7 @@ The frequency, in Hz, that the wideband tuner should be placed at. This
 configuration variable should normally be left unset since SvxLink will try to
 place the wideband tuner to cover all set up Ddr frequencies. SvxLink will also
 try to avoid placing a Ddr on the center frequency of the wideband spectrum
-since there is usually some noise there. Only use this configration variable
+since there is usually some noise there. Only use this configuration variable
 if you need to override the automatic placement for some reason.
 .TP
 .B XVRTR_OFFSET
@@ -1533,7 +1533,7 @@ The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
-The audio codec to use when transfering audio from this remote receiver.
+The audio codec to use when transferring audio from this remote receiver.
 Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
@@ -1575,7 +1575,7 @@ Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
 .TP
 .B SPEEX_ENC_ABR
 Speex encoder setting. The average bitrate encoding will try to keep a target
-bitrate by continously adjusting the quality. This configuration variable
+bitrate by continuously adjusting the quality. This configuration variable
 specify the target bitrate and enable ABR. It also need to have VBR enabled so
 don't force it to off.
 .TP
@@ -1834,7 +1834,7 @@ The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
-The audio codec to use when transfering audio to this remote transmitter.
+The audio codec to use when transferring audio to this remote transmitter.
 Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
@@ -1878,7 +1878,7 @@ Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
 .TP
 .B SPEEX_ENC_ABR
 Speex encoder setting. The average bitrate encoding will try to keep a target
-bitrate by continously adjusting the quality. This configuration variable
+bitrate by continuously adjusting the quality. This configuration variable
 specify the target bitrate and enable ABR. It also need to have VBR enabled so
 don't force it to off.
 .TP
