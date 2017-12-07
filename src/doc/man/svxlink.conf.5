@@ -213,7 +213,7 @@ code (e.g. sv_SE for Swedish). If not set, it defaults to en_US which is US Engl
 .TP
 .B RGR_SOUND_DELAY
 The number of milliseconds to wait after the squelch has been closed before a roger beep
-is played. The beep can be disabled by specifying a value of -1 or commenting out this
+is played. The beep can be disabled by specifying a value of \-1 or commenting out this
 line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
 a delay instead of specifying a delay here. This configuration variable should then be set
 to 0. 
@@ -262,7 +262,7 @@ This gain is normally set to 0dB which means no gain or attenuation.
 .TP
 .B FX_GAIN_LOW
 The gain (dB) to use for audio effects and announcements when there is other traffic.
-This gain is normally set to something like -12dB so that announcements and audio effects
+This gain is normally set to something like \-12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
 .TP
 .B QSO_RECORDER
@@ -581,9 +581,9 @@ may be a good idea to write a script instead.
 
 The encoder command will be run under a shell so normal shell operators like
 redirects and pipes may be used. The shell specified in the SHELL environment
-variable will be used and if not set, /bin/sh will be used. The "-c" command
+variable will be used and if not set, /bin/sh will be used. The "\-c" command
 line option will be added so the complete command will look something like:
-$SHELL -c "$ENCODER_CMD". A number of %-codes can be included in the command.
+$SHELL \-c "$ENCODER_CMD". A number of %-codes can be included in the command.
 They have the following meaning:
 .RS
 .IP \(bu 4
@@ -603,9 +603,9 @@ for longer than one hour it will be killed.
 Note that SvxLink will never remove the original recording so that have to be
 done in the encoder command. Here are a couple of examples:
 
- ENCODER_CMD=/usr/bin/oggenc -Q \\"%f\\" && rm \\"%f\\"
+ ENCODER_CMD=/usr/bin/oggenc \-Q \\"%f\\" && rm \\"%f\\"
 .BR
- ENCODER_CMD=/usr/bin/lame --quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
+ ENCODER_CMD=/usr/bin/lame \-\-quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
 .BR
  ENCODER_CMD=/usr/bin/speexenc \\"%f\\" \\"%d/%b.spx\\" 2>/dev/null && rm \\"%f\\"
 .BR
@@ -1758,7 +1758,7 @@ transmitter. 50ms is the default.
 .B DTMF_DIGIT_PWR
 The power, in dB, of DTMF digits transmitted on this transmitter. Zero dB will
 give the same power in the generated signal as there is in a maximum amplitude
-(full scale) sine wave. -15dB is the default.
+(full scale) sine wave. \-15dB is the default.
 .TP
 .B TONE_SIGLEV_MAP
 It is possible to transmit one of ten tones along with the normal transmission
@@ -2048,7 +2048,7 @@ ANTENNA_HEIGHT=90     # 90 feet
 .TP
 .B ANTENNA_DIR
 Main beam direction of the antenna in degrees. If an omni direction antenna is
-used, specify -1 as the direction.
+used, specify \-1 as the direction.
 
 Example:
 .br
