@@ -189,7 +189,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   if (!Dispatcher::instance()->registerConnection(this, &Qso::handleCtrlInput,
       &Qso::handleAudioInput))
   {
-    cerr << "Cannot create a new Qso object becasue registration with the "
+    cerr << "Cannot create a new Qso object because registration with the "
       	    "dispatcher object failed for some reason.\n";
     return;
   }
