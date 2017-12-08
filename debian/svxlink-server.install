@@ -1,0 +1,15 @@
+lib/systemd/system/svxlink_gpio_setup.service
+lib/systemd/system/svxlink.service
+usr/bin/svxlink
+usr/bin/siglevdetcal
+usr/sbin/svxlink_gpio_up
+usr/sbin/svxlink_gpio_down
+usr/lib/*/svxlink/*
+usr/share/svxlink/*
+var/spool/svxlink/*
+etc/svxlink/svxlink.conf
+etc/svxlink/svxlink_gpio.conf
+etc/svxlink/svxlink.d/**
+etc/svxlink/TclVoiceMail.conf
+etc/svxlink/.procmailrc
+etc/tmpfiles.d/svxlink.conf

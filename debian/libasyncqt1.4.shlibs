@@ -1,0 +1,8 @@
+libasyncqt 1.4 libasynccore1.4 (>= 14.08)
+libasyncqt 1.4 libc6 (>= 2.4)
+libasyncqt 1.4 libgcc1 (>= 1:4.1.1)
+libasyncqt 1.4 libqt5network5 (>= 5.3.2+dfsg-4+deb8u1)
+libasyncqt 1.4 libqt5core5a (>= 5.3.2+dfsg-4+deb8u1)
+libasyncqt 1.4 libqt5gui5 (>= 5.3.2+dfsg-4+deb8u1)
+libasyncqt 1.4 libsigc++-2.0-0c2a (>= 2.2.0)
+libasyncqt 1.4 libstdc++6 (>= 4.6)

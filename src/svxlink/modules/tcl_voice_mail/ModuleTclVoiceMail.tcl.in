@@ -50,7 +50,7 @@ set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
 set cfg_home ""
 if {[info exists ::env(HOME)]} {
-  set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
+  set cfg_relative_home ".svxlink/TclVoiceMail.conf";
 }
 
 
@@ -88,12 +88,12 @@ proc processEvent {ev} {
 #
 # Read configuration file
 #
-if {$cfg_home != "" && [file exists $cfg_home]} {
-  source $cfg_home;
+if {[info exists env(HOME)] && [file exists env(HOME)/$cfg_relative_home]} {
+  source env(HOME)/$cfg_relative_home;
 } elseif [file exists $cfg_etc] {
   source $cfg_etc;
 } else {
-  set info_str "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried"
+  set info_str "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \$HOME/\"$cfg_relative_home\" and \"$cfg_etc\""
   if {$cfg_home != ""} {
     set info_str "$info_str \"$cfg_home\" and"
   }

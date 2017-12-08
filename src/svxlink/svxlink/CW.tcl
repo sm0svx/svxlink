@@ -77,47 +77,50 @@ array set letters {
 
 # Private function
 proc calculateTimings {} {
-  variable short_len;
-  variable long_len [expr $short_len * 3];
-  variable char_spacing $short_len;
-  variable letter_spacing [expr $short_len * 3];
-  variable word_spacing [expr $short_len * 7];
+  global cw_wpm
+  global cw_amp
+  global cw_pitch
+  variable amplitude $cw_amp
+  variable fq $cw_pitch
+  
+  variable short_len [expr 60000 / (50 * $cw_wpm)]
+  variable long_len [expr $short_len * 3]
+  variable char_spacing $short_len
+  variable letter_spacing [expr $short_len * 3]
+  variable word_spacing [expr $short_len * 7]
 }
 
 
 #
 # Set the CW speed in words per minute
 #
-proc setWpm {wpm} {
-  variable short_len [expr 60000 / (50 * $wpm)];
-  calculateTimings;
-}
+#proc setWpm {wpm} {
+#  variable short_len [expr 60000 / (50 * $wpm)];
+#  calculateTimings;
+#}
 
 
 #
 # Set the CW speed in characters per minute
 #
-proc setCpm {cpm} {
-  variable short_len [expr 60000 / (10 * $cpm)];
-  calculateTimings;
-}
-
+#proc setCpm {cpm} {
+#  variable short_len [expr 60000 / (10 * $cpm)];
+#  calculateTimings;
+#}
 
 #
 # Set the pitch (frequency), in Hz, of the CW audio.
 #
-proc setPitch {new_fq} {
-  variable fq $new_fq;
-}
-
+#proc setPitch {new_fq} {
+#  variable fq $new_fq;
+#}
 
 #
 # Set the amplitude in per mille (0-1000) of full amplitude.
 #
-proc setAmplitude {new_amplitude} {
-  variable amplitude $new_amplitude;
-}
-
+#proc setAmplitude {new_amplitude} {
+#  variable amplitude $new_amplitude;
+#}
 
 #
 # Play the given CW text
@@ -156,10 +159,11 @@ proc play {txt} {
   }
 }
 
-
 # Set defaults
-setPitch 800;
-setAmplitude 500;
-setCpm 100;
+#setPitch 800;
+#setAmplitude 500;
+#setCpm 100;
 
+#load values from config
+calculateTimings
 }

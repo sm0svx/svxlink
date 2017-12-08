@@ -16,14 +16,14 @@
 #
 # Play a message in a certain context. A context can for example be Core,
 # EchoLink, Help, Parrot etc. If a sound is not found in the specified context,
-# a search in the "Default" context is done.
+# a search in the "Core" context is done.
 #
 proc playMsg {context msg} {
   global basedir
   global langdir
 
   set candidates [glob -nocomplain "$langdir/$context/$msg.{wav,raw,gsm}" \
-                                   "$langdir/Default/$msg.{wav,raw,gsm}"];
+                                   "$langdir/Core/$msg.{wav,raw,gsm}"];
   if { [llength $candidates] > 0 } {
     playFile [lindex $candidates 0];
   } else {
@@ -38,7 +38,7 @@ proc playMsg {context msg} {
 # Each matching sound clip will be played in sub command number order, prefixed
 # with the command number.
 #
-#   context   - The context to look for the sound files in (e.g Default,
+#   context   - The context to look for the sound files in (e.g Core,
 #               Parrot etc).
 #   basename  - The common basename for the sound clips to find.
 #   header    - A header sound clip to play first
@@ -90,8 +90,8 @@ proc processEvent {module ev} {
 ###############################################################################
 
 set basedir [file dirname $script_path];
-if [info exists Logic::CFG_DEFAULT_LANG] {
-  set lang $Logic::CFG_DEFAULT_LANG
+if [info exists Logic::CFG_Core_LANG] {
+  set lang $Logic::CFG_Core_LANG
 } else {
   set lang "en_US"
 }

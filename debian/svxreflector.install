@@ -1,0 +1,4 @@
+lib/systemd/system/svxreflector.service
+usr/bin/svxreflector
+etc/svxlink/svxreflector.conf
+etc/tmpfiles.d/svxreflector.conf

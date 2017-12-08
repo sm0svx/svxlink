@@ -10,18 +10,23 @@
 # Spell the specified word using a phonetic alphabet
 #
 proc spellWord {word} {
+  global phonetic_spelling
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
-    if {$char == "*"} {
-      playMsg "Default" "star";
+    if {[regexp {[a-z0-9]} $char]} {
+        if {$phonetic_spelling == 0} {
+			playMsg "Core" "$char";
+        } else {
+			playMsg "Core" "phonetic_$char";
+        }
     } elseif {$char == "/"} {
-      playMsg "Default" "slash";
+      playMsg "Core" "slash";
     } elseif {$char == "-"} {
-      playMsg "Default" "dash";
-    } elseif {[regexp {[a-z0-9]} $char]} {
-      playMsg "Default" "phonetic_$char";
-    }
+      playMsg "Core" "dash";
+    } elseif {$char == "*"} {
+      playMsg "Core" "star";
+        }
   }
 }
 
@@ -33,9 +38,9 @@ proc spellNumber {number} {
   for {set i 0} {$i < [string length $number]} {set i [expr $i + 1]} {
     set ch [string index $number $i];
     if {$ch == "."} {
-      playMsg "Default" "decimal";
+      playMsg "Core" "decimal";
     } else {
-      playMsg "Default" "$ch";
+      playMsg "Core" "$ch";
     }
   }
 }
@@ -52,15 +57,15 @@ proc playTwoDigitNumber {number} {
   
   set first [string index $number 0];
   if {($first == "0") || ($first == "O")} {
-    playMsg "Default" $first;
-    playMsg "Default" [string index $number 1];
+    playMsg "Core" $first;
+    playMsg "Core" [string index $number 1];
   } elseif {$first == "1"} {
-    playMsg "Default" $number;
+    playMsg "Core" $number;
   } elseif {[string index $number 1] == "0"} {
-    playMsg "Default" $number;
+    playMsg "Core" $number;
   } else {
-    playMsg "Default" "[string index $number 0]X";
-    playMsg "Default" "[string index $number 1]";
+    playMsg "Core" "[string index $number 0]X";
+    playMsg "Core" "[string index $number 1]";
   }
 }
 
@@ -79,13 +84,13 @@ proc playThreeDigitNumber {number} {
     spellNumber $number
   } else {
     append first "00";
-    playMsg "Default" $first;
+    playMsg "Core" $first;
     if {[string index $number 1] != "0"} {
-      playMsg "Default" "and"
+      playMsg "Core" "and"
       playTwoDigitNumber [string range $number 1 2];
     } elseif {[string index $number 2] != "0"} {
-      playMsg "Default" "and"
-      playMsg "Default" [string index $number 2];
+      playMsg "Core" "and"
+      playMsg "Core" [string index $number 2];
     }
   }
 }
@@ -104,7 +109,7 @@ proc playThreeDigitNumber {number} {
 proc playNumber {number} {
   if {[regexp {(\d+)\.(\d+)?} $number -> integer fraction]} {
     playNumber $integer;
-    playMsg "Default" "decimal";
+    playMsg "Core" "decimal";
     spellNumber $fraction;
     return;
   }
@@ -112,7 +117,7 @@ proc playNumber {number} {
   while {[string length $number] > 0} {
     set len [string length $number];
     if {$len == 1} {
-      playMsg "Default" $number;
+      playMsg "Core" $number;
       set number "";
     } elseif {$len % 2 == 0} {
       playTwoDigitNumber [string range $number 0 1];
@@ -129,6 +134,7 @@ proc playNumber {number} {
 # Say the time specified by function arguments "hour" and "minute".
 #
 proc playTime {hour minute} {
+  global time_format
   # Strip white space and leading zeros. Check ranges.
   if {[scan $hour "%d" hour] != 1 || $hour < 0 || $hour > 23} {
     error "playTime: Non digit hour or value out of range: $hour"
@@ -136,31 +142,54 @@ proc playTime {hour minute} {
   if {[scan $minute "%d" minute] != 1 || $minute < 0 || $minute > 59} {
     error "playTime: Non digit minute or value out of range: $hour"
   }
-  
-  if {$hour < 12} {
-    set ampm "AM";
+  if {$time_format == 24} {
     if {$hour == 0} {
-      set hour 12;
+      set hour "00"
+      playTwoDigitNumber $hour;
     }
+ 
+    if {$hour != 0} {
+      if {[string length $hour] == 1} {
+        set hour "o$hour";
+      }
+      playTwoDigitNumber $hour;
+    }
+    if {$minute != 0} {
+      if {[string length $minute] == 1} {
+        set minute "o$minute";
+      }
+      playTwoDigitNumber $minute;
+    }
+    playMsg "default" "hours";
+    playSilence 100;
   } else {
-    set ampm "PM";
-    if {$hour > 12} {
-      set hour [expr $hour - 12];
+  # anything not 24 will fail back to 12 hour default
+    if {$hour < 12} {
+      set ampm "AM";
+      if {$hour == 0} {
+        set hour 12;
+      }
+    } else {
+      set ampm "PM";
+      if {$hour > 12} {
+        set hour [expr $hour - 12];
+      }
     }
-  };
   
-  playMsg "Default" [expr $hour];
-
-  if {$minute != 0} {
-    if {[string length $minute] == 1} {
-      set minute "O$minute";
+    playMsg "Default" [expr $hour];
+    if {$minute != 0} {
+      if {[string length $minute] == 1} {
+        set minute "o$minute";
+      }
+      playTwoDigitNumber $minute;
     }
-    playTwoDigitNumber $minute;
+    playSilence 100;
+    playMsg "Core" $ampm;
   }
-  
-  playSilence 100;
-  playMsg "Core" $ampm;
 }
+#
+# This file has not been truncated
+#
 
 
 #

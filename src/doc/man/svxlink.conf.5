@@ -211,7 +211,7 @@ The default location is /usr/share/svxlink/events.tcl.
 Set the default language to use for announcements. It should be set to an ISO
 code (e.g. sv_SE for Swedish). If not set, it defaults to en_US which is US English.
 .TP
-.B RGR_SOUND_DELAY
+.B COURTESY_TONE_DELAY
 The number of milliseconds to wait after the squelch has been closed before a roger beep
 is played. The beep can be disabled by specifying a value of \-1 or commenting out this
 line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
@@ -358,11 +358,11 @@ is open.
 .
 A Repeater Logic section contains configuration data for a repeater logic core.
 The name of the section, which in the example configuration file is
-.BR RepeaterLogic ,
+.BR DuplexLogic ,
 must have a corresponding list item in the GLOBAL/LOGICS config variable for
-this logic core to be activated. The name "RepeaterLogic" is not magic.
+this logic core to be activated. The name "DuplexLogic" is not magic.
 It could be called what ever you like but it must match the namespace name in
-the RepeaterLogic.tcl script. The configuration variables below are those that
+the DuplexLogic.tcl script. The configuration variables below are those that
 are specific for a repeater logic core.
 .TP
 .B TYPE
@@ -583,7 +583,7 @@ The encoder command will be run under a shell so normal shell operators like
 redirects and pipes may be used. The shell specified in the SHELL environment
 variable will be used and if not set, /bin/sh will be used. The "\-c" command
 line option will be added so the complete command will look something like:
-$SHELL \-c "$ENCODER_CMD". A number of %-codes can be included in the command.
+$SHELL -c "$ENCODER_CMD". A number of %-codes can be included in the command.
 They have the following meaning:
 .RS
 .IP \(bu 4
@@ -618,7 +618,7 @@ logic core points out the macros section to use by using the MACROS
 configuration variable. The name of the MACROS section can be chosen arbitrarily
 as long as it match the MACROS configuration variable in the logic core
 configuration section. There could for example exist both a
-[RepeaterLogicMacros] and a [SimplexLogicMacros] section.
+[DuplexLogicMacros] and a [SimplexLogicMacros] section.
 .P
 A macro is a kind of shortcut that can be used to decrease the amount of key
 presses that have to be done to connect to common EchoLink stations for example.
@@ -659,10 +659,10 @@ Both "command" and "announcement name" may be left empty if no manual control
 is wanted.
 An example config line may look like this:
 
-RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
+DuplexLogic_2m:99:SK3GW,DuplexLogic_70cm:94:SK3GK
 
-It will include two logics in the link, RepeaterLogic_2m and
-RepeaterLogic_70cm. From the 2m side, the link will be activated when the user
+It will include two logics in the link, DuplexLogic_2m and
+DuplexLogic_70cm. From the 2m side, the link will be activated when the user
 send command 991 and deactivated when the user send command 990. Upon
 activation, an announcement like "activating link to SK3GW" will be played
 back. From the 70cm side the command will be 941 and 940 respectively. The

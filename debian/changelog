@@ -1,0 +1,35 @@
+svxlink (15.99-17) Testing; urgency=low
+
+  * Update & Repaired Systemd Configuration
+  * New settings Non-Phonetic/PHONETIC_CALLSIGN in svxlink.conf
+  * New settings SHORT_ID_VOICE_ENABLE in svxlink.conf
+  * New settings SHORT_ID_CW_ENABLE in svxlink.conf
+  * New settings SHORT_IDENT_INTERVAL in svxlink.conf
+  * New settings LONG_ID_VOICE_ENABLE in svxlink.conf
+  * New settings LONG_ID_CW_ENABLE in svxlink.conf
+  * New settings LONG_IDENT_INTERVAL in svxlink.conf
+  * New settings CW_AMP in svxlink.conf
+  * New settings CW_WPM in svxlink.conf
+  * New settings CW_PITCH in svxlink.conf
+  * Changed RGR_SOUND to COURTESY_TONE 
+  * Updated systemd 
+  * Changed RepeaterLogic to Duplex logic Naming Convention
+  * No Sonames On-Modules
+  * Removed /rc/svxlink/scripts dir and old sounds files
+  * Changed /src/svxlink/contrib to contrib_modules
+  * Fixed Hyphen vs Minus in man pages
+  * New Module Site_Status
+  * New Module a2d_mcp320x
+  * New Module svxlinkcfg
+  * Add upstream patch to fix FTBFS with gcc 7. (Closes: #853672)
+  * Bugfix release
+  * Referred to $(CURDIR) in rules (Closes: #846703)
+  * Dropped Build-Depends: quilt
+  * Updated Standards-Version: to 3.9.8
+  * svxlink-server & remotetrx Depend:lsb-base (>= 3.0-6) b/c init scripts
+  * Shipping new qtel icons; used them in qtel.desktop (LP: #1591112)
+  * Fixed more spelling errors
+  * Enabled hardening
+
+ -- Richard Neese <kb3vgw@gmail.com>  Thur, 7 Dec 2017 22:17:40 -0500
+ 

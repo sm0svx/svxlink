@@ -1,0 +1,10 @@
+/var/log/svxreflector {
+    missingok
+    notifempty
+    weekly
+    create 0644 svxreflector adm
+    postrotate
+        killall -HUP svxreflector
+    endscript
+}
+

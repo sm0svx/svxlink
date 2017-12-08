@@ -75,8 +75,8 @@ proc SimplexLogic {} {
   SimplexLogic::manual_identification;
   puts "";
 
-  puts "--- SimplexLogic::send_rgr_sound";
-  SimplexLogic::send_rgr_sound;
+  puts "--- SimplexLogic::send_send_courtesy_tone";
+  SimplexLogic::send_send_courtesy_tone;
   puts "";
 
   #puts "--- SimplexLogic::no_such_module";
@@ -137,89 +137,89 @@ proc SimplexLogic {} {
 }
 
 
-proc RepeaterLogic {} {
-  puts "--- RepeaterLogic::startup";
-  RepeaterLogic::startup;
+proc DuplexLogic {} {
+  puts "--- DuplexLogic::startup";
+  DuplexLogic::startup;
   puts "";
 
-  puts "--- RepeaterLogic::no_such_module";
-  RepeaterLogic::no_such_module 1;
+  puts "--- DuplexLogic::no_such_module";
+  DuplexLogic::no_such_module 1;
   puts "";
 
-  puts "--- RepeaterLogic::manual_identification";
-  RepeaterLogic::manual_identification;
+  puts "--- DuplexLogic::manual_identification";
+  DuplexLogic::manual_identification;
   puts "";
 
-  puts "--- RepeaterLogic::send_rgr_sound";
-  RepeaterLogic::send_rgr_sound;
+  puts "--- DuplexLogic::send_send_courtesy_tone";
+  DuplexLogic::send_send_courtesy_tone;
   puts "";
 
-  #puts "--- RepeaterLogic::no_such_module";
-  #RepeaterLogic::no_such_module 1;
+  #puts "--- DuplexLogic::no_such_module";
+  #DuplexLogic::no_such_module 1;
   #puts "";
 
-  puts "--- RepeaterLogic::macro_empty";
-  RepeaterLogic::macro_empty;
+  puts "--- DuplexLogic::macro_empty";
+  DuplexLogic::macro_empty;
   puts "";
 
-  puts "--- RepeaterLogic::macro_not_found";
-  RepeaterLogic::macro_not_found;
+  puts "--- DuplexLogic::macro_not_found";
+  DuplexLogic::macro_not_found;
   puts "";
 
-  puts "--- RepeaterLogic::macro_syntax_error";
-  RepeaterLogic::macro_syntax_error;
+  puts "--- DuplexLogic::macro_syntax_error";
+  DuplexLogic::macro_syntax_error;
   puts "";
 
-  puts "--- RepeaterLogic::macro_module_not_found";
-  RepeaterLogic::macro_module_not_found;
+  puts "--- DuplexLogic::macro_module_not_found";
+  DuplexLogic::macro_module_not_found;
   puts "";
 
-  puts "--- RepeaterLogic::macro_module_activation_failed";
-  RepeaterLogic::macro_module_activation_failed;
+  puts "--- DuplexLogic::macro_module_activation_failed";
+  DuplexLogic::macro_module_activation_failed;
   puts "";
 
-  puts "--- RepeaterLogic::macro_another_active_module";
-  RepeaterLogic::macro_another_active_module;
+  puts "--- DuplexLogic::macro_another_active_module";
+  DuplexLogic::macro_another_active_module;
   puts "";
 
-  puts "--- RepeaterLogic::unknown_command";
-  RepeaterLogic::unknown_command 123;
+  puts "--- DuplexLogic::unknown_command";
+  DuplexLogic::unknown_command 123;
   puts "";
 
-  puts "--- RepeaterLogic::command_failed";
-  RepeaterLogic::command_failed 123;
+  puts "--- DuplexLogic::command_failed";
+  DuplexLogic::command_failed 123;
   puts "";
 
-  puts "--- RepeaterLogic::activating_link";
-  RepeaterLogic::activating_link "TEST";
+  puts "--- DuplexLogic::activating_link";
+  DuplexLogic::activating_link "TEST";
   puts "";
 
-  puts "--- RepeaterLogic::deactivating_link";
-  RepeaterLogic::deactivating_link "TEST";
+  puts "--- DuplexLogic::deactivating_link";
+  DuplexLogic::deactivating_link "TEST";
   puts "";
 
-  puts "--- RepeaterLogic::link_not_active";
-  RepeaterLogic::link_not_active "TEST";
+  puts "--- DuplexLogic::link_not_active";
+  DuplexLogic::link_not_active "TEST";
   puts "";
 
-  puts "--- RepeaterLogic::link_already_active";
-  RepeaterLogic::link_already_active "TEST";
+  puts "--- DuplexLogic::link_already_active";
+  DuplexLogic::link_already_active "TEST";
   puts "";
 
-  puts "--- RepeaterLogic::every_minute";
-  RepeaterLogic::every_minute;
+  puts "--- DuplexLogic::every_minute";
+  DuplexLogic::every_minute;
   puts "";
 
-  puts "--- RepeaterLogic::repeater_up";
-  RepeaterLogic::repeater_up;
+  puts "--- DuplexLogic::repeater_up";
+  DuplexLogic::repeater_up;
   puts "";
   
-  puts "--- RepeaterLogic::repeater_down";
-  RepeaterLogic::repeater_down;
+  puts "--- DuplexLogic::repeater_down";
+  DuplexLogic::repeater_down;
   puts "";
   
-  puts "--- RepeaterLogic::repeater_idle";
-  RepeaterLogic::repeater_idle;
+  puts "--- DuplexLogic::repeater_idle";
+  DuplexLogic::repeater_idle;
   puts "";
 }
 
@@ -440,7 +440,7 @@ source [lindex $argv 0];
 set EchoLink::num_connected_stations 2;
 
 SimplexLogic;
-RepeaterLogic;
+DuplexLogic;
 Help;
 Parrot;
 EchoLink;

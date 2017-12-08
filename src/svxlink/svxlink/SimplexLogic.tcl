@@ -47,11 +47,11 @@ proc manual_identification {} {
 
 
 #
-# Executed when the squelch just have closed and the RGR_SOUND_DELAY timer has
+# Executed when the squelch just have closed and the COURTESY_TONE_DELAY timer has
 # expired.
 #
-proc send_rgr_sound {} {
-  Logic::send_rgr_sound;
+proc send_send_courtesy_tone {} {
+  Logic::send_send_courtesy_tone;
 }
 
 
@@ -290,10 +290,8 @@ proc logic_online {online} {
   Logic::logic_online $online
 }
 
-
 # end of namespace
 }
-
 
 #
 # This file has not been truncated

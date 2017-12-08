@@ -1,0 +1,21 @@
+;;;;; Author: Richard Neese<kb3vgw@gmail.com>
+
+[Unit]
+Description=SvxLink Reflector server software
+After=network.target remote-fs.target syslog.target time.target
+
+[Service]
+[Service]
+Type=simple
+User=svxlink
+Group=daemon
+EnvironmentFile=-/etc/default/svxreflector
+Environment=CFGFILE=/etc/svxlink/svxreflector.conf
+RuntimeDirectory=svxlink
+ExecStart=/usr/bin/svxreflector --config $CFGFILE
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+TimeoutStartSec=60
+[Install]
+WantedBy=multi-user.target
+

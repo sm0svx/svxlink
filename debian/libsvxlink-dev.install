@@ -1,0 +1,3 @@
+build/locationinfo/liblocationinfo.a /usr/lib/
+build/svxlink/trx/libtrx.a /usr/lib/
+/usr/include/svxlink/common.h
