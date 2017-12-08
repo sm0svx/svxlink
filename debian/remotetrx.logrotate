@@ -1,0 +1,10 @@
+/var/log/remotetrx {
+    missingok
+    notifempty
+    weekly
+    create 0644 svxlink adm
+    postrotate
+        killall -HUP remotetrx
+    endscript
+}
+

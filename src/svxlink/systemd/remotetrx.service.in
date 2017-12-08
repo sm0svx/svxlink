@@ -1,25 +1,21 @@
 ;;;;; Author: Richard Neese<kb3vgw@gmail.com>
 
 [Unit]
-Description=SvxLink remote transceiver repeater control software
-Documentation=man:remotetrx(1)
-Requires=svxlink_gpio_setup.service
-After=network.target remote-fs.target syslog.target time.target
-After=svxlink_gpio_setup.service
+Description=svxlink repeater reflector software
+Documentation="man:svxlink"
+After=network.target remote-fs.target time.target sound.target
 
 [Service]
-EnvironmentFile=/etc/default/remotetrx
-PIDFile=/run/remotetrx.pid
-ExecStartPre=-/bin/touch /var/log/remotetrx
-ExecStartPre=-/bin/chown $RUNASUSER /var/log/remotetrx
-ExecStart=/bin/sh -c '@CMAKE_INSTALL_PREFIX@/bin/remotetrx --pidfile=/run/remotetrx.pid --logfile=/var/log/remotetrx --config=$CFGFILE --runasuser=$RUNASUSER'
+Type=simple
+User=svxlink
+Group=daemon
+EnvironmentFile=-/etc/default/svxreflector
+Environment=CFGFILE=/etc/svxlink/svxreflector.conf
+RuntimeDirectory=svxlink
+ExecStart=/usr/bin/svxreflector --config $CFGFILE
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
-#WatchdogSec=@SVX_WatchdogSec@
-#NotifyAccess=main
-LimitCORE=infinity
-WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
 
 [Install]
 WantedBy=multi-user.target

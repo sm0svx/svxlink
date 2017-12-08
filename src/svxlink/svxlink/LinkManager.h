@@ -126,16 +126,16 @@ class LogicBase;
  * A link configuration section may look like this:
  *
  *   [LinkToR4]
- *   CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic
+ *   CONNECT_LOGICS=DuplexLogic:94:SK3AB,SimplexLogic
  *   DEFAULT_CONNECT=1
  *   TIMEOUT=300
  *
  * The setup above will define a link called "LinkToR4". When activated, it
- * will connect RepeaterLogic and SimplexLogic. The link will be activated by
+ * will connect DuplexLogic and SimplexLogic. The link will be activated by
  * default. To disconnect the link, a user may send DTMF command 940 from the
- * RepeaterLogic side. When there have been no activity for 300 seconds
+ * DuplexLogic side. When there have been no activity for 300 seconds
  * (5 minutes), the link will be automatically connected again. It can also be
- * manually connected again using DTMF command 941 from the RepeaterLogic side.
+ * manually connected again using DTMF command 941 from the DuplexLogic side.
  * It is not possible to control the link from the SimplexLogic side since no
  * command has been specified.
  */

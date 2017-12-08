@@ -1,5 +1,44 @@
  1.6.0 -- ?? ??? 2017
 ----------------------
+* New settings PHONETIC_CALLSIGN SHORT_ID_VOICE_ENABLE SHORT_ID_CW_ENABLE SHORT_IDENT_INTERVAL LONG_ID_VOICE_ENABLE LONG_ID_CW_ENABLE LONG_IDENT_INTERVAL CW_AMP CW_WPM CW_PITCH
+
+* Changed RGR_SOUND to COURTESY_TONE Proper naming convention
+
+* Updated systemd for new settings
+
+* Added debian pkg build into src for current vesrion build.
+
+* Changed RepeaterLogic to Duplex logic Naming convention
+
+* No Sonames On-Modules
+
+* Changed /src/svxlink/contrib to contrib_modules
+
+* Fixed Hyphen vs Minus in man pages
+
+* New Module Site_Status
+
+* New Module a2d_mcp320x
+
+* New Module svxlinkcfg
+
+* Updated the Debian PKG build
+
+* Cleaned up the gpio up/down scripts
+
+* Add upstream patch to fix FTBFS with gcc 7. (Closes: #853672)
+
+* Referred to $(CURDIR) in rules (Closes: #846703)
+
+* Dropped Build-Depends: quilt
+
+* Updated Standards-Version: to 3.9.8
+
+* svxlink-server & remotetrx Depend:lsb-base (>= 3.0-6) b/c init scripts
+
+* Shipping new qtel icons; used them in qtel.desktop (LP: #1591112)
+
+* Fixed more spelling errors
 
 * ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
   output
@@ -499,7 +538,7 @@
 * Now possible to have personal greetings on incoming EchoLink connections,
   if desired. Some TCL coding is neccessary to enable it though.
 
-* Improved voter implementation that can vote continously and not only at the
+* Improved voter implementation that can vote continuously and not only at the
   start of a transmission. By default it will check the signal strength for
   all receivers once per second and switch to the strongest one if the
   difference is large enough. New config variables: REVOTE_INTERVAL,
@@ -530,7 +569,7 @@
 
 * Added selective calling system Motorola QC2.
 
-* Small bugfix in RepeaterLogic: TX down was not always correctly handled
+* Small bugfix in DuplexLogic: TX down was not always correctly handled
   on interference shutdown.
 
 * Bugfix in ModuleEchoLink: The "last disconnected station" variable was
@@ -691,7 +730,7 @@
   on the receiver.
 
 * Support for selcall activated functions added. New config variables:
-  Logic/SEL5_MACRO_RANGE, RepeaterLogic/OPEN_ON_SEL5,
+  Logic/SEL5_MACRO_RANGE, DuplexLogic/OPEN_ON_SEL5,
   LocalRx/SEL5_TYPE and LocalRx/SEL5_DEC_TYPE. Have a look in the
   svxlink.conf (5) manual page for more details.
 
@@ -824,12 +863,12 @@
   block the system indefinitly. Use the SQL_TIMEOUT configuration variable
   to set this up.
 
-* RepeaterLogic: The reason for repeater activation is now given in the
+* DuplexLogic: The reason for repeater activation is now given in the
   repeater_up event handler function. This make it possible to implement
   different behavior depending on how the repeater was activated.
 
 * Patch from DH1DM: Supressing roger beep after periodic id:s in
-  RepeaterLogic.
+  DuplexLogic.
 
 * Bugfix: Log lines were not flushed out to the log file immediately since
   stdout was block buffered by default. Now it's forced to line buffered
@@ -849,7 +888,7 @@
   configuration file.
 
 * SvxLink can now read WAV files. However, only 8k sampling rate,
-  mono, 16 bit signed formated files are supported.
+  mono, 16 bit signed formatted files are supported.
 
 * The config file reader did not enforce a specific file extension which
   could cause strange effects when using an editor that save backup files
@@ -867,7 +906,7 @@
 * Bugfix: The "transmit" function was never called in Logic.tcl.
   This probably caused the IDENT_ONLY_AFTER_TX feature not to work.
 
-* Bugfix: The squelchOpen function was not called in a RepeaterLogic when
+* Bugfix: The squelchOpen function was not called in a DuplexLogic when
   the repeater opened if using OPEN_SQL_FLANK=OPEN.
 
 * Added TCL functions for sending selcall sequences. Code contributed by
@@ -905,7 +944,7 @@
 
 * Audio is now transported between logic links and modules.
 
-* RepeaterLogic: Identifications are now also sent when the
+* DuplexLogic: Identifications are now also sent when the
   repeater is up.
 
 * The volume of sound effects and announcements are now lowered
@@ -1060,7 +1099,7 @@
 
 * Implemented CTCSS tone on transmit. New configuration variables are
   Tx1/CTCSS_FQ, Tx1/CTCSS_LEVEL, SimplexLogic/TX_CTCSS and
-  RepeaterLogic/TX_CTCSS.
+  DuplexLogic/TX_CTCSS.
 
 * Now possible to set a squelch delay which can be good in some odd
   situations. Configuration variable: Rx1/SQL_DELAY.
@@ -1127,7 +1166,7 @@
   to make it possible to filter on callsign which stations are allowed
   to connect.
 
-* RepeaterLogic: New configuration variable OPEN_SQL_FLANK which can be set
+* DuplexLogic: New configuration variable OPEN_SQL_FLANK which can be set
   to either OPEN or CLOSE to control if the repeater should activate on
   squelch open or squelch close for OPEN_ON_SQL and OPEN_ON_CTCSS.
 

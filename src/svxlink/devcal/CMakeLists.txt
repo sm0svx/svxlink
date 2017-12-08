@@ -18,6 +18,3 @@ set_target_properties(devcal PROPERTIES
 #set_target_properties(noisegen PROPERTIES
 #  RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 #)
-
-# Install targets
-install(TARGETS devcal DESTINATION ${BIN_INSTALL_DIR})

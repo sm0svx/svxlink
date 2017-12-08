@@ -5,7 +5,18 @@
 #############################################################################
 
 # The user to run the SvxLink server as
-RUNASUSER=@SVXLINK_USER@
+RUNASUSER=svxlink
 
 # Specify which configuration file to use
-CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
+CFGFILE=
+
+# Environment variables to set up. Separate variables with a space.
+ENV="ASYNC_AUDIO_NOTRIGGER=1"
+
+# AUDIO_SETTINGS_ONSTART="<string>"
+# AUDIO_SETTINGS_ONSTOP="<string>"
+#   <string>: shell script command(s)
+
+if [ -r /etc/svxlink/gpio.conf ]; then
+        . /etc/svxlink/gpio.conf
+fi

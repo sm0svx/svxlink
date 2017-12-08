@@ -6,7 +6,7 @@
 
 This is the logic core of the SvxLink Server application. This is where
 everything is tied together. It is also the base class for implementing
-specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
+specific logic core classes (e.g. SimplexLogic and DuplexLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -156,7 +156,7 @@ Logic::Logic(Config &cfg, const string& name)
   : LogicBase(cfg, name),
     m_rx(0),  	      	      	            m_tx(0),
     msg_handler(0), 	      	            active_module(0),
-    exec_cmd_on_sql_close_timer(-1),        rgr_sound_timer(-1),
+    exec_cmd_on_sql_close_timer(-1),        send_courtesy_tone_timer(-1),
     report_ctcss(0.0f),                     event_handler(0),
     recorder(0),                            tx_audio_mixer(0),
     fx_gain_ctrl(0),                        tx_audio_selector(0),
@@ -170,9 +170,16 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0)
+    dtmf_ctrl_pty(0),						m_phonetic_spelling("1"),
+	m_time_format("12"),					m_cw_amp("200"),
+	m_cw_wpm("25"),							m_cw_pitch("600"),
+	m_short_voice_id_enable("1"),			m_short_cw_id_enable("1"),
+	m_short_announce("short_annouce.wav"),	m_short_announce_enable("0"),
+	m_long_voice_id_enable("1"),			m_long_cw_id_enable("1"),
+	m_long_announce("long_annouce.wav"),	m_long_announce_enable("0")
+	
 {
-  rgr_sound_timer.expired.connect(sigc::hide(
+  send_courtesy_tone_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -247,16 +254,81 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
+  
+  // Variable to set spellword phonetics/non-phonetic letters
+  // default to phonetic for legacy compatibility
+  if (cfg().getValue(name(), "PHONETIC_SPELLING", m_phonetic_spelling))
+  {
+		  cerr << "*** INFORMATION: spelling will be announced without phonetics\n";
+  } 
+  
+  // Variable to set time format 12/24 hours
+  if (cfg().getValue(name(), "TIME_FORMAT", m_time_format))
+  {
+  }  
 
+ // Variable to set short Voice ID enable
+  if (cfg().getValue(name(), "SHORT_VOICE_ID_ENABLE", m_short_voice_id_enable))
+  {
+  }   
+  
+  // Variable to set long Voice ID enable
+  if (cfg().getValue(name(), "LONG_VOICE_ID_ENABLE", m_long_voice_id_enable))
+  {
+  }
+
+  // Variable to set short CW ID enable
+  if (cfg().getValue(name(), "SHORT_CW_ID_ENABLE", m_short_cw_id_enable))
+  {
+  }
+  
+  // Variable to set Long CW ID enable
+  if (cfg().getValue(name(), "LONG_CW_ID_ENABLE", m_long_cw_id_enable))
+  {
+  }
+  
+  // Variable to set CW frequency
+  if (cfg().getValue(name(), "CW_PITCH", m_cw_pitch))
+  {
+  }   
+
+  // Variable to set CW WPM
+  if (cfg().getValue(name(), "CW_WPM", m_cw_wpm))
+  {
+  }  
+  
+  // Variable to set CW amp
+  if (cfg().getValue(name(), "CW_AMP", m_cw_amp))
+  {
+  }  
+  
+  // variable to define the short announcement file name
+  if (cfg().getValue(name(), "SHORT_ANNOUNCE", m_short_announce))
+  {
+  }
+  // variable to define the short announcement enabling
+  if (cfg().getValue(name(), "SHORT_ANNOUNCE_ENABLE", m_short_announce_enable))
+  {
+  }	
+  
+  // variable to define the long announcement file name
+  if (cfg().getValue(name(), "LONG_ANNOUNCE", m_long_announce))
+  {
+  }
+  // variable to define the long announcement enabling
+  if (cfg().getValue(name(), "LONG_ANNOUNCE_ENABLE", m_long_announce_enable))
+  {
+  }
+  
   int exec_cmd_on_sql_close = -1;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
   {
     exec_cmd_on_sql_close_timer.setTimeout(exec_cmd_on_sql_close);
   }
-  int rgr_sound_delay = -1;
-  if (cfg().getValue(name(), "RGR_SOUND_DELAY", rgr_sound_delay))
+  int send_courtesy_tone_delay = -1;
+  if (cfg().getValue(name(), "COURTESY_TONE_DELAY", send_courtesy_tone_delay))
   {
-    rgr_sound_timer.setTimeout(rgr_sound_delay);
+    send_courtesy_tone_timer.setTimeout(send_courtesy_tone_delay);
   }
   cfg().getValue(name(), "REPORT_CTCSS", report_ctcss);
 
@@ -592,6 +664,27 @@ bool Logic::initialize(void)
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
+  
+  // Configure variable to allow user to select phonetics/non-phonetics
+  event_handler->setVariable("phonetic_spelling", m_phonetic_spelling);
+  // Configure variable to allow user to select 12h/24h time formats
+  event_handler->setVariable("time_format", m_time_format);
+  // configure variables to allow user to configure CW tone settings
+  event_handler->setVariable("cw_amp", m_cw_amp);
+  event_handler->setVariable("cw_pitch", m_cw_pitch);
+  event_handler->setVariable("cw_wpm", m_cw_wpm);
+  // configure variables to allow user to configure CW & VOICE ID enables
+  event_handler->setVariable("short_voice_id_enable", m_short_voice_id_enable);
+  event_handler->setVariable("short_cw_id_enable", m_short_cw_id_enable);
+  event_handler->setVariable("long_voice_id_enable", m_long_voice_id_enable);
+  event_handler->setVariable("long_cw_id_enable", m_long_cw_id_enable);
+  // configure variables to setup custom short announcements
+  event_handler->setVariable("short_announce", m_short_announce);
+  event_handler->setVariable("short_announce_enable", m_short_announce_enable);
+    // configure variables to setup custom short announcements
+  event_handler->setVariable("long_announce", m_long_announce);
+  event_handler->setVariable("long_announce_enable", m_long_announce_enable);
+  
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
@@ -644,6 +737,11 @@ bool Logic::initialize(void)
   every_minute_timer.expired.connect(mem_fun(*this, &Logic::everyMinute));
   timeoutNextMinute();
   every_minute_timer.start();
+  
+  every_second_timer.setExpireOffset(100);
+  every_second_timer.expired.connect(mem_fun(*this, &Logic::everySecond));
+  timeoutNextSecond();
+  every_second_timer.start();
 
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
@@ -1018,18 +1116,18 @@ void Logic::clearPendingSamples(void)
 
 void Logic::enableRgrSoundTimer(bool enable)
 {
-  if (rgr_sound_timer.timeout() < 0)
+  if (send_courtesy_tone_timer.timeout() < 0)
   {
     return;
   }
 
-  rgr_sound_timer.setEnable(false);
+  send_courtesy_tone_timer.setEnable(false);
 
   if (enable)
   {
-    if (rgr_sound_timer.timeout() > 0)
+    if (send_courtesy_tone_timer.timeout() > 0)
     {
-      rgr_sound_timer.setEnable(true);
+      send_courtesy_tone_timer.setEnable(true);
     }
     else
     {
@@ -1462,7 +1560,7 @@ void Logic::putCmdOnQueue(void)
 
 void Logic::sendRgrSound(void)
 {
-  processEvent("send_rgr_sound");
+  processEvent("send_courtesy_tone");
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
 
@@ -1485,6 +1583,33 @@ void Logic::everyMinute(AtTimer *t)
 } /* Logic::everyMinute */
 
 
+/* Experimental code to make a faster timer for 
+siteStatus module to work against
+
+BEGIN
+*/
+void Logic::timeoutNextSecond(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  struct tm *tm = localtime(&tv.tv_sec);
+  tm->tm_min += 0;
+  tm->tm_sec += 1;
+  every_second_timer.setTimeout(*tm);
+} /* Logic::timeoutNextSecond */
+
+
+void Logic::everySecond(AtTimer *t)
+{
+  processEvent("every_second");
+  timeoutNextSecond();
+} /* Logic::everySecond */
+
+/* Experimental code to make a faster timer for 
+siteStatus module to work against
+
+END
+*/
 void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
   cout << name() << ": digit=" << digit << endl;
@@ -1537,8 +1662,9 @@ void Logic::cleanup(void)
   delete event_handler;       	      event_handler = 0;
   unloadModules();
   exec_cmd_on_sql_close_timer.setEnable(false);
-  rgr_sound_timer.setEnable(false);
+  send_courtesy_tone_timer.setEnable(false);
   every_minute_timer.stop();
+  every_second_timer.stop();
 
   if (LinkManager::hasInstance())
   {
