@@ -172,10 +172,11 @@ Logic::Logic(Config &cfg, const string& name)
     dtmf_digit_handler(0),                  state_pty(0),
     dtmf_ctrl_pty(0),						m_phonetic_spelling("1"),
 	m_time_format("12"),					m_cw_amp("200"),
-	m_cw_wpm("100"),						m_cw_pitch("600"),
+	m_cw_wpm("25"),							m_cw_pitch("600"),
 	m_short_voice_id_enable("1"),			m_short_cw_id_enable("1"),
+	m_short_announce("short_annouce.wav"),	m_short_announce_enable("0"),
 	m_long_voice_id_enable("1"),			m_long_cw_id_enable("1"),
-	m_long_announcement_path("/"),			m_announcement_enable("0")
+	m_long_announce("long_annouce.wav"),	m_long_announce_enable("0")
 	
 {
   send_courtesy_tone_timer.expired.connect(sigc::hide(
@@ -264,8 +265,28 @@ bool Logic::initialize(void)
   // Variable to set time format 12/24 hours
   if (cfg().getValue(name(), "TIME_FORMAT", m_time_format))
   {
-  }   
+  }  
 
+ // Variable to set short Voice ID enable
+  if (cfg().getValue(name(), "SHORT_VOICE_ID_ENABLE", m_short_voice_id_enable))
+  {
+  }   
+  
+  // Variable to set long Voice ID enable
+  if (cfg().getValue(name(), "LONG_VOICE_ID_ENABLE", m_long_voice_id_enable))
+  {
+  }
+
+  // Variable to set short CW ID enable
+  if (cfg().getValue(name(), "SHORT_CW_ID_ENABLE", m_short_cw_id_enable))
+  {
+  }
+  
+  // Variable to set Long CW ID enable
+  if (cfg().getValue(name(), "LONG_CW_ID_ENABLE", m_long_cw_id_enable))
+  {
+  }
+  
   // Variable to set CW frequency
   if (cfg().getValue(name(), "CW_PITCH", m_cw_pitch))
   {
@@ -281,11 +302,21 @@ bool Logic::initialize(void)
   {
   }  
   
-  if (cfg().getValue(name(), "LONG_ANNOUNCEMENT_PATH", m_long_announcement_path))
+  // variable to define the short announcement file name
+  if (cfg().getValue(name(), "SHORT_ANNOUNCE", m_short_announce))
   {
   }
+  // variable to define the short announcement enabling
+  if (cfg().getValue(name(), "SHORT_ANNOUNCE_ENABLE", m_short_announce_enable))
+  {
+  }	
   
-  if (cfg().getValue(name(), "ANNOUNCEMENT_ENABLE", m_announcement_enable))
+  // variable to define the long announcement file name
+  if (cfg().getValue(name(), "LONG_ANNOUNCE", m_long_announce))
+  {
+  }
+  // variable to define the long announcement enabling
+  if (cfg().getValue(name(), "LONG_ANNOUNCE_ENABLE", m_long_announce_enable))
   {
   }
   
@@ -647,9 +678,12 @@ bool Logic::initialize(void)
   event_handler->setVariable("short_cw_id_enable", m_short_cw_id_enable);
   event_handler->setVariable("long_voice_id_enable", m_long_voice_id_enable);
   event_handler->setVariable("long_cw_id_enable", m_long_cw_id_enable);
-  // configure variable to setup custom long announcements
-  event_handler->setVariable("long_announcement_path", m_long_announcement_path);
-  event_handler->setVariable("announcement_enable", m_announcement_enable);
+  // configure variables to setup custom short announcements
+  event_handler->setVariable("short_announce", m_short_announce);
+  event_handler->setVariable("short_announce_enable", m_short_announce_enable);
+    // configure variables to setup custom short announcements
+  event_handler->setVariable("long_announce", m_long_announce);
+  event_handler->setVariable("long_announce_enable", m_long_announce_enable);
   
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -703,6 +737,11 @@ bool Logic::initialize(void)
   every_minute_timer.expired.connect(mem_fun(*this, &Logic::everyMinute));
   timeoutNextMinute();
   every_minute_timer.start();
+  
+  every_second_timer.setExpireOffset(100);
+  every_second_timer.expired.connect(mem_fun(*this, &Logic::everySecond));
+  timeoutNextSecond();
+  every_second_timer.start();
 
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
@@ -1521,7 +1560,7 @@ void Logic::putCmdOnQueue(void)
 
 void Logic::sendRgrSound(void)
 {
-  processEvent("send_send_courtesy_tone");
+  processEvent("send_courtesy_tone");
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
 
@@ -1544,6 +1583,33 @@ void Logic::everyMinute(AtTimer *t)
 } /* Logic::everyMinute */
 
 
+/* Experimental code to make a faster timer for 
+siteStatus module to work against
+
+BEGIN
+*/
+void Logic::timeoutNextSecond(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  struct tm *tm = localtime(&tv.tv_sec);
+  tm->tm_min += 0;
+  tm->tm_sec += 1;
+  every_second_timer.setTimeout(*tm);
+} /* Logic::timeoutNextSecond */
+
+
+void Logic::everySecond(AtTimer *t)
+{
+  processEvent("every_second");
+  timeoutNextSecond();
+} /* Logic::everySecond */
+
+/* Experimental code to make a faster timer for 
+siteStatus module to work against
+
+END
+*/
 void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
   cout << name() << ": digit=" << digit << endl;
@@ -1598,6 +1664,7 @@ void Logic::cleanup(void)
   exec_cmd_on_sql_close_timer.setEnable(false);
   send_courtesy_tone_timer.setEnable(false);
   every_minute_timer.stop();
+  every_second_timer.stop();
 
   if (LinkManager::hasInstance())
   {

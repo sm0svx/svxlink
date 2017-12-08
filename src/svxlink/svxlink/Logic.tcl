@@ -42,6 +42,7 @@ namespace eval Logic {
 	# A list of functions that should be called once every whole minute
 	#
 	variable timer_tick_subscribers [list];
+	variable timer_tick_subscribers_seconds [list];
 
 	#
 	# Contains the ID of the last receiver that indicated squelch activity
@@ -60,7 +61,7 @@ namespace eval Logic {
 	#
 	# Executed when a transmission has ended
 	#
-	proc send_send_courtesy_tone {} {
+	proc send_courtesy_tone {} {
 		playTone 660 500 200;
 		playSilence 200
 	}
@@ -83,7 +84,7 @@ namespace eval Logic {
 		global report_ctcss;
 		global active_module;
 		global loaded_modules;
-		variable CFG_TYPE;
+		global CFG_TYPE;
 		variable prev_ident;
 	
 		set epoch [clock seconds];
@@ -138,17 +139,38 @@ namespace eval Logic {
 		global mycall;
 		global short_voice_id_enable;
 		global short_cw_id_enable;
+		global short_announce;
+		global short_announce_enable;
 		variable CFG_TYPE;
 		# only play voice id if not disabled (default to enabled)
-		if {short_voice_id_enable != 0} {
+		
+		#puts $short_voice_id_enable
+		#puts $short_cw_id_enable
+		
+		if {$short_voice_id_enable != 0} {
+			puts "Playing short voice ID"
 			spellWord $mycall;
 			if {$CFG_TYPE == "Repeater"} {
 				playMsg "Core" "repeater";
 			}
 			playSilence 250;
 		}
+				# play announcements if either path is valid, otherwise print message to
+		# the log file
+		if {$short_announce_enable == 1} {
+			set announcement_path "/var/lib/svxlink/sounds/announcement/$short_announcement"
+			set fexist1 [file exist $path]
+			if {$fexist1} {
+				playFile $announcement_path
+                playSilence 500
+            } else {
+                playFile "CustomIdent" "Long_ID.wav"
+                playSilence 500
+            }
+		}
 		# only play CW id if not disabled (default to enabled)
-		if {short_cw_id_enable !=0} {
+		if {$short_cw_id_enable !=0} {
+			puts "Playing short CW ID"
 			CW::play $mycall
 			if {$CFG_TYPE == "Repeater"} {
 				CW::play "/R"
@@ -169,12 +191,13 @@ namespace eval Logic {
 		global active_module;
 		global long_voice_id_enable;
 		global long_cw_id_enable;
-		global long_announcement_path;
-		global announcement_enable;
+		global long_announce;
+		global long_announce_enable;
 		variable CFG_TYPE;
 		
 		# only play the voice ID if not disabled (defualt to enabled)
-		if {long_voice_id_enable !=0} {
+		if {$long_voice_id_enable !=0} {
+			puts "Playing Long voice ID"
 			spellWord $mycall;
 			if {$CFG_TYPE == "Repeater"} {
 				playMsg "Core" "repeater";
@@ -198,21 +221,24 @@ namespace eval Logic {
 			}
 
 			playSilence 250;
-			# play announcements if either path is valid, otherwise print message to
-			# the log file
-			if ($announcement_enable !=1) {
-				if {-f $long_announcement_path} {
-					playFile $long_announcement_path
-				} elseif {-f /usr/share/svxlink/sounds/en_US/announcment/announcement.wav} {
-					playFile "/usr/share/svxlink/sounds/en_US/announcment/announcement.wav"
-				} else {
-					printMsg "Long announcement file not found"
-				}
-				playSilence 250
-			}
+		}
+		
+		# play announcements if either path is valid, otherwise print message to
+		# the log file
+		if {$long_announce_enable == 1} {
+			set announcement_path "/var/lib/svxlink/sounds/announcement/$long_announcement"
+			set fexist1 [file exist $path]
+			if {$fexist1} {
+				playFile $announcement_path
+                playSilence 500
+            } else {
+                playFile "CustomIdent" "Long_ID.wav"
+                playSilence 500
+            }
 		}
 		# only play CW id if not disabled (default to enabled)
-		if {long_cw_id_enable !=0} {
+		if {$long_cw_id_enable !=0} {
+			puts "Playing long CW ID"
 			CW::play $mycall
 			if {$CFG_TYPE == "Repeater"} {
 				CW::play "/R"
@@ -226,7 +252,7 @@ namespace eval Logic {
 	# Executed when the squelch just have closed and the COURTESY_TONE_DELAY timer has
 	# expired.
 	#
-	proc send_send_courtesy_tone {} {
+	proc send_courtesy_tone {} {
 		variable sql_rx_id;
 
 		playTone 440 500 100;
@@ -461,7 +487,20 @@ namespace eval Logic {
 		}
 	}
 
-
+	#
+	# Executed once every whole second. Don't put any code here directly
+	# Create a new function and add it to the timer tick subscriber list
+	# by using the function addTimerTickSubscriberSeconds.
+	#
+	proc every_second {} {
+		variable timer_tick_subscribers_seconds;
+		#puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
+		foreach subscriber $timer_tick_subscribers_seconds {
+			$subscriber;
+		}
+	}
+	
+	
 	#
 	# Use this function to add a function to the list of functions that
 	# should be executed once every whole minute. This is not an event
@@ -470,6 +509,16 @@ namespace eval Logic {
 	proc addTimerTickSubscriber {func} {
 		variable timer_tick_subscribers;
 		lappend timer_tick_subscribers $func;
+	}
+	
+	#
+	# Use this function to add a function to the list of functions that
+	# should be executed once every whole second. This is not an event
+	# function but rather a management function.
+	#
+	proc addTimerTickSubscriberSeconds {func} {
+		variable timer_tick_subscribers_seconds;
+		lappend timer_tick_subscribers_seconds $func;
 	}
 
 

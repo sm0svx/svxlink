@@ -40,41 +40,39 @@ namespace eval SiteStatus {
 	}
 	
 	proc main {} {
+		variable CFG_DIGITAL_0
+		variable CFG_DIGITAL_0_TYPE
 		set gpioPath "/sys/class/gpio/gpio"
 		# capture the initial values on the sensors and enable them if the settings are 
 		# all defined (validity of the sensor is not enforced)
-		if {[info exists SITESENSOR_DIGIAL_0] && [info exists SITESENSOR_DIGIAL_0_TYPE]} {	
-			set CURRENT_STATE_0 [exec cat $gpioPath$SITESENSOR_DIGIAL_0/value]
-			set DIGITAL_0 ENABLED
+		if {[info exists CFG_DIGITAL_0]} {	
+			printInfo "Digital Sensor 0 is enabled"
+			#set CURRENT_STATE_0 [exec cat $gpioPath$CFG_DIGITAL_0/value]
+			set CURRENT_STATE_0 0
+			set DIGITAL_0_ENABLE ENABLED
+			printInfo "Digital Sensor 0 is enabled"
 		} else {
-			set DIGITAL_0 DISABLED
-		}
-
-		if {[info exists SITESENSOR_DIGIAL_1] && [info exists SITESENSOR_DIGIAL_1_TYPE]} {	
-			set CURRENT_STATE_1 [exec cat $gpioPath$SITESENSOR_DIGIAL_1/value]
-			set DIGITAL_1 ENABLED
-		} else {
-			set DIGITAL_1 DISABLED
+			set DIGITAL_0_ENABLE DISABLED
+			printInfo "Digital Sensor 0 is disabled"
 		}
 		
-		while {1} {
-			# 4 samples per second should be frequent enough
-			after 250 
-			# Digital Sensors
-			if {DIGITAL_0 == ENABLED} {
-				# Read the updated state of the sensor and compare against the old state
-				# alerts should only go out when the sensor changes state
-				set NEW_STATE_0 [exec cat $gpioPath$SITESENSOR_DIGIAL_0/value]
-				if {CURRENT_STATE_0 != NEW_STATE_0} {
-					set CURRENT_STATE_0 NEW_STATE_0
-					switch SITESENSOR_DIGIAL_0_TYPE {
-						DOORSENSOR{DOORSENSOR_STATUS{0 NEW_STATE_0}}
-						#TEMPSENSOR{TEMPSENSOR_STATUS{0 NEW_STATE_0}}
-						default {printInfo "SENSOR 0 is of unknown type"}}
-					}
+		printInfo "main code running"
+		# Digital Sensors
+		if {$DIGITAL_0_ENABLE == "ENABLED"} {
+			# Read the updated state of the sensor and compare against the old state
+			# alerts should only go out when the sensor changes state
+			set NEW_STATE_0 0 
+			#[exec cat $gpioPath$CFG_DIGITAL_0/value]
+			if {$CURRENT_STATE_0 != $NEW_STATE_0} {
+				set CURRENT_STATE_0 $NEW_STATE_0
+				switch $CFG_DIGIAL_0_TYPE {
+					DOORSENSOR{DOORSENSOR_STATUS{0 $NEW_STATE_0}}
+					#TEMPSENSOR{TEMPSENSOR_STATUS{0 NEW_STATE_0}}
+					default {printInfo "SENSOR 0 is of unknown type"}
 				}
 			}
 		}
+		
 	}
 
 	#basic function to announce the door sensor changing status
@@ -96,9 +94,17 @@ namespace eval SiteStatus {
 		printInfo "Module deactivated"
 	}
 	
+	#
+	# Executed when this module is being deactivated.
+	#
+	proc check_for_alerts {} {
+		main 
+	}
 
-
-# end of namespace
+	append func $module_name "::check_for_alerts";
+	Logic::addTimerTickSubscriberSeconds $func;
+	
+	# end of namespace
 }
 
 

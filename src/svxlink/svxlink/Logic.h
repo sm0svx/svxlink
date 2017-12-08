@@ -250,10 +250,12 @@ class Logic : public LogicBase
 	std::string 					m_cw_amp;
 	std::string						m_short_voice_id_enable;
 	std::string						m_short_cw_id_enable;
+	std::string						m_short_announce;
+	std::string						m_short_announce_enable;
 	std::string						m_long_voice_id_enable;
 	std::string						m_long_cw_id_enable;
-	std::string						m_long_announcement_path;
-	std::string						m_announcement_enable;
+	std::string						m_long_announce;
+	std::string						m_long_announce_enable;
     std::list<std::string>    	    cmd_queue;
     Async::Timer      	       	    exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    send_courtesy_tone_timer;
@@ -264,6 +266,7 @@ class Logic : public LogicBase
     Async::AudioSplitter	    	*logic_con_in;
     CmdParser 	      	      	    cmd_parser;
     Async::AtTimer      	    	every_minute_timer;
+	Async::AtTimer      	    	every_second_timer;
     Async::AudioRecorder  	    	*recorder;
     Async::AudioMixer	      	    *tx_audio_mixer;
     Async::AudioAmp   	      	    *fx_gain_ctrl;
@@ -302,7 +305,9 @@ class Logic : public LogicBase
     void putCmdOnQueue(void);
     void sendRgrSound(void);
     void timeoutNextMinute(void);
+	void timeoutNextSecond(void);
     void everyMinute(Async::AtTimer *t);
+	void everySecond(Async::AtTimer *t);
     void checkIfOnlineCmd(void);
     void dtmfDigitDetectedP(char digit, int duration);
     void cleanup(void);

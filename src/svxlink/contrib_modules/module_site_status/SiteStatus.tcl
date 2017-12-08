@@ -10,7 +10,7 @@
 # [ModuleTcl] section in the configuration file. The name may be changed
 # but it must be changed in both places.
 #
-namespace eval SvxlinkCfg {
+namespace eval SiteStatus {
 
 #
 # Check if this module is loaded in the current logic core
