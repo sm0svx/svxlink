@@ -1,3 +1,9 @@
+svxlink (15.99-18) Testing; urgency=low
+
+  * Added new timer code for site status module
+
+ -- Richard Neese <kb3vgw@gmail.com>  Fri, 8 Dec 2017 12:04:40 -0500
+
 svxlink (15.99-17) Testing; urgency=low
 
   * Update & Repaired Systemd Configuration
@@ -31,5 +37,5 @@ svxlink (15.99-17) Testing; urgency=low
   * Fixed more spelling errors
   * Enabled hardening
 
- -- Richard Neese <kb3vgw@gmail.com>  Thur, 7 Dec 2017 22:17:40 -0500
+ -- Richard Neese <kb3vgw@gmail.com>  Thu, 7 Dec 2017 22:17:40 -0500
  
