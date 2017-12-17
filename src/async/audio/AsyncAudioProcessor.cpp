@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -133,10 +134,7 @@ int AudioProcessor::writeSamples(const float *samples, int len)
 {
   //cout << "AudioProcessor::writeSamples: len=" << len << endl;
   
-  if (len <= 0)
-  {
-    return 0;
-  }
+  assert(len > 0);
   
   do_flush = false;
   int orig_len = len;
@@ -222,6 +220,7 @@ void AudioProcessor::flushSamples(void)
     }
     else
     {
+      do_flush = false;
       sinkFlushSamples();
     }
   }
@@ -320,13 +319,7 @@ void AudioProcessor::writeFromBuf(void)
   do
   {
     written = sinkWriteSamples(buf, buf_cnt);
-    if (written > buf_cnt)
-    {
-      cout << "### AudioProcessor::writeFromBuf: buf_cnt=" << buf_cnt
-           << " written=" << written << endl;
-      written = buf_cnt;
-    }
-    //cout << "buf_cnt=" << buf_cnt << "  written=" << written << endl;
+    assert((written >= 0) && (written <= buf_cnt));
     if (written > 0)
     {
       buf_cnt -= written;
@@ -334,11 +327,6 @@ void AudioProcessor::writeFromBuf(void)
       {
         memmove(buf, buf+written, buf_cnt * sizeof(*buf));
       }
-    }
-    else if (written < 0)
-    {
-      cout << "### AudioProcessor::writeFromBuf: buf_cnt=" << buf_cnt
-           << " written=" << written << endl;
     }
 
     if (do_flush && (buf_cnt == 0))
@@ -353,21 +341,22 @@ void AudioProcessor::writeFromBuf(void)
       }
       else
       {
-	sinkFlushSamples();
+        do_flush = false;
+        Application::app().runTask(
+            mem_fun(*this, &AudioProcessor::sinkFlushSamples));
       }
     }
   }
   while ((written > 0) && (buf_cnt > 0));
     
+  output_stopped = (written == 0);
+
   if (input_stopped && (buf_cnt < BUFSIZE))
   {
-    //cout << "Resume output!\n";
     input_stopped = false;
-    sourceResumeOutput();
+    Application::app().runTask(
+		    mem_fun(*this, &AudioProcessor::sourceResumeOutput));
   }
-  
-  output_stopped = (written == 0);
-  
 } /* AudioProcessor::writeFromBuf */
 
 

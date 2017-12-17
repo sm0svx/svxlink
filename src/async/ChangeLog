@@ -27,6 +27,9 @@
   implementation also made it possible to implement seamless switches (no
   flush when switching between two active streams).
 
+* AudioProcessor bugfix: State could get corrupted due to double call of
+  sample output function.
+
 
 
  1.4.0 -- 22 Nov 2015

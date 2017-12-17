@@ -2,6 +2,7 @@
 
 [Unit]
 Description=SvxLink remote transceiver repeater control software
+Documentation=man:remotetrx(1)
 Requires=svxlink_gpio_setup.service
 After=network.target remote-fs.target syslog.target time.target
 After=svxlink_gpio_setup.service

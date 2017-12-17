@@ -78,11 +78,11 @@ SELinux will by default deny procmail to write the mail files in the
 propagation monitor spool directory. To fix this, run the following commands:
 .PP
 .RS 4
-semanage fcontext -a -t user_home_t \\
+semanage fcontext \-a \-t user_home_t \\
 .RS 0
          "/var/spool/svxlink/propagation_monitor(/.*)?"
 .RS 0
-restorecon -r /var/spool/svxlink/propagation_monitor
+restorecon \-r /var/spool/svxlink/propagation_monitor
 .
 .SH FILES
 .
