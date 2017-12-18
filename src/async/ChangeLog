@@ -30,6 +30,8 @@
 * AudioProcessor bugfix: State could get corrupted due to double call of
   sample output function.
 
+* TcpClient: DNS lookup is now done on every reconnect.
+
 
 
  1.4.0 -- 22 Nov 2015

@@ -136,6 +136,12 @@ TcpClientBase::TcpClientBase(TcpConnection *con, const string& remote_host,
                              uint16_t remote_port)
   : con(con), dns(0), remote_host(remote_host), sock(-1), wr_watch(0)
 {
+  IpAddress ip_addr(remote_host);
+  if (!ip_addr.isEmpty())
+  {
+    con->setRemoteAddr(ip_addr);
+    this->remote_host = ip_addr.toString();
+  }
   con->setRemotePort(remote_port);
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpClientBase::connectHandler));
@@ -170,6 +176,12 @@ void TcpClientBase::bind(const IpAddress& bind_ip)
 void TcpClientBase::connect(const string &remote_host, uint16_t remote_port)
 {
   this->remote_host = remote_host;
+  IpAddress ip_addr(remote_host);
+  if (!ip_addr.isEmpty())
+  {
+    con->setRemoteAddr(ip_addr);
+    this->remote_host = ip_addr.toString();
+  }
   con->setRemotePort(remote_port);
   connect();
 } /* TcpClientBase::connect */
@@ -193,7 +205,8 @@ void TcpClientBase::connect(void)
     return;
   }
 
-  if (con->remoteHost().isEmpty())
+  if (con->remoteHost().isEmpty() ||
+      (remote_host != con->remoteHost().toString()))
   {
     assert(!remote_host.empty());
     dns = new DnsLookup(remote_host);
