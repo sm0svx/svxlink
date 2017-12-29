@@ -172,7 +172,7 @@ CppApplication::CppApplication(void)
 
 CppApplication::~CppApplication(void)
 {
-  
+  clearTasks();
 } /* CppApplication::~CppApplication */
 
 
