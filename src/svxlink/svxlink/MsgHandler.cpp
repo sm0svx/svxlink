@@ -777,7 +777,7 @@ bool WavFileQueueItem::initialize(void)
   }
 
     // Read subchunks
-  streampos data_file_pos(0);
+  std::streampos data_file_pos(0);
   int64_t rest_size = chunk_size - 4;
   while (rest_size > 0)
   {
@@ -916,7 +916,7 @@ bool WavFileQueueItem::initialize(void)
     return false;
   }
 
-  if (data_file_pos == 0)
+  if (data_file_pos == std::streampos(0))
   {
     cerr << "*** WARNING: No \"data\" subchunk found in WAV file \""
          << filename << "\"" << endl;

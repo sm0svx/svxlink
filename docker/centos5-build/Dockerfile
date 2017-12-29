@@ -25,6 +25,9 @@
 FROM centos:5
 MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
 
+# Install static Yum config since CentOS 5 is EOL
+ADD *.repo /etc/yum.repos.d/
+
 # Install required packages and set up the svxlink user
 RUN yum -y install epel-release && \
     yum -y install git sudo cmake28 make gcc gcc-c++ libsigc++20-devel \

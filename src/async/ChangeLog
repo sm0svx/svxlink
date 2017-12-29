@@ -32,6 +32,9 @@
 
 * TcpClient: DNS lookup is now done on every reconnect.
 
+* AudioDeviceAlsa: Relaxed assertion for snd_pcm_readi so that fewer frames
+  than requested may be returned.
+
 
 
  1.4.0 -- 22 Nov 2015

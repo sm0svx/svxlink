@@ -351,6 +351,7 @@ execute_process(
   COMMAND git describe --tags
   COMMAND tr - .
   COMMAND tr -d '\n'
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   OUTPUT_VARIABLE CPACK_PACKAGE_VERSION)
 message(STATUS "Package Version = ${CPACK_PACKAGE_VERSION}")
 #set(CPACK_PACKAGE_VERSION "0.1.3")
