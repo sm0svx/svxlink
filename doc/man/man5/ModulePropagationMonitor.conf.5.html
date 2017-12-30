@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sun Nov 22 18:29:29 2015 -->
+<!-- CreationDate: Sat Dec 30 17:48:42 2017 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -134,10 +134,11 @@ mail files in the propagation monitor spool directory. To
 fix this, run the following commands:</p>
 
 <p style="margin-left:17%; margin-top: 1em">semanage
-fcontext -a -t user_home_t \ <br>
+fcontext &minus;a &minus;t user_home_t \ <br>
 &quot;/var/spool/svxlink/propagation_monitor(/.*)?&quot;
 <br>
-restorecon -r /var/spool/svxlink/propagation_monitor</p>
+restorecon &minus;r
+/var/spool/svxlink/propagation_monitor</p>
 
 <h2>FILES
 <a name="FILES"></a>

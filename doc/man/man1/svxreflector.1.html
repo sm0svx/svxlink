@@ -1,0 +1,217 @@
+<!-- Creator     : groff version 1.22.3 -->
+<!-- CreationDate: Sat Dec 30 17:48:41 2017 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>SVXREFLECTOR</title>
+
+</head>
+<body>
+
+<h1 align="center">SVXREFLECTOR</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#OPTIONS">OPTIONS</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#ENVIRONMENT">ENVIRONMENT</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">svxreflector
+&minus; The SvxLink conference server audio reflector</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxreflector
+[--help] [--daemon] [--logfile=</b><i>log file</i><b>]
+[--config=</b><i>configuration file</i><b>]
+[--pidfile=</b><i>pid file</i><b>] [--runasuser=</b><i>user
+name</i><b>]</b></p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The
+<b>svxreflector</b> server is used to interconnect multiple
+SvxLink nodes into one network. All audio sent to the
+reflector from one node is retransmitted on all other
+connected nodes. Only one talker is allowed at a time so if
+another node starts sending audio when another one is
+already active, the second node will not interrupt the first
+talker.</p>
+
+<p style="margin-left:11%; margin-top: 1em">A TCP/IP
+connection is used for the control messages and the audio is
+transported via UDP. Make sure to open up the configured TCP
+and UDP ports in your firewall for incoming traffic on the
+server. By default the port number is set to 5300 for both
+TCP and UDP. The clients do not have to open any ports in
+their firewall. Each node must have a unique user ID,
+typically the callsign. It is not allowed for a client,
+using the same user ID, to connect more than one time to the
+server. The connections are password protected.</p>
+
+<p style="margin-left:11%; margin-top: 1em">On the SvxLink
+node side, a ReflectorLogic should be used to connect to the
+SvxReflector server. The connection to the SvxReflector from
+other logics in that node can be activated and deactivated
+using standard logic linking. Read more about how to set up
+a SvxLink node for use with the SvxReflector in the
+<b>svxlink.conf</b>(5) manual page.</p>
+
+<h2>OPTIONS
+<a name="OPTIONS"></a>
+</h2>
+
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p style="margin-top: 1em"><b>--help</b></p></td>
+<td width="2%"></td>
+<td width="46%">
+
+
+<p style="margin-top: 1em">Print a help message and
+exit.</p> </td>
+<td width="32%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>--daemon</b></p>
+
+<p style="margin-left:22%;">Start the SvxReflector server
+as a daemon.</p>
+
+<p style="margin-left:11%;"><b>--runasuser</b></p>
+
+<p style="margin-left:22%;">Start SvxReflector as the
+specified user. The switch to the new user will happen after
+the log and pid files has been opened.</p>
+
+<p style="margin-left:11%;"><b>--logfile=</b><i>log
+file</i></p>
+
+<p style="margin-left:22%;">Specify a log file to put all
+output into. Both stdout and stderr will be redirected to
+the log file.</p>
+
+<p style="margin-left:11%;"><b>--pidfile=</b><i>pid
+file</i></p>
+
+<p style="margin-left:22%;">Specify a pid file to write the
+process ID into.</p>
+
+
+<p style="margin-left:11%;"><b>--config=</b><i>configuration
+file</i></p>
+
+<p style="margin-left:22%;">Specify which configuration
+file to use.</p>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxreflector.conf</i></p>
+
+<p style="margin-left:22%;">The system wide configuration
+file. See <b>svxreflector.conf</b>(5) for further
+details.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/svxreflector.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration file.
+See <b>svxreflector.conf</b>(5) for further details.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/svxreflector.d/*</i></p>
+
+<p style="margin-left:22%;">Additional configuration files.
+This directory is setup by the CFG_DIR configuration
+variable.</p>
+
+<h2>ENVIRONMENT
+<a name="ENVIRONMENT"></a>
+</h2>
+
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p style="margin-top: 1em">HOME</p></td>
+<td width="5%"></td>
+<td width="69%">
+
+
+<p style="margin-top: 1em">Used to find the per user
+configuration file.</p></td>
+<td width="9%">
+</td></tr>
+</table>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">SvxLink Devel
+&lt;svxlink-devel at lists dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxreflector.conf</b>(5),
+<b>svxlink</b>(1), <b>svxlink.conf</b>(5),</p>
+<hr>
+</body>
+</html>

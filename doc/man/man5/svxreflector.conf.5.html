@@ -1,0 +1,330 @@
+<!-- Creator     : groff version 1.22.3 -->
+<!-- CreationDate: Sat Dec 30 17:48:41 2017 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>SVXREFLECTOR.CONF</title>
+
+</head>
+<body>
+
+<h1 align="center">SVXREFLECTOR.CONF</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#FILE FORMAT">FILE FORMAT</a><br>
+<a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em">svxreflector.conf
+&minus; Configuration file for the SvxReflector conference
+server audio reflector</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The
+<b>svxreflector</b> server is used to interconnect multiple
+SvxLink nodes into one network. This man-page describe the
+configuration file format for it.</p>
+
+<p style="margin-left:11%; margin-top: 1em">SvxReflector
+look for configuration files in a number of places. First it
+tries to find a user specific configuration file. It will
+look for a user specific configuration file in:
+<b>$HOME/.svxlink/svxreflector.conf</b>. If no user specific
+configuration file can be found, svxreflector will look for
+the system wide configuration file
+<b>/etc/svxlink/svxreflector.conf</b>. The <b>--config</b>
+command line option may also be used to specify an arbitrary
+configuration file.</p>
+
+<h2>FILE FORMAT
+<a name="FILE FORMAT"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The
+configuration file is in the famous INI-file format. A
+generic example of how such a file might look like is shown
+below.</p>
+
+<p style="margin-left:11%; margin-top: 1em">[SECTION1] <br>
+VALUE1=1 <br>
+VALUE2=&quot;TWO &quot; <br>
+VAULE3=&quot;Multi &quot; <br>
+&quot;line&quot;</p>
+
+<p style="margin-left:11%; margin-top: 1em">[SECTION2] <br>
+VALUE1=2</p>
+
+<p style="margin-left:11%; margin-top: 1em">This is a
+simple format that contain name=value pairs that belong to a
+section. In written text, a specific configuration variable
+can be referred to as SECTION1/VALUE2 meaning
+&quot;configuration variable VALUE2 in section
+SECTION1&quot;.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The same
+variable name can exist in two different sections. For
+example VALUE1 in section SECTION1 have the value 1 and
+VALUE1 in section SECTION2 have the value 2. Values
+containing spaces at the beginning or end of the line must
+be surrounded by citation characters (see SECTION1/VALUE2).
+Likewise with a multi line value (see SECTION1/VALUE3).</p>
+
+<h2>CONFIGURATION VARIABLES
+<a name="CONFIGURATION VARIABLES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Here is the
+description of all configuration variables that svxreflector
+understands. The configuration variables are described
+section for section.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>GLOBAL</b>
+<br>
+The GLOBAL section contains application global configuration
+data. <b><br>
+CFG_DIR</b></p>
+
+<p style="margin-left:22%;">Specify the path to a directory
+that contain additional configuration files. If a relative
+path is specified, the path will be relative to the
+directory where the main configuration file is at. All files
+in the specified directory will be read as additional
+configuration. Filenames starting with a dot are
+ignored.</p>
+
+<p style="margin-left:11%;"><b>TIMESTAMP_FORMAT</b></p>
+
+<p style="margin-left:22%;">This variable specifies the
+format of the timestamp that is written in front of each row
+in the log file. The format string is in the same format as
+specified in the <b>strftime</b>(3) manual page. The default
+is &quot;%c&quot; which is described as: &quot;the preferred
+date and time representation for the current locale&quot;.
+The environment variables LC_TIME, LC_ALL and LANG will
+affect how this time format will look. For example, setting
+LC_TIME=&quot;sv_SE.UTF8&quot; will give you Swedish
+timestamp representation. Other examples of format
+specifiers are:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%d</b> - The day of the month as a decimal number
+(range 01 to 31)</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%b</b> - The abbreviated month name according to the
+current locale</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%Y</b> - The year as a decimal number including the
+century</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%H</b> - The hour as a decimal number using a 24-hour
+clock (range 00 to 23)</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%M</b> - The minute as a decimal number (range 00 to
+59)</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%S</b> - The second as a decimal number (range 00 to
+61)</p> </td></tr>
+</table>
+
+<p style="margin-left:22%; margin-top: 1em">So,
+TIMESTAMP_FORMAT=&quot;%d %b %Y %H:%M:%S&quot; would give a
+timestamp looking something like: &quot;29 Nov 2005
+22:31:59&quot;.</p>
+
+<p style="margin-left:11%;"><b>LISTEN_PORT</b></p>
+
+<p style="margin-left:22%;">The TCP and UDP port number to
+use for network communications. The default is 5300. Make
+sure to open this port for incoming traffic to the server on
+both TCP and UDP. Clients do not have to open any ports in
+their firewalls.</p>
+
+<p style="margin-left:11%;"><b>SQL_TIMEOUT</b></p>
+
+<p style="margin-left:22%;">Use this configuration variable
+to set a time in seconds after which a clients audio is
+blocked if he has been talking for too long. The default is
+0 (disabled).</p>
+
+
+<p style="margin-left:11%;"><b>SQL_TIMEOUT_BLOCKTIME</b></p>
+
+<p style="margin-left:22%;">If a client has been talking
+for longer than the time specified in the <b>SQL_TIMEOUT</b>
+configuration variable he will not be able to talk again
+until the time in this configuration variable have elapsed.
+If not specified, the default is one second.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>CODECS</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>A comma separated list of allowed codecs. For the moment
+only one codec can be specified. Choose from the following
+codecs: OPUS, SPEEX, GSM, S16 (uncompressed signed 16 bit),
+RAW (uncompressed 32 bit floats).</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em"><b>USERS and
+PASSWORDS sections</b> <br>
+All users must be specified in the USERS section. Usernames
+are totally arbitrary but typically the callsign is used.
+The purpose is to map each username to a password. However,
+the password is not given directly but instead a reference
+to the PASSWORDS section is given. It&rsquo;s done like this
+so that multiple nodes can share a single password.</p>
+
+<p style="margin-left:11%; margin-top: 1em">An example of
+how the USERS and PASSWORDS sections may look is given
+below.</p>
+
+<p style="margin-left:11%; margin-top: 1em">[USERS] <br>
+SM0ABC-1=MyNodes <br>
+SM0ABC-2=MyNodes <br>
+SM1XYZ=SM1XYZ</p>
+
+<p style="margin-left:11%; margin-top: 1em">[PASSWORDS]
+<br>
+MyNodes=&quot;A very strong password!&quot; <br>
+SM1XYZ=&quot;Another very good password?&quot;</p>
+
+<p style="margin-left:11%; margin-top: 1em">This will set
+up <b>SM0ABC-1</b> and <b>SM0ABC-2</b> to use the same
+password specified by <b>MyNodes</b> in the PASSWORDS
+section. User <b>SM1XYZ</b> have his own password.</p>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxreflector.conf</i></p>
+
+<p style="margin-left:22%;">The system wide configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/svxreflector.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/svxreflector.d/*</i></p>
+
+<p style="margin-left:22%;">Additional configuration files.
+This directory is setup by the CFG_DIR configuration
+variable.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxreflector</b>(1),
+<b>svxlink</b>(1), <b>svxlink.conf</b>(5),</p>
+<hr>
+</body>
+</html>
