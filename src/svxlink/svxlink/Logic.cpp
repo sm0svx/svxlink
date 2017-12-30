@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 Logic::Logic(Config &cfg, const string& name)
-  : m_cfg(cfg),       	      	            m_name(name),
+  : LogicBase(cfg, name),
     m_rx(0),  	      	      	            m_tx(0),
     msg_handler(0), 	      	            active_module(0),
     exec_cmd_on_sql_close_timer(-1),        rgr_sound_timer(-1),
@@ -163,13 +163,14 @@ Logic::Logic(Config &cfg, const string& name)
     rx_splitter(0),                         rx_valve(0),
     rpt_valve(0),                           audio_from_module_selector(0),
     audio_to_module_splitter(0),            audio_to_module_selector(0),
-    state_det(0),                           is_idle(true),
+    state_det(0),
     fx_gain_normal(0),                      fx_gain_low(-12),
     long_cmd_digits(100),                   report_events_as_idle(false),
     qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
-    dtmf_digit_handler(0),                  state_pty(0)
+    dtmf_digit_handler(0),                  state_pty(0),
+    dtmf_ctrl_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -189,6 +190,11 @@ Logic::~Logic(void)
 
 bool Logic::initialize(void)
 {
+  if (!LogicBase::initialize())
+  {
+    return false;
+  }
+
   if (cfg().getValue(name(), "ONLINE_CMD", online_cmd))
   {
     OnlineCmd *cmd = new OnlineCmd(&cmd_parser, this, online_cmd);
@@ -267,6 +273,23 @@ bool Logic::initialize(void)
       cleanup();
       return false;
     }
+  }
+
+  string dtmf_ctrl_pty_path;
+  cfg().getValue(name(), "DTMF_CTRL_PTY", dtmf_ctrl_pty_path);
+  if (!dtmf_ctrl_pty_path.empty())
+  {
+    dtmf_ctrl_pty = new Pty(dtmf_ctrl_pty_path);
+    if (!dtmf_ctrl_pty->open())
+    {
+      cerr << "*** ERROR: Could not open control PTY "
+           << dtmf_ctrl_pty_path << " as spcified in configuration variable "
+           << name() << "/" << "DTMF_CTRL_PTY" << endl;
+      cleanup();
+      return false;
+    }
+    dtmf_ctrl_pty->dataReceived.connect(
+        mem_fun(*this, &Logic::dtmfCtrlPtyCmdReceived));
   }
 
   string value;
@@ -566,6 +589,8 @@ bool Logic::initialize(void)
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->publishStateEvent.connect(
           mem_fun(*this, &Logic::publishStateEvent));
+  event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
+  event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -605,12 +630,6 @@ bool Logic::initialize(void)
   {
     cleanup();
     return false;
-  }
-
-  if (LinkManager::hasInstance())
-  {
-      // Register this logic in the link manager
-    LinkManager::instance()->addLogic(this);
   }
 
   if (LocationInfo::has_instance())
@@ -697,6 +716,23 @@ void Logic::playTone(int fq, int amp, int len)
 } /* Logic::playSilence */
 
 
+void Logic::playDtmf(const std::string& digits, int amp, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    msg_handler->playDtmf(digits[i], amp, len);
+    msg_handler->playSilence(50, report_events_as_idle);
+  }
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
+  checkIdle();
+} /* Logic::playDtmf */
+
+
 void Logic::recordStart(const string& filename, unsigned max_time)
 {
   recordStop();
@@ -719,6 +755,15 @@ void Logic::recordStop(void)
   rx_splitter->removeSink(recorder);
   recorder = 0;
 } /* Logic::recordStop */
+
+
+void Logic::injectDtmf(const std::string& digits, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    dtmfDigitDetected(digits[i], len);
+  }
+} /* Logic::injectDtmf */
 
 
 bool Logic::activateModule(Module *module)
@@ -950,6 +995,21 @@ void Logic::transmitterStateChange(bool is_transmitting)
 } /* Logic::transmitterStateChange */
 
 
+void Logic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<count; ++i)
+  {
+    const char &ch = buffer[i];
+    if (::isdigit(ch) || (ch == '*') || (ch == '#') ||
+        ((ch >= 'A') && (ch <= 'F')))
+    {
+      dtmfDigitDetectedP(ch, 100);
+    }
+  }
+} /* Logic::dtmfCtrlPtyCmdReceived */
+
+
 void Logic::clearPendingSamples(void)
 {
   msg_handler->clear();
@@ -1001,13 +1061,7 @@ void Logic::rptValveSetOpen(bool do_open)
 
 void Logic::checkIdle(void)
 {
-  bool new_idle_state = getIdleState();
-  if (new_idle_state != is_idle)
-  {
-    is_idle = new_idle_state;
-    //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
-    idleStateChanged(is_idle);
-  }
+  setIdle(getIdleState());
 } /* Logic::checkIdle */
 
 
@@ -1451,6 +1505,10 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
   dtmfDigitDetected(digit, duration);
 
+  if (dtmf_ctrl_pty != 0)
+  {
+    dtmf_ctrl_pty->write(&digit, 1);
+  }
 } /* Logic::dtmfDigitDetectedP */
 
 
@@ -1496,6 +1554,7 @@ void Logic::cleanup(void)
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
   delete qso_recorder;                qso_recorder = 0;
   delete state_pty;                   state_pty = 0;
+  delete dtmf_ctrl_pty;               dtmf_ctrl_pty = 0;
 } /* Logic::cleanup */
 
 
@@ -1542,7 +1601,6 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
 } /* Logic::publishStateEvent */
-
 
 
 /*

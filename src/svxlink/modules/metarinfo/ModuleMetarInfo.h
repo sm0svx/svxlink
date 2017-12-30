@@ -149,7 +149,11 @@ class ModuleMetarInfo : public Module
     typedef std::map<std::string, std::string> Repdefs;
     Repdefs repstr;
 
-    Async::TcpClient *con;
+    Async::TcpClient<> *con;
+    std::string html;
+    std::string type;
+    std::string server;
+    std::string link;
 
     bool initialize(void);
     void activateInit(void);
@@ -159,8 +163,8 @@ class ModuleMetarInfo : public Module
     void dtmfCmdReceivedWhenIdle(const std::string& cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
-    void onDisconnected(Async::TcpClient::TcpConnection *con,
-                        Async::TcpClient::DisconnectReason reason);
+    void onDisconnected(Async::TcpClient<>::TcpConnection *con,
+                        Async::TcpClient<>::DisconnectReason reason);
     void onConnected(void);
     void openConnection(void);
     std::string getSlp(std::string token);
@@ -173,11 +177,11 @@ class ModuleMetarInfo : public Module
     std::string getPrecipitation(std::string token);
     std::string getCloudType(std::string token);
     void isRwyState(std::string &retval, std::string token);
-    int  onDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
+    int  onDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
               int count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);
-    bool isvalidUTC(std::string token);
+    bool isvalidUTC(std::string utctoken);
     int checkToken(std::string token);
     bool rmatch(std::string tok, std::string token, regex_t *re);
     bool checkDirection(std::string &retval, std::string token);
@@ -196,6 +200,8 @@ class ModuleMetarInfo : public Module
     bool ispObscurance(std::string &tempstr, std::string token);
     bool getPeakWind(std::string &retval, std::string token);
     void say(std::stringstream &tmp);
+    int handleMetar(std::string input);
+    std::string getXmlParam(std::string token, std::string input);
 
 };  /* class ModuleMetarInfo */
 

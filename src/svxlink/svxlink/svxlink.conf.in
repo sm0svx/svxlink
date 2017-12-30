@@ -38,6 +38,7 @@ FX_GAIN_LOW=-12
 #MUTE_RX_ON_TX=1
 #MUTE_TX_ON_RX=1
 #STATE_PTY=/var/run/svxlink/state
+#DTMF_CTRL_PTY=/dev/shm/simplex_dtmf_ctrl
 
 [RepeaterLogic]
 TYPE=Repeater
@@ -76,6 +77,15 @@ IDLE_SOUND_INTERVAL=3000
 #IDENT_NAG_MIN_TIME=2000
 #ONLINE_CMD=998877
 #STATE_PTY=/var/run/svxlink/state
+#DTMF_CTRL_PTY=/dev/shm/repeater_dtmf_ctrl
+
+[ReflectorLogic]
+TYPE=Reflector
+HOST=reflector.example.com
+#PORT=5300
+CALLSIGN="MYCALL"
+AUTH_KEY="Change this key now!"
+#JITTER_BUFFER_DELAY=0
 
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD
@@ -108,6 +118,7 @@ BUFFER_LENGTH=0
 #HYSTERESIS=50
 #SQL_CLOSE_REVOTE_DELAY=500
 #RX_SWITCH_DELAY=500
+#COMMAND_PTY=/dev/shm/voter_ctrl
 
 [MultiTx]
 TYPE=Multi
@@ -179,6 +190,7 @@ SERIAL_PIN=CTS
 #EVDEV_DEVNAME=/dev/input/by-id/usb-SYNIC_SYNIC_Wireless_Audio-event-if03
 #EVDEV_OPEN=1,163,1
 #EVDEV_CLOSE=1,163,0
+#GPIO_PATH=/sys/class/gpio
 #GPIO_SQL_PIN=gpio30
 #PTY_PATH=/tmp/rx1_sql
 #HID_DEVICE=/dev/hidraw3
@@ -229,6 +241,7 @@ PTT_PIN=DTRRTS
 #HID_DEVICE=/dev/hidraw3
 #HID_PTT_PIN=GPIO3
 #SERIAL_SET_PINS=DTR!RTS
+#GPIO_PATH=/sys/class/gpio
 #PTT_HANGTIME=1000
 TIMEOUT=300
 TX_DELAY=500
@@ -254,5 +267,5 @@ APRS_SERVER_LIST=euro.aprs2.net:14580
 PATH=WIDE1-1
 BEACON_INTERVAL=10
 #TONE=136
-COMMENT=SvxLink by SM0SVX (svxlink.sourceforge.net)
+COMMENT=SvxLink by SM0SVX (www.svxlink.org)
 

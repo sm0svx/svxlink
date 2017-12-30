@@ -178,6 +178,7 @@ class Application : public sigc::trackable
     void runTask(sigc::slot<void> task);
     
   protected:
+    void clearTasks(void);
     
   private:
     friend class FdWatch;

@@ -218,7 +218,7 @@ class DirectoryCon : public sigc::trackable
     std::vector<Async::DnsLookup*>          dns_lookups;
     std::vector<Async::IpAddress>           addresses;
     std::vector<Async::IpAddress>::iterator current_server;
-    Async::TcpClient *                      client;
+    Async::TcpClient<>*                     client;
     int                                     last_disconnect_reason;
     bool                                    is_ready;
 
@@ -228,7 +228,7 @@ class DirectoryCon : public sigc::trackable
     void onDnsLookupResultsReady(Async::DnsLookup &dns);
     void doConnect(void);
     void onDisconnected(Async::TcpConnection *con,
-                        Async::TcpClient::DisconnectReason reason);
+                        Async::TcpClient<>::DisconnectReason reason);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void proxyReady(bool is_ready);
     

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -81,8 +81,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "version/SVXLINK.h"
 #include "MsgHandler.h"
+#include "DummyLogic.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
+#include "ReflectorLogic.h"
 #include "LinkManager.h"
 
 
@@ -151,16 +153,16 @@ static void logfile_flush(void);
  *
  ****************************************************************************/
 
-static char   	      	*pidfile_name = NULL;
-static char   	      	*logfile_name = NULL;
-static char   	      	*runasuser = NULL;
-static char   	      	*config = NULL;
-static int    	      	daemonize = 0;
-static int    	      	logfd = -1;
-static vector<Logic*>  	logic_vec;
-static FdWatch	      	*stdin_watch = 0;
-static FdWatch	      	*stdout_watch = 0;
-static string         	tstamp_format;
+static char   	      	  *pidfile_name = NULL;
+static char   	      	  *logfile_name = NULL;
+static char   	      	  *runasuser = NULL;
+static char   	      	  *config = NULL;
+static int    	      	  daemonize = 0;
+static int    	      	  logfd = -1;
+static vector<LogicBase*> logic_vec;
+static FdWatch	      	  *stdin_watch = 0;
+static FdWatch	      	  *stdout_watch = 0;
+static string         	  tstamp_format;
 
 
 /****************************************************************************
@@ -429,7 +431,7 @@ int main(int argc, char **argv)
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION
-          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the terms "
@@ -524,6 +526,7 @@ int main(int argc, char **argv)
   app.exec();
 
   LinkManager::deleteInstance();
+  LocationInfo::deleteInstance();
 
   logfile_flush();
   
@@ -540,7 +543,7 @@ int main(int argc, char **argv)
     close(pipefd[1]);
   }
 
-  vector<Logic*>::iterator lit;
+  vector<LogicBase*>::iterator lit;
   for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
   {
     delete *lit;
@@ -670,9 +673,15 @@ static void stdinHandler(FdWatch *w)
     case '8': case '9': case 'A': case 'B':
     case 'C': case 'D': case '*': case '#':
     case 'H':
-      logic_vec[0]->injectDtmfDigit(buf[0], 100);
+    {
+      Logic *logic = dynamic_cast<Logic*>(logic_vec[0]);
+      if (logic != 0)
+      {
+        logic->injectDtmfDigit(buf[0], 100);
+      }
       break;
-    
+    }
+
     default:
       break;
   }
@@ -729,7 +738,7 @@ static void initialize_logics(Config &cfg)
       	   << logic_name << "\". Skipping...\n";
       continue;
     }
-    Logic *logic = 0;
+    LogicBase *logic = 0;
     if (logic_type == "Simplex")
     {
       logic = new SimplexLogic(cfg, logic_name);
@@ -738,10 +747,18 @@ static void initialize_logics(Config &cfg)
     {
       logic = new RepeaterLogic(cfg, logic_name);
     }
+    else if (logic_type == "Reflector")
+    {
+      logic = new ReflectorLogic(cfg, logic_name);
+    }
+    else if (logic_type == "Dummy")
+    {
+      logic = new DummyLogic(cfg, logic_name);
+    }
     else
     {
       cerr << "*** ERROR: Unknown logic type \"" << logic_type
-      	   << "\"specified for logic " << logic_name << ".\n";
+           << "\" specified for logic " << logic_name << ".\n";
       continue;
     }
     if ((logic == 0) || !logic->initialize())

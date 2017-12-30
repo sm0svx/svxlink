@@ -94,7 +94,7 @@ class AudioDevice;
  * @param   _class The name of the class that handle the new audio device type
  */
 #define REGISTER_AUDIO_DEVICE_TYPE(_name, _class) \
-  AudioDevice *create_ ## _class(const string& dev_name) \
+  AudioDevice *create_ ## _class(const std::string& dev_name) \
           { return new _class(dev_name); } \
   static bool _class ## _creator_registered = \
           AudioDeviceFactory::instance().registerCreator(_name, \

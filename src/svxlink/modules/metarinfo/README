@@ -1,19 +1,21 @@
 Metar information module for SvxLink (based on the latest trunk
-from Aug 2009) by Adi, DL1HRC
+from Feb 2017) by Adi, DL1HRC
 
-VERSION 0.0.2
+VERSION 1.0.99.0 (21 Feb 2017)
+
 
 
 CHANGES:
-- completely rewritten, based on regex.h
-- RVR
-- trends
+- two ways to request a METAR information from different web services
+- new configuration params
+- cloudtypes procedure added
+
 
 
 FUNCTION:
 
 Get METAR (weather) information from ICAO locations, usually airports and 
-gives them out. With V0.0.2 you can request a METAR from an
+gives them out. With V1.0.99.0 you can request a METAR from an
 airport of your interest.
 
 command  function
@@ -69,6 +71,7 @@ ESSB ->  33*7777**22#
 LEPA ->  555*33*7*2#
 
 
+
 INSTALL:
 
 - recompile and reinstall the latest trunk of SvxLink
@@ -82,6 +85,7 @@ INSTALL:
 ...
 MODULES=ModuleHelp,ModuleEchoLink,ModuleMetarInfo
 ...
+
 
 
 CONFIGURATION:
@@ -108,14 +112,44 @@ LONGMESSAGES=1
 If set to 1, it gives out e.g. "Ceiling and visibility OK" instead of just
 "cavok". Comment out if you don't want it.
 
+TYPE=(XML||TXT)
+Configure the type of service
+
+SERVER=xxxx
+Configure a hostname providing METAR information, e.g.
+SERVER=tgftp.nws.noaa.gov
+Please omit http:// here!
+
+LINK=xxx/yyy/zzz
+The path on the webserver where the MEATAR file can be found, e.g.
+LINK=data/observations/metar/stations
+
+
+
+IMPORTANT NOTICE:
+At the moment ONLY TWO combination are known to work:
+
+1) the text file based method:
+TYPE=TXT
+SERVER=tgftp.nws.noaa.gov
+LINK=data/observations/metar/stations
+
+2) the new xml service by aviationweather.gov:
+TYPE=XML
+SERVER=aviationweather.gov
+LINK=/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=
+
+
 
 PROBLEMS AND BUGS:
-cat problems > dl1hrc [at] web.de
+cat problems > dl1hrc [at] gmx.de
+
 
 
 KNOWN PROBLEMS:
 - not all precipitations and combinations of it could be tested out
 - all after RMK can not be given out
+
 
 
 ToDo:

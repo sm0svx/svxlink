@@ -117,7 +117,7 @@ namespace Async
 @author Tobias Blomberg / SM0SVX
 @date   2008-03-15
 */
-class NetTrxTcpClient : public Async::TcpClient
+class NetTrxTcpClient : public Async::TcpClient<>
 {
   public:
     typedef Async::TcpConnection::DisconnectReason DiscReason;

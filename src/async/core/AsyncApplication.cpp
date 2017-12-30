@@ -172,6 +172,11 @@ void Application::runTask(sigc::slot<void> task)
  *
  ****************************************************************************/
 
+void Application::clearTasks(void)
+{
+  task_list.clear();
+  task_timer->setEnable(false);
+} /* Application::clearTasks */
 
 
 /****************************************************************************
@@ -187,8 +192,7 @@ void Application::taskTimerExpired(void)
   {
     (*it)();
   }
-  task_list.clear();
-  task_timer->setEnable(false);
+  clearTasks();
 } /* Application::taskTimerExpired */
 
 

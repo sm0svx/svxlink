@@ -1,3 +1,82 @@
+ 1.6.0 -- 30 Dec 2017
+----------------------
+
+* ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
+  output
+
+* ModuleMetarInfo: Because of termination the metar service on noaa.gov some
+  changes were needed in the module (weather.noaa.gov - >
+  aviationweather.gov), better debug output if a metar can not be announced
+
+* New argument "call" to EchoLink::is_receiving TCL event handler.
+  Patch by hsmade.
+
+* New TCL event handler EchoLink::client_list_changed.
+  Patch by hsmade.
+
+* New TCL function playDtmf. Patch by DL1HRC / Adi.
+
+* ModuleEchoLink: Add command PTY that can be used to send commands to the
+  EchoLink module at runtime. Patch by hsmade.
+
+* RemoteTrx now display squelch open/close even when disconnected from
+  the main system.
+
+* Small bugfix in the LocationInfo functionality that made SvxLink exit
+  uncleanly, possibly with a segmentation fault.
+
+* New TCL command, injectDtmf, to inject DTMF digits into the command
+  stream just as if they were received on the receiver. This function
+  can for example be used in conjuction with the dtmf_digit_received and
+  dtmf_cmd_received functions to remap commands to something different or
+  inventing compound commands.
+
+* ModuleTclVoiceMail: SvxLink would not start if the HOME environment
+  variable was not set. That prevented proper operation from system
+  startcripts.
+
+* ModuleFrn: Now possible to specify a backup server that is used when the
+  connection to the primary server fail. Use the new configuration variables
+  SERVER_BACKUP and PORT_BACKUP to configure the backup server.
+  Patch by sh123.
+
+* New command PTY for controlling the receiver voter. It's possible to
+  enable and disable receivers using the ENABLE and DISABLE commands.
+  Use the COMMAND_PTY config variable in the voter configuration section
+  to set it up.
+
+* New command PTY for injecting DTMF digits into a logic core. Use
+  configuration variable DTMF_CTRL_PTY to set the path to the PTY.
+  The PTY will also emit the DTMF digits received on the RF.
+
+* New configuration variable GPIO_PATH for PTT and squelch configurations that
+  use GPIO. On some hardware platforms the path to control GPIO pins is not
+  standard. This configuration variable can be used to set the path.
+
+* Bugfix: Setting FQ_CORR=0 in a WbRx configuration section resulted in an
+  error message
+
+* FQ_CORR can now be negative
+
+* New TCL event handing function EchoLink::info_received that is called when
+  an info message is received from a remote EchoLink station.
+
+* ModuleEchoLink: The connected TCL event handling function now also is given
+  the callsign.
+
+* Bugfix: The squelch detector was not able to handle larger audio blocks than
+  256 bytes. It now can.
+
+* Bugfix: Could not handle WAV files that contained other subchunks than 'fmt'
+  or 'data'. Reading would fail for WAV files containing for example 'LIST'
+  or 'id3' subchunks.
+
+* New application SvxReflector that is used to link multiple SvxLink nodes
+  together. On the SvxLink node side the new ReflectorLogic logic core is used
+  to connect to the SvxReflector server.
+
+
+
  1.5.0 -- 22 Nov 2015
 ----------------------
 

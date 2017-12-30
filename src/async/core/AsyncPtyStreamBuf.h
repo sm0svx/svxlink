@@ -127,6 +127,7 @@ class PtyStreamBuf : public std::streambuf
     /**
      * @brief 	Default constructor
      * @param   pty A previously created PTY object
+     * @param   buf_size The buffer size
      */
     explicit PtyStreamBuf(Pty *pty, std::size_t buf_size=256);
   
@@ -136,9 +137,8 @@ class PtyStreamBuf : public std::streambuf
     ~PtyStreamBuf(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Return the PTY this stream is attached to
+     * @return	The PTY
      */
     Pty *pty(void) const { return m_pty; }
     

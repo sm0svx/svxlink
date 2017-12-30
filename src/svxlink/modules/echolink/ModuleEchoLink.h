@@ -75,6 +75,7 @@ namespace Async
   class AudioSplitter;
   class AudioValve;
   class AudioSelector;
+  class Pty;
 };
 namespace EchoLink
 {
@@ -210,6 +211,8 @@ class ModuleEchoLink : public Module
     int   	      	  autocon_time;
     Async::Timer	  *autocon_timer;
     EchoLink::Proxy       *proxy;
+    Async::Pty            *pty;
+    std::string           command_buf;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -220,15 +223,19 @@ class ModuleEchoLink : public Module
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
+    void handlePtyCommand(const std::string &full_command);
+    void onCommandPtyInput(const void *buf, size_t count);
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
+    void clientListChanged(void);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name,
       	    const std::string& priv);
     void onStateChange(QsoImpl *qso, EchoLink::Qso::State qso_state);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
+    void onInfoMsgReceived(QsoImpl *qso, const std::string& msg);
     void onIsReceiving(bool is_receiving, QsoImpl *qso);
     void destroyQsoObject(QsoImpl *qso);
 

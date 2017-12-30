@@ -7,7 +7,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2017  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ class AudioSelector : public AudioSource
      * @return	Returns \em true if auto select is enabled for the given source
      *          or else \em false is returned
      */
-    bool autoSelectEnabled(AudioSource *source);
+    bool autoSelectEnabled(AudioSource *source) const;
 
     /**
      * @brief 	Select one of the previously added audio sources
@@ -170,20 +170,53 @@ class AudioSelector : public AudioSource
      */
     void selectSource(AudioSource *source);
     
-    
+    /**
+     * @brief   Set if this souce want to wait for allSamplesFlushed
+     * @param 	source The audio source to select. 0 = none selected.
+     * @param   flush_wait Set to \em true to wait for flush or else \em false
+     *
+     * Normally after a source signals flush, the audio selector will wait until
+     * the connected sink signals that all samples have been flushed before
+     * any other source with the same or lower priority can be selected.
+     * If flush_wait is set to false, the selector will immediately signal
+     * all samples flushed to the source and if any other source is active,
+     * that source will immediately be switched in without sending a flush
+     * command to the sink.
+     */
+    void setFlushWait(AudioSource *source, bool flush_wait);
+
+    /**
+     * @brief Resume audio output to the sink
+     *
+     * This function will be called when the registered audio sink is ready to
+     * accept more samples. It is normally only called from a connected sink
+     * object.
+     */
+    virtual void resumeOutput(void);
+
   protected:
+    virtual void allSamplesFlushed(void);
     
   private:
+    typedef enum
+    {
+      STATE_IDLE, STATE_WRITING, STATE_STOPPED, STATE_FLUSHING
+    } StreamState;
+
     class Branch;
     typedef std::map<Async::AudioSource *, Branch *> BranchMap;
-    class NullBranch;
     
-    BranchMap 	branch_map;
-    NullBranch	*null_branch;
+    BranchMap 	m_branch_map;
+    Branch *    m_selected_branch;
+    StreamState m_stream_state;
     
     AudioSelector(const AudioSelector&);
     AudioSelector& operator=(const AudioSelector&);
     void selectBranch(Branch *branch);
+    Branch *selectedBranch(void) const { return m_selected_branch; }
+    void selectHighestPrioActiveBranch(bool clear_if_no_active);
+    int branchWriteSamples(const float *samples, int count);
+    void branchFlushSamples(void);
     
     friend class Branch;
     

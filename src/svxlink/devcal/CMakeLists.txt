@@ -8,7 +8,7 @@ set(VERSION_DEPENDS)
 add_version_target(DEVCAL VERSION_DEPENDS)
 
 add_executable(devcal devcal.cpp ${VERSION_DEPENDS})
-target_link_libraries(devcal asyncaudio asynccpp trx ${POPT_LIBRARIES})
+target_link_libraries(devcal asyncaudio asynccpp trx svxmisc ${POPT_LIBRARIES})
 set_target_properties(devcal PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
@@ -18,3 +18,6 @@ set_target_properties(devcal PROPERTIES
 #set_target_properties(noisegen PROPERTIES
 #  RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 #)
+
+# Install targets
+install(TARGETS devcal DESTINATION ${BIN_INSTALL_DIR})

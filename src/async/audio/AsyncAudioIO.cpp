@@ -110,8 +110,9 @@ class Async::AudioIO::InputFifo : public AudioFifo
       {
         return count;
       }
+      int ret = AudioFifo::writeSamples(samples, count);
       audio_dev->audioToWriteAvailable();
-      return AudioFifo::writeSamples(samples, count);
+      return ret;
     }
     
     virtual void flushSamples(void)
@@ -175,6 +176,10 @@ class Async::AudioIO::DelayedFlushAudioReader
       audio_dev->flushSamples();
       long flushtime =
               1000 * audio_dev->samplesToWrite() / audio_dev->sampleRate();
+      if (flushtime < 0)
+      {
+        flushtime = 0;
+      }
       flush_timer.setEnable(false);
       flush_timer.setTimeout(flushtime);
       flush_timer.setEnable(true);
@@ -239,10 +244,16 @@ void AudioIO::setBlocksize(int size)
 } /* AudioIO::setBlocksize */
 
 
-int AudioIO::blocksize(void)
+int AudioIO::readBlocksize(void)
 {
-  return audio_dev->blocksize();
-} /* AudioIO::blocksize */
+  return audio_dev->readBlocksize();
+} /* AudioIO::readBlocksize */
+
+
+int AudioIO::writeBlocksize(void)
+{
+  return audio_dev->writeBlocksize();
+} /* AudioIO::writeBlocksize */
 
 
 void AudioIO::setBlockCount(int count)
@@ -329,8 +340,8 @@ bool AudioIO::open(Mode mode)
   if (open_ok)
   {
     io_mode = mode;
-    input_fifo->setSize(audio_dev->blocksize() * 2 + 1);
-    input_fifo->setPrebufSamples(audio_dev->blocksize() * 2 + 1);
+    input_fifo->setSize(audio_dev->writeBlocksize() * 2 + 1);
+    input_fifo->setPrebufSamples(audio_dev->writeBlocksize() * 2 + 1);
   }
   
   input_valve->setOpen(true);

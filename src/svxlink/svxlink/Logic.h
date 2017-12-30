@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2017  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "LogicBase.h"
 #include "CmdParser.h"
 
 
@@ -144,7 +145,7 @@ class DtmfDigitHandler;
 @author Tobias Blomberg
 @date   2004-03-23
 */
-class Logic : public sigc::trackable
+class Logic : public LogicBase
 {
   public:
 
@@ -166,15 +167,15 @@ class Logic : public sigc::trackable
 
     virtual bool initialize(void);
 
-    const std::string& name(void) const { return m_name; }
-
     virtual void processEvent(const std::string& event, const Module *module=0);
     void setEventVariable(const std::string& name, const std::string& value);
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
+    virtual void playDtmf(const std::string& digits, int amp, int len);
     void recordStart(const std::string& filename, unsigned max_time);
     void recordStop(void);
+    void injectDtmf(const std::string& digits, int len);
 
     virtual bool activateModule(Module *module);
     virtual void deactivateModule(Module *module);
@@ -185,7 +186,6 @@ class Logic : public sigc::trackable
 
     const std::string& callsign(void) const { return m_callsign; }
 
-    Async::Config &cfg(void) const { return m_cfg; }
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
@@ -196,19 +196,15 @@ class Logic : public sigc::trackable
       dtmfDigitDetectedP(digit, duration_ms);
     }
 
-    bool isIdle(void) const { return is_idle; }
-
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
 
     bool isWritingMessage(void);
     virtual void setOnline(bool online);
 
-    Async::AudioSink *logicConIn(void);
-    Async::AudioSource *logicConOut(void);
+    virtual Async::AudioSink *logicConIn(void);
+    virtual Async::AudioSource *logicConOut(void);
 
     CmdParser *cmdParser(void) { return &cmd_parser; }
-
-    sigc::signal<void, bool> idleStateChanged;
 
   protected:
     virtual void squelchOpen(bool is_open);
@@ -218,6 +214,7 @@ class Logic : public sigc::trackable
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
     virtual void selcallSequenceDetected(std::string sequence);
+    virtual void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
 
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
@@ -240,8 +237,6 @@ class Logic : public sigc::trackable
       time_t last_tx_sec;
     };
 
-    Async::Config     	      	    &m_cfg;
-    std::string       	      	    m_name;
     Rx	      	      	      	    *m_rx;
     Tx	      	      	      	    *m_tx;
     MsgHandler	      	      	    *msg_handler;
@@ -269,7 +264,6 @@ class Logic : public sigc::trackable
     Async::AudioSplitter      	    *audio_to_module_splitter;
     Async::AudioSelector      	    *audio_to_module_selector;
     Async::AudioStreamStateDetector *state_det;
-    bool      	      	      	    is_idle;
     int                             fx_gain_normal;
     int                             fx_gain_low;
     unsigned       	      	    long_cmd_digits;
@@ -286,6 +280,7 @@ class Logic : public sigc::trackable
     std::string                     online_cmd;
     DtmfDigitHandler                *dtmf_digit_handler;
     Async::Pty                      *state_pty;
+    Async::Pty                      *dtmf_ctrl_pty;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

@@ -239,8 +239,10 @@ class Dispatcher : public sigc::trackable
     void unregisterConnection(Qso *con);
     
     Dispatcher(void);
-    void ctrlDataReceived(const Async::IpAddress& ip, void *buf, int len);
-    void audioDataReceived(const Async::IpAddress& ip, void *buf, int len);
+    void ctrlDataReceived(const Async::IpAddress& ip, uint16_t port,
+                          void *buf, int len);
+    void audioDataReceived(const Async::IpAddress& ip, uint16_t port,
+                           void *buf, int len);
     void printData(const char *buf, int len);
     
       // These functions are accessed by the Qso class

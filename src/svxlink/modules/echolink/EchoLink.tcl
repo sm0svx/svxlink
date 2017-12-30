@@ -243,10 +243,23 @@ proc remote_connected {call} {
 
 #
 # Executed when an outgoing connection has been established.
+#   call - The callsign of the remote station
 #
-proc connected {} {
+proc connected {call} {
+  #puts "Outgoing Echolink connection to $call established"
   playMsg "connected";
   playSilence 500;
+}
+
+
+#
+# Executed when the list of connected remote EchoLink clients changes
+#   client_list - List of connected clients
+#
+proc client_list_changed {client_list} {
+  #foreach {call} $client_list {
+  #  puts $call
+  #}
 }
 
 
@@ -448,8 +461,11 @@ proc reject_outgoing_connection {call} {
 #
 # Executed when a transmission from an EchoLink station is starting
 # or stopping
+#   rx   - 1 if receiving or 0 if not
+#   call - The callsign of the remote station
 #
-proc is_receiving {rx} {
+#
+proc is_receiving {rx call} {
   if {$rx == 0} {
     playTone 1000 100 100;
   }
@@ -464,9 +480,24 @@ proc is_receiving {rx} {
 # WARNING: This is a slightly dangerous function since unexepected input
 # may open up a security flaw. Make sure that the message string is handled
 # as unknown data that can contain anything. Check it thoroughly before
-# using it.
+# using it. Do not run SvxLink as user root.
 proc chat_received {msg} {
   #puts $msg
+}
+
+
+#
+# Executed when an info message is received from a remote station
+#
+#   call -- The callsign of the sending station
+#   msg  -- The message text
+#
+# WARNING: This is a slightly dangerous function since unexepected input
+# may open up a security flaw. Make sure that the message string is handled
+# as unknown data that can contain anything. Check it thoroughly before
+# using it. Do not run SvxLink as user root.
+proc info_received {call msg} {
+  #puts "$call: $msg"
 }
 
 

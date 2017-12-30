@@ -189,8 +189,7 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
     {
       addr.sin_addr = bind_ip.ip4Addr();
     }
-    if(bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr))
-	== -1)
+    if(::bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
     {
       perror("bind");
       cleanup();
@@ -336,7 +335,7 @@ void UdpSocket::handleInput(FdWatch *watch)
     return;
   }
   
-  dataReceived(IpAddress(addr.sin_addr), buf, len);
+  dataReceived(IpAddress(addr.sin_addr), ntohs(addr.sin_port), buf, len);
   
 } /* UdpSocket::handleInput */
 
@@ -375,7 +374,7 @@ void UdpSocket::sendRest(FdWatch *watch)
   send_buf = 0;
   wr_watch->setEnabled(false);
   
-} /* UdpSocket::handleInput */
+} /* UdpSocket::sendRest */
 
 
 

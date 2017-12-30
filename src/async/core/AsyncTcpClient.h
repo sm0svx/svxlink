@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2017 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ An example of how to use the Async::TcpClient class
  *
  ****************************************************************************/
 
-#include <AsyncTcpConnection.h>
+#include <AsyncTcpClientBase.h>
 
 
 /****************************************************************************
@@ -127,7 +127,8 @@ create and use the connections. An example usage is shown below.
 
 \include AsyncTcpClient_demo.cpp
 */
-class TcpClient : public TcpConnection
+template <typename ConT=TcpConnection>
+class TcpClient : public ConT, public TcpClientBase
 {
   public:
     /**
@@ -140,7 +141,10 @@ class TcpClient : public TcpConnection
      * When using this variant of the constructor the connect method which
      * take host and port must be used.
      */
-    explicit TcpClient(size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+    explicit TcpClient(size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
+      : ConT(recv_buf_len), TcpClientBase(this)
+    {
+    }
     
     /**
      * @brief 	Constructor
@@ -153,7 +157,10 @@ class TcpClient : public TcpConnection
      * (see @ref TcpClient::connect) is called.
      */
     TcpClient(const std::string& remote_host, uint16_t remote_port,
-      	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+              size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
+      : ConT(recv_buf_len), TcpClientBase(this, remote_host, remote_port)
+    {
+    }
     
     /**
      * @brief 	Constructor
@@ -166,52 +173,15 @@ class TcpClient : public TcpConnection
      * (see @ref TcpClient::connect) is called.
      */
     TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
-      	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+              size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
+      : ConT(recv_buf_len), TcpClientBase(this, remote_ip, remote_port)
+    {
+    }
     
     /**
      * @brief 	Destructor
      */
-    ~TcpClient(void);
-    
-    /**
-     * @brief   Bind to the interface having the specified IP address
-     * @param   bind_ip The IP address of the interface to bind to
-     */
-    void bind(const IpAddress& bind_ip);
-
-    /**
-     * @brief 	Connect to the remote host
-     * @param 	remote_host   The hostname of the remote host
-     * @param 	remote_port   The port on the remote host to connect to
-     *
-     * This function will initiate a connection to the remote host. The
-     * connection must not be written to before the connected signal
-     * (see @ref TcpClient::connected) has been emitted. If the connection is
-     * already established or pending, nothing will be done.
-     */
-    void connect(const std::string &remote_host, uint16_t remote_port);
-    
-    /**
-     * @brief 	Connect to the remote host
-     * @param 	remote_ip     The IP address of the remote host
-     * @param 	remote_port   The port on the remote host to connect to
-     *
-     * This function will initiate a connection to the remote host. The
-     * connection must not be written to before the connected signal
-     * (see @ref TcpClient::connected) has been emitted. If the connection is
-     * already established or pending, nothing will be done.
-     */
-    void connect(const Async::IpAddress& remote_ip, uint16_t remote_port);
-    
-    /**
-     * @brief 	Connect to the remote host
-     *
-     * This function will initiate a connection to the remote host. The
-     * connection must not be written to before the connected signal
-     * (see @ref TcpClient::connected) has been emitted. If the connection is
-     * already established or pending, nothing will be done.
-     */
-    void connect(void);
+    ~TcpClient(void) {}
     
     /**
      * @brief 	Disconnect from the remote host
@@ -220,7 +190,11 @@ class TcpClient : public TcpConnection
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    void disconnect(void);
+    virtual void disconnect(void)
+    {
+      ConT::disconnect();
+      TcpClientBase::disconnect();
+    }
     
     /**
      * @brief   Check if the connection is idle
@@ -228,26 +202,14 @@ class TcpClient : public TcpConnection
      *
      * A connection being idle means that it is not connected nor connecting.
      */
-    bool isIdle(void) const { return TcpConnection::isIdle() && (sock == -1); }
-    
-    /**
-     * @brief 	A signal that is emitted when a connection has been established
-     */
-    sigc::signal<void>       	      	  connected;
-    
-        
+    bool isIdle(void) const
+    {
+      return TcpClientBase::isIdle() && ConT::isIdle();
+    }
+
   protected:
     
   private:
-    DnsLookup *       dns;
-    std::string       remote_host;
-    int       	      sock;
-    FdWatch *         wr_watch;
-    Async::IpAddress  bind_ip;
-    
-    void dnsResultsReady(DnsLookup& dns_lookup);
-    void connectToRemote(void);
-    void connectHandler(FdWatch *watch);
 
 };  /* class TcpClient */
 

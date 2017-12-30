@@ -11,7 +11,7 @@ include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
 
 # Add project libraries
-set(LIBS ${LIBS} trx asynccpp asyncaudio asynccore)
+set(LIBS ${LIBS} trx asynccpp asyncaudio asynccore svxmisc)
 
 # Add targets for version files
 set(VERSION_DEPENDS)

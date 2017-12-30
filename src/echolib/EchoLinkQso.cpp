@@ -189,7 +189,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   if (!Dispatcher::instance()->registerConnection(this, &Qso::handleCtrlInput,
       &Qso::handleAudioInput))
   {
-    cerr << "Cannot create a new Qso object becasue registration with the "
+    cerr << "Cannot create a new Qso object because registration with the "
       	    "dispatcher object failed for some reason.\n";
     return;
   }
@@ -357,9 +357,9 @@ bool Qso::sendInfoData(const string& info)
   }
   replace(info_msg.begin(), info_msg.end(), '\n', '\r');
 
-  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, info_msg.c_str(),
-      info_msg.length()+1);
-  if (ret == -1)
+  bool success = Dispatcher::instance()->sendAudioMsg(
+      remote_ip, info_msg.c_str(), info_msg.length()+1);
+  if (!success)
   {
     perror("sendAudioMsg in Qso::sendInfoData");
     return false;
@@ -378,9 +378,9 @@ bool Qso::sendChatData(const string& msg)
   }
   
   string buf("oNDATA" + callsign + '>' + msg + "\r\n");
-  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, buf.c_str(),
+  bool success = Dispatcher::instance()->sendAudioMsg(remote_ip, buf.c_str(),
       buf.length()+1);
-  if (ret == -1)
+  if (!success)
   {
     perror("sendAudioMsg in Qso::sendChatData");
     return false;
@@ -417,9 +417,9 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
     voice_packet.header.ssrc = htonl(0);
     voice_packet.header.seqNum = htons(next_audio_seq++);
     
-    int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, &voice_packet,
+    bool success = Dispatcher::instance()->sendAudioMsg(remote_ip, &voice_packet,
         nbytes + sizeof(voice_packet.header));
-    if (ret == -1)
+    if (!success)
     {
       perror("sendAudioMsg in Qso::sendAudioRaw");
       return false;
@@ -430,9 +430,9 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
   {
     raw_packet->voice_packet->header.seqNum = htons(next_audio_seq++);
   
-    int ret = Dispatcher::instance()->sendAudioMsg(remote_ip,
+    bool success = Dispatcher::instance()->sendAudioMsg(remote_ip,
         raw_packet->voice_packet, raw_packet->length);
-    if (ret == -1)
+    if (!success)
     {
       perror("sendAudioMsg in Qso::sendAudioRaw");
       return false;
@@ -998,9 +998,9 @@ bool Qso::sendVoicePacket(void)
     return false;
   }
 
-  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, &voice_packet,
+  bool success = Dispatcher::instance()->sendAudioMsg(remote_ip, &voice_packet,
       nbytes + sizeof(voice_packet.header));
-  if (ret == -1)
+  if (!success)
   {
     perror("sendAudioMsg in Qso::sendVoicePacket");
     return false;
@@ -1031,8 +1031,8 @@ bool Qso::sendByePacket(void)
 {
   unsigned char bye[64];
   int length = rtp_make_bye(bye);
-  int ret = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
-  if (ret == -1)
+  bool success = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
+  if (!success)
   {
     perror("sendCtrlMsg in Qso::disconnect");
     return false;

@@ -159,7 +159,7 @@ class AudioFilter : public AudioProcessor
 
     /**
      * @brief 	Set the output gain of the filter
-     * @param 	gain The gain to set in dB
+     * @param 	gain_db The gain to set in dB
      *
      * Use this function to apply a gain (positive) or attenuation (negative)
      * after the filter output. A gain of 6dB will amplify the signal with

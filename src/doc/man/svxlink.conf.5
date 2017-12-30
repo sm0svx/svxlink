@@ -62,7 +62,7 @@ Leaving this variable unset should work in most cases.
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is
-the thing that ties the transciever and the voice services (modules) together. It contains
+the thing that ties the transceiver and the voice services (modules) together. It contains
 the rules for how the radio interface should be handled. The specified name of a logic
 core must have a corresponding section specified in the config file. This is where the
 behaviour of the logic core is specified.
@@ -135,7 +135,7 @@ card in mono mode, both left and right channels transmit/receive the same
 audio.
 .TP
 .B LOCATION_INFO
-Enter the section name that contains information required for transfering
+Enter the section name that contains information required for transferring
 positioning data to location servers. Setting this item makes the system
 visible on the EchoLink link status page and the APRS network.
 .TP
@@ -213,7 +213,7 @@ code (e.g. sv_SE for Swedish). If not set, it defaults to en_US which is US Engl
 .TP
 .B RGR_SOUND_DELAY
 The number of milliseconds to wait after the squelch has been closed before a roger beep
-is played. The beep can be disabled by specifying a value of -1 or commenting out this
+is played. The beep can be disabled by specifying a value of \-1 or commenting out this
 line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
 a delay instead of specifying a delay here. This configuration variable should then be set
 to 0. 
@@ -262,7 +262,7 @@ This gain is normally set to 0dB which means no gain or attenuation.
 .TP
 .B FX_GAIN_LOW
 The gain (dB) to use for audio effects and announcements when there is other traffic.
-This gain is normally set to something like -12dB so that announcements and audio effects
+This gain is normally set to something like \-12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
 .TP
 .B QSO_RECORDER
@@ -306,12 +306,24 @@ PTY that SvxLink state events is published to. The published events is in a
 simple text format using a space separated list of values. SvxLink will create
 a softlink to the actual slave PTY. For that reason, SvxLink must have write
 permissions in the directory where the softlink should be created. Monitoring
-the PTY output is as simple at doing a
+the PTY output is as simple as doing a
 .B "cat /path/to/pty"
 after starting SvxLink. See STATE PTY FORMAT for more information on the format
 of the state messages.
 
 Example: STATE_PTY=/tmp/state_pty
+.TP
+.B DTMF_CTRL_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Sending
+commands to the PTY is as simple as doing a
+.B "echo '*1#' > /path/to/pty"
+after starting SvxLink. The device works bidirectional, received dtmf characters
+(from Rf) are output via this interface.
+
+Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .
 .SS Simplex Logic Section
 .
@@ -466,6 +478,38 @@ This is the minimum time, in milliseconds, that a transmission must last to
 be considered as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.
 .
+.SS ReflectorLogic
+.
+The ReflectorLogic is used to connect to an SvxReflector server. The
+SvxReflector will distribute all audio to all connected nodes. To actually send
+audio to the reflector from a logic core, set up a link between the two logics
+using LogicLinking. More than one logic core can be connected.
+.TP
+.B TYPE
+The type for a reflector logic core is always
+.BR Reflector .
+.TP
+.B HOST
+The hostname or IP address of the reflector server.
+.TP
+.B PORT
+The TCP/UDP port number used by the server. The client do not need to open any
+ports in the firewall. Default: 5300.
+.TP
+.B CALLSIGN
+The callsign of this node. The callsign also serves as the username when
+authenticating to the SvxReflector server.
+.TP
+.B AUTH_KEY
+The authentication key, or password, used when authenticating to the
+SvxReflector server.
+.TP
+.B JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. Set this configuration
+variable to the number of milliseconds to buffer before starting to process the
+audio. Default: 0.
+.
 .SS QSO Recorder Section
 .
 The QSO recorder is used to record all received audio to files on disk. All
@@ -495,7 +539,7 @@ To not get abrupt breaks in recordings it is possible to set a soft break time.
 Let's say that MAX_TIME is set to 3600 seconds (one hour). If we set SOFT_TIME
 to 300 seconds (five minutes) the QSO recorder try to close the file on a
 squelch close somewhere between 55 and 60 minutes. In this way we may avoid
-getting transmissions splitted between files. Default: 0 (no limit)
+getting transmissions split up between files. Default: 0 (no limit)
 .TP
 .B MAX_DIRSIZE
 Specify the maximum total size in megabytes of the files in the recording
@@ -537,9 +581,9 @@ may be a good idea to write a script instead.
 
 The encoder command will be run under a shell so normal shell operators like
 redirects and pipes may be used. The shell specified in the SHELL environment
-variable will be used and if not set, /bin/sh will be used. The "-c" command
+variable will be used and if not set, /bin/sh will be used. The "\-c" command
 line option will be added so the complete command will look something like:
-$SHELL -c "$ENCODER_CMD". A number of %-codes can be included in the command.
+$SHELL \-c "$ENCODER_CMD". A number of %-codes can be included in the command.
 They have the following meaning:
 .RS
 .IP \(bu 4
@@ -559,9 +603,9 @@ for longer than one hour it will be killed.
 Note that SvxLink will never remove the original recording so that have to be
 done in the encoder command. Here are a couple of examples:
 
- ENCODER_CMD=/usr/bin/oggenc -Q \\"%f\\" && rm \\"%f\\"
+ ENCODER_CMD=/usr/bin/oggenc \-Q \\"%f\\" && rm \\"%f\\"
 .BR
- ENCODER_CMD=/usr/bin/lame --quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
+ ENCODER_CMD=/usr/bin/lame \-\-quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
 .BR
  ENCODER_CMD=/usr/bin/speexenc \\"%f\\" \\"%d/%b.spx\\" 2>/dev/null && rm \\"%f\\"
 .BR
@@ -700,6 +744,8 @@ The GPIO squelch detector read a pin on the GPIO Port. Depending on the level
 of the pin, the squelch is switched. A HIGH (3.3V) at the pin set the squelch
 to open and a LOW (GND) level will set the squelch to closed.
 Specify which squelch pin to use with the GPIO_SQL_PIN configuration variable.
+On some devices, like the Orange Pi, you also need to set the GPIO_PATH
+configuration variable.
 
 The SIGLEV squelch detector use signal level measurements to determine if the
 squelch is open or not. Which signal level detector to use is determined by the
@@ -768,7 +814,7 @@ it will not work as expected.
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limiti, in seconds, for how
 long the squelch is allowed to be open. If the timeout value is exceeded the
-squelch is forced to closed. If the squelch close for real, everthing is back
+squelch is forced to closed. If the squelch close for real, everything is back
 to normal. When it opens the next time a squelch open will be signalled.
 For example, use this feature to make sure that a faulty receiver cannot block
 the system indefinitly.
@@ -911,6 +957,11 @@ value for the event you want to use to close the squelch. For example if
 type is 1, code is 163 and value is 0, set this config variable to
 1,163,0. If you set the same type,code,value combination for both
 EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
+.TP
+.B GPIO_PATH
+Use this configuration variable to set the path to the sys control devices for
+GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
+Pi, the path is /sys/class/gpio_sw.
 .TP
 .B GPIO_SQL_PIN
 If SQL_DET is set to GPIO this configuration variable is used to choose which
@@ -1314,7 +1365,7 @@ The frequency, in Hz, that the wideband tuner should be placed at. This
 configuration variable should normally be left unset since SvxLink will try to
 place the wideband tuner to cover all set up Ddr frequencies. SvxLink will also
 try to avoid placing a Ddr on the center frequency of the wideband spectrum
-since there is usually some noise there. Only use this configration variable
+since there is usually some noise there. Only use this configuration variable
 if you need to override the automatic placement for some reason.
 .TP
 .B XVRTR_OFFSET
@@ -1429,6 +1480,18 @@ and fast receiver is receiving the same signal and the faster is currently
 chosen, when the PTT is released the slower receiver will be voted before
 closing.  This will cause a double squelch tail and double roger beep.
 Default is 500 milliseconds.
+.TP
+.B COMMAND_PTY
+Specify the path to a PTY that can be used to control the voter from
+the operating system. Available commands:
+.RS
+.IP \(bu 4
+.BR "ENABLE rx_name" " - Enable the given receiver"
+.IP \(bu 4
+.BR "DISABLE rx_name" " - Disable the given receiver"
+.P
+Commands can be issued using a simple echo command from the shell. Example:
+echo "DISABLE Rx1" >/dev/shm/voter_ctrl
 .
 .SS Networked Receiver Section
 .
@@ -1470,7 +1533,7 @@ The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
-The audio codec to use when transfering audio from this remote receiver.
+The audio codec to use when transferring audio from this remote receiver.
 Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
@@ -1512,7 +1575,7 @@ Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
 .TP
 .B SPEEX_ENC_ABR
 Speex encoder setting. The average bitrate encoding will try to keep a target
-bitrate by continously adjusting the quality. This configuration variable
+bitrate by continuously adjusting the quality. This configuration variable
 specify the target bitrate and enable ABR. It also need to have VBR enabled so
 don't force it to off.
 .TP
@@ -1597,7 +1660,13 @@ name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
 Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
 the USING GPIO section for information on how to set up the operating system.
 Normally, the pin will be active high but if the pin name is prefixed with an
-exclamation mark it will be active low instead.
+exclamation mark it will be active low instead. For some hardware platforms you
+may need to also set the GPIO_PATH configuration variable.
+.TP
+.B GPIO_PATH
+Use this configuration variable to set the path to the sys control devices for
+GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
+Pi, the path is /sys/class/gpio_sw.
 .TP
 .B PTT_PTY
 If PTT_TYPE is set to "PTY" this configuration variable will set the path for
@@ -1689,7 +1758,7 @@ transmitter. 50ms is the default.
 .B DTMF_DIGIT_PWR
 The power, in dB, of DTMF digits transmitted on this transmitter. Zero dB will
 give the same power in the generated signal as there is in a maximum amplitude
-(full scale) sine wave. -15dB is the default.
+(full scale) sine wave. \-15dB is the default.
 .TP
 .B TONE_SIGLEV_MAP
 It is possible to transmit one of ten tones along with the normal transmission
@@ -1765,7 +1834,7 @@ The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
-The audio codec to use when transfering audio to this remote transmitter.
+The audio codec to use when transferring audio to this remote transmitter.
 Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
@@ -1809,7 +1878,7 @@ Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
 .TP
 .B SPEEX_ENC_ABR
 Speex encoder setting. The average bitrate encoding will try to keep a target
-bitrate by continously adjusting the quality. This configuration variable
+bitrate by continuously adjusting the quality. This configuration variable
 specify the target bitrate and enable ABR. It also need to have VBR enabled so
 don't force it to off.
 .TP
@@ -1979,7 +2048,7 @@ ANTENNA_HEIGHT=90     # 90 feet
 .TP
 .B ANTENNA_DIR
 Main beam direction of the antenna in degrees. If an omni direction antenna is
-used, specify -1 as the direction.
+used, specify \-1 as the direction.
 
 Example:
 .br
@@ -2071,30 +2140,11 @@ be chosen using the CARD_SAMPLE_RATE config variable as usual.
 .
 GPIO (General Purpose IO) is used to access hardware pins that are made
 available for example on an embedded system. Before starting to use a pin in
-SvxLink some setup need to be done in the operating system. The example below
-will set up pin 31 as an output for PTT use and pin 30 is used as input for
-squelch. Make sure that the commands are run as user root.
-
-  Enable the PTT pin for GPIO:
-  echo 31 > /sys/class/gpio/export
-
-  Set the direction to output for the pin:
-  echo out > /sys/class/gpio/gpio31/direction
-
-  Make sure that the svxlink user can write to the GPIO pin:
-  chown svxlink /sys/class/gpio31/value
-
-  Enable the squelch pin for GPIO:
-  echo 30 > /sys/class/gpio/export
-
-  Set the direction to input for the pin:
-  echo in > /sys/class/gpio/gpio30/direction
-
-  Make sure that the svxlink user can read from the GPIO pin:
-  chown svxlink /sys/class/gpio30/value
-
-These steps have to be performed whenever the system is rebooted. Putting the
-commands in a script is recommended.
+SvxLink some setup need to be done in the operating system. With the standard
+distribution of SvxLink there is a pair of scripts that help with setting up
+and taking down the GPIO pins. The scripts are named svxlink_gpio_up and
+svxlink_gpio_down. The configuration file, which can be found among the other
+SvxLink configuration files (typically in /etc/svxlink), is called gpio.conf.
 .
 .SH CALIBRATING THE SIGNAL LEVEL DETECTOR
 .
