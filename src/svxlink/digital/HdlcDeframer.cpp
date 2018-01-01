@@ -209,7 +209,7 @@ void HdlcDeframer::bitsReceived(vector<bool> &bits)
             }
             cout << endl << endl;
             */
-            if (fcsOk(frame))
+            if ((frame.size() > 2) && fcsOk(frame))
             {
                 // Remove CRC from frame
               frame.pop_back();
