@@ -1,14 +1,12 @@
 /**
 @file	 AfskModulator.h
-@brief   A_brief_description_for_this_file
+@brief   Audio Frequency Shift Keying modulator
 @author  Tobias Blomberg / SM0SVX
 @date	 2013-05-09
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example AfskModulator_demo.cpp
-An example of how to use the AfskModulator class
-*/
-
 
 #ifndef AFSK_MODULATOR_INCLUDED
 #define AFSK_MODULATOR_INCLUDED
@@ -92,7 +85,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -117,39 +110,37 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Audio Frequency Shift Keying modulator
 @author Tobias Blomberg / SM0SVX
 @date   2013-05-09
 
-A_detailed_class_description
-
-\include AfskModulator_demo.cpp
+This class implement an Audio Frequency Shift Keying modulator. It will
+generate an audio sample stream from the given bitstream.
 */
 class AfskModulator : public Async::AudioSource, public sigc::trackable
 {
   public:
     /**
      * @brief 	Constuctor
+     * @param   f0          The lower frequency
+     * @param   f1          The upper frequency
+     * @param   baudrate    The baudrate of the bitstream
+     * @param   sample_rate The sample rate of the audio stream
      */
     AfskModulator(unsigned f0, unsigned f1, unsigned baudrate, float level,
-                 unsigned sample_rate=INTERNAL_SAMPLE_RATE);
-  
+                  unsigned sample_rate=INTERNAL_SAMPLE_RATE);
+
     /**
      * @brief 	Destructor
      */
     ~AfskModulator(void);
-  
+
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Generate audio samples from the given bits
+     * @param 	bit The bit vector to send
      */
     void sendBits(const std::vector<bool> &bits);
-    void onResumeOutput(void);
-    void onAllSamplesFlushed(void);
-    
-  protected:
-    
+
   private:
     static CONSTEXPR unsigned BUFSIZE = 256;
     static CONSTEXPR unsigned FADE_SYMBOLS = 1;
@@ -161,7 +152,7 @@ class AfskModulator : public Async::AudioSource, public sigc::trackable
     float                   *sin_lookup;
     unsigned                k0;
     unsigned                k1;
-    unsigned                phi; 
+    unsigned                phi;
     std::deque<bool>        bitbuf;
     unsigned                bitclock;
     float                   buf[BUFSIZE];
@@ -175,15 +166,15 @@ class AfskModulator : public Async::AudioSource, public sigc::trackable
     AfskModulator(const AfskModulator&);
     AfskModulator& operator=(const AfskModulator&);
     void writeToSink(void);
-    
+    void onResumeOutput(void);
+    void onAllSamplesFlushed(void);
+
 };  /* class AfskModulator */
 
 
 //} /* namespace */
 
 #endif /* AFSK_MODULATOR_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

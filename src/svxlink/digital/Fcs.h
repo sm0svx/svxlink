@@ -1,14 +1,12 @@
 /**
 @file	 Fcs.h
-@brief   A_brief_description_for_this_file
+@brief   Calculate the HDLC CRC16 Frame Check Sequence
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Fcs_demo.cpp
-An example of how to use the Fcs class
-*/
-
 
 #ifndef FCS_INCLUDED
 #define FCS_INCLUDED
@@ -110,11 +103,17 @@ An example of how to use the Fcs class
  ****************************************************************************/
 
 /**
- * @brief   A_brief_member_function_description
- * @param   param1 Description_of_param1
- * @return  Return_value_of_this_member_function
+ * @brief   Calculate the frame check sequence for the given frame buffer
+ * @param   buf The buffer containing the data bytes
+ * @return  Return the 16 bit frame check sequence
  */
-uint32_t fcsCalc(const std::vector<uint8_t> buf);
+uint16_t fcsCalc(const std::vector<uint8_t> buf);
+
+/**
+ * @brief   Check if the buffer contain a valid data stream
+ * @param   buf The buffer containing the data bytes and the transmitted FCS
+ * @return  Returns \em true on success or \em false on failure
+ * */
 bool fcsOk(const std::vector<uint8_t> buf);
 
 

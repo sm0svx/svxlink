@@ -1,14 +1,12 @@
 /**
 @file	 HdlcDeframer.cpp
-@brief   A_brief_description_for_this_file
+@brief   Deframe an HDLC bitstream
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 
 /****************************************************************************
  *
@@ -65,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 
 
-
 /****************************************************************************
  *
  * Defines & typedefs
@@ -98,7 +93,6 @@ using namespace std;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -116,13 +110,11 @@ using namespace std;
 HdlcDeframer::HdlcDeframer(void)
   : state(STATE_SYNCHRONIZING), next_byte(0), bit_cnt(0), ones(0)
 {
-
 } /* HdlcDeframer::HdlcDeframer */
 
 
 HdlcDeframer::~HdlcDeframer(void)
 {
-  
 } /* HdlcDeframer::~HdlcDeframer */
 
 
@@ -167,8 +159,6 @@ void HdlcDeframer::bitsReceived(vector<bool> &bits)
       case STATE_FRAME_START_WAIT:
         if (++bit_cnt >= 8)
         {
-          //cout << "STATE_FRAME_START_WAIT: next_byte=" << hex << setfill('0') << setw(2)
-          //     << (int)next_byte << endl;
           if (next_byte != 0x7e)
           {
             state = STATE_RECEIVING;
@@ -189,8 +179,6 @@ void HdlcDeframer::bitsReceived(vector<bool> &bits)
       case STATE_RECEIVING:
         if (++bit_cnt >= 8)
         {
-          //cout << "STATE_RECEIVING: next_byte=" << hex << setfill('0') << setw(2)
-          //     << (int)next_byte << endl;
           if (flag_detected)
           {
             state = STATE_FRAME_START_WAIT;
@@ -242,7 +230,6 @@ void HdlcDeframer::bitsReceived(vector<bool> &bits)
 } /* HdlcDeframer::bitsReceived */
 
 
-
 /****************************************************************************
  *
  * Protected member functions
@@ -262,4 +249,3 @@ void HdlcDeframer::bitsReceived(vector<bool> &bits)
 /*
  * This file has not been truncated
  */
-

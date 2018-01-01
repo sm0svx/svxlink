@@ -1,14 +1,12 @@
 /**
 @file	 AfskModulator.cpp
-@brief   A_brief_description_for_this_file
+@brief   Audio Frequency Shift Keying modulator
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 
 /****************************************************************************
  *
@@ -61,7 +57,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AfskModulator.h"
 
 
-
 /****************************************************************************
  *
  * Namespaces to use
@@ -70,7 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-
 
 
 /****************************************************************************
@@ -140,8 +134,6 @@ namespace {
     return N * quotient + N * rest / numerator;
   } /* AfskModulator::findMultiplier */
 #endif
-
-
 };
 
 
@@ -150,7 +142,6 @@ namespace {
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -216,10 +207,10 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
       expf(logf(FADE_START_VAL) * (fade_len - 1 - i) / (fade_len - 1));
   }
 
-  cout << "N0=" << N0 << endl;
-  cout << "N1=" << N1 << endl;
-  cout << "N=" << N << endl;
-  cout << "k0=" << k0 << " k1=" << k1 << endl;
+  cout << "### N0=" << N0 << endl;
+  cout << "### N1=" << N1 << endl;
+  cout << "### N=" << N << endl;
+  cout << "### k0=" << k0 << " k1=" << k1 << endl;
 
   sigc_src = new SigCAudioSource;
   sigc_src->sigResumeOutput.connect(
@@ -236,7 +227,7 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
   prev_src->registerSink(filter);
   prev_src = filter;
   */
-  
+
 #if 0
     // Apply a bandpass filter to filter out the AFSK signal.
     // The constructed filter is a FIR filter with linear phase.
@@ -330,7 +321,6 @@ void AfskModulator::onResumeOutput(void)
 
 void AfskModulator::onAllSamplesFlushed(void)
 {
-
 } /* AfskModulator::allSamplesFlushed */
 
 
@@ -384,7 +374,7 @@ void AfskModulator::writeToSink(void)
         {
           phi -= N;
         }
-        
+
         bitclock += baudrate;
         if (bitclock >= sample_rate)
         {

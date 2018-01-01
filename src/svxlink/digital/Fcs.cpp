@@ -1,14 +1,12 @@
 /**
 @file	 Fcs.cpp
-@brief   A_brief_description_for_this_file
+@brief   Calculate the HDLC CRC16 Frame Check Sequence
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 
 /****************************************************************************
  *
@@ -53,7 +49,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Fcs.h"
 
 
-
 /****************************************************************************
  *
  * Namespaces to use
@@ -61,7 +56,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-
 
 
 /****************************************************************************
@@ -89,7 +83,7 @@ using namespace std;
  ****************************************************************************/
 
 namespace {
-uint16_t pppfcs(uint16_t fcs, const uint8_t *cp, size_t len);
+  uint16_t pppfcs(uint16_t fcs, const uint8_t *cp, size_t len);
 };
 
 
@@ -157,7 +151,7 @@ namespace {
  *
  ****************************************************************************/
 
-uint32_t fcsCalc(const std::vector<uint8_t> buf)
+uint16_t fcsCalc(const std::vector<uint8_t> buf)
 {
   uint16_t fcs = PPPINITFCS;
   fcs = pppfcs(fcs, buf.data(), buf.size());
@@ -172,7 +166,6 @@ bool fcsOk(const std::vector<uint8_t> buf)
   fcs = pppfcs(fcs, buf.data(), buf.size());
   return (fcs == PPPGOODFCS);
 } /* fcsOk */
-
 
 
 /****************************************************************************
@@ -197,8 +190,6 @@ uint16_t pppfcs(uint16_t fcs, const uint8_t *cp, size_t len)
 }
 
 }; /* namespace */
-
-
 
 /*
  * This file has not been truncated

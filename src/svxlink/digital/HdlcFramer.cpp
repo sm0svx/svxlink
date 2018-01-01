@@ -1,14 +1,12 @@
 /**
 @file	 HdlcFramer.cpp
-@brief   A_brief_description_for_this_file
+@brief   Create HDLC frames from data bytes
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 
 /****************************************************************************
  *
@@ -63,7 +59,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 
 
-
 /****************************************************************************
  *
  * Defines & typedefs
@@ -96,7 +91,6 @@ using namespace std;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -114,13 +108,11 @@ using namespace std;
 HdlcFramer::HdlcFramer(void)
   : ones(0), prev_was_mark(false), start_flag_cnt(DEFAULT_START_FLAG_CNT)
 {
-  
 } /* HdlcFramer::HdlcFramer */
 
 
 HdlcFramer::~HdlcFramer(void)
 {
-  
 } /* HdlcFramer::~HdlcFramer */
 
 
@@ -148,7 +140,7 @@ void HdlcFramer::sendBytes(const vector<uint8_t> &frame)
   }
 
     // Calculate and store CRC (FCS)
-  uint32_t crc = fcsCalc(frame);
+  uint16_t crc = fcsCalc(frame);
   encodeByte(bitbuf, crc & 0xff);
   encodeByte(bitbuf, crc >> 8);
 
@@ -164,7 +156,6 @@ void HdlcFramer::sendBytes(const vector<uint8_t> &frame)
 
   sendBits(bitbuf);
 } /* HdlcFramer::sendBytes */
-    
 
 
 /****************************************************************************
@@ -180,7 +171,6 @@ void HdlcFramer::sendBytes(const vector<uint8_t> &frame)
  * Private member functions
  *
  ****************************************************************************/
-
 
 void HdlcFramer::encodeByte(vector<bool> &bitbuf, uint8_t data)
 {
@@ -209,7 +199,6 @@ void HdlcFramer::encodeByte(vector<bool> &bitbuf, uint8_t data)
     prev_was_mark = is_mark;
   }
 } /* HdlcFramer::encodeByte */
-
 
 
 /*

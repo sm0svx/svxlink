@@ -1,14 +1,12 @@
 /**
 @file	 AfskDemodulator.cpp
-@brief   A_brief_description_for_this_file
+@brief   A class to demodulate Audio Frequency Shift Keying
 @author  Tobias Blomberg / SM0SVX
 @date	 2013-05-09
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 
 /****************************************************************************
  *
@@ -49,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioProcessor.h>
-#include <AsyncAudioClipper.h>
+//#include <AsyncAudioClipper.h>
 #include <AsyncAudioFilter.h>
 
 
@@ -60,8 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AfskDemodulator.h"
-#include "remez.h"
-
+//#include "remez.h"
 
 
 /****************************************************************************
@@ -74,13 +69,11 @@ using namespace std;
 using namespace Async;
 
 
-
 /****************************************************************************
  *
  * Defines & typedefs
  *
  ****************************************************************************/
-
 
 
 /****************************************************************************
@@ -97,7 +90,7 @@ namespace {
           unsigned sample_rate=INTERNAL_SAMPLE_RATE)
         : delay(0), head(0)
       {
-        // Calculate the optimum value for the delay
+          // Calculate the optimum value for the delay
         unsigned samples_per_symbol = sample_rate / baudrate;
         double max_k_val = 0.0;
         for (unsigned k=0; k<samples_per_symbol; ++k)
@@ -110,16 +103,20 @@ namespace {
             delay = k;
           }
         }
-        cout << "Delay: " << delay << endl;
+        cout << "### Delay: " << delay << endl;
 
         buf = new float[delay];
         memset(buf, 0, sizeof(float) * delay);
       }
 
+      ~Correlator(void)
+      {
+        delete [] buf;
+      }
+
     protected:
       void processSamples(float *out, const float *in, int len)
       {
-        //cout << "processSamples: len=" << len << endl;
         for (int i=0; i<len; ++i)
         {
           out[i] = in[i] * buf[head];
@@ -129,9 +126,9 @@ namespace {
       }
 
     private:
-      unsigned delay;
-      float *buf;
-      unsigned head;
+      unsigned  delay;
+      float *   buf;
+      unsigned  head;
   };
 
 #if 0
@@ -158,8 +155,8 @@ namespace {
       }
 
     private:
-      deque<float> delay;
-      float prev;
+      deque<float>  delay;
+      float         prev;
   };
 #endif
 
@@ -180,10 +177,9 @@ namespace {
        * @param src   Source buffer
        * @param count Number of samples in the source buffer
        *
-       * This function should be reimplemented by the inheriting class to
-       * do the actual processing of the incoming samples. All samples must
-       * be processed, otherwise they are lost and the output buffer will
-       * contain garbage.
+       * This function do the actual processing of the incoming samples. All
+       * samples must be processed, otherwise they are lost and the output
+       * buffer will contain garbage.
        */
       virtual void processSamples(float *dest, const float *src, int count)
       {
@@ -200,9 +196,9 @@ namespace {
       }
 
     private:
-      const size_t order;
-      deque<float> delay;
-      float prev;
+      const size_t  order;
+      deque<float>  delay;
+      float         prev;
 
   }; /* class DcBlocker */
 }; /* Anonymous namespace */
@@ -215,13 +211,11 @@ namespace {
  ****************************************************************************/
 
 
-
 /****************************************************************************
  *
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 /****************************************************************************
@@ -231,64 +225,64 @@ namespace {
  ****************************************************************************/
 
 namespace {
-const double pre_filter_taps[] =
-{
--0.0497607774343533,
--0.0414626205397930,
-0.0147754767686696,
--0.0050460885570081,
-0.0126147216425678,
--0.0264073840416123,
-0.0296003565900331,
--0.0130149931857980,
--0.0144000295612727,
-0.0295301867452591,
--0.0152325941654806,
--0.0201650467073737,
-0.0449705722700260,
--0.0314722795301329,
--0.0147694650389599,
-0.0541293567854939,
--0.0469861720933350,
--0.0064907618162468,
-0.0607226391419224,
--0.0637607134140635,
-0.0074537437539216,
-0.0603289683874208,
--0.0769560352643945,
-0.0239509524606725,
-0.0532261698461783,
--0.0844641222378282,
-0.0403188191263031,
-0.0403188191263031,
--0.0844641222378282,
-0.0532261698461783,
-0.0239509524606725,
--0.0769560352643945,
-0.0603289683874208,
-0.0074537437539216,
--0.0637607134140635,
-0.0607226391419224,
--0.0064907618162468,
--0.0469861720933350,
-0.0541293567854939,
--0.0147694650389599,
--0.0314722795301329,
-0.0449705722700260,
--0.0201650467073737,
--0.0152325941654806,
-0.0295301867452591,
--0.0144000295612727,
--0.0130149931857980,
-0.0296003565900331,
--0.0264073840416123,
-0.0126147216425678,
--0.0050460885570081,
-0.0147754767686696,
--0.0414626205397930,
--0.0497607774343533
-};
-const int numtaps = sizeof(pre_filter_taps) / sizeof(*pre_filter_taps);
+  const double pre_filter_taps[] =
+  {
+    -0.0497607774343533,
+    -0.0414626205397930,
+    0.0147754767686696,
+    -0.0050460885570081,
+    0.0126147216425678,
+    -0.0264073840416123,
+    0.0296003565900331,
+    -0.0130149931857980,
+    -0.0144000295612727,
+    0.0295301867452591,
+    -0.0152325941654806,
+    -0.0201650467073737,
+    0.0449705722700260,
+    -0.0314722795301329,
+    -0.0147694650389599,
+    0.0541293567854939,
+    -0.0469861720933350,
+    -0.0064907618162468,
+    0.0607226391419224,
+    -0.0637607134140635,
+    0.0074537437539216,
+    0.0603289683874208,
+    -0.0769560352643945,
+    0.0239509524606725,
+    0.0532261698461783,
+    -0.0844641222378282,
+    0.0403188191263031,
+    0.0403188191263031,
+    -0.0844641222378282,
+    0.0532261698461783,
+    0.0239509524606725,
+    -0.0769560352643945,
+    0.0603289683874208,
+    0.0074537437539216,
+    -0.0637607134140635,
+    0.0607226391419224,
+    -0.0064907618162468,
+    -0.0469861720933350,
+    0.0541293567854939,
+    -0.0147694650389599,
+    -0.0314722795301329,
+    0.0449705722700260,
+    -0.0201650467073737,
+    -0.0152325941654806,
+    0.0295301867452591,
+    -0.0144000295612727,
+    -0.0130149931857980,
+    0.0296003565900331,
+    -0.0264073840416123,
+    0.0126147216425678,
+    -0.0050460885570081,
+    0.0147754767686696,
+    -0.0414626205397930,
+    -0.0497607774343533
+  };
+  const int numtaps = sizeof(pre_filter_taps) / sizeof(*pre_filter_taps);
 };
 
 
@@ -363,7 +357,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
     {
       ss << " " << pre_filter_taps[i];
     }
-    cout << "AFSK RX Passband filter: " << ss.str() << endl;
+    cout << "### AFSK RX Passband filter: " << ss.str() << endl;
     AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
     //AudioSink::setHandler(passband_filter);
     prev_src->registerSink(passband_filter, true);
@@ -381,7 +375,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
     // Low pass out the constant component from the correlator
   stringstream ss("");
   ss << "LpBu5/" << baudrate;
-  cout << "Correlator filter: " << ss.str() << endl;
+  cout << "### Correlator filter: " << ss.str() << endl;
   AudioFilter *corr_filter = new AudioFilter(ss.str(), sample_rate);
   corr_filter->setOutputGain(10);
   prev_src->registerSink(corr_filter, true);

@@ -1,14 +1,12 @@
 /**
 @file	 HdlcFramer.h
-@brief   A_brief_description_for_this_file
+@brief   Create HDLC frames from data bytes
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example HdlcFramer_demo.cpp
-An example of how to use the HdlcFramer class
-*/
-
 
 #ifndef HDLC_FRAMER_INCLUDED
 #define HDLC_FRAMER_INCLUDED
@@ -86,7 +79,7 @@ An example of how to use the HdlcFramer class
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -111,13 +104,17 @@ An example of how to use the HdlcFramer class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief  Create HDLC frames from data bytes
 @author Tobias Blomberg / SM0SVX
-@date   2008-
+@date   2013-05-09
 
-A_detailed_class_description
+This class will create a framed HDLC bitstream from the incoming data bytes.
+The generated frames will look like:
 
-\include HdlcFramer_demo.cpp
+  <flag>[...<flag>]<data>[...<data>]<FCS><flag>
+
+Where flag is 01111110 and FCS is the 16 bit Frame Check Sequence (CRC). The
+should be at least one data byte in each frame.
 */
 class HdlcFramer : public sigc::trackable
 {
@@ -126,25 +123,36 @@ class HdlcFramer : public sigc::trackable
      * @brief 	Default constuctor
      */
     HdlcFramer(void);
-  
+
     /**
      * @brief 	Destructor
      */
     ~HdlcFramer(void);
-  
+
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Set how many flag bytes that should prefix each frame
+     * @param 	cnt The number of flag bytes
      */
     void setStartFlagCnt(size_t cnt) { start_flag_cnt = cnt; }
+
+    /**
+     * @brief   Get the number of flag bytes prefixed to each frame
+     * @return  Returns the number of flags prefixed to each frame
+     */
     size_t startFlagCnt(void) const { return start_flag_cnt; }
+
+    /**
+     * @brief   Pack the given data bytes into an HDLC frame
+     * @param   frame The data bytes to put into the frame
+     */
     void sendBytes(const std::vector<uint8_t> &frame);
-    
+
+    /**
+     * @brief   A signal emitted when there are bits to transmit
+     * @param   bits The bits to transmit
+     */
     sigc::signal<void, const std::vector<bool>&> sendBits;
 
-  protected:
-    
   private:
     static const size_t DEFAULT_START_FLAG_CNT = 4;
 
@@ -155,7 +163,7 @@ class HdlcFramer : public sigc::trackable
     HdlcFramer(const HdlcFramer&);
     HdlcFramer& operator=(const HdlcFramer&);
     void encodeByte(std::vector<bool> &bitbuf, uint8_t data);
-    
+
 };  /* class HdlcFramer */
 
 
@@ -163,9 +171,6 @@ class HdlcFramer : public sigc::trackable
 
 #endif /* HDLC_FRAMER_INCLUDED */
 
-
-
 /*
  * This file has not been truncated
  */
-

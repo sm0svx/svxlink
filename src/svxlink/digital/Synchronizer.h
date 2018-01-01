@@ -1,14 +1,12 @@
 /**
-@file	 Synchronizer.h
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@file   Synchronizer.h
+@brief  Create HDLC frames from data bytes
+@author Tobias Blomberg / SM0SVX
+@date   2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Synchronizer_demo.cpp
-An example of how to use the Synchronizer class
-*/
-
 
 #ifndef SYNCHRONIZER_INCLUDED
 #define SYNCHRONIZER_INCLUDED
@@ -86,7 +79,7 @@ An example of how to use the Synchronizer class
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -111,52 +104,71 @@ An example of how to use the Synchronizer class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief  A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2008-
+@date   2013-05-09
 
-A_detailed_class_description
-
-\include Synchronizer_demo.cpp
+Find the optimal sampling point in the incoming stream of samples to extract
+the embedded bitstream. The method used is to track zero crossings and adjust
+the sampling point if the zero crossing is too eary or late.
 */
 class Synchronizer : public Async::AudioSink, public sigc::trackable
 {
   public:
     /**
      * @brief 	Constuctor
+     * @param   baudrate    The baudrate of the symbol stream
+     * @param   sample_rate The sample rate of the incoming samples
      */
     Synchronizer(unsigned baudrate, unsigned sample_rate=INTERNAL_SAMPLE_RATE);
-  
+
     /**
      * @brief 	Destructor
      */
     ~Synchronizer(void);
-  
+
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
      */
     int writeSamples(const float *samples, int len);
+
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     */
     void flushSamples(void);
-    
+
+    /**
+     * @brief   A signal emitted when new bits have been received
+     * @param   A vector of received bits
+     */
     sigc::signal<void, std::vector<bool>&> bitsReceived;
 
-  protected:
-    
   private:
-    const unsigned baudrate;
-    const unsigned sample_rate;
-    const unsigned shift_pos;
-    unsigned pos;
+    const unsigned    baudrate;
+    const unsigned    sample_rate;
+    const unsigned    shift_pos;
+    unsigned          pos;
     std::vector<bool> bitbuf;
-    bool was_mark;
-    bool last_stored_was_mark;
-    int err;
+    bool              was_mark;
+    bool              last_stored_was_mark;
+    int               err;
 
     Synchronizer(const Synchronizer&);
     Synchronizer& operator=(const Synchronizer&);
-    
+
 };  /* class Synchronizer */
 
 
@@ -165,8 +177,6 @@ class Synchronizer : public Async::AudioSink, public sigc::trackable
 #endif /* SYNCHRONIZER_INCLUDED */
 
 
-
 /*
  * This file has not been truncated
  */
-

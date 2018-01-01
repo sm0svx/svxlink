@@ -1,14 +1,12 @@
 /**
 @file	 HdlcDeframer.h
-@brief   A_brief_description_for_this_file
+@brief   Deframe an HDLC bitstream
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-05-09
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,14 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example HdlcDeframer_demo.cpp
-An example of how to use the HdlcDeframer class
-*/
-
-
 #ifndef HDLC_DEFRAMER_INCLUDED
 #define HDLC_DEFRAMER_INCLUDED
-
 
 /****************************************************************************
  *
@@ -86,7 +78,7 @@ An example of how to use the HdlcDeframer class
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -111,13 +103,15 @@ An example of how to use the HdlcDeframer class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Deframe an HDLC bitstream
 @author Tobias Blomberg / SM0SVX
-@date   2008-
+@date   2013-05-09
 
-A_detailed_class_description
-
-\include HdlcDeframer_demo.cpp
+The HDLC deframer will extract complete HDLC frames from the incoming
+bitstream. An HDLC frame will start and end with one or more flag bytes,
+01111110. The content must be one or more data bytes followed by two CRC bytes
+(Frame Check Sequence). The deframed data bytes will be emitted without the CRC
+bytes.
 */
 class HdlcDeframer : public sigc::trackable
 {
@@ -126,36 +120,38 @@ class HdlcDeframer : public sigc::trackable
      * @brief 	Default constuctor
      */
     HdlcDeframer(void);
-  
+
     /**
      * @brief 	Destructor
      */
     ~HdlcDeframer(void);
-  
+
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Process bitstream
+     * @param 	bits The bitstream to process
      */
     void bitsReceived(std::vector<bool> &bits);
-    
+
+    /**
+     * @brief 	Signal that is emitted when a complete frame have been received
+     * @param 	frame The received frame bytes
+     */
     sigc::signal<void, std::vector<uint8_t>&> frameReceived;
 
-  protected:
-    
   private:
     typedef enum {
       STATE_SYNCHRONIZING, STATE_FRAME_START_WAIT, STATE_RECEIVING
     } State;
-    State state;
-    uint8_t next_byte;
-    uint8_t bit_cnt;
-    std::vector<uint8_t> frame;
-    unsigned ones;
+
+    State                 state;
+    uint8_t               next_byte;
+    uint8_t               bit_cnt;
+    std::vector<uint8_t>  frame;
+    unsigned              ones;
 
     HdlcDeframer(const HdlcDeframer&);
     HdlcDeframer& operator=(const HdlcDeframer&);
-    
+
 };  /* class HdlcDeframer */
 
 
@@ -163,9 +159,6 @@ class HdlcDeframer : public sigc::trackable
 
 #endif /* HDLC_DEFRAMER_INCLUDED */
 
-
-
 /*
  * This file has not been truncated
  */
-
