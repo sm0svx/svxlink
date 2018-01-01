@@ -2,13 +2,13 @@
 @file	 Template.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2017-
+@date	 2018-
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -113,13 +113,11 @@ using namespace std;
 
 Template::Template(void)
 {
-  
 } /* Template::Template */
 
 
 Template::~Template(void)
 {
-  
 } /* Template::~Template */
 
 

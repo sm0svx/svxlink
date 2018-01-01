@@ -1,3 +1,12 @@
+ 1.7.0 -- ?? ??? 2018
+----------------------
+
+* Now possible to set the roger sound to be always on in the SimplexLogic, even
+  when no module is active. Use the RGR_SOUND_ALWAYS configuration variable to
+  enable the feature.
+
+
+
  1.6.0 -- 30 Dec 2017
 ----------------------
 
