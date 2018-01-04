@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
 
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
