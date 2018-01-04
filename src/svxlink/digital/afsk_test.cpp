@@ -12,6 +12,9 @@
 #include <AsyncAudioDebugger.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioPacer.h>
+#include <AsyncAudioFsf.h>
+
+#include <Rx.h>
 
 #include "AfskDemodulator.h"
 #include "Synchronizer.h"
@@ -215,11 +218,14 @@ class AX25Decoder : public sigc::trackable
     {
       AX25Frame ax25_frame;
       ax25_frame.decode(frame);
+#if 1
       //cout << "\a";
-      //cout << setw(3) << ++frameno << ": ";
-      //ax25_frame.print();
+      cout << setw(3) << ++frameno << ": ";
+      ax25_frame.print();
+#else
       ++pkt_cnt;
       cout << "\r" << dec << pkt_cnt << " " << flush;
+#endif
     }
 
   private:
@@ -389,14 +395,31 @@ int main(int argc, const char **argv)
   AudioIO::setBlocksize(256);
   AudioIO::setBlockCount(4);
 
-  //AudioIO audio_in("udp:127.0.0.1:10000", 0);
-  //AudioIO audio_in("alsa:plughw:0", 0);
-  StdInSourceDev audio_in;
-  AudioSource *prev_src = &audio_in;
+  AudioSource *prev_src = 0;
 
-  AudioFifo fifo(2048);
-  prev_src->registerSink(&fifo);
-  prev_src = &fifo;
+  //AudioIO audio_in("udp:127.0.0.1:10000", 0);
+  AudioIO audio_io("alsa:plughw:0", 0);
+
+  //StdInSourceDev audio_in;
+  //prev_src = &audio_in;
+  //AudioFifo fifo(2048);
+  //prev_src->registerSink(&fifo);
+  //prev_src = &fifo;
+
+  if ((f0 == 5415) && (f1 == 5585) && (baudrate == 300))
+  {
+    const size_t N = 128;
+    float coeff[N/2+1];
+    memset(coeff, 0, sizeof(coeff));
+    coeff[42] = 0.39811024;
+    coeff[43] = 1.0;
+    coeff[44] = 1.0;
+    coeff[45] = 1.0;
+    coeff[46] = 0.39811024;
+    AudioFsf *fsf = new AudioFsf(N, coeff);
+    prev_src->registerSink(fsf, true);
+    prev_src = fsf;
+  }
 
   /*
   AudioFilter deemph_filt("HpBu1/50 x LpBu1/150");
@@ -404,6 +427,38 @@ int main(int argc, const char **argv)
   prev_src->registerSink(&deemph_filt);
   prev_src = &deemph_filt;
   */
+
+  string cfg_filename(getenv("HOME"));
+  cfg_filename += "/.svxlink/svxlink.conf";
+  Async::Config cfg;
+  if (!cfg.open(cfg_filename))
+  {
+    cout << "*** ERROR: Could not open configuration file: "
+         << cfg_filename << endl;
+    exit(1);
+  }
+
+  string rx_name("RxRtl");
+  Rx *rx = RxFactory::createNamedRx(cfg, rx_name);
+  if ((rx == 0) || !rx->initialize())
+  {
+    cout << "*** ERROR: Could not initialize receiver " << rx_name << endl;
+    exit(1);
+  }
+  rx->setMuteState(Rx::MUTE_NONE);
+  prev_src = rx;
+
+  AudioSplitter audio_splitter;
+  prev_src->registerSink(&audio_splitter);
+  prev_src = &audio_splitter;
+
+  //AudioIO audio_out("alsa:plughw:0", 0);
+  if (!audio_io.open(AudioIO::MODE_RDWR))
+  {
+    cerr << "*** ERROR: Could not open audio device\n";
+    exit(1);
+  }
+  audio_splitter.addSink(&audio_io);
 
   AfskDemodulator fsk_demod(f0, f1, baudrate, sample_rate);
   prev_src->registerSink(&fsk_demod);
@@ -453,11 +508,11 @@ int main(int argc, const char **argv)
     exit(1);
   }
   */
-  if (!audio_in.open(AudioIO::MODE_RD))
-  {
-    cerr << "*** ERROR: Could not open audio device for reading\n";
-    exit(1);
-  }
+  //if (!audio_in.open(AudioIO::MODE_RD))
+  //{
+  //  cerr << "*** ERROR: Could not open audio device for reading\n";
+  //  exit(1);
+  //}
 
   /*
   vector<bool> bits;

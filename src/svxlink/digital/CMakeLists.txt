@@ -25,7 +25,7 @@ add_library(${LIBNAME} STATIC ${LIBSRC})
 target_link_libraries(${LIBNAME} ${LIBS})
 
 add_executable(afsk_test afsk_test.cpp)
-target_link_libraries(afsk_test asyncaudio asynccpp asynccore digital)
+target_link_libraries(afsk_test asyncaudio asynccpp asynccore digital trx svxmisc)
 
 add_executable(cal_sound_card cal_sound_card.cpp)
 target_link_libraries(cal_sound_card asyncaudio asynccpp asynccore)

@@ -511,11 +511,11 @@ bool LocalTx::initialize(void)
   if (ob_afsk_enable)
   {
     unsigned fc = 5500;
-    cfg.getValue(name, "OB_AFSK_CENTER_FQ", fc);
+    //cfg.getValue(name, "OB_AFSK_CENTER_FQ", fc);
     unsigned shift = 170;
-    cfg.getValue(name, "OB_AFSK_SHIFT", shift);
+    //cfg.getValue(name, "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
-    cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
+    //cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
     float voice_gain = -6;
     cfg.getValue(name, "OB_AFSK_VOICE_GAIN", voice_gain);
     float afsk_level = -6;
@@ -569,11 +569,11 @@ bool LocalTx::initialize(void)
   if (ob_afsk_enable && ib_afsk_enable)
   {
     unsigned fc = 1700;
-    cfg.getValue(name, "IB_AFSK_CENTER_FQ", fc);
+    //cfg.getValue(name, "IB_AFSK_CENTER_FQ", fc);
     unsigned shift = 1000;
-    cfg.getValue(name, "IB_AFSK_SHIFT", shift);
+    //cfg.getValue(name, "IB_AFSK_SHIFT", shift);
     unsigned baudrate = 1200;
-    cfg.getValue(name, "IB_AFSK_BAUDRATE", baudrate);
+    //cfg.getValue(name, "IB_AFSK_BAUDRATE", baudrate);
     float afsk_level = -6;
     cfg.getValue(name, "IB_AFSK_LEVEL", afsk_level);
     unsigned afsk_tx_delay = 25;

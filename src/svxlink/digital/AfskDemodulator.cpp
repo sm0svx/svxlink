@@ -347,6 +347,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
     cout << pre_filter_taps[i] << endl;
   }
   */
+#if 0
   if ((f0 == 5415) && (f1 == 5585) && (baudrate == 300))
   {
     stringstream ss;
@@ -366,6 +367,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
     prev_src->registerSink(passband_filter2, true);
     prev_src = passband_filter2;
   }
+#endif
 
     // Run the sample stream through the correlator
   Correlator *corr = new Correlator(f0, f1, baudrate, sample_rate);

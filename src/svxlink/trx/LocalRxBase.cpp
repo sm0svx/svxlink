@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #include <limits>
 
 
@@ -59,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioCompressor.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
+#include <AsyncAudioFsf.h>
 #include <AsyncUdpSocket.h>
 #include <common.h>
 
@@ -479,13 +481,27 @@ bool LocalRxBase::initialize(void)
   if (cfg.getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable) && ob_afsk_enable)
   {
     unsigned fc = 5500;
-    cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
+    //cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
     unsigned shift = 170;
-    cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
+    //cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
-    cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
+    //cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
     voice_gain = 6.0f;
     cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
+
+      // Filter with passband center 5500Hz, about 400Hz wide and about 40dB
+      // stop band attenuation
+    const size_t N = 128;
+    float coeff[N/2+1];
+    memset(coeff, 0, sizeof(coeff));
+    coeff[42] = 0.39811024;
+    coeff[43] = 1.0;
+    coeff[44] = 1.0;
+    coeff[45] = 1.0;
+    coeff[46] = 0.39811024;
+    AudioFsf *fsf = new AudioFsf(N, coeff);
+    prev_src->registerSink(fsf, true);
+    prev_src = fsf;
 
     AfskDemodulator *fsk_demod =
       new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
@@ -506,11 +522,11 @@ bool LocalRxBase::initialize(void)
   if (cfg.getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable) && ib_afsk_enable)
   {
     unsigned fc = 1700;
-    cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
+    //cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
     unsigned shift = 1000;
-    cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
+    //cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
     unsigned baudrate = 1200;
-    cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
+    //cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
 
     AfskDemodulator *fsk_demod =
       new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
