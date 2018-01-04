@@ -500,12 +500,14 @@ bool LocalRxBase::initialize(void)
     coeff[45] = 1.0;
     coeff[46] = 0.39811024;
     AudioFsf *fsf = new AudioFsf(N, coeff);
-    prev_src->registerSink(fsf, true);
+    //prev_src->registerSink(fsf, true);
+    fullband_splitter->addSink(fsf, true);
     prev_src = fsf;
 
     AfskDemodulator *fsk_demod =
       new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
-    fullband_splitter->addSink(fsk_demod, true);
+    //fullband_splitter->addSink(fsk_demod, true);
+    prev_src->registerSink(fsk_demod, true);
     AudioSource *prev_src = fsk_demod;
 
     Synchronizer *sync = new Synchronizer(baudrate);
