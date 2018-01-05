@@ -977,11 +977,11 @@ Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. The available choices are:
-"NONE", "NOISE", "TONE" or "SIM". Depending on other configuration there may be
-more choices available. For example, if a Ddr receiver is used there will also
-be a DDR signal level detector available.  The  signal level detector is only
-needed when using multiple receivers in a voter configuration or when using the
-SIGLEV squelch type.
+"NONE", "NOISE", "TONE", "AFSK" or "SIM". Depending on other configuration
+there may be more choices available. For example, if a Ddr receiver is used
+there will also be a DDR signal level detector available.  The  signal level
+detector is only needed when using multiple receivers in a voter configuration
+or when using the SIGLEV squelch type.
 
 Type NONE disable the signal level detector. This may be used if no signal
 level detector is needed.
@@ -1006,6 +1006,11 @@ moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
 signal level voltage to tone frequencies.
 Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
 corresponding signal level value in between 0 - 100.
+
+Type AFSK is like the TONE detector really a transport mechanism. Signal level
+values are transmitted using Audio Frequency Shift Keying, AFSK, over the
+receiver uplink channel from a remote receiver site. AFSK reception must have
+been enebled by setting OB_AFSK_ENABLE=1 and also optionally IB_AFSK_ENABLE=1.
 
 Type SIM is a simulated signal level detector that can be used to debug
 problems in the SvxLink software. Use the SIGLEV_MIN, SIGLEV_MAX,
@@ -1128,12 +1133,15 @@ Specify the DTMF decoder type. Set it to
 to use the internal software
 DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
 it to
-.B S54S.
+.BR S54S .
 To control it over a pseudo tty device set it to
-.B PTY.
+.BR PTY .
 Setting it to PTY will install the PTY dtmf decoder. SvxLink creates a symlink
 linked to a slave pty device on runtime. The name has to be defined with
 DTMF_PTY.
+If AFSK reception is enabled using OB_AFSK_ENABLE/IB_AFSK_ENABLE, remotely
+decoded DTMF digits may be received by setting this configuration variable to
+.BR AFSK .
 .B NONE
 or commenting it out will disable DTMF detection.
 .TP
@@ -1264,6 +1272,37 @@ The sample rate is the same as the one chosen for the audio device.
 The destination is specified as ip-address:port.
 
 Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable reception of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the transmitter section of the
+transmitting RemoteTrx. If it's set to -6dB in the transmitter configuration it
+should be set to 6dB here.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable reception of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
 .
 .SS Ddr Receiver Section
 .
@@ -1801,6 +1840,51 @@ This configuration variable can be used to fine tune or increase the audio
 gain for all transmitted sound if it's not possible to do using the normal
 sound card hardware gain controls. The gain should be given in dB and can
 be both positive and negative.
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable transmission of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the receiver section of the
+receiving node. If it's set to 6dB in the receiver configuration it
+should be set to -6dB here.
+.TP
+.B OB_AFSK_LEVEL
+The out-of-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B OB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an out-of-band packet.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable transmission of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B IB_AFSK_LEVEL
+The in-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B IB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an in-band packet.
 .
 .SS Networked Transmitter Section
 .

@@ -576,7 +576,7 @@ bool LocalTx::initialize(void)
     //cfg.getValue(name, "IB_AFSK_BAUDRATE", baudrate);
     float afsk_level = -6;
     cfg.getValue(name, "IB_AFSK_LEVEL", afsk_level);
-    unsigned afsk_tx_delay = 25;
+    unsigned afsk_tx_delay = 100;
     cfg.getValue(name, "IB_AFSK_TX_DELAY", afsk_tx_delay);
 
       // Create the inband HDLC framer
