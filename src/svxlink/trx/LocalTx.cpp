@@ -516,9 +516,9 @@ bool LocalTx::initialize(void)
     //cfg.getValue(name, "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
     //cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
-    float voice_gain = -6;
+    float voice_gain = -6.0f;
     cfg.getValue(name, "OB_AFSK_VOICE_GAIN", voice_gain);
-    float afsk_level = -6;
+    float afsk_level = -12.0f;
     cfg.getValue(name, "OB_AFSK_LEVEL", afsk_level);
     unsigned afsk_tx_delay = 100;
     cfg.getValue(name, "OB_AFSK_TX_DELAY", afsk_tx_delay);
