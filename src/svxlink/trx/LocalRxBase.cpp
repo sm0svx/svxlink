@@ -495,8 +495,8 @@ bool LocalRxBase::initialize(void)
     voice_gain = 6.0f;
     cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
 
-      // Filter with passband center 5500Hz, about 400Hz wide and about 40dB
-      // stop band attenuation
+      // Frequency sampling filter with passband center 5500Hz, about 400Hz
+      // wide and about 40dB stop band attenuation
     const size_t N = 128;
     float coeff[N/2+1];
     memset(coeff, 0, sizeof(coeff));

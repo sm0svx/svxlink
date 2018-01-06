@@ -177,7 +177,7 @@ class MultiTx : public Tx
      * link receiver.
      */
     virtual void setTransmittedSignalStrength(char rx_id, float siglev);
-    
+
     /**
      * @brief 	Send a data frame
      * @param 	msg The frame data

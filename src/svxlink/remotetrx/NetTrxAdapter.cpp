@@ -310,7 +310,7 @@ class TxAdapter : public Tx, public AudioSource
     {
       for (unsigned i=0; i<digits.size(); ++i)
       {
-      	sendDtmfDigit(digits[i], duration);
+        sendDtmfDigit(digits[i], duration);
       }
     }
 
@@ -393,7 +393,7 @@ class TxAdapter : public Tx, public AudioSource
       {
         //cout << "### TxAdapter::transmit: Sending tone\n";
         sendTone(ctcss_fq);
-      } 
+      }
     }
     
 }; /* class TxAdapter */
@@ -480,7 +480,7 @@ bool NetTrxAdapter::initialize(void)
 
   float rx_siglev = 1.0f;
   cfg.getValue(net_uplink_name, "RX_SIGLEV", rx_siglev);
-  
+
   AudioSource *prev_src = 0;
 
     // NetTx audio chain

@@ -138,7 +138,7 @@ void SigLevDetAfsk::setContinuousUpdateInterval(int interval_ms)
 {
   /*
   update_interval = interval_ms * sample_rate / 1000;
-  update_counter = 0;  
+  update_counter = 0;
   */
 } /* SigLevDetAfsk::setContinuousUpdateInterval */
 

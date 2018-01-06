@@ -130,9 +130,9 @@ bool AfskDtmfDecoder::initialize(void)
   {
     return false;
   }
-  
+
   return true;
-  
+
 } /* AfskDtmfDecoder::initialize */
 
 

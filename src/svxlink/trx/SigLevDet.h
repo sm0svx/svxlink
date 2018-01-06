@@ -187,6 +187,14 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      */
     virtual void reset(void) = 0;
     
+    /**
+     * @brief   Call this function when a data frame has been received
+     * @param   frame The data bytes received
+     *
+     * This function should be called by the owning object that has received a
+     * data frame. If the message type is recognized it will be processed buf
+     * if it's not recognized nothing will happen.
+     */
     virtual void frameReceived(std::vector<uint8_t> frame) {}
 
     /**

@@ -79,7 +79,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Defines & typedefs
  *
  ****************************************************************************/
-    
+
 
 
 /****************************************************************************
@@ -103,7 +103,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * This is not precisely a DTMF decoder. It listens to the incoming data
  * for DATA_CMD_DTMF frames, decodes them and emits DTMF signals.
- */   
+ */
 class AfskDtmfDecoder : public DtmfDecoder
 {
   public:
@@ -124,7 +124,7 @@ class AfskDtmfDecoder : public DtmfDecoder
      * before using it.
      */
     virtual bool initialize(void);
-    
+
     /**
      * @brief 	Write samples into the DTMF decoder
      * @param 	samples The buffer containing the samples
@@ -132,7 +132,7 @@ class AfskDtmfDecoder : public DtmfDecoder
      * @return	Returns the number of samples that has been taken care of
      */
     virtual int writeSamples(const float *samples, int count);
-    
+
     /**
      * @brief 	Tell the DTMF decoder to flush the previously written samples
      *

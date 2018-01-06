@@ -170,14 +170,12 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
 SigLevDet::SigLevDet(void)
   : force_rx_id(false), last_rx_id(Rx::ID_UNKNOWN)
 {
-  
 } /* SigLevDet::SigLevDet */
 
 
 #if 0
 SigLevDet::~SigLevDet(void)
 {
-  
 } /* SigLevDet::~SigLevDet */
 #endif
 

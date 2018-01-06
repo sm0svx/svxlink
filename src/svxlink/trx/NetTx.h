@@ -173,7 +173,7 @@ class NetTx : public Tx
      * @param   duration The tone duration in milliseconds
      */
     virtual void sendDtmf(const std::string& digits, unsigned duration);
-    
+
     /**
      * @brief   Set the signal level value that should be transmitted
      * @param   siglev The signal level to transmit

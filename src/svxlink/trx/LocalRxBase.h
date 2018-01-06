@@ -174,13 +174,13 @@ class LocalRxBase : public Rx
      * @return	Returns the signal strength
      */
     virtual float signalStrength(void) const;
-    
+
     /**
      * @brief 	Find out RX ID of last receiver with squelch activity
      * @returns Returns the RX ID
      */
     char sqlRxId(void) const;
-    
+
     /**
      * @brief 	Reset the receiver object to its default settings
      */
@@ -254,7 +254,7 @@ class LocalRxBase : public Rx
     int                         dtmf_muting_pre;
     HdlcDeframer *              ob_afsk_deframer;
     HdlcDeframer *              ib_afsk_deframer;
-    
+
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
     void dataFrameReceived(std::vector<uint8_t> frame);

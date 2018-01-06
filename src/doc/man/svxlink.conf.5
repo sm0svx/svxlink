@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "NOVEMBER 2015" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JANUARI 2018" Linux "File Formats"
 .
 .SH NAME
 .
@@ -706,6 +706,11 @@ configuration variables are described below.
 .TP
 .B TYPE
 Always "Local" for a local receiver.
+.TP
+.B RX_ID
+A single char uniquely identifying this receiver. The RX identity can for
+example be used in the TCL event scripts to get different rogers sounds for
+different receivers when using a receiver voter.
 .TP
 .B AUDIO_DEV
 Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
@@ -1471,6 +1476,19 @@ Optionally the receiver name may be followed by a colon and a squelch delay
 value. This can be used to adjust the voting delay for receivers that always
 are slower to open for some reason. The delay value given will be subtracted
 from the voting delay if the receiver is the first one to open.
+
+The usage of the delay value is best illustrated with an example.  Let's say we
+have three receivers where two of the receivers take at most 100ms to report
+signal level and one receiver requires 300ms. We then need to set the
+VOTING_DELAY to something like 350ms so as to be sure that all receivers get a
+chance to report their signal level measurement. If only the slow receiver
+opens there will be a total delay of 300+350=650ms. This is unnecessarily long
+since the other two receivers should have reported their signal strength way
+earlier. It's thus safe to shorten the voting delay for the slow receiver, so
+we do this: RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay
+will now be 100+350=450ms for the fast receivers and 300+350-200=450ms for the
+slow receiver. That is, all receivers are now equally fast.
+
 Example: RECEIVERS=Rx1,Rx2:200,Rx3
 .TP
 .B VOTING_DELAY

@@ -547,8 +547,8 @@ bool LocalTx::initialize(void)
                                 afsk_level);
     hdlc_framer->sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
 
-      // Filter with passband center 5500Hz, about 400Hz wide and about 40dB
-      // stop band attenuation
+      // Frequency sampling filter with passband center 5500Hz, about 400Hz
+      // wide and about 40dB stop band attenuation
     const size_t N = 128;
     float coeff[N/2+1];
     memset(coeff, 0, sizeof(coeff));
@@ -781,7 +781,7 @@ void LocalTx::setTransmittedSignalStrength(char rx_id, float siglev)
         }
       }
     }
-    
+
     siglev_sine_gen->enable(false);
   }
 #endif
