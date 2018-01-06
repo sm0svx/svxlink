@@ -224,6 +224,7 @@ namespace {
  *
  ****************************************************************************/
 
+#if 0
 namespace {
   const double pre_filter_taps[] =
   {
@@ -284,6 +285,7 @@ namespace {
   };
   const int numtaps = sizeof(pre_filter_taps) / sizeof(*pre_filter_taps);
 };
+#endif
 
 
 /****************************************************************************
