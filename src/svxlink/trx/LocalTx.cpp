@@ -74,6 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <common.h>
 #include <HdlcFramer.h>
 #include <AfskModulator.h>
+#include <AsyncAudioFsf.h>
 
 
 /****************************************************************************
@@ -545,7 +546,21 @@ bool LocalTx::initialize(void)
     fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
                                 afsk_level);
     hdlc_framer->sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
-    mixer->addSource(fsk_mod);
+
+      // Filter with passband center 5500Hz, about 400Hz wide and about 40dB
+      // stop band attenuation
+    const size_t N = 128;
+    float coeff[N/2+1];
+    memset(coeff, 0, sizeof(coeff));
+    coeff[42] = 0.39811024;
+    coeff[43] = 1.0;
+    coeff[44] = 1.0;
+    coeff[45] = 1.0;
+    coeff[46] = 0.39811024;
+    AudioFsf *fsf = new AudioFsf(N, coeff);
+    fsk_mod->registerSink(fsf, true);
+
+    mixer->addSource(fsf);
 
     /*
     AudioPacer *fsk_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256, 20);
