@@ -172,16 +172,20 @@ void AfskDtmfDecoder::dataReceived(const vector<uint8_t> &frame)
   uint16_t duration = frame[1];
   duration |= static_cast<uint16_t>(frame[2]) << 8;
 
-  cout << "AfskDtmfDecoder::frameReceived:"
+  cout << "### AfskDtmfDecoder::frameReceived:"
        << " cmd=" << (int)cmd
        << " duration=" << duration
        << " digits=";
+  for (size_t i=3; i<frame.size(); ++i)
+  {
+    char digit = static_cast<char>(frame[i]);
+    cout << digit;
+  }
   cout << endl;
 
   for (size_t i=3; i<frame.size(); ++i)
   {
     uint8_t digit = frame[i];
-    //cout << digit;
     digitDeactivated(digit, duration);
   }
 } /* AfskDtmfDecoder::dataReceived */
