@@ -240,7 +240,8 @@ LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
-    sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0)
+    sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0),
+    ob_afsk_deframer(0), ib_afsk_deframer(0)
 {
 } /* LocalRxBase::LocalRxBase */
 
@@ -249,6 +250,11 @@ LocalRxBase::~LocalRxBase(void)
 {
   clearHandler();
   delete input_fifo;  // This will delete the whole chain of audio objects
+  input_fifo = 0;
+  delete ob_afsk_deframer;
+  ob_afsk_deframer = 0;
+  delete ib_afsk_deframer;
+  ib_afsk_deframer = 0;
 } /* LocalRxBase::~LocalRxBase */
 
 
@@ -514,10 +520,11 @@ bool LocalRxBase::initialize(void)
     prev_src->registerSink(sync, true);
     prev_src = 0;
 
-    HdlcDeframer *deframer = new HdlcDeframer;
-    deframer->frameReceived.connect(
+    ob_afsk_deframer = new HdlcDeframer;
+    ob_afsk_deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceived));
-    sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
+    sync->bitsReceived.connect(
+        mem_fun(ob_afsk_deframer, &HdlcDeframer::bitsReceived));
   }
 
   bool ib_afsk_enable = false;
@@ -539,10 +546,11 @@ bool LocalRxBase::initialize(void)
     prev_src->registerSink(sync, true);
     prev_src = 0;
 
-    HdlcDeframer *deframer = new HdlcDeframer;
-    deframer->frameReceived.connect(
+    ib_afsk_deframer = new HdlcDeframer;
+    ib_afsk_deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceivedIb));
-    sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
+    sync->bitsReceived.connect(
+        mem_fun(ib_afsk_deframer, &HdlcDeframer::bitsReceived));
   }
 
     // Create a new audio splitter to handle tone detectors

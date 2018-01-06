@@ -168,7 +168,7 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
 
 
 SigLevDet::SigLevDet(void)
-  : last_rx_id(Rx::ID_UNKNOWN)
+  : force_rx_id(false), last_rx_id(Rx::ID_UNKNOWN)
 {
   
 } /* SigLevDet::SigLevDet */

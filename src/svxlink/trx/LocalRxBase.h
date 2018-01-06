@@ -78,6 +78,7 @@ namespace Async
 };
 
 class Squelch;
+class HdlcDeframer;
 
 
 /****************************************************************************
@@ -251,6 +252,8 @@ class LocalRxBase : public Rx
     unsigned                    sql_extended_hangtime_thresh;
     Async::AudioFifo            *input_fifo;
     int                         dtmf_muting_pre;
+    HdlcDeframer *              ob_afsk_deframer;
+    HdlcDeframer *              ib_afsk_deframer;
     
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
