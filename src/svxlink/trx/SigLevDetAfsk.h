@@ -63,14 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Forward declarations
  *
  ****************************************************************************/
-/*
-namespace Async
-{
-  class AudioFilter;
-};
-
-class Goertzel;
-*/
 
 class HdlcDeframer;
 class Rx;

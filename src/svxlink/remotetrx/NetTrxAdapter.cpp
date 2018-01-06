@@ -92,12 +92,6 @@ class RxAdapter : public Rx, public AudioSink
       : Rx(cfg, name), siglev_timer(1000, Timer::TYPE_PERIODIC),
         rx_id(rx_id), forced_rx_id(rx_id != Rx::ID_UNKNOWN), siglev(0.0)
     {
-      struct timespec ts;
-      if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
-      {
-        perror("clock_gettime(CLOCK_MONOTONIC, ...)");
-      }
-      ts.tv_sec -= 2;
       mute_valve.setOpen(false);
       mute_valve.setBlockWhenClosed(false);
       AudioSink::setHandler(&mute_valve);

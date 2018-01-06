@@ -216,7 +216,7 @@ class LocalTx : public Tx
     Async::AudioMixer       *mixer;
     HdlcFramer              *hdlc_framer;
     AfskModulator           *fsk_mod;
-    Async::AudioValve 	    *fsk_valve;
+    //Async::AudioValve 	    *fsk_valve;
     Async::AudioPassthrough *input_handler;
     PttCtrl   	      	    *ptt_ctrl;
     Async::AudioValve 	    *audio_valve;
