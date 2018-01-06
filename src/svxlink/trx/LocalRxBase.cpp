@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #include <limits>
 
 
@@ -59,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioCompressor.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
+#include <AsyncAudioFsf.h>
 #include <AsyncUdpSocket.h>
 #include <common.h>
 
@@ -81,6 +83,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LocalRxBase.h"
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
+#include "AfskDemodulator.h"
+#include "Synchronizer.h"
+#include "HdlcDeframer.h"
+#include "Tx.h"
 #include "Emphasis.h"
 #include "SquelchPty.h"
 #include "SquelchOpen.h"
@@ -106,8 +112,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_POST  200
-#define TONE_1750_MUTING_PRE 75
+#define DTMF_MUTING_POST      200
+#define TONE_1750_MUTING_PRE  75
 #define TONE_1750_MUTING_POST 100
 
 
@@ -234,7 +240,8 @@ LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
-    sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0)
+    sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0),
+    ob_afsk_deframer(0), ib_afsk_deframer(0)
 {
 } /* LocalRxBase::LocalRxBase */
 
@@ -243,6 +250,11 @@ LocalRxBase::~LocalRxBase(void)
 {
   clearHandler();
   delete input_fifo;  // This will delete the whole chain of audio objects
+  input_fifo = 0;
+  delete ob_afsk_deframer;
+  ob_afsk_deframer = 0;
+  delete ib_afsk_deframer;
+  ib_afsk_deframer = 0;
 } /* LocalRxBase::~LocalRxBase */
 
 
@@ -349,6 +361,7 @@ bool LocalRxBase::initialize(void)
   siglevdet->signalLevelUpdated.connect(
       mem_fun(*this, &LocalRxBase::onSignalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
+  dataReceived.connect(mem_fun(siglevdet, &SigLevDet::frameReceived));
   
     // Create a mute valve
   mute_valve = new AudioValve;
@@ -468,6 +481,78 @@ bool LocalRxBase::initialize(void)
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRxBase::onSquelchOpen));
   fullband_splitter->addSink(squelch_det, true);
 
+    // Set up out of band AFSK demodulator if configured
+  float voice_gain = 0.0f;
+  bool ob_afsk_enable = false;
+  if (cfg.getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable) && ob_afsk_enable)
+  {
+    unsigned fc = 5500;
+    //cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 170;
+    //cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
+    unsigned baudrate = 300;
+    //cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
+    voice_gain = 6.0f;
+    cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
+
+      // Frequency sampling filter with passband center 5500Hz, about 400Hz
+      // wide and about 40dB stop band attenuation
+    const size_t N = 128;
+    float coeff[N/2+1];
+    memset(coeff, 0, sizeof(coeff));
+    coeff[42] = 0.39811024;
+    coeff[43] = 1.0;
+    coeff[44] = 1.0;
+    coeff[45] = 1.0;
+    coeff[46] = 0.39811024;
+    AudioFsf *fsf = new AudioFsf(N, coeff);
+    //prev_src->registerSink(fsf, true);
+    fullband_splitter->addSink(fsf, true);
+    AudioSource *prev_src = fsf;
+
+    AfskDemodulator *fsk_demod =
+      new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
+    //fullband_splitter->addSink(fsk_demod, true);
+    prev_src->registerSink(fsk_demod, true);
+    prev_src = fsk_demod;
+
+    Synchronizer *sync = new Synchronizer(baudrate);
+    prev_src->registerSink(sync, true);
+    prev_src = 0;
+
+    ob_afsk_deframer = new HdlcDeframer;
+    ob_afsk_deframer->frameReceived.connect(
+        mem_fun(*this, &LocalRxBase::dataFrameReceived));
+    sync->bitsReceived.connect(
+        mem_fun(ob_afsk_deframer, &HdlcDeframer::bitsReceived));
+  }
+
+  bool ib_afsk_enable = false;
+  if (cfg.getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable) && ib_afsk_enable)
+  {
+    unsigned fc = 1700;
+    //cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 1000;
+    //cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
+    unsigned baudrate = 1200;
+    //cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
+
+    AfskDemodulator *fsk_demod =
+      new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
+    fullband_splitter->addSink(fsk_demod, true);
+    AudioSource *prev_src = fsk_demod;
+
+    Synchronizer *sync = new Synchronizer(baudrate);
+    prev_src->registerSink(sync, true);
+    prev_src = 0;
+
+    ib_afsk_deframer = new HdlcDeframer;
+    ib_afsk_deframer->frameReceived.connect(
+        mem_fun(*this, &LocalRxBase::dataFrameReceivedIb));
+    sync->bitsReceived.connect(
+        mem_fun(ib_afsk_deframer, &HdlcDeframer::bitsReceived));
+  }
+
     // Create a new audio splitter to handle tone detectors
   tone_dets = new AudioSplitter;
   prev_src->registerSink(tone_dets, true);
@@ -476,9 +561,9 @@ bool LocalRxBase::initialize(void)
     // Filter out the voice band, removing high- and subaudible frequencies,
     // for example CTCSS.
 #if (INTERNAL_SAMPLE_RATE == 16000)
-  AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/300-5000");
+  AudioFilter *voiceband_filter = new AudioFilter("BpCh12/-0.1/300-5000");
 #else
-  AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/300-3500");
+  AudioFilter *voiceband_filter = new AudioFilter("BpCh12/-0.1/300-3500");
 #endif
   prev_src->registerSink(voiceband_filter, true);
   prev_src = voiceband_filter;
@@ -494,7 +579,7 @@ bool LocalRxBase::initialize(void)
   cfg.getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
   if (dtmf_dec_type != "NONE")
   {
-    DtmfDecoder *dtmf_dec = DtmfDecoder::create(cfg, name());
+    DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg, name());
     if ((dtmf_dec == 0) || !dtmf_dec->initialize())
     {
       // FIXME: Cleanup?
@@ -690,6 +775,12 @@ float LocalRxBase::signalStrength(void) const
 } /* LocalRxBase::signalStrength */
     
 
+char LocalRxBase::sqlRxId(void) const
+{
+  return siglevdet->lastRxId();
+} /* LocalRxBase::sqlRxId */
+
+
 void LocalRxBase::reset(void)
 {
   setMuteState(Rx::MUTE_ALL);
@@ -747,6 +838,34 @@ void LocalRxBase::dtmfDigitDeactivated(char digit, int duration_ms)
     delay->mute(false, DTMF_MUTING_POST);
   }
 } /* LocalRxBase::dtmfDigitActivated */
+
+
+void LocalRxBase::dataFrameReceived(vector<uint8_t> frame)
+{
+  vector<uint8_t>::const_iterator it = frame.begin();
+  if ((frame.size() == 5) && (*it++ == Tx::DATA_CMD_TONE_DETECTED))
+  {
+    float fq = 0.0f;
+    uint8_t *fq_ptr = reinterpret_cast<uint8_t*>(&fq);
+    *fq_ptr++ = *it++;
+    *fq_ptr++ = *it++;
+    *fq_ptr++ = *it++;
+    *fq_ptr++ = *it++;
+    cout << "### LocalRxBase::dataFrameReceived: len=" << frame.size()
+         << " cmd=" << Tx::DATA_CMD_TONE_DETECTED
+         << " fq=" << fq
+         << endl;
+    toneDetected(fq);
+  }
+  dataReceived(frame);
+} /* LocalRxBase::dataFrameReceived */
+
+
+void LocalRxBase::dataFrameReceivedIb(vector<uint8_t> frame)
+{
+  cout << "### Inband data frame received: len=" << frame.size() << endl;
+  dataFrameReceived(frame);
+} /* LocalRxBase::dataFrameReceived */
 
 
 void LocalRxBase::audioStreamStateChange(bool is_active, bool is_idle)

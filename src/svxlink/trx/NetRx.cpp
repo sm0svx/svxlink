@@ -133,8 +133,8 @@ class ToneDet
 NetRx::NetRx(Config &cfg, const string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
     log_disconnects_once(false), log_disconnect(true),
-    last_signal_strength(0.0), last_sql_rx_id(0), unflushed_samples(false),
-    sql_is_open(false), audio_dec(0)
+    last_signal_strength(0.0), last_sql_rx_id(Rx::ID_UNKNOWN),
+    unflushed_samples(false), sql_is_open(false), audio_dec(0)
 {
 } /* NetRx::NetRx */
 
@@ -249,7 +249,7 @@ void NetRx::setMuteState(Rx::MuteState new_mute_state)
 
         case MUTE_ALL:  // MUTE_CONTENT -> MUTE_ALL
           last_signal_strength = 0.0;
-          last_sql_rx_id = 0;
+          last_sql_rx_id = Rx::ID_UNKNOWN;
           sql_is_open = false;
           if (!unflushed_samples)
           {
@@ -299,7 +299,7 @@ void NetRx::reset(void)
   
   mute_state = Rx::MUTE_ALL;
   last_signal_strength = 0;
-  last_sql_rx_id = 0;
+  last_sql_rx_id = Rx::ID_UNKNOWN;
   sql_is_open = false;
   
   if (unflushed_samples)

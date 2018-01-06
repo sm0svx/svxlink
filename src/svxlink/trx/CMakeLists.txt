@@ -17,6 +17,7 @@ set(LIBSRC
   PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlSdr.cpp RtlTcp.cpp
   WbRxRtlSdr.cpp SigLevDet.cpp SigLevDetDdr.cpp
   SvxSwDtmfDecoder.cpp LocalRxSim.cpp SigLevDetSim.cpp
+  AfskDtmfDecoder.cpp SigLevDetAfsk.cpp
 )
 include (CheckSymbolExists)
 CHECK_SYMBOL_EXISTS(HIDIOCGRAWINFO linux/hidraw.h HAS_HIDRAW_SUPPORT)
@@ -26,7 +27,7 @@ if (HAS_HIDRAW_SUPPORT)
 endif (HAS_HIDRAW_SUPPORT)
 
 # Which other libraries this library depends on
-#set(LIBS ${LIBS} asynccore)
+set(LIBS ${LIBS} digital)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})

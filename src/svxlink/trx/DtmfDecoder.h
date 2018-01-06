@@ -63,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+class Rx;
 
 
 /****************************************************************************
@@ -80,33 +81,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-/*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
-    
 
 
 /****************************************************************************
@@ -133,6 +107,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
   public:
     /**
      * @brief 	Create a new DTMF decoder object
+     * @param   rx The receiver object that own this DTMF decoder
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
      * @returns Returns a new DTMF object or 0 on failure
@@ -143,7 +118,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * contain a configuration variable DTMF_DEC_TYPE that points out the
      * decoder type to use. Valid values are: INTERNAL, S54S
      */
-    static DtmfDecoder *create(Async::Config &cfg, const std::string& name);
+    static DtmfDecoder *create(Rx *rx, Async::Config &cfg, const std::string& name);
     
     /**
      * @brief 	Destructor

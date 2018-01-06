@@ -248,11 +248,30 @@ void NetTx::enableCtcss(bool enable)
 } /* NetTx::enableCtcss */
 
 
-void NetTx::sendDtmf(const std::string& digits)
+void NetTx::sendDtmf(const std::string& digits, unsigned duration)
 {
-  MsgSendDtmf *msg = new MsgSendDtmf(digits);
+  MsgSendDtmf *msg = new MsgSendDtmf(digits, duration);
   sendMsg(msg);
 } /* NetTx::sendDtmf */
+
+
+void NetTx::setTransmittedSignalStrength(char rx_id, float siglev)
+{
+  //cout << "### NetTx::setTransmittedSignalStrength: rx_id=" << rx_id
+  //     << " siglev=" << siglev << endl;
+  MsgTransmittedSignalStrength *msg =
+    new MsgTransmittedSignalStrength(siglev, rx_id);
+  sendMsg(msg);
+} /* NetTx::setTransmittedSignalStrength */
+
+
+void NetTx::sendData(const std::vector<uint8_t> &msg)
+{
+  /*
+  MsgSendDtmf *msg = new MsgSendDtmf(digits, duration);
+  sendMsg(msg);
+  */
+} /* NetTx::sendData */
 
 
 
