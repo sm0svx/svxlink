@@ -14,3 +14,7 @@ else()
 endif()
 
 add_custom_target(translations ALL DEPENDS ${TRANSLATIONS_QM})
+
+install(FILES ${TRANSLATIONS_QM}
+  DESTINATION ${SHARE_INSTALL_PREFIX}/qtel/translations
+  )
