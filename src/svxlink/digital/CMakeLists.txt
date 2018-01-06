@@ -9,7 +9,7 @@ set(EXPINC
 # What sources to compile for the library
 set(LIBSRC
   AfskDemodulator.cpp Synchronizer.cpp HdlcDeframer.cpp AfskModulator.cpp
-  HdlcFramer.cpp Fcs.cpp remez.cpp
+  HdlcFramer.cpp Fcs.cpp
 )
 
 # Which other libraries this library depends on
