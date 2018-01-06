@@ -1,5 +1,5 @@
 # Version for the Qtel application
-QTEL=1.2.3
+QTEL=1.2.4
 
 # Version for the EchoLib library
 LIBECHOLIB=1.3.3
