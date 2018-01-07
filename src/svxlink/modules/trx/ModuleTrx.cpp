@@ -244,8 +244,45 @@ bool ModuleTrx::initialize(void)
     rx_timeout_timer->expired.connect(mem_fun(*this, &ModuleTrx::rxTimeout));
   }
 
+  stringstream ss;
+  ss << cfgName() << ":Bands";
+  std::list<std::string> bandlist = cfg().listSection(ss.str());
+  for (std::list<std::string>::iterator it=bandlist.begin();
+       it!=bandlist.end();
+       ++it)
+  {
+    istringstream iss(*it);
+    double fqstart=0.0, fqend=0.0;
+    char minus=0;
+    iss >> fqstart >> minus >> fqend;
+    if (iss.fail() || (minus != '-') || (fqstart <= 0.0) || (fqend <= 0.0))
+    {
+      cerr << "*** WARNING[" << cfgName() << "]: Illegal fq band: "
+           << *it << endl;
+      continue;
+    }
+    std::string modstr;
+    cfg().getValue(ss.str(), *it, modstr);
+    Modulation::Type mod = Modulation::fromString(modstr);
+    if (mod == Modulation::MOD_UNKNOWN)
+    {
+      cerr << "*** WARNING[" << cfgName() << "]: Illegal modulation specified: "
+           << *it << "=" << modstr << endl;
+      continue;
+    }
+    cout << "\tBand: " << *it << ": fqstart=" << fqstart
+         << " fqend=" << fqend
+         << " modstr=" << Modulation::toString(mod)
+         << endl;
+    Band band;
+    band.fqstart = static_cast<unsigned>(fqstart * 1000);
+    band.fqend = static_cast<unsigned>(fqend * 1000);
+    band.mod = mod;
+    bands.push_back(band);
+  }
+
   return true;
-  
+
 } /* initialize */
 
 
@@ -344,27 +381,33 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
     string fqstr(cmd);
     replace(fqstr.begin(), fqstr.end(), '*', '.');
     stringstream ss(fqstr);
-    double fq;
-    ss >> fq;
-    ios_base::fmtflags orig_cout_flags(cout.flags());
-    cout << name() << ": Setting receiver frequency "
-         << setprecision(3) << fixed << fq << "kHz\n";
-    cout.flags(orig_cout_flags);
-    rx->setFq(1000 * fq);
-    tx->setFq(1000 * fq);
-    if (auto_mod_select)
+    double fqin;
+    ss >> fqin;
+    unsigned fq = static_cast<unsigned>(1000 * fqin);
+    for (Bands::const_iterator it=bands.begin(); it!=bands.end(); ++it)
     {
-      if (fq < 10000.0)
+      //cout << "### fqstart=" << (*it).fqstart << " fqend=" << (*it).fqend
+      //     << " mod=" << Modulation::toString((*it).mod) << endl;
+      if ((fq >= (*it).fqstart) && (fq <= (*it).fqend))
       {
-        rx->setModulation(Modulation::MOD_LSB);
-        tx->setModulation(Modulation::MOD_LSB);
-      }
-      else
-      {
-        rx->setModulation(Modulation::MOD_USB);
-        tx->setModulation(Modulation::MOD_USB);
+        ios_base::fmtflags orig_cout_flags(cout.flags());
+        cout << name() << ": Setting transciver to "
+             << setprecision(3) << fixed << fqin << "kHz "
+             << Modulation::toString((*it).mod) << endl;
+        cout.flags(orig_cout_flags);
+        rx->setFq(fq);
+        tx->setFq(fq);
+        if (auto_mod_select)
+        {
+          rx->setModulation((*it).mod);
+          tx->setModulation((*it).mod);
+        }
+        return;
       }
     }
+    cerr << "*** WARNING[" << cfgName()
+         << "]: Out of band frequency specified: "
+         << fqin << "kHz" << endl;
   }
 } /* dtmfCmdReceived */
 

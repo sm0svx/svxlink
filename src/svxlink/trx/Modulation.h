@@ -126,6 +126,8 @@ typedef enum
  */
 Type fromString(const std::string& modstr);
 
+const char *toString(Type mod);
+
 
 } /* namespace */
 

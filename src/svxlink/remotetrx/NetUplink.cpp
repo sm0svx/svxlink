@@ -523,7 +523,7 @@ void NetUplink::handleMsg(Msg *msg)
     {
       MsgSetRxModulation *mod_msg = reinterpret_cast<MsgSetRxModulation*>(msg);
       cout << rx->name() << ": SetRxModulation("
-           << mod_msg->modulation() << ")\n";
+           << Modulation::toString(mod_msg->modulation()) << ")\n";
       rx->setModulation(mod_msg->modulation());
       break;
     }
@@ -684,7 +684,7 @@ void NetUplink::handleMsg(Msg *msg)
     {
       MsgSetTxModulation *mod_msg = reinterpret_cast<MsgSetTxModulation*>(msg);
       cout << tx->name() << ": SetTxModulation("
-           << mod_msg->modulation() << ")\n";
+           << Modulation::toString(mod_msg->modulation()) << ")\n";
       tx->setModulation(mod_msg->modulation());
       break;
     }

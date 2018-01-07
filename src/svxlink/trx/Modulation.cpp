@@ -132,6 +132,35 @@ Modulation::Type Modulation::fromString(const std::string& modstr)
 }
 
 
+const char *Modulation::toString(Modulation::Type mod)
+{
+  switch (mod)
+  {
+    case MOD_FM:
+      return "FM";
+    case MOD_NBFM:
+      return "NBFM";
+    case MOD_WBFM:
+      return "WBFM";
+    case MOD_AM:
+      return "AM";
+    case MOD_NBAM:
+      return "NBAM";
+    case MOD_USB:
+      return "USB";
+    case MOD_LSB:
+      return "LSB";
+    case MOD_CW:
+      return "CW";
+    case MOD_WBCW:
+      return "WBCW";
+    case MOD_UNKNOWN:
+      break;
+  }
+  return "UNKNOWN";
+}
+
+
 /*
  * This file has not been truncated
  */

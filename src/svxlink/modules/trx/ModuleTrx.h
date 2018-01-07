@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <vector>
 
 
 
@@ -126,10 +127,19 @@ class ModuleTrx : public Module
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
+    struct Band
+    {
+      unsigned          fqstart;
+      unsigned          fqend;
+      Modulation::Type  mod;
+    };
+    typedef std::vector<Band> Bands;
+
     Rx            *rx;
     Tx            *tx;
     bool          auto_mod_select;
     Async::Timer  *rx_timeout_timer;
+    Bands         bands;
 
     bool initialize(void);
     void activateInit(void);
