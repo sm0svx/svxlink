@@ -1,8 +1,8 @@
 /**
-@file	 DummyRxTx.h
-@brief   Dummy RX and TX classes
+@file	 Modulation.h
+@brief   Transceiver modulation representation
 @author  Tobias Blomberg / SM0SVX
-@date	 2013-05-10
+@date	 2018-01-07
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef DUMMY_RX_TX_INCLUDED
-#define DUMMY_RX_TX_INCLUDED
+#ifndef MODULATION_INCLUDED
+#define MODULATION_INCLUDED
 
 
 /****************************************************************************
@@ -43,7 +43,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -52,8 +51,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Rx.h"
-#include "Tx.h"
 
 
 /****************************************************************************
@@ -70,8 +67,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Modulation
+{
 
 
 /****************************************************************************
@@ -80,7 +77,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -105,56 +102,34 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A dummy transmitter
-@author Tobias Blomberg / SM0SVX
-@date   2013-05-10
-
-This dummy transmitter can be used instead of a real transmitter object if
-a real transmitter is not needed. Using a dummy object instead of using a
-NULL pointer may make the code simpler since checks for NULL pointer can
-be omitted.
-*/
-class DummyTx : public Tx
+ * @brief   Modulation types
+ */
+typedef enum
 {
-  public:
-    DummyTx(const std::string& name) : Tx(name) {}
-    virtual ~DummyTx(void) {}
-    virtual bool initialize(void) { return true; }
-    virtual void setTxCtrlMode(TxCtrlMode mode) {}
-    virtual bool isTransmitting(void) const { return false; }
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
-};
+  MOD_UNKNOWN,  //!< Unknown/unset
+  MOD_FM,       //!< FM. Standard two-way radio 20kHz channel.
+  MOD_NBFM,     //!< FM narrow. Narrow band two-way radio 10kHz channel.
+  MOD_WBFM,     //!< Wide band FM. Standard FM broadcasting 180kHz channel.
+  MOD_AM,       //!< AM. Standard two-way radio 10kHz channel.
+  MOD_NBAM,     //!< AM narrow. Narrow band two-way radio 6kHz channel.
+  MOD_USB,      //!< Upper Sideband 3kHz channel
+  MOD_LSB,      //!< Lower Sideband 3kHz channel
+  MOD_CW,       //!< Morse
+  MOD_WBCW      //!< Morse 3kHz channel
+} Type;
 
 
 /**
-@brief	A dummy receiver
-@author Tobias Blomberg / SM0SVX
-@date   2013-05-10
-
-This dummy receiver can be used instead of a real receiver object if
-a real receiver is not needed. Using a dummy object instead of using a
-NULL pointer may make the code simpler since checks for NULL pointer can
-be omitted.
-*/
-class DummyRx : public Rx
-{
-  public:
-    DummyRx(Async::Config &cfg, const std::string &name) : Rx(cfg, name) {}
-    virtual ~DummyRx(void) {}
-    virtual bool initialize(void) { return Rx::initialize(); }
-    virtual void setMuteState(Rx::MuteState new_mute_state) {}
-    virtual void reset(void) {}
-    virtual void resumeOutput(void) {}
-    virtual void allSamplesFlushed(void) {}
-};
+ * @brief 	A_brief_member_function_description
+ * @param 	param1 Description_of_param1
+ * @return	Return_value_of_this_member_function
+ */
+Type fromString(const std::string& modstr);
 
 
+} /* namespace */
 
-//} /* namespace */
-
-#endif /* DUMMY_RX_TX_INCLUDED */
-
+#endif /* MODULATION_INCLUDED */
 
 
 /*

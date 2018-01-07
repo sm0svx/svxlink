@@ -1,8 +1,8 @@
 /**
-@file	 DummyRxTx.h
-@brief   Dummy RX and TX classes
+@file	 Modulation.cpp
+@brief   Transceiver modulation representation
 @author  Tobias Blomberg / SM0SVX
-@date	 2013-05-10
+@date	 2018-01-07
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef DUMMY_RX_TX_INCLUDED
-#define DUMMY_RX_TX_INCLUDED
 
 
 /****************************************************************************
@@ -34,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
+#include <map>
 
 
 /****************************************************************************
@@ -43,7 +41,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -52,39 +49,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Rx.h"
-#include "Tx.h"
-
-
-/****************************************************************************
- *
- * Forward declarations
- *
- ****************************************************************************/
+#include "Modulation.h"
 
 
 
 /****************************************************************************
  *
- * Namespace
+ * Namespaces to use
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
 
-
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
-  
 
 /****************************************************************************
  *
  * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
  *
  ****************************************************************************/
 
@@ -100,63 +95,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /****************************************************************************
  *
- * Class definitions
+ * Local Global Variables
  *
  ****************************************************************************/
 
-/**
-@brief	A dummy transmitter
-@author Tobias Blomberg / SM0SVX
-@date   2013-05-10
 
-This dummy transmitter can be used instead of a real transmitter object if
-a real transmitter is not needed. Using a dummy object instead of using a
-NULL pointer may make the code simpler since checks for NULL pointer can
-be omitted.
-*/
-class DummyTx : public Tx
+
+/****************************************************************************
+ *
+ * Public functions
+ *
+ ****************************************************************************/
+
+Modulation::Type Modulation::fromString(const std::string& modstr)
 {
-  public:
-    DummyTx(const std::string& name) : Tx(name) {}
-    virtual ~DummyTx(void) {}
-    virtual bool initialize(void) { return true; }
-    virtual void setTxCtrlMode(TxCtrlMode mode) {}
-    virtual bool isTransmitting(void) const { return false; }
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
-};
-
-
-/**
-@brief	A dummy receiver
-@author Tobias Blomberg / SM0SVX
-@date   2013-05-10
-
-This dummy receiver can be used instead of a real receiver object if
-a real receiver is not needed. Using a dummy object instead of using a
-NULL pointer may make the code simpler since checks for NULL pointer can
-be omitted.
-*/
-class DummyRx : public Rx
-{
-  public:
-    DummyRx(Async::Config &cfg, const std::string &name) : Rx(cfg, name) {}
-    virtual ~DummyRx(void) {}
-    virtual bool initialize(void) { return Rx::initialize(); }
-    virtual void setMuteState(Rx::MuteState new_mute_state) {}
-    virtual void reset(void) {}
-    virtual void resumeOutput(void) {}
-    virtual void allSamplesFlushed(void) {}
-};
-
-
-
-//} /* namespace */
-
-#endif /* DUMMY_RX_TX_INCLUDED */
-
+  static std::map<std::string,Type> modmap;
+  if (modmap.empty())
+  {
+    modmap["FM"] = MOD_FM;
+    modmap["NBFM"] = MOD_NBFM;
+    modmap["WBFM"] = MOD_WBFM;
+    modmap["AM"] = MOD_AM;
+    modmap["NBAM"] = MOD_NBAM;
+    modmap["USB"] = MOD_USB;
+    modmap["LSB"] = MOD_LSB;
+    modmap["CW"] = MOD_CW;
+    modmap["WBCW"] = MOD_WBCW;
+  }
+  std::map<std::string,Type>::const_iterator it;
+  it = modmap.find(modstr);
+  if (it == modmap.end())
+  {
+    return MOD_UNKNOWN;
+  }
+  return (*it).second;
+}
 
 
 /*
  * This file has not been truncated
  */
+

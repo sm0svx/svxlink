@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ NetRx::NetRx(Config &cfg, const string& name)
     log_disconnects_once(false), log_disconnect(true),
     last_signal_strength(0.0), last_sql_rx_id(Rx::ID_UNKNOWN),
     unflushed_samples(false), sql_is_open(false), audio_dec(0), fq(0),
-    modulation(MOD_UNKNOWN)
+    modulation(Modulation::MOD_UNKNOWN)
 {
 } /* NetRx::NetRx */
 
@@ -321,15 +321,15 @@ void NetRx::reset(void)
 void NetRx::setFq(unsigned fq)
 {
   this->fq = fq;
-  MsgSetFq *msg = new MsgSetFq(fq);
+  MsgSetRxFq *msg = new MsgSetRxFq(fq);
   sendMsg(msg);
 } /* NetRx::setFq */
 
 
-void NetRx::setModulation(Modulation mod)
+void NetRx::setModulation(Modulation::Type mod)
 {
   modulation = mod;
-  MsgSetModulation *msg = new MsgSetModulation(mod);
+  MsgSetRxModulation *msg = new MsgSetRxModulation(mod);
   sendMsg(msg);
 } /* NetRx::setModulation */
 
@@ -375,13 +375,13 @@ void NetRx::connectionReady(bool is_ready)
 
     if (fq > 0)
     {
-      MsgSetFq *msg = new MsgSetFq(fq);
+      MsgSetRxFq *msg = new MsgSetRxFq(fq);
       sendMsg(msg);
     }
     
-    if (modulation != MOD_UNKNOWN)
+    if (modulation != Modulation::MOD_UNKNOWN)
     {
-      MsgSetModulation *msg = new MsgSetModulation(modulation);
+      MsgSetRxModulation *msg = new MsgSetRxModulation(modulation);
       sendMsg(msg);
     }
 

@@ -188,7 +188,6 @@ class MultiTx : public Tx
     
   private:
     Async::Config     	  &cfg;
-    std::string       	  m_name;
     std::list<Tx *>   	  txs;
     Async::AudioSplitter  *splitter;
     

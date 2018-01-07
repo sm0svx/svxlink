@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -201,7 +201,6 @@ class LocalTx : public Tx
     void setTransmittedSignalStrength(char rx_id, float siglev);
     
   private:
-    std::string       	    name;
     Async::Config     	    &cfg;
     Async::AudioIO    	    *audio_io;
     bool      	      	    is_transmitting;

@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -238,7 +238,7 @@ class SineGenerator : public Async::AudioSource
  ****************************************************************************/
 
 LocalTx::LocalTx(Config& cfg, const string& name)
-  : name(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
+  : Tx(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
     fsk_mod(0), /*fsk_valve(0),*/ input_handler(0), ptt_ctrl(0),
@@ -277,28 +277,28 @@ bool LocalTx::initialize(void)
   string value;
   
   string audio_dev;
-  if (!cfg.getValue(name, "AUDIO_DEV", audio_dev))
+  if (!cfg.getValue(name(), "AUDIO_DEV", audio_dev))
   {
-    cerr << "*** ERROR: Config variable " << name << "/AUDIO_DEV not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/AUDIO_DEV not set\n";
     return false;
   }
   
-  if (!cfg.getValue(name, "AUDIO_CHANNEL", value))
+  if (!cfg.getValue(name(), "AUDIO_CHANNEL", value))
   {
-    cerr << "*** ERROR: Config variable " << name
+    cerr << "*** ERROR: Config variable " << name()
          << "/AUDIO_CHANNEL not set\n";
     return false;
   }
   int audio_channel = atoi(value.c_str());
 
-  ptt = PttFactoryBase::createNamedPtt(cfg, name);
-  if ((ptt == 0) || (!ptt->initialize(cfg, name)))
+  ptt = PttFactoryBase::createNamedPtt(cfg, name());
+  if ((ptt == 0) || (!ptt->initialize(cfg, name())))
   {
     return false;
   }
 
   int ptt_hangtime = 0;
-  if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
+  if (cfg.getValue(name(), "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
   {
     ptt_hangtimer = new Timer(ptt_hangtime);
     ptt_hangtimer->expired.connect(
@@ -306,13 +306,13 @@ bool LocalTx::initialize(void)
     ptt_hangtimer->setEnable(false);
   }
 
-  if (cfg.getValue(name, "TIMEOUT", value))
+  if (cfg.getValue(name(), "TIMEOUT", value))
   {
     tx_timeout = 1000 * atoi(value.c_str());
   }
   
   int tx_delay = 0;
-  if (cfg.getValue(name, "TX_DELAY", value))
+  if (cfg.getValue(name(), "TX_DELAY", value))
   {
     tx_delay = atoi(value.c_str());
   }
@@ -325,28 +325,28 @@ bool LocalTx::initialize(void)
   }
   
   int dtmf_tone_length = 100;
-  if (cfg.getValue(name, "DTMF_TONE_LENGTH", value))
+  if (cfg.getValue(name(), "DTMF_TONE_LENGTH", value))
   {
     dtmf_tone_length = atoi(value.c_str());
   }
   
   int dtmf_tone_spacing = 50;
-  if (cfg.getValue(name, "DTMF_TONE_SPACING", value))
+  if (cfg.getValue(name(), "DTMF_TONE_SPACING", value))
   {
     dtmf_tone_spacing = atoi(value.c_str());
   }
   
   int dtmf_tone_amp = -18;
   int dtmf_digit_pwr = -15;
-  if (cfg.getValue(name, "DTMF_TONE_AMP", dtmf_tone_amp))
+  if (cfg.getValue(name(), "DTMF_TONE_AMP", dtmf_tone_amp))
   {
     cout << "*** WARNING: The DTMF_TONE_AMP configuration variable set in "
-            "transmitter " << name << " is deprecated. Use DTMF_DIGIT_PWR "
+            "transmitter " << name() << " is deprecated. Use DTMF_DIGIT_PWR "
             "instead. To get the same output level uing the new configuration "
             "variable, add 3dB to the old value." << endl;
     dtmf_digit_pwr = dtmf_tone_amp + 3;
   }
-  cfg.getValue(name, "DTMF_DIGIT_PWR", dtmf_digit_pwr);
+  cfg.getValue(name(), "DTMF_DIGIT_PWR", dtmf_digit_pwr);
   
   audio_io = new AudioIO(audio_dev, audio_channel);
   // FIXME: Check that the audio device has been correctly initialized
@@ -356,19 +356,19 @@ bool LocalTx::initialize(void)
   if (audio_io->sampleRate() < 0)
   {
     cerr << "*** ERROR: Failed to initialize audio device for transmitter \""
-	 << name << "\".\n";
+	 << name() << "\".\n";
     return false;
   }
 #endif
 
   sine_gen = new SineGenerator(audio_dev, audio_channel);
   
-  if (cfg.getValue(name, "CTCSS_FQ", value))
+  if (cfg.getValue(name(), "CTCSS_FQ", value))
   {
     sine_gen->setFq(atof(value.c_str()));
   }  
   
-  if (cfg.getValue(name, "CTCSS_LEVEL", value))
+  if (cfg.getValue(name(), "CTCSS_LEVEL", value))
   {
     int level = atoi(value.c_str());
     sine_gen->setLevel(level);
@@ -376,10 +376,10 @@ bool LocalTx::initialize(void)
   }
 
 #if INTERNAL_SAMPLE_RATE >= 16000
-  if (cfg.getValue(name, "TONE_SIGLEV_MAP", value))
+  if (cfg.getValue(name(), "TONE_SIGLEV_MAP", value))
   {
     int siglev_level = 10;
-    cfg.getValue(name, "TONE_SIGLEV_LEVEL", siglev_level, true);
+    cfg.getValue(name(), "TONE_SIGLEV_LEVEL", siglev_level, true);
     size_t list_len = splitStr(tone_siglev_map, value, ", ");
     if (list_len == 10)
     {
@@ -389,19 +389,19 @@ bool LocalTx::initialize(void)
     }
     else if (list_len != 0)
     {
-      cerr << "*** ERROR: Config variable " << name << "/TONE_SIGLEV_MAP must "
+      cerr << "*** ERROR: Config variable " << name() << "/TONE_SIGLEV_MAP must "
            << "contain exactly ten comma separated siglev values.\n";
     }
   }
 #endif
 
   bool ob_afsk_enable = false;
-  cfg.getValue(name, "OB_AFSK_ENABLE", ob_afsk_enable);
+  cfg.getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable);
   if (ob_afsk_enable && (siglev_sine_gen != 0))
   {
     cerr << "*** ERROR: Cannot have both siglev tone (TONE_SIGLEV_MAP) and "
             "AFSK (IB/OB_AFSK_ENABLE) enabled at the same time for receiver "
-         << name << ".\n";
+         << name() << ".\n";
       // FIXME: Should we bother to clean up or do we trust that the
       // creator of this object will delete it if the initialization fail?
     return false;
@@ -426,7 +426,7 @@ bool LocalTx::initialize(void)
   */
   
     // If preemphasis is enabled, create the preemphasis filter
-  if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
+  if (cfg.getValue(name(), "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
     //AudioFilter *preemph = new AudioFilter("HsBq1/0.05/36/3500");
     //preemph->setOutputGain(-9.0f);
@@ -512,17 +512,17 @@ bool LocalTx::initialize(void)
   if (ob_afsk_enable)
   {
     unsigned fc = 5500;
-    //cfg.getValue(name, "OB_AFSK_CENTER_FQ", fc);
+    //cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
     unsigned shift = 170;
-    //cfg.getValue(name, "OB_AFSK_SHIFT", shift);
+    //cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
-    //cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
+    //cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
     float voice_gain = -6.0f;
-    cfg.getValue(name, "OB_AFSK_VOICE_GAIN", voice_gain);
+    cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
     float afsk_level = -12.0f;
-    cfg.getValue(name, "OB_AFSK_LEVEL", afsk_level);
+    cfg.getValue(name(), "OB_AFSK_LEVEL", afsk_level);
     unsigned afsk_tx_delay = 100;
-    cfg.getValue(name, "OB_AFSK_TX_DELAY", afsk_tx_delay);
+    cfg.getValue(name(), "OB_AFSK_TX_DELAY", afsk_tx_delay);
 
     AudioFilter *voice_filter = new AudioFilter("LpCh10/-0.5/4500");
     voice_filter->setOutputGain(voice_gain);
@@ -580,19 +580,19 @@ bool LocalTx::initialize(void)
   }
 
   bool ib_afsk_enable = false;
-  cfg.getValue(name, "IB_AFSK_ENABLE", ib_afsk_enable);
+  cfg.getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable);
   if (ob_afsk_enable && ib_afsk_enable)
   {
     unsigned fc = 1700;
-    //cfg.getValue(name, "IB_AFSK_CENTER_FQ", fc);
+    //cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
     unsigned shift = 1000;
-    //cfg.getValue(name, "IB_AFSK_SHIFT", shift);
+    //cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
     unsigned baudrate = 1200;
-    //cfg.getValue(name, "IB_AFSK_BAUDRATE", baudrate);
+    //cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
     float afsk_level = -6;
-    cfg.getValue(name, "IB_AFSK_LEVEL", afsk_level);
+    cfg.getValue(name(), "IB_AFSK_LEVEL", afsk_level);
     unsigned afsk_tx_delay = 100;
-    cfg.getValue(name, "IB_AFSK_TX_DELAY", afsk_tx_delay);
+    cfg.getValue(name(), "IB_AFSK_TX_DELAY", afsk_tx_delay);
 
       // Create the inband HDLC framer
     hdlc_framer_ib = new HdlcFramer;
@@ -629,7 +629,7 @@ bool LocalTx::initialize(void)
   prev_src = ptt_ctrl;
 
   float master_gain = 0.0f;
-  if (cfg.getValue(name, "MASTER_GAIN", master_gain))
+  if (cfg.getValue(name(), "MASTER_GAIN", master_gain))
   {
     AudioAmp *master_gain_stage = new AudioAmp;
     master_gain_stage->setGain(master_gain);
@@ -803,7 +803,7 @@ void LocalTx::transmit(bool do_transmit)
     return;
   }
   
-  cout << name << ": Turning the transmitter " << (do_transmit ? "ON" : "OFF")
+  cout << name() << ": Turning the transmitter " << (do_transmit ? "ON" : "OFF")
        << endl;
   
   is_transmitting = do_transmit;
@@ -817,7 +817,7 @@ void LocalTx::transmit(bool do_transmit)
     if (!audio_io->open(AudioIO::MODE_WR))
     {
       cerr << "*** ERROR: Could not open audio device for transmitter \""
-      	   << name << "\"\n";
+           << name() << "\"\n";
       //is_transmitting = false;
       //return;
     }
@@ -886,7 +886,7 @@ void LocalTx::txTimeoutOccured(Timer *t)
     return;
   }
   
-  cerr << "*** ERROR: Transmitter " << name
+  cerr << "*** ERROR: Transmitter " << name()
        << " have been active for too long. Turning it off...\n";
   
   if (!setPtt(false))
@@ -937,7 +937,7 @@ void LocalTx::pttHangtimeExpired(Timer *t)
 
 bool LocalTx::preTransmitterStateChange(bool do_transmit)
 {
-  //cout << name << ": LocalTx::preTransmitterStateChange: do_transmit="
+  //cout << name() << ": LocalTx::preTransmitterStateChange: do_transmit="
   //     << do_transmit << endl;
 
   if (do_transmit)

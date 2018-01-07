@@ -5,8 +5,8 @@
 @date	 2015-05-16
 
 \verbatim
-A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+A module (plugin) for the multi purpose tranceiver frontend system.
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -100,7 +100,6 @@ using namespace Async;
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -224,9 +223,15 @@ bool ModuleTrx::initialize(void)
     }
     else
     {
-      cerr << "*** ERROR: Unsupported modulation \"" << modstr
-           << "\" configured in module \"" << name() << "\"\n";
-      return false;
+      Modulation::Type mod = Modulation::fromString(modstr);
+      if (mod == Modulation::MOD_UNKNOWN)
+      {
+        cerr << "*** ERROR: Unsupported modulation \"" << modstr
+             << "\" configured in module \"" << name() << "\"\n";
+        return false;
+      }
+      rx->setModulation(mod);
+      tx->setModulation(mod);
     }
   }
 
@@ -346,15 +351,18 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
          << setprecision(3) << fixed << fq << "kHz\n";
     cout.flags(orig_cout_flags);
     rx->setFq(1000 * fq);
+    tx->setFq(1000 * fq);
     if (auto_mod_select)
     {
       if (fq < 10000.0)
       {
-        rx->setModulation(Rx::MOD_LSB);
+        rx->setModulation(Modulation::MOD_LSB);
+        tx->setModulation(Modulation::MOD_LSB);
       }
       else
       {
-        rx->setModulation(Rx::MOD_USB);
+        rx->setModulation(Modulation::MOD_USB);
+        tx->setModulation(Modulation::MOD_USB);
       }
     }
   }
@@ -438,7 +446,6 @@ void ModuleTrx::rxSquelchOpen(bool is_open)
     }
   }
 } /* ModuleTrx::rxSquelchOpen */
-
 
 
 /*

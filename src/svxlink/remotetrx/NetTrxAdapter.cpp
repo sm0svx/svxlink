@@ -6,7 +6,7 @@
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -227,9 +227,9 @@ class RxAdapter : public Rx, public AudioSink
 class TxAdapter : public Tx, public AudioSource
 {
   public:
-    TxAdapter(void)
-      : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), is_idle(true),
-        ctcss_enabled(false), ctcss_fq(0.0f)
+    TxAdapter(const string &name)
+      : Tx(name), tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false),
+        is_idle(true), ctcss_enabled(false), ctcss_fq(0.0f)
     {
     }
 
@@ -484,7 +484,7 @@ bool NetTrxAdapter::initialize(void)
   AudioSource *prev_src = 0;
 
     // NetTx audio chain
-  txa1 = new TxAdapter;
+  txa1 = new TxAdapter("NetRxAdapter");
   if (!txa1->initialize())
   {
     return false;
@@ -513,7 +513,7 @@ bool NetTrxAdapter::initialize(void)
 
     
     // NetRx audio chain
-  txa2 = new TxAdapter;
+  txa2 = new TxAdapter("NetTxAdapter");
   if (!txa2->initialize())
   {
     return false;

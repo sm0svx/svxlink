@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -186,9 +186,9 @@ class NetRx : public Rx
 
     /**
      * @brief   Set the receiver modulation mode
-     * @param   mod The modulation to set (@see Modulation)
+     * @param   mod The modulation to set (@see Modulation::Type)
      */
-    virtual void setModulation(Modulation mod);
+    virtual void setModulation(Modulation::Type mod);
 
     /**
      * @brief Resume audio output to the sink
@@ -214,7 +214,7 @@ class NetRx : public Rx
     bool      	      	sql_is_open;
     Async::AudioDecoder *audio_dec;
     unsigned            fq;
-    Modulation          modulation;
+    Modulation::Type    modulation;
     
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);

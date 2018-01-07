@@ -8,7 +8,7 @@ This file contains a class that handle local digital drop receivers.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -996,7 +996,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
              << ". Legal values are: 960000 and 2400000\n";
         return false;
       }
-      setModulation(Ddr::MOD_FM);
+      setModulation(Modulation::MOD_FM);
       channelizer->preDemod.connect(preDemod.make_slot());
       return true;
     }
@@ -1007,36 +1007,36 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
       trans.setOffset(fq_offset - ch_offset);
     }
 
-    void setModulation(Ddr::Modulation mod)
+    void setModulation(Modulation::Type mod)
     {
       demod = 0;
       ch_offset = 0;
       switch (mod)
       {
-        case Ddr::MOD_FM:
+        case Modulation::MOD_FM:
           channelizer->setBw(Channelizer::BW_20K);
           fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
           demod = &fm_demod;
           break;
-        case Ddr::MOD_NBFM:
+        case Modulation::MOD_NBFM:
           channelizer->setBw(Channelizer::BW_10K);
           fm_demod.setDemodParams(channelizer->chSampRate(), 2500);
           demod = &fm_demod;
           break;
-        case Ddr::MOD_WBFM:
+        case Modulation::MOD_WBFM:
           channelizer->setBw(Channelizer::BW_WIDE);
           fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
           demod = &fm_demod;
           break;
-        case Ddr::MOD_AM:
+        case Modulation::MOD_AM:
           channelizer->setBw(Channelizer::BW_10K);
           demod = &am_demod;
           break;
-        case Ddr::MOD_NBAM:
+        case Modulation::MOD_NBAM:
           channelizer->setBw(Channelizer::BW_6K);
           demod = &am_demod;
           break;
-        case Ddr::MOD_USB:
+        case Modulation::MOD_USB:
 #ifdef USE_SSB_PHASE_DEMOD
           channelizer->setBw(Channelizer::BW_6K);
 #else
@@ -1046,7 +1046,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           ssb_demod.useLsb(false);
           demod = &ssb_demod;
           break;
-        case Ddr::MOD_LSB:
+        case Modulation::MOD_LSB:
 #ifdef USE_SSB_PHASE_DEMOD
           channelizer->setBw(Channelizer::BW_6K);
 #else
@@ -1056,15 +1056,15 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           ssb_demod.useLsb(true);
           demod = &ssb_demod;
           break;
-        case Ddr::MOD_CW:
+        case Modulation::MOD_CW:
           channelizer->setBw(Channelizer::BW_500);
           demod = &cw_demod;
           break;
-        case Ddr::MOD_WBCW:
+        case Modulation::MOD_WBCW:
           channelizer->setBw(Channelizer::BW_3K);
           demod = &cw_demod;
           break;
-        case Ddr::MOD_UNKNOWN:
+        case Modulation::MOD_UNKNOWN:
           break;
       }
       setFqOffset(fq_offset);
@@ -1234,41 +1234,10 @@ bool Ddr::initialize(void)
 
   string modstr("FM");
   cfg.getValue(name(), "MODULATION", modstr);
-  if (modstr == "FM")
+  Modulation::Type mod = Modulation::fromString(modstr);
+  if (mod != Modulation::MOD_UNKNOWN)
   {
-    channel->setModulation(MOD_FM);
-  }
-  else if (modstr == "NBFM")
-  {
-    channel->setModulation(MOD_NBFM);
-  }
-  else if (modstr == "WBFM")
-  {
-    channel->setModulation(MOD_WBFM);
-  }
-  else if (modstr == "AM")
-  {
-    channel->setModulation(MOD_AM);
-  }
-  else if (modstr == "NBAM")
-  {
-    channel->setModulation(MOD_NBAM);
-  }
-  else if (modstr == "USB")
-  {
-    channel->setModulation(MOD_USB);
-  }
-  else if (modstr == "LSB")
-  {
-    channel->setModulation(MOD_LSB);
-  }
-  else if (modstr == "CW")
-  {
-    channel->setModulation(MOD_CW);
-  }
-  else if (modstr == "WBCW")
-  {
-    channel->setModulation(MOD_WBCW);
+    channel->setModulation(mod);
   }
   else
   {
@@ -1318,7 +1287,7 @@ void Ddr::setFq(unsigned fq)
 } /* Ddr::setFq */
 
 
-void Ddr::setModulation(Modulation mod)
+void Ddr::setModulation(Modulation::Type mod)
 {
   channel->setModulation(mod);
 } /* Ddr::setModulation */

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <Modulation.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioSink.h>
 
@@ -133,7 +134,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Default constuctor
      */
-    Tx(void) {}
+    Tx(const std::string& name) : m_name(name) {}
   
     /**
      * @brief 	Destructor
@@ -146,6 +147,12 @@ class Tx : public sigc::trackable, public Async::AudioSink
      */
     virtual bool initialize(void) = 0;
   
+    /**
+     * @brief 	Return the name of the transmitter
+     * @return	Return the name of the transmitter
+     */
+    const std::string& name(void) const { return m_name; }
+
     /**
      * @brief 	Set the transmit control mode
      * @param 	mode The mode to use to set the transmitter on or off.
@@ -195,6 +202,18 @@ class Tx : public sigc::trackable, public Async::AudioSink
     virtual void sendData(const std::vector<uint8_t> &msg) {}
     
     /**
+     * @brief   Set the transmitter frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq) {}
+
+    /**
+     * @brief   Set the transmitter modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    virtual void setModulation(Modulation::Type mod) {}
+
+    /**
      * @brief 	This signal is emitted when the tx timeout timer expires
      *
      * This signal is emitted when the transmitter have been transmitting
@@ -210,6 +229,9 @@ class Tx : public sigc::trackable, public Async::AudioSink
      *          is transmitting or else \em false.
      */
     sigc::signal<void, bool> transmitterStateChange;
+
+  private:
+    std::string   m_name;
     
 };  /* class Tx */
 

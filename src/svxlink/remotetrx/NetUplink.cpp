@@ -6,7 +6,7 @@
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -511,18 +511,18 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
     
-    case MsgSetFq::TYPE:
+    case MsgSetRxFq::TYPE:
     {
-      MsgSetFq *fq_msg = reinterpret_cast<MsgSetFq*>(msg);
-      cout << rx->name() << ": SetFq(" << fq_msg->fq() << ")\n";
+      MsgSetRxFq *fq_msg = reinterpret_cast<MsgSetRxFq*>(msg);
+      cout << rx->name() << ": SetRxFq(" << fq_msg->fq() << ")\n";
       rx->setFq(fq_msg->fq());
       break;
     }
 
-    case MsgSetModulation::TYPE:
+    case MsgSetRxModulation::TYPE:
     {
-      MsgSetModulation *mod_msg = reinterpret_cast<MsgSetModulation*>(msg);
-      cout << rx->name() << ": SetModulation("
+      MsgSetRxModulation *mod_msg = reinterpret_cast<MsgSetRxModulation*>(msg);
+      cout << rx->name() << ": SetRxModulation("
            << mod_msg->modulation() << ")\n";
       rx->setModulation(mod_msg->modulation());
       break;
@@ -672,6 +672,23 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
     
+    case MsgSetTxFq::TYPE:
+    {
+      MsgSetTxFq *fq_msg = reinterpret_cast<MsgSetTxFq*>(msg);
+      cout << tx->name() << ": SetTxFq(" << fq_msg->fq() << ")\n";
+      tx->setFq(fq_msg->fq());
+      break;
+    }
+
+    case MsgSetTxModulation::TYPE:
+    {
+      MsgSetTxModulation *mod_msg = reinterpret_cast<MsgSetTxModulation*>(msg);
+      cout << tx->name() << ": SetTxModulation("
+           << mod_msg->modulation() << ")\n";
+      tx->setModulation(mod_msg->modulation());
+      break;
+    }
+
     default:
       cerr << "*** ERROR: Unknown TCP message received in NetUplink "
            << name << ". type=" << msg->type() << ", size="

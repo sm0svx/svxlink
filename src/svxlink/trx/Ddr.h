@@ -8,7 +8,7 @@ This file contains a class that handle local digital drop receivers.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -171,9 +171,9 @@ class Ddr : public LocalRxBase
 
     /**
      * @brief   Set the receiver modulation mode
-     * @param   mod The modulation to set (@see Modulation)
+     * @param   mod The modulation to set (@see Modulation::Type)
      */
-    virtual void setModulation(Modulation mod);
+    virtual void setModulation(Modulation::Type mod);
 
     /**
      * @brief   A signal that is emitted when new I/Q data is available
