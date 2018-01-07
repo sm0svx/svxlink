@@ -52,7 +52,7 @@ extern "C" {
 
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
-#include <AsyncTcpConnection.h>
+#include <AsyncTcpClient.h>
 #include <CppStdCompat.h>
 
 
@@ -75,7 +75,6 @@ namespace Async
   class AudioPacer;
   class AudioFifo;
   class AudioPassthrough;
-  class TcpClient;
   class TcpConnection;
 };
 
@@ -541,7 +540,7 @@ class QsoFrn
 
     bool                init_ok;
 
-    Async::TcpClient *  tcp_client;
+    Async::TcpClient<>* tcp_client;
     Async::Timer *      rx_timeout_timer;
     Async::Timer *      con_timeout_timer;
     Async::Timer *      keepalive_timer;

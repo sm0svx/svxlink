@@ -2,19 +2,17 @@
 #   docker build --pull -t svxlink-ubuntu-build .
 #
 # Run with:
-#   docker run -it --rm --hostname ubuntu-build \
-#              --privileged -v /dev/snd:/dev/snd \
-#              svxlink-ubuntu-build
+#   docker run -it --rm --hostname ubuntu-build svxlink-ubuntu-build
 #
 # For using sound inside the docker container add:
-#              --privileged -v /dev/snd:/dev/snd \
-#              -e HOSTAUDIO_GID=$(stat -c "%g" /dev/snd/timer) \
+#              --privileged -v /dev/snd:/dev/snd
+#              -e HOSTAUDIO_GID=$(stat -c "%g" /dev/snd/timer)
 #
 # To import your git config add (mileage may vary):
-#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro \
+#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro
 #
 # To use a specific git repositoty instead of the default one:
-#              -e GIT_URL=username@your.repo:/path/to/svxlink.git \
+#              -e GIT_URL=username@your.repo:/path/to/svxlink.git
 #
 # To build another branch than master:
 #              -e GIT_BRANCH=the_branch
@@ -24,7 +22,7 @@
 #
 
 #FROM ubuntu
-FROM ubuntu:wily
+FROM ubuntu
 MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
 
 # Install required packages and set up the svxlink user

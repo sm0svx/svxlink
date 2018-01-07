@@ -1,4 +1,51 @@
- 1.6.0 -- ?? ??? 2017
+ 1.7.0 -- ?? ??? 2018
+----------------------
+
+* Now possible to set the roger sound to be always on in the SimplexLogic, even
+  when no module is active. Use the RGR_SOUND_ALWAYS configuration variable to
+  enable the feature.
+
+* New feature added called "AFSK-com". This feature make it possible to
+  transport smaller amouts of metadata on an RF link, for example when linking
+  remote receivers in via RF. The metadata can be signal level measurements,
+  DTMF digits or tone detections (e.g. 1750Hz or CTCSS for repeater
+  activation).
+  There are two modes for AFSK-com, in-band and out-of-band. The in-band mode
+  is used to transport data when there is no audio being transported. The
+  out-of-band mode is used when data must be transmitted at the same time as
+  analogue audio, like continuous signal level updates.
+  To configure the AFSK handling use the OB_AFSK_* (for out-of-band) and
+  IB_AFSK_* (for in-band) configuration variables. Also there is a new
+  SIGLEV_DET=AFSK and DTMF_DEC_TYPE=AFSK to support transporting those values
+  using the AFSK-com feature.
+
+* Now possible to specify 1750Hz and CTCSS detectors in a RemoteTrx RfUplink.
+  That is done using the new DETECT_1750 and DETECT_CTCSS configuration
+  variables.
+
+* An RX identity can now be specified for each receiver in a system. That
+  identity can then be used in the TCL event handling scripts to for example
+  send different roger sounds depending on which receiver the signal
+  originated from. The identity is specified using the RX_ID configuration
+  variable and consists of one char.
+
+* New receiver voter feature: Now possible to adjust the voting delay per
+  receiver. This may be good to do if some receivers are much slower to report
+  squelch open/signal level. As an example, let's say we have three receivers
+  where two of the receivers take at most 100ms to report signal level and one
+  receiver requires 300ms. We then need to set the VOTING_DELAY to something
+  like 350ms so as to be sure that all receivers get a chance to report their
+  signal level measurement. If only the slow receiver opens there will be a
+  total delay of 300+350=650ms. This is unnecessarily long since the other two
+  receivers should have reported their signal strength way earlier. It's thus
+  safe to shorten the voting delay for the slow receiver, so we do this:
+  RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay will now
+  be 100+350=450ms for the fast receivers and 300+350-200=450ms for the slow
+  receiver. That is, all receivers are now equally fast.
+
+
+
+ 1.6.0 -- 30 Dec 2017
 ----------------------
 
 * ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
@@ -47,6 +94,7 @@
 
 * New command PTY for injecting DTMF digits into a logic core. Use
   configuration variable DTMF_CTRL_PTY to set the path to the PTY.
+  The PTY will also emit the DTMF digits received on the RF.
 
 * New configuration variable GPIO_PATH for PTT and squelch configurations that
   use GPIO. On some hardware platforms the path to control GPIO pins is not
@@ -62,6 +110,17 @@
 
 * ModuleEchoLink: The connected TCL event handling function now also is given
   the callsign.
+
+* Bugfix: The squelch detector was not able to handle larger audio blocks than
+  256 bytes. It now can.
+
+* Bugfix: Could not handle WAV files that contained other subchunks than 'fmt'
+  or 'data'. Reading would fail for WAV files containing for example 'LIST'
+  or 'id3' subchunks.
+
+* New application SvxReflector that is used to link multiple SvxLink nodes
+  together. On the SvxLink node side the new ReflectorLogic logic core is used
+  to connect to the SvxReflector server.
 
 
 

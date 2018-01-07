@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -113,10 +113,18 @@ This is the base class for implementing an audio encoder.
 class AudioEncoder : public AudioSink, virtual public sigc::trackable
 {
   public:
-    typedef std::map<std::string,std::string> Options;
+    /**
+     * @brief   Check if a specific encoder is available
+     * @param   name The name of the encoder to look for
+     */
+    static bool isAvailable(const std::string &name);
 
-    static AudioEncoder *create(const std::string &name, const Options &options);
-
+    /**
+     * @brief   Create a new encoder of the specified type
+     * @param   name The name of the encoder to create
+     */
+    static AudioEncoder *create(const std::string &name);
+    
     /**
      * @brief 	Default constuctor
      */

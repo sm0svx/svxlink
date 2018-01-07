@@ -1505,6 +1505,10 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
   dtmfDigitDetected(digit, duration);
 
+  if (dtmf_ctrl_pty != 0)
+  {
+    dtmf_ctrl_pty->write(&digit, 1);
+  }
 } /* Logic::dtmfDigitDetectedP */
 
 

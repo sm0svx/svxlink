@@ -22,6 +22,7 @@ add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}
   ${VERSION_DEPENDS}
 )
 set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
+set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
 target_link_libraries(Module${MODNAME} ${LIBS})
 
 # Install targets

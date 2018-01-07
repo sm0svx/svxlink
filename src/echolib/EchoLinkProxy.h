@@ -24,11 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example EchoLinkProxy_demo.cpp
-An example of how to use the EchoLinkProxy class
-*/
-
-
 #ifndef ECHOLINK_PROXY_INCLUDED
 #define ECHOLINK_PROXY_INCLUDED
 
@@ -122,8 +117,6 @@ proxy server. This is of most use when the two UDP ports cannot be forwarded
 to your local EchoLink computer for one or the other reason, like when being
 on a public network. Instead of your computer listening directly to the two
 UDP ports, the EchoLink proxy server will do it for you.
-
-\include EchoLinkProxy_demo.cpp
 */
 class Proxy : public sigc::trackable
 {
@@ -348,15 +341,15 @@ class Proxy : public sigc::trackable
 
     static Proxy *the_instance;
 
-    Async::TcpClient  con;
-    const std::string callsign;
-    std::string       password;
-    ProxyState        state;
-    TcpState          tcp_state;
-    uint8_t           recv_buf[recv_buf_size];
-    int               recv_buf_cnt;
-    Async::Timer      reconnect_timer;
-    Async::Timer      cmd_timer;
+    Async::TcpClient<>  con;
+    const std::string   callsign;
+    std::string         password;
+    ProxyState          state;
+    TcpState            tcp_state;
+    uint8_t             recv_buf[recv_buf_size];
+    int                 recv_buf_cnt;
+    Async::Timer        reconnect_timer;
+    Async::Timer        cmd_timer;
 
     Proxy(const Proxy&);
     Proxy& operator=(const Proxy&);
@@ -366,7 +359,7 @@ class Proxy : public sigc::trackable
     void onConnected(void);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void onDisconnected(Async::TcpConnection *con,
-        Async::TcpClient::DisconnectReason reason);
+        Async::TcpClient<>::DisconnectReason reason);
     void disconnectHandler(void);
     int handleAuthentication(const unsigned char *buf, int len);
     int parseProxyMessageBlock(unsigned char *buf, int len);

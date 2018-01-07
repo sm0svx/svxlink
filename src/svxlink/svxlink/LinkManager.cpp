@@ -284,7 +284,7 @@ void LinkManager::addLogic(LogicBase *logic)
   for (SinkMap::iterator it=sinks.begin(); it != sinks.end(); ++it)
   {
     AudioPassthrough *connector = new AudioPassthrough;
-    splitter->addSink(connector);
+    splitter->addSink(connector, true);
     AudioSelector *other_selector = (*it).second.selector;
     other_selector->addSource(connector);
     (*it).second.connectors[logic->name()] = connector;
@@ -294,7 +294,7 @@ void LinkManager::addLogic(LogicBase *logic)
   for (SourceMap::iterator it=sources.begin(); it!=sources.end(); ++it)
   {
     AudioPassthrough *connector = new AudioPassthrough;
-    (*it).second.splitter->addSink(connector);
+    (*it).second.splitter->addSink(connector, true);
     selector->addSource(connector);
     sinks[logic->name()].connectors[(*it).first] = connector;
   }
@@ -364,7 +364,7 @@ void LinkManager::deleteLogic(LogicBase *logic)
     sink_info.selector->removeSource(connector);
     sink_info.connectors.erase(logic->name());
     splitter->removeSink(connector);
-    delete connector;
+    //delete connector;
   }
   delete splitter;
   sources.erase(logic->name());
@@ -378,7 +378,7 @@ void LinkManager::deleteLogic(LogicBase *logic)
     selector->removeSource(connector);
     const string &source_name = (*cmit).first;
     sources[source_name].splitter->removeSink(connector);
-    delete connector;
+    //delete connector;
   }
   delete selector;
   sinks.erase(logic->name());
@@ -487,6 +487,17 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
  * Private member functions
  *
  ****************************************************************************/
+
+LinkManager::~LinkManager(void)
+{
+  LogicMap::iterator it = logic_map.begin();
+  while (it != logic_map.end())
+  {
+    deleteLogic(it->second.logic);
+    it = logic_map.begin();
+  }
+} /* LinkManager::~LinkManager */
+
 
 /**
  * @brief Find out which logics that should be connected

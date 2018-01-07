@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <deque>
 #include <sigc++/sigc++.h>
 
 
@@ -131,11 +132,18 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
      */
     void setDigitDuration(int duration_ms);
 
+    int digitDuration(void) const
+    {
+      return 1000 * tone_length / sampling_rate;
+    }
+
     /**
      * @brief   Set the spacing between each digit
      * @param   spacing_ms The spacing in milliseconds
      */
     void setDigitSpacing(int spacing_ms);
+
+    int digitSpacing(void) const { return 1000 * tone_spacing / sampling_rate; }
 
     /**
      * @brief   Set the power of the generated DTMF digits
@@ -156,8 +164,9 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
     /**
      * @brief   Send the specified digits
      * @param   str A string of digits (0-9, A-D, *, #)
+     * @param   duration The duration of the digit
      */
-    void send(const std::string &str);
+    void send(const std::string &str, unsigned duration=0);
 
     /**
      * @brief   Check if we are currently transmitting digits
@@ -194,15 +203,28 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
   protected:
     
   private:
-    int       	sampling_rate;
-    int       	tone_length;
-    int       	tone_spacing;
+    struct SendQueueItem
+    {
+      char      digit;
+      unsigned  duration;
+
+      SendQueueItem(char digit, unsigned duration)
+        : digit(digit), duration(duration)
+      {
+      }
+    };
+    typedef std::deque<SendQueueItem> SendQueue;
+
+    unsigned    sampling_rate;
+    unsigned    tone_length;
+    unsigned    tone_spacing;
     float       tone_amp;
-    std::string current_str;
-    int       	low_tone;
-    int       	high_tone;
-    int       	pos;
-    int       	length;
+    //std::string current_str;
+    SendQueue   send_queue;
+    unsigned    low_tone;
+    unsigned    high_tone;
+    unsigned    pos;
+    unsigned    length;
     bool      	is_playing;
     bool      	is_sending_digits;
 

@@ -1,0 +1,162 @@
+.TH SVXREFLECTOR.CONF 5 "OCTOBER 2017" Linux "File Formats"
+.
+.SH NAME
+.
+svxreflector.conf \- Configuration file for the SvxReflector conference server audio reflector
+.
+.SH DESCRIPTION
+.
+The
+.B svxreflector
+server is used to interconnect multiple SvxLink nodes into one network.  This
+man-page describe the configuration file format for it.
+.P
+SvxReflector look for configuration files in a number of places. First it tries
+to find a user specific configuration file. It will look for a user specific
+configuration file in:
+.BR $HOME/.svxlink/svxreflector.conf .
+If no user specific configuration file can be found, svxreflector will look
+for the system wide configuration file
+.BR /etc/svxlink/svxreflector.conf .
+The
+.B --config
+command line option may also be used to specify an arbitrary configuration file.
+.
+.SH FILE FORMAT
+.
+The configuration file is in the famous INI-file format. A generic example of
+how such a file might look like is shown below.
+
+  [SECTION1]
+  VALUE1=1
+  VALUE2="TWO "
+  VAULE3="Multi "
+         "line"
+  
+  [SECTION2]
+  VALUE1=2
+
+This is a simple format that contain name=value pairs that belong to a section.
+In written text, a specific configuration variable can be referred to as
+SECTION1/VALUE2 meaning "configuration variable VALUE2 in section SECTION1".
+.P
+The same variable name can exist in two different sections. For example VALUE1
+in section SECTION1 have the value 1 and VALUE1 in section SECTION2 have the
+value 2. Values containing spaces at the beginning or end of the line must be
+surrounded by citation characters (see SECTION1/VALUE2). Likewise with a multi
+line value (see SECTION1/VALUE3).
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that svxreflector
+understands. The configuration variables are described section for section.
+.
+.SS GLOBAL
+.
+The GLOBAL section contains application global configuration data.
+.TP
+.B CFG_DIR
+Specify the path to a directory that contain additional configuration files.
+If a relative path is specified, the path will be relative to the directory
+where the main configuration file is at. All files in the specified directory
+will be read as additional configuration. Filenames starting with a dot are
+ignored.
+.TP
+.B TIMESTAMP_FORMAT
+This variable specifies the format of the timestamp that is written in front of
+each row in the log file. The format string is in the same format as specified
+in the
+.BR strftime (3)
+manual page. The default is "%c" which is described as: "the preferred date and
+time representation for the current locale". The environment variables LC_TIME,
+LC_ALL and LANG will affect how this time format will look. For example, setting
+LC_TIME="sv_SE.UTF8" will give you Swedish timestamp representation. Other
+examples of format specifiers are:
+.RS
+.IP \(bu 4
+.BR %d " - The day of the month as a decimal number (range 01 to 31)"
+.IP \(bu 4
+.BR %b " - The abbreviated month name according to the current locale"
+.IP \(bu 4
+.BR %Y " - The year as a decimal number including the century"
+.IP \(bu 4
+.BR %H " - The hour as a decimal number using a 24-hour clock (range 00 to 23)"
+.IP \(bu 4
+.BR %M " - The minute as a decimal number (range 00 to 59)"
+.IP \(bu 4
+.BR %S " - The second as a decimal number (range 00 to 61)"
+.P
+So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
+"29 Nov 2005 22:31:59".
+.RE
+.TP
+.B LISTEN_PORT
+The TCP and UDP port number to use for network communications. The default is
+5300. Make sure to open this port for incoming traffic to the server on both
+TCP and UDP. Clients do not have to open any ports in their firewalls.
+.TP
+.B SQL_TIMEOUT
+Use this configuration variable to set a time in seconds after which a clients
+audio is blocked if he has been talking for too long. The default is 0
+(disabled).
+.TP
+.B SQL_TIMEOUT_BLOCKTIME
+If a client has been talking for longer than the time specified in the
+.B SQL_TIMEOUT
+configuration variable he will not be able to talk again until the time in this
+configuration variable have elapsed. If not specified, the default is one
+second.
+.TP
+.B CODECS
+A comma separated list of allowed codecs. For the moment only one codec can be
+specified. Choose from the following codecs: OPUS, SPEEX, GSM, S16
+(uncompressed signed 16 bit), RAW (uncompressed 32 bit floats).
+.
+.SS USERS and PASSWORDS sections
+.
+All users must be specified in the USERS section. Usernames are totally
+arbitrary but typically the callsign is used. The purpose is to map each
+username to a password. However, the password is not given directly but instead
+a reference to the PASSWORDS section is given. It's done like this so that
+multiple nodes can share a single password.
+.P
+An example of how the USERS and PASSWORDS sections may look is given below.
+
+  [USERS]
+  SM0ABC-1=MyNodes
+  SM0ABC-2=MyNodes
+  SM1XYZ=SM1XYZ
+  
+  [PASSWORDS]
+  MyNodes="A very strong password!"
+  SM1XYZ="Another very good password?"
+
+This will set up
+.BR SM0ABC-1 " and " SM0ABC-2
+to use the same password specified by
+.B MyNodes
+in the PASSWORDS section. User
+.BR SM1XYZ " have his own password."
+.
+.SH FILES
+.
+.TP
+.I /etc/svxlink/svxreflector.conf
+The system wide configuration file.
+.TP
+.I ~/.svxlink/svxreflector.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxreflector.d/*
+Additional configuration files. This directory is setup by the CFG_DIR
+configuration variable.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxreflector (1),
+.BR svxlink (1),
+.BR svxlink.conf (5),

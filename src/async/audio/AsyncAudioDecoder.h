@@ -114,10 +114,18 @@ This is the base class for an audio decoder.
 class AudioDecoder : public AudioSource, virtual public sigc::trackable
 {
   public:
-    typedef std::map<std::string,std::string> Options;
+    /**
+     * @brief   Check if a specific decoder is available
+     * @param   name The name of the decoder to look for
+     */
+    static bool isAvailable(const std::string &name);
 
-    static AudioDecoder *create(const std::string &name, const Options &options);
-
+    /**
+     * @brief   Create a new decoder of the specified type
+     * @param   name The name of the decoder to create
+     */
+    static AudioDecoder *create(const std::string &name);
+    
     /**
      * @brief 	Default constuctor
      */

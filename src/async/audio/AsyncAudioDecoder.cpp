@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AsyncAudioDecoder.h"
+#include "AsyncAudioDecoderDummy.h"
 #include "AsyncAudioDecoderNull.h"
 #include "AsyncAudioDecoderRaw.h"
 #include "AsyncAudioDecoderS16.h"
@@ -120,11 +121,29 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioDecoder *AudioDecoder::create(const std::string &name, const std::map<std::string,std::string> &options)
+bool AudioDecoder::isAvailable(const std::string &name)
+{
+  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
+         (name == "GSM") || (name == "AMBE")
+#ifdef SPEEX_MAJOR
+         (name == "SPEEX") ||
+#endif
+#ifdef OPUS_MAJOR
+         (name == "OPUS") ||
+#endif
+         (name == "DUMMY");
+} /* AudioDecoder::isAvailable */
+
+
+AudioDecoder *AudioDecoder::create(const std::string &name)
 {
   if (name == "NULL")
   {
     return new AudioDecoderNull;
+  }
+  else if (name == "DUMMY")
+  {
+    return new AudioDecoderDummy;
   }
   else if (name == "RAW")
   {
@@ -161,45 +180,11 @@ AudioDecoder *AudioDecoder::create(const std::string &name, const std::map<std::
 }
 
 
-#if 0
-AudioDecoder::AudioDecoder(void)
-{
-
-} /* AudioDecoder::AudioDecoder */
-
-
-AudioDecoder::~AudioDecoder(void)
-{
-
-} /* AudioDecoder::~AudioDecoder */
-
-
-void AudioDecoder::resumeOutput(void)
-{
-
-} /* AudioDecoder::resumeOutput */
-#endif
-
-
-
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
-
-void AudioDecoder::setOptions(const Options &options) {
-    for(Options::const_iterator it = options.begin(); it != options.end(); ++it) {
-        setOption(it->first,it->second);
-    }
-}
-
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-
-} /* AudioDecoder::allSamplesFlushed */
-#endif
 
 
 

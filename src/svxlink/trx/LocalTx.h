@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <vector>
 
 
@@ -73,10 +74,13 @@ namespace Async
   class AudioSource;
   class AudioValve;
   class AudioPassthrough;
+  class AudioMixer;
 };
 
 class DtmfEncoder;
 class PttCtrl;
+class HdlcFramer;
+class AfskModulator;
 
 
 /****************************************************************************
@@ -173,11 +177,19 @@ class LocalTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
+     * @param   duration The tone duration in milliseconds
      */
-    void sendDtmf(const std::string& digits);
+    void sendDtmf(const std::string& digits, unsigned duration=0);
+
+    /**
+     * @brief 	Send a data frame
+     * @param 	msg The frame data
+     */
+    void sendData(const std::vector<uint8_t> &msg);
     
     /**
      * @brief   Set the signal level value that should be transmitted
+     * @param   rx_id  The id of the RX that the signal was received on
      * @param   siglev The signal level to transmit
      *
      * This function does not set the output power of the transmitter but
@@ -186,7 +198,7 @@ class LocalTx : public Tx
      * on a link transmitter to transport signal level measurements to the
      * link receiver.
      */
-    void setTransmittedSignalStrength(float siglev);
+    void setTransmittedSignalStrength(char rx_id, float siglev);
     
   private:
     std::string       	    name;
@@ -201,6 +213,10 @@ class LocalTx : public Tx
     DtmfEncoder       	    *dtmf_encoder;
     Async::AudioSelector    *selector;
     Async::AudioValve 	    *dtmf_valve;
+    Async::AudioMixer       *mixer;
+    HdlcFramer              *hdlc_framer;
+    AfskModulator           *fsk_mod;
+    //Async::AudioValve 	    *fsk_valve;
     Async::AudioPassthrough *input_handler;
     PttCtrl   	      	    *ptt_ctrl;
     Async::AudioValve 	    *audio_valve;
@@ -208,12 +224,20 @@ class LocalTx : public Tx
     std::vector<int>        tone_siglev_map;
     Async::Timer            *ptt_hangtimer;
     Ptt                     *ptt;
+    bool                    fsk_trailer_transmitted;
+    char                    last_rx_id;
+    bool                    fsk_first_packet_transmitted;
+    HdlcFramer              *hdlc_framer_ib;
+    AfskModulator           *fsk_mod_ib;
     
     void txTimeoutOccured(Async::Timer *t);
     bool setPtt(bool tx, bool with_hangtime=false);
     void transmit(bool do_transmit);
     void allDtmfDigitsSent(void);
     void pttHangtimeExpired(Async::Timer *t);
+    bool preTransmitterStateChange(bool do_transmit);
+    void sendFskSiglev(char rxid, uint8_t siglev);
+    void sendFskDtmf(const std::string &digits, unsigned duration);
 
 };  /* class LocalTx */
 

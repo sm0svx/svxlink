@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Dh1dmSwDtmfDecoder.h"
 #include "SvxSwDtmfDecoder.h"
 #include "S54sDtmfDecoder.h"
+#include "AfskDtmfDecoder.h"
 #include "PtyDtmfDecoder.h"
 
 
@@ -115,7 +116,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
 {
   DtmfDecoder *dec = 0;
   string type;
@@ -127,6 +128,10 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   else if (type == "S54S")
   {
     dec = new S54sDtmfDecoder(cfg, name);
+  }
+  else if (type == "AFSK")
+  {
+    dec = new AfskDtmfDecoder(rx, cfg, name);
   }
   else if (type == "PTY")
   {

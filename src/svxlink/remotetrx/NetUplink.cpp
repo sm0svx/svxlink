@@ -136,9 +136,10 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   heartbeat_timer->expired.connect(mem_fun(*this, &NetUplink::heartbeat));
 
     // FIXME: Shouldn't we use the updates directly from the receiver instead?
-  siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
-  siglev_check_timer->setEnable(true);
-  siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
+    // Why is this even here?!
+  //siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
+  //siglev_check_timer->setEnable(true);
+  //siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
   
 } /* NetUplink::NetUplink */
 
@@ -154,7 +155,7 @@ NetUplink::~NetUplink(void)
   delete server;
   delete heartbeat_timer;
   delete mute_tx_timer;
-  delete siglev_check_timer;
+  //delete siglev_check_timer;
 } /* NetUplink::~NetUplink */
 
 
@@ -202,7 +203,7 @@ bool NetUplink::initialize(void)
     mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
   }
   
-  server = new TcpServer(listen_port);
+  server = new TcpServer<>(listen_port);
   server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
       mem_fun(*this, &NetUplink::clientDisconnected));
@@ -552,7 +553,7 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSendDtmf::TYPE:
     {
       MsgSendDtmf *dtmf_msg = reinterpret_cast<MsgSendDtmf *>(msg);
-      tx->sendDtmf(dtmf_msg->digits());
+      tx->sendDtmf(dtmf_msg->digits(), dtmf_msg->duration());
       break;
     }
     
@@ -652,10 +653,19 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     } 
+
+    case MsgTransmittedSignalStrength::TYPE:
+    {
+      MsgTransmittedSignalStrength *siglev_msg =
+        reinterpret_cast<MsgTransmittedSignalStrength *>(msg);
+      tx->setTransmittedSignalStrength(siglev_msg->sqlRxId(),
+                                       siglev_msg->signalStrength());
+      break;
+    }
     
     default:
       cerr << "*** ERROR: Unknown TCP message received in NetUplink "
-           << name << ". type=" << msg->type() << ", tize="
+           << name << ". type=" << msg->type() << ", size="
            << msg->size() << endl;
       break;
   }
@@ -672,6 +682,7 @@ void NetUplink::sendMsg(Msg *msg)
     {
       cerr << "*** ERROR: TCP transmit error in NetUplink \"" << name
            << "\": " << strerror(errno) << ".\n";
+      forceDisconnect();
     }
     else if (written != static_cast<int>(msg->size()))
     {
@@ -792,10 +803,12 @@ void NetUplink::heartbeat(Timer *t)
 } /* NetTrxTcpClient::heartbeat */
 
 
+#if 0
 void NetUplink::checkSiglev(Timer *t)
 {
   squelchOpen(rx->squelchIsOpen());
 } /* NetUplink::checkSiglev */
+#endif
 
 
 void NetUplink::unmuteTx(Timer *t)

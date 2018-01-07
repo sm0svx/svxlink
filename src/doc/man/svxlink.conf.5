@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "NOVEMBER 2015" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JANUARI 2018" Linux "File Formats"
 .
 .SH NAME
 .
@@ -62,7 +62,7 @@ Leaving this variable unset should work in most cases.
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is
-the thing that ties the transciever and the voice services (modules) together. It contains
+the thing that ties the transceiver and the voice services (modules) together. It contains
 the rules for how the radio interface should be handled. The specified name of a logic
 core must have a corresponding section specified in the config file. This is where the
 behaviour of the logic core is specified.
@@ -135,7 +135,7 @@ card in mono mode, both left and right channels transmit/receive the same
 audio.
 .TP
 .B LOCATION_INFO
-Enter the section name that contains information required for transfering
+Enter the section name that contains information required for transferring
 positioning data to location servers. Setting this item makes the system
 visible on the EchoLink link status page and the APRS network.
 .TP
@@ -213,10 +213,10 @@ code (e.g. sv_SE for Swedish). If not set, it defaults to en_US which is US Engl
 .TP
 .B RGR_SOUND_DELAY
 The number of milliseconds to wait after the squelch has been closed before a roger beep
-is played. The beep can be disabled by specifying a value of -1 or commenting out this
+is played. The beep can be disabled by specifying a value of \-1 or commenting out this
 line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
 a delay instead of specifying a delay here. This configuration variable should then be set
-to 0.
+to 0. 
 .TP
 .B REPORT_CTCSS
 If set, will report the specified CTCSS frequency upon manual identification (* pressed).
@@ -262,7 +262,7 @@ This gain is normally set to 0dB which means no gain or attenuation.
 .TP
 .B FX_GAIN_LOW
 The gain (dB) to use for audio effects and announcements when there is other traffic.
-This gain is normally set to something like -12dB so that announcements and audio effects
+This gain is normally set to something like \-12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
 .TP
 .B QSO_RECORDER
@@ -320,7 +320,8 @@ a softlink to the actual slave PTY. For that reason, SvxLink must have write
 permissions in the directory where the softlink should be created. Sending
 commands to the PTY is as simple as doing a
 .B "echo '*1#' > /path/to/pty"
-after starting SvxLink.
+after starting SvxLink. The device works bidirectional, received dtmf characters
+(from Rf) are output via this interface.
 
 Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .
@@ -352,6 +353,10 @@ to 0 to make the TX active during squelch open.  One might want to set this to
 0 if the link is operating on a split frequency or if it's connected to some
 full duplex device.  The normal setting is 1, to mute the TX when the squelch
 is open.
+.TP
+.B RGR_SOUND_ALWAYS
+Set to 1 to always send roger sound after squelch close, even when no module is
+active.
 .
 .SS Repeater Logic Section
 .
@@ -477,6 +482,7 @@ This is the minimum time, in milliseconds, that a transmission must last to
 be considered as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.
 .
+<<<<<<< HEAD
 .SS Rewind Logic Section
 .
 A Rewind Logic section contains configuration data for the connection to
@@ -530,6 +536,39 @@ The hostname or ip address where the AMBEserver is running.
 .TP
 .B AMBE_AMBESERVER_PORT
 The port number to access the AMBEserver (default 2460)
+=======
+.SS ReflectorLogic
+.
+The ReflectorLogic is used to connect to an SvxReflector server. The
+SvxReflector will distribute all audio to all connected nodes. To actually send
+audio to the reflector from a logic core, set up a link between the two logics
+using LogicLinking. More than one logic core can be connected.
+.TP
+.B TYPE
+The type for a reflector logic core is always
+.BR Reflector .
+.TP
+.B HOST
+The hostname or IP address of the reflector server.
+.TP
+.B PORT
+The TCP/UDP port number used by the server. The client do not need to open any
+ports in the firewall. Default: 5300.
+.TP
+.B CALLSIGN
+The callsign of this node. The callsign also serves as the username when
+authenticating to the SvxReflector server.
+.TP
+.B AUTH_KEY
+The authentication key, or password, used when authenticating to the
+SvxReflector server.
+.TP
+.B JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. Set this configuration
+variable to the number of milliseconds to buffer before starting to process the
+audio. Default: 0.
+>>>>>>> f1b9b6b54e90fa673e3bedb01613cc15c29f966a
 .
 .SS QSO Recorder Section
 .
@@ -560,7 +599,7 @@ To not get abrupt breaks in recordings it is possible to set a soft break time.
 Let's say that MAX_TIME is set to 3600 seconds (one hour). If we set SOFT_TIME
 to 300 seconds (five minutes) the QSO recorder try to close the file on a
 squelch close somewhere between 55 and 60 minutes. In this way we may avoid
-getting transmissions splitted between files. Default: 0 (no limit)
+getting transmissions split up between files. Default: 0 (no limit)
 .TP
 .B MAX_DIRSIZE
 Specify the maximum total size in megabytes of the files in the recording
@@ -602,9 +641,9 @@ may be a good idea to write a script instead.
 
 The encoder command will be run under a shell so normal shell operators like
 redirects and pipes may be used. The shell specified in the SHELL environment
-variable will be used and if not set, /bin/sh will be used. The "-c" command
+variable will be used and if not set, /bin/sh will be used. The "\-c" command
 line option will be added so the complete command will look something like:
-$SHELL -c "$ENCODER_CMD". A number of %-codes can be included in the command.
+$SHELL \-c "$ENCODER_CMD". A number of %-codes can be included in the command.
 They have the following meaning:
 .RS
 .IP \(bu 4
@@ -624,9 +663,9 @@ for longer than one hour it will be killed.
 Note that SvxLink will never remove the original recording so that have to be
 done in the encoder command. Here are a couple of examples:
 
- ENCODER_CMD=/usr/bin/oggenc -Q \\"%f\\" && rm \\"%f\\"
+ ENCODER_CMD=/usr/bin/oggenc \-Q \\"%f\\" && rm \\"%f\\"
 .BR
- ENCODER_CMD=/usr/bin/lame --quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
+ ENCODER_CMD=/usr/bin/lame \-\-quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
 .BR
  ENCODER_CMD=/usr/bin/speexenc \\"%f\\" \\"%d/%b.spx\\" 2>/dev/null && rm \\"%f\\"
 .BR
@@ -723,6 +762,11 @@ configuration variables are described below.
 .TP
 .B TYPE
 Always "Local" for a local receiver.
+.TP
+.B RX_ID
+A single char uniquely identifying this receiver. The RX identity can for
+example be used in the TCL event scripts to get different rogers sounds for
+different receivers when using a receiver voter.
 .TP
 .B AUDIO_DEV
 Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
@@ -835,7 +879,7 @@ it will not work as expected.
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limiti, in seconds, for how
 long the squelch is allowed to be open. If the timeout value is exceeded the
-squelch is forced to closed. If the squelch close for real, everthing is back
+squelch is forced to closed. If the squelch close for real, everything is back
 to normal. When it opens the next time a squelch open will be signalled.
 For example, use this feature to make sure that a faulty receiver cannot block
 the system indefinitly.
@@ -994,11 +1038,11 @@ Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. The available choices are:
-"NONE", "NOISE", "TONE" or "SIM". Depending on other configuration there may be
-more choices available. For example, if a Ddr receiver is used there will also
-be a DDR signal level detector available.  The  signal level detector is only
-needed when using multiple receivers in a voter configuration or when using the
-SIGLEV squelch type.
+"NONE", "NOISE", "TONE", "AFSK" or "SIM". Depending on other configuration
+there may be more choices available. For example, if a Ddr receiver is used
+there will also be a DDR signal level detector available.  The  signal level
+detector is only needed when using multiple receivers in a voter configuration
+or when using the SIGLEV squelch type.
 
 Type NONE disable the signal level detector. This may be used if no signal
 level detector is needed.
@@ -1021,8 +1065,13 @@ frequency spektrum (5.5 - 6.4kHz, 100Hz step) to indicate one of ten signal
 levels.  Only the receiving part have been implemented in SvxLink at the
 moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
 signal level voltage to tone frequencies.
-Use the TONE_SIGLEV_MAP configuration variable to map each tone to a
+Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
 corresponding signal level value in between 0 - 100.
+
+Type AFSK is like the TONE detector really a transport mechanism. Signal level
+values are transmitted using Audio Frequency Shift Keying, AFSK, over the
+receiver uplink channel from a remote receiver site. AFSK reception must have
+been enebled by setting OB_AFSK_ENABLE=1 and also optionally IB_AFSK_ENABLE=1.
 
 Type SIM is a simulated signal level detector that can be used to debug
 problems in the SvxLink software. Use the SIGLEV_MIN, SIGLEV_MAX,
@@ -1145,12 +1194,15 @@ Specify the DTMF decoder type. Set it to
 to use the internal software
 DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
 it to
-.B S54S.
+.BR S54S .
 To control it over a pseudo tty device set it to
-.B PTY.
+.BR PTY .
 Setting it to PTY will install the PTY dtmf decoder. SvxLink creates a symlink
 linked to a slave pty device on runtime. The name has to be defined with
 DTMF_PTY.
+If AFSK reception is enabled using OB_AFSK_ENABLE/IB_AFSK_ENABLE, remotely
+decoded DTMF digits may be received by setting this configuration variable to
+.BR AFSK .
 .B NONE
 or commenting it out will disable DTMF detection.
 .TP
@@ -1281,6 +1333,37 @@ The sample rate is the same as the one chosen for the audio device.
 The destination is specified as ip-address:port.
 
 Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable reception of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the transmitter section of the
+transmitting RemoteTrx. If it's set to -6dB in the transmitter configuration it
+should be set to 6dB here.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable reception of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
 .
 .SS Ddr Receiver Section
 .
@@ -1386,7 +1469,7 @@ The frequency, in Hz, that the wideband tuner should be placed at. This
 configuration variable should normally be left unset since SvxLink will try to
 place the wideband tuner to cover all set up Ddr frequencies. SvxLink will also
 try to avoid placing a Ddr on the center frequency of the wideband spectrum
-since there is usually some noise there. Only use this configration variable
+since there is usually some noise there. Only use this configuration variable
 if you need to override the automatic placement for some reason.
 .TP
 .B XVRTR_OFFSET
@@ -1444,8 +1527,25 @@ In the default configuration file there is a voter section called
 Always "Voter" for a voter.
 .TP
 .B RECEIVERS
-Specify a comma separated list of receivers that the voter should use. Example:
-RECEIVERS=Rx1,Rx2,Rx3
+Specify a comma separated list of receivers that the voter should use.
+Optionally the receiver name may be followed by a colon and a squelch delay
+value. This can be used to adjust the voting delay for receivers that always
+are slower to open for some reason. The delay value given will be subtracted
+from the voting delay if the receiver is the first one to open.
+
+The usage of the delay value is best illustrated with an example.  Let's say we
+have three receivers where two of the receivers take at most 100ms to report
+signal level and one receiver requires 300ms. We then need to set the
+VOTING_DELAY to something like 350ms so as to be sure that all receivers get a
+chance to report their signal level measurement. If only the slow receiver
+opens there will be a total delay of 300+350=650ms. This is unnecessarily long
+since the other two receivers should have reported their signal strength way
+earlier. It's thus safe to shorten the voting delay for the slow receiver, so
+we do this: RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay
+will now be 100+350=450ms for the fast receivers and 300+350-200=450ms for the
+slow receiver. That is, all receivers are now equally fast.
+
+Example: RECEIVERS=Rx1,Rx2:200,Rx3
 .TP
 .B VOTING_DELAY
 Specify the delay in milliseconds that the voter will wait after the first
@@ -1554,7 +1654,7 @@ The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
-The audio codec to use when transfering audio from this remote receiver.
+The audio codec to use when transferring audio from this remote receiver.
 Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
@@ -1596,7 +1696,7 @@ Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
 .TP
 .B SPEEX_ENC_ABR
 Speex encoder setting. The average bitrate encoding will try to keep a target
-bitrate by continously adjusting the quality. This configuration variable
+bitrate by continuously adjusting the quality. This configuration variable
 specify the target bitrate and enable ABR. It also need to have VBR enabled so
 don't force it to off.
 .TP
@@ -1779,7 +1879,7 @@ transmitter. 50ms is the default.
 .B DTMF_DIGIT_PWR
 The power, in dB, of DTMF digits transmitted on this transmitter. Zero dB will
 give the same power in the generated signal as there is in a maximum amplitude
-(full scale) sine wave. -15dB is the default.
+(full scale) sine wave. \-15dB is the default.
 .TP
 .B TONE_SIGLEV_MAP
 It is possible to transmit one of ten tones along with the normal transmission
@@ -1814,6 +1914,51 @@ This configuration variable can be used to fine tune or increase the audio
 gain for all transmitted sound if it's not possible to do using the normal
 sound card hardware gain controls. The gain should be given in dB and can
 be both positive and negative.
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable transmission of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the receiver section of the
+receiving node. If it's set to 6dB in the receiver configuration it
+should be set to -6dB here.
+.TP
+.B OB_AFSK_LEVEL
+The out-of-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B OB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an out-of-band packet.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable transmission of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B IB_AFSK_LEVEL
+The in-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B IB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an in-band packet.
 .
 .SS Networked Transmitter Section
 .
@@ -1855,7 +2000,7 @@ The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
-The audio codec to use when transfering audio to this remote transmitter.
+The audio codec to use when transferring audio to this remote transmitter.
 Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
@@ -1899,7 +2044,7 @@ Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
 .TP
 .B SPEEX_ENC_ABR
 Speex encoder setting. The average bitrate encoding will try to keep a target
-bitrate by continously adjusting the quality. This configuration variable
+bitrate by continuously adjusting the quality. This configuration variable
 specify the target bitrate and enable ABR. It also need to have VBR enabled so
 don't force it to off.
 .TP
@@ -2069,7 +2214,7 @@ ANTENNA_HEIGHT=90     # 90 feet
 .TP
 .B ANTENNA_DIR
 Main beam direction of the antenna in degrees. If an omni direction antenna is
-used, specify -1 as the direction.
+used, specify \-1 as the direction.
 
 Example:
 .br

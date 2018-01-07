@@ -34,11 +34,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
 #include <map>
 #include <cassert>
+#include <vector>
 
 
 /****************************************************************************
@@ -132,6 +134,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
       MUTE_ALL      //! Mute everything. Also close the audio device.
     } MuteState;
 
+    static const char ID_UNKNOWN = '?';   //! Unknown RX id
+
+    /**
+     * @brief   Translate a mute state to a printable sting
+     * @returns Return a printable version of the given mute state
+     */
     static std::string muteStateToString(MuteState mute_state);
 
     /**
@@ -200,7 +208,7 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @brief 	Find out RX ID of last receiver with squelch activity
      * @returns Returns the RX ID
      */
-    virtual int sqlRxId(void) const { return 0; }
+    virtual char sqlRxId(void) const { return ID_UNKNOWN; }
     
     /**
      * @brief 	Reset the receiver object to its default settings
@@ -245,6 +253,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param	siglev The new signal level
      */
     sigc::signal<void, float> signalLevelUpdated;
+
+    /**
+     * @brief   A signal that is emitted when digital data have been received
+     * @param   frame The data frame that was received
+     */
+    sigc::signal<void, std::vector<uint8_t>&> dataReceived;
     
     /**
      * @brief	A signal that is emitted to publish a state update event

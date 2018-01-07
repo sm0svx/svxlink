@@ -12,7 +12,7 @@
 class MsgOne : public Async::Msg
 {
   public:
-    int64_t                       a;
+    uint64_t                      a;
     char                          b;
     double                        f;
     std::string                   str;

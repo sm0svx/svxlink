@@ -11,7 +11,7 @@ else
   cd svxlink
   git fetch
   git checkout master
-  git reset --hard master
+  git reset --hard origin/master
 fi
 
 # Checkout the wanted branch

@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sigc++/sigc++.h>
 #include <string>
 
 
@@ -114,7 +115,7 @@ This class is the base class for an audio processor. An audio processor is
 a class that is both an audio sink and source. It receives samples, process
 them in some way and send them further down the chain. 
 */
-class AudioProcessor : public AudioSink, public AudioSource
+class AudioProcessor : public AudioSink, public AudioSource, public sigc::trackable
 {
   public:
     /**

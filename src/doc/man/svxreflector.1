@@ -1,0 +1,93 @@
+.TH SVXREFLECTOR 1 "OCTOBER 2017" Linux "User Manuals"
+.
+.SH NAME
+.
+svxreflector \- The SvxLink conference server audio reflector
+.
+.SH SYNOPSIS
+.
+.BI "svxreflector [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
+.
+.SH DESCRIPTION
+.
+The
+.B svxreflector
+server is used to interconnect multiple SvxLink nodes into one network. All
+audio sent to the reflector from one node is retransmitted on all other
+connected nodes. Only one talker is allowed at a time so if another node starts
+sending audio when another one is already active, the second node will not
+interrupt the first talker.
+.P
+A TCP/IP connection is used for the control messages and the audio is
+transported via UDP. Make sure to open up the configured TCP and UDP ports in
+your firewall for incoming traffic on the server. By default the port number is
+set to 5300 for both TCP and UDP. The clients do not have to open any ports in
+their firewall. Each node must have a unique user ID, typically the callsign.
+It is not allowed for a client, using the same user ID, to connect more than
+one time to the server. The connections are password protected.
+.P
+On the SvxLink node side, a ReflectorLogic should be used to connect to the
+SvxReflector server. The connection to the SvxReflector from other logics in
+that node can be activated and deactivated using standard logic linking. Read more about how to set up a SvxLink node for use with the SvxReflector in the
+.BR svxlink.conf (5)
+manual page.
+.
+.SH OPTIONS
+.
+.TP
+.B --help
+Print a help message and exit.
+.TP
+.B --daemon
+Start the SvxReflector server as a daemon.
+.TP
+.B --runasuser
+Start SvxReflector as the specified user. The switch to the new user
+will happen after the log and pid files has been opened.
+.TP
+.BI "--logfile=" "log file"
+Specify a log file to put all output into. Both stdout and stderr will be
+redirected to the log file.
+.TP
+.BI "--pidfile=" "pid file"
+Specify a pid file to write the process ID into.
+.TP
+.BI "--config=" "configuration file"
+Specify which configuration file to use.
+.
+.SH FILES
+.
+.TP
+.I /etc/svxlink/svxreflector.conf
+The system wide configuration file. See
+.BR svxreflector.conf (5)
+for further details.
+.TP
+.I ~/.svxlink/svxreflector.conf
+Per user configuration file. See
+.BR svxreflector.conf (5)
+for further details.
+.TP
+.I /etc/svxlink/svxreflector.d/*
+Additional configuration files. This directory is setup by the CFG_DIR
+configuration variable.
+.
+.SH ENVIRONMENT
+.
+.TP
+HOME
+Used to find the per user configuration file.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH REPORTING BUGS
+.
+SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxreflector.conf (5),
+.BR svxlink (1),
+.BR svxlink.conf (5),

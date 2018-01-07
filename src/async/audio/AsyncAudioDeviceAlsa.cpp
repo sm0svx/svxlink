@@ -436,7 +436,7 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
       }
       return;
     }
-    assert(frames_read == frames_avail);
+    assert(frames_read <= frames_avail);
 
     putBlocks(buf, frames_read);
   }

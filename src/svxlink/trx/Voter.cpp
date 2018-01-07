@@ -110,7 +110,8 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
   public:
     SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
       : rx_id(id), rx(0), fifo(0), sql_open(false), enabled(true),
-        mute_state(Rx::MUTE_ALL) // FIXME: Set this from the Rx object
+        mute_state(Rx::MUTE_ALL), // FIXME: Set this from the Rx object
+        sql_open_delay(0)
     {
       rx = RxFactory::createNamedRx(cfg, rx_name);
       if (rx != 0)
@@ -242,7 +243,13 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       }
     }
     
-    int id(void) const { return rx_id; }
+    char id(void) const { return rx->sqlRxId(); }
+
+    void setSqlOpenDelay(unsigned new_sql_open_delay)
+    {
+      sql_open_delay = new_sql_open_delay;
+    }
+    unsigned sqlOpenDelay(void) const { return sql_open_delay; }
     
     signal<void, char, int>  	dtmfDigitDetected;
     signal<void, string>  	selcallSequenceDetected;
@@ -272,6 +279,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     bool      	  sql_open;
     bool          enabled;
     Rx::MuteState mute_state;
+    unsigned      sql_open_delay;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
@@ -502,11 +510,25 @@ bool Voter::initialize(void)
   for (;;)
   {
     string::iterator comma = find(start, receivers.end(), ',');
-    string rx_name(start, comma);
+    string::iterator name_end(comma);
+    string::iterator colon = find(start, comma, ':');
+    unsigned sql_open_delay = 0;
+    if (colon != comma)
+    {
+      name_end = colon;
+      if (++colon != comma)
+      {
+        string sql_open_delay_str(colon, comma);
+        istringstream is(sql_open_delay_str);
+        is >> sql_open_delay;
+      }
+    }
+    string rx_name(start, name_end);
     if (!rx_name.empty())
     {
       cout << "\tAdding receiver: " << rx_name << endl;
       SatRx *srx = new SatRx(cfg, rx_name, rxs.size() + 1, buffer_length);
+      srx->setSqlOpenDelay(sql_open_delay);
       srx->squelchOpen.connect(mem_fun(*this, &Voter::satSquelchOpen));
       srx->signalLevelUpdated.connect(
 	      mem_fun(*this, &Voter::satSignalLevelUpdated));
@@ -568,7 +590,7 @@ float Voter::signalStrength(void) const
 } /* Voter::signalStrength */
 
 
-int Voter::sqlRxId(void) const
+char Voter::sqlRxId(void) const
 {
   return const_cast<Macho::Machine<Top>&>(sm)->sqlRxId();
 } /* Voter::sqlRxId */
@@ -925,7 +947,7 @@ void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
     }
     else
     {
-      setState<VotingDelay>();
+      setState<VotingDelay>(srx);
     }
   }
 } /* Voter::Idle::satSquelchOpen */
@@ -941,8 +963,15 @@ void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 void Voter::VotingDelay::entry(void)
 {
   //cout << "### VotingDelay::entry\n";
-  startTimer(votingDelay());
+  //startTimer(votingDelay());
 } /* Voter::VotingDelay::entry */
+
+
+void Voter::VotingDelay::init(SatRx *srx)
+{
+  //cout << "### VotingDelay::init\n";
+  startTimer(max(votingDelay() - srx->sqlOpenDelay(), 0U));
+} /* Voter::VotingDelay::init */
 
 
 void Voter::VotingDelay::exit(void)
@@ -1021,7 +1050,7 @@ void Voter::ActiveRxSelected::setMuteState(Rx::MuteState new_mute_state)
 } /* Voter::ActiveRxSelected::setMuteState */
 
 
-int Voter::ActiveRxSelected::sqlRxId(void)
+char Voter::ActiveRxSelected::sqlRxId(void)
 {
   return box().active_srx->id();
 } /* Voter::ActiveRxSelected::sqlRxId */

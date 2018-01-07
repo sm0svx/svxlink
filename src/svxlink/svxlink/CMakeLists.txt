@@ -30,13 +30,15 @@ set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
 include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
 
-# Find the dl library
-find_package(DL REQUIRED)
-set(LIBS ${LIBS} ${DL_LIBRARIES})
-include_directories(${DL_INCLUDES})
+# Find the dl library - only for Linux, not required for FreeBSD
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  find_package(DL REQUIRED)
+  set(LIBS ${LIBS} ${DL_LIBRARIES})
+  include_directories(${DL_INCLUDES})
+endif()
 
 # Add project libraries
-set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore)
+set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
 
 # Add targets for version files
 set(VERSION_DEPENDS)
@@ -70,7 +72,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
 
 # Install targets
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
-install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder ${SVXLINK_USER}.${SVXLINK_GROUP})
+install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder ${SVXLINK_USER}:${SVXLINK_GROUP})
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}

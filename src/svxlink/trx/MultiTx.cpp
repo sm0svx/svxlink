@@ -220,24 +220,34 @@ void MultiTx::enableCtcss(bool enable)
 } /* MultiTx::enableCtcss */
 
 
-void MultiTx::sendDtmf(const std::string& digits)
+void MultiTx::sendDtmf(const std::string& digits, unsigned duration)
 {
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
-    (*it)->sendDtmf(digits);
+    (*it)->sendDtmf(digits, duration);
   }
 } /* MultiTx::sendDtmf */
 
 
-void MultiTx::setTransmittedSignalStrength(float siglev)
+void MultiTx::setTransmittedSignalStrength(char rx_id, float siglev)
 {
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
-    (*it)->setTransmittedSignalStrength(siglev);
+    (*it)->setTransmittedSignalStrength(rx_id, siglev);
   }
 } /* MultiTx::setTransmittedSignalStrength */
+
+
+void MultiTx::sendData(const std::vector<uint8_t> &msg)
+{
+  list<Tx *>::iterator it;
+  for (it=txs.begin(); it!=txs.end(); ++it)
+  {
+    (*it)->sendData(msg);
+  }
+} /* MultiTx::sendData */
 
 
 

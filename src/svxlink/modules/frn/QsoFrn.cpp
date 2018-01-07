@@ -129,7 +129,7 @@ using namespace FrnUtils;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
-  , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
+  , tcp_client(new TcpClient<>(TCP_BUFFER_SIZE))
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , keepalive_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
@@ -530,7 +530,7 @@ void QsoFrn::reconnect(void)
 {
   bool is_using_backup_server = (server == opt_server_backup && port == opt_port_backup);
 
-  reconnect_timeout_ms *= RECONNECT_BACKOFF;
+  reconnect_timeout_ms = static_cast<int>(reconnect_timeout_ms * RECONNECT_BACKOFF);
   if (reconnect_timeout_ms > RECONNECT_MAX_TIMEOUT) {
     reconnect_timeout_ms = RECONNECT_MAX_TIMEOUT;
   }

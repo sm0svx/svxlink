@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
+#include <string>
 
 
 /****************************************************************************
@@ -72,16 +74,6 @@ namespace Async
   class DnsLookup;
 };
 
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-//namespace MyNameSpace
-//{
 
 
 /****************************************************************************
@@ -125,9 +117,9 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief
-@author Tobias Blomberg / SM0SVX
-@date   2017-02-12
+@brief	A logic core that connect to the BM network
+@author Adi Bier / DL1HRC
+@date   2017-07-12
 */
 class RewindLogic : public LogicBase
 {
@@ -248,6 +240,7 @@ class RewindLogic : public LogicBase
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
     void disconnect(void);
+    void reconnect(void);
     void allEncodedSamplesFlushed(void);
     void pingHandler(Async::Timer *t);
     void authenticate(uint8_t salt[], const std::string pass);
@@ -263,11 +256,9 @@ class RewindLogic : public LogicBase
 
 };  /* class RewindLogic */
 
-
 //} /* namespace */
 
 #endif /* REWIND_LOGIC_INCLUDED */
-
 
 /*
  * This file has not been truncated

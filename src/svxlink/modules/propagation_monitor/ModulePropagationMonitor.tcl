@@ -206,9 +206,10 @@ proc handle_vhfdx {msg_file} {
   }
 
   # Example: Aurora active on 6m. down to 55 deg. of Lat. / LY2X/P(KO25MO)
+  # Example: Aurora active on 6m. down to 56 deg. of Lat. / OZ4VV(JO46)
   # Example: Aurora active on 6m. down to 57º of Lat. / SM7GVF(JO77GA)
   set match [regexp \
-	{^Aurora active on (\d+c?m)\. down to (\d+).* of Lat. / (.*?)\((\w\w\d\d\w\w)\)$} \
+	{^Aurora active on (\d+c?m)\. down to (\d+).* of Lat. / (.*?)\((\w\w\d\d(?:\w\w)?)\)$} \
 	$subject -> band lat call loc]
   if {$match} {
     processEvent "vhfdx_aurora_opening $band $lat $call $loc"

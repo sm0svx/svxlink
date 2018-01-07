@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -137,6 +137,7 @@ class SimplexLogic : public Logic
   private:
     bool  mute_rx_on_tx;
     bool  mute_tx_on_rx;
+    bool  rgr_sound_always;
     
 };  /* class SimplexLogic */
 

@@ -50,6 +50,8 @@ extern "C" {
 #include <cassert>
 #include <iostream>
 #include <cstring>
+#include <fstream>
+#include <cerrno>
 
 
 
@@ -208,9 +210,10 @@ class WavFileQueueItem : public QueueItem
 {
   public:
     WavFileQueueItem(const std::string& filename, bool idle_marked)
-      : QueueItem(idle_marked), filename(filename), file(-1), chunk_size(0),
+      : QueueItem(idle_marked), filename(filename), chunk_size(0),
         subchunk1size(0), audio_format(0), num_channels(0), sample_rate(0),
-        byte_rate(0), block_align(0), bits_per_sample(0), subchunk2size(0)
+        byte_rate(0), block_align(0), bits_per_sample(0), subchunk2size(0),
+        data_read(0)
     {}
     ~WavFileQueueItem(void);
     bool initialize(void);
@@ -219,7 +222,7 @@ class WavFileQueueItem : public QueueItem
 
   private:
     string    filename;
-    int       file;
+    ifstream  file;
     char      chunk_id[4];
     uint32_t  chunk_size;
     char      format[4];
@@ -233,9 +236,10 @@ class WavFileQueueItem : public QueueItem
     uint16_t  bits_per_sample;
     char      subchunk2id[4];
     uint32_t  subchunk2size;
+    uint32_t  data_read;
     
-    int read32bitValue(unsigned char *ptr, uint32_t *val);
-    int read16bitValue(unsigned char *ptr, uint16_t *val);
+    int read32bitValue(uint8_t *ptr, uint32_t *val);
+    int read16bitValue(uint8_t *ptr, uint16_t *val);
 };
 
 
@@ -724,35 +728,35 @@ void GsmFileQueueItem::unreadSamples(int len)
 
 WavFileQueueItem::~WavFileQueueItem(void)
 {
-  if (file != -1)
+  if (file.is_open())
   {
-    ::close(file);
+    file.close();
   }
-} /* RawFileQueueItem::~FileQueueItem */
+} /* WavFileQueueItem::~WavFileQueueItem */
 
 
 bool WavFileQueueItem::initialize(void)
 {
-  assert(file == -1);
+  assert(!file.is_open());
 
-  file = ::open(filename.c_str(), O_RDONLY);
-  if (file == -1)
+  file.open(filename.c_str(), ios::in | ios::binary);
+  if (!file.is_open())
   {
-    cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
+    cerr << "*** WARNING: Could not read WAV file \"" << filename << "\"\n";
     return false;
   }
   
-    // Read the wave file header
-  unsigned char buf[44];
-  int read_cnt = read(file, buf, sizeof(buf));
-  if (read_cnt != sizeof(buf))
+    // Read the RIFF chunk descriptor
+  char chunk_header[12];
+  file.read(chunk_header, sizeof(chunk_header));
+  if (!file.good())
   {
-    cerr << "*** WARNING: Illegal WAV file header. Header too short: "
-      	 << filename << "\n";
+    cerr << "*** WARNING: Failed to read WAV file \"" << filename << "\": "
+         << strerror(errno) << endl;
     return false;
   }
   
-  unsigned char *ptr = buf;
+  uint8_t *ptr = reinterpret_cast<uint8_t*>(chunk_header);
   memcpy(chunk_id, ptr, 4);
   ptr += 4;
   if (memcmp(chunk_id, "RIFF", 4) != 0)
@@ -765,87 +769,166 @@ bool WavFileQueueItem::initialize(void)
   ptr += read32bitValue(ptr, &chunk_size);
   
   memcpy(format, ptr, 4);
-  ptr += 4;
   if (memcmp(format, "WAVE", 4) != 0)
   {
     cerr << "*** WARNING: Illegal WAV file header. Format is not \"WAVE\": "
       	 << filename << "\n";
     return false;
   }
-  
-  memcpy(subchunk1id, ptr, 4);
-  ptr += 4;
-  if (memcmp(subchunk1id, "fmt ", 4) != 0)
+
+    // Read subchunks
+  std::streampos data_file_pos(0);
+  int64_t rest_size = chunk_size - 4;
+  while (rest_size > 0)
+  {
+      // Read subchunk header
+    char subchunk_header[8];
+    file.read(subchunk_header, sizeof(subchunk_header));
+    if (file.fail())
+    {
+      cerr << "*** WARNING: Failed to read WAV file \""
+           << filename << "\" subchunk header: "
+           << strerror(errno) << endl;
+      return false;
+    }
+
+    ptr = reinterpret_cast<uint8_t*>(subchunk_header);
+
+    char subchunk_id[5];
+    memcpy(subchunk_id, ptr, 4);
+    subchunk_id[4] = 0;
+    ptr += 4;
+
+    uint32_t subchunk_size;
+    ptr += read32bitValue(ptr, &subchunk_size);
+
+    rest_size -= subchunk_size + 8;
+
+    if (memcmp(subchunk_id, "data", 4) == 0)
+    {
+      memcpy(subchunk2id, subchunk_id, 4);
+      subchunk2size = subchunk_size;
+
+      data_file_pos = file.tellg();
+      file.seekg(subchunk_size, ios::cur);
+      if (!file.good())
+      {
+        cerr << "*** WARNING: Could not seek to end of subchunk data in "
+                "WAV file \"" << filename << "\": "
+             << strerror(errno) << endl;
+        return false;
+      }
+    }
+    else
+    {
+      if (memcmp(subchunk_id, "fmt ", 4) == 0)
+      {
+        if (subchunk_size != 16)
+        {
+          cerr << "*** WARNING: Illegal WAV file header in \""
+               << filename << "\". "
+               << "\"fmt\" subchunk size is not 16: "
+               << filename << "\n";
+          return false;
+        }
+        memcpy(subchunk1id, subchunk_id, 4);
+        subchunk1size = subchunk_size;
+
+          // Read subchunk data
+        char subchunk_data[subchunk_size];
+        file.read(subchunk_data, subchunk_size);
+        if (!file.good())
+        {
+          cerr << "*** WARNING: Failed to read WAV file \""
+               << filename << "\"subchunk data: "
+               << strerror(errno) << endl;
+          return false;
+        }
+        ptr = reinterpret_cast<uint8_t*>(subchunk_data);
+
+        ptr += read16bitValue(ptr, &audio_format);
+        if (audio_format != 1)
+        {
+          cerr << "*** WARNING: SvxLink can only handle PCM formatted WAV files: "
+               << filename << "\n";
+          return false;
+        }
+
+        ptr += read16bitValue(ptr, &num_channels);
+        if (num_channels != 1)
+        {
+          cerr << "*** WARNING: SvxLink can only handle mono WAV files: "
+               << filename << "\n";
+          return false;
+        }
+
+        ptr += read32bitValue(ptr, &sample_rate);
+        if (sample_rate != INTERNAL_SAMPLE_RATE)
+        {
+          cerr << "*** WARNING: SvxLink can only handle WAV files which have "
+                  "a sample rate of "
+               << INTERNAL_SAMPLE_RATE << ". This file use " << sample_rate
+               << ": " << filename << "\n";
+          return false;
+        }
+
+        ptr += read32bitValue(ptr, &byte_rate);
+
+        ptr += read16bitValue(ptr, &block_align);
+
+        ptr += read16bitValue(ptr, &bits_per_sample);
+        if (bits_per_sample != 16)
+        {
+          cerr << "*** WARNING: SvxLink can only handle WAV files with "
+               << "16 bits per sample: "
+               << filename << "\n";
+          return false;
+        }
+      }
+      else
+      {
+          // Skip unknown subchunk data
+        file.seekg(subchunk_size, ios::cur);
+        if (!file.good())
+        {
+          cerr << "*** WARNING: Could not seek to end of subchunk data in "
+                  "WAV file \"" << filename << "\": "
+               << strerror(errno) << endl;
+          return false;
+        }
+      }
+    }
+  }
+
+  if (rest_size != 0)
   {
     cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Subchunk1ID is not \"fmt \": "
+         << "ChunkSize should be the sum of all subchunk sizes (rest_size="
+         << rest_size << "): "
       	 << filename << "\n";
     return false;
   }
-  
-  ptr += read32bitValue(ptr, &subchunk1size);
-  if (subchunk1size != 16)
+
+  if (subchunk1size == 0)
   {
-    cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Subchunk1Size is not 16: "
-      	 << filename << "\n";
+    cerr << "*** WARNING: No \"fmt\" subchunk found in WAV file \""
+         << filename << "\"" << endl;
     return false;
   }
-  
-  ptr += read16bitValue(ptr, &audio_format);
-  if (audio_format != 1)
+
+  if (data_file_pos == std::streampos(0))
   {
-    cerr << "*** WARNING: SvxLink can only handle PCM formated WAV files: "
-      	 << filename << "\n";
+    cerr << "*** WARNING: No \"data\" subchunk found in WAV file \""
+         << filename << "\"" << endl;
     return false;
   }
-  
-  ptr += read16bitValue(ptr, &num_channels);
-  if (num_channels != 1)
+
+    // Set file position to the start of audio data
+  file.seekg(data_file_pos, ios::beg);
+  if (!file.good())
   {
-    cerr << "*** WARNING: SvxLink can only handle mono WAV files: "
-      	 << filename << "\n";
-    return false;
-  }
-  
-  ptr += read32bitValue(ptr, &sample_rate);
-  if (sample_rate != INTERNAL_SAMPLE_RATE)
-  {
-    cerr << "*** WARNING: SvxLink can only handle WAV files with sample rate "
-      	 << INTERNAL_SAMPLE_RATE << ": "
-      	 << filename << "\n";
-    return false;
-  }
-  
-  ptr += read32bitValue(ptr, &byte_rate);
-  
-  ptr += read16bitValue(ptr, &block_align);
-  
-  ptr += read16bitValue(ptr, &bits_per_sample);
-  if (bits_per_sample != 16)
-  {
-    cerr << "*** WARNING: SvxLink can only handle WAV files with "
-      	 << "16 bits per sample: "
-      	 << filename << "\n";
-    return false;
-  }
-  
-  memcpy(subchunk2id, ptr, 4);
-  ptr += 4;
-  if (memcmp(subchunk2id, "data", 4) != 0)
-  {
-    cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Subchunk2ID is not \"data\": "
-      	 << filename << "\n";
-    return false;
-  }
-  
-  ptr += read32bitValue(ptr, &subchunk2size);
-  if (chunk_size != subchunk2size + 36)
-  {
-    cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "ChunkSize should be Subchunk2Size plus 36: "
-      	 << filename << "\n";
+    cerr << "*** WARNING: Failed to seek to audio data position in file \""
+         << filename << "\":" << strerror(errno) << endl;
     return false;
   }
   
@@ -857,44 +940,56 @@ bool WavFileQueueItem::initialize(void)
 int WavFileQueueItem::readSamples(float *samples, int len)
 {
   short buf[len];
-  assert(file != -1);
-  int read_cnt = read(file, buf, len * sizeof(*buf));
-  if (read_cnt == -1)
+  assert(file.is_open());
+  streamsize to_read = min(static_cast<uint32_t>(len * sizeof(*buf)),
+                           subchunk2size - data_read);
+  if (to_read <= 0)
   {
-    perror("read in FileQueueItem::readSamples");
-    read_cnt = 0;
+    return 0;
   }
-  else
+
+  file.read(reinterpret_cast<char*>(buf), to_read);
+  if (file.fail())
   {
-    read_cnt /= sizeof(*buf);
-    for (int i=0; i<read_cnt; ++i)
-    {
-      samples[i] = static_cast<float>(buf[i]) / 32768.0;
-    }
+    cerr << "*** WARNING: Failed to read samples from WAV file \""
+         << filename << "\": " << strerror(errno) << endl;
+    return 0;
+  }
+
+  int read_cnt = file.gcount();
+  data_read += read_cnt;
+  read_cnt /= sizeof(*buf);
+  for (int i=0; i<read_cnt; ++i)
+  {
+    samples[i] = static_cast<float>(buf[i]) / 32768.0;
   }
   
   return read_cnt;
-  
 } /* WavFileQueueItem::readSamples */
 
 
 void WavFileQueueItem::unreadSamples(int len)
 {
-  if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
+  assert(len >= 0);
+  streamsize to_unread = min(static_cast<uint32_t>(len * sizeof(short)),
+                             data_read);
+  if (!file.seekg(-to_unread, ios::cur).good())
   {
-    perror("lseek in RawFileQueueItem::unreadSamples");
+    cerr << "***ERROR: Failed to unread samples from WAV file \""
+         << filename << "\": " << strerror(errno) << endl;
   }
+  data_read -= to_unread;
 } /* WavFileQueueItem::unreadSamples */
 
 
-int WavFileQueueItem::read32bitValue(unsigned char *ptr, uint32_t *val)
+int WavFileQueueItem::read32bitValue(uint8_t *ptr, uint32_t *val)
 {
   *val = ptr[0] + (ptr[1] << 8) + (ptr[2] << 16) + (ptr[3] << 24);
   return 4;
 } /* WavFileQueueItem::read32bitValue */
 
 
-int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
+int WavFileQueueItem::read16bitValue(uint8_t *ptr, uint16_t *val)
 {
   *val = ptr[0] + (ptr[1] << 8);
   return 2;

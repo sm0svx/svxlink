@@ -172,7 +172,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 4;
+    static const uint16_t MINOR = 6;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -482,17 +482,17 @@ class MsgSquelch : public Msg
 {
   public:
     static const unsigned TYPE = 250;
-    MsgSquelch(bool is_open, float signal_strength, int sql_rx_id)
+    MsgSquelch(bool is_open, float signal_strength, char sql_rx_id)
       : Msg(TYPE, sizeof(MsgSquelch)), m_is_open(is_open),
       	m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id) {}
     bool isOpen(void) const { return m_is_open; }
     float signalStrength(void) const { return m_signal_strength; }
-    int sqlRxId(void) const { return m_sql_rx_id; }
+    char sqlRxId(void) const { return m_sql_rx_id; }
   
   private:
     bool  m_is_open;
     float m_signal_strength;
-    int   m_sql_rx_id;
+    char  m_sql_rx_id;
     
 }; /* MsgSquelch */
 
@@ -550,15 +550,15 @@ class MsgSiglevUpdate : public Msg
 {
   public:
     static const unsigned TYPE = 254;
-    MsgSiglevUpdate(float signal_strength, int sql_rx_id)
+    MsgSiglevUpdate(float signal_strength, char sql_rx_id)
       : Msg(TYPE, sizeof(MsgSiglevUpdate)), m_signal_strength(signal_strength),
         m_sql_rx_id(sql_rx_id) {}
     float signalStrength(void) const { return m_signal_strength; }
-    int sqlRxId(void) const { return m_sql_rx_id; }
+    char sqlRxId(void) const { return m_sql_rx_id; }
   
   private:
     float m_signal_strength;
-    int   m_sql_rx_id;
+    char  m_sql_rx_id;
     
 }; /* MsgSiglevUpdate */
 
@@ -599,17 +599,19 @@ class MsgSendDtmf : public Msg
   public:
     static const unsigned TYPE  = 302;
     static const int MAX_DIGITS = 256;
-    MsgSendDtmf(const std::string &digits)
-      : Msg(TYPE, sizeof(MsgSendDtmf))
+    MsgSendDtmf(const std::string &digits, unsigned duration)
+      : Msg(TYPE, sizeof(MsgSendDtmf)), m_duration(duration)
     {
       strncpy(m_digits, digits.c_str(), MAX_DIGITS);
       m_digits[MAX_DIGITS] = 0;
       setSize(size() - MAX_DIGITS + strlen(m_digits));
     }
     std::string digits(void) const { return m_digits; }
+    unsigned duration(void) const { return m_duration; }
   
   private:
-    char  m_digits[MAX_DIGITS+1];
+    unsigned m_duration;
+    char     m_digits[MAX_DIGITS+1];
     
 }; /* MsgSendDtmf */
 
@@ -621,6 +623,23 @@ class MsgFlush : public Msg
     MsgFlush(void)
       : Msg(TYPE, sizeof(MsgFlush)) {}
 }; /* MsgFlush */
+
+
+class MsgTransmittedSignalStrength : public Msg
+{
+  public:
+    static const unsigned TYPE = 304;
+    MsgTransmittedSignalStrength(float signal_strength, char sql_rx_id)
+      : Msg(TYPE, sizeof(MsgTransmittedSignalStrength)),
+        m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id) {}
+    float signalStrength(void) const { return m_signal_strength; }
+    char sqlRxId(void) const { return m_sql_rx_id; }
+
+  private:
+    float m_signal_strength;
+    char  m_sql_rx_id;
+
+}; /* MsgTransmittedSignalStrength */
 
 
 
