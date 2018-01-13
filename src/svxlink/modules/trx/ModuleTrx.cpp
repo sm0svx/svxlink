@@ -134,8 +134,7 @@ extern "C" {
  ****************************************************************************/
 
 ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), rx(0), tx(0), auto_mod_select(false),
-    rx_timeout_timer(0)
+  : Module(dl_handle, logic, cfg_name), rx(0), tx(0)
 {
   cout << "\tModule Trx v" MODULE_TRX_VERSION " starting...\n";
 
@@ -144,8 +143,6 @@ ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
 
 ModuleTrx::~ModuleTrx(void)
 {
-  delete rx_timeout_timer;
-  rx_timeout_timer = 0;
   AudioSink::clearHandler();
   AudioSource::clearHandler();
   delete rx;
@@ -191,99 +188,161 @@ bool ModuleTrx::initialize(void)
     return false;
   }
 
-  string rx_name;
-  cfg().getValue(cfgName(), "RX", rx_name);
-  rx = RxFactory::createNamedRx(cfg(), rx_name);
-  if ((rx == 0) || !rx->initialize())
-  {
-    cerr << "*** ERROR: Could not initialize receiver \"" << rx_name
-         << "\" in module \"" << name() << "\"\n";
-    return false;
-  }
-  rx->squelchOpen.connect(mem_fun(*this, &ModuleTrx::rxSquelchOpen));
-  AudioSource::setHandler(rx);
-  
-  string tx_name;
-  cfg().getValue(cfgName(), "TX", tx_name);
-  tx = TxFactory::createNamedTx(cfg(), tx_name);
-  if ((tx == 0) || !tx->initialize())
-  {
-    cerr << "*** ERROR: Could not initialize transmitter \"" << tx_name
-         << "\" in module \"" << name() << "\"\n";
-    return false;
-  }
-  AudioSink::setHandler(tx);
+  Band defband;
+  cfg().getValue(cfgName(), "RX", defband.rx_name);
+  cfg().getValue(cfgName(), "TX", defband.tx_name);
 
   string modstr;
-  if (cfg().getValue(cfgName(), "MODULATION", modstr))
+  cfg().getValue(cfgName(), "MODULATION", modstr);
+  defband.mod = Modulation::fromString(modstr);
+
+  cfg().getValue(cfgName(), "RX_TIMEOUT", defband.rx_timeout);
+  rx_timeout_timer.setEnable(false);
+  rx_timeout_timer.expired.connect(mem_fun(*this, &ModuleTrx::rxTimeout));
+
+  cout << "\t"
+       << " " << setw(10) << "Name"
+       << " " << setw(9) << "FQ Start"
+       << " " << setw(9) << "FQ End"
+       << " " << setw(4) << "Mod"
+       << " " << setw(5) << "Short"
+       << " " << setw(10) << "RX"
+       << " " << setw(10) << "TX"
+       << " " << setw(3) << "TMO"
+       << endl;
+
+  std::list<std::string> sectionlist = cfg().listSections();
+  for (std::list<std::string>::iterator it=sectionlist.begin();
+       it!=sectionlist.end();
+       ++it)
   {
-    if (modstr == "AUTO")
+    string& section = *it;
+    if (section.find(cfgName() + ":Band:") != 0)
     {
-      auto_mod_select = true;
+      continue;
+    }
+    string::size_type pos = section.rfind(':');
+    assert(pos != string::npos);
+
+    Band band(defband);
+    band.name = section.substr(pos+1, string::npos);
+    if (band.name.empty())
+    {
+      cerr << "*** WARNING[" << cfgName()
+           << "]: Illegal band configuration section: "
+           << section << endl;
+      continue;
+    }
+
+    string fq;
+    cfg().getValue(section, "FQ", fq);
+    istringstream fqss(fq);
+    double fqstart=0.0, fqend=0.0;
+    char minus=0;
+    fqss >> fqstart;
+    if (!(fqss >> minus).eof())
+    {
+      if ((minus != '-') || !(fqss >> fqend))
+      {
+        fqstart = 0.0;
+      }
     }
     else
     {
-      Modulation::Type mod = Modulation::fromString(modstr);
-      if (mod == Modulation::MOD_UNKNOWN)
-      {
-        cerr << "*** ERROR: Unsupported modulation \"" << modstr
-             << "\" configured in module \"" << name() << "\"\n";
-        return false;
-      }
-      rx->setModulation(mod);
-      tx->setModulation(mod);
+      fqend = fqstart;
     }
-  }
-
-  int rx_timeout = 0;
-  cfg().getValue(cfgName(), "RX_TIMEOUT", rx_timeout);
-  if (rx_timeout > 0)
-  {
-    rx_timeout_timer = new Timer(1000 * rx_timeout);
-    rx_timeout_timer->setEnable(false);
-    rx_timeout_timer->expired.connect(mem_fun(*this, &ModuleTrx::rxTimeout));
-  }
-
-  stringstream ss;
-  ss << cfgName() << ":Bands";
-  std::list<std::string> bandlist = cfg().listSection(ss.str());
-  for (std::list<std::string>::iterator it=bandlist.begin();
-       it!=bandlist.end();
-       ++it)
-  {
-    istringstream iss(*it);
-    double fqstart=0.0, fqend=0.0;
-    char minus=0;
-    iss >> fqstart >> minus >> fqend;
-    if (iss.fail() || (minus != '-') || (fqstart <= 0.0) || (fqend <= 0.0))
+    if ((fqstart <= 0.0) || (fqend <= 0.0))
     {
       cerr << "*** WARNING[" << cfgName() << "]: Illegal fq band: "
-           << *it << endl;
+           << fq << endl;
       continue;
     }
-    std::string modstr;
-    cfg().getValue(ss.str(), *it, modstr);
-    Modulation::Type mod = Modulation::fromString(modstr);
-    if (mod == Modulation::MOD_UNKNOWN)
+    band.fqstart = static_cast<Frequency>(fqstart * 1000);
+    band.fqend = static_cast<Frequency>(fqend * 1000);
+
+    band.fqdefault = band.fqstart;
+    cfg().getValue(section, "FQ_DEFAULT", band.fqdefault);
+    if ((band.fqdefault < band.fqstart) || (band.fqdefault > band.fqend))
     {
-      cerr << "*** WARNING[" << cfgName() << "]: Illegal modulation specified: "
-           << *it << "=" << modstr << endl;
+      cerr << "*** WARNING[]: Default frequency is outside of band: "
+           << band.fqdefault << endl;
       continue;
     }
-    cout << "\tBand: " << *it << ": fqstart=" << fqstart
-         << " fqend=" << fqend
-         << " modstr=" << Modulation::toString(mod)
-         << endl;
-    Band band;
-    band.fqstart = static_cast<unsigned>(fqstart * 1000);
-    band.fqend = static_cast<unsigned>(fqend * 1000);
-    band.mod = mod;
+
+    string modstr;
+    if (cfg().getValue(section, "MODULATION", modstr))
+    {
+      band.mod = Modulation::fromString(modstr);
+    }
+    if (band.mod == Modulation::MOD_UNKNOWN)
+    {
+      cerr << "*** WARNING[" << cfgName()
+           << "]: Illegal modulation specified: "
+           << section << "/MODULATION=" << modstr << endl;
+      continue;
+    }
+
+    cfg().getValue(section, "SHORTCUT", band.shortcut);
+    cfg().getValue(section, "RX_NAME", band.rx_name);
+    cfg().getValue(section, "TX_NAME", band.tx_name);
+    cfg().getValue(section, "RX_TIMEOUT", band.rx_timeout);
+
     bands.push_back(band);
+
+    cout << "\t"
+         << " " << setw(10) << band.name
+         << " " << setw(9) << (band.fqstart / 1000.0)
+         << " " << setw(9) << (band.fqend / 1000.0)
+         << " " << setw(4) << Modulation::toString(band.mod)
+         << " " << setw(5) << band.shortcut
+         << " " << setw(10) << band.rx_name
+         << " " << setw(10) << band.tx_name
+         << " " << setw(3) << band.rx_timeout
+         << endl;
   }
 
   return true;
 
 } /* initialize */
+
+
+bool ModuleTrx::setTrx(const ModuleTrx::TxName& tx_name,
+                       const ModuleTrx::RxName& rx_name)
+{
+  if ((rx == 0) || (rx_name != rx->name()))
+  {
+    AudioSource::clearHandler();
+    delete rx;
+    rx = RxFactory::createNamedRx(cfg(), rx_name);
+    if ((rx == 0) || !rx->initialize())
+    {
+      cerr << "*** ERROR: Could not initialize receiver \"" << rx_name
+           << "\" in module \"" << name() << "\"\n";
+      return false;
+    }
+    rx->squelchOpen.connect(mem_fun(*this, &ModuleTrx::rxSquelchOpen));
+    AudioSource::setHandler(rx);
+  }
+
+  if ((tx == 0) || (tx_name != tx->name()))
+  {
+    AudioSink::clearHandler();
+    delete tx;
+    tx = TxFactory::createNamedTx(cfg(), tx_name);
+    if ((tx == 0) || !tx->initialize())
+    {
+      cerr << "*** ERROR: Could not initialize transmitter \"" << tx_name
+           << "\" in module \"" << name() << "\"\n";
+      return false;
+    }
+    AudioSink::setHandler(tx);
+  }
+
+  rx->setMuteState(Rx::MUTE_NONE);
+  tx->setTxCtrlMode(Tx::TX_AUTO);
+
+  return true;
+} /* ModuleTrx::setTrx */
 
 
 /*
@@ -300,8 +359,7 @@ bool ModuleTrx::initialize(void)
  */
 void ModuleTrx::activateInit(void)
 {
-  rx->setMuteState(Rx::MUTE_NONE);
-  tx->setTxCtrlMode(Tx::TX_AUTO);
+  setTrx("NONE", "NONE");
 } /* activateInit */
 
 
@@ -320,12 +378,15 @@ void ModuleTrx::activateInit(void)
  */
 void ModuleTrx::deactivateCleanup(void)
 {
-  if (rx_timeout_timer != 0)
-  {
-    rx_timeout_timer->setEnable(false);
-  }
+  rx_timeout_timer.setEnable(false);
   rx->setMuteState(Rx::MUTE_ALL);
+  AudioSource::clearHandler();
+  delete rx;
+  rx = 0;
   tx->setTxCtrlMode(Tx::TX_OFF);
+  AudioSink::clearHandler();
+  delete tx;
+  tx = 0;
 } /* deactivateCleanup */
 
 
@@ -383,41 +444,62 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
     stringstream ss(fqstr);
     double fqin;
     ss >> fqin;
-    unsigned fq = static_cast<unsigned>(1000 * fqin);
+    Frequency fq = static_cast<Frequency>(1000 * fqin);
+    const Band *band = 0;
     for (Bands::const_iterator it=bands.begin(); it!=bands.end(); ++it)
     {
       //cout << "### fqstart=" << (*it).fqstart << " fqend=" << (*it).fqend
       //     << " mod=" << Modulation::toString((*it).mod) << endl;
-      if ((fq >= (*it).fqstart) && (fq <= (*it).fqend))
+      if (fq == 1000 * (*it).shortcut)
       {
-        ios_base::fmtflags orig_cout_flags(cout.flags());
-        cout << name() << ": Setting transciver to "
-             << setprecision(3) << fixed << fqin << "kHz "
-             << Modulation::toString((*it).mod) << endl;
-        cout.flags(orig_cout_flags);
+        fq = (*it).fqdefault;
+        fqin = static_cast<double>(fq / 1000.0);
+        band = &(*it);
+        break;
+      }
+      else if ((fq >= (*it).fqstart) && (fq <= (*it).fqend))
+      {
+        band = &(*it);
+        break;
+      }
+    }
+    if (band != 0)
+    {
+      ios_base::fmtflags orig_cout_flags(cout.flags());
+      cout << cfgName() << ": Setting transceiver to "
+           << setprecision(3) << fixed << fqin << "kHz "
+           << Modulation::toString(band->mod) << endl;
+      cout.flags(orig_cout_flags);
+      if (setTrx(band->tx_name, band->rx_name))
+      {
         rx->setFq(fq);
         tx->setFq(fq);
-        if (auto_mod_select)
-        {
-          rx->setModulation((*it).mod);
-          tx->setModulation((*it).mod);
-        }
+        rx->setModulation(band->mod);
+        tx->setModulation(band->mod);
+      }
+      else
+      {
+        cerr << "*** WARNING[" << cfgName() << "]: Could not set up "
+             << "transceiver (TX=" << band->tx_name
+             << " RX=" << band->rx_name << ")" << endl;
         return;
       }
     }
-    cerr << "*** WARNING[" << cfgName()
-         << "]: Out of band frequency specified: "
-         << fqin << "kHz" << endl;
+    else
+    {
+      cerr << "*** WARNING[" << cfgName()
+           << "]: Could not find matching band for command: "
+           << fqstr << endl;
+    }
   }
 } /* dtmfCmdReceived */
 
 
-#if 0
 void ModuleTrx::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
-
+  activateMe();
+  dtmfCmdReceived(cmd);
 } /* dtmfCmdReceivedWhenIdle */
-#endif
 
 
 /*
@@ -438,11 +520,8 @@ void ModuleTrx::squelchOpen(bool is_open)
   //cout << "### ModuleTrx::squelchOpen: is_open=" << is_open << endl;
   if (isActive())
   {
-    rx->setMuteState(Rx::MUTE_NONE);
-    if (rx_timeout_timer != 0)
-    {
-      rx_timeout_timer->reset();
-    }
+    rx->setMuteState(is_open ? Rx::MUTE_ALL : Rx::MUTE_NONE);
+    rx_timeout_timer.reset();
   }
 } /* squelchOpen */
 
@@ -472,6 +551,7 @@ void ModuleTrx::allMsgsWritten(void)
 void ModuleTrx::rxTimeout(Async::Timer *t)
 {
   cout << cfgName() << ": RX Timeout" << endl;
+  assert(rx != 0);
   rx->setMuteState(Rx::MUTE_ALL);
 } /* ModuleTrx::rxTimeout */
 
@@ -483,9 +563,9 @@ void ModuleTrx::rxSquelchOpen(bool is_open)
   {
     setIdle(!is_open);
 
-    if (rx_timeout_timer != 0)
+    if (rx_timeout_timer.timeout() > 0)
     {
-      rx_timeout_timer->setEnable(is_open);
+      rx_timeout_timer.setEnable(is_open);
     }
   }
 } /* ModuleTrx::rxSquelchOpen */

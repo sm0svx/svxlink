@@ -49,7 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <Module.h>
 #include <version/SVXLINK.h>
-
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -66,10 +66,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
 class Rx;
 class Tx;
 
@@ -127,26 +123,42 @@ class ModuleTrx : public Module
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
+    typedef unsigned    Frequency;
+    typedef Frequency   Shortcut;
+    typedef std::string BandName;
+    typedef std::string RxName;
+    typedef std::string TxName;
+    typedef int         RxTimeout;
     struct Band
     {
-      unsigned          fqstart;
-      unsigned          fqend;
+      Band(void)
+        : fqstart(0.0), fqend(0.0), fqdefault(0.0),
+          mod(Modulation::MOD_UNKNOWN), shortcut(0), rx_timeout(-1) {}
+      BandName          name;
+      Frequency         fqstart;
+      Frequency         fqend;
+      Frequency         fqdefault;
       Modulation::Type  mod;
+      Shortcut          shortcut;
+      RxName            rx_name;
+      TxName            tx_name;
+      RxTimeout         rx_timeout;
     };
     typedef std::vector<Band> Bands;
 
-    Rx            *rx;
-    Tx            *tx;
-    bool          auto_mod_select;
-    Async::Timer  *rx_timeout_timer;
-    Bands         bands;
+    Rx*               rx;
+    Tx*               tx;
+    Async::Timer      rx_timeout_timer;
+    Bands             bands;
 
     bool initialize(void);
+    bool setTrx(const ModuleTrx::RxName& rx_name,
+                const ModuleTrx::TxName& tx_name);
     void activateInit(void);
     void deactivateCleanup(void);
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
-    //void dtmfCmdReceivedWhenIdle(const std::string &cmd);
+    void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     //void allMsgsWritten(void);
     void rxTimeout(Async::Timer *t);
