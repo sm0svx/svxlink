@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "RefCountingPty.h"
 #include "LocalRxBase.h"
 
 
@@ -138,6 +139,18 @@ class LocalRx : public LocalRxBase
      */
     virtual bool initialize(void);
     
+    /**
+     * @brief   Set the receiver frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq);
+
+    /**
+     * @brief   Set the receiver modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    virtual void setModulation(Modulation::Type mod);
+
   protected:
     /**
      * @brief   Open the audio input source
@@ -181,6 +194,7 @@ class LocalRx : public LocalRxBase
   private:
     Async::Config   &cfg;
     Async::AudioIO  *audio_io;
+    RefCountingPty  *ctrl_pty;
     
 };  /* class LocalRx */
 

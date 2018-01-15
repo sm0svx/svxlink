@@ -244,7 +244,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     fsk_mod(0), /*fsk_valve(0),*/ input_handler(0), ptt_ctrl(0),
     audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), ptt(0),
     last_rx_id(Rx::ID_UNKNOWN), fsk_first_packet_transmitted(false),
-    hdlc_framer_ib(0), fsk_mod_ib(0)
+    hdlc_framer_ib(0), fsk_mod_ib(0), ctrl_pty(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -269,6 +269,7 @@ LocalTx::~LocalTx(void)
   delete sine_gen;
   delete siglev_sine_gen;
   delete ptt_hangtimer;
+  if (ctrl_pty != 0) ctrl_pty->destroy();
 } /* LocalTx::~LocalTx */
 
 
@@ -665,6 +666,17 @@ bool LocalTx::initialize(void)
     // Finally connect the whole audio pipe to the audio device
   prev_src->registerSink(audio_io, true);
 
+  string ctrl_pty_name;
+  if (cfg.getValue(name(), "CTRL_PTY", ctrl_pty_name))
+  {
+    ctrl_pty = RefCountingPty::instance(ctrl_pty_name);
+    if (ctrl_pty == 0)
+    {
+      cerr << "*** ERROR: Could not create control PTY in " << name() << endl;
+      return false;
+    }
+  }
+
   return true;
   
 } /* LocalTx::initialize */
@@ -787,6 +799,39 @@ void LocalTx::setTransmittedSignalStrength(char rx_id, float siglev)
 #endif
 } /* LocalTx::setTransmittedSignalLevel */
 
+
+void LocalTx::setFq(unsigned fq)
+{
+  if (ctrl_pty != 0)
+  {
+    ostringstream ss;
+    ss << "F" << fq << ";";
+    ssize_t ret = ctrl_pty->write(ss.str().c_str(), ss.str().size());
+    if (ret != static_cast<ssize_t>(ss.str().size()))
+    {
+      cerr << "*** WARNING[" << name() << "]: Failed to write transmit "
+              "frequency command to PTY " << ctrl_pty->name()
+           << ": " << ss.str() << endl;
+    }
+  }
+} /* LocalTx::setFq */
+
+
+void LocalTx::setModulation(Modulation::Type mod)
+{
+  if (ctrl_pty != 0)
+  {
+    ostringstream ss;
+    ss << "M" << Modulation::toString(mod) << ";";
+    ssize_t ret = ctrl_pty->write(ss.str().c_str(), ss.str().size());
+    if (ret != static_cast<ssize_t>(ss.str().size()))
+    {
+      cerr << "*** WARNING[" << name() << "]: Failed to write set transmit "
+              "modulation command to PTY " << ctrl_pty->name()
+           << ": " << ss.str() << endl;
+    }
+  }
+} /* LocalTx::setModulation */
 
 
 /****************************************************************************

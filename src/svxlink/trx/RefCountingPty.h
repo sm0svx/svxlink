@@ -1,12 +1,12 @@
 /**
-@file	 PttPty.cpp
-@brief   A PTT hardware controller using a PTY to signal an external script
-@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-05-05
+@file	 RefCountingPty.h
+@brief   A_brief_description_for_this_file
+@author  Tobias Blomberg / SM0SVX
+@date	 2018-01-14
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef REF_COUNTING_PTY_INCLUDED
+#define REF_COUNTING_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -32,7 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
+#include <string>
+#include <map>
+#include <cassert>
 
 
 /****************************************************************************
@@ -41,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <RefCountingPty.h>
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -50,40 +54,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttPty.h"
+
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Namespace
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,75 +100,86 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	A_brief_class_description
+@author Tobias Blomberg / SM0SVX
+@date   2018-01-14
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-PttPty::PttPty(void)
-  : pty(0)
+A_detailed_class_description
+*/
+class RefCountingPty : public Async::Pty
 {
-} /* PttPty::PttPty */
+  public:
+    /**
+     * @brief 	A_brief_member_function_description
+     * @param 	param1 Description_of_param1
+     * @return	Return_value_of_this_member_function
+     */
+    static RefCountingPty *instance(const std::string& name)
+    {
+      RefCountingPty *pty = 0;
+      PtyMap::iterator it = ptys().find(name);
+      if (it == ptys().end())
+      {
+        pty = new RefCountingPty(name);
+        if (!pty->open())
+        {
+          delete pty;
+          pty = 0;
+        }
+        ptys()[name] = pty;
+      }
+      else
+      {
+        pty = it->second;
+        pty->m_refs += 1;
+      }
+      return pty;
+    }
+
+    const std::string& name(void) const { return m_name; }
+
+    void destroy(void)
+    {
+      assert(m_refs > 0);
+      if (--m_refs == 0)
+      {
+        close();
+        ptys().erase(m_name);
+        delete this;
+      }
+    }
+
+  private:
+    typedef std::map<std::string, RefCountingPty*> PtyMap;
+
+    std::string m_name;
+    unsigned    m_refs;
+
+    static PtyMap& ptys(void)
+    {
+      static PtyMap pty_map;
+      return pty_map;
+    }
+
+    RefCountingPty(const std::string& name) : Pty(name), m_refs(1) {}
+    ~RefCountingPty(void) {}
+    RefCountingPty(const RefCountingPty&);
+    RefCountingPty& operator=(const RefCountingPty&);
+
+};  /* class RefCountingPty */
 
 
-PttPty::~PttPty(void)
-{
-  pty->destroy();
-} /* PttPty::~PttPty */
+//} /* namespace */
 
-
-bool PttPty::initialize(Async::Config &cfg, const std::string name)
-{
-
-  string ptt_pty;
-  if (!cfg.getValue(name, "PTT_PTY", ptt_pty))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PTY not set\n";
-    return false;
-  }
-
-  pty = RefCountingPty::instance(ptt_pty);
-  return (pty != 0);
-} /* PttPty::initialize */
-
-
-/*
- * This functions sends a character over the pty-device:
- * T  to direct the controller to enable the TX
- * R  to direct the controller to disable the TX
- */
-bool PttPty::setTxOn(bool tx_on)
-{
-  char cmd(tx_on ? 'T' : 'R');
-  return (pty->write(&cmd, 1) == 1);
-} /* PttPty::setTxOn */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* REF_COUNTING_PTY_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-

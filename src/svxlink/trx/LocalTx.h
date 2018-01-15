@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <RefCountingPty.h>
 #include "Tx.h"
 
 
@@ -200,6 +201,18 @@ class LocalTx : public Tx
      */
     void setTransmittedSignalStrength(char rx_id, float siglev);
     
+    /**
+     * @brief   Set the transmitter frequency
+     * @param   fq The frequency in Hz
+     */
+    void setFq(unsigned fq);
+
+    /**
+     * @brief   Set the transmitter modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    void setModulation(Modulation::Type mod);
+
   private:
     Async::Config     	    &cfg;
     Async::AudioIO    	    *audio_io;
@@ -228,6 +241,7 @@ class LocalTx : public Tx
     bool                    fsk_first_packet_transmitted;
     HdlcFramer              *hdlc_framer_ib;
     AfskModulator           *fsk_mod_ib;
+    RefCountingPty          *ctrl_pty;
     
     void txTimeoutOccured(Async::Timer *t);
     bool setPtt(bool tx, bool with_hangtime=false);
