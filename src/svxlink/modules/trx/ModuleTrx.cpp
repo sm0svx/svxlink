@@ -450,6 +450,10 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
   {
     deactivateMe();
   }
+  else if (cmd == "0")
+  {
+    playHelpMsg();
+  }
   else
   {
     string fqstr(cmd);
