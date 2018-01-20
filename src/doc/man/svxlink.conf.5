@@ -770,13 +770,15 @@ get correct signal level measurements. A value of about 40ms seem to be OK.
 Also, when using the NOISE signal level detector the input audio must be
 unsquelched since silence will be interpreted as a high signal strength.
 
-The PTY squelch expects a very easy protocol over a pseudo-tty device, 
-created by SvxLink on runtime. 
-An 'O' over this pty device indicate an open squelch, a 'Z' is a closed squelch.
-Define the slave pty in PTY_PATH (e.g. PTY_PATH=/tmp/sql) and SvxLink 
-will create a link to the specified path from it's pseudotty slave device 
-(/dev/pts/X). This can be used by a script to interface custom devices,
-modems or other hardware to SvxLink. Look for nhrcx.pl to see an example.
+The PTY squelch expects a very simple protocol over a pseudo-tty device,
+created by SvxLink at runtime.  An 'O' over this pty device indicate an open
+squelch, a 'Z' is a closed squelch.  Define the slave pty using PTY_PATH (e.g.
+PTY_PATH=/tmp/sql) and SvxLink will create a link to the specified path from
+it's pseudotty slave device (/dev/pts/X). This can be used by a script to
+interface custom devices, modems or other hardware to SvxLink. Look for
+nhrcx.pl or trx_pty_ctrl.py for an example.  It is possible to specify the same
+PTY for multiple functions (e.g. DTMF, ptt etc) in both TX and RX
+configurations. This may be good if there is one script handling all functions.
 
 The HIDRAW squelch supports human interface devices (HID), USB devices
 like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
@@ -1179,14 +1181,18 @@ specify a serial port (e.g. /dev/ttyS0).
 .B DTMF_PTY
 When using the PTY DTMF "decoder" this configuration variable will set the path
 to the PTY slave softlink that the external interface script use to communicate
-to SvxLink. Over this symlink a very easy communication protocol is used to
-tell SvxLink received DTMF digits: 0-9, A-F, *, #. "E" is the same as "*" and
-"F" is the same as "#". Sending a digit tell SvxLink when it starts. To tell
-SvxLink that the digit has ended, send a space character.
+to SvxLink. Over this softlink a very simple communication protocol is used to
+notify SvxLink about received DTMF digits: 0-9, A-F, *, #. "E" is the same as
+"*" and "F" is the same as "#". Sending a digit tell SvxLink when it starts. To
+tell SvxLink that the digit has ended, send a space character.
 
 The PTY DTMF "decoder" can be used by an external script to interface custom
-devices, modems or other hardware to SvxLink. Look for nhrcx.pl to see an
-example.
+devices, modems or other hardware to SvxLink. Look for nhrcx.pl or
+trx_pty_ctrl.py for an example.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 
 Example: /tmp/rx1_dtmf.
 .TP
@@ -1308,6 +1314,22 @@ end user will not hear the AFSK burst. The AFSK feature is typically used on a
 remote receiver uplink. The protocol used is SvxLink specific. Data is
 transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
 The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B CTRL_PTY
+Set this configuration variable to the path of a PTY to use for controlling a
+receivers frequency and modulation. This can be used to interface a receiver to
+SvxLink using a translation script, like trx_pty_ctrl.py. To set the receive
+frequency, SvxLink will send the sequence "f<frequency>;". The frequency will
+be in Hz, e.g. f145550000; will be sent to set the receiver to 145.550MHz.
+
+To set the modulation the command is "m<modulation>;". Look at the
+documentation of the MODULATION configuration variable to see which modulations
+that are available. To set "normal" 25kHz channel spaced FM the command would
+be mFM;.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 .
 .SS Ddr Receiver Section
 .
@@ -1741,6 +1763,10 @@ SvxLink.
 SvxLink sends a 'T' to start transmitting and a 'R' to turn the transmitter
 off.  This can be used by an external script to interface custom devices,
 modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+DTMF etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 .TP
 .B HID_DEVICE
 Define the device node where your hidraw device is accessible at.
@@ -1903,6 +1929,23 @@ The in-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
 .B IB_AFSK_TX_DELAY
 The number of milliseconds to send AFSK flag bytes before sending the actual
 data when transmitting an in-band packet.
+.TP
+.B CTRL_PTY
+Set this configuration variable to the path of a PTY to use for controlling a
+transmitters frequency and modulation. This can be used to interface a
+transmitter to SvxLink using a translation script, like trx_pty_ctrl.py. To set
+the transmit frequency, SvxLink will send the sequence "F<frequency>;". The
+frequency will be in Hz, e.g. F145550000; will be sent to set the receiver to
+145.550MHz.
+
+To set the modulation the command is "M<modulation>;". Look at the
+documentation of the MODULATION configuration variable to see which modulations
+are available. To set "normal" 25kHz channel spaced FM the command would be
+MFM;.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 .
 .SS Networked Transmitter Section
 .
