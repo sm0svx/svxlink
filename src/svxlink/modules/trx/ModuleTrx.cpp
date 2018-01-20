@@ -478,7 +478,10 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
       }
       else if ((fq >= (*it).fqstart) && (fq <= (*it).fqend))
       {
-        if ((band == 0) || band->isSuperBandOf(*it))
+        if ((band == 0) ||
+            band->isSuperBandOf(*it) ||
+            ((*it).shortcut < band->shortcut) ||
+            ((*it).fqstart < band->fqstart))
         {
           band = &(*it);
         }
