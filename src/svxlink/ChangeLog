@@ -64,6 +64,12 @@
   transceiver through the SvxLink node. Have a look at the manual page for all
   details.
 
+* The sound clip hz.wav have been moved from the Core directory to the Default
+  directory and renamed to Hz.wav. Language packs need to be updated.
+
+* There is a new function in locale.tcl called playFrequency that shoud read
+  back a frequency as intelligently as possible. Language packs need to be
+  updated if they use their own locale.tcl.
 
 
  1.6.0 -- 30 Dec 2017

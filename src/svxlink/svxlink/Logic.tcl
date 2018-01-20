@@ -94,8 +94,7 @@ proc manual_identification {} {
   playSilence 250;
   if {$report_ctcss > 0} {
     playMsg "Core" "pl_is";
-    playNumber $report_ctcss;
-    playMsg "Core" "hz";
+    playFrequency $report_ctcss
     playSilence 300;
   }
   if {$active_module != ""} {
