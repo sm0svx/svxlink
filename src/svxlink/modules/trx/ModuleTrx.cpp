@@ -134,7 +134,7 @@ extern "C" {
  ****************************************************************************/
 
 ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), rx(0), tx(0)
+  : Module(dl_handle, logic, cfg_name), rx(0), tx(0), current_band(0)
 {
   cout << "\tModule Trx v" MODULE_TRX_VERSION " starting...\n";
 
@@ -390,6 +390,7 @@ void ModuleTrx::activateInit(void)
  */
 void ModuleTrx::deactivateCleanup(void)
 {
+  current_band = 0;
   rx_timeout_timer.setEnable(false);
   rx->setMuteState(Rx::MUTE_ALL);
   AudioSource::clearHandler();
@@ -457,51 +458,63 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
     double fqin;
     ss >> fqin;
     Frequency fq = static_cast<Frequency>(1000 * fqin);
+    Shortcut shortcut = static_cast<Shortcut>(fqin);
     const Band *band = 0;
     for (Bands::const_iterator it=bands.begin(); it!=bands.end(); ++it)
     {
       //cout << "### fqstart=" << (*it).fqstart << " fqend=" << (*it).fqend
       //     << " mod=" << Modulation::toString((*it).mod) << endl;
-      if (fq == 1000 * (*it).shortcut)
+      if (shortcut == (*it).shortcut)
       {
         fq = (*it).fqdefault;
         fqin = static_cast<double>(fq / 1000.0);
         band = &(*it);
+        current_band = 0;
         break;
       }
       else if ((fq >= (*it).fqstart) && (fq <= (*it).fqend))
       {
-        band = &(*it);
-        break;
+        if ((band == 0) || band->isSuperBandOf(*it))
+        {
+          band = &(*it);
+        }
       }
     }
-    if (band != 0)
-    {
-      ios_base::fmtflags orig_cout_flags(cout.flags());
-      cout << cfgName() << ": Setting transceiver to "
-           << setprecision(3) << fixed << fqin << "kHz "
-           << Modulation::toString(band->mod) << endl;
-      cout.flags(orig_cout_flags);
-      if (setTrx(band->tx_name, band->rx_name))
-      {
-        rx->setFq(fq);
-        tx->setFq(fq + band->fqtxshift);
-        rx->setModulation(band->mod);
-        tx->setModulation(band->mod);
-      }
-      else
-      {
-        cerr << "*** WARNING[" << cfgName() << "]: Could not set up "
-             << "transceiver (TX=" << band->tx_name
-             << " RX=" << band->rx_name << ")" << endl;
-        return;
-      }
-    }
-    else
+    if (band == 0)
     {
       cerr << "*** WARNING[" << cfgName()
            << "]: Could not find matching band for command: "
            << fqstr << endl;
+      return;
+    }
+    if ((current_band != 0) && !current_band->isSuperBandOf(*band) &&
+        ((fq >= current_band->fqstart) && (fq <= current_band->fqend)))
+    {
+      band = current_band;
+    }
+    else
+    {
+      current_band = band;
+    }
+
+    ios_base::fmtflags orig_cout_flags(cout.flags());
+    cout << cfgName() << ": Setting transceiver to "
+         << setprecision(3) << fixed << fqin << "kHz "
+         << Modulation::toString(band->mod) << endl;
+    cout.flags(orig_cout_flags);
+    if (setTrx(band->tx_name, band->rx_name))
+    {
+      rx->setFq(fq);
+      tx->setFq(fq + band->fqtxshift);
+      rx->setModulation(band->mod);
+      tx->setModulation(band->mod);
+    }
+    else
+    {
+      cerr << "*** WARNING[" << cfgName() << "]: Could not set up "
+           << "transceiver (TX=" << band->tx_name
+           << " RX=" << band->rx_name << ")" << endl;
+      return;
     }
   }
 } /* dtmfCmdReceived */

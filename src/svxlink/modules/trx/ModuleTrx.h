@@ -145,6 +145,12 @@ class ModuleTrx : public Module
       RxName            rx_name;
       TxName            tx_name;
       RxTimeout         rx_timeout;
+
+      bool isSuperBandOf(const Band& b) const
+      {
+        return (((b.fqend - b.fqstart) < (fqend - fqstart)) &&
+                ((b.fqstart >= fqstart) && (b.fqend <= fqend)));
+      }
     };
     typedef std::vector<Band> Bands;
 
@@ -152,6 +158,7 @@ class ModuleTrx : public Module
     Tx*               tx;
     Async::Timer      rx_timeout_timer;
     Bands             bands;
+    const Band*       current_band;
 
     bool initialize(void);
     bool setTrx(const ModuleTrx::RxName& rx_name,
