@@ -170,18 +170,19 @@ proc playTime {hour minute} {
 #
 proc playFrequency {fq} {
   if {$fq < 1000} {
-    playNumber $fq
-    playMsg "Core" "Hz"
+    set unit "Hz"
   } elseif {$fq < 1000000} {
-    playNumber [format "%.3f" [expr {$fq / 1000.0}]]
-    playMsg "Core" "kHz"
+    set fq [expr {$fq / 1000.0}]
+    set unit "kHz"
   } elseif {$fq < 1000000000} {
-    playNumber [format "%.3f" [expr {$fq / 1000000.0}]]
-    playMsg "Core" "MHz"
+    set fq [expr {$fq / 1000000.0}]
+    set unit "MHz"
   } else {
-    playNumber [format "%.3f" [expr {$fq / 1000000000.0}]]
-    playMsg "Core" "GHz"
+    set fq [expr {$fq / 1000000000.0}]
+    set unit "GHz"
   }
+  playNumber [string trimright [format "%.3f" $fq] ".0"]
+  playMsg "Core" $unit
 }
 
 
