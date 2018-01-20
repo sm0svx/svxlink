@@ -24,6 +24,8 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]];
 
+# The currently setup frequency
+variable current_fq 0
 
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
@@ -88,9 +90,47 @@ proc play_help {} {
 # This function will only be called if this module is active.
 #
 proc status_report {} {
-  #printInfo "status_report called...";
+  #printInfo "status_report called..."
+  variable current_fq
+  if {$current_fq > 0} {
+    playFrequency $current_fq
+  }
 }
 
+
+proc set_frequency {fq} {
+  #printInfo "### Set transceiver frequency to $fq Hz"
+  variable current_fq
+  set current_fq $fq
+  if {$fq > 0} {
+    playFrequency $fq
+    playMsg "ok"
+  }
+}
+
+
+proc no_matching_band {cmd} {
+  #printInfo "### No matching band for command: $cmd"
+  spellNumber $cmd
+  playMsg "operation_failed"
+}
+
+
+proc failed_to_set_trx {cmd rx_name tx_name} {
+  #printInfo "### Failed to set transceiver: cmd=$cmd RX=$rx_name TX=$tx_name"
+  spellNumber $cmd
+  playMsg "operation_failed"
+}
+
+
+proc play_current_fq {} {
+  variable current_fq
+  if {$current_fq > 0} {
+    playFrequency $current_fq
+  } else {
+    playMsg "not_active"
+  }
+}
 
 # end of namespace
 }

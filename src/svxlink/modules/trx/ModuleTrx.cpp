@@ -390,6 +390,7 @@ void ModuleTrx::activateInit(void)
  */
 void ModuleTrx::deactivateCleanup(void)
 {
+  processEvent("set_frequency 0");
   current_band = 0;
   rx_timeout_timer.setEnable(false);
   rx->setMuteState(Rx::MUTE_ALL);
@@ -454,6 +455,10 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
   {
     playHelpMsg();
   }
+  else if (cmd == "1")
+  {
+    processEvent("play_current_fq");
+  }
   else
   {
     string fqstr(cmd);
@@ -492,6 +497,9 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
       cerr << "*** WARNING[" << cfgName()
            << "]: Could not find matching band for command: "
            << fqstr << endl;
+      ostringstream ss;
+      ss << "no_matching_band " << fqstr;
+      processEvent(ss.str());
       return;
     }
     if ((current_band != 0) && !current_band->isSuperBandOf(*band) &&
@@ -515,12 +523,23 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
       tx->setFq(fq + band->fqtxshift);
       rx->setModulation(band->mod);
       tx->setModulation(band->mod);
+      ostringstream ss;
+      ss << "set_frequency " << fq;
+      processEvent(ss.str());
     }
     else
     {
+      setTrx("NONE", "NONE");
+      processEvent("set_frequency 0");
       cerr << "*** WARNING[" << cfgName() << "]: Could not set up "
            << "transceiver (TX=" << band->tx_name
            << " RX=" << band->rx_name << ")" << endl;
+      ostringstream ss;
+      ss << "failed_to_set_trx";
+      ss << " " << fqstr;
+      ss << " " << band->rx_name;
+      ss << " " << band->tx_name;
+      processEvent(ss.str());
       return;
     }
   }

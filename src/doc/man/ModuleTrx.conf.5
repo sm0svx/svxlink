@@ -122,11 +122,11 @@ frequency for a band that is selected through a shortcut. If it is not set, the
 lower band limit will be used as the default frequency.
 .TP
 .B SHORTCUT
-Define a shortcut for a band. The shortcut may be any positive number except 0
-which is reserved for triggering the help playback command. If the shortcut
-match a command enterend on the command interface the band will be selected
-immediately and the frequency set by FQ_DEFAULT will be set. If more than one
-band have the same shortcut it is undefined which one will get selected.
+Define a shortcut for a band. The shortcut may be any positive number except
+0-9 which is reserved for module commands. If the shortcut match a command
+entered on the command interface, the band will be selected immediately and the
+frequency set by FQ_DEFAULT will be set. If more than one band have the same
+shortcut it is undefined which one will get selected.
 .
 .SH FILES
 .
