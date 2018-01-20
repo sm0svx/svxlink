@@ -178,7 +178,7 @@ ModuleTrx::~ModuleTrx(void)
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2015-05-16
  * Remarks:   The base class initialize method must be called from here.
- * Bugs:      
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 bool ModuleTrx::initialize(void)
@@ -365,8 +365,8 @@ bool ModuleTrx::setTrx(const ModuleTrx::TxName& tx_name,
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2015-05-16
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleTrx::activateInit(void)
@@ -385,7 +385,7 @@ void ModuleTrx::activateInit(void)
  * Created:   2015-05-16
  * Remarks:   Do NOT call this function directly unless you really know what
  *    	      you are doing. Use Module::deactivate() instead.
- * Bugs:      
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleTrx::deactivateCleanup(void)
@@ -414,14 +414,14 @@ void ModuleTrx::deactivateCleanup(void)
  * Output:    Return true if the digit is handled or false if not
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2015-05-16
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 bool ModuleTrx::dtmfDigitReceived(char digit, int duration)
 {
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
-  
+
   return false;
 } /* dtmfDigitReceived */
 
@@ -438,14 +438,14 @@ bool ModuleTrx::dtmfDigitReceived(char digit, int duration)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2015-05-16
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleTrx::dtmfCmdReceived(const string& cmd)
 {
   cout << "DTMF command received in module " << name() << ": " << cmd << endl;
-  
+
   if (cmd == "")
   {
     deactivateMe();
@@ -543,8 +543,8 @@ void ModuleTrx::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2015-05-16
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleTrx::squelchOpen(bool is_open)
@@ -569,8 +569,8 @@ void ModuleTrx::squelchOpen(bool is_open)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2015-05-16
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleTrx::allMsgsWritten(void)

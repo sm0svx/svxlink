@@ -43,6 +43,27 @@
   be 100+350=450ms for the fast receivers and 300+350-200=450ms for the slow
   receiver. That is, all receivers are now equally fast.
 
+* Support was added to control the frequency and modulation of receivers and
+  transmitters connected to the SvxLink node.
+
+* New configuration variable CTRL_PTY that can be used in RX and TX
+  configuration setions. It will set a PTY than can be used to control the
+  frequency and modulation of external receivers and transmitters. An external
+  transceiver control script is needed to actually control a transceiver. An
+  example of such a script, trx_pty_ctrl.py, can be found in the SvxLink
+  distribution. That script may be modified to support a specific transceiver.
+
+* Now possible to specify the same PTY for multiple receiver and transmitter
+  functions like squelch, ptt, DTMF, frequency control etc. That make it
+  possible to handle all commands on the one PTY in one script. It is still
+  possible to use separate PTY:s as before if that is desirable.
+
+* New module ModuleTrx, a module to control one or more separate transceivers
+  connected to a SvxLink node. The frequency of the transceiver is set through
+  DTMF commands and then it's possible to transmit and receive on the
+  transceiver through the SvxLink node. Have a look at the manual page for all
+  details.
+
 
 
  1.6.0 -- 30 Dec 2017
