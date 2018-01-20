@@ -200,15 +200,20 @@ bool ModuleTrx::initialize(void)
   rx_timeout_timer.setEnable(false);
   rx_timeout_timer.expired.connect(mem_fun(*this, &ModuleTrx::rxTimeout));
 
+  double def_fqtxshift = 0.0;
+  cfg().getValue(cfgName(), "SHIFT", def_fqtxshift);
+  defband.fqtxshift = static_cast<FrequencyDiff>(def_fqtxshift * 1000.0);
+
   cout << "\t"
        << " " << setw(10) << "Name"
        << " " << setw(9) << "FQ Start"
        << " " << setw(9) << "FQ End"
+       << " " << setw(5) << "Shift"
        << " " << setw(4) << "Mod"
        << " " << setw(5) << "Short"
        << " " << setw(10) << "RX"
        << " " << setw(10) << "TX"
-       << " " << setw(3) << "TMO"
+       //<< " " << setw(3) << "TMO"
        << endl;
 
   std::list<std::string> sectionlist = cfg().listSections();
@@ -260,6 +265,12 @@ bool ModuleTrx::initialize(void)
     band.fqstart = static_cast<Frequency>(fqstart * 1000);
     band.fqend = static_cast<Frequency>(fqend * 1000);
 
+    double fqtxshift = 0.0;
+    if (cfg().getValue(section, "SHIFT", fqtxshift))
+    {
+      band.fqtxshift = static_cast<FrequencyDiff>(fqtxshift * 1000);
+    }
+
     band.fqdefault = band.fqstart;
     cfg().getValue(section, "FQ_DEFAULT", band.fqdefault);
     if ((band.fqdefault < band.fqstart) || (band.fqdefault > band.fqend))
@@ -293,11 +304,12 @@ bool ModuleTrx::initialize(void)
          << " " << setw(10) << band.name
          << " " << setw(9) << (band.fqstart / 1000.0)
          << " " << setw(9) << (band.fqend / 1000.0)
+         << " " << setw(5) << (band.fqtxshift / 1000.0)
          << " " << setw(4) << Modulation::toString(band.mod)
          << " " << setw(5) << band.shortcut
          << " " << setw(10) << band.rx_name
          << " " << setw(10) << band.tx_name
-         << " " << setw(3) << band.rx_timeout
+         //<< " " << setw(3) << band.rx_timeout
          << endl;
   }
 
@@ -473,7 +485,7 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
       if (setTrx(band->tx_name, band->rx_name))
       {
         rx->setFq(fq);
-        tx->setFq(fq);
+        tx->setFq(fq + band->fqtxshift);
         rx->setModulation(band->mod);
         tx->setModulation(band->mod);
       }

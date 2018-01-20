@@ -124,6 +124,7 @@ class ModuleTrx : public Module
 
   private:
     typedef unsigned    Frequency;
+    typedef int         FrequencyDiff;
     typedef Frequency   Shortcut;
     typedef std::string BandName;
     typedef std::string RxName;
@@ -132,12 +133,13 @@ class ModuleTrx : public Module
     struct Band
     {
       Band(void)
-        : fqstart(0.0), fqend(0.0), fqdefault(0.0),
+        : fqstart(0), fqend(0), fqdefault(0), fqtxshift(0),
           mod(Modulation::MOD_UNKNOWN), shortcut(0), rx_timeout(-1) {}
       BandName          name;
       Frequency         fqstart;
       Frequency         fqend;
       Frequency         fqdefault;
+      FrequencyDiff     fqtxshift;
       Modulation::Type  mod;
       Shortcut          shortcut;
       RxName            rx_name;
