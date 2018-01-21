@@ -74,6 +74,8 @@
 * New Default sound clips: kHz, MHz, GHz, ok. Language packs need to be
   updated.
 
+* The default group for SvxLink changed from 'daemon' to 'svxlink'.
+
 
 
  1.6.0 -- 30 Dec 2017

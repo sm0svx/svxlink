@@ -328,7 +328,7 @@ set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
 include(FindCHOWN)
 
 set(SVXLINK_USER "svxlink" CACHE STRING "Set SvxLink system user")
-set(SVXLINK_GROUP "daemon" CACHE STRING "Set SvxLink system group")
+set(SVXLINK_GROUP "svxlink" CACHE STRING "Set SvxLink system group")
 message(STATUS "SvxLink user = ${SVXLINK_USER}")
 message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
