@@ -369,6 +369,8 @@ void QsoImpl::reject(bool perm)
 
 void QsoImpl::setListenOnly(bool enable)
 {
+  event_handler->setVariable(string(module->name()) + "::listen_only_active",
+                             enable ? "1" : "0");
   if (enable)
   {
     string str("[listen only] ");

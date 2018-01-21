@@ -24,7 +24,6 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]];
 
-
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
 # as the first argument.
@@ -543,7 +542,9 @@ proc remote_timeout {} {
 # Executed when the squelch state changes
 #
 proc squelch_open {is_open} {
-  if {!$is_open} {
+  # The listen_only_active global variable is set by the C++ code
+  variable listen_only_active
+  if {!$is_open && !$listen_only_active} {
     playSilence 200
     playTone 1000 100 100
   }
