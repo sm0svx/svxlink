@@ -76,6 +76,10 @@
 
 * The default group for SvxLink changed from 'daemon' to 'svxlink'.
 
+* ModuleEchoLink: New configuration variable REMOTE_RGR_SOUND that is used to
+  enable the sending of a roger sound to remote Echolink stations when the
+  squelch is closed on the local node. Default is to not send a roger sound.
+
 
 
  1.6.1 -- 21 Jan 2018
