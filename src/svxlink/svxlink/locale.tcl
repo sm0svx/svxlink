@@ -164,5 +164,28 @@ proc playTime {hour minute} {
 
 
 #
+# Say the given frequency as intelligently as popssible
+#
+#   fq -- The frequency in Hz
+#
+proc playFrequency {fq} {
+  if {$fq < 1000} {
+    set unit "Hz"
+  } elseif {$fq < 1000000} {
+    set fq [expr {$fq / 1000.0}]
+    set unit "kHz"
+  } elseif {$fq < 1000000000} {
+    set fq [expr {$fq / 1000000.0}]
+    set unit "MHz"
+  } else {
+    set fq [expr {$fq / 1000000000.0}]
+    set unit "GHz"
+  }
+  playNumber [string trimright [format "%.3f" $fq] ".0"]
+  playMsg "Core" $unit
+}
+
+
+#
 # This file has not been truncated
 #

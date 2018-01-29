@@ -1,4 +1,4 @@
-.TH REMOTETRX.CONF 5 "MAY 2011" Linux "File Formats"
+.TH REMOTETRX.CONF 5 "JANUARI 2018" Linux "File Formats"
 .
 .SH NAME
 .
@@ -178,23 +178,24 @@ squelch is open. The value represents a delay, in milliseconds, after the
 squelch has closed, that the transmitter will be muted. For example, if set
 to 1000, the transmitter will be muted one second after the squelch has closed.
 The default is not to mute the transmitter when the squelch is open.
+.TP
+.B FALLBACK_REPEATER
+This function is useful if running RemoteTrx as both RX and TX for a repeater.
+If the connection to the SvxLink base station is lost due to network errors, the
+RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
+the connection has been established again. Set to 1 to enable this function
+or set to 0 to disable it. Default is 0.
 .
 .SS RF uplink transceiver section
 .
 The RF uplink transceiver configuration section is used to specify the
-configuration for an RF link to the main SvxLink server. In the default
-configuration file there is an RF uplink transceiver section called
+configuration for an RF link to the main SvxLink server.  It can for example be
+used to link remote receivers coming in on the Internet to a site that do not
+have access to the Internet.  In the default configuration file there is an RF
+uplink transceiver section called
 .BR RfUpLinkTrx .
 The section name could be anything. It should match what is specified in the
 TRXS configuration variable in the GLOBAL section.
-.P
-The use of Rf uplinks is very EXPERIMENTAL and still have some flaws. Among
-other things, detected tones (like CTCSS or 1750 tone burst) are not relayed and
-all relayed DTMF tones are always 100ms long no matter how long the received
-digit was. Signal level measurements are not relayed either.
-.P
-Any way, it's used to link remote receivers coming in on the Internet to a site
-that do not have access to Internet.
 .TP
 .B TYPE
 Always "RF" for an RF uplink transceiver configuration section.
@@ -237,12 +238,20 @@ transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
 Set to 1 to loop incoming RX audio (not link RX) directly to the TX (not link
 TX). You figure out when to use it. Default is 0.
 .TP
-.B FALLBACK_REPEATER
-This function is useful if running RemoteTrx as both RX and TX for a repeater.
-If the connection to the SvxLink base station is lost due to network errors, the
-RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
-the connection has been established again. Set to 1 to enable this function
-or set to 0 to disable it. Default is 0.
+.B DETECT_1750
+Set up the receiver(s) specified in the RX configuration variable to detect a
+1750Hz tone burst. The detection will be relayed on the uplink transmitter if
+the setup have the capability to do so. Set this configuration variable to the
+number of milliseconds that the 1750Hz tone must be present before reporting
+it. Detection is disabled by default.
+.TP
+.B DETECT_CTCSS
+Set up the receiver(s) specified in the RX configuration variable to detect the
+given CTCSS tone. The detection will be relayed on the uplink transmitter if
+the setup have the capability to do so. Set this configuration variable to
+tone_fq:tone_duration, where tone_fq is the CTCSS tone frequency and
+tone_duration is the number of milliseconds that the CTCSS tone must be present
+before reporting it. Detection is disabled by default.
 .
 .SH FILES
 .

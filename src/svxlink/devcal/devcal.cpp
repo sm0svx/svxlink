@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -640,7 +640,7 @@ int main(int argc, const char *argv[])
     }
     if (wb_mode)
     {
-      ddr->setModulation(Ddr::MOD_WBFM);
+      ddr->setModulation(Modulation::MOD_WBFM);
     }
     DevMeasure *dev_measure = new DevMeasure(ddr->preDemodSampleRate(), 
                                              mod_fqs, ddr->nbFq());

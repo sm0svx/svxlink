@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -119,10 +119,11 @@ using namespace NetTrxMsg;
  ****************************************************************************/
 
 NetTx::NetTx(Config &cfg, const string& name)
-  : cfg(cfg), name(name), tcp_con(0), log_disconnects_once(false),
+  : Tx(name), cfg(cfg), tcp_con(0), log_disconnects_once(false),
     log_disconnect(true), is_transmitting(false), mode(Tx::TX_OFF),
     ctcss_enable(false), pacer(0), is_connected(false), pending_flush(false),
-    unflushed_samples(false), audio_enc(0)
+    unflushed_samples(false), audio_enc(0), fq(0),
+    modulation(Modulation::MOD_UNKNOWN)
 {
 } /* NetTx::NetTx */
 
@@ -139,29 +140,29 @@ NetTx::~NetTx(void)
 bool NetTx::initialize(void)
 {
   string host;
-  if (!cfg.getValue(name, "HOST", host))
+  if (!cfg.getValue(name(), "HOST", host))
   {
-    cerr << "*** ERROR: Config variable " << name << "/HOST not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/HOST not set\n";
     return false;
   }
 
   string tcp_port(NET_TRX_DEFAULT_TCP_PORT);
-  cfg.getValue(name, "TCP_PORT", tcp_port);
+  cfg.getValue(name(), "TCP_PORT", tcp_port);
   
   string udp_port(NET_TRX_DEFAULT_UDP_PORT);
-  cfg.getValue(name, "UDP_PORT", udp_port);
+  cfg.getValue(name(), "UDP_PORT", udp_port);
   
-  cfg.getValue(name, "LOG_DISCONNECTS_ONCE", log_disconnects_once);
+  cfg.getValue(name(), "LOG_DISCONNECTS_ONCE", log_disconnects_once);
 
   string audio_enc_name;
-  cfg.getValue(name, "CODEC", audio_enc_name);
+  cfg.getValue(name(), "CODEC", audio_enc_name);
   if (audio_enc_name.empty())
   {
     audio_enc_name = "RAW";
   }
   
   string auth_key;
-  cfg.getValue(name, "AUTH_KEY", auth_key);
+  cfg.getValue(name(), "AUTH_KEY", auth_key);
   
   pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512, 50);
   setHandler(pacer);
@@ -170,7 +171,7 @@ bool NetTx::initialize(void)
   if (audio_enc == 0)
   {
     cerr << "*** ERROR: Illegal audio codec (" << audio_enc_name
-          << ") specified for transmitter " << name << "\n";
+          << ") specified for transmitter " << name() << "\n";
     return false;
   }
   audio_enc->writeEncodedSamples.connect(
@@ -179,14 +180,14 @@ bool NetTx::initialize(void)
           mem_fun(*this, &NetTx::flushEncodedSamples));
   string opt_prefix(audio_enc->name());
   opt_prefix += "_ENC_";
-  list<string> names = cfg.listSection(name);
+  list<string> names = cfg.listSection(name());
   list<string>::const_iterator nit;
   for (nit=names.begin(); nit!=names.end(); ++nit)
   {
     if ((*nit).find(opt_prefix) == 0)
     {
       string opt_value;
-      cfg.getValue(name, *nit, opt_value);
+      cfg.getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
       audio_enc->setOption(opt_name, opt_value);
     }
@@ -248,11 +249,46 @@ void NetTx::enableCtcss(bool enable)
 } /* NetTx::enableCtcss */
 
 
-void NetTx::sendDtmf(const std::string& digits)
+void NetTx::sendDtmf(const std::string& digits, unsigned duration)
 {
-  MsgSendDtmf *msg = new MsgSendDtmf(digits);
+  MsgSendDtmf *msg = new MsgSendDtmf(digits, duration);
   sendMsg(msg);
 } /* NetTx::sendDtmf */
+
+
+void NetTx::setTransmittedSignalStrength(char rx_id, float siglev)
+{
+  //cout << "### NetTx::setTransmittedSignalStrength: rx_id=" << rx_id
+  //     << " siglev=" << siglev << endl;
+  MsgTransmittedSignalStrength *msg =
+    new MsgTransmittedSignalStrength(siglev, rx_id);
+  sendMsg(msg);
+} /* NetTx::setTransmittedSignalStrength */
+
+
+void NetTx::sendData(const std::vector<uint8_t> &msg)
+{
+  /*
+  MsgSendDtmf *msg = new MsgSendDtmf(digits, duration);
+  sendMsg(msg);
+  */
+} /* NetTx::sendData */
+
+
+void NetTx::setFq(unsigned fq)
+{
+  this->fq = fq;
+  MsgSetTxFq *msg = new MsgSetTxFq(fq);
+  sendMsg(msg);
+} /* NetTx::setFq */
+
+
+void NetTx::setModulation(Modulation::Type mod)
+{
+  modulation = mod;
+  MsgSetTxModulation *msg = new MsgSetTxModulation(mod);
+  sendMsg(msg);
+} /* NetTx::setModulation */
 
 
 
@@ -275,7 +311,7 @@ void NetTx::connectionReady(bool is_ready)
 {
   if (is_ready)
   {
-    cout << name << ": Connected to remote transmitter at "
+    cout << name() << ": Connected to remote transmitter at "
         << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
     
     is_connected = true;
@@ -287,18 +323,30 @@ void NetTx::connectionReady(bool is_ready)
     MsgEnableCtcss *ctcss_msg = new MsgEnableCtcss(ctcss_enable);
     sendMsg(ctcss_msg);
     
+    if (fq > 0)
+    {
+      MsgSetTxFq *msg = new MsgSetTxFq(fq);
+      sendMsg(msg);
+    }
+
+    if (modulation != Modulation::MOD_UNKNOWN)
+    {
+      MsgSetTxModulation *msg = new MsgSetTxModulation(modulation);
+      sendMsg(msg);
+    }
+
     MsgAudioCodecSelect *msg = new MsgTxAudioCodecSelect(audio_enc->name());
-    cout << name << ": Requesting CODEC \"" << msg->name() << "\"\n";
+    cout << name() << ": Requesting CODEC \"" << msg->name() << "\"\n";
     string opt_prefix(audio_enc->name());
     opt_prefix += "_DEC_";
-    list<string> names = cfg.listSection(name);
+    list<string> names = cfg.listSection(name());
     list<string>::const_iterator nit;
     for (nit=names.begin(); nit!=names.end(); ++nit)
     {
       if ((*nit).find(opt_prefix) == 0)
       {
 	string opt_value;
-	cfg.getValue(name, *nit, opt_value);
+	cfg.getValue(name(), *nit, opt_value);
 	string opt_name((*nit).substr(opt_prefix.size()));
 	msg->addOption(opt_name, opt_value);
       }
@@ -309,7 +357,7 @@ void NetTx::connectionReady(bool is_ready)
   {
     if (log_disconnect)
     {
-      cout << name << ": Disconnected from remote transmitter at "
+      cout << name() << ": Disconnected from remote transmitter at "
           << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
           << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
           << "\n";
@@ -352,7 +400,7 @@ void NetTx::handleMsg(Msg *msg)
     
     /*
     default:
-      cerr << name << ": *** ERROR: Unknown TCP message received. Type="
+      cerr << name() << ": *** ERROR: Unknown TCP message received. Type="
       	   << msg->type() << ", Size=" << msg->size() << endl;
       break;
     */
@@ -414,7 +462,7 @@ void NetTx::setIsTransmitting(bool is_transmitting)
 {
   if (is_transmitting != this->is_transmitting)
   {
-    cout << name << ": The transmitter is "
+    cout << name() << ": The transmitter is "
       	 << (is_transmitting ? "ON" : "OFF") << endl;
     this->is_transmitting = is_transmitting;
     transmitterStateChange(is_transmitting);

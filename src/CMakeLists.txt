@@ -328,7 +328,7 @@ set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
 include(FindCHOWN)
 
 set(SVXLINK_USER "svxlink" CACHE STRING "Set SvxLink system user")
-set(SVXLINK_GROUP "daemon" CACHE STRING "Set SvxLink system group")
+set(SVXLINK_GROUP "svxlink" CACHE STRING "Set SvxLink system group")
 message(STATUS "SvxLink user = ${SVXLINK_USER}")
 message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
@@ -351,6 +351,7 @@ execute_process(
   COMMAND git describe --tags
   COMMAND tr - .
   COMMAND tr -d '\n'
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   OUTPUT_VARIABLE CPACK_PACKAGE_VERSION)
 message(STATUS "Package Version = ${CPACK_PACKAGE_VERSION}")
 #set(CPACK_PACKAGE_VERSION "0.1.3")

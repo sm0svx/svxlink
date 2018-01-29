@@ -219,7 +219,7 @@ bool ReflectorLogic::initialize(void)
   else
   {
     AudioPassthrough *passthrough = new AudioPassthrough;
-    prev_src->registerSink(passthrough);
+    prev_src->registerSink(passthrough, true);
     prev_src = passthrough;
   }
   m_logic_con_out = prev_src;
@@ -892,7 +892,7 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
       mem_fun(*this, &ReflectorLogic::allEncodedSamplesFlushed));
   if (sink != 0)
   {
-    m_dec->registerSink(sink, false);
+    m_dec->registerSink(sink, true);
   }
 
   return true;

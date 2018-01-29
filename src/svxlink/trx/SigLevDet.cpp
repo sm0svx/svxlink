@@ -50,11 +50,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "Rx.h"
 #include "SigLevDet.h"
 #include "SigLevDetNoise.h"
 #include "SigLevDetTone.h"
 #include "SigLevDetDdr.h"
 #include "SigLevDetSim.h"
+#include "SigLevDetAfsk.h"
 
 
 
@@ -145,6 +147,7 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
   SigLevDetTone::Factory tone_siglev_factory;
   SigLevDetDdr::Factory ddr_siglev_factory;
   SigLevDetSim::Factory sim_siglev_factory;
+  SigLevDetAfsk::Factory afsk_siglev_factory;
   
   string det_name;
   if (!cfg.getValue(name, "SIGLEV_DET", det_name) || det_name.empty())
@@ -164,12 +167,44 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
 } /* SigLevDetFactoryBase::createNamedSigLevDet */
 
 
+SigLevDet::SigLevDet(void)
+  : force_rx_id(false), last_rx_id(Rx::ID_UNKNOWN)
+{
+} /* SigLevDet::SigLevDet */
+
+
+#if 0
+SigLevDet::~SigLevDet(void)
+{
+} /* SigLevDet::~SigLevDet */
+#endif
+
+
+bool SigLevDet::initialize(Async::Config &cfg, const std::string& name,
+                           int sample_rate)
+{
+  if (cfg.getValue(name, "RX_ID", last_rx_id))
+  {
+    force_rx_id = true;
+  }
+  return true;
+}
+
+
 
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
+
+void SigLevDet::updateRxId(char rx_id)
+{
+  if (!force_rx_id)
+  {
+    last_rx_id = rx_id;
+  }
+} /* SigLevDet::updateRxId */
 
 
 

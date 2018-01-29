@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "NOVEMBER 2015" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JANUARI 2018" Linux "File Formats"
 .
 .SH NAME
 .
@@ -353,6 +353,10 @@ to 0 to make the TX active during squelch open.  One might want to set this to
 0 if the link is operating on a split frequency or if it's connected to some
 full duplex device.  The normal setting is 1, to mute the TX when the squelch
 is open.
+.TP
+.B RGR_SOUND_ALWAYS
+Set to 1 to always send roger sound after squelch close, even when no module is
+active.
 .
 .SS Repeater Logic Section
 .
@@ -703,6 +707,11 @@ configuration variables are described below.
 .B TYPE
 Always "Local" for a local receiver.
 .TP
+.B RX_ID
+A single char uniquely identifying this receiver. The RX identity can for
+example be used in the TCL event scripts to get different rogers sounds for
+different receivers when using a receiver voter.
+.TP
 .B AUDIO_DEV
 Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
 AUDIO DEVICE SPECIFICATIONS chapter for more information.
@@ -761,13 +770,15 @@ get correct signal level measurements. A value of about 40ms seem to be OK.
 Also, when using the NOISE signal level detector the input audio must be
 unsquelched since silence will be interpreted as a high signal strength.
 
-The PTY squelch expects a very easy protocol over a pseudo-tty device, 
-created by SvxLink on runtime. 
-An 'O' over this pty device indicate an open squelch, a 'Z' is a closed squelch.
-Define the slave pty in PTY_PATH (e.g. PTY_PATH=/tmp/sql) and SvxLink 
-will create a link to the specified path from it's pseudotty slave device 
-(/dev/pts/X). This can be used by a script to interface custom devices,
-modems or other hardware to SvxLink. Look for nhrcx.pl to see an example.
+The PTY squelch expects a very simple protocol over a pseudo-tty device,
+created by SvxLink at runtime.  An 'O' over this pty device indicate an open
+squelch, a 'Z' is a closed squelch.  Define the slave pty using PTY_PATH (e.g.
+PTY_PATH=/tmp/sql) and SvxLink will create a link to the specified path from
+it's pseudotty slave device (/dev/pts/X). This can be used by a script to
+interface custom devices, modems or other hardware to SvxLink. Look for
+nhrcx.pl or trx_pty_ctrl.py for an example.  It is possible to specify the same
+PTY for multiple functions (e.g. DTMF, ptt etc) in both TX and RX
+configurations. This may be good if there is one script handling all functions.
 
 The HIDRAW squelch supports human interface devices (HID), USB devices
 like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
@@ -973,11 +984,11 @@ Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. The available choices are:
-"NONE", "NOISE", "TONE" or "SIM". Depending on other configuration there may be
-more choices available. For example, if a Ddr receiver is used there will also
-be a DDR signal level detector available.  The  signal level detector is only
-needed when using multiple receivers in a voter configuration or when using the
-SIGLEV squelch type.
+"NONE", "NOISE", "TONE", "AFSK" or "SIM". Depending on other configuration
+there may be more choices available. For example, if a Ddr receiver is used
+there will also be a DDR signal level detector available.  The  signal level
+detector is only needed when using multiple receivers in a voter configuration
+or when using the SIGLEV squelch type.
 
 Type NONE disable the signal level detector. This may be used if no signal
 level detector is needed.
@@ -1002,6 +1013,11 @@ moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
 signal level voltage to tone frequencies.
 Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
 corresponding signal level value in between 0 - 100.
+
+Type AFSK is like the TONE detector really a transport mechanism. Signal level
+values are transmitted using Audio Frequency Shift Keying, AFSK, over the
+receiver uplink channel from a remote receiver site. AFSK reception must have
+been enebled by setting OB_AFSK_ENABLE=1 and also optionally IB_AFSK_ENABLE=1.
 
 Type SIM is a simulated signal level detector that can be used to debug
 problems in the SvxLink software. Use the SIGLEV_MIN, SIGLEV_MAX,
@@ -1124,12 +1140,15 @@ Specify the DTMF decoder type. Set it to
 to use the internal software
 DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
 it to
-.B S54S.
+.BR S54S .
 To control it over a pseudo tty device set it to
-.B PTY.
+.BR PTY .
 Setting it to PTY will install the PTY dtmf decoder. SvxLink creates a symlink
 linked to a slave pty device on runtime. The name has to be defined with
 DTMF_PTY.
+If AFSK reception is enabled using OB_AFSK_ENABLE/IB_AFSK_ENABLE, remotely
+decoded DTMF digits may be received by setting this configuration variable to
+.BR AFSK .
 .B NONE
 or commenting it out will disable DTMF detection.
 .TP
@@ -1162,14 +1181,18 @@ specify a serial port (e.g. /dev/ttyS0).
 .B DTMF_PTY
 When using the PTY DTMF "decoder" this configuration variable will set the path
 to the PTY slave softlink that the external interface script use to communicate
-to SvxLink. Over this symlink a very easy communication protocol is used to
-tell SvxLink received DTMF digits: 0-9, A-F, *, #. "E" is the same as "*" and
-"F" is the same as "#". Sending a digit tell SvxLink when it starts. To tell
-SvxLink that the digit has ended, send a space character.
+to SvxLink. Over this softlink a very simple communication protocol is used to
+notify SvxLink about received DTMF digits: 0-9, A-F, *, #. "E" is the same as
+"*" and "F" is the same as "#". Sending a digit tell SvxLink when it starts. To
+tell SvxLink that the digit has ended, send a space character.
 
 The PTY DTMF "decoder" can be used by an external script to interface custom
-devices, modems or other hardware to SvxLink. Look for nhrcx.pl to see an
-example.
+devices, modems or other hardware to SvxLink. Look for nhrcx.pl or
+trx_pty_ctrl.py for an example.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 
 Example: /tmp/rx1_dtmf.
 .TP
@@ -1260,6 +1283,53 @@ The sample rate is the same as the one chosen for the audio device.
 The destination is specified as ip-address:port.
 
 Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable reception of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the transmitter section of the
+transmitting RemoteTrx. If it's set to -6dB in the transmitter configuration it
+should be set to 6dB here.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable reception of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B CTRL_PTY
+Set this configuration variable to the path of a PTY to use for controlling a
+receivers frequency and modulation. This can be used to interface a receiver to
+SvxLink using a translation script, like trx_pty_ctrl.py. To set the receive
+frequency, SvxLink will send the sequence "f<frequency>;". The frequency will
+be in Hz, e.g. f145550000; will be sent to set the receiver to 145.550MHz.
+
+To set the modulation the command is "m<modulation>;". Look at the
+documentation of the MODULATION configuration variable to see which modulations
+that are available. To set "normal" 25kHz channel spaced FM the command would
+be mFM;.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 .
 .SS Ddr Receiver Section
 .
@@ -1423,8 +1493,25 @@ In the default configuration file there is a voter section called
 Always "Voter" for a voter.
 .TP
 .B RECEIVERS
-Specify a comma separated list of receivers that the voter should use. Example:
-RECEIVERS=Rx1,Rx2,Rx3
+Specify a comma separated list of receivers that the voter should use.
+Optionally the receiver name may be followed by a colon and a squelch delay
+value. This can be used to adjust the voting delay for receivers that always
+are slower to open for some reason. The delay value given will be subtracted
+from the voting delay if the receiver is the first one to open.
+
+The usage of the delay value is best illustrated with an example.  Let's say we
+have three receivers where two of the receivers take at most 100ms to report
+signal level and one receiver requires 300ms. We then need to set the
+VOTING_DELAY to something like 350ms so as to be sure that all receivers get a
+chance to report their signal level measurement. If only the slow receiver
+opens there will be a total delay of 300+350=650ms. This is unnecessarily long
+since the other two receivers should have reported their signal strength way
+earlier. It's thus safe to shorten the voting delay for the slow receiver, so
+we do this: RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay
+will now be 100+350=450ms for the fast receivers and 300+350-200=450ms for the
+slow receiver. That is, all receivers are now equally fast.
+
+Example: RECEIVERS=Rx1,Rx2:200,Rx3
 .TP
 .B VOTING_DELAY
 Specify the delay in milliseconds that the voter will wait after the first
@@ -1676,6 +1763,10 @@ SvxLink.
 SvxLink sends a 'T' to start transmitting and a 'R' to turn the transmitter
 off.  This can be used by an external script to interface custom devices,
 modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+DTMF etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 .TP
 .B HID_DEVICE
 Define the device node where your hidraw device is accessible at.
@@ -1793,6 +1884,68 @@ This configuration variable can be used to fine tune or increase the audio
 gain for all transmitted sound if it's not possible to do using the normal
 sound card hardware gain controls. The gain should be given in dB and can
 be both positive and negative.
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable transmission of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the receiver section of the
+receiving node. If it's set to 6dB in the receiver configuration it
+should be set to -6dB here.
+.TP
+.B OB_AFSK_LEVEL
+The out-of-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B OB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an out-of-band packet.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable transmission of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B IB_AFSK_LEVEL
+The in-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B IB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an in-band packet.
+.TP
+.B CTRL_PTY
+Set this configuration variable to the path of a PTY to use for controlling a
+transmitters frequency and modulation. This can be used to interface a
+transmitter to SvxLink using a translation script, like trx_pty_ctrl.py. To set
+the transmit frequency, SvxLink will send the sequence "F<frequency>;". The
+frequency will be in Hz, e.g. F145550000; will be sent to set the receiver to
+145.550MHz.
+
+To set the modulation the command is "M<modulation>;". Look at the
+documentation of the MODULATION configuration variable to see which modulations
+are available. To set "normal" 25kHz channel spaced FM the command would be
+MFM;.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
 .
 .SS Networked Transmitter Section
 .

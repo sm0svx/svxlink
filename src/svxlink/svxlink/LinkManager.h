@@ -286,7 +286,7 @@ class LinkManager : public sigc::trackable
 
     LinkManager(void) : all_logics_started(false) {};
     LinkManager(const LinkManager&);
-    ~LinkManager(void) {};
+    ~LinkManager(void);
 
     std::vector<std::string> getLinkNames(const std::string& logicname);
     void wantedConnections(LogicConSet &want);

@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
 
 /****************************************************************************
@@ -86,6 +87,24 @@ using namespace Async;
  *
  ****************************************************************************/
 
+struct CtcssDetPar
+{
+  float fq;
+  unsigned duration;
+
+  CtcssDetPar(void) : fq(0.0f), duration(0) {}
+
+  friend istream &operator>>(istream &input, CtcssDetPar &par)
+  {
+    char colon;
+    input >> par.fq >> colon >> par.duration >> std::ws;
+    if (colon != ':')
+    {
+      input.setstate(ios_base::failbit);
+    }
+    return input;
+  }
+};
 
 
 /****************************************************************************
@@ -164,11 +183,36 @@ bool RfUplink::initialize(void)
     loop_rx_to_tx = atoi(value.c_str()) != 0;
   }
 
-  rx->squelchOpen.connect(mem_fun(*this, &RfUplink::rxSquelchOpen));
-  rx->signalLevelUpdated.connect(mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
-  rx->dtmfDigitDetected.connect(mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
+  CtcssDetPar ctcss_det_par;
+  if (!cfg.getValue(name, "DETECT_CTCSS", ctcss_det_par, true))
+  {
+    cerr << "*** ERROR: Format error for config variable "
+         << name << "/DETECT_CTCSS. Valid format: "
+         << "tone_fq:min_duration\n";
+    return false;
+  }
+
+  unsigned det_1750_duration = 0;
+  cfg.getValue(name, "DETECT_1750", det_1750_duration);
+
+  rx->squelchOpen.connect(
+      mem_fun(*this, &RfUplink::rxSquelchOpen));
+  rx->signalLevelUpdated.connect(
+      mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
+  rx->dtmfDigitDetected.connect(
+      mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
+  rx->toneDetected.connect(
+      mem_fun(*this, &RfUplink::rxToneDetected));
   rx->reset();
   rx->setMuteState(Rx::MUTE_NONE);
+  if ((ctcss_det_par.fq > 0) && (ctcss_det_par.duration > 0))
+  {
+    rx->addToneDetector(ctcss_det_par.fq, 4, 10, ctcss_det_par.duration);
+  }
+  if (det_1750_duration > 0)
+  {
+    rx->addToneDetector(1750, 50, 10, det_1750_duration);
+  }
   AudioSource *prev_src = rx;
 
   AudioFifo *fifo = new AudioFifo(8000);
@@ -218,6 +262,8 @@ bool RfUplink::initialize(void)
   uplink_rx->squelchOpen.connect(mem_fun(*this, &RfUplink::uplinkRxSquelchOpen));
   uplink_rx->dtmfDigitDetected.connect(
       mem_fun(*this, &RfUplink::uplinkRxDtmfRcvd));
+  uplink_rx->signalLevelUpdated.connect(
+      mem_fun(*this, &RfUplink::uplinkRxSignalLevelUpdated));
   uplink_rx->reset();
   uplink_rx->setMuteState(Rx::MUTE_NONE);
   if (mute_rx_on_tx)
@@ -267,40 +313,55 @@ void RfUplink::uplinkRxSquelchOpen(bool is_open)
 {
   if (is_open)
   {
-    tx->setTransmittedSignalStrength(uplink_rx->signalStrength());
+    tx->setTransmittedSignalStrength(uplink_rx->sqlRxId(),
+                                     uplink_rx->signalStrength());
   }
+  /*
   else
   {
-    tx->setTransmittedSignalStrength(0);
+    tx->setTransmittedSignalStrength(uplink_rx->sqlRxId(), 0);
   }
+  */
 } /* RfUplink::uplinkRxSquelchOpen */
 
 
 void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
-  tx->sendDtmf(digit_str);
+  tx->sendDtmf(digit_str, duration);
 } /* RfUplink::uplinkRxDtmfRcvd */
+
+
+void RfUplink::uplinkRxSignalLevelUpdated(float siglev)
+{
+  //cout << "### RfUplink::uplinkRxSignalLevelUpdated: siglev="
+  //     << siglev << endl;
+  tx->setTransmittedSignalStrength('?', siglev);
+} /* RfUplink::uplinkRxSignalLevelUpdated */
 
 
 void RfUplink::rxSquelchOpen(bool is_open)
 {
   if (is_open)
   {
-    uplink_tx->setTransmittedSignalStrength(rx->signalStrength());
+    uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(),
+                                            rx->signalStrength());
   }
+  /*
   else
   {
-    uplink_tx->setTransmittedSignalStrength(0);
+    uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), 0);
   }
+  */
 } /* RfUplink::rxSquelchOpen  */
 
 
 void RfUplink::rxSignalLevelUpdated(float siglev)
 {
+  //cout << "### RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
   if (rx->squelchIsOpen())
   {
-    uplink_tx->setTransmittedSignalStrength(siglev);
+    uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), siglev);
   }
 } /* RfUplink::rxSignalLevelUpdated */
 
@@ -311,8 +372,21 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
        << duration << "ms" << endl;
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
-  uplink_tx->sendDtmf(dtmf_str);
+  uplink_tx->sendDtmf(dtmf_str, duration);
 } /* RfUplink::rxDtmfDigitDetected */
+
+
+void RfUplink::rxToneDetected(float fq)
+{
+  vector<uint8_t> msg;
+  msg.push_back(Tx::DATA_CMD_TONE_DETECTED);
+  uint8_t *fq_ptr = reinterpret_cast<uint8_t*>(&fq);
+  msg.push_back(*fq_ptr++);
+  msg.push_back(*fq_ptr++);
+  msg.push_back(*fq_ptr++);
+  msg.push_back(*fq_ptr++);
+  uplink_tx->sendData(msg);
+} /* RfUplink::rxToneDetected */
 
 
 void RfUplink::uplinkTxTransmitterStateChange(bool is_transmitting)

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ using namespace Async;
  ****************************************************************************/
 
 MultiTx::MultiTx(Config& cfg, const string& name)
-  : cfg(cfg), m_name(name), splitter(0)
+  : Tx(name), cfg(cfg), splitter(0)
 {
   
 } /* MultiTx::MultiTx */
@@ -140,9 +140,9 @@ MultiTx::~MultiTx(void)
 bool MultiTx::initialize(void)
 {
   string transmitters;
-  if (!cfg.getValue(m_name, "TRANSMITTERS", transmitters))
+  if (!cfg.getValue(name(), "TRANSMITTERS", transmitters))
   {
-    cerr << "*** ERROR: Config variable " << m_name
+    cerr << "*** ERROR: Config variable " << name()
       	 << "/TRANSMITTERS not set\n";
     return false;
   }
@@ -220,24 +220,34 @@ void MultiTx::enableCtcss(bool enable)
 } /* MultiTx::enableCtcss */
 
 
-void MultiTx::sendDtmf(const std::string& digits)
+void MultiTx::sendDtmf(const std::string& digits, unsigned duration)
 {
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
-    (*it)->sendDtmf(digits);
+    (*it)->sendDtmf(digits, duration);
   }
 } /* MultiTx::sendDtmf */
 
 
-void MultiTx::setTransmittedSignalStrength(float siglev)
+void MultiTx::setTransmittedSignalStrength(char rx_id, float siglev)
 {
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
-    (*it)->setTransmittedSignalStrength(siglev);
+    (*it)->setTransmittedSignalStrength(rx_id, siglev);
   }
 } /* MultiTx::setTransmittedSignalStrength */
+
+
+void MultiTx::sendData(const std::vector<uint8_t> &msg)
+{
+  list<Tx *>::iterator it;
+  for (it=txs.begin(); it!=txs.end(); ++it)
+  {
+    (*it)->sendData(msg);
+  }
+} /* MultiTx::sendData */
 
 
 

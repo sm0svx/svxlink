@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include <sigc++/sigc++.h>
 
@@ -67,7 +68,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioAmp.h>
+#include <AsyncAudioMixer.h>
+#include <AsyncAudioDebugger.h>
+#include <AsyncAudioPacer.h>
 #include <common.h>
+#include <HdlcFramer.h>
+#include <AfskModulator.h>
+#include <AsyncAudioFsf.h>
 
 
 /****************************************************************************
@@ -80,6 +87,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "DtmfEncoder.h"
 #include "multirate_filter_coeff.h"
 #include "PttCtrl.h"
+#include "SigLevDetAfsk.h"
+#include "Rx.h"
 #include "Emphasis.h"
 #include "Ptt.h"
 
@@ -229,10 +238,13 @@ class SineGenerator : public Async::AudioSource
  ****************************************************************************/
 
 LocalTx::LocalTx(Config& cfg, const string& name)
-  : name(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
+  : Tx(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
-    dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0), ptt_ctrl(0),
-    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), ptt(0)
+    dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
+    fsk_mod(0), /*fsk_valve(0),*/ input_handler(0), ptt_ctrl(0),
+    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), ptt(0),
+    last_rx_id(Rx::ID_UNKNOWN), fsk_first_packet_transmitted(false),
+    hdlc_framer_ib(0), fsk_mod_ib(0), ctrl_pty(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -246,12 +258,18 @@ LocalTx::~LocalTx(void)
   delete input_handler;
   delete selector;
   delete dtmf_encoder;
+  delete fsk_mod;
+  delete hdlc_framer;
+  delete fsk_mod_ib;
+  delete hdlc_framer_ib;
+  delete mixer;
   
   delete txtot;
   delete ptt;
   delete sine_gen;
   delete siglev_sine_gen;
   delete ptt_hangtimer;
+  if (ctrl_pty != 0) ctrl_pty->destroy();
 } /* LocalTx::~LocalTx */
 
 
@@ -260,28 +278,28 @@ bool LocalTx::initialize(void)
   string value;
   
   string audio_dev;
-  if (!cfg.getValue(name, "AUDIO_DEV", audio_dev))
+  if (!cfg.getValue(name(), "AUDIO_DEV", audio_dev))
   {
-    cerr << "*** ERROR: Config variable " << name << "/AUDIO_DEV not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/AUDIO_DEV not set\n";
     return false;
   }
   
-  if (!cfg.getValue(name, "AUDIO_CHANNEL", value))
+  if (!cfg.getValue(name(), "AUDIO_CHANNEL", value))
   {
-    cerr << "*** ERROR: Config variable " << name
+    cerr << "*** ERROR: Config variable " << name()
          << "/AUDIO_CHANNEL not set\n";
     return false;
   }
   int audio_channel = atoi(value.c_str());
 
-  ptt = PttFactoryBase::createNamedPtt(cfg, name);
-  if ((ptt == 0) || (!ptt->initialize(cfg, name)))
+  ptt = PttFactoryBase::createNamedPtt(cfg, name());
+  if ((ptt == 0) || (!ptt->initialize(cfg, name())))
   {
     return false;
   }
 
   int ptt_hangtime = 0;
-  if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
+  if (cfg.getValue(name(), "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
   {
     ptt_hangtimer = new Timer(ptt_hangtime);
     ptt_hangtimer->expired.connect(
@@ -289,13 +307,13 @@ bool LocalTx::initialize(void)
     ptt_hangtimer->setEnable(false);
   }
 
-  if (cfg.getValue(name, "TIMEOUT", value))
+  if (cfg.getValue(name(), "TIMEOUT", value))
   {
     tx_timeout = 1000 * atoi(value.c_str());
   }
   
   int tx_delay = 0;
-  if (cfg.getValue(name, "TX_DELAY", value))
+  if (cfg.getValue(name(), "TX_DELAY", value))
   {
     tx_delay = atoi(value.c_str());
   }
@@ -308,28 +326,28 @@ bool LocalTx::initialize(void)
   }
   
   int dtmf_tone_length = 100;
-  if (cfg.getValue(name, "DTMF_TONE_LENGTH", value))
+  if (cfg.getValue(name(), "DTMF_TONE_LENGTH", value))
   {
     dtmf_tone_length = atoi(value.c_str());
   }
   
   int dtmf_tone_spacing = 50;
-  if (cfg.getValue(name, "DTMF_TONE_SPACING", value))
+  if (cfg.getValue(name(), "DTMF_TONE_SPACING", value))
   {
     dtmf_tone_spacing = atoi(value.c_str());
   }
   
   int dtmf_tone_amp = -18;
   int dtmf_digit_pwr = -15;
-  if (cfg.getValue(name, "DTMF_TONE_AMP", dtmf_tone_amp))
+  if (cfg.getValue(name(), "DTMF_TONE_AMP", dtmf_tone_amp))
   {
     cout << "*** WARNING: The DTMF_TONE_AMP configuration variable set in "
-            "transmitter " << name << " is deprecated. Use DTMF_DIGIT_PWR "
+            "transmitter " << name() << " is deprecated. Use DTMF_DIGIT_PWR "
             "instead. To get the same output level uing the new configuration "
             "variable, add 3dB to the old value." << endl;
     dtmf_digit_pwr = dtmf_tone_amp + 3;
   }
-  cfg.getValue(name, "DTMF_DIGIT_PWR", dtmf_digit_pwr);
+  cfg.getValue(name(), "DTMF_DIGIT_PWR", dtmf_digit_pwr);
   
   audio_io = new AudioIO(audio_dev, audio_channel);
   // FIXME: Check that the audio device has been correctly initialized
@@ -339,19 +357,19 @@ bool LocalTx::initialize(void)
   if (audio_io->sampleRate() < 0)
   {
     cerr << "*** ERROR: Failed to initialize audio device for transmitter \""
-	 << name << "\".\n";
+	 << name() << "\".\n";
     return false;
   }
 #endif
 
   sine_gen = new SineGenerator(audio_dev, audio_channel);
   
-  if (cfg.getValue(name, "CTCSS_FQ", value))
+  if (cfg.getValue(name(), "CTCSS_FQ", value))
   {
     sine_gen->setFq(atof(value.c_str()));
   }  
   
-  if (cfg.getValue(name, "CTCSS_LEVEL", value))
+  if (cfg.getValue(name(), "CTCSS_LEVEL", value))
   {
     int level = atoi(value.c_str());
     sine_gen->setLevel(level);
@@ -359,10 +377,10 @@ bool LocalTx::initialize(void)
   }
 
 #if INTERNAL_SAMPLE_RATE >= 16000
-  if (cfg.getValue(name, "TONE_SIGLEV_MAP", value))
+  if (cfg.getValue(name(), "TONE_SIGLEV_MAP", value))
   {
     int siglev_level = 10;
-    cfg.getValue(name, "TONE_SIGLEV_LEVEL", siglev_level, true);
+    cfg.getValue(name(), "TONE_SIGLEV_LEVEL", siglev_level, true);
     size_t list_len = splitStr(tone_siglev_map, value, ", ");
     if (list_len == 10)
     {
@@ -372,11 +390,23 @@ bool LocalTx::initialize(void)
     }
     else if (list_len != 0)
     {
-      cerr << "*** ERROR: Config variable " << name << "/TONE_SIGLEV_MAP must "
+      cerr << "*** ERROR: Config variable " << name() << "/TONE_SIGLEV_MAP must "
            << "contain exactly ten comma separated siglev values.\n";
     }
   }
 #endif
+
+  bool ob_afsk_enable = false;
+  cfg.getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable);
+  if (ob_afsk_enable && (siglev_sine_gen != 0))
+  {
+    cerr << "*** ERROR: Cannot have both siglev tone (TONE_SIGLEV_MAP) and "
+            "AFSK (IB/OB_AFSK_ENABLE) enabled at the same time for receiver "
+         << name() << ".\n";
+      // FIXME: Should we bother to clean up or do we trust that the
+      // creator of this object will delete it if the initialization fail?
+    return false;
+  }
   
   AudioSource *prev_src = 0;
   
@@ -397,7 +427,7 @@ bool LocalTx::initialize(void)
   */
   
     // If preemphasis is enabled, create the preemphasis filter
-  if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
+  if (cfg.getValue(name(), "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
     //AudioFilter *preemph = new AudioFilter("HsBq1/0.05/36/3500");
     //preemph->setOutputGain(-9.0f);
@@ -456,9 +486,12 @@ bool LocalTx::initialize(void)
     // We need a selector to choose if DTMF or normal audio should be
     // transmitted
   selector = new AudioSelector;
+  //selector->setDebug(true);
+  //prev_src = new AudioDebugger(prev_src, "content");
   selector->addSource(prev_src);
   selector->enableAutoSelect(prev_src, 0);
   prev_src = selector;
+  //prev_src = new AudioDebugger(prev_src, "selector");
   
     // Create the DTMF encoder
   dtmf_encoder = new DtmfEncoder(INTERNAL_SAMPLE_RATE);
@@ -475,15 +508,129 @@ bool LocalTx::initialize(void)
   dtmf_encoder->registerSink(dtmf_valve, true);
   selector->addSource(dtmf_valve);
   selector->enableAutoSelect(dtmf_valve, 10);
+  selector->setFlushWait(dtmf_valve, false);
   
-    // Cteate the PTT controller
+  if (ob_afsk_enable)
+  {
+    unsigned fc = 5500;
+    //cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 170;
+    //cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
+    unsigned baudrate = 300;
+    //cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
+    float voice_gain = -6.0f;
+    cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
+    float afsk_level = -12.0f;
+    cfg.getValue(name(), "OB_AFSK_LEVEL", afsk_level);
+    unsigned afsk_tx_delay = 100;
+    cfg.getValue(name(), "OB_AFSK_TX_DELAY", afsk_tx_delay);
+
+    AudioFilter *voice_filter = new AudioFilter("LpCh10/-0.5/4500");
+    voice_filter->setOutputGain(voice_gain);
+    prev_src->registerSink(voice_filter, true);
+    prev_src = voice_filter;
+    AudioFilter *voice_filter2 = new AudioFilter("LpCh10/-0.5/4500");
+    prev_src->registerSink(voice_filter2, true);
+    prev_src = voice_filter2;
+
+      // Create a mixer so that we can mix other audio with the voice audio
+    mixer = new AudioMixer;
+    mixer->addSource(prev_src);
+    prev_src = mixer;
+
+      // Create the HDLC framer
+    hdlc_framer = new HdlcFramer;
+    hdlc_framer->setStartFlagCnt(
+        static_cast<size_t>(ceil(afsk_tx_delay * baudrate / 8000.0)));
+
+      // Create the AFSK modulator
+    fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
+                                afsk_level);
+    hdlc_framer->sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
+
+      // Frequency sampling filter with passband center 5500Hz, about 400Hz
+      // wide and about 40dB stop band attenuation
+    const size_t N = 128;
+    float coeff[N/2+1];
+    memset(coeff, 0, sizeof(coeff));
+    coeff[42] = 0.39811024;
+    coeff[43] = 1.0;
+    coeff[44] = 1.0;
+    coeff[45] = 1.0;
+    coeff[46] = 0.39811024;
+    AudioFsf *fsf = new AudioFsf(N, coeff);
+    fsk_mod->registerSink(fsf, true);
+
+    mixer->addSource(fsf);
+
+    /*
+    AudioPacer *fsk_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256, 20);
+    fsk_mod->registerSink(fsk_pacer, true);
+    mixer->addSource(fsk_pacer);
+    */
+
+      // Create a valve so that we can control when to transmit AFSK
+    /*
+    fsk_valve = new AudioValve;
+    fsk_valve->setBlockWhenClosed(true);
+    fsk_valve->setOpen(false);
+    fsk_valve->registerSink(fsk_valve, true);
+    selector->addSource(fsk_valve);
+    selector->enableAutoSelect(fsk_valve, 20);
+    */
+  }
+
+  bool ib_afsk_enable = false;
+  cfg.getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable);
+  if (ob_afsk_enable && ib_afsk_enable)
+  {
+    unsigned fc = 1700;
+    //cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 1000;
+    //cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
+    unsigned baudrate = 1200;
+    //cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
+    float afsk_level = -6;
+    cfg.getValue(name(), "IB_AFSK_LEVEL", afsk_level);
+    unsigned afsk_tx_delay = 100;
+    cfg.getValue(name(), "IB_AFSK_TX_DELAY", afsk_tx_delay);
+
+      // Create the inband HDLC framer
+    hdlc_framer_ib = new HdlcFramer;
+    hdlc_framer_ib->setStartFlagCnt(
+        static_cast<size_t>(ceil(afsk_tx_delay * baudrate / 8000.0)));
+
+      // Create the inband AFSK modulator
+    fsk_mod_ib = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
+                                afsk_level);
+    hdlc_framer_ib->sendBits.connect(
+        mem_fun(fsk_mod_ib, &AfskModulator::sendBits));
+
+    AudioPacer *pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256, 0);
+    fsk_mod_ib->registerSink(pacer);
+
+      // Connect the inband AFSK modulator to the main audio selector
+    selector->addSource(pacer);
+    selector->enableAutoSelect(pacer, 20);
+    selector->setFlushWait(pacer, false);
+  }
+
+  /*
+  AudioDebugger *d1 = new AudioDebugger;
+  prev_src->registerSink(d1, true);
+  prev_src = d1;
+  */
+
+    // Create the PTT controller
   ptt_ctrl = new PttCtrl(tx_delay);
   ptt_ctrl->transmitterStateChange.connect(mem_fun(*this, &LocalTx::transmit));
+  ptt_ctrl->preTransmitterStateChange.connect(
+      mem_fun(*this, &LocalTx::preTransmitterStateChange));
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
 
   float master_gain = 0.0f;
-  if (cfg.getValue(name, "MASTER_GAIN", master_gain))
+  if (cfg.getValue(name(), "MASTER_GAIN", master_gain))
   {
     AudioAmp *master_gain_stage = new AudioAmp;
     master_gain_stage->setGain(master_gain);
@@ -519,6 +666,17 @@ bool LocalTx::initialize(void)
     // Finally connect the whole audio pipe to the audio device
   prev_src->registerSink(audio_io, true);
 
+  string ctrl_pty_name;
+  if (cfg.getValue(name(), "CTRL_PTY", ctrl_pty_name))
+  {
+    ctrl_pty = RefCountingPty::instance(ctrl_pty_name);
+    if (ctrl_pty == 0)
+    {
+      cerr << "*** ERROR: Could not create control PTY in " << name() << endl;
+      return false;
+    }
+  }
+
   return true;
   
 } /* LocalTx::initialize */
@@ -552,53 +710,128 @@ void LocalTx::enableCtcss(bool enable)
 } /* LocalTx::enableCtcss */
 
 
-void LocalTx::sendDtmf(const string& digits)
+void LocalTx::sendDtmf(const string& digits, unsigned duration)
 {
-  #if USE_AUDIO_VALVE
-  audio_valve->setOpen(false);
-  #endif
-  dtmf_encoder->send(digits);
-} /* LocalTx::sendDtmf */
-
-
-void LocalTx::setTransmittedSignalStrength(float siglev)
-{
-#if INTERNAL_SAMPLE_RATE >= 16000
-  if (siglev_sine_gen == 0)
+  if (fsk_mod != 0)
   {
-    return;
-  }
-  
-  int siglevi = static_cast<int>(siglev);
-  if (tone_siglev_map[0] > tone_siglev_map[9])
-  {
-    for (int i=0; i<10; ++i)
+    if (duration == 0)
     {
-      if (tone_siglev_map[i] <= siglevi)
-      {
-        siglev_sine_gen->setFq(5500 + i*100);
-        siglev_sine_gen->enable(true);
-        return;
-      }
+      duration = dtmf_encoder->digitDuration();
     }
+    sendFskDtmf(digits, duration);
   }
   else
   {
-    for (int i=9; i>=0; --i)
+    #if USE_AUDIO_VALVE
+    audio_valve->setOpen(false);
+    #endif
+    dtmf_encoder->send(digits, duration);
+  }
+} /* LocalTx::sendDtmf */
+
+
+void LocalTx::sendData(const std::vector<uint8_t> &msg)
+{
+  if (hdlc_framer != 0)
+  {
+    hdlc_framer->sendBytes(msg);
+  }
+} /* LocalTx::sendData */
+
+
+void LocalTx::setTransmittedSignalStrength(char rx_id, float siglev)
+{
+  //cout << "### LocalTx::setTransmittedSignalStrength: rx_id=" << rx_id
+  //     << " siglev=" << siglev
+  //     << endl;
+
+#if INTERNAL_SAMPLE_RATE >= 16000
+  if (hdlc_framer != 0)
+  {
+    fsk_trailer_transmitted = false;
+
+    uint8_t siglevui;
+    if (siglev < 0.0f)
     {
-      if (tone_siglev_map[i] <= siglevi)
+      siglevui = 0;
+    }
+    else if (siglev > 255.0f)
+    {
+      siglevui = 255;
+    }
+    else
+    {
+      siglevui = static_cast<uint8_t>(siglev);
+    }
+    sendFskSiglev(rx_id, siglevui);
+    last_rx_id = rx_id;
+  }
+  else if (siglev_sine_gen != 0)
+  {
+    int siglevi = static_cast<int>(siglev);
+    if (tone_siglev_map[0] > tone_siglev_map[9])
+    {
+      for (int i=0; i<10; ++i)
       {
-        siglev_sine_gen->setFq(5500 + i*100);
-        siglev_sine_gen->enable(true);
-        return;
+        if (tone_siglev_map[i] <= siglevi)
+        {
+          siglev_sine_gen->setFq(5500 + i*100);
+          siglev_sine_gen->enable(true);
+          return;
+        }
       }
     }
+    else
+    {
+      for (int i=9; i>=0; --i)
+      {
+        if (tone_siglev_map[i] <= siglevi)
+        {
+          siglev_sine_gen->setFq(5500 + i*100);
+          siglev_sine_gen->enable(true);
+          return;
+        }
+      }
+    }
+
+    siglev_sine_gen->enable(false);
   }
-  
-  siglev_sine_gen->enable(false);
 #endif
 } /* LocalTx::setTransmittedSignalLevel */
 
+
+void LocalTx::setFq(unsigned fq)
+{
+  if (ctrl_pty != 0)
+  {
+    ostringstream ss;
+    ss << "F" << fq << ";";
+    ssize_t ret = ctrl_pty->write(ss.str().c_str(), ss.str().size());
+    if (ret != static_cast<ssize_t>(ss.str().size()))
+    {
+      cerr << "*** WARNING[" << name() << "]: Failed to write transmit "
+              "frequency command to PTY " << ctrl_pty->name()
+           << ": " << ss.str() << endl;
+    }
+  }
+} /* LocalTx::setFq */
+
+
+void LocalTx::setModulation(Modulation::Type mod)
+{
+  if (ctrl_pty != 0)
+  {
+    ostringstream ss;
+    ss << "M" << Modulation::toString(mod) << ";";
+    ssize_t ret = ctrl_pty->write(ss.str().c_str(), ss.str().size());
+    if (ret != static_cast<ssize_t>(ss.str().size()))
+    {
+      cerr << "*** WARNING[" << name() << "]: Failed to write set transmit "
+              "modulation command to PTY " << ctrl_pty->name()
+           << ": " << ss.str() << endl;
+    }
+  }
+} /* LocalTx::setModulation */
 
 
 /****************************************************************************
@@ -615,19 +848,21 @@ void LocalTx::transmit(bool do_transmit)
     return;
   }
   
-  cout << name << ": Turning the transmitter " << (do_transmit ? "ON" : "OFF")
+  cout << name() << ": Turning the transmitter " << (do_transmit ? "ON" : "OFF")
        << endl;
   
   is_transmitting = do_transmit;
   
   if (do_transmit)
   {
+    fsk_trailer_transmitted = false;
+
     transmitterStateChange(true);
 
     if (!audio_io->open(AudioIO::MODE_WR))
     {
       cerr << "*** ERROR: Could not open audio device for transmitter \""
-      	   << name << "\"\n";
+           << name() << "\"\n";
       //is_transmitting = false;
       //return;
     }
@@ -665,7 +900,7 @@ void LocalTx::transmit(bool do_transmit)
     delete txtot;
     txtot = 0;
     tx_timeout_occured = false;
-    
+
     transmitterStateChange(false);
   }
   
@@ -696,7 +931,7 @@ void LocalTx::txTimeoutOccured(Timer *t)
     return;
   }
   
-  cerr << "*** ERROR: Transmitter " << name
+  cerr << "*** ERROR: Transmitter " << name()
        << " have been active for too long. Turning it off...\n";
   
   if (!setPtt(false))
@@ -743,6 +978,86 @@ void LocalTx::pttHangtimeExpired(Timer *t)
 {
   setPtt(false);
 } /* LocalTx::pttHangtimeExpired */
+
+
+bool LocalTx::preTransmitterStateChange(bool do_transmit)
+{
+  //cout << name() << ": LocalTx::preTransmitterStateChange: do_transmit="
+  //     << do_transmit << endl;
+
+  if (do_transmit)
+  {
+    return false;
+  }
+
+  //cout << "### fsk_trailer_transmitted=" << fsk_trailer_transmitted << endl;
+  if (fsk_mod != 0) {
+    if (!fsk_trailer_transmitted)
+    {
+      //cout << "  Sending AFSK trailer\n";
+      fsk_trailer_transmitted = true;
+      sendFskSiglev(last_rx_id, 0);
+      sendFskSiglev(last_rx_id, 0);
+      last_rx_id = Rx::ID_UNKNOWN;
+      return true;
+    }
+    else
+    {
+      //cout << "### fsk_first_packet_transmitted = false\n";
+      fsk_first_packet_transmitted = false;
+    }
+  }
+
+  return false;
+
+} /* LocalTx::preTransmitterStateChange */
+
+
+void LocalTx::sendFskSiglev(char rxid, uint8_t siglev)
+{
+  //cout << "### LocalTx::sendFskSiglev: rxid=" << rxid
+  //     << " siglev=" << (int)siglev << endl;
+  if ((rxid < '!') || (rxid > '~'))
+  {
+    rxid = Rx::ID_UNKNOWN;
+  }
+
+  vector<uint8_t> frame;
+  frame.push_back(DATA_CMD_SIGLEV);
+  frame.push_back(static_cast<uint8_t>(rxid));
+  frame.push_back(siglev);
+  //cout << "### fsk_first_packet_transmitted=" << fsk_first_packet_transmitted
+  //     << endl;
+  if (fsk_first_packet_transmitted || (hdlc_framer_ib == 0))
+  {
+    hdlc_framer->sendBytes(frame);
+  }
+  else
+  {
+    //cout << "### Send first packet ---\n";
+    fsk_first_packet_transmitted = true;
+    hdlc_framer_ib->sendBytes(frame);
+  }
+} /* LocalTx::sendFskSiglev */
+
+
+void LocalTx::sendFskDtmf(const string &digits, unsigned duration)
+{
+  if (duration > numeric_limits<uint16_t>::max())
+  {
+    duration = numeric_limits<uint16_t>::max();
+  }
+
+  vector<uint8_t> frame;
+  frame.push_back(DATA_CMD_DTMF);
+  frame.push_back(duration & 0xff);
+  frame.push_back(duration >> 8);
+  for (size_t i=0; i<digits.size(); ++i)
+  {
+    frame.push_back(digits[i]);
+  }
+  hdlc_framer->sendBytes(frame);
+} /* LocalTx::sendFskDtmf */
 
 
 

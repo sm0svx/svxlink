@@ -8,7 +8,7 @@ This file contains a class that handle local digital drop receivers.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -118,22 +118,6 @@ extracted from this wideband signal and a demodulator is applied.
 class Ddr : public LocalRxBase
 {
   public:
-    /**
-     * @brief   Modulation types
-     */
-    typedef enum
-    {
-      MOD_FM,     //!< FM. Standard two-way radio 20kHz channel.
-      MOD_NBFM,   //!< FM narrow. Narrow band two-way radio 10kHz channel.
-      MOD_WBFM,   //!< Wide band FM. Standard FM broadcasting 180kHz channel.
-      MOD_AM,     //!< AM. Standard two-way radio 10kHz channel.
-      MOD_NBAM,   //!< AM narrow. Narrow band two-way radio 6kHz channel.
-      MOD_USB,    //!< Upper Sideband 3kHz channel
-      MOD_LSB,    //!< Lower Sideband 3kHz channel
-      MOD_CW,     //!< Morse
-      MOD_WBCW    //!< Morse
-    } Modulation;
-
     static Ddr *find(const std::string &name);
 
     /**
@@ -165,12 +149,6 @@ class Ddr : public LocalRxBase
     void tunerFqChanged(uint32_t fq);
 
     /**
-     * @brief   Set the modulation used for this ddr
-     * @param   mod The type of modulation to set (@see Modulation)
-     */
-    void setModulation(Modulation mod);
-
-    /**
      * @brief   Find out what the pre-demodulation sample rate is
      * @returns Returns the sample rate used before the demodulator
      *
@@ -184,6 +162,18 @@ class Ddr : public LocalRxBase
      * @returns Returns \em true if the receiver is ready for operation
      */
     virtual bool isReady(void) const;
+
+    /**
+     * @brief   Set the receiver frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq);
+
+    /**
+     * @brief   Set the receiver modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    virtual void setModulation(Modulation::Type mod);
 
     /**
      * @brief   A signal that is emitted when new I/Q data is available
@@ -245,7 +235,9 @@ class Ddr : public LocalRxBase
     Async::Config           &cfg;
     Channel                 *channel;
     WbRxRtlSdr              *rtl;
-    uint32_t                fq;
+    double                  fq;
+
+    void updateFqOffset(void);
     
 };  /* class Ddr */
 

@@ -190,6 +190,17 @@ const string &Config::getValue(const string& section, const string& tag) const
 } /* Config::getValue */
 
 
+list<string> Config::listSections(void)
+{
+  list<string> section_list;
+  for (Sections::const_iterator it=sections.begin(); it!=sections.end(); ++it)
+  {
+    section_list.push_back((*it).first);
+  }
+  return section_list;
+} /* Config::listSections */
+
+
 list<string> Config::listSection(const string& section)
 {
   list<string> tags;

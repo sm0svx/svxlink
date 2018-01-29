@@ -1,36 +1,37 @@
 # Version for the Qtel application
-QTEL=1.2.2.99.2
+QTEL=1.2.4
 
 # Version for the EchoLib library
-LIBECHOLIB=1.3.2.99.0
+LIBECHOLIB=1.3.3
 
 # Version for the Async library
-LIBASYNC=1.4.99.0
+LIBASYNC=1.5.99.1
 
 # SvxLink versions
-SVXLINK=1.5.99.17
+SVXLINK=1.6.99.3
 MODULE_HELP=1.0.0
 MODULE_PARROT=1.1.1
-MODULE_ECHOLINK=1.3.99.1
+MODULE_ECHOLINK=1.4.99.0
 MODULE_TCL=1.0.1
 MODULE_PROPAGATION_MONITOR=1.0.1
-MODULE_TCL_VOICE_MAIL=1.0.0.99.0
+MODULE_TCL_VOICE_MAIL=1.0.1
 MODULE_SELCALLENC=1.0.0
 MODULE_DTMF_REPEATER=1.0.1
-MODULE_METARINFO=1.0.99.0
-MODULE_FRN=1.0.99.0
+MODULE_METARINFO=1.1.0
+MODULE_FRN=1.1.0
+MODULE_TRX=0.99.1
 
 # Version for the RemoteTrx application
-REMOTE_TRX=1.2.0.99.4
+REMOTE_TRX=1.2.99.1
 
 # Version for the signal level calibration utility
-SIGLEV_DET_CAL=1.0.5.99.2
+SIGLEV_DET_CAL=1.0.6.99.0
 
 # Version for the deviation calibration utility
-DEVCAL=1.0.0.99.2
+DEVCAL=1.0.1.99.0
 
 # Version for svxserver
 SVXSERVER=0.0.5.99.1
 
 # Version for SvxReflector
-SVXREFLECTOR=0.99.0
+SVXREFLECTOR=1.0.0

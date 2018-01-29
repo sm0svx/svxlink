@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -129,7 +129,7 @@ class DummyTxFactory : public TxFactory
   protected:
     Tx *createTx(Config &cfg, const string& name)
     {
-      return new DummyTx;
+      return new DummyTx(name);
     }
 }; /* class MultiTxFactory */
 
