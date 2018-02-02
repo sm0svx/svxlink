@@ -18,3 +18,25 @@ if(WITH_CONTRIB_SVXSERVER)
   message(STATUS "Building experimental application svxserver")
   add_subdirectory(svxserver)
 endif(WITH_CONTRIB_SVXSERVER)
+
+option(WITH_CONTRIB_MODULE_A2D_MCP320X
+  "Set to ON to build and install contributed module A2D_MCP320X")
+if(WITH_CONTRIB_MODULE_A2D_MCP320X)
+  message(STATUS "Building experimental module A2D_MCP320X")
+  add_subdirectory(module_a2d_mcp320X)
+endif(WITH_CONTRIB_MODULE_A2D_MCP320X)
+
+option(WITH_CONTRIB_MODULE_SITE_STATUS
+  "Set to ON to build and install contributed module SITE_STATUS")
+if(WITH_CONTRIB_MODULE_SITE_STATUS)
+  message(STATUS "Building experimental module SITE_STATUS")
+  add_subdirectory(module_site_status)
+endif(WITH_CONTRIB_MODULE_SITE_STATUS)
+
+option(WITH_CONTRIB_MODULE_TXFAN
+  "Set to ON to build and install contributed module TXFAN")
+if(WITH_CONTRIB_MODULE_TXFAN)
+  message(STATUS "Building experimental module TXFAN")
+  add_subdirectory(module_txfan)
+endif(WITH_CONTRIB_MODULE_TXFAN)
+
