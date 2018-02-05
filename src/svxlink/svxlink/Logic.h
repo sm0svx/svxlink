@@ -243,6 +243,14 @@ class Logic : public LogicBase
     Module    	      	      	    *active_module;
     std::list<Module*>	      	    modules;
     std::string       	      	    m_callsign;
+	std::string						m_short_voice_id_enable;
+	std::string						m_short_cw_id_enable;
+	std::string						m_short_announce;
+	std::string						m_short_announce_enable;
+	std::string						m_long_voice_id_enable;
+	std::string						m_long_cw_id_enable;
+	std::string						m_long_announce;
+	std::string						m_long_announce_enab
     std::list<std::string>    	    cmd_queue;
     Async::Timer      	      	    exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    rgr_sound_timer;

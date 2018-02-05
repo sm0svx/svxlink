@@ -128,14 +128,49 @@ proc manual_identification {} {
 #
 proc send_short_ident {{hour -1} {minute -1}} {
   global mycall;
+  global short_voice_id_enable;
+  global short_cw_id_enable;
+  global short_announce;
+  global short_announce_enable;
   variable CFG_TYPE;
-
-  spellWord $mycall;
-  if {$CFG_TYPE == "Repeater"} {
-    playMsg "Core" "repeater";
+  # only play voice id if not disabled (default to enabled)
+  
+  #puts $short_voice_id_enable
+  #puts $short_cw_id_enable
+  
+  if {$short_voice_id_enable != 0} {
+    puts "Playing short voice ID"
+    spellWord $mycall;
+    if {$CFG_TYPE == "Repeater"} {
+      playMsg "Core" "repeater";
+    }
+    playSilence 500;
   }
-  playSilence 500;
-}
+  # play announcements if either path is valid, otherwise print message to
+  # the log file
+  if {$short_announce_enable == 1} {
+    set announcement_path "/var/lib/svxlink/sounds/announcement/$short_announcement"
+    set fexist1 [file exist $path]
+    if {$fexist1} {
+      playFile $announcement_path
+               playSilence 500
+        } else {
+         playFile "CustomIdent" "Long_ID.wav"
+                playSilence 500
+            }
+    }
+    # only play CW id if not disabled (default to enabled)
+    if {$short_cw_id_enable !=0} {
+            puts "Playing long CW ID"
+            if {$CFG_TYPE == "Repeater"} {
+                set call "$mycall/R"
+                CW::play $call
+            } else {
+                CW::play $mycall
+            }
+            playSilence 500;
+        }
+  }
 
 
 #
@@ -147,19 +182,26 @@ proc send_long_ident {hour minute} {
   global mycall;
   global loaded_modules;
   global active_module;
+  global long_voice_id_enable;
+  global long_cw_id_enable;
+  global long_announce;
+  global long_announce_enable;
   variable CFG_TYPE;
 
+# only play the voice ID if not disabled (defualt to enabled)
+if {$long_voice_id_enable !=0} {
+  puts "Playing Long voice ID"
   spellWord $mycall;
   if {$CFG_TYPE == "Repeater"} {
     playMsg "Core" "repeater";
   }
   playSilence 500;
-
+  # announce the time
   playMsg "Core" "the_time_is";
   playSilence 100;
   playTime $hour $minute;
   playSilence 500;
-
+  
     # Call the "status_report" function in all modules if no module is active
   if {$active_module == ""} {
     foreach module [split $loaded_modules " "] {
@@ -170,9 +212,37 @@ proc send_long_ident {hour minute} {
       }
     }
   }
-
+  
   playSilence 500;
 }
+    
+  # play announcements if either path is valid, otherwise print message to
+  # the log file
+  if {$long_announce_enable == 1} {
+    set announcement_path "/var/lib/svxlink/sounds/announcement/$long_announcement"
+    set fexist1 [file exist $path]
+    if {$fexist1} {
+      playFile $announcement_path
+      playSilence 500
+    } else {
+      playFile "CustomIdent" "Long_ID.wav"
+      playSilence 500
+    }
+  }
+
+  # only play CW id if not disabled (default to enabled)
+  if {$long_cw_id_enable !=0} {
+    puts "Playing long CW ID"
+    if {$CFG_TYPE == "Repeater"} {
+      set call "$mycall/R"
+      CW::play $call
+    } else {
+      CW::play $mycall
+    }
+    playSilence 100
+  }  
+}
+
 
 
 #
