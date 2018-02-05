@@ -170,7 +170,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0)
+    dtmf_ctrl_pty(0),						m_phonetic_spelling("1")
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -248,6 +248,13 @@ bool Logic::initialize(void)
     return false;
   }
 
+  // Variable to set spellword phonetics/non-phonetic letters
+  // default to phonetic for legacy compatibility
+  if (cfg().getValue(name(), "PHONETIC_SPELLING", m_phonetic_spelling))
+  {
+		  cerr << "*** INFORMATION: spelling will be announced without phonetics\n";
+  } 
+  
   int exec_cmd_on_sql_close = -1;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
   {
@@ -592,6 +599,8 @@ bool Logic::initialize(void)
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
+  // Configure variable to allow user to select phonetics/non-phonetics
+  event_handler->setVariable("phonetic_spelling", m_phonetic_spelling);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
