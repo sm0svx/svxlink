@@ -243,6 +243,9 @@ class Logic : public LogicBase
     Module    	      	      	    *active_module;
     std::list<Module*>	      	    modules;
     std::string       	      	    m_callsign;
+	std::string 					m_cw_pitch;
+	std::string 					m_cw_wpm;
+	std::string 					m_cw_amp;
     std::list<std::string>    	    cmd_queue;
     Async::Timer      	      	    exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    rgr_sound_timer;
