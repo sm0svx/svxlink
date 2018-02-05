@@ -185,6 +185,7 @@ class Logic : public LogicBase
     std::list<Module*> moduleList(void) const { return modules; }
 
     const std::string& callsign(void) const { return m_callsign; }
+	const std::string& phonetic_spelling(void) const { return m_phonetic_spelling;}
 
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
@@ -243,6 +244,7 @@ class Logic : public LogicBase
     Module    	      	      	    *active_module;
     std::list<Module*>	      	    modules;
     std::string       	      	    m_callsign;
+    std::string 					m_phonetic_spelling;
     std::list<std::string>    	    cmd_queue;
     Async::Timer      	      	    exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    rgr_sound_timer;
