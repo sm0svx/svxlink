@@ -71,15 +71,7 @@ bool Module::initialize(void)
     return false;
   }
 
-  string id_str;
-  if (!cfg().getValue(cfgName(), "ID", id_str))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-      	 << "/ID not set\n";
-    return false;
-  }
-  m_id = atoi(id_str.c_str());
-
+  cfg().getValue(cfgName(), "ID", m_id);
   cfg().getValue(cfgName(), "NAME", m_name);
   
   string timeout_str;

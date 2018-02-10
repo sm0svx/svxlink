@@ -810,6 +810,11 @@ void Logic::deactivateModule(Module *module)
 
 Module *Logic::findModule(int id)
 {
+  if (id < 0)
+  {
+    return 0;
+  }
+
   list<Module *>::iterator it;
   for (it=modules.begin(); it!=modules.end(); ++it)
   {
@@ -1234,20 +1239,23 @@ void Logic::loadModule(const string& module_cfg_name)
     return;
   }
 
-  stringstream ss;
-  ss << module->id();
-  ModuleActivateCmd *cmd = new ModuleActivateCmd(&cmd_parser, ss.str(), this);
-  if (!cmd->addToParser())
+  if (module->id() >= 0)
   {
-    cerr << "\n*** ERROR: Failed to add module activation command for module \""
-	 << module_cfg_name << "\" in logic \"" << name() << "\". "
-         << "This is probably due to having set up two modules with the same "
-         << "module id or choosing a module id that is the same as another "
-         << "command.\n\n";
-    delete cmd;
-    delete module;
-    dlclose(handle);
-    return;
+    stringstream ss;
+    ss << module->id();
+    ModuleActivateCmd *cmd = new ModuleActivateCmd(&cmd_parser, ss.str(), this);
+    if (!cmd->addToParser())
+    {
+      cerr << "\n*** ERROR: Failed to add module activation command for "
+           << "module \"" << module_cfg_name << "\" in logic \"" << name()
+           << "\". This is probably due to having set up two modules with the "
+           << "same module id or choosing a module id that is the same as "
+           << "another command.\n\n";
+      delete cmd;
+      delete module;
+      dlclose(handle);
+      return;
+    }
   }
 
     // Connect module audio output to the module audio selector

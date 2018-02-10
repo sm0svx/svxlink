@@ -84,6 +84,10 @@
 
 * Add new TCL function addSecondTickSubscriber.
 
+* Now possible to not specify an ID for a module. It will then not be possible
+  to activate the module. This is typically useful for modules that have no
+  command interface but rather is just doing something in the background.
+
 
 
  1.6.1 -- 21 Jan 2018
