@@ -88,6 +88,9 @@
   to activate the module. This is typically useful for modules that have no
   command interface but rather is just doing something in the background.
 
+* When reading TCL files, print a warning instead of erroring out if a file is
+  not readable.
+
 
 
  1.6.1 -- 21 Jan 2018

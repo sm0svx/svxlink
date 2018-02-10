@@ -83,6 +83,22 @@ proc processEvent {module ev} {
 }
 
 
+#
+# Read and execute (source) a TCL file
+# Check if the given TCL file is readable before trying to source it. Print
+# a warning if the file is not readable.
+#
+#   filename - The file to read
+#
+proc sourceTcl {filename} {
+  if [file readable $filename] {
+    source $filename
+  } else {
+    puts "*** WARNING: Could not load TCL event file: $filename"
+  }
+}
+
+
 ###############################################################################
 #
 # Main program
@@ -101,31 +117,31 @@ set langdir "$basedir/sounds/$lang"
 # Source all tcl files in the events.d directory.
 # This directory contains the main event handlers.
 foreach {file} [glob -directory $basedir/events.d *.tcl] {
-  source $file;
+  sourceTcl $file
 }
 
 # Source all files in the events.d/local directory.
 # This directory contains local modifications to the main event handlers.
 foreach {file} [glob -nocomplain -directory $basedir/events.d/local *.tcl] {
-  source $file;
+  sourceTcl $file;
 }
 
 # Source all tcl files in the language specific events.d directory.
 # This directory contains the main event handlers.
 foreach {file} [glob -nocomplain -directory $langdir/events.d *.tcl] {
-  source $file;
+  sourceTcl $file;
 }
 
 # Source all files in the language specific events.d/local directory.
 # This directory contains local modifications to the main event handlers.
 foreach {file} [glob -nocomplain -directory $langdir/events.d/local *.tcl] {
-  source $file;
+  sourceTcl $file;
 }
 
 # Source all files in the modules.d directory.
 # This directory contains modules written in TCL.
 foreach {file} [glob -directory $basedir/modules.d *.tcl] {
-  source $file;
+  sourceTcl $file;
 }
 
 if [info exists is_core_event_handler] {
