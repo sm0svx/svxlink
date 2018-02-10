@@ -250,7 +250,7 @@ class Logic : public LogicBase
 	std::string						m_long_voice_id_enable;
 	std::string						m_long_cw_id_enable;
 	std::string						m_long_announce;
-	std::string						m_long_announce_enab
+	std::string						m_long_announce_enable;
     std::list<std::string>    	    cmd_queue;
     Async::Timer      	      	    exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    rgr_sound_timer;
