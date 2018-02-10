@@ -80,6 +80,10 @@
   enable the sending of a roger sound to remote Echolink stations when the
   squelch is closed on the local node. Default is to not send a roger sound.
 
+* Rename TCL function addTimerTickSubscriber to addMinuteTickSubscriber.
+
+* Add new TCL function addSecondTickSubscriber.
+
 
 
  1.6.1 -- 21 Jan 2018
