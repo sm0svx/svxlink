@@ -645,6 +645,11 @@ bool Logic::initialize(void)
   timeoutNextMinute();
   every_minute_timer.start();
 
+  every_second_timer.setExpireOffset(100);
+  every_second_timer.expired.connect(mem_fun(*this, &Logic::everySecond));
+  timeoutNextSecond();
+  every_second_timer.start();
+  
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
       mem_fun(*this, &Logic::putCmdOnQueue));
@@ -1484,6 +1489,22 @@ void Logic::everyMinute(AtTimer *t)
   timeoutNextMinute();
 } /* Logic::everyMinute */
 
+void Logic::timeoutNextSecond(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  struct tm *tm = localtime(&tv.tv_sec);
+  tm->tm_min += 0;
+  tm->tm_sec += 1;
+  every_second_timer.setTimeout(*tm);
+} /* Logic::timeoutNextSecond */
+
+
+void Logic::everySecond(AtTimer *t)
+{
+  processEvent("every_second");
+  timeoutNextSecond();
+} /* Logic::everySecond */
 
 void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
