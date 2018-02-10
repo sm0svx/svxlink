@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -645,6 +645,11 @@ bool Logic::initialize(void)
   timeoutNextMinute();
   every_minute_timer.start();
 
+  every_second_timer.setExpireOffset(100);
+  every_second_timer.expired.connect(mem_fun(*this, &Logic::everySecond));
+  timeoutNextSecond();
+  every_second_timer.start();
+  
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
       mem_fun(*this, &Logic::putCmdOnQueue));
@@ -1483,6 +1488,23 @@ void Logic::everyMinute(AtTimer *t)
   processEvent("every_minute");
   timeoutNextMinute();
 } /* Logic::everyMinute */
+
+
+void Logic::timeoutNextSecond(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  struct tm *tm = localtime(&tv.tv_sec);
+  tm->tm_sec += 1;
+  every_second_timer.setTimeout(*tm);
+} /* Logic::timeoutNextSecond */
+
+
+void Logic::everySecond(AtTimer *t)
+{
+  processEvent("every_second");
+  timeoutNextSecond();
+} /* Logic::everySecond */
 
 
 void Logic::dtmfDigitDetectedP(char digit, int duration)
