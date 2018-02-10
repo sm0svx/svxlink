@@ -103,7 +103,7 @@ namespace eval TxFan {
 	}
 	
 	append func $module_name "::check_for_alerts";
-	Logic::addTimerTickSubscriberSeconds $func;
+	Logic::addSecondTickSubscriber $func;
 	
 	# end of namespace
 }

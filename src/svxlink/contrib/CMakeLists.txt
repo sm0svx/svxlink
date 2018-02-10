@@ -19,13 +19,6 @@ if(WITH_CONTRIB_SVXSERVER)
   add_subdirectory(svxserver)
 endif(WITH_CONTRIB_SVXSERVER)
 
-option(WITH_CONTRIB_MODULE_A2D_MCP320X
-  "Set to ON to build and install contributed module A2D_MCP320X")
-if(WITH_CONTRIB_MODULE_A2D_MCP320X)
-  message(STATUS "Building experimental module A2D_MCP320X")
-  add_subdirectory(module_a2d_mcp320X)
-endif(WITH_CONTRIB_MODULE_A2D_MCP320X)
-
 option(WITH_CONTRIB_MODULE_SITE_STATUS
   "Set to ON to build and install contributed module SITE_STATUS")
 if(WITH_CONTRIB_MODULE_SITE_STATUS)
