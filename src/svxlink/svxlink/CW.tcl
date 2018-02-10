@@ -77,17 +77,11 @@ array set letters {
 
 # Private function
 proc calculateTimings {} {
-  variable cw_wpm
-  variable cw_amp
-  variable cw_pitch
-  variable amplitude $cw_amp
-  variable fq $cw_pitch
-  
-  variable short_len [expr 60000 / (50 * $cw_wpm)]
-  variable long_len [expr $short_len * 3]
-  variable char_spacing $short_len
-  variable letter_spacing [expr $short_len * 3]
-  variable word_spacing [expr $short_len * 7]
+  variable short_len;
+  variable long_len [expr $short_len * 3];
+  variable char_spacing $short_len;
+  variable letter_spacing [expr $short_len * 3];
+  variable word_spacing [expr $short_len * 7];
 }
 
 
@@ -95,7 +89,7 @@ proc calculateTimings {} {
 # Set the CW speed in words per minute
 #
 proc setWpm {wpm} {
-  set cw_wpm $wpm
+  variable short_len [expr 60000 / (50 * $wpm)];
   calculateTimings;
 }
 
@@ -104,8 +98,7 @@ proc setWpm {wpm} {
 # Set the CW speed in characters per minute
 #
 proc setCpm {cpm} {
-  # Convert in-line from CPM to WPM
-  set cw_wpm [expr $cpm % 5]
+  variable short_len [expr 60000 / (10 * $cpm)];
   calculateTimings;
 }
 
@@ -119,41 +112,62 @@ proc setPitch {new_fq} {
 
 
 #
-# Set the amplitude in per mille (0-1000) of full amplitude.
+# Set the amplitude in dB of full amplitude.
 #
 proc setAmplitude {new_amplitude} {
-  variable amplitude $new_amplitude;
+  if {$new_amplitude > 0} {
+    set db_str [format "%.2f" [expr 20.0 * log10($new_amplitude / 1000.0)]]
+    puts "*** WARNING: Deprecated CW amplitude specification: $new_amplitude."
+    puts "             Use the equivalent $db_str (dB) instead."
+    variable amplitude $new_amplitude
+  } else {
+    variable amplitude [expr round(1000.0 * pow(10.0, $new_amplitude / 20.0))]
+  }
 }
+
 
 #
 # Load the values from the config file
 #
-proc cwLoadDefaults {
-  variable Logic::CFG_CW_AMP
-  variable Logic::CFG_CW_WPM
-  variable Logic::CFG_CW_PITCH
-  if { [info exists CFG_CW_AMP]} {
-    set cw_amp $CFG_CW_AMP
+proc loadDefaults {} {
+  variable ::Logic::CFG_CW_AMP
+  variable ::Logic::CFG_CW_CPM
+  variable ::Logic::CFG_CW_WPM
+  variable ::Logic::CFG_CW_PITCH
+
+  if [info exists CFG_CW_AMP] {
+    setAmplitude $CFG_CW_AMP
   } else {
-    set cw_amp 500
+    setAmplitude -6
   }
-  if { [info exists CFG_CW_WPM]} {
-    set cw_wpm $CFG_CW_WPM
+
+  if [info exists CFG_CW_CPM] {
+    setCpm $CFG_CW_CPM
+  } elseif [info exists CFG_CW_WPM] {
+    setWpm $CFG_CW_WPM
   } else {
-    set cw_wpm 20
+    setCpm 100
   }
-  if { [info exists CFG_CW_PITCH]} {
-    set cw_pitch $CFG_CW_PITCH
+
+  if [info exists CFG_CW_PITCH] {
+    setPitch $CFG_CW_PITCH
   } else {
-    set cw_pitch 800
+    setPitch 800
   }
-  calculateTimings;
+
+  calculateTimings
 }
-  
+
+
 #
 # Play the given CW text
 #
-proc play {txt} {
+#   txt   - The text to send
+#   cpm   - The CW speed in characters per minute
+#   pitch - The CW pitch in Hz
+#   amp   - The CW amplitude in dBFS
+#
+proc play {txt {cpm 0} {pitch 0} {amp 0}} {
   variable short_len;
   variable long_len;
   variable char_spacing;
@@ -162,7 +176,21 @@ proc play {txt} {
   variable fq;
   variable amplitude;
   variable letters;
-  
+
+  set load_defaults 0
+  if {$cpm > 0} {
+    setCpm $cpm
+    set load_defaults 1
+  }
+  if {$pitch > 0} {
+    setPitch $pitch
+    set load_defaults 1
+  }
+  if {$amp > 0} {
+    setAmplitude $amp
+    set load_defaults 1
+  }
+
   set txt [string toupper $txt];
   set first_letter 1;
   foreach letter [split $txt ""] {
@@ -185,8 +213,14 @@ proc play {txt} {
       }
     }
   }
+
+  if {$load_defaults} {
+    loadDefaults
+  }
 }
 
-#load values from config
-cwLoadDefaults
+
+# Set defaults
+loadDefaults
+
 }

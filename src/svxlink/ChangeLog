@@ -91,6 +91,11 @@
 * When reading TCL files, print a warning instead of erroring out if a file is
   not readable.
 
+* The TCL function CW::setAmplitude now take the amplitude value in dB of
+  full scale amplitude rather than thusands of full amplitude.
+  Also it's now possible to give the CW::play function temporary values for CW
+  speed, frequency and amplitude.
+
 
 
  1.6.1 -- 21 Jan 2018
