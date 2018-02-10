@@ -77,11 +77,17 @@ array set letters {
 
 # Private function
 proc calculateTimings {} {
-  variable short_len;
-  variable long_len [expr $short_len * 3];
-  variable char_spacing $short_len;
-  variable letter_spacing [expr $short_len * 3];
-  variable word_spacing [expr $short_len * 7];
+  variable cw_wpm
+  variable cw_amp
+  variable cw_pitch
+  variable amplitude $cw_amp
+  variable fq $cw_pitch
+  
+  variable short_len [expr 60000 / (50 * $cw_wpm)]
+  variable long_len [expr $short_len * 3]
+  variable char_spacing $short_len
+  variable letter_spacing [expr $short_len * 3]
+  variable word_spacing [expr $short_len * 7]
 }
 
 
@@ -89,7 +95,7 @@ proc calculateTimings {} {
 # Set the CW speed in words per minute
 #
 proc setWpm {wpm} {
-  variable short_len [expr 60000 / (50 * $wpm)];
+  set cw_wpm $wpm
   calculateTimings;
 }
 
@@ -98,7 +104,8 @@ proc setWpm {wpm} {
 # Set the CW speed in characters per minute
 #
 proc setCpm {cpm} {
-  variable short_len [expr 60000 / (10 * $cpm)];
+  # Convert in-line from CPM to WPM
+  set cw_wpm [expr $cpm % 5]
   calculateTimings;
 }
 
@@ -118,7 +125,31 @@ proc setAmplitude {new_amplitude} {
   variable amplitude $new_amplitude;
 }
 
-
+#
+# Load the values from the config file
+#
+proc cwLoadDefaults {
+  variable Logic::CFG_CW_AMP
+  variable Logic::CFG_CW_WPM
+  variable Logic::CFG_CW_PITCH
+  if { [info exists CFG_CW_AMP]} {
+    set cw_amp $CFG_CW_AMP
+  } else {
+    set cw_amp 500
+  }
+  if { [info exists CFG_CW_WPM]} {
+    set cw_wpm $CFG_CW_WPM
+  } else {
+    set cw_wpm 20
+  }
+  if { [info exists CFG_CW_PITCH]} {
+    set cw_pitch $CFG_CW_PITCH
+  } else {
+    set cw_pitch 800
+  }
+  calculateTimings;
+}
+  
 #
 # Play the given CW text
 #
@@ -156,10 +187,6 @@ proc play {txt} {
   }
 }
 
-
-# Set defaults
-setPitch 800;
-setAmplitude 500;
-setCpm 100;
-
+#load values from config
+cwLoadDefaults
 }
