@@ -170,9 +170,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0),m_cw_amp("200"),
-	m_cw_wpm("25"),							
-	m_cw_pitch("600")
+    dtmf_ctrl_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -249,21 +247,7 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-
-  // Variable to set CW frequency
-  if (cfg().getValue(name(), "CW_PITCH", m_cw_pitch))
-  {
-  }   
-
-  // Variable to set CW WPM
-  if (cfg().getValue(name(), "CW_WPM", m_cw_wpm))
-  {
-  }  
   
-  // Variable to set CW amp
-  if (cfg().getValue(name(), "CW_AMP", m_cw_amp))
-  {
-  }  
   
   int exec_cmd_on_sql_close = -1;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
@@ -609,10 +593,6 @@ bool Logic::initialize(void)
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
-  // configure variables to allow user to configure CW tone settings
-  event_handler->setVariable("cw_amp", m_cw_amp);
-  event_handler->setVariable("cw_pitch", m_cw_pitch);
-  event_handler->setVariable("cw_wpm", m_cw_wpm);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);

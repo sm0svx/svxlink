@@ -77,9 +77,9 @@ array set letters {
 
 # Private function
 proc calculateTimings {} {
-  global cw_wpm
-  global cw_amp
-  global cw_pitch
+  variable cw_wpm
+  variable cw_amp
+  variable cw_pitch
   variable amplitude $cw_amp
   variable fq $cw_pitch
   
@@ -94,34 +94,50 @@ proc calculateTimings {} {
 #
 # Set the CW speed in words per minute
 #
-#proc setWpm {wpm} {
-#  variable short_len [expr 60000 / (50 * $wpm)];
-#  calculateTimings;
-#}
+proc setWpm {wpm} {
+  set cw_wpm $wpm
+  calculateTimings;
+}
 
 
 #
 # Set the CW speed in characters per minute
 #
-#proc setCpm {cpm} {
-#  variable short_len [expr 60000 / (10 * $cpm)];
-#  calculateTimings;
-#}
+proc setCpm {cpm} {
+  # Convert in-line from CPM to WPM
+  set cw_wpm [expr $cpm % 5]
+  calculateTimings;
+}
+
 
 #
 # Set the pitch (frequency), in Hz, of the CW audio.
 #
-#proc setPitch {new_fq} {
-#  variable fq $new_fq;
-#}
+proc setPitch {new_fq} {
+  variable fq $new_fq;
+}
+
 
 #
 # Set the amplitude in per mille (0-1000) of full amplitude.
 #
-#proc setAmplitude {new_amplitude} {
-#  variable amplitude $new_amplitude;
-#}
+proc setAmplitude {new_amplitude} {
+  variable amplitude $new_amplitude;
+}
 
+#
+# Load the values from the config file
+#
+proc cwLoadDefaults {
+  variable Logic::CFG_CW_AMP
+  variable Logic::CFG_CW_WPM
+  variable Logic::CFG_CW_PITCH
+  set cw_amp CFG_CW_AMP
+  set cw_wpm CFG_CW_WPM
+  set cw_pitch CFG_CW_PITCH
+  calculateTimings;
+}
+  
 #
 # Play the given CW text
 #
@@ -159,11 +175,6 @@ proc play {txt} {
   }
 }
 
-# Set defaults
-#setPitch 800;
-#setAmplitude 500;
-#setCpm 100;
-
 #load values from config
-calculateTimings
+cwLoadDefaults
 }
