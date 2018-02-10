@@ -132,9 +132,21 @@ proc cwLoadDefaults {
   variable Logic::CFG_CW_AMP
   variable Logic::CFG_CW_WPM
   variable Logic::CFG_CW_PITCH
-  set cw_amp CFG_CW_AMP
-  set cw_wpm CFG_CW_WPM
-  set cw_pitch CFG_CW_PITCH
+  if { [info exists CFG_CW_AMP]} {
+    set cw_amp $CFG_CW_AMP
+  } else {
+    set cw_amp 500
+  }
+  if { [info exists CFG_CW_WPM]} {
+    set cw_wpm $CFG_CW_WPM
+  } else {
+    set cw_wpm 20
+  }
+  if { [info exists CFG_CW_PITCH]} {
+    set cw_pitch $CFG_CW_PITCH
+  } else {
+    set cw_pitch 800
+  }
   calculateTimings;
 }
   
