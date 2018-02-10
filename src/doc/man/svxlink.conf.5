@@ -1314,7 +1314,7 @@ The drawback is that the Ddr signal level is not completely comparable to the
 ordinary SvxLink signal level measurements since it have a larger dynamic
 range. Set SIGLEV_DET=DDR to activate the Ddr signal level detector.
 .
-.SS wide-band Receiver Section
+.SS Wide-band Receiver Section
 .
 A wide-band receiver section is used to configure access to a wide-band receiver
 which can be used by a Digital Drop Receiver (DDR), described above, to handle
@@ -1603,7 +1603,7 @@ much CPU time it should spend on doing a good job. Set it as high as possible
 without overloading the CPU on the encoding computer (check CPU usage using
 command "top"). Default: 10.
 .TP
-.B OPUS_ENC_bit-rate
+.B OPUS_ENC_BITRATE
 Opus encoder setting. This is the bit-rate that the encoder will encode for.
 Rates from about 8000 to 64000 bits per second are meaningful but the codec
 can handle from like 2500 to 512000 bps. Default: 20000bps.
@@ -1612,7 +1612,7 @@ can handle from like 2500 to 512000 bps. Default: 20000bps.
 Opus encoder setting. Enable (1) or disable (0) variable bit-rate encoding. If
 enabled, the encoder will try to keep a constant quality by increasing the
 bit-rate when needed and decrease it when the quality can be assured with a
-lower bit-rate. The target average bit-rate is the one set by OPUS_ENC_bit-rate.
+lower bit-rate. The target average bit-rate is the one set by OPUS_ENC_BITRATE.
 Default: 1.
 .
 .SS Local Transmitter Section
@@ -1860,7 +1860,7 @@ will be about 4x20=80ms.
 Speex encoder setting. Specify the encoder quality using a number between 0-10.
 Lower values give poorer quality and lower bit-rates.
 .TP
-.B SPEEX_ENC_bit-rate
+.B SPEEX_ENC_BITRATE
 Speex encoder setting. Specify the bit-rate to use. Speex will snap to the
 nearest lower possible bit-rate. Possible values range from 2150 to 24600 bps.
 You should probably not specify quality at the same time as bit-rate. Not sure
@@ -1906,7 +1906,7 @@ much CPU time it should spend on doing a good job. Set it as high as possible
 without overloading the CPU on the encoding computer (check CPU usage using
 command "top"). Default: 10.
 .TP
-.B OPUS_ENC_bit-rate
+.B OPUS_ENC_BITRATE
 Opus encoder setting. This is the bit-rate that the encoder will encode for.
 Rates from about 8000 to 64000 bits per second are meaningful but the codec
 can handle from like 2500 to 512000 bps. Default: 20000bps.
@@ -1915,7 +1915,7 @@ can handle from like 2500 to 512000 bps. Default: 20000bps.
 Opus encoder setting. Enable (1) or disable (0) variable bit-rate encoding. If
 enabled, the encoder will try to keep a constant quality by increasing the
 bit-rate when needed and decrease it when the quality can be assured with a
-lower bit-rate. The target average bit-rate is the one set by OPUS_ENC_bit-rate.
+lower bit-rate. The target average bit-rate is the one set by OPUS_ENC_BITRATE.
 Default: 1.
 .
 .SS Multi Transmitter Section
