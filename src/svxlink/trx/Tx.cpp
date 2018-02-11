@@ -231,6 +231,21 @@ Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
  *
  ****************************************************************************/
 
+void Tx::setIsTransmitting(bool is_transmitting)
+{
+  if (is_transmitting != m_is_transmitting)
+  {
+    if (isVerbose())
+    {
+      cout << m_name << ": Turning the transmitter "
+           << (is_transmitting ? "ON" : "OFF") << endl;
+    }
+    m_is_transmitting = is_transmitting;
+    transmitterStateChange(is_transmitting);
+  }
+} /* Tx::setIsTransmitting */
+
+
 
 
 /****************************************************************************

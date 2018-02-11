@@ -121,7 +121,6 @@ class DummyTx : public Tx
     virtual ~DummyTx(void) {}
     virtual bool initialize(void) { return true; }
     virtual void setTxCtrlMode(TxCtrlMode mode) {}
-    virtual bool isTransmitting(void) const { return false; }
     virtual int writeSamples(const float *samples, int count) { return count; }
     virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
 };

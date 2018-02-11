@@ -163,9 +163,10 @@ bool MultiTx::initialize(void)
       	// FIXME: Cleanup
       	return false;
       }
+      tx->setVerbose(false);
       tx->txTimeout.connect(txTimeout.make_slot());
       tx->transmitterStateChange.connect(
-      	      mem_fun(*this, &MultiTx::onTransmitterStateChange));
+      	      hide(mem_fun(*this, &MultiTx::onTransmitterStateChange)));
       
       splitter->addSink(tx);
       
@@ -196,6 +197,7 @@ void MultiTx::setTxCtrlMode(TxCtrlMode mode)
 } /* MultiTx::setTxCtrlMode */
 
 
+#if 0
 bool MultiTx::isTransmitting(void) const
 {
   bool is_transmitting = false;
@@ -208,6 +210,7 @@ bool MultiTx::isTransmitting(void) const
   return is_transmitting;
   
 } /* MultiTx::isTransmitting */
+#endif
 
 
 void MultiTx::enableCtcss(bool enable)
@@ -265,12 +268,18 @@ void MultiTx::sendData(const std::vector<uint8_t> &msg)
  *
  ****************************************************************************/
 
-void MultiTx::onTransmitterStateChange(bool is_transmitting)
+void MultiTx::onTransmitterStateChange(void)
 {
-  if (is_transmitting == isTransmitting())
+  list<Tx *>::const_iterator it;
+  for (it=txs.begin(); it!=txs.end(); ++it)
   {
-    transmitterStateChange(is_transmitting);
+    if ((*it)->isTransmitting())
+    {
+      setIsTransmitting(true);
+      return;
+    }
   }
+  setIsTransmitting(false);
 } /* MultiTx::onTransmitterStateChange */
 
 
@@ -278,4 +287,3 @@ void MultiTx::onTransmitterStateChange(bool is_transmitting)
 /*
  * This file has not been truncated
  */
-
