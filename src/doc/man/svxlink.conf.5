@@ -532,6 +532,49 @@ connection do not provide a steady flow of data. Set this configuration
 variable to the number of milliseconds to buffer before starting to process the
 audio. Default: 0.
 .
+.SS SipLogic
+.
+The SipLogic is used to connect to a Sip-based communication server like
+Astrisk.
+.TP
+.B TYPE
+The type for a sip logic core is always
+.BR Sip .
+.TP
+.B SIPSERVER
+The ip address or the hostname of the Sip communication server.
+.TP
+.B SIPPORT
+The udp port that is used for communication (normally 5060).
+.TP
+.B USERNAME
+The USERNAME that is used to connect to the Sip communication server.
+.TP
+.B PASSWORD
+The password for the USERNAME to connect to the Sip communication server.
+.TP
+.B SIPSCHEMA
+.TP
+.B SIPEXTENSION
+The extension to used when connecting to a Sip communication server.
+.TP
+.B AUTOANSWER
+If set the call will be pickup immedaitely when received.
+AUTOANSWER=(0|1)
+.TP
+.B AUTOCONNECT
+Define a party that will being connected afte upon startup.
+AUTOCONNECT=user123@sipaccount.com
+.TP
+.B SIP_LOGLEVEL
+The debug output of the pjsip library (0..6)
+.TP
+.B JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. Set this configuration
+variable to the number of milliseconds to buffer before starting to process the
+audio. Default: 0.
+.
 .SS QSO Recorder Section
 .
 The QSO recorder is used to record all received audio to files on disk. All

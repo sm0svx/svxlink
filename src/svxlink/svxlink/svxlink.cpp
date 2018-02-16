@@ -85,6 +85,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
 #include "ReflectorLogic.h"
+#include "SipLogic.h"
 #include "LinkManager.h"
 
 
@@ -750,6 +751,10 @@ static void initialize_logics(Config &cfg)
     else if (logic_type == "Reflector")
     {
       logic = new ReflectorLogic(cfg, logic_name);
+    }
+    else if (logic_type == "Sip")
+    {
+      logic = new SipLogic(cfg, logic_name);
     }
     else if (logic_type == "Dummy")
     {

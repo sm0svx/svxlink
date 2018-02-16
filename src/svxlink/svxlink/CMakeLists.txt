@@ -9,6 +9,12 @@ find_package(GSM REQUIRED)
 set(LIBS ${LIBS} ${GSM_LIBRARY})
 include_directories(${GSM_INCLUDE_DIR})
 
+# Find the pjsip library
+pkg_check_modules(PJSIP "libpjproject")
+add_definitions(${PJSIP_CFLAGS})
+set(LIBS ${LIBS} ${PJSIP_LIBRARIES})
+include_directories(${PJSIP_INCLUDE_DIRS})
+
 # Find the TCL library
 if(TCL_LIBRARY)
   set(TCL_LIBRARY_CACHED TRUE)
@@ -48,10 +54,10 @@ add_version_target(SVXLINK VERSION_DEPENDS)
 add_executable(svxlink
   MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
   EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
-  DtmfDigitHandler.cpp ReflectorLogic.cpp
+  DtmfDigitHandler.cpp ReflectorLogic.cpp SipLogic.cpp
   ${VERSION_DEPENDS}
 )
-target_link_libraries(svxlink ${LIBS})
+target_link_libraries(svxlink ${LIBS} ${PJSIP_LIBRARIES})
 set_target_properties(svxlink PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
