@@ -88,7 +88,7 @@ namespace sip {
   class _Call : public pj::Call, public sigc::trackable
   {
     public:
-      _Call(pj::Account &acc, int call_id = PJSUA_INVALID_ID) 
+      _Call(pj::Account &acc, int call_id = PJSUA_INVALID_ID)
       : pj::Call(acc, call_id), account(acc) {}
 
       virtual void onCallMediaState(pj::OnCallMediaStateParam &prm)
@@ -181,20 +181,20 @@ namespace sip {
       pjmedia_frame *get_frame;
       pjmedia_frame *put_frame;
 
-/*    static pj_status_t callback_getFrame(pjmedia_port *port, pjmedia_frame *frame) 
+/*    static pj_status_t callback_getFrame(pjmedia_port *port, pjmedia_frame *frame)
       {
         auto *communicator = static_cast<sip::PjsuaCommunicator *>(port->port_data.pdata);
         return communicator->mediaPortGetFrame(port, frame);
       }
 
-      static pj_status_t callback_putFrame(pjmedia_port *port, pjmedia_frame *frame) 
+      static pj_status_t callback_putFrame(pjmedia_port *port, pjmedia_frame *frame)
       {
         auto *communicator = static_cast<sip::PjsuaCommunicator *>(port->port_data.pdata);
         return communicator->mediaPortPutFrame(port, frame);
       }
 */
 
-      void createMediaPort(int frameTimeLength) 
+      void createMediaPort(int frameTimeLength)
       {
         pj_str_t name = pj_str((char *) "SvxLinkMediaPort");
 
@@ -259,9 +259,12 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_dec(0), m_enc(0), m_siploglevel(0), m_autoanswer(false), 
-    m_autoconnect(""), m_sip_port(5060)
+    m_dec(0), m_enc(0), m_siploglevel(0), m_autoanswer(false),
+    m_autoconnect(""), m_sip_port(5060),
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
 {
+  m_flush_timeout_timer.expired.connect(
+    mem_fun(*this, &SipLogic::flushTimeout));
 } /* SipLogic::SipLogic */
 
 
@@ -284,35 +287,35 @@ bool SipLogic::initialize(void)
 {
   if (!cfg().getValue(name(), "USERNAME", m_username))
   {
-    cerr << "*** ERROR: " << name() << "/USERNAME missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/USERNAME missing in configuration"
          << endl;
     return false;
   }
 
   if (!cfg().getValue(name(), "PASSWORD", m_password))
   {
-    cerr << "*** ERROR: " << name() << "/PASSWORD missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/PASSWORD missing in configuration"
          << endl;
     return false;
   }
 
   if (!cfg().getValue(name(), "SIPSERVER", m_sipserver))
   {
-    cerr << "*** ERROR: " << name() << "/SIPSERVER missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/SIPSERVER missing in configuration"
          << endl;
     return false;
   }
 
   if (!cfg().getValue(name(), "SIPEXTENSION", m_sipextension))
   {
-    cerr << "*** ERROR: " << name() << "/SIPEXTENSION missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/SIPEXTENSION missing in configuration"
          << endl;
     return false;
   }
 
   if (!cfg().getValue(name(), "SIPSCHEMA", m_schema))
   {
-    cerr << "*** ERROR: " << name() << "/SIPSCHEMA missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/SIPSCHEMA missing in configuration"
          << endl;
     return false;
   }
@@ -452,7 +455,7 @@ void SipLogic::onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm)
   pj::CallInfo ci = call->getInfo();
   if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
   {
-    for (pj::vector<Call *>::iterator it=calls.begin(); 
+    for (pj::vector<Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
     {
       if (*it == call)

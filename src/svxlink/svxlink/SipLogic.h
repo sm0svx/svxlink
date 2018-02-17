@@ -151,11 +151,6 @@ class SipLogic : public LogicBase
 
   private:
 
-    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 15;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET = 60;
-    static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
-    static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
-
     std::string               m_username;
     std::string               m_password;
     std::string               m_sipserver;
@@ -173,17 +168,11 @@ class SipLogic : public LogicBase
     sip::_Account             *acc;
     std::vector<pj::Call *>   calls;
 
-    unsigned                  m_msg_type;
-    uint32_t                  m_client_id;
     Async::Timer              m_reconnect_timer;
     uint16_t                  m_next_udp_tx_seq;
     uint16_t                  m_next_udp_rx_seq;
     Async::Timer              m_heartbeat_timer;
     Async::Timer              m_flush_timeout_timer;
-    unsigned                  m_udp_heartbeat_tx_cnt;
-    unsigned                  m_udp_heartbeat_rx_cnt;
-    unsigned                  m_tcp_heartbeat_tx_cnt;
-    unsigned                  m_tcp_heartbeat_rx_cnt;
     struct timeval            m_last_talker_timestamp;
 
     SipLogic(const SipLogic&);
