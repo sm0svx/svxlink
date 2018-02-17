@@ -167,16 +167,19 @@ class SipLogic : public LogicBase
     pj::Endpoint              ep;
     sip::_Account             *acc;
     std::vector<pj::Call *>   calls;
+    Async::Timer              m_heartbeat_timer;
+    Async::Timer              m_flush_timeout_timer;
+    uint16_t                  m_reg_timeout;
+    std::string               m_callername;
 
     Async::Timer              m_reconnect_timer;
     uint16_t                  m_next_udp_tx_seq;
     uint16_t                  m_next_udp_rx_seq;
-    Async::Timer              m_heartbeat_timer;
-    Async::Timer              m_flush_timeout_timer;
     struct timeval            m_last_talker_timestamp;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
+    void makeCall(pj::Account acc, std::string dest_uri);
     void onIncomingCall(pj::Account acc, pj::OnIncomingCallParam &iprm);
     void onRegState(pj::Account acc, pj::OnRegStateParam &prm);
     bool setAudioCodec(const std::string& codec_name);

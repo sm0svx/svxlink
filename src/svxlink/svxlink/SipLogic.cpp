@@ -261,7 +261,8 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
     m_dec(0), m_enc(0), m_siploglevel(0), m_autoanswer(false),
     m_autoconnect(""), m_sip_port(5060),
-    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+    m_reg_timeout(500), m_callername("SvxLink")
 {
   m_flush_timeout_timer.expired.connect(
     mem_fun(*this, &SipLogic::flushTimeout));
@@ -322,8 +323,10 @@ bool SipLogic::initialize(void)
 
   cfg().getValue(name(), "AUTOANSWER", m_autoanswer);
   cfg().getValue(name(), "AUTOCONNECT", m_autoconnect);
+  cfg().getValue(name(), "CALLERNAME", m_callername);
   cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel);
   cfg().getValue(name(), "SIPPORT", m_sip_port);
+  cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
 
    // create SipEndpoint - init library
   ep.libCreate();
@@ -339,12 +342,16 @@ bool SipLogic::initialize(void)
 
    // add SipAccount
   AccountConfig acc_cfg;
-  acc_cfg.idUri = "sip:";
+  acc_cfg.idUri = "\"";
+  acc_cfg.idUri += m_callername;
+  acc_cfg.idUri += "\"<sip:";
   acc_cfg.idUri += m_username;
   acc_cfg.idUri += "@";
   acc_cfg.idUri += m_sipserver;
+  acc_cfg.idUri += ">";
   acc_cfg.regConfig.registrarUri = "sip:";
   acc_cfg.regConfig.registrarUri += m_sipserver;
+  acc_cfg.regConfig.timeoutSec = m_reg_timeout;
 
   acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo(
                       m_schema, "*", m_username, 0, m_password));
@@ -394,6 +401,12 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+   // auto create an outgoing call
+  if (m_autoconnect.length() > 0)
+  {
+    makeCall(*acc, m_autoconnect);
+  }
+
   return true;
 } /* SipLogic::initialize */
 
@@ -411,6 +424,24 @@ bool SipLogic::initialize(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void SipLogic::makeCall(pj::Account acc, std::string dest_uri)
+{
+  cout << "+++ Calling \"" << dest_uri << "\"" << endl;
+
+  CallOpParam prm(true);
+  prm.opt.audioCount = 1;
+  prm.opt.videoCount = 0;
+  Call *call = new sip::_Call(acc);
+
+  try {
+    call->makeCall(dest_uri, prm);
+    calls.push_back(call);
+  } catch (Error& err) {
+    cout << "*** ERROR: " << err.info() << endl;
+  }
+} /* SipLogic::makeCall */
+
 
 void SipLogic::onIncomingCall(pj::Account acc, pj::OnIncomingCallParam &iprm)
 {
@@ -434,23 +465,29 @@ void SipLogic::onIncomingCall(pj::Account acc, pj::OnIncomingCallParam &iprm)
 } /* SipLogic::onIncomingCall */
 
 
-void SipLogic::onCallState(pj::Call *call, pj::OnCallStateParam &prm)
+void SipLogic::onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm)
 {
   pj::CallInfo ci = call->getInfo();
-  cout << "+++ Info: " << ci.remoteUri << " [" << ci.stateText
-       << "]" << endl;
 
-  for (unsigned i=0; i<ci.media.size(); i++)
+  if (ci.media.size() != 1)
   {
-    if (ci.media[i].type==PJMEDIA_TYPE_AUDIO && call->getMedia(i))
-    {
-     // catch the audio media object
-    }
+    cout << "*** ERROR: media size not 1" << endl;
+    return;
   }
-} /* SipLogic::onCallState */
+
+  if (ci.media[0].status == PJSUA_CALL_MEDIA_ACTIVE)
+  {
+    pj::AudioMedia *aud_med = static_cast<pj::AudioMedia *>(call->getMedia(0));
+    // toDo
+  }
+  else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
+  {
+   // toDo
+  }
+} /* SipLogic::onMediaState */
 
 
-void SipLogic::onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm)
+void SipLogic::onCallState(pj::Call *call, pj::OnCallStateParam &prm)
 {
   pj::CallInfo ci = call->getInfo();
   if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
@@ -466,7 +503,7 @@ void SipLogic::onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm)
       }
     }
   }
-} /* SipLogic::onMediaState */
+} /* SipLogic::onCallState */
 
 
 bool SipLogic::setAudioCodec(const std::string& codec_name)
