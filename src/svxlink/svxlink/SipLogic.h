@@ -166,7 +166,7 @@ class SipLogic : public LogicBase
     uint16_t                  m_sip_port;
     pj::Endpoint              ep;
     sip::_Account             *acc;
-    std::vector<pj::Call *>   calls;
+    std::vector<pj::Call *>  calls;
     Async::Timer              m_heartbeat_timer;
     Async::Timer              m_flush_timeout_timer;
     uint16_t                  m_reg_timeout;
@@ -179,9 +179,9 @@ class SipLogic : public LogicBase
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
-    void makeCall(pj::Account acc, std::string dest_uri);
-    void onIncomingCall(pj::Account acc, pj::OnIncomingCallParam &iprm);
-    void onRegState(pj::Account acc, pj::OnRegStateParam &prm);
+    void makeCall(sip::_Account *acc, std::string dest_uri);
+    void onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm);
+    void onRState(sip::_Account *acc, pj::OnRegStateParam &prm);
     bool setAudioCodec(const std::string& codec_name);
     void onDtmfDigit(pj::Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(pj::Call *call, pj::OnCallStateParam &prm);

@@ -132,26 +132,26 @@ namespace sip {
 
     public:
       _Account() {};
-
+      
       virtual void onRegState(pj::OnRegStateParam &prm)
       {
-        onState(*this, prm);
+        onState(this, prm);
       }
 
       virtual void onIncomingCall(pj::OnIncomingCallParam &iprm)
       {
-        onCall(*this, iprm);
+        onCall(this, iprm);
       }
 
       /**
        *
        */
-      sigc::signal<void, pj::Account, pj::OnRegStateParam&> onState;
+      sigc::signal<void, sip::_Account*, pj::OnRegStateParam&> onState;
 
       /**
        *
        */
-      sigc::signal<void, pj::Account, pj::OnIncomingCallParam&> onCall;
+      sigc::signal<void, sip::_Account*, pj::OnIncomingCallParam&> onCall;
 
     private:
       friend class _Call;
@@ -351,7 +351,9 @@ bool SipLogic::initialize(void)
   acc_cfg.idUri += ">";
   acc_cfg.regConfig.registrarUri = "sip:";
   acc_cfg.regConfig.registrarUri += m_sipserver;
-  acc_cfg.regConfig.timeoutSec = m_reg_timeout;
+  acc_cfg.regConfig.firstRetryIntervalSec = 5;
+  acc_cfg.regConfig.retryIntervalSec = 30;
+  acc_cfg.regConfig.registerOnAdd  = PJ_TRUE;
 
   acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo(
                       m_schema, "*", m_username, 0, m_password));
@@ -367,7 +369,7 @@ bool SipLogic::initialize(void)
 
    // sigc-callbacks in case of incoming call or registration change
   acc->onCall.connect(mem_fun(*this, &SipLogic::onIncomingCall));
-  acc->onState.connect(mem_fun(*this, &SipLogic::onRegState));
+  acc->onState.connect(mem_fun(*this, &SipLogic::onRState));
 
    // Create logic connection incoming audio passthrough
   m_logic_con_in = new Async::AudioPassthrough;
@@ -398,13 +400,14 @@ bool SipLogic::initialize(void)
 
   if (!LogicBase::initialize())
   {
+    cout << "*** ERROR initializing Logic" << endl;
     return false;
   }
 
    // auto create an outgoing call
   if (m_autoconnect.length() > 0)
   {
-    makeCall(*acc, m_autoconnect);
+    makeCall(acc, m_autoconnect);
   }
 
   return true;
@@ -425,14 +428,14 @@ bool SipLogic::initialize(void)
  *
  ****************************************************************************/
 
-void SipLogic::makeCall(pj::Account acc, std::string dest_uri)
+void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 {
   cout << "+++ Calling \"" << dest_uri << "\"" << endl;
 
   CallOpParam prm(true);
   prm.opt.audioCount = 1;
   prm.opt.videoCount = 0;
-  Call *call = new sip::_Call(acc);
+  Call *call = new sip::_Call(*acc);
 
   try {
     call->makeCall(dest_uri, prm);
@@ -443,9 +446,9 @@ void SipLogic::makeCall(pj::Account acc, std::string dest_uri)
 } /* SipLogic::makeCall */
 
 
-void SipLogic::onIncomingCall(pj::Account acc, pj::OnIncomingCallParam &iprm)
+void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 {
-  sip::_Call *call = new sip::_Call(acc, iprm.callId);
+  sip::_Call *call = new sip::_Call(*acc, iprm.callId);
   pj::CallInfo ci = call->getInfo();
   pj::CallOpParam prm;
 
@@ -559,10 +562,10 @@ void SipLogic::onDtmfDigit(pj::Call *call, pj::OnDtmfDigitParam &prm)
 } /* SipLogic::onDtmfDigit */
 
 
-void SipLogic::onRegState(pj::Account acc, pj::OnRegStateParam &prm)
+void SipLogic::onRState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
-  pj::AccountInfo ai = acc.getInfo();
-  std::cout << "--- " << (ai.regIsActive ? "Register: code=" :
+  pj::AccountInfo ai = acc->getInfo();
+  std::cout << ">>>>> " << (ai.regIsActive ? "Register: code=" :
             "Unregister: code=") << prm.code << std::endl;
 } /* SipLogic::onRegState */
 
