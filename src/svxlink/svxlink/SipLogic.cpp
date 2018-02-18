@@ -111,17 +111,17 @@ namespace sip {
          string pj::OnDtmfDigitParam::digit
          DTMF ASCII digit.
        */
-      sigc::signal<void, pj::Call*, pj::OnDtmfDigitParam&> onDtmf;
+      sigc::signal<void, sip::_Call*, pj::OnDtmfDigitParam&> onDtmf;
 
       /**
        * This structure contains parameters for Call::onCallMediaState() callback.
        */
-      sigc::signal<void, pj::Call*, pj::OnCallMediaStateParam&> onMedia;
+      sigc::signal<void, sip::_Call*, pj::OnCallMediaStateParam&> onMedia;
 
       /**
        * This structure contains parameters for Call::onCallState() callback.
        **/
-      sigc::signal<void, pj::Call*, pj::OnCallStateParam&> onCall;
+      sigc::signal<void, sip::_Call*, pj::OnCallStateParam&> onCall;
 
     private:
       pj::Account &account;
@@ -369,7 +369,7 @@ bool SipLogic::initialize(void)
 
    // sigc-callbacks in case of incoming call or registration change
   acc->onCall.connect(mem_fun(*this, &SipLogic::onIncomingCall));
-  acc->onState.connect(mem_fun(*this, &SipLogic::onRState));
+  acc->onState.connect(mem_fun(*this, &SipLogic::onRegState));
 
    // Create logic connection incoming audio passthrough
   m_logic_con_in = new Async::AudioPassthrough;
@@ -468,7 +468,7 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 } /* SipLogic::onIncomingCall */
 
 
-void SipLogic::onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm)
+void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 {
   pj::CallInfo ci = call->getInfo();
 
@@ -490,7 +490,7 @@ void SipLogic::onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm)
 } /* SipLogic::onMediaState */
 
 
-void SipLogic::onCallState(pj::Call *call, pj::OnCallStateParam &prm)
+void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 {
   pj::CallInfo ci = call->getInfo();
   if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
@@ -556,13 +556,13 @@ bool SipLogic::setAudioCodec(const std::string& codec_name)
 } /* SipLogic::setAudioCodec */
 
 
-void SipLogic::onDtmfDigit(pj::Call *call, pj::OnDtmfDigitParam &prm)
+void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
   std::cout << "+++ Dtmf digit received: " << prm.digit << std::endl;
 } /* SipLogic::onDtmfDigit */
 
 
-void SipLogic::onRState(sip::_Account *acc, pj::OnRegStateParam &prm)
+void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
   std::cout << ">>>>> " << (ai.regIsActive ? "Register: code=" :

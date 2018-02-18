@@ -181,12 +181,12 @@ class SipLogic : public LogicBase
     SipLogic& operator=(const SipLogic&);
     void makeCall(sip::_Account *acc, std::string dest_uri);
     void onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm);
-    void onRState(sip::_Account *acc, pj::OnRegStateParam &prm);
+    void onRegState(sip::_Account *acc, pj::OnRegStateParam &prm);
     bool setAudioCodec(const std::string& codec_name);
-    void onDtmfDigit(pj::Call *call, pj::OnDtmfDigitParam &prm);
-    void onCallState(pj::Call *call, pj::OnCallStateParam &prm);
+    void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
+    void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
     void sendEncodedAudio(const void *buf, int count);
-    void onMediaState(pj::Call *call, pj::OnCallMediaStateParam &prm);
+    void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
     void flushEncodedAudio(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
