@@ -84,7 +84,11 @@ namespace sip
   class _Account;
   class _Call;
   class _AudioMedia;
-}
+};
+namespace Async
+{
+  class Pty;
+};
 
 
 /****************************************************************************
@@ -149,6 +153,7 @@ class SipLogic : public LogicBase
 
   protected:
 
+
   private:
 
     std::string               m_username;
@@ -176,6 +181,8 @@ class SipLogic : public LogicBase
     uint16_t                  m_next_udp_tx_seq;
     uint16_t                  m_next_udp_rx_seq;
     struct timeval            m_last_talker_timestamp;
+    Async::Pty                *dtmf_ctrl_pty;
+    uint16_t                  m_calltimeout;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -185,6 +192,8 @@ class SipLogic : public LogicBase
     bool setAudioCodec(const std::string& codec_name);
     void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
+    void sipWriteSamples(pjmedia_port med_port, pjmedia_frame put_frame);
+    void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void sendEncodedAudio(const void *buf, int count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
     void flushEncodedAudio(void);

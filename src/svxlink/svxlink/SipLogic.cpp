@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioPassthrough.h>
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -132,24 +133,30 @@ namespace sip {
 
     public:
       _Account() {};
-      
+
+      /**
+       * Signal when registration state was changed
+       */
       virtual void onRegState(pj::OnRegStateParam &prm)
       {
         onState(this, prm);
       }
 
+      /**
+       * Signal on an incoming call
+       */
       virtual void onIncomingCall(pj::OnIncomingCallParam &iprm)
       {
         onCall(this, iprm);
       }
 
       /**
-       *
+       * the sigc++ signal on registration change
        */
       sigc::signal<void, sip::_Account*, pj::OnRegStateParam&> onState;
 
       /**
-       *
+       * the sigc++ signal on incoming call
        */
       sigc::signal<void, sip::_Account*, pj::OnIncomingCallParam&> onCall;
 
@@ -262,10 +269,11 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     m_dec(0), m_enc(0), m_siploglevel(0), m_autoanswer(false),
     m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
-    m_reg_timeout(500), m_callername("SvxLink")
+    m_reg_timeout(500), m_callername("SvxLink"), dtmf_ctrl_pty(0),
+    m_calltimeout(45)
 {
   m_flush_timeout_timer.expired.connect(
-    mem_fun(*this, &SipLogic::flushTimeout));
+      mem_fun(*this, &SipLogic::flushTimeout));
 } /* SipLogic::SipLogic */
 
 
@@ -280,6 +288,8 @@ SipLogic::~SipLogic(void)
   delete m_dec;
   m_dec = 0;
   delete acc;
+  delete dtmf_ctrl_pty;
+  dtmf_ctrl_pty = 0;
   ep.libDestroy();
 } /* SipLogic::~SipLogic */
 
@@ -321,12 +331,30 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+  std::string dtmf_ctrl_pty_path;
+  cfg().getValue(name(), "DTMF_CTRL_PTY", dtmf_ctrl_pty_path);
+
+  if (!dtmf_ctrl_pty_path.empty())
+  {
+    dtmf_ctrl_pty = new Async::Pty(dtmf_ctrl_pty_path);
+    if (!dtmf_ctrl_pty->open())
+    {
+      cerr << "*** ERROR: Could not open dtmf sip PTY " << dtmf_ctrl_pty_path 
+           << " as specified in configuration variable " << name()
+           << "/" << "DTMF_CTRL_PTY" << endl;
+      return false;
+    }
+    dtmf_ctrl_pty->dataReceived.connect(
+               mem_fun(*this, &SipLogic::dtmfCtrlPtyCmdReceived));
+  }
+
   cfg().getValue(name(), "AUTOANSWER", m_autoanswer);
   cfg().getValue(name(), "AUTOCONNECT", m_autoconnect);
   cfg().getValue(name(), "CALLERNAME", m_callername);
   cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel);
   cfg().getValue(name(), "SIPPORT", m_sip_port);
   cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
+  cfg().getValue(name(), "CALL_TIMEOUT", m_calltimeout);
 
    // create SipEndpoint - init library
   ep.libCreate();
@@ -351,9 +379,11 @@ bool SipLogic::initialize(void)
   acc_cfg.idUri += ">";
   acc_cfg.regConfig.registrarUri = "sip:";
   acc_cfg.regConfig.registrarUri += m_sipserver;
+/*
   acc_cfg.regConfig.firstRetryIntervalSec = 5;
   acc_cfg.regConfig.retryIntervalSec = 30;
-  acc_cfg.regConfig.registerOnAdd  = PJ_TRUE;
+  acc_cfg.regConfig.registerOnAdd = PJ_TRUE;
+*/
 
   acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo(
                       m_schema, "*", m_username, 0, m_password));
@@ -400,7 +430,7 @@ bool SipLogic::initialize(void)
 
   if (!LogicBase::initialize())
   {
-    cout << "*** ERROR initializing Logic" << endl;
+    cout << "*** ERROR initializing SipLogic" << endl;
     return false;
   }
 
@@ -480,14 +510,21 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 
   if (ci.media[0].status == PJSUA_CALL_MEDIA_ACTIVE)
   {
-    pj::AudioMedia *aud_med = static_cast<pj::AudioMedia *>(call->getMedia(0));
-    // toDo
+    sip::_AudioMedia *aud_med=static_cast<sip::_AudioMedia *>(call->getMedia(0));
+    aud_med->callback_putFrame.connect(mem_fun(*this, &SipLogic::sipWriteSamples));
+//    aud_med->callback_getFrame.connect(mem_fun(*this, &SipLogic::sipGetSamples));
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
   {
-   // toDo
+    // toDo
   }
 } /* SipLogic::onMediaState */
+
+
+void SipLogic::sipWriteSamples(pjmedia_port med_port, pjmedia_frame put_frame)
+{
+
+} /* SipLogic::sipWriteSamples */
 
 
 void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
@@ -501,6 +538,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
       if (*it == call)
       {
         cout << "+++ call disconnected\n" << endl;
+        m_enc->allEncodedSamplesFlushed();
         calls.erase(it);
         break;
       }
@@ -568,6 +606,21 @@ void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
   std::cout << ">>>>> " << (ai.regIsActive ? "Register: code=" :
             "Unregister: code=") << prm.code << std::endl;
 } /* SipLogic::onRegState */
+
+
+void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
+{
+  string m_dtmf_incoming = reinterpret_cast<const char*>(buf);
+  if (m_dtmf_incoming[0] == 'F' && count > 3)
+  {
+    if (acc != 0)
+    {
+      cout << "+++ Calling \"" << m_dtmf_incoming.substr(1, count-1)
+       << "\"..." << endl;
+      makeCall(acc, m_dtmf_incoming.substr(1, count-1));
+    }
+  }
+} /* SipLogic::dtmfCtrlPtyCmdReceived */
 
 
 void SipLogic::sendEncodedAudio(const void *buf, int count)
