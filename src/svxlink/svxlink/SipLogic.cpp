@@ -615,8 +615,6 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
   {
     if (acc != 0)
     {
-      cout << "+++ Calling \"" << m_dtmf_incoming.substr(1, count-1)
-       << "\"..." << endl;
       makeCall(acc, m_dtmf_incoming.substr(1, count-1));
     }
   }

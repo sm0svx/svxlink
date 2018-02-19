@@ -574,6 +574,18 @@ A jitter buffer is used to prevent gaps in the audio when the network
 connection do not provide a steady flow of data. Set this configuration
 variable to the number of milliseconds to buffer before starting to process the
 audio. Default: 0.
+.TP
+.B DTMF_CTRL_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Sending
+commands to the PTY is as simple as doing a
+.B "echo '*1#' > /path/to/pty"
+after starting SvxLink. The device works bidirectional, received dtmf characters
+(from local application) are output via this interface.
+
+Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .
 .SS QSO Recorder Section
 .
