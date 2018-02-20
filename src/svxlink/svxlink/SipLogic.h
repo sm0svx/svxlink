@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -171,7 +171,7 @@ class SipLogic : public LogicBase
     uint16_t                  m_sip_port;
     pj::Endpoint              ep;
     sip::_Account             *acc;
-    std::vector<pj::Call *>  calls;
+    std::vector<sip::_Call *> calls;
     Async::Timer              m_heartbeat_timer;
     Async::Timer              m_flush_timeout_timer;
     uint16_t                  m_reg_timeout;
@@ -183,6 +183,7 @@ class SipLogic : public LogicBase
     struct timeval            m_last_talker_timestamp;
     Async::Pty                *dtmf_ctrl_pty;
     uint16_t                  m_calltimeout;
+    sip::_AudioMedia          *aud_med;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -192,7 +193,8 @@ class SipLogic : public LogicBase
     bool setAudioCodec(const std::string& codec_name);
     void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
-    void sipWriteSamples(pjmedia_port med_port, pjmedia_frame put_frame);
+    void sipWriteSamples(pjmedia_port med_port, pjmedia_frame *put_frame);
+    void hangupCalls(std::vector<sip::_Call *> calls);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void sendEncodedAudio(const void *buf, int count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
