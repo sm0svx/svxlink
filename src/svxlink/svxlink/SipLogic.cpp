@@ -178,28 +178,22 @@ namespace sip {
         unregisterMediaPort();
       }
 
-      sigc::signal<void, pjmedia_port, pjmedia_frame> callback_putFrame;
+      sigc::signal<void, pjmedia_port, pjmedia_frame*> callback_putFrame;
+//    sigc::signal<void, pjmedia_port, pjmedia_frame*> callback_getFrame;
 
-      sigc::signal<void, pjmedia_port, pjmedia_frame> callback_getFrame;
-
+      void getFrame(const void *buf, int count)
+      {
+        pjmedia_frame *get_frame = 0;
+        memcpy(get_frame->buf, buf, count);
+        get_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+        get_frame->size = count;
+        pjmedia_port_get_frame(&mediaPort, get_frame);
+      }
 
     private:
       pjmedia_port mediaPort;
       pjmedia_frame *get_frame;
       pjmedia_frame *put_frame;
-
-/*    static pj_status_t callback_getFrame(pjmedia_port *port, pjmedia_frame *frame)
-      {
-        auto *communicator = static_cast<sip::PjsuaCommunicator *>(port->port_data.pdata);
-        return communicator->mediaPortGetFrame(port, frame);
-      }
-
-      static pj_status_t callback_putFrame(pjmedia_port *port, pjmedia_frame *frame)
-      {
-        auto *communicator = static_cast<sip::PjsuaCommunicator *>(port->port_data.pdata);
-        return communicator->mediaPortPutFrame(port, frame);
-      }
-*/
 
       void createMediaPort(int frameTimeLength)
       {
@@ -219,14 +213,9 @@ namespace sip {
                     << std::endl;
         }
 
-        if (pjmedia_port_get_frame(&mediaPort, get_frame) == PJ_SUCCESS)
-        {
-          callback_getFrame(mediaPort, *get_frame);
-        }
-
         if (pjmedia_port_put_frame(&mediaPort, put_frame) == PJ_SUCCESS)
         {
-          callback_putFrame(mediaPort, *put_frame);
+          callback_putFrame(mediaPort, put_frame);
         }
       }
 
@@ -269,7 +258,7 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     m_dec(0), m_enc(0), m_siploglevel(0), m_autoanswer(false),
     m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
-    m_reg_timeout(500), m_callername("SvxLink"), dtmf_ctrl_pty(0),
+    m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
     m_calltimeout(45)
 {
   m_flush_timeout_timer.expired.connect(
@@ -349,12 +338,15 @@ bool SipLogic::initialize(void)
   }
 
   cfg().getValue(name(), "AUTOANSWER", m_autoanswer);
-  cfg().getValue(name(), "AUTOCONNECT", m_autoconnect);
+  cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto pickup an call
   cfg().getValue(name(), "CALLERNAME", m_callername);
-  cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel);
-  cfg().getValue(name(), "SIPPORT", m_sip_port);
+  cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-5
+  cfg().getValue(name(), "SIPPORT", m_sip_port); // SIP udp-port default: 5060
   cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
+  if (m_reg_timeout < 60 || m_reg_timeout > 1000) m_reg_timeout = 300;
+
   cfg().getValue(name(), "CALL_TIMEOUT", m_calltimeout);
+  if (m_calltimeout < 5 || m_calltimeout > 100) m_reg_timeout = 45;
 
    // create SipEndpoint - init library
   ep.libCreate();
@@ -379,11 +371,7 @@ bool SipLogic::initialize(void)
   acc_cfg.idUri += ">";
   acc_cfg.regConfig.registrarUri = "sip:";
   acc_cfg.regConfig.registrarUri += m_sipserver;
-/*
-  acc_cfg.regConfig.firstRetryIntervalSec = 5;
-  acc_cfg.regConfig.retryIntervalSec = 30;
-  acc_cfg.regConfig.registerOnAdd = PJ_TRUE;
-*/
+  acc_cfg.regConfig.timeoutSec = m_reg_timeout;
 
   acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo(
                       m_schema, "*", m_username, 0, m_password));
@@ -465,7 +453,7 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
   CallOpParam prm(true);
   prm.opt.audioCount = 1;
   prm.opt.videoCount = 0;
-  Call *call = new sip::_Call(*acc);
+  sip::_Call *call = new sip::_Call(*acc);
 
   try {
     call->makeCall(dest_uri, prm);
@@ -510,9 +498,8 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 
   if (ci.media[0].status == PJSUA_CALL_MEDIA_ACTIVE)
   {
-    sip::_AudioMedia *aud_med=static_cast<sip::_AudioMedia *>(call->getMedia(0));
+    aud_med = static_cast<sip::_AudioMedia *>(call->getMedia(0));
     aud_med->callback_putFrame.connect(mem_fun(*this, &SipLogic::sipWriteSamples));
-//    aud_med->callback_getFrame.connect(mem_fun(*this, &SipLogic::sipGetSamples));
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
   {
@@ -521,9 +508,21 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 } /* SipLogic::onMediaState */
 
 
-void SipLogic::sipWriteSamples(pjmedia_port med_port, pjmedia_frame put_frame)
+void SipLogic::sendEncodedAudio(const void *buf, int count)
 {
+  if (m_flush_timeout_timer.isEnabled())
+  {
+    m_flush_timeout_timer.setEnable(false);
+  }
+  aud_med->getFrame(buf, count);
+} /* SipLogic::sendEncodedAudio */
 
+
+void SipLogic::sipWriteSamples(pjmedia_port med_port, pjmedia_frame *get_frame)
+{
+  get_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+  uint8_t *samples = reinterpret_cast<uint8_t*>(get_frame->buf);
+  m_dec->writeEncodedSamples(samples, get_frame->size);
 } /* SipLogic::sipWriteSamples */
 
 
@@ -532,7 +531,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
   pj::CallInfo ci = call->getInfo();
   if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
   {
-    for (pj::vector<Call *>::iterator it=calls.begin();
+    for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
     {
       if (*it == call)
@@ -596,38 +595,55 @@ bool SipLogic::setAudioCodec(const std::string& codec_name)
 
 void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
-  std::cout << "+++ Dtmf digit received: " << prm.digit << std::endl;
+  std::cout << "+++ Dtmf digit received: " << prm.digit 
+            << " code=" << call->getId() << std::endl;
 } /* SipLogic::onDtmfDigit */
 
 
 void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
-  std::cout << ">>>>> " << (ai.regIsActive ? "Register: code=" :
+  std::cout << "+++ " << (ai.regIsActive ? "Register: code=" :
             "Unregister: code=") << prm.code << std::endl;
 } /* SipLogic::onRegState */
+
+
+void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
+{
+  m_enc->allEncodedSamplesFlushed();
+
+  CallOpParam prm(true);
+
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
+       it != calls.end(); it++)
+  {
+    cout << "+++ hangup call " << (*it)->getInfo().remoteUri
+         << endl;
+    (*it)->hangup(prm);
+    calls.erase(it);
+  }
+} /* SipLogic::hangupCalls */
 
 
 void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 {
   string m_dtmf_incoming = reinterpret_cast<const char*>(buf);
-  if (m_dtmf_incoming[0] == 'F' && count > 3)
+
+  if (acc != 0)
   {
-    if (acc != 0)
+     // hanging up all calls with F#
+    if (m_dtmf_incoming == "F#")
     {
-      makeCall(acc, m_dtmf_incoming.substr(1, count-1));
+      hangupCalls(calls);
+    }
+
+     // calling a party with F12345#
+    if (m_dtmf_incoming[0] == 'F' && count > 3)
+    {
+      makeCall(acc, m_dtmf_incoming.substr(1, count-2));
     }
   }
 } /* SipLogic::dtmfCtrlPtyCmdReceived */
-
-
-void SipLogic::sendEncodedAudio(const void *buf, int count)
-{
-  if (m_flush_timeout_timer.isEnabled())
-  {
-    m_flush_timeout_timer.setEnable(false);
-  }
-} /* SipLogic::sendEncodedAudio */
 
 
 void SipLogic::flushEncodedAudio(void)
