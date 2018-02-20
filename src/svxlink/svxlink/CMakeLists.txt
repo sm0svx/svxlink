@@ -14,6 +14,7 @@ pkg_check_modules(PJSIP "libpjproject")
 add_definitions(${PJSIP_CFLAGS})
 set(LIBS ${LIBS} ${PJSIP_LIBRARIES})
 include_directories(${PJSIP_INCLUDE_DIRS})
+add_definitions("-DPJSIP_MAJOR=${PJSIP_VERSION_MAJOR}")
 
 # Find the TCL library
 if(TCL_LIBRARY)
