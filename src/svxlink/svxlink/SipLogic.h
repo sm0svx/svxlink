@@ -178,12 +178,11 @@ class SipLogic : public LogicBase
     std::string               m_callername;
 
     Async::Timer              m_reconnect_timer;
-    uint16_t                  m_next_udp_tx_seq;
-    uint16_t                  m_next_udp_rx_seq;
     struct timeval            m_last_talker_timestamp;
     Async::Pty                *dtmf_ctrl_pty;
     uint16_t                  m_calltimeout;
     sip::_AudioMedia          *aud_med;
+    Async::Timer              m_call_timeout_timer;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -200,6 +199,7 @@ class SipLogic : public LogicBase
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
     void flushEncodedAudio(void);
     void allEncodedSamplesFlushed(void);
+    void callTimeout(Async::Timer *t=0);
     void flushTimeout(Async::Timer *t=0);
 
 };  /* class SipLogic */
