@@ -259,10 +259,12 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
-    m_calltimeout(45)
+    m_calltimeout(45), m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::flushTimeout));
+  m_call_timeout_timer.expired.connect(
+      mem_fun(*this, &SipLogic::callTimeout));
 } /* SipLogic::SipLogic */
 
 
@@ -337,22 +339,26 @@ bool SipLogic::initialize(void)
                mem_fun(*this, &SipLogic::dtmfCtrlPtyCmdReceived));
   }
 
-  cfg().getValue(name(), "AUTOANSWER", m_autoanswer);
-  cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto pickup an call
+  cfg().getValue(name(), "AUTOANSWER", m_autoanswer); // auto pickup the call
+  cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto connect a number
   cfg().getValue(name(), "CALLERNAME", m_callername);
-  cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-5
+  cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-6
+  if (m_siploglevel < 0 || m_siploglevel > 6) m_siploglevel = 3;
+
   cfg().getValue(name(), "SIPPORT", m_sip_port); // SIP udp-port default: 5060
   cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
   if (m_reg_timeout < 60 || m_reg_timeout > 1000) m_reg_timeout = 300;
 
   cfg().getValue(name(), "CALL_TIMEOUT", m_calltimeout);
-  if (m_calltimeout < 5 || m_calltimeout > 100) m_reg_timeout = 45;
+  if (m_calltimeout < 5 || m_calltimeout > 100) m_calltimeout = 45;
+  m_call_timeout_timer.setTimeout(m_calltimeout * 1000);
 
    // create SipEndpoint - init library
   ep.libCreate();
   pj::EpConfig ep_cfg;
   ep_cfg.logConfig.level = m_siploglevel;
   ep.libInit(ep_cfg);
+  ep.audDevManager().setNullDev();
 
    // Transport
   TransportConfig tcfg;
@@ -458,6 +464,7 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
   try {
     call->makeCall(dest_uri, prm);
     calls.push_back(call);
+    m_call_timeout_timer.setEnable(true);
   } catch (Error& err) {
     cout << "*** ERROR: " << err.info() << endl;
   }
@@ -655,6 +662,14 @@ void SipLogic::flushEncodedAudio(void)
 void SipLogic::allEncodedSamplesFlushed(void)
 {
 } /* SipLogic::allEncodedSamplesFlushed */
+
+
+void SipLogic::callTimeout(Async::Timer *t)
+{
+  cout << "+++ called party is not at home." << endl;
+  m_call_timeout_timer.setEnable(false);
+  m_call_timeout_timer.reset();
+} /* SipLogic::flushTimeout */
 
 
 void SipLogic::flushTimeout(Async::Timer *t)
