@@ -575,6 +575,15 @@ connection do not provide a steady flow of data. Set this configuration
 variable to the number of milliseconds to buffer before starting to process the
 audio. Default: 0.
 .TP
+.B REG_TIMEOUT
+Time in seconds to renewal the registration at the sip server.
+.
+.TP
+.B CALL_TIMEOUT
+Time in seconds after an outgoing call will be terminate when the party will not
+pickup the call.
+.
+.TP
 .B DTMF_CTRL_PTY
 Using this configuration variable it is possible to specify a path to a UNIX 98
 PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
