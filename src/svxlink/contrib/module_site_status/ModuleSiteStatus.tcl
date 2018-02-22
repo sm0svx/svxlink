@@ -276,12 +276,7 @@ namespace eval SiteStatus {
 		printInfo "Module deactivated"
 	}
 	
-	# check for new events
-	proc check_for_alerts {} {
-		main_every_second
-	}
-	
-	append func $module_name "::check_for_alerts";
+	append func $module_name "::main_every_second";
 	Logic::addSecondTickSubscriber $func;
 	
 	# end of namespace
