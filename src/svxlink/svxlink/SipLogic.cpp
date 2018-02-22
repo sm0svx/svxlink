@@ -132,7 +132,7 @@ namespace sip {
   {
 
     public:
-      _Account() {};
+      _Account() {}
 
       /**
        * Signal when registration state was changed
@@ -164,10 +164,11 @@ namespace sip {
       friend class _Call;
   };
 
-  class _AudioMedia : public pj::AudioMedia, public sigc::trackable
+  class _AudioMedia : public pj::AudioMedia
   {
     public:
-      _AudioMedia(int frameTimeLength)
+      _AudioMedia(SipLogic &logic, int frameTimeLength)
+        : slogic(logic)
       {
         createMediaPort(frameTimeLength);
         registerMediaPort(&mediaPort);
@@ -178,22 +179,34 @@ namespace sip {
         unregisterMediaPort();
       }
 
-      sigc::signal<void, pjmedia_port, pjmedia_frame*> callback_putFrame;
-//    sigc::signal<void, pjmedia_port, pjmedia_frame*> callback_getFrame;
-
       void getFrame(const void *buf, int count)
       {
-        pjmedia_frame *get_frame = 0;
+/*      get_frame = 0;
         memcpy(get_frame->buf, buf, count);
         get_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
         get_frame->size = count;
         pjmedia_port_get_frame(&mediaPort, get_frame);
-      }
+*/
+      } /* _AudioMedia::getFrame */
+
 
     private:
+      SipLogic &slogic;
       pjmedia_port mediaPort;
-      pjmedia_frame *get_frame;
-      pjmedia_frame *put_frame;
+
+
+      static pj_status_t callback_getFrame(pjmedia_port *port, pjmedia_frame *frame) 
+      {
+        SipLogic *slogic = static_cast<SipLogic *>(port->port_data.pdata);
+        return slogic->mediaPortGetFrame(port, frame);
+      } /* callback_getFrame */
+
+      static pj_status_t callback_putFrame(pjmedia_port *port, pjmedia_frame *frame) 
+      {
+        SipLogic *slogic = static_cast<SipLogic *>(port->port_data.pdata);
+        return slogic->mediaPortPutFrame(port, frame);
+      } /* callback_putFrame */
+
 
       void createMediaPort(int frameTimeLength)
       {
@@ -213,12 +226,17 @@ namespace sip {
                     << std::endl;
         }
 
-        if (pjmedia_port_put_frame(&mediaPort, put_frame) == PJ_SUCCESS)
-        {
-          callback_putFrame(mediaPort, put_frame);
-        }
-      }
+        mediaPort.port_data.pdata = &slogic;
+        mediaPort.get_frame = &callback_getFrame;
+        mediaPort.put_frame = &callback_putFrame;
 
+      /* if (pjmedia_port_put_frame(&mediaPort, put_frame) == PJ_SUCCESS)
+         {
+           put_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+           uint8_t *samples = reinterpret_cast<uint8_t*>(put_frame->buf);
+         }
+      */
+      } /* _AudioMedia::createMediaPort */
   };
 }
 
@@ -280,6 +298,14 @@ SipLogic::~SipLogic(void)
   m_dec = 0;
   delete acc;
   delete dtmf_ctrl_pty;
+  delete media;
+  media = 0;
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
+          it != calls.end(); it++)
+  {
+    calls.erase(it);
+    *it = 0;
+  }
   dtmf_ctrl_pty = 0;
   ep.libDestroy();
 } /* SipLogic::~SipLogic */
@@ -356,9 +382,10 @@ bool SipLogic::initialize(void)
    // create SipEndpoint - init library
   ep.libCreate();
   pj::EpConfig ep_cfg;
-  ep_cfg.logConfig.level = m_siploglevel;
+  ep_cfg.logConfig.level = m_siploglevel; // set the debug level of pj
+  pj_log_set_level(m_siploglevel);
   ep.libInit(ep_cfg);
-  ep.audDevManager().setNullDev();
+  ep.audDevManager().setNullDev(); // do not init a hw audio device
 
    // Transport
   TransportConfig tcfg;
@@ -386,14 +413,15 @@ bool SipLogic::initialize(void)
   try {
     acc->create(acc_cfg);
   } catch (Error& err) {
-    std::cout << "*** ERROR: creating account: " << acc_cfg.idUri
-       << std::endl;
+    cout << "*** ERROR: creating account: " << acc_cfg.idUri << endl;
     return false;
   }
 
    // sigc-callbacks in case of incoming call or registration change
   acc->onCall.connect(mem_fun(*this, &SipLogic::onIncomingCall));
   acc->onState.connect(mem_fun(*this, &SipLogic::onRegState));
+
+  media = new sip::_AudioMedia(*this, 60);
 
    // Create logic connection incoming audio passthrough
   m_logic_con_in = new Async::AudioPassthrough;
@@ -476,16 +504,17 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
   sip::_Call *call = new sip::_Call(*acc, iprm.callId);
   pj::CallInfo ci = call->getInfo();
   pj::CallOpParam prm;
+  prm.opt.audioCount = 1;
+  prm.opt.videoCount = 0;
 
-  std::cout << "+++ Incoming Call: " <<  ci.remoteUri << " ["
-            << ci.stateText << "]" << std::endl;
+  cout << "+++ Incoming Call: " <<  ci.remoteUri << " ["
+            << ci.stateText << "]" << endl;
 
   calls.push_back(call);
   prm.statusCode = (pjsip_status_code)200;
   if (m_autoanswer)
   {
     call->answer(prm);
-    std::cout << "### auto answer call" << std::endl;
     call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
     call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
     call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
@@ -495,6 +524,7 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 
 void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 {
+
   pj::CallInfo ci = call->getInfo();
 
   if (ci.media.size() != 1)
@@ -505,12 +535,32 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 
   if (ci.media[0].status == PJSUA_CALL_MEDIA_ACTIVE)
   {
-    aud_med = static_cast<sip::_AudioMedia *>(call->getMedia(0));
-    aud_med->callback_putFrame.connect(mem_fun(*this, &SipLogic::sipWriteSamples));
+    if (ci.media[0].type == PJMEDIA_TYPE_AUDIO)
+    {
+      sip::_AudioMedia *aud_med 
+                     = static_cast<sip::_AudioMedia *>(call->getMedia(0));
+      aud_med->startTransmit(*media);
+      media->startTransmit(*aud_med);
+    }
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
   {
-    // toDo
+    cout << "+++ Call currently has no media, or the media is not used."
+         << endl;
+  }
+  else if (ci.media[0].status == PJSUA_CALL_MEDIA_LOCAL_HOLD)
+  {
+    cout << "+++ The media is currently put on hold by local endpoint."
+         << endl;
+  }
+  else if (ci.media[0].status == PJSUA_CALL_MEDIA_REMOTE_HOLD)
+  {
+    cout << "+++ The media is currently put on hold by remote endpoint."
+         << endl;
+  }
+  else if (ci.media[0].status == PJSUA_CALL_MEDIA_ERROR)
+  {
+    cout << "*** ERROR: The Sip audio media has reported an error." << endl;
   }
 } /* SipLogic::onMediaState */
 
@@ -521,21 +571,33 @@ void SipLogic::sendEncodedAudio(const void *buf, int count)
   {
     m_flush_timeout_timer.setEnable(false);
   }
-  aud_med->getFrame(buf, count);
+//  aud_med->getFrame(buf, count);
 } /* SipLogic::sendEncodedAudio */
 
 
-void SipLogic::sipWriteSamples(pjmedia_port med_port, pjmedia_frame *get_frame)
+pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
-  get_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
-  uint8_t *samples = reinterpret_cast<uint8_t*>(get_frame->buf);
-  m_dec->writeEncodedSamples(samples, get_frame->size);
+  return PJ_SUCCESS;
+} /* SipLogic::mediaPortGetFrame */
+
+
+pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame)
+{
+  return PJ_SUCCESS;
+} /* SipLogic::mediaPortPutFrame */
+
+
+void SipLogic::sipWriteSamples(uint8_t *samples, pj_size_t count)
+{
+//  m_dec->writeEncodedSamples(samples, count);
 } /* SipLogic::sipWriteSamples */
 
 
 void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 {
+  cout << "onCallState" << endl;
   pj::CallInfo ci = call->getInfo();
+
   if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
   {
     for (std::vector<sip::_Call *>::iterator it=calls.begin();
@@ -543,7 +605,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
     {
       if (*it == call)
       {
-        cout << "+++ call disconnected\n" << endl;
+        cout << "+++ call disconnected" << endl;
         m_enc->allEncodedSamplesFlushed();
         calls.erase(it);
         break;
@@ -602,16 +664,16 @@ bool SipLogic::setAudioCodec(const std::string& codec_name)
 
 void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
-  std::cout << "+++ Dtmf digit received: " << prm.digit 
-            << " code=" << call->getId() << std::endl;
+  cout << "+++ Dtmf digit received: " << prm.digit 
+       << " code=" << call->getId() << endl;
 } /* SipLogic::onDtmfDigit */
 
 
 void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
-  std::cout << "+++ " << (ai.regIsActive ? "Register: code=" :
-            "Unregister: code=") << prm.code << std::endl;
+  std::cout << "+++ " << (ai.regIsActive ? "Registered code=" :
+            "Unregistered code=") << prm.code << std::endl;
 } /* SipLogic::onRegState */
 
 
@@ -631,23 +693,34 @@ void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
   }
 } /* SipLogic::hangupCalls */
 
-
+/**
+ *  dial-out by sending a string over Pty device, e.g.
+ *  echo "C12345#" > /tmp/sippty 
+ *  method converts it to a valid dial string:
+ *  "sip:12345@sipserver"
+**/
 void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 {
   string m_dtmf_incoming = reinterpret_cast<const char*>(buf);
 
   if (acc != 0)
   {
-     // hanging up all calls with F#
-    if (m_dtmf_incoming == "F#")
+     // hanging up all calls with "C#"
+    if (m_dtmf_incoming == "C#")
     {
       hangupCalls(calls);
     }
 
-     // calling a party with F12345#
-    if (m_dtmf_incoming[0] == 'F' && count > 3)
+     // calling a party with "C12345#"
+    if (m_dtmf_incoming[0] == 'C' && count > 3)
     {
-      makeCall(acc, m_dtmf_incoming.substr(1, count-2));
+      // "C12345#" -> sip:12345@sipserver.de
+      string tocall = "sip:";
+      tocall += m_dtmf_incoming.substr(1, count-3);
+      tocall += "@";
+      tocall += m_sipserver;
+      makeCall(acc, tocall);
+      m_call_timeout_timer.setEnable(true);
     }
   }
 } /* SipLogic::dtmfCtrlPtyCmdReceived */
