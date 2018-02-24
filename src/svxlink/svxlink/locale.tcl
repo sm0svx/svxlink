@@ -16,16 +16,16 @@ proc spellWord {word} {
     set char [string index $word $i];
     if {[regexp {[a-z0-9]} $char]} {
         if {$phonetic_spelling == 0} {
-			playMsg "default" "$char";
+			playMsg "Default" "$char";
         } else {
-			playMsg "default" "phonetic_$char";
+			playMsg "Default" "phonetic_$char";
         }
     } elseif {$char == "/"} {
-      playMsg "default" "slash";
+      playMsg "Default" "slash";
     } elseif {$char == "-"} {
-      playMsg "default" "dash";
+      playMsg "Default" "dash";
     } elseif {$char == "*"} {
-      playMsg "default" "star";
+      playMsg "Default" "star";
     }
   }
 }
