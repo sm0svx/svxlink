@@ -247,7 +247,7 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-  
+
   int exec_cmd_on_sql_close = -1;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
   {

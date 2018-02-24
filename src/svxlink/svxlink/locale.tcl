@@ -7,28 +7,26 @@
 ###############################################################################
 
 #
-# Spell the specified word using a spoken alphabet
+# Spell the specified word using a phonetic alphabet
 #
 proc spellWord {word} {
-  variable Logic::CFG_PHONETIC_SPELLING
-  puts "### PHONETIC_SPELLING=$CFG_PHONETIC_SPELLING"
-  
+  global phonetic_spelling
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
     if {[regexp {[a-z0-9]} $char]} {
-        if {$CFG_PHONETIC_SPELLING == 0} {
-			playMsg "Core" "$char";
+        if {$phonetic_spelling == 0} {
+			playMsg "default" "$char";
         } else {
-			playMsg "Core" "phonetic_$char";
+			playMsg "default" "phonetic_$char";
         }
     } elseif {$char == "/"} {
-      playMsg "Core" "slash";
+      playMsg "default" "slash";
     } elseif {$char == "-"} {
-      playMsg "Core" "dash";
+      playMsg "default" "dash";
     } elseif {$char == "*"} {
-      playMsg "Core" "star";
-        }
+      playMsg "default" "star";
+    }
   }
 }
 

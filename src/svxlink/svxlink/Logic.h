@@ -185,7 +185,7 @@ class Logic : public LogicBase
     std::list<Module*> moduleList(void) const { return modules; }
 
     const std::string& callsign(void) const { return m_callsign; }
-	
+
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
