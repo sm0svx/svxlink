@@ -1,0 +1,116 @@
+.TH MODULESITESTATUS.CONF 5 "FEB 2018" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleSiteStatus.conf \- Configuration file for the SvxLink server
+Site status module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the SiteStatus module.
+.P
+The SiteStatus module is used to monitor auxiliary sensors that are 
+triggered by either a GPIO event (digital type sensors) or crossing a threshold
+outside the hysteresis (analog type sensors)
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink SiteStatus module understands.
+.
+.SS ModuleSiteStatus
+.
+.TP
+.B DIGITAL_GPIO_PATH
+The absolute path to the digital gpio pins stopping before the actual pin number.
+Typically "/sys/class/gpio/gpio" for a raspberry pi, but may vary.
+.TP
+.B DIGITAL_SENSORS_COUNT
+The DIGITAL_SENSORS_COUNT tells the module how many digital type sensors are connected
+to the system that are to be monitored.
+.TP
+.B DIGITAL_#
+The sensor number (increments from 0 by 1), value corresponds to the digital gpio pin
+number.  Example "DIGITAL_0=496". corresponds to sensor 0, which uses GPIO496 as the
+input pin to monitor.
+.TP
+.B DIGITAL_TYPE_#
+The DIGITAL_TYPE_# number (increments from 0 by 1), value corresponds to the type of
+sensor being monitored. Currently defined valid entries are:
+# DOOR_ACTIVE_HIGH - Announces a door is open (open = true, closed = false)
+# DOOR_ACTIVE_LOW - Announces a door is open (open = false, closed = true)
+# FUEL_ACTIVE_HIGH - Announces a low fuel sensor is activated (active signal = true) 
+# FUEL_ACTIVE_LOW - Announces a low fuel sensor is activated (active signal = false) 
+# WATER - Not implemented yet
+# FIRE - Not implemented yet
+# SOLAR_ACTIVE_HIGH - Announces a Solar Charger state (active signal = true)
+# SOLAR_ACTIVE_LOW - Announces a Solar Charger state (active signal = false)
+# BATTERY - not implemented yet
+as an example:
+DIGITAL_TYPE_0=DOOR_ACTIVE_HIGH
+means the sensor that is attached to the pin defined by DIGITAL_0 is a door sensor
+that when the value toggle from logic low to logic high indicates the door has been
+opened.
+.TP
+.B ANALOG_SENSORS_COUNT
+The ANALOG_SENSORS_COUNT tells the module how many analog type sensors are connected
+to the system that are to be monitored.
+.TP
+.B ANALOG_GPIO_PATH
+The absolute path to the analog sensor pins stopping before the actual pin number. The 
+functional tcl file may need manipulated if the following structure does not reflect
+the final location of the raw data values in the system.
+/sys/bus/iio/devices/iio:device0/in_voltage<number 0-N>_raw
+.TP
+.B ANALOG_#
+The sensor number (increments from 0 by 1), value corresponds to the analog channel
+number. Example "ANALOG_0=0". corresponds to sensor channel 0
+.TP
+.B ANALOG_TYPE_#
+The ANALOG_TYPE_# number (increments from 0 by 1), value corresponds to the type of
+sensor being monitored. Currently defined valid entries are:
+TEMPERATURE - Placeholder only, user to configure based on scaling factors
+BATTERY_VOLTAGE  - Placeholder only, user to configure based on scaling factors
+as an example:
+# ANALOG_TYPE_0=TEMPERATURE
+.TP
+.B ANALOG_HYSTERISIS_#
+The amount of signal "noise" that should be tolerated before an alarm is triggered.
+For example, during development, an open analog pin had noise of +/- 35 counts from 
+the mean value.  Setting the ANALOG_HYSTERISIS_#=40 would suppress the alarms from
+being triggered every second for in-range/out-of-range....  It is best to understand
+the expected behavior of the circuit in the environment before locking down this value
+or the hysteresis may be too low or to high causing false alarms or missed alarms.
+.TP 
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModuleSiteStatus.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleSiteStatus.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Dan Loranger (KG7PAR) <support at ICS-CTRL dot com>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)
