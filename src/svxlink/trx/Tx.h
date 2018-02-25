@@ -133,8 +133,12 @@ class Tx : public sigc::trackable, public Async::AudioSink
     
     /**
      * @brief 	Default constuctor
+     * @param   tx_name   The name of the transmitter
      */
-    Tx(const std::string& name) : m_name(name) {}
+    Tx(std::string tx_name)
+      : m_name(tx_name), m_verbose(true), m_is_transmitting(false)
+    {
+    }
   
     /**
      * @brief 	Destructor
@@ -146,12 +150,24 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void) = 0;
-  
+
     /**
      * @brief 	Return the name of the transmitter
      * @return	Return the name of the transmitter
      */
     const std::string& name(void) const { return m_name; }
+
+    /*
+     * @brief 	Set the verbosity level of the transmitter
+     * @param	verbose Set to \em false to keep the rx from printing things
+     */
+    virtual void setVerbose(bool verbose) { m_verbose = verbose; }
+
+    /**
+     * @brief   Check if the transmitter is verbose or not
+     * @returns Returns \em true if the transmitter is verbose
+     */
+    virtual bool isVerbose(void) const { return m_verbose; }
 
     /**
      * @brief 	Set the transmit control mode
@@ -167,7 +183,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
      */
-    virtual bool isTransmitting(void) const = 0;
+    virtual bool isTransmitting(void) const { return m_is_transmitting; }
     
     /**
      * @brief 	Enable/disable CTCSS on TX
@@ -230,9 +246,14 @@ class Tx : public sigc::trackable, public Async::AudioSink
      */
     sigc::signal<void, bool> transmitterStateChange;
 
+  protected:
+    void setIsTransmitting(bool is_transmitting);
+
   private:
-    std::string   m_name;
-    
+    std::string m_name;
+    bool        m_verbose;
+    bool        m_is_transmitting;
+
 };  /* class Tx */
 
 

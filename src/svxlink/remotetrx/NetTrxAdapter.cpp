@@ -228,7 +228,7 @@ class TxAdapter : public Tx, public AudioSource
 {
   public:
     TxAdapter(const string &name)
-      : Tx(name), tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false),
+      : Tx(name), tx_ctrl_mode(Tx::TX_OFF),
         is_idle(true), ctcss_enabled(false), ctcss_fq(0.0f)
     {
     }
@@ -284,15 +284,6 @@ class TxAdapter : public Tx, public AudioSource
     }
     
     /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
-     */
-    virtual bool isTransmitting(void) const
-    {
-      return is_transmitting;
-    }
-    
-    /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
@@ -334,9 +325,8 @@ class TxAdapter : public Tx, public AudioSource
 
     int writeSamples(const float *samples, int count)
     {
-      //cout << "TxAdapter::writeSamples\n";
       is_idle = false;
-      if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
+      if ((tx_ctrl_mode == Tx::TX_AUTO) && !isTransmitting())
       {
       	transmit(true);
       }
@@ -346,7 +336,6 @@ class TxAdapter : public Tx, public AudioSource
     
     void flushSamples(void)
     {
-      //cout << "TxAdapter::flushSamples\n";
       sinkFlushSamples();
     }
     
@@ -357,10 +346,9 @@ class TxAdapter : public Tx, public AudioSource
     
     void allSamplesFlushed(void)
     {
-      //cout << "TxAdapter::allSamplesFlushed\n";
       is_idle = true;
       sourceAllSamplesFlushed();
-      if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting)
+      if ((tx_ctrl_mode == Tx::TX_AUTO) && isTransmitting())
       {
       	transmit(false);
       }
@@ -373,20 +361,13 @@ class TxAdapter : public Tx, public AudioSource
     
   private:
     Tx::TxCtrlMode  tx_ctrl_mode;
-    bool      	    is_transmitting;
     bool      	    is_idle;
     bool            ctcss_enabled;
     float           ctcss_fq;
 
     void transmit(bool do_transmit)
     {
-      //cout << "TxAdapter::transmit: do_transmit=" << do_transmit << endl;
-      if (do_transmit == is_transmitting)
-      {
-      	return;
-      }
-      
-      is_transmitting = do_transmit;
+      setIsTransmitting(do_transmit);
       sigTransmit(do_transmit);
       transmitterStateChange(do_transmit);
       if (ctcss_enabled && do_transmit && (ctcss_fq > 0.0f))
