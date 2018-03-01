@@ -20,7 +20,7 @@ int main()
     // Create audio device
   Async::AudioIO::setSampleRate(8000);
   Async::AudioIO::setBlocksize(256);
-  Async::AudioIO audio_io("alsa:plughw:0", 0);
+  Async::AudioIO audio_io("alsa:default", 0);
   if (!audio_io.open(Async::AudioIO::MODE_RDWR))
   {
     std::cout << "*** ERROR: Could not open audio device" << std::endl;
