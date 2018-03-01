@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <unistd.h>
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
@@ -25,7 +26,7 @@ int main()
   if (!audio_io.open(Async::AudioIO::MODE_RDWR))
   {
     std::cout << "*** ERROR: Could not open audio device" << std::endl;
-    exit(1);
+    std::exit(1);
   }
   Async::AudioSource* prev_src = &audio_io;
 
@@ -36,7 +37,7 @@ int main()
   if (encoder == 0)
   {
     std::cerr << "*** ERROR: Could not create encoder" << std::endl;
-    exit(1);
+    std::exit(1);
   }
   prev_src->registerSink(encoder);
   prev_src = 0;
@@ -46,7 +47,7 @@ int main()
   if (decoder == 0)
   {
     std::cerr << "*** ERROR: Could not create decoder" << std::endl;
-    exit(1);
+    std::exit(1);
   }
   prev_src = decoder;
 
