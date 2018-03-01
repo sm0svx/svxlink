@@ -174,7 +174,6 @@ class ModuleMetarInfo : public Module
     std::string getCloudType(std::string token);
     void isRwyState(std::string &retval, std::string token);
     int  onDataReceived(std::string metarinput, int count);
-    std::string onConnected(void);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string utctoken);

@@ -2068,44 +2068,6 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
 } /* ispObscurance */
 
 
-std::string ModuleMetarInfo::onConnected(void)
-{
-  string getpath;
-  
-  /*
-   * noaa.gov has changed their web service, new string:
-   * https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=EDDP
-  */
-
-  if (type == "XML")
-  {
-    getpath = "GET ";
-    getpath += link; 
-    getpath += icao;
-    getpath += " HTTP/1.0\r\nHOST:";
-    getpath += server;
-    getpath += "\r\n\r\n";
-  }
-  else
-  {
-    getpath = "GET https://";
-    getpath += server;
-    getpath += "/";
-    getpath += link;
-    getpath += "/";
-    getpath += icao;
-    getpath += ".TXT HTTP/1.0\015\012\015\012";
-  }
-
-  if (debug)
-  {
-    cout << getpath << endl;
-  }
-
-  return(getpath);
-} /* onConnected */
-
-
 void ModuleMetarInfo::say(stringstream &tmp)
 {
    if (debug) cout << tmp.str() << endl;  // debug
