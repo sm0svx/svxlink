@@ -167,7 +167,7 @@ proc loadDefaults {} {
 #   pitch - The CW pitch in Hz
 #   amp   - The CW amplitude in dBFS
 #
-proc play {txt {cpm 0} {pitch 0} {amp 0}} {
+proc play {txt {cpm 0} {pitch 0} {amp -1000000}} {
   variable short_len;
   variable long_len;
   variable char_spacing;
@@ -186,7 +186,7 @@ proc play {txt {cpm 0} {pitch 0} {amp 0}} {
     setPitch $pitch
     set load_defaults 1
   }
-  if {$amp > 0} {
+  if {$amp > -1000000} {
     setAmplitude $amp
     set load_defaults 1
   }

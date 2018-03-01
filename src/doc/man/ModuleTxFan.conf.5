@@ -1,0 +1,75 @@
+.TH MODULETXFAN.CONF 5 "FEB 2018" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleTxFan.conf \- Configuration file for the SvxLink server
+Transmitter Fan module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the TxFan module.
+.P
+The TxFan module is used to control auxiliary fans that are triggered
+by a PTT GPIO event.
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink TxFan module understands.
+.
+.SS ModuleTxFan
+.
+.TP
+.B MODE
+The MODE variable has 2 acceptable values "COUNT_DOWN" and "FOLLOW_PTT".
+The COUNT_DOWN starts at the value set in DELAY variable, and counts down by 1
+every second until zero is reached. At the start of the count down, the FAN_GPIO
+pin will be set to logic high.  When the timer reaches zero, the FAN_GPIO will be
+set to logic low.  The FOLLOW_PTT mode will Activate the FAN_GPIO pin when PTT is
+activated (accurate to 1 second) and will deactivate the FAN_GPIO pin when PTT is
+deactivated (accurate to 1 second).
+.TP
+.B DELAY
+Number of seconds to count down after last PTT gpio is deactivated.
+.TP
+.B PATH_PTT_#
+The absolute path to the value file that controls the PTT pin for a given channel.
+By default the module supports 2 PTT signals, but can easily be expanded to support
+additional channels.  Be certain to include these pins in the svxlink_gpio.conf file.
+.TP
+.B FAN_GPIO
+The absolute path to the value file that controls the FAN gpio pin.  Be certain to
+include these pins in the svxlink_gpio.conf file.
+.TP 
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModuleTxFan.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleTxFan.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Dan Loranger (KG7PAR) <support at ICS-CTRL dot com>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)
