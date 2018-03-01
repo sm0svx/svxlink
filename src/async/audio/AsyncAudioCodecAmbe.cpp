@@ -157,7 +157,7 @@ namespace {
        * indicator.
        */
       Packet(uint8_t type)
-        : m_buf(4)
+        : m_buf(DV3K_HEADER_SIZE)
       {
         m_buf[0] = DV3K_START_BYTE;
         m_buf[1] = 0;
@@ -175,7 +175,7 @@ namespace {
        * indicator is set to 1.
        */
       Packet(uint8_t type, uint8_t field_id)
-        : m_buf(5)
+        : m_buf(DV3K_HEADER_SIZE+1)
       {
         m_buf[0] = DV3K_START_BYTE;
         m_buf[1] = 0;
@@ -194,7 +194,7 @@ namespace {
        * type and multiple fields.
        */
       Packet(uint8_t type, const uint8_t* argv, size_t argc)
-        : m_buf(4+argc)
+        : m_buf(DV3K_HEADER_SIZE+argc)
       {
         assert(argc <= 0xffff);
         m_buf[0] = DV3K_START_BYTE;
@@ -213,8 +213,8 @@ namespace {
        */
       uint8_t* argBuf(void)
       {
-        assert(m_buf.size() > 4);
-        return &m_buf.front() + 4;
+        assert(m_buf.size() > DV3K_HEADER_SIZE);
+        return &m_buf.front() + DV3K_HEADER_SIZE;
       }
 
       /**
@@ -229,7 +229,7 @@ namespace {
       {
         m_buf[1] = len >> 8;
         m_buf[2] = len & 0xff;
-        uint16_t tot_len = len + 4;
+        uint16_t tot_len = len + DV3K_HEADER_SIZE;
         m_buf.resize(tot_len);
         return argBuf();
       }
@@ -267,7 +267,7 @@ namespace {
        */
       uint8_t type(void) const
       {
-        assert(m_buf.size() >= 4);
+        assert(m_buf.size() >= DV3K_HEADER_SIZE);
         return m_buf[3];
       }
 
@@ -276,7 +276,7 @@ namespace {
        */
       size_t fieldsSize(void) const
       {
-        assert(m_buf.size() >= 3);
+        assert(m_buf.size() >= DV3K_HEADER_SIZE-1);
         return (static_cast<size_t>(m_buf[1]) << 8) + m_buf[2];
       }
 
@@ -291,11 +291,11 @@ namespace {
        */
       size_t missingBytes(void) const
       {
-        if (m_buf.size() < 4)
+        if (m_buf.size() < DV3K_HEADER_SIZE)
         {
-          return 4 - m_buf.size();
+          return DV3K_HEADER_SIZE - m_buf.size();
         }
-        return fieldsSize() + 4 - m_buf.size();
+        return fieldsSize() + DV3K_HEADER_SIZE - m_buf.size();
       }
 
       /**
@@ -318,7 +318,8 @@ namespace {
       }
 
     private:
-      static const char DV3K_START_BYTE = 0x61;
+      static const size_t DV3K_HEADER_SIZE  = 4;
+      static const char   DV3K_START_BYTE   = 0x61;
 
       std::vector<uint8_t> m_buf;
   }; /* Packet */
