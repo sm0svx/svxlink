@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioCodecAmbe.h>
+#include "AsyncAudioCodecAmbe.h"
 //#include <AsyncAudioDecimator.h>
 
 
@@ -136,11 +136,26 @@ namespace {
   }
 #endif
 
+  /**
+   * @brief   Represents a DV3k packet
+   */
   class Packet
   {
     public:
+      /**
+       * @brief   Default constructor
+       *
+       * Initializes a packet with an empty buffer to be filled in later.
+       */
       Packet(void) {}
 
+      /**
+       * @brief   Constructor that initialize a packet with a packet type
+       * @param   type The packet type
+       *
+       * Initialize the Packet with the specified type and a zero length
+       * indicator.
+       */
       Packet(uint8_t type)
         : m_buf(4)
       {
@@ -150,35 +165,66 @@ namespace {
         m_buf[3] = type;
       }
 
-      Packet(uint8_t type, uint8_t arg1)
+      /**
+       * @brief   Constructor that initialize a packet with type and one field
+       * @param   type The message type
+       * @param   field_id The id of the single field
+       *
+       * This constructor creates a Packet object with the given type and a
+       * single field. The field can not have any extra data so the length
+       * indicator is set to 1.
+       */
+      Packet(uint8_t type, uint8_t field_id)
         : m_buf(5)
       {
         m_buf[0] = DV3K_START_BYTE;
         m_buf[1] = 0;
         m_buf[2] = 1;
         m_buf[3] = type;
-        m_buf[4] = arg1;
+        m_buf[4] = field_id;
       }
 
+      /**
+       * @brief   Constructor that init a packet with type and multiple fields
+       * @param   The type of the packet
+       * @param   argv The field id:s and field data
+       * @param   argc The number of bytes in the field id:s and field datas
+       *
+       * This constructor can create a whole packet all at once with packet
+       * type and multiple fields.
+       */
       Packet(uint8_t type, const uint8_t* argv, size_t argc)
         : m_buf(4+argc)
       {
+        assert(argc <= 0xffff);
         m_buf[0] = DV3K_START_BYTE;
-        m_buf[1] = 0;
-        m_buf[2] = argc;
+        m_buf[1] = argc >> 8;
+        m_buf[2] = argc & 0xff;
         m_buf[3] = type;
-        for (size_t i=0; i<argc; ++i)
-        {
-          m_buf[4+i] = argv[i];
-        }
+        copy(argv, argv+argc, m_buf.begin()+4);
       }
 
+      /**
+       * @brief   Return a pointer to the fields area in the packet
+       *
+       * This function returns a pointer to the fields area of a packet. The
+       * fields area must have been previously allocated by some of the
+       * available means to do so.
+       */
       uint8_t* argBuf(void)
       {
         assert(m_buf.size() > 4);
         return &m_buf.front() + 4;
       }
 
+      /**
+       * @brief   Set up size of fields packet area and return a pointer to it
+       * @param   len The length of the fields area in bytes
+       *
+       * This function will resize the packet buffer to the given size, adding
+       * the packet header size, and then a pointer to the new fields area is
+       * returned.
+       */
       uint8_t* argBuf(size_t len)
       {
         m_buf[1] = len >> 8;
@@ -188,12 +234,22 @@ namespace {
         return argBuf();
       }
 
+      /**
+       * @brief   Return a pointer to the start of the packet buffer
+       */
       const char* data(void) const
       {
         return reinterpret_cast<const char*>(&m_buf.front());
       }
+
+      /**
+       * @brief   Return the size of the packet buffer
+       */
       size_t size(void) const { return m_buf.size(); }
 
+      /**
+       * @brief   Returns the packet buffer as a hex string (debugging)
+       */
       std::string toString(void) const
       {
         std::ostringstream ss;
@@ -206,18 +262,33 @@ namespace {
         return ss.str();
       }
 
+      /**
+       * @brief   Returns the packet type
+       */
       uint8_t type(void) const
       {
         assert(m_buf.size() >= 4);
         return m_buf[3];
       }
 
+      /**
+       * @brief   Returns the size of the fields area
+       */
       size_t fieldsSize(void) const
       {
         assert(m_buf.size() >= 3);
         return (static_cast<size_t>(m_buf[1]) << 8) + m_buf[2];
       }
 
+      /**
+       * @brief   Returns a count of how many bytes are currently missing
+       *
+       * This function will calculate how many bytes that are currently missing
+       * in the buffer. When starting with a completely empty packet, at least
+       * the number of bytes in a minimal packet header is expected. When the
+       * header have been received, the packet fields area size can be used to
+       * calculate how many bytes are missing.
+       */
       size_t missingBytes(void) const
       {
         if (m_buf.size() < 4)
@@ -227,11 +298,20 @@ namespace {
         return fieldsSize() + 4 - m_buf.size();
       }
 
+      /**
+       * @brief   Clear the buffer contents
+       */
       void clear(void)
       {
         m_buf.clear();
       }
 
+      /**
+       * @brief   Add bytes to the end of the buffer
+       *
+       * NOTE: This function do NOT update the fields length indicator in the
+       * packet.
+       */
       void addBytes(const uint8_t *buf, size_t len)
       {
         m_buf.insert(m_buf.end(), buf, buf+len);
@@ -264,7 +344,9 @@ namespace {
         send(packet);
       }
 
-        /* Method is called to send speech samples to the encoder */
+      /**
+       * @brief   Called to send speech samples to the encoder
+       */
       virtual int writeSamples(const float *samples, int count)
       {
         if (m_state != READY)
@@ -347,6 +429,7 @@ namespace {
         OFFLINE, RESET, INIT, PRODID, VERSID, CPARAMS, READY, WARNING, ERROR
       };
       State     m_state;
+        // FIXME: Use std::vector instead or maybe a Packet to store samples
       float     m_inbuf[640];
       size_t    m_inbufcnt;
       Packet    m_packet;
@@ -761,11 +844,11 @@ namespace {
 }
 
 
-AudioCodecAmbe *AudioCodecAmbe::allocateEncoder(void)
+AudioEncoderAmbe *AudioCodecAmbe::allocateEncoder(void)
 {
   initializeCodecs();
 
-  for (CodecVector::iterator it=codecs.begin(); it!=codecs.end(); ++it)
+  for (Codecs::iterator it=codecs.begin(); it!=codecs.end(); ++it)
   {
     if (!(*it)->m_encoder_in_use)
     {
@@ -787,11 +870,11 @@ void AudioCodecAmbe::releaseEncoder(void)
 } /* AudioCodecAmbe::releaseEncoder */
 
 
-AudioCodecAmbe *AudioCodecAmbe::allocateDecoder(void)
+AudioDecoderAmbe *AudioCodecAmbe::allocateDecoder(void)
 {
   initializeCodecs();
 
-  for (CodecVector::iterator it=codecs.begin(); it!=codecs.end(); ++it)
+  for (Codecs::iterator it=codecs.begin(); it!=codecs.end(); ++it)
   {
     if (!(*it)->m_decoder_in_use)
     {
@@ -820,6 +903,9 @@ void AudioCodecAmbe::initializeCodecs(void)
     return;
   }
 
+    // FIXME: Only one codec with hardcoded parameters are created right now.
+    // A method should be derived for how to get codec configuration into this
+    // class.
   AudioCodecAmbe *codec = new AudioCodecAmbeDv3kTty;
   DeviceOptions options;
   options["TTY_DEVICE"] = "/dev/ttyUSB0";
@@ -837,14 +923,14 @@ void AudioCodecAmbe::initializeCodecs(void)
 void AudioCodecAmbe::deinitializeCodecs(void)
 {
   bool all_unused = true;
-  for (CodecVector::iterator it=codecs.begin(); it!=codecs.end(); ++it)
+  for (Codecs::iterator it=codecs.begin(); it!=codecs.end(); ++it)
   {
     all_unused &= (!(*it)->m_encoder_in_use && !(*it)->m_decoder_in_use);
   }
   if (all_unused)
   {
     //std::cout << "### Delete all AMBE codecs" << std::endl;
-    for (CodecVector::iterator it=codecs.begin(); it!=codecs.end(); ++it)
+    for (Codecs::iterator it=codecs.begin(); it!=codecs.end(); ++it)
     {
       delete *it;
     }
@@ -853,4 +939,7 @@ void AudioCodecAmbe::deinitializeCodecs(void)
 } /* AudioCodecAmbe::deinitializeCodecs */
 
 
+/*
+ * This file has not been truncated
+ */
 

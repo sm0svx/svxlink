@@ -125,6 +125,12 @@ class AudioEncoder : public AudioSink, virtual public sigc::trackable
      */
     static AudioEncoder *create(const std::string &name);
     
+    /**
+     * @brief   Release a previously created encoder
+     *
+     * This function is used instead of 'delete' to deallocate an encoder.
+     * Calling it twice is not allowed.
+     */
     virtual void release(void) { delete this; }
 
     /**

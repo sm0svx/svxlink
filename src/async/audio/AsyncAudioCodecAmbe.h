@@ -106,10 +106,14 @@ namespace Async
  ****************************************************************************/
 
 /**
- * @brief Base class for an AMBE encoder
+ * @brief AMBE encoder
  *
- * This class should not be used directly. It is only used as an intermediate
- * base class to implement the AudioEncoder::release method.
+ * This is the type for an AMBE encoder. An instance of this class can not be
+ * created or deleted directly since the constructor and destructor has
+ * protected scope. Instead the AudioCodecAmbe::allocateEncoder() class
+ * function must be used to get an instance of an encoder and the
+ * AudioEncoderAmbe::release() member function must be used to free the
+ * instance.
  */
 class AudioEncoderAmbe : public AudioEncoder
 {
@@ -117,16 +121,21 @@ class AudioEncoderAmbe : public AudioEncoder
     virtual void release(void) { releaseEncoder(); }
 
   protected:
+    AudioEncoderAmbe(void) {}
     virtual ~AudioEncoderAmbe(void) {}
     virtual void releaseEncoder(void) = 0;
 }; /* class AudioEncoderAmbe */
 
 
 /**
- * @brief Base class for an AMBE decoder
+ * @brief AMBE decoder
  *
- * This class should not be used directly. It is only used as an intermediate
- * base class to implement the AudioDecoder::release method.
+ * This is the type for an AMBE decoder. An instance of this class can not be
+ * created or deleted directly since the constructor and destructor has
+ * protected scope. Instead the AudioCodecAmbe::allocateDecoder() class
+ * function must be used to get an instance of a decoder and the
+ * AudioDecoderAmbe::release() member function must be used to free the
+ * instance.
  */
 class AudioDecoderAmbe : public AudioDecoder
 {
@@ -134,23 +143,34 @@ class AudioDecoderAmbe : public AudioDecoder
     virtual void release(void) { releaseDecoder(); }
 
   protected:
+    AudioDecoderAmbe(void) {}
     virtual ~AudioDecoderAmbe(void) {}
     virtual void releaseDecoder(void) = 0;
 }; /* class AudioDecoderAmbe */
 
 
 /**
-@brief
+@brief  Implements usage of an AMBE hardware codec device
 @author Christian Stussak / porst17 & Tobias Blomberg / SM0SVX
 @date   2018-02-25
 
-Factory for different implementations of the AMBE codec.
+This class implements usage of an AMBE hardware audio codec device. As with all
+audio codecs this class should not normally be used directly but instead the
+Async::Audio::Encoder::create() and Async::AudioDecoder::create() class
+functions should be used.
 */
 class AudioCodecAmbe : public AudioEncoderAmbe, public AudioDecoderAmbe
 {
   public:
-    static AudioCodecAmbe *allocateEncoder(void);
-    static AudioCodecAmbe *allocateDecoder(void);
+    /**
+     * @brief Allocate an unused encoder
+     */
+    static AudioEncoderAmbe *allocateEncoder(void);
+
+    /**
+     * @brief Allocate an unused decoder
+     */
+    static AudioDecoderAmbe *allocateDecoder(void);
 
     /**
      * @brief   Get the name of the codec
@@ -188,9 +208,9 @@ class AudioCodecAmbe : public AudioEncoderAmbe, public AudioDecoderAmbe
     virtual void releaseDecoder(void);
 
   private:
-    typedef std::vector<AudioCodecAmbe*> CodecVector;
+    typedef std::vector<AudioCodecAmbe*> Codecs;
 
-    static CodecVector codecs;
+    static Codecs codecs;
 
     bool m_encoder_in_use;
     bool m_decoder_in_use;

@@ -125,6 +125,12 @@ class AudioDecoder : public AudioSource, virtual public sigc::trackable
      */
     static AudioDecoder *create(const std::string &name);
     
+    /**
+     * @brief   Release a previously created decoder
+     *
+     * This function is used instead of 'delete' to deallocate a decoder.
+     * Calling it twice is not allowed.
+     */
     virtual void release(void) { delete this; }
 
     /**

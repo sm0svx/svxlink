@@ -1,9 +1,9 @@
 #include <iostream>
 #include <unistd.h>
 #include <AsyncCppApplication.h>
-#include <AsyncAudioCodecAmbe.h>
 #include <AsyncAudioIO.h>
-#include <AsyncTimer.h>
+#include <AsyncAudioEncoder.h>
+#include <AsyncAudioDecoder.h>
 
 void do_quit(int signum)
 {
@@ -28,31 +28,34 @@ int main()
   }
   Async::AudioSource* prev_src = &audio_io;
 
-    // Create AMBE codec
-  //Async::AudioCodecAmbe* codec = Async::AudioCodecAmbe::create("TTY");
+    // Create AMBE encoder
   Async::AudioEncoder* encoder = Async::AudioEncoder::create("AMBE");
-  prev_src->registerSink(encoder);
-
-  Async::AudioDecoder* decoder = Async::AudioDecoder::create("AMBE");
-#if 0
-  Async::AudioCodecAmbe::Options options;
-  options["TTY_DEVICE"] = "/dev/ttyUSB0";
-  //options["TTY_BAUDRATE"] = "230400";
-  options["TTY_BAUDRATE"] = "460800";
-  if (!codec->initialize(options))
+  if (encoder == 0)
   {
-    std::cerr << "*** ERROR: AMBE codec initialization failed" << std::endl;
+    std::cerr << "*** ERROR: Could not create encoder" << std::endl;
     exit(1);
   }
-#endif
+  prev_src->registerSink(encoder);
+  prev_src = 0;
+
+    // Create AMBE decoder
+  Async::AudioDecoder* decoder = Async::AudioDecoder::create("AMBE");
+  if (decoder == 0)
+  {
+    std::cerr << "*** ERROR: Could not create decoder" << std::endl;
+    exit(1);
+  }
+  prev_src = decoder;
+
+    // Connect encoder to decoder
   encoder->writeEncodedSamples.connect(
       mem_fun(*decoder, &Async::AudioDecoder::writeEncodedSamples));
   encoder->flushEncodedSamples.connect(
       mem_fun(*decoder, &Async::AudioDecoder::flushEncodedSamples));
   decoder->allEncodedSamplesFlushed.connect(
       mem_fun(*encoder, &Async::AudioEncoder::allEncodedSamplesFlushed));
-  prev_src = decoder;
 
+    // Finally route audio back to the audio device
   prev_src->registerSink(&audio_io);
 
   app.unixSignalCaught.connect(sigc::ptr_fun(&do_quit));
@@ -60,7 +63,7 @@ int main()
 
   app.exec();
 
-  audio_io.close();
+    // When both encoder and decoder are released, the AMBE device is released
   encoder->release();
   decoder->release();
 
