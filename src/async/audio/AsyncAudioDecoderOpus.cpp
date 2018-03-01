@@ -185,9 +185,9 @@ void AudioDecoderOpus::reset(void)
 } /* AudioDecoderOpus::reset */
 
 
-void AudioDecoderOpus::writeEncodedSamples(void *buf, int size)
+void AudioDecoderOpus::writeEncodedSamples(const void *buf, int size)
 {
-  unsigned char *packet = reinterpret_cast<unsigned char *>(buf);
+  const unsigned char *packet = reinterpret_cast<const unsigned char *>(buf);
   
   int frame_cnt = opus_packet_get_nb_frames(packet, size);
   if (frame_cnt == 0)

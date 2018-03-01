@@ -1,12 +1,13 @@
 /**
-@file	 AsyncAudioDecoderSpeex.h
-@brief   An audio decoder that use the Speex audio codec
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-15
+@file	 AsyncAudioCodecAmbe.h
+@brief   Contains a class to encode/decode AMBE to/from voice
+@author  Christian Stussak / Imaginary & Tobias Blomberg / SM0SVX
+         & Adi Bier / DL1HRC
+@date	 2017-07-10
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,9 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef ASYNC_AUDIO_DECODER_SPEEX_INCLUDED
-#define ASYNC_AUDIO_DECODER_SPEEX_INCLUDED
-
+#ifndef ASYNC_AUDIO_CODEC_AMBE_INCLUDED
+#define ASYNC_AUDIO_CODEC_AMBE_INCLUDED
 
 /****************************************************************************
  *
@@ -34,7 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <speex/speex.h>
+#include <string>
+#include <vector>
+#include <map>
 
 
 /****************************************************************************
@@ -43,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioEncoder.h>
 #include <AsyncAudioDecoder.h>
 
 
@@ -78,7 +81,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -103,91 +106,106 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	An audio decoder that use the Speex audio codec
-@author Tobias Blomberg / SM0SVX
-@date   2008-10-15
-
-This class implements an audio decoder that use the Speex audio codec.
-*/
-class AudioDecoderSpeex : public AudioDecoder
+ * @brief Base class for an AMBE encoder
+ *
+ * This class should not be used directly. It is only used as an intermediate
+ * base class to implement the AudioEncoder::release method.
+ */
+class AudioEncoderAmbe : public AudioEncoder
 {
   public:
+    virtual void release(void) { releaseEncoder(); }
+
+  protected:
+    virtual ~AudioEncoderAmbe(void) {}
+    virtual void releaseEncoder(void) = 0;
+}; /* class AudioEncoderAmbe */
+
+
+/**
+ * @brief Base class for an AMBE decoder
+ *
+ * This class should not be used directly. It is only used as an intermediate
+ * base class to implement the AudioDecoder::release method.
+ */
+class AudioDecoderAmbe : public AudioDecoder
+{
+  public:
+    virtual void release(void) { releaseDecoder(); }
+
+  protected:
+    virtual ~AudioDecoderAmbe(void) {}
+    virtual void releaseDecoder(void) = 0;
+}; /* class AudioDecoderAmbe */
+
+
+/**
+@brief
+@author Christian Stussak / porst17 & Tobias Blomberg / SM0SVX
+@date   2018-02-25
+
+Factory for different implementations of the AMBE codec.
+*/
+class AudioCodecAmbe : public AudioEncoderAmbe, public AudioDecoderAmbe
+{
+  public:
+    static AudioCodecAmbe *allocateEncoder(void);
+    static AudioCodecAmbe *allocateDecoder(void);
+
     /**
-     * @brief 	Default constuctor
+     * @brief   Get the name of the codec
+     * @return  Return the name of the codec
      */
-    AudioDecoderSpeex(void);
-  
+    virtual const char *name(void) const { return "AMBE"; }
+
+  protected:
+    typedef std::map<std::string, std::string> DeviceOptions;
+
+    /**
+    * @brief 	Default constuctor
+    */
+    AudioCodecAmbe(void) : m_encoder_in_use(false), m_decoder_in_use(false) {}
+
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioDecoderSpeex(void);
-  
-    /**
-     * @brief   Get the name of the codec
-     * @returns Return the name of the codec
-     */
-    virtual const char *name(void) const { return "SPEEX"; }
-  
-    /**
-     * @brief 	Set an option for the decoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value);
+    virtual ~AudioCodecAmbe(void) {}
 
     /**
-     * @brief Print codec parameter settings
+     * @brief   Initialize the codec device
+     * @param   options Codec device options
      */
-    virtual void printCodecParams(void) const;
-    
-    /**
-     * @brief 	Get the frame size for the decoder
-     * @return	Returns the decoder frame size
-     */
-    int frameSize(void) const { return frame_size; }
-  
-    /**
-     * @brief 	Enable or disable the perceptual enhancer
-     * @param 	enable Set to \em true to enable or \em false to disable
-     * @return	Returns the new setting
-     */
-    bool enableEnhancer(bool enable);
-  
-    /**
-     * @brief 	Get the perceptual enhance enable/disable state
-     * @return	Returns \em true if the enhancer is enabled or \em false if
-     *          it's not
-     */
-    bool enhancerEnabled(void) const;
-    
-    /**
-     * @brief 	Write encoded samples into the decoder
-     * @param 	buf  Buffer containing encoded samples
-     * @param 	size The size of the buffer
-     */
-    virtual void writeEncodedSamples(const void *buf, int size);
-    
+    virtual bool initialize(const DeviceOptions& options=DeviceOptions()) = 0;
 
-  protected:
-    
+    /**
+     * @brief Release a previously allocated encoder
+     */
+    virtual void releaseEncoder(void);
+
+    /**
+     * @brief Release a previously allocated decoder
+     */
+    virtual void releaseDecoder(void);
+
   private:
-    SpeexBits bits;
-    void      *dec_state;
-    int       frame_size;
-    
-    AudioDecoderSpeex(const AudioDecoderSpeex&);
-    AudioDecoderSpeex& operator=(const AudioDecoderSpeex&);
-    
-};  /* class AudioDecoderSpeex */
+    typedef std::vector<AudioCodecAmbe*> CodecVector;
 
+    static CodecVector codecs;
+
+    bool m_encoder_in_use;
+    bool m_decoder_in_use;
+
+    static void initializeCodecs(void);
+    static void deinitializeCodecs(void);
+
+    AudioCodecAmbe(const AudioCodecAmbe&);
+    AudioCodecAmbe& operator=(const AudioCodecAmbe&);
+};  /* class AudioCodecAmbe */
 
 } /* namespace */
 
-#endif /* ASYNC_AUDIO_DECODER_SPEEX_INCLUDED */
-
-
+#endif /* ASYNC_AUDIO_CODEC_AMBE_INCLUDED */
 
 /*
  * This file has not been truncated
  */
-

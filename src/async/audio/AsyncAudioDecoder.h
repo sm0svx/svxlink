@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for an audio decoder.
 */
-class AudioDecoder : public AudioSource, public sigc::trackable
+class AudioDecoder : public AudioSource, virtual public sigc::trackable
 {
   public:
     /**
@@ -125,16 +125,8 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      */
     static AudioDecoder *create(const std::string &name);
     
-    /**
-     * @brief 	Default constuctor
-     */
-    AudioDecoder(void) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    virtual ~AudioDecoder(void) {}
-    
+    virtual void release(void) { delete this; }
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
@@ -158,7 +150,7 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    virtual void writeEncodedSamples(void *buf, int size) = 0;
+    virtual void writeEncodedSamples(const void *buf, int size) = 0;
     
     /**
      * @brief Call this function when all encoded samples have been received
@@ -181,6 +173,16 @@ class AudioDecoder : public AudioSource, public sigc::trackable
     
 
   protected:
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioDecoder(void) {}
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioDecoder(void) {}
+
     /**
      * @brief The registered sink has flushed all samples
      *

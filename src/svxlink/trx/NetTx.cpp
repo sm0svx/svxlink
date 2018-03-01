@@ -131,7 +131,7 @@ NetTx::NetTx(Config &cfg, const string& name)
 NetTx::~NetTx(void)
 {
   clearHandler();
-  delete audio_enc;
+  audio_enc->release();
   delete pacer;
   tcp_con->deleteInstance();
 } /* NetTx::~NetTx */

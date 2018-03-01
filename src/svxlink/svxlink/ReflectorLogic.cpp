@@ -143,9 +143,9 @@ ReflectorLogic::~ReflectorLogic(void)
   m_udp_sock = 0;
   delete m_logic_con_in;
   m_logic_con_in = 0;
-  delete m_enc;
+  m_enc->release();
   m_enc = 0;
-  delete m_dec;
+  m_dec->release();
   m_dec = 0;
   delete m_con;
   m_con = 0;
@@ -854,7 +854,7 @@ void ReflectorLogic::handleTimerTick(Async::Timer *t)
 
 bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
 {
-  delete m_enc;
+  m_enc->release();
   m_enc = Async::AudioEncoder::create(codec_name);
   if (m_enc == 0)
   {
@@ -876,7 +876,7 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
   {
     sink = m_dec->sink();
     m_dec->unregisterSink();
-    delete m_dec;
+    m_dec->release();
   }
   m_dec = Async::AudioDecoder::create(codec_name);
   if (m_dec == 0)

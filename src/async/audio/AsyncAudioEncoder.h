@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for implementing an audio encoder.
 */
-class AudioEncoder : public AudioSink, public sigc::trackable
+class AudioEncoder : public AudioSink, virtual public sigc::trackable
 {
   public:
     /**
@@ -125,16 +125,8 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      */
     static AudioEncoder *create(const std::string &name);
     
-    /**
-     * @brief 	Default constuctor
-     */
-    AudioEncoder(void) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~AudioEncoder(void) {}
-  
+    virtual void release(void) { delete this; }
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
@@ -182,7 +174,17 @@ class AudioEncoder : public AudioSink, public sigc::trackable
     
   
   protected:
-    
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioEncoder(void) {}
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioEncoder(void) {}
+
+
   private:
     AudioEncoder(const AudioEncoder&);
     AudioEncoder& operator=(const AudioEncoder&);

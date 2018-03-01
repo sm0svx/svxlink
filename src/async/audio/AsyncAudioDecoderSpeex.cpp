@@ -175,7 +175,7 @@ bool AudioDecoderSpeex::enhancerEnabled(void) const
 
 
 
-void AudioDecoderSpeex::writeEncodedSamples(void *buf, int size)
+void AudioDecoderSpeex::writeEncodedSamples(const void *buf, int size)
 {
   char *ptr = (char *)buf;
   

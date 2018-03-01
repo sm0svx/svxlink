@@ -143,7 +143,7 @@ NetRx::NetRx(Config &cfg, const string& name)
 NetRx::~NetRx(void)
 {
   clearHandler();
-  delete audio_dec;
+  audio_dec->release();
   
   tcp_con->deleteInstance();
   

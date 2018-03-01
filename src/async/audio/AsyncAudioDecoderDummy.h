@@ -136,7 +136,7 @@ class AudioDecoderDummy : public AudioDecoder
      *
      * This DUMMY decoder will just throw away incoming encoded samples.
      */
-    virtual void writeEncodedSamples(void*, int) {}
+    virtual void writeEncodedSamples(const void*, int) {}
 
     /**
      * @brief Call this function when all encoded samples have been received
