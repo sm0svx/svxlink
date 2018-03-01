@@ -101,11 +101,15 @@
   each transmitter.
 
 
- 1.6.1 -- 21 Jan 2018
+ 1.6.1 -- 01 Mar 2018
 ----------------------
 
 * ModuleEchoLink bugfix: Echolink remote roger beep was sent even though
   listen only mode was active on the local node.
+
+* Bugfix in the --logfile command line argument handling for svxlink,
+  remotetrx and svxreflector. Under some circumstances SvxLink would crash
+  with strange errors if used with a logfile.
 
 
 
