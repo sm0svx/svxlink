@@ -21,7 +21,7 @@ MODULE_METARINFO=1.1.0
 MODULE_FRN=1.1.0
 
 # Version for the RemoteTrx application
-REMOTE_TRX=1.2.1
+REMOTE_TRX=1.2.2
 
 # Version for the signal level calibration utility
 SIGLEV_DET_CAL=1.0.6
@@ -33,4 +33,4 @@ DEVCAL=1.0.1
 SVXSERVER=0.0.5.99.1
 
 # Version for SvxReflector
-SVXREFLECTOR=1.0.0
+SVXREFLECTOR=1.0.1
