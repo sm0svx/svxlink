@@ -35,9 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
-#include <stdio.h>
+#include <string.h>
 #include <iostream>
 #include <sstream>
 #include <time.h>
@@ -51,7 +49,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
 
 
@@ -220,7 +217,7 @@ extern "C" {
 
 ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
                                  const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), con(0)
+  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false)
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
@@ -229,7 +226,6 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
 
 ModuleMetarInfo::~ModuleMetarInfo(void)
 {
-   delete con;
 } /* ~ModuleMetarInfo */
 
 
@@ -458,8 +454,6 @@ void ModuleMetarInfo::activateInit(void)
  */
 void ModuleMetarInfo::deactivateCleanup(void)
 {
-  delete con;
-  con = 0;
 } /* deactivateCleanup */
 
 
@@ -661,30 +655,61 @@ void ModuleMetarInfo::allMsgsWritten(void)
 
 } /* allMsgsWritten */
 
+/*
+* callback function, called-up by libcurl framework
+*/
+size_t ModuleMetarInfo::callback(char *contents, size_t size, size_t nmemb,
+                                       void *userp)
+{
+  if (userp == NULL) return 0;
+  size_t written = size * nmemb;
+  char *t = (char *)malloc(written +1);
+  memcpy(t, (const char *)contents, written);
+  t[written] = '\0';
+  static_cast<ModuleMetarInfo *>(userp)->onDataReceived((std::string)t, 
+                                                   (std::string(t)).length());
+  free(t);
+  return written;
+} /* MetarInfo::callback */
+
 
 /*
-* establish a tcp-connection to the METAR-Server
+* establish a https-connection to the METAR-Server
+* using curl library
 */
-void ModuleMetarInfo::openConnection(void)
+void ModuleMetarInfo::openConnection()
 {
-  if (con == 0)
-  {
-    con = new TcpClient<>(server, 80);
-    con->connected.connect(mem_fun(*this, &ModuleMetarInfo::onConnected));
-    con->disconnected.connect(mem_fun(*this, &ModuleMetarInfo::onDisconnected));
-    con->dataReceived.connect(mem_fun(*this, &ModuleMetarInfo::onDataReceived));
-    con->connect();
-  }
+  CURL *curl;
+  CURLcode res;
+  
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+  curl = curl_easy_init();
+ 
+  std::string path = server;
+              path += link;
+              path += icao;
 
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, path.c_str());
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &ModuleMetarInfo::callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
+    res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+    {
+      cout << "*** ERROR: " << curl_easy_strerror(res) << 
+           " while processing metarinfo from " << server << endl;   
+    }
+    curl_easy_cleanup(curl);
+  }
+  curl_global_cleanup();
 } /* openConnection */
 
 
-int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
+int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)
 {
   std::string metar = "";
-  char *metarinput = static_cast<char *>(buf);
-  html += string(metarinput, metarinput + count);
-
+  html += metarinput;
 
   // switching between the newer xml-service by aviationweather and the old 
   // noaa.gov version. With the standard TXT format anybody will be able to 
@@ -2043,9 +2068,8 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
 } /* ispObscurance */
 
 
-void ModuleMetarInfo::onConnected(void)
+std::string ModuleMetarInfo::onConnected(void)
 {
-  assert(con->isConnected());
   string getpath;
   
   /*
@@ -2064,7 +2088,7 @@ void ModuleMetarInfo::onConnected(void)
   }
   else
   {
-    getpath = "GET http://";
+    getpath = "GET https://";
     getpath += server;
     getpath += "/";
     getpath += link;
@@ -2078,16 +2102,8 @@ void ModuleMetarInfo::onConnected(void)
     cout << getpath << endl;
   }
 
-  con->write(getpath.c_str(), getpath.size());
+  return(getpath);
 } /* onConnected */
-
-
-void ModuleMetarInfo::onDisconnected(TcpConnection * /*con*/,
-                     TcpClient<>::DisconnectReason reason)
-{
-  delete con;
-  con = 0;
-} /* onDisconnect */
 
 
 void ModuleMetarInfo::say(stringstream &tmp)
