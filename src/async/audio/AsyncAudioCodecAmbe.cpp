@@ -60,7 +60,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AsyncAudioCodecAmbe.h"
-//#include <AsyncAudioDecimator.h>
+#include "AsyncAudioDecimator.h"
+#include "AsyncAudioInterpolator.h"
+#include "AsyncSigCAudioSink.h"
+#include "AsyncSigCAudioSource.h"
+
+// FIXME: Temporarily use these filter coefficients for resampling
+#include "../../svxlink/trx/multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -348,22 +354,24 @@ namespace {
       /**
        * @brief   Called to send speech samples to the encoder
        */
-      virtual int writeSamples(const float *samples, int count)
+      virtual int writeSpeechSamples(const float *samples, int count)
       {
+        assert(count > 0);
+
         if (m_state != READY)
         {
           return count;
         }
 
-        while (count > 0)
+        size_t samples_left = static_cast<size_t>(count);
+        while (samples_left > 0)
         {
             // Store incoming floats in a buffer until 160 samples have been
             // received
-          size_t to_copy = std::min(DV3K_AUDIO_LEN-m_inbufcnt,
-                                    static_cast<size_t>(count));
+          size_t to_copy = std::min(DV3K_AUDIO_LEN-m_inbufcnt, samples_left);
           memcpy(m_inbuf+m_inbufcnt, samples, sizeof(float)*to_copy);
           m_inbufcnt += to_copy;
-          count -= to_copy;
+          samples_left -= to_copy;
           samples += to_copy;
           if (m_inbufcnt == DV3K_AUDIO_LEN)
           {
@@ -391,7 +399,26 @@ namespace {
       /**
        * @brief Default constuctor
        */
-      AudioCodecAmbeDv3k(void) : m_state(OFFLINE), m_inbufcnt(0) {}
+      AudioCodecAmbeDv3k(void)
+        : m_state(OFFLINE), m_inbufcnt(0),
+          m_decimator(2, coeff_16_8, coeff_16_8_taps),
+          m_interpolator(2, coeff_16_8, coeff_16_8_taps)
+      {
+        m_decimator.setBufferSize(DV3K_AUDIO_LEN);
+        AudioSink::setHandler(&m_decimator);
+        SigCAudioSink *sigc_sink = new SigCAudioSink;
+        m_decimator.registerSink(sigc_sink, true);
+        sigc_sink->sigWriteSamples.connect(
+            sigc::mem_fun(*this, &AudioCodecAmbeDv3k::writeSpeechSamples));
+        sigc_sink->sigFlushSamples.connect(
+            sigc::mem_fun(*this, &AudioCodecAmbeDv3k::sourceAllSamplesFlushed));
+
+        m_dec_output.registerSink(&m_interpolator);
+        m_dec_output.sigAllSamplesFlushed.connect(
+            AudioDecoder::allEncodedSamplesFlushed.make_slot());
+        m_interpolator.setBufferSize(2*DV3K_AUDIO_LEN);
+        AudioSource::setHandler(&m_interpolator);
+      }
       virtual ~AudioCodecAmbeDv3k(void) {}
 
       void reset(void)
@@ -429,11 +456,14 @@ namespace {
       {
         OFFLINE, RESET, INIT, PRODID, VERSID, CPARAMS, READY, WARNING, ERROR
       };
-      State     m_state;
+      State               m_state;
         // FIXME: Use std::vector instead or maybe a Packet to store samples
-      float     m_inbuf[640];
-      size_t    m_inbufcnt;
-      Packet    m_packet;
+      float               m_inbuf[640];
+      size_t              m_inbufcnt;
+      Packet              m_packet;
+      AudioDecimator      m_decimator;
+      SigCAudioSource     m_dec_output;
+      AudioInterpolator   m_interpolator;
 
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
       AudioCodecAmbeDv3k& operator=(const AudioCodecAmbeDv3k&);
@@ -587,7 +617,15 @@ namespace {
                 w |= *fields++;
                 t[b++] = static_cast<float>(w) / 32767.0;
               }
-              AudioDecoder::sinkWriteSamples(t, sample_cnt);
+              int ret = m_interpolator.writeSamples(t, sample_cnt);
+              //cout << "### sample_cnt=" << sample_cnt
+              //     << " ret=" << ret
+              //     << endl;
+              if (ret != static_cast<int>(sample_cnt))
+              {
+                cerr << "*** WARNING: " << (sample_cnt - ret)
+                     << " samples dropped in AMBE encoder" << endl;
+              }
               break;
             }
 
@@ -899,6 +937,13 @@ void AudioCodecAmbe::releaseDecoder(void)
 
 void AudioCodecAmbe::initializeCodecs(void)
 {
+  if (INTERNAL_SAMPLE_RATE != 16000)
+  {
+    cout << "*** ERROR: The AMBE audio codec can only be used with 16kHz "
+            "sampling rate at the moment" << endl;
+    return;
+  }
+
   if (!codecs.empty())
   {
     return;

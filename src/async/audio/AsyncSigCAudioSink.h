@@ -139,7 +139,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      */
     virtual int writeSamples(const float *samples, int count)
     {
-      return sigWriteSamples(const_cast<float *>(samples), count);
+      return sigWriteSamples(samples, count);
     }
     
     /**
@@ -191,7 +191,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      * If 0 is returned, the source should write no more samples until the
      * resumeOutput function in the source have been called.
      */
-    sigc::signal<int, float *, int> sigWriteSamples;
+    sigc::signal<int, const float *, int> sigWriteSamples;
 
     /**
      * @brief 	Signal emitted when the source are finished writing samples

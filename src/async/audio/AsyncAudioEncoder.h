@@ -164,7 +164,7 @@ class AudioEncoder : public AudioSink, virtual public sigc::trackable
      * sourceAllSamplesFlushed function.
      * This function is normally only called from a connected source object.
      */
-    virtual void flushSamples(void) { flushEncodedSamples(); }
+    //virtual void flushSamples(void) { flushEncodedSamples(); }
     
     /**
      * @brief 	A signal emitted when encoded samples are available
@@ -180,10 +180,26 @@ class AudioEncoder : public AudioSink, virtual public sigc::trackable
     
   
   protected:
+    class DefaultSinkHandler : public Async::AudioSink
+    {
+      public:
+        DefaultSinkHandler(AudioEncoder *enc) : m_enc(enc) {}
+        virtual void flushSamples(void) { m_enc->flushEncodedSamples(); }
+      private:
+        AudioEncoder *m_enc;
+    };
+
     /**
      * @brief 	Default constuctor
      */
-    AudioEncoder(void) {}
+    AudioEncoder(void)
+      : m_default_sink_handler(this)
+    {
+      if (handler() == 0)
+      {
+        setHandler(&m_default_sink_handler);
+      }
+    }
 
     /**
      * @brief 	Destructor
@@ -192,6 +208,8 @@ class AudioEncoder : public AudioSink, virtual public sigc::trackable
 
 
   private:
+    DefaultSinkHandler m_default_sink_handler;
+
     AudioEncoder(const AudioEncoder&);
     AudioEncoder& operator=(const AudioEncoder&);
     

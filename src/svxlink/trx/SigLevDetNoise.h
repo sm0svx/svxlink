@@ -233,7 +233,7 @@ class SigLevDetNoise : public SigLevDet
     
     SigLevDetNoise(const SigLevDetNoise&);
     SigLevDetNoise& operator=(const SigLevDetNoise&);
-    int processSamples(float *samples, int count);
+    int processSamples(const float *samples, int count);
     
 };  /* class SigLevDetNoise */
 
