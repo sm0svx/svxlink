@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "version/MODULE_METARINFO.h"
 #include "ModuleMetarInfo.h"
+#include "AsyncFdWatch.h"
 #include "common.h"
 
 
@@ -226,6 +227,7 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
 
 ModuleMetarInfo::~ModuleMetarInfo(void)
 {
+  delete rd_watch;
 } /* ~ModuleMetarInfo */
 
 
@@ -328,7 +330,7 @@ bool ModuleMetarInfo::initialize(void)
   shdesig["fm"]= "from";
   shdesig["tl"]= "until";
 
-
+  rd_watch = new FdWatch;
 
   if (!Module::initialize())
   {
@@ -666,6 +668,7 @@ size_t ModuleMetarInfo::callback(char *contents, size_t size, size_t nmemb,
   char *t = (char *)malloc(written +1);
   memcpy(t, (const char *)contents, written);
   t[written] = '\0';
+  //cout << t << endl;
   static_cast<ModuleMetarInfo *>(userp)->onDataReceived((std::string)t, 
                                                    (std::string(t)).length());
   free(t);
@@ -679,31 +682,55 @@ size_t ModuleMetarInfo::callback(char *contents, size_t size, size_t nmemb,
 */
 void ModuleMetarInfo::openConnection()
 {
-  CURL *curl;
-  CURLcode res;
+  //CURLcode res;
+  int running;
   
   curl_global_init(CURL_GLOBAL_DEFAULT);
-  curl = curl_easy_init();
- 
+  http_handle = curl_easy_init();  
+  multi_handle = curl_multi_init();
+
+  rd_watch->activity.connect(mem_fun(*this, &ModuleMetarInfo::recvHandler));
+
   std::string path = server;
               path += link;
               path += icao;
 
-  if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, path.c_str());
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &ModuleMetarInfo::callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
-    res = curl_easy_perform(curl);
-    if (res != CURLE_OK)
+  if(http_handle) 
+  {
+    curl_easy_setopt(http_handle, CURLOPT_URL, path.c_str());
+    curl_easy_setopt(http_handle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(http_handle, CURLOPT_WRITEFUNCTION, &ModuleMetarInfo::callback);
+    curl_easy_setopt(http_handle, CURLOPT_WRITEDATA, this);
+    
+    curl_multi_add_handle(multi_handle, http_handle);
+    
+    rd_watch->setFd(running, FdWatch::FD_WATCH_RD);
+    rd_watch->setEnabled(true);
+
+    do {
+      curl_multi_perform(multi_handle, &running);
+    } while (running);
+ 
+  /*  if (res != CURLE_OK)
     {
       cout << "*** ERROR: " << curl_easy_strerror(res) << 
            " while processing metarinfo from " << server << endl;   
-    }
-    curl_easy_cleanup(curl);
+    }*/
   }
-  curl_global_cleanup();
 } /* openConnection */
+
+
+void ModuleMetarInfo::recvHandler(FdWatch *watch)
+{
+  cout << "ModuleMetarInfo::recvHandler" << endl;
+  
+  curl_multi_remove_handle(multi_handle, http_handle);
+  curl_easy_cleanup(http_handle);
+  curl_multi_cleanup(multi_handle);
+  curl_global_cleanup();
+  rd_watch->setEnabled(false);
+
+} /* ModuleMetarInfo::recvHandler */
 
 
 int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)

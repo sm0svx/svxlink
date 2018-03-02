@@ -90,6 +90,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async {
+    class FdWatch;
+};
 
 
 /****************************************************************************
@@ -153,6 +156,9 @@ class ModuleMetarInfo : public Module
     std::string type;
     std::string server;
     std::string link;
+    CURL *http_handle; 
+    CURLM *multi_handle;
+    Async::FdWatch * rd_watch;
 
     bool initialize(void);
     void activateInit(void);
@@ -172,6 +178,7 @@ class ModuleMetarInfo : public Module
     std::string getLightning(std::string token);
     std::string getPrecipitation(std::string token);
     std::string getCloudType(std::string token);
+    void recvHandler(Async::FdWatch *watch);
     void isRwyState(std::string &retval, std::string token);
     int  onDataReceived(std::string metarinput, int count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
