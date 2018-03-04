@@ -6,24 +6,24 @@
 #
 ###############################################################################
 
-#Bring in the Phonetic Spelling variable from the config file
-variable Logic::CFG_PHONETIC_SPELLING
-puts "### PHONETIC_SPELLING=$CFG_PHONETIC_SPELLING"
-
-
 #
-# Spell the specified word using a phonetic alphabet
+# Spell the specified word using phonetic alphabet or plain letters depending
+# on the setting of the PHONETIC_SPELLING configuration variable.
+#
+#   word -- The word to spell
 #
 proc spellWord {word} {
+  variable Logic::CFG_PHONETIC_SPELLING
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
     if {[regexp {[a-z0-9]} $char]} {
-        if {([info exists CFG_PHONETIC_SPELLING]) && ($CFG_PHONETIC_SPELLING == 0)} {
-			playMsg "Default" "$char";
-        } else {
-			playMsg "Default" "phonetic_$char";
-        }
+      if {([info exists CFG_PHONETIC_SPELLING]) && \
+          ($CFG_PHONETIC_SPELLING == 0)} {
+        playMsg "Default" "$char";
+      } else {
+        playMsg "Default" "phonetic_$char";
+      }
     } elseif {$char == "/"} {
       playMsg "Default" "slash";
     } elseif {$char == "-"} {
