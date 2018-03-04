@@ -189,6 +189,12 @@ Specify the Words Per Minute of the CW that should be used during any CW
 traffic, typically announcements. If both CW_WPM and CW_CPM is set, CW_CPM will
 be used. Default: 20.
 .TP
+.B PHONETIC_SPELLING
+Specify if the spelling of callsign and other words should be announced on the
+radio interface using phonetic or non-phonetic spelling.  "1" to use phonetic
+sounds (legacy default), or "0" to use non-phonetic sounds.
+Note that this option may not be available for all language packs.
+.TP
 .B SHORT_IDENT_INTERVAL
 The number of minutes between short identifications. The purpose of the short
 identification is to just announce that the station is on the air. Typically just the
