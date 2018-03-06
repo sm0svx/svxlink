@@ -174,6 +174,29 @@ Specify the callsign that should be announced on the radio interface.
 .B TIME_FORMAT
 Specify  what format the time should be announced as, valid options are "12"/"24".
 NOTE: may not work for all language packs
+.B CW_AMP
+Specify the amplitude of the CW that should be used during any cw traffic,
+typically announcements. The amplitude is specified in dB. Default: -6.
+.TP
+.B CW_PITCH
+Specify the pitch (frequency in Hz) of the CW that should be used during any CW
+traffic, typically announcements. Default: 800.
+.TP
+.B CW_CPM
+Specify the Characters Per Minute of the CW that should be used during any CW
+traffic, typically announcements. If both CW_WPM and CW_CPM is set, CW_CPM will
+be used. Default: 100.
+.TP
+.B CW_WPM
+Specify the Words Per Minute of the CW that should be used during any CW
+traffic, typically announcements. If both CW_WPM and CW_CPM is set, CW_CPM will
+be used. Default: 20.
+.TP
+.B PHONETIC_SPELLING
+Specify if the spelling of callsign and other words should be announced on the
+radio interface using phonetic or non-phonetic spelling.  "1" to use phonetic
+sounds (legacy default), or "0" to use non-phonetic sounds.
+Note that this option may not be available for all language packs.
 .TP
 .B SHORT_IDENT_INTERVAL
 The number of minutes between short identifications. The purpose of the short

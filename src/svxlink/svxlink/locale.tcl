@@ -7,21 +7,29 @@
 ###############################################################################
 
 #
-# Spell the specified word using a phonetic alphabet
+# Spell the specified word using phonetic alphabet or plain letters depending
+# on the setting of the PHONETIC_SPELLING configuration variable.
+#
+#   word -- The word to spell
 #
 proc spellWord {word} {
-  global phonetic_spelling
+  variable Logic::CFG_PHONETIC_SPELLING
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
     if {[regexp {[a-z0-9]} $char]} {
-			playMsg "Core" "phonetic_$char";
+      if {([info exists CFG_PHONETIC_SPELLING]) && \
+          ($CFG_PHONETIC_SPELLING == 0)} {
+        playMsg "Default" "$char";
+      } else {
+        playMsg "Default" "phonetic_$char";
+      }
     } elseif {$char == "/"} {
-      playMsg "Core" "slash";
+      playMsg "Default" "slash";
     } elseif {$char == "-"} {
-      playMsg "Core" "dash";
+      playMsg "Default" "dash";
     } elseif {$char == "*"} {
-      playMsg "Core" "star";
+      playMsg "Default" "star";
     }
   }
 }
@@ -129,9 +137,11 @@ proc playNumber {number} {
 #
 # Say the time specified by function arguments "hour" and "minute".
 #
+variable Logic::CFG_TIME_FORMAT
+puts "### TIME_FORMAT=$CFG_TIME_FORMAT"
+
 proc playTime {hour minute} {
-  variable Logic::CFG_TIME_FORMAT
-  puts "### TIME_FORMAT=$CFG_TIME_FORMAT"
+
   # Strip white space and leading zeros. Check ranges.
   if {[scan $hour "%d" hour] != 1 || $hour < 0 || $hour > 23} {
     error "playTime: Non digit hour or value out of range: $hour"
