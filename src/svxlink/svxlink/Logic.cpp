@@ -3,25 +3,20 @@
 @brief   The logic core of the SvxLink Server application
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-23
-
 This is the logic core of the SvxLink Server application. This is where
 everything is tied together. It is also the base class for implementing
 specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
-
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
-
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -170,8 +165,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0),
-	m_time_format("12")
+    dtmf_ctrl_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -248,11 +242,6 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-  
-   // Variable to set time format 12/24 hours
-  if (cfg().getValue(name(), "TIME_FORMAT", m_time_format))
-  {
-  } 
 
   int exec_cmd_on_sql_close = -1;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
@@ -598,8 +587,6 @@ bool Logic::initialize(void)
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
-    // Configure variable to allow user to select 12h/24h time formats
-  event_handler->setVariable("time_format", m_time_format);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
@@ -653,6 +640,11 @@ bool Logic::initialize(void)
   timeoutNextMinute();
   every_minute_timer.start();
 
+  every_second_timer.setExpireOffset(100);
+  every_second_timer.expired.connect(mem_fun(*this, &Logic::everySecond));
+  timeoutNextSecond();
+  every_second_timer.start();
+  
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
       mem_fun(*this, &Logic::putCmdOnQueue));
@@ -813,6 +805,11 @@ void Logic::deactivateModule(Module *module)
 
 Module *Logic::findModule(int id)
 {
+  if (id < 0)
+  {
+    return 0;
+  }
+
   list<Module *>::iterator it;
   for (it=modules.begin(); it!=modules.end(); ++it)
   {
@@ -1237,20 +1234,23 @@ void Logic::loadModule(const string& module_cfg_name)
     return;
   }
 
-  stringstream ss;
-  ss << module->id();
-  ModuleActivateCmd *cmd = new ModuleActivateCmd(&cmd_parser, ss.str(), this);
-  if (!cmd->addToParser())
+  if (module->id() >= 0)
   {
-    cerr << "\n*** ERROR: Failed to add module activation command for module \""
-	 << module_cfg_name << "\" in logic \"" << name() << "\". "
-         << "This is probably due to having set up two modules with the same "
-         << "module id or choosing a module id that is the same as another "
-         << "command.\n\n";
-    delete cmd;
-    delete module;
-    dlclose(handle);
-    return;
+    stringstream ss;
+    ss << module->id();
+    ModuleActivateCmd *cmd = new ModuleActivateCmd(&cmd_parser, ss.str(), this);
+    if (!cmd->addToParser())
+    {
+      cerr << "\n*** ERROR: Failed to add module activation command for "
+           << "module \"" << module_cfg_name << "\" in logic \"" << name()
+           << "\". This is probably due to having set up two modules with the "
+           << "same module id or choosing a module id that is the same as "
+           << "another command.\n\n";
+      delete cmd;
+      delete module;
+      dlclose(handle);
+      return;
+    }
   }
 
     // Connect module audio output to the module audio selector
@@ -1491,6 +1491,23 @@ void Logic::everyMinute(AtTimer *t)
   processEvent("every_minute");
   timeoutNextMinute();
 } /* Logic::everyMinute */
+
+
+void Logic::timeoutNextSecond(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  struct tm *tm = localtime(&tv.tv_sec);
+  tm->tm_sec += 1;
+  every_second_timer.setTimeout(*tm);
+} /* Logic::timeoutNextSecond */
+
+
+void Logic::everySecond(AtTimer *t)
+{
+  processEvent("every_second");
+  timeoutNextSecond();
+} /* Logic::everySecond */
 
 
 void Logic::dtmfDigitDetectedP(char digit, int duration)

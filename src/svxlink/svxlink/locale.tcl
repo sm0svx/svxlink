@@ -130,7 +130,8 @@ proc playNumber {number} {
 # Say the time specified by function arguments "hour" and "minute".
 #
 proc playTime {hour minute} {
-  global time_format
+  variable Logic::CFG_TIME_FORMAT
+  puts "### TIME_FORMAT=$CFG_TIME_FORMAT"
   # Strip white space and leading zeros. Check ranges.
   if {[scan $hour "%d" hour] != 1 || $hour < 0 || $hour > 23} {
     error "playTime: Non digit hour or value out of range: $hour"
@@ -138,7 +139,7 @@ proc playTime {hour minute} {
   if {[scan $minute "%d" minute] != 1 || $minute < 0 || $minute > 59} {
     error "playTime: Non digit minute or value out of range: $hour"
   }
-  if {$time_format == 24} {
+  if {$CFG_TIME_FORMAT == 24} {
     if {$hour == 0} {
       set hour "00"
       playTwoDigitNumber $hour;
