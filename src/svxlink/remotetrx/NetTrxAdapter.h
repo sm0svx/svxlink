@@ -175,6 +175,7 @@ class NetTrxAdapter
     
     NetTrxAdapter(const NetTrxAdapter&);
     NetTrxAdapter& operator=(const NetTrxAdapter&);
+    void onTransmittedSignalStrength(RxAdapter *rx, char rx_id, float siglev);
     
 };  /* class NetTrxAdapter */
 

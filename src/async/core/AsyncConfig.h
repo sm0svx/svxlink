@@ -330,6 +330,12 @@ class Config
     } /* Config::getValue */
 
     /**
+     * @brief   Return the name of all configuration sections
+     * @return  Returns a list of all existing section names
+     */
+    std::list<std::string> listSections(void);
+
+    /**
      * @brief 	Return the name of all the tags in the given section
      * @param 	section The name of the section where the configuration
      *	      	      	variables are located

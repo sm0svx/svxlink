@@ -1,4 +1,4 @@
-.TH MODULEECHOLINK.CONF 5 "MARS 2013" Linux "File Formats"
+.TH MODULEECHOLINK.CONF 5 "JANUARI 2017" Linux "File Formats"
 .
 .SH NAME
 .
@@ -176,6 +176,10 @@ Specify the path to a PTY that can be used to control the EchoLink module from
 the operating system. Commands: "KILL" will disconnect the current talker,
 "DISC callsign" will disconnect the station with the given callsign. Commands
 can be issued using a simple echo command from the shell.
+.TP
+.B REMOTE_RGR_SOUND
+Set this to 1 to enable sending of a roger sound (beep) to remote Echolink
+stations when the squelch closes on the local node. It's disabled by default.
 .
 .SH REGULAR EXPRESSIONS
 .

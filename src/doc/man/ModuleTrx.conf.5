@@ -1,0 +1,154 @@
+.TH MODULETRX.CONF 5 "JANUARI 2018" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleTrx.conf \- Configuration file for the SvxLink transceiver control module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the transceiver control module.
+.P
+The transceiver control module is used to remotely control and operate a
+transceiver through a SvxLink node. The module is configured by setting up one
+or more bands to operate the transceiver on. It is even possible to support
+multiple transceivers by having multiple band definitions but with differing RX
+and TX configurations. This make it possible to for example support HF, VHF,
+UHF etc using the same module.
+.P
+It is only possible to select the operating frequency through the command
+interface but with intelligent band configurations it is possible to select the
+modulation and other parameters as well, like listen only bands.
+.P
+It is also possible to select a band through a shortcut. The configured default
+frequency for the band will then be selected. Single frequency channels are
+configured by setting up a band that span only one frequency. The channel can
+then be selected by either entering a possibly configured shortcut or the
+frequency for the channel.
+.P
+When entering a frequency on the control interface, a band is selected that
+match the entered frequency. If there are more than one band that match the
+frequency there are some rules for which of the bands to select.
+.RS
+.IP \(bu 4
+If the new frequency falls within a band that is a subband of another band, the
+subband is selected. This make it possible to configure regions of a larger
+band differently than the whole band, like making parts of a band listen only
+or selecting another modulation. It also make it possible to define channels
+within the band that have different settings like repeater shift.
+.IP \(bu 4
+If the new frequency falls within a band that is overlapping with the current
+band but that is not a subband of the current band, the band having the lowest
+valued shortcut will be selected. If there is no shortcut configured, the band
+with the lowest lower frequency limit will be selected.
+.IP \(bu 4
+If there is a band currently selected and the new band is not a subband, the
+transceiver will prefer to stay on the current band. Another band can be
+selected explicitly by setting a shortcut on it and first use that shortcut to
+switch to the other band.
+.IP \(bu 4
+If the above rules does not appy it is undefined which band get selected.
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration variables that the
+SvxLink transceiver control module understands. The configuration file consists
+of one global section, that by default is called ModuleTrx, and then there are
+one or more band configuration sections. The global configuration variables
+will serve as a default for all band configuration sections.
+.
+.SS ModuleTrx
+.
+.TP
+.B RX
+Specify a receiver configration section in the same way that it is done in the
+rest of SvxLink. It is even possible to use receivers defined in other SvxLink
+configuration files. If a receiver is defined in the ModuleTrx configuration
+file it is good practise, but not required, to prefix the configuration section
+name with
+.BR ModuleTrx: ,
+like
+.BR [ModuleTrx:Rx1] .
+.TP
+.B TX
+Specify a transmitter configration section in the same way that it is done in
+the rest of SvxLink. It is even possible to use transmitters defined in other
+SvxLink configuration files. If a transmitter is defined in the ModuleTrx
+configuration file it is good practise, but not required, to prefix the
+configuration section name with
+.BR ModuleTrx: ,
+like
+.BR [ModuleTrx:Tx1] .
+.TP
+.B RX_TIMEOUT
+Specify a timeout, in seconds, after which the audio is suppressed from the
+receiver. The audio will be suppressed until the squelch is closed.
+.TP
+.B MODULATION
+Specify which modulation to use. For a list of valid modulations, have a look
+at the documentation for the MODULATION variable in the
+.BR svxlink.conf (5)
+manual page.
+.TP
+.B SHIFT
+Specify the repeater shift (e.g. split transmit frequency) in kHz.
+.
+.SS Band Configuration Section
+.
+A band specific configuration section must be named like
+[ModuleTrx:Band:BANDNAME], where BANDNAME should be replaced with a unique band
+name.
+.P
+A band specific configuration section may contain the same variables that is
+listed above for the ModuleTrx section. Setting the corresponding configuration
+variable here will override the global default. A band configuration section
+may in addition have the following configuration variables.
+.TP
+.B FQ
+This variable is required and define the lower and upper frequencies for the
+band. The frequencies are in kHz and should be given on the form lower-upper.
+For a single frequency band (i.e. a channel) it is sufficient to only specify
+the first frequency.
+.TP
+.B FQ_DEFAULT
+This is the default frequency in kHz for a band. It is used to set the initial
+frequency for a band that is selected through a shortcut. If it is not set, the
+lower band limit will be used as the default frequency.
+.TP
+.B SHORTCUT
+Define a shortcut for a band. The shortcut may be any positive number except
+0-9 which is reserved for module commands. If the shortcut match a command
+entered on the command interface, the band will be selected immediately and the
+frequency set by FQ_DEFAULT will be set. If more than one band have the same
+shortcut it is undefined which one will get selected.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModuleTrx.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleTrx.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)

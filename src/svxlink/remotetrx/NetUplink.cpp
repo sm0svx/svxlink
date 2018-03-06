@@ -6,7 +6,7 @@
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -136,9 +136,10 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   heartbeat_timer->expired.connect(mem_fun(*this, &NetUplink::heartbeat));
 
     // FIXME: Shouldn't we use the updates directly from the receiver instead?
-  siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
-  siglev_check_timer->setEnable(true);
-  siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
+    // Why is this even here?!
+  //siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
+  //siglev_check_timer->setEnable(true);
+  //siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
   
 } /* NetUplink::NetUplink */
 
@@ -154,7 +155,7 @@ NetUplink::~NetUplink(void)
   delete server;
   delete heartbeat_timer;
   delete mute_tx_timer;
-  delete siglev_check_timer;
+  //delete siglev_check_timer;
 } /* NetUplink::~NetUplink */
 
 
@@ -510,6 +511,23 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
     
+    case MsgSetRxFq::TYPE:
+    {
+      MsgSetRxFq *fq_msg = reinterpret_cast<MsgSetRxFq*>(msg);
+      cout << rx->name() << ": SetRxFq(" << fq_msg->fq() << ")\n";
+      rx->setFq(fq_msg->fq());
+      break;
+    }
+
+    case MsgSetRxModulation::TYPE:
+    {
+      MsgSetRxModulation *mod_msg = reinterpret_cast<MsgSetRxModulation*>(msg);
+      cout << rx->name() << ": SetRxModulation("
+           << Modulation::toString(mod_msg->modulation()) << ")\n";
+      rx->setModulation(mod_msg->modulation());
+      break;
+    }
+
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);
@@ -552,7 +570,7 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSendDtmf::TYPE:
     {
       MsgSendDtmf *dtmf_msg = reinterpret_cast<MsgSendDtmf *>(msg);
-      tx->sendDtmf(dtmf_msg->digits());
+      tx->sendDtmf(dtmf_msg->digits(), dtmf_msg->duration());
       break;
     }
     
@@ -644,10 +662,36 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     } 
+
+    case MsgTransmittedSignalStrength::TYPE:
+    {
+      MsgTransmittedSignalStrength *siglev_msg =
+        reinterpret_cast<MsgTransmittedSignalStrength *>(msg);
+      tx->setTransmittedSignalStrength(siglev_msg->sqlRxId(),
+                                       siglev_msg->signalStrength());
+      break;
+    }
     
+    case MsgSetTxFq::TYPE:
+    {
+      MsgSetTxFq *fq_msg = reinterpret_cast<MsgSetTxFq*>(msg);
+      cout << tx->name() << ": SetTxFq(" << fq_msg->fq() << ")\n";
+      tx->setFq(fq_msg->fq());
+      break;
+    }
+
+    case MsgSetTxModulation::TYPE:
+    {
+      MsgSetTxModulation *mod_msg = reinterpret_cast<MsgSetTxModulation*>(msg);
+      cout << tx->name() << ": SetTxModulation("
+           << Modulation::toString(mod_msg->modulation()) << ")\n";
+      tx->setModulation(mod_msg->modulation());
+      break;
+    }
+
     default:
       cerr << "*** ERROR: Unknown TCP message received in NetUplink "
-           << name << ". type=" << msg->type() << ", tize="
+           << name << ". type=" << msg->type() << ", size="
            << msg->size() << endl;
       break;
   }
@@ -785,10 +829,12 @@ void NetUplink::heartbeat(Timer *t)
 } /* NetTrxTcpClient::heartbeat */
 
 
+#if 0
 void NetUplink::checkSiglev(Timer *t)
 {
   squelchOpen(rx->squelchIsOpen());
 } /* NetUplink::checkSiglev */
+#endif
 
 
 void NetUplink::unmuteTx(Timer *t)

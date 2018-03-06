@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncPty.h>
+#include <RefCountingPty.h>
 
 
 /****************************************************************************
@@ -119,7 +119,7 @@ PttPty::PttPty(void)
 
 PttPty::~PttPty(void)
 {
-  delete pty;
+  pty->destroy();
 } /* PttPty::~PttPty */
 
 
@@ -133,12 +133,8 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
 
-  pty = new Pty(ptt_pty);
-  if (pty == 0)
-  {
-    return false;
-  }
-  return pty->open();
+  pty = RefCountingPty::instance(ptt_pty);
+  return (pty != 0);
 } /* PttPty::initialize */
 
 

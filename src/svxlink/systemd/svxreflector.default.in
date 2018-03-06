@@ -1,0 +1,11 @@
+#############################################################################
+#
+# Configuration file for the SvxReflector Systemd unit file
+#
+#############################################################################
+
+# The user to run the SvxReflector server as
+RUNASUSER=@SVXLINK_USER@
+
+# Specify which configuration file to use
+CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxreflector.conf

@@ -278,7 +278,6 @@ MainWindow::~MainWindow(void)
   }
   Settings::instance()->setIncomingViewColSizes(sizes);
   
-  dir->makeOffline(); // FIXME: Unneccessary?
   delete dir;
 
   Dispatcher::deleteInstance();

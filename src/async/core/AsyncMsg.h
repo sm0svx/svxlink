@@ -556,6 +556,8 @@ class MsgPacker<std::map<Tag,Value> >
 class Msg
 {
   public:
+    virtual ~Msg(void) {}
+
     bool packParent(std::ostream&) const { return true; }
     size_t packedSizeParent(void) const { return 0; }
     bool unpackParent(std::istream&) const { return true; }

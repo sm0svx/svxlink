@@ -122,8 +122,9 @@ class AudioDebugger : public AudioSink, public AudioSource
     /**
      * @brief 	Default constuctor
      */
-    AudioDebugger(Async::AudioSource *src=0)
-      : name("AudioDebugger"), sample_count(0)
+    AudioDebugger(Async::AudioSource *src=0,
+                  const std::string& name="AudioDebugger")
+      : name(name), sample_count(0)
     {
       gettimeofday(&start_time, 0);
       if (src != 0)

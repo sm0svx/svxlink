@@ -34,8 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <sigc++/sigc++.h>
 #include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -126,7 +128,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Default constuctor
      */
-    SigLevDet(void) {}
+    SigLevDet(void);
   
     /**
      * @brief 	Destructor
@@ -141,10 +143,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(Async::Config &cfg, const std::string& name,
-                            int sample_rate)
-    {
-      return true;
-    }
+                            int sample_rate);
     
     /**
      * @brief	Set the interval for continuous updates
@@ -178,10 +177,26 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     virtual float siglevIntegrated(void) const = 0;
     
     /**
+     * @brief   Read the receiver id for the last signal report
+     * @returns Returns the receiver id for the last signal report
+     */
+    char lastRxId(void) const { return last_rx_id; }
+
+    /**
      * @brief   Reset the signal level detector
      */
     virtual void reset(void) = 0;
     
+    /**
+     * @brief   Call this function when a data frame has been received
+     * @param   frame The data bytes received
+     *
+     * This function should be called by the owning object that has received a
+     * data frame. If the message type is recognized it will be processed buf
+     * if it's not recognized nothing will happen.
+     */
+    virtual void frameReceived(std::vector<uint8_t> frame) {}
+
     /**
      * @brief	A signal that is emitted when the signal strength is updated
      * @param	siglev The updated siglev measurement
@@ -193,8 +208,20 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     sigc::signal<void, float> signalLevelUpdated;
     
   protected:
+    /**
+     * @brief   Update the receiver id
+     * @param   The receiver id to update with
+     *
+     * The class inheriting from this class may update the receiver id by
+     * calling this function. If the receiver id have been set in the config
+     * file, the update request will be ignored.
+     */
+    void updateRxId(char rx_id);
     
   private:
+    bool  force_rx_id;
+    char  last_rx_id;
+
     SigLevDet(const SigLevDet&);
     SigLevDet& operator=(const SigLevDet&);
     

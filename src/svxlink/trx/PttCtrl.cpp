@@ -155,7 +155,10 @@ void PttCtrl::allSamplesFlushed(void)
   valve.allSamplesFlushed();
   if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting && valve.isIdle())
   {
-    transmit(false);
+    if (!preTransmitterStateChange(false))
+    {
+      transmit(false);
+    }
   }
 }
 
