@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncTimer.h>
 
 
 
@@ -61,7 +62,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "version/MODULE_METARINFO.h"
 #include "ModuleMetarInfo.h"
-#include "AsyncFdWatch.h"
 #include "common.h"
 
 
@@ -150,6 +150,89 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
+class Http : public sigc::trackable
+{
+   CURLM* multi_handle; 
+   int handle_count;
+   Async::Timer  update_timer;
+   int cnt; 
+   
+  public:
+   Http()
+   {
+   //  handle_count = 0;  
+   }
+   
+   ~Http()
+   {
+     curl_multi_cleanup(multi_handle);
+   } /* ~Http */
+
+   // a signal when a metar has been available
+   sigc::signal<void, std::string, size_t> metarInfo;
+   // a signal when a metar has a timeout
+   sigc::signal<void> metarTimeout;
+   
+      
+   // update the html handler periodically
+   void Update(Async::Timer *t)
+   {
+     if (cnt++ > 50)
+     {
+       cout << "*** ERROR: Timeout while requesting MetarInfo" << endl;
+       cnt = 0;
+       update_timer.setEnable(false);
+       metarTimeout();
+     }
+     else 
+     {
+       update_timer.setTimeout(500);
+       curl_multi_perform(multi_handle, &handle_count);
+     }
+   } /* Update */
+   
+   static size_t callback(char *contents, size_t size, size_t nmemb,
+                                       void *userp)
+   {
+     if (userp == NULL) return 0;
+     size_t written = size * nmemb;
+     char *t = (char *)malloc(written+1);
+     memcpy(t, (const char *)contents, written);
+     t[written] = '\0';
+     static_cast<Http *>(userp)->onDataReceived((std::string)t, 
+                                   (std::string(t)).length());
+     free(t);
+     return written;
+   } /* callback */
+   
+   
+   void onDataReceived(std::string html, size_t len)
+   {
+     cnt = 0;
+     update_timer.reset();
+     update_timer.setEnable(false);
+     metarInfo(html, len);
+   } /* onDataReceived */
+   
+   
+   void AddRequest(const char* uri)
+   {
+     cnt = 0;
+     handle_count = 0;
+     CURL* curl = NULL;
+     multi_handle = curl_multi_init();
+
+     curl = curl_easy_init();
+     curl_easy_setopt(curl, CURLOPT_URL, uri);
+     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &Http::callback);
+     curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
+     curl_multi_add_handle(multi_handle, curl);
+
+     update_timer.setTimeout(50);
+     update_timer.expired.connect(mem_fun(*this, &Http::Update));
+     update_timer.setEnable(true);
+   } /* AddRequest */
+};
 
 
 /****************************************************************************
@@ -227,7 +310,7 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
 
 ModuleMetarInfo::~ModuleMetarInfo(void)
 {
-  delete rd_watch;
+
 } /* ~ModuleMetarInfo */
 
 
@@ -329,8 +412,6 @@ bool ModuleMetarInfo::initialize(void)
   shdesig["+"] = "heavy";
   shdesig["fm"]= "from";
   shdesig["tl"]= "until";
-
-  rd_watch = new FdWatch;
 
   if (!Module::initialize())
   {
@@ -657,24 +738,6 @@ void ModuleMetarInfo::allMsgsWritten(void)
 
 } /* allMsgsWritten */
 
-/*
-* callback function, called-up by libcurl framework
-*/
-size_t ModuleMetarInfo::callback(char *contents, size_t size, size_t nmemb,
-                                       void *userp)
-{
-  if (userp == NULL) return 0;
-  size_t written = size * nmemb;
-  char *t = (char *)malloc(written +1);
-  memcpy(t, (const char *)contents, written);
-  t[written] = '\0';
-  //cout << t << endl;
-  static_cast<ModuleMetarInfo *>(userp)->onDataReceived((std::string)t, 
-                                                   (std::string(t)).length());
-  free(t);
-  return written;
-} /* MetarInfo::callback */
-
 
 /*
 * establish a https-connection to the METAR-Server
@@ -682,58 +745,29 @@ size_t ModuleMetarInfo::callback(char *contents, size_t size, size_t nmemb,
 */
 void ModuleMetarInfo::openConnection()
 {
-  //CURLcode res;
-  int running;
-  
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-  http_handle = curl_easy_init();  
-  multi_handle = curl_multi_init();
 
-  rd_watch->activity.connect(mem_fun(*this, &ModuleMetarInfo::recvHandler));
+  Http *http = new Http();
 
   std::string path = server;
               path += link;
               path += icao;
 
-  if(http_handle) 
-  {
-    curl_easy_setopt(http_handle, CURLOPT_URL, path.c_str());
-    curl_easy_setopt(http_handle, CURLOPT_VERBOSE, 0L);
-    curl_easy_setopt(http_handle, CURLOPT_WRITEFUNCTION, &ModuleMetarInfo::callback);
-    curl_easy_setopt(http_handle, CURLOPT_WRITEDATA, this);
-    
-    curl_multi_add_handle(multi_handle, http_handle);
-    
-    rd_watch->setFd(running, FdWatch::FD_WATCH_RD);
-    rd_watch->setEnabled(true);
-
-    do {
-      curl_multi_perform(multi_handle, &running);
-    } while (running);
- 
-  /*  if (res != CURLE_OK)
-    {
-      cout << "*** ERROR: " << curl_easy_strerror(res) << 
-           " while processing metarinfo from " << server << endl;   
-    }*/
-  }
+  http->AddRequest(path.c_str());
+  http->metarInfo.connect(mem_fun(*this, &ModuleMetarInfo::onData));
+  http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
+  
 } /* openConnection */
 
 
-void ModuleMetarInfo::recvHandler(FdWatch *watch)
+void ModuleMetarInfo::onTimeout(void)
 {
-  cout << "ModuleMetarInfo::recvHandler" << endl;
-  
-  curl_multi_remove_handle(multi_handle, http_handle);
-  curl_easy_cleanup(http_handle);
-  curl_multi_cleanup(multi_handle);
-  curl_global_cleanup();
-  rd_watch->setEnabled(false);
-
-} /* ModuleMetarInfo::recvHandler */
+  stringstream temp;
+  temp << "metar_not_valid";
+  say(temp);
+} /* ModuleMetarInfo::onTimeout */
 
 
-int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)
+void ModuleMetarInfo::onData(std::string metarinput, size_t count)
 {
   std::string metar = "";
   html += metarinput;
@@ -756,7 +790,7 @@ int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)
       temp << "metar_not_valid";
       say(temp);
       html = "";
-      return -1;
+      return;
     }
 
     // check day and time, if not in limit throw information away
@@ -780,7 +814,7 @@ int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)
         cout << "Metar information outdated" << endl;
         temp << "metar_not_valid";
         say(temp);
-        return -1;
+        return;
       }
     }
   }
@@ -814,7 +848,7 @@ int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)
       cout << "ERROR 404 from webserver -> no such airport\n";
       temp << "no_such_airport";
       say(temp);
-      return -1;
+      return;
     }
 
     // check if METAR is actual
@@ -822,13 +856,11 @@ int ModuleMetarInfo::onDataReceived(std::string metarinput, int count)
     {
       temp << "metar_not_valid";
       say(temp);
-      return -1;
+      return;
     }
   }
 
   handleMetar(metar);
-  return count;
-
 } /* onDataReceived */
 
 

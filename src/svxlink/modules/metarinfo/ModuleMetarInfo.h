@@ -91,7 +91,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 namespace Async {
-    class FdWatch;
+  class Timer;
 };
 
 
@@ -158,7 +158,6 @@ class ModuleMetarInfo : public Module
     std::string link;
     CURL *http_handle; 
     CURLM *multi_handle;
-    Async::FdWatch * rd_watch;
 
     bool initialize(void);
     void activateInit(void);
@@ -169,6 +168,7 @@ class ModuleMetarInfo : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
     void openConnection(void);
+    void onTimeout(void);
     std::string getSlp(std::string token);
     std::string getTempTime(std::string token);
     std::string getTempinRmk(std::string token);
@@ -178,9 +178,8 @@ class ModuleMetarInfo : public Module
     std::string getLightning(std::string token);
     std::string getPrecipitation(std::string token);
     std::string getCloudType(std::string token);
-    void recvHandler(Async::FdWatch *watch);
     void isRwyState(std::string &retval, std::string token);
-    int  onDataReceived(std::string metarinput, int count);
+    void onData(std::string metarinput, size_t count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string utctoken);
@@ -204,7 +203,6 @@ class ModuleMetarInfo : public Module
     void say(std::stringstream &tmp);
     int handleMetar(std::string input);
     std::string getXmlParam(std::string token, std::string input);
-    static size_t callback(char *contents, size_t size, size_t nmemb, void *userp);
 };  /* class ModuleMetarInfo */
 
 
