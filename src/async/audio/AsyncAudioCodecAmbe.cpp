@@ -64,6 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioInterpolator.h"
 #include "AsyncSigCAudioSink.h"
 #include "AsyncSigCAudioSource.h"
+#include "AsyncAudioDebugger.h"
 
 // FIXME: Temporarily use these filter coefficients for resampling
 #include "../../svxlink/trx/multirate_filter_coeff.h"
@@ -346,18 +347,29 @@ namespace {
       {
         //uint8_t fields[] = { 0x03, 0xa0, 0x08, 0x81, 0x00 };
         //Packet packet(DV3K_TYPE_CHANNEL, fields, sizeof(fields));
+        m_flush_dec = false;
         Packet packet(DV3K_TYPE_CHANNEL);
         memcpy(packet.argBuf(size), buf, size);
+        m_outstanding_dec_packets += 1;
         send(packet);
+      }
+
+      virtual void flushEncodedSamples(void)
+      {
+        //cout << "### AudioCodecAmbeDv3k::flushEncodedSamples" << endl;
+        //m_dec_output.flushSamples();
+        m_flush_dec = true;
       }
 
       /**
        * @brief   Called to send speech samples to the encoder
        */
-      virtual int writeSpeechSamples(const float *samples, int count)
+      int writeSpeechSamples(const float *samples, int count)
       {
         assert(count > 0);
 
+        //cout << "### AudioCodecAmbeDv3k::writeSpeechSamples" << endl;
+        m_flush_enc = false;
         if (m_state != READY)
         {
           return count;
@@ -375,11 +387,26 @@ namespace {
           samples += to_copy;
           if (m_inbufcnt == DV3K_AUDIO_LEN)
           {
+            m_outstanding_enc_packets += 1;
             sendSpeechPacket();
             m_inbufcnt = 0;
           }
         }
         return count;
+      }
+
+      void flushSpeechSamples(void)
+      {
+        //cout << "### AudioCodecAmbeDv3k::flushSpeechSamples" << endl;
+        if (m_outstanding_enc_packets == 0)
+        {
+          m_inbufcnt = 0;
+          AudioEncoder::flushEncodedSamples();
+        }
+        else
+        {
+          m_flush_enc = true;
+        }
       }
 
     protected:
@@ -402,7 +429,9 @@ namespace {
       AudioCodecAmbeDv3k(void)
         : m_state(OFFLINE), m_inbufcnt(0),
           m_decimator(2, coeff_16_8, coeff_16_8_taps),
-          m_interpolator(2, coeff_16_8, coeff_16_8_taps)
+          m_interpolator(2, coeff_16_8, coeff_16_8_taps),
+          m_outstanding_enc_packets(0), m_outstanding_dec_packets(0),
+          m_flush_enc(false), m_flush_dec(false)
       {
         m_decimator.setBufferSize(DV3K_AUDIO_LEN);
         AudioSink::setHandler(&m_decimator);
@@ -411,12 +440,16 @@ namespace {
         sigc_sink->sigWriteSamples.connect(
             sigc::mem_fun(*this, &AudioCodecAmbeDv3k::writeSpeechSamples));
         sigc_sink->sigFlushSamples.connect(
-            sigc::mem_fun(*this, &AudioCodecAmbeDv3k::sourceAllSamplesFlushed));
+            sigc::mem_fun(*this, &AudioCodecAmbeDv3k::flushSpeechSamples));
 
-        m_dec_output.registerSink(&m_interpolator);
         m_dec_output.sigAllSamplesFlushed.connect(
             AudioDecoder::allEncodedSamplesFlushed.make_slot());
+        AudioSource *prev_src = &m_dec_output;
+        //AudioDebugger *d1 = new AudioDebugger;
+        //prev_src->registerSink(d1);
+        //prev_src = d1;
         m_interpolator.setBufferSize(2*DV3K_AUDIO_LEN);
+        prev_src->registerSink(&m_interpolator);
         AudioSource::setHandler(&m_interpolator);
       }
       virtual ~AudioCodecAmbeDv3k(void) {}
@@ -464,6 +497,10 @@ namespace {
       AudioDecimator      m_decimator;
       SigCAudioSource     m_dec_output;
       AudioInterpolator   m_interpolator;
+      unsigned            m_outstanding_enc_packets;
+      unsigned            m_outstanding_dec_packets;
+      bool                m_flush_enc;
+      bool                m_flush_dec;
 
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
       AudioCodecAmbeDv3k& operator=(const AudioCodecAmbeDv3k&);
@@ -513,10 +550,26 @@ namespace {
         {
           AudioEncoder::writeEncodedSamples(m_packet.argBuf(),
                                             m_packet.fieldsSize());
+          //cout << "### outstanding_enc_packets=" << m_outstanding_enc_packets
+          //     << endl;
+          assert(m_outstanding_enc_packets > 0);
+          if ((--m_outstanding_enc_packets == 0) && m_flush_enc)
+          {
+            m_flush_enc = false;
+            AudioEncoder::flushEncodedSamples();
+          }
         }
         else if (m_packet.type() == DV3K_TYPE_SPEECH)   // Speech packet
         {
           handleSpeechPacket();
+          //cout << "### outstanding_dec_packets=" << m_outstanding_dec_packets
+          //     << endl;
+          assert(m_outstanding_dec_packets > 0);
+          if ((--m_outstanding_dec_packets == 0) && m_flush_dec)
+          {
+            m_flush_dec = false;
+            m_dec_output.flushSamples();
+          }
         }
         else
         {
@@ -617,7 +670,7 @@ namespace {
                 w |= *fields++;
                 t[b++] = static_cast<float>(w) / 32767.0;
               }
-              int ret = m_interpolator.writeSamples(t, sample_cnt);
+              int ret = m_dec_output.writeSamples(t, sample_cnt);
               //cout << "### sample_cnt=" << sample_cnt
               //     << " ret=" << ret
               //     << endl;
