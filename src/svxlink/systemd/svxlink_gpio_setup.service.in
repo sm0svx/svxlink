@@ -1,6 +1,7 @@
 [Unit]
 Description=SvxLink repeater control software GPIO setup
 Documentation=man:svxlink(1)
+PartOf=svxlink.service
 
 [Service]
 Type=oneshot
