@@ -192,13 +192,16 @@ class Http : public sigc::trackable
        // FixMe !!! delete curl pointer
        return;
      }
-     update_timer.setTimeout(500);
-     cout  << "onTimeout 2" << endl;
+     if (watch_list.empty())
+       UpdateWatchList();
+     if (watch_list.empty())
+       update_timer.reset();
+     cout << "onTimeout 2" << endl;
    } /* Update */
 
    void onActivity(Async::FdWatch *watch)
    {
-     cout  << "onActivity 1" << endl;
+//     cout  << "onActivity 1" << endl;
 
      curl_multi_perform(multi_handle, &handle_count);
      if (handle_count == 0) {
@@ -209,8 +212,8 @@ class Http : public sigc::trackable
        // FixMe !!! delete curl pointer
        return;
      }
-     update_timer.setTimeout(500);
-     cout  << "onActivity 1" << endl;
+     update_timer.reset();
+//     cout  << "onActivity 2" << endl;
    }
    
    static size_t callback(char *contents, size_t size, size_t nmemb,
@@ -220,9 +223,10 @@ class Http : public sigc::trackable
      size_t written = size * nmemb;
      std::string html((const char *)contents, written);
      static_cast<Http*>(userp)->metarInfo(html, html.size());
+     cout << html << endl;
      return written;
    } /* callback */
-   
+
    void AddRequest(const char* uri)
    {
      CURL* curl = NULL;
@@ -233,6 +237,21 @@ class Http : public sigc::trackable
      curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
      curl_multi_add_handle(multi_handle, curl);
 
+     curl_multi_perform(multi_handle, &handle_count);
+     UpdateWatchList();
+
+     long curl_timeout = -1;
+     curl_multi_timeout(multi_handle, &curl_timeout);
+
+     update_timer.setTimeout((curl_timeout >= 0) ? curl_timeout : 100);
+     update_timer.expired.connect(mem_fun(*this, &Http::onTimeout));
+     update_timer.setEnable(true);
+   } /* AddRequest */
+
+  private:
+
+   void UpdateWatchList()
+   {
      fd_set fdread;
      fd_set fdwrite;
      fd_set fdexcep;
@@ -243,8 +262,9 @@ class Http : public sigc::trackable
      FD_ZERO(&fdexcep);
      
      curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+     cout  << "fdset: " << maxfd << endl;
 
-     for (int fd = 0; fd < maxfd; fd++) {
+     for (int fd = 0; fd <= maxfd; fd++) {
        if (FD_ISSET(fd, &fdread)) {
          Async::FdWatch *watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
          watch->activity.connect(mem_fun(*this, &Http::onActivity));
@@ -256,11 +276,8 @@ class Http : public sigc::trackable
          watch_list.push_back(watch);
        }
      }
+   }
 
-     update_timer.setTimeout(100);
-     update_timer.expired.connect(mem_fun(*this, &Http::onTimeout));
-     update_timer.setEnable(true);
-   } /* AddRequest */
 };
 
 
