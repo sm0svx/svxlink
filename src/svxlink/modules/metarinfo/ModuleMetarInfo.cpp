@@ -1,8 +1,8 @@
 /*
 @file	 ModuleMetarInfo.cpp
 @brief   gives out a METAR report
-@author  Adi Bier / DL1HRC
-@date	 2009-10-14
+@author  Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2018-03-10
 
 \verbatim
 A module (plugin) to request the latest METAR (weather) information from
@@ -159,9 +159,10 @@ class Http : public sigc::trackable
    std::vector<Async::FdWatch*> watch_list;
    std::queue<CURL*> url_queue;
    CURL* pending_curl;
-   
+
   public:
-   Http() : multi_handle(0), pending_curl(0) 
+
+   Http() : multi_handle(0), pending_curl(0)
    {
      multi_handle = curl_multi_init();
      long curl_timeout = -1;
@@ -169,8 +170,8 @@ class Http : public sigc::trackable
      update_timer.setTimeout((curl_timeout >= 0) ? curl_timeout : 100);
      update_timer.setEnable(false);
      update_timer.expired.connect(mem_fun(*this, &Http::onTimeout));
-   }
-   
+   } /* Http */
+
    ~Http()
    {
      if (pending_curl)
@@ -181,23 +182,27 @@ class Http : public sigc::trackable
 
    // a signal when a metar has been available
    sigc::signal<void, std::string, size_t> metarInfo;
+
    // a signal when a metar has a timeout
    sigc::signal<void> metarTimeout;
-   
-      
+
+
    // update the html handler periodically
    void onTimeout(Async::Timer *timer)
    {
-//     cout  << "onTimeout 1" << endl;
      int handle_count;
      curl_multi_perform(multi_handle, &handle_count);
-     if (handle_count == 0) {
+     if (handle_count == 0) 
+     {
        ClearWatchList();
        curl_easy_cleanup(pending_curl);
-       if (url_queue.empty()) {
+       if (url_queue.empty())
+       {
          pending_curl = 0;
          update_timer.setEnable(false);
-       } else {
+       }
+       else
+       {
          pending_curl = url_queue.front();
          url_queue.pop();
          curl_multi_add_handle(multi_handle, pending_curl);
@@ -207,21 +212,23 @@ class Http : public sigc::trackable
      if (watch_list.empty())
        UpdateWatchList();
      update_timer.reset();
-//     cout << "onTimeout 2" << endl;
    } /* Update */
 
    void onActivity(Async::FdWatch *watch)
    {
-//     cout  << "onActivity 1" << endl;
      int handle_count;
      curl_multi_perform(multi_handle, &handle_count);
-     if (handle_count == 0) {
+     if (handle_count == 0)
+     {
        ClearWatchList();
        curl_easy_cleanup(pending_curl);
-       if (url_queue.empty()) {
+       if (url_queue.empty())
+       {
          pending_curl = 0;
          update_timer.setEnable(false);
-       } else {
+       }
+       else
+       {
          pending_curl = url_queue.front();
          url_queue.pop();
          curl_multi_add_handle(multi_handle, pending_curl);
@@ -230,9 +237,8 @@ class Http : public sigc::trackable
        }
      }
      update_timer.reset();
-//     cout  << "onActivity 2" << endl;
-   }
-   
+   } /* onActivity */
+
    static size_t callback(char *contents, size_t size, size_t nmemb,
                                        void *userp)
    {
@@ -240,7 +246,6 @@ class Http : public sigc::trackable
      size_t written = size * nmemb;
      std::string html((const char *)contents, written);
      static_cast<Http*>(userp)->metarInfo(html, html.size());
-     cout << html << endl;
      return written;
    } /* callback */
 
@@ -250,14 +255,17 @@ class Http : public sigc::trackable
      curl_easy_setopt(curl, CURLOPT_URL, uri);
      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &Http::callback);
      curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
-     
-     if (!pending_curl) {
+
+     if (!pending_curl)
+     {
        pending_curl = curl;
        curl_multi_add_handle(multi_handle, pending_curl);
        UpdateWatchList();
        update_timer.reset();
        update_timer.setEnable(true);
-     } else {
+     }
+     else
+     {
        url_queue.push(curl);
      }
    } /* AddRequest */
@@ -270,34 +278,37 @@ class Http : public sigc::trackable
      fd_set fdwrite;
      fd_set fdexcep;
      int maxfd = -1;
- 
+
      FD_ZERO(&fdread);
      FD_ZERO(&fdwrite);
      FD_ZERO(&fdexcep);
-     
      curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
-//     cout  << "fdset: " << maxfd << endl;
 
-     for (int fd = 0; fd <= maxfd; fd++) {
-       if (FD_ISSET(fd, &fdread)) {
-         Async::FdWatch *watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
+     for (int fd = 0; fd <= maxfd; fd++) 
+     {
+       if (FD_ISSET(fd, &fdread))
+       {
+         Async::FdWatch *watch=new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_RD);
          watch->activity.connect(mem_fun(*this, &Http::onActivity));
          watch_list.push_back(watch);
        }
-       if (FD_ISSET(fd, &fdwrite)) {
-         Async::FdWatch *watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_WR);
+       if (FD_ISSET(fd, &fdwrite)) 
+       {
+         Async::FdWatch *watch=new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_WR);
          watch->activity.connect(mem_fun(*this, &Http::onActivity));
          watch_list.push_back(watch);
        }
      }
-   }
-   
-   void ClearWatchList() {
-     for (std::vector<Async::FdWatch*>::iterator it = watch_list.begin() ; it != watch_list.end(); ++it)
-       delete *it;
-     watch_list.clear();
-   }
+   } /* UpdateWatchList */
 
+   void ClearWatchList() {
+     for (std::vector<Async::FdWatch*>::iterator it = watch_list.begin();
+          it != watch_list.end(); ++it)
+     {
+       delete *it;
+     }
+     watch_list.clear();
+   } /* ClearWatchList */
 };
 
 
@@ -822,7 +833,7 @@ void ModuleMetarInfo::openConnection()
   cout << path << endl;
   http->metarInfo.connect(mem_fun(*this, &ModuleMetarInfo::onData));
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
-  
+
 } /* openConnection */
 
 
