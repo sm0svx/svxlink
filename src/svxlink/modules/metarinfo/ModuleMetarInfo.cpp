@@ -156,7 +156,7 @@ class Http : public sigc::trackable
 {
    CURLM* multi_handle; 
    Async::Timer update_timer;
-   std::vector<Async::FdWatch*> watch_list;
+   std::map<int, Async::FdWatch*> watch_map;
    std::queue<CURL*> url_queue;
    CURL* pending_curl;
 
@@ -176,7 +176,7 @@ class Http : public sigc::trackable
    {
      if (pending_curl)
        curl_easy_cleanup(pending_curl);
-     ClearWatchList();
+     ClearWatchMap();
      curl_multi_cleanup(multi_handle);
    } /* ~Http */
 
@@ -194,7 +194,7 @@ class Http : public sigc::trackable
      curl_multi_perform(multi_handle, &handle_count);
      if (handle_count == 0) 
      {
-       ClearWatchList();
+       ClearWatchMap();
        curl_easy_cleanup(pending_curl);
        if (url_queue.empty())
        {
@@ -209,8 +209,7 @@ class Http : public sigc::trackable
          update_timer.setEnable(true);
        }
      }
-     if (watch_list.empty())
-       UpdateWatchList();
+     UpdateWatchMap();
      update_timer.reset();
    } /* Update */
 
@@ -220,7 +219,7 @@ class Http : public sigc::trackable
      curl_multi_perform(multi_handle, &handle_count);
      if (handle_count == 0)
      {
-       ClearWatchList();
+       ClearWatchMap();
        curl_easy_cleanup(pending_curl);
        if (url_queue.empty())
        {
@@ -232,7 +231,7 @@ class Http : public sigc::trackable
          pending_curl = url_queue.front();
          url_queue.pop();
          curl_multi_add_handle(multi_handle, pending_curl);
-         UpdateWatchList();
+         UpdateWatchMap();
          update_timer.setEnable(true);
        }
      }
@@ -260,7 +259,7 @@ class Http : public sigc::trackable
      {
        pending_curl = curl;
        curl_multi_add_handle(multi_handle, pending_curl);
-       UpdateWatchList();
+       UpdateWatchMap();
        update_timer.reset();
        update_timer.setEnable(true);
      }
@@ -272,7 +271,7 @@ class Http : public sigc::trackable
 
   private:
 
-   void UpdateWatchList()
+   void UpdateWatchMap()
    {
      fd_set fdread;
      fd_set fdwrite;
@@ -286,29 +285,31 @@ class Http : public sigc::trackable
 
      for (int fd = 0; fd <= maxfd; fd++) 
      {
+       if (watch_map.find(fd) != watch_map.end())
+         continue;
        if (FD_ISSET(fd, &fdread))
        {
-         Async::FdWatch *watch=new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_RD);
+         Async::FdWatch *watch = new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_RD);
          watch->activity.connect(mem_fun(*this, &Http::onActivity));
-         watch_list.push_back(watch);
+         watch_map[fd] = watch;
        }
        if (FD_ISSET(fd, &fdwrite)) 
        {
-         Async::FdWatch *watch=new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_WR);
+         Async::FdWatch *watch = new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_WR);
          watch->activity.connect(mem_fun(*this, &Http::onActivity));
-         watch_list.push_back(watch);
+         watch_map[fd] = watch;
        }
      }
-   } /* UpdateWatchList */
+   } /* UpdateWatchMap */
 
-   void ClearWatchList() {
-     for (std::vector<Async::FdWatch*>::iterator it = watch_list.begin();
-          it != watch_list.end(); ++it)
+   void ClearWatchMap() {
+     for (std::map<int, Async::FdWatch*>::iterator it = watch_map.begin();
+          it != watch_map.end(); ++it)
      {
-       delete *it;
+       delete it->second;
      }
-     watch_list.clear();
-   } /* ClearWatchList */
+     watch_map.clear();
+   } /* ClearWatchMap */
 };
 
 
