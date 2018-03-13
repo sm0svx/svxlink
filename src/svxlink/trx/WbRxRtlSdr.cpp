@@ -269,6 +269,15 @@ void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
 } /* WbRxRtlSdr::unregisterDdr */
 
 
+void WbRxRtlSdr::updateDdrFq(Ddr *ddr)
+{
+  if (auto_tune_enabled)
+  {
+    findBestCenterFq();
+  }
+} /* WbRxRtlSdr::updateDdrFq */
+
+
 bool WbRxRtlSdr::isReady(void) const
 {
   return (rtl != 0) && rtl->isReady();

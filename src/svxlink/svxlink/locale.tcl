@@ -7,20 +7,29 @@
 ###############################################################################
 
 #
-# Spell the specified word using a phonetic alphabet
+# Spell the specified word using phonetic alphabet or plain letters depending
+# on the setting of the PHONETIC_SPELLING configuration variable.
+#
+#   word -- The word to spell
 #
 proc spellWord {word} {
+  variable Logic::CFG_PHONETIC_SPELLING
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
-    if {$char == "*"} {
-      playMsg "Default" "star";
+    if {[regexp {[a-z0-9]} $char]} {
+      if {([info exists CFG_PHONETIC_SPELLING]) && \
+          ($CFG_PHONETIC_SPELLING == 0)} {
+        playMsg "Default" "$char";
+      } else {
+        playMsg "Default" "phonetic_$char";
+      }
     } elseif {$char == "/"} {
       playMsg "Default" "slash";
     } elseif {$char == "-"} {
       playMsg "Default" "dash";
-    } elseif {[regexp {[a-z0-9]} $char]} {
-      playMsg "Default" "phonetic_$char";
+    } elseif {$char == "*"} {
+      playMsg "Default" "star";
     }
   }
 }
@@ -129,6 +138,8 @@ proc playNumber {number} {
 # Say the time specified by function arguments "hour" and "minute".
 #
 proc playTime {hour minute} {
+  variable Logic::CFG_TIME_FORMAT
+
   # Strip white space and leading zeros. Check ranges.
   if {[scan $hour "%d" hour] != 1 || $hour < 0 || $hour > 23} {
     error "playTime: Non digit hour or value out of range: $hour"
@@ -136,30 +147,70 @@ proc playTime {hour minute} {
   if {[scan $minute "%d" minute] != 1 || $minute < 0 || $minute > 59} {
     error "playTime: Non digit minute or value out of range: $hour"
   }
-  
-  if {$hour < 12} {
-    set ampm "AM";
-    if {$hour == 0} {
-      set hour 12;
-    }
-  } else {
-    set ampm "PM";
-    if {$hour > 12} {
-      set hour [expr $hour - 12];
-    }
-  };
-  
-  playMsg "Default" [expr $hour];
 
-  if {$minute != 0} {
-    if {[string length $minute] == 1} {
-      set minute "O$minute";
+  if {[info exists CFG_TIME_FORMAT] && ($CFG_TIME_FORMAT == 24)} {
+    if {$hour == 0} {
+      set hour "00"
+    } elseif {[string length $hour] == 1} {
+      set hour "o$hour";
     }
-    playTwoDigitNumber $minute;
-  }
+    playTwoDigitNumber $hour;
+
+    if {$minute != 0} {
+      if {[string length $minute] == 1} {
+        set minute "o$minute";
+      }
+      playTwoDigitNumber $minute;
+    }
+    playMsg "Default" "hours";
+    playSilence 100;
+  } else {
+    # Anything not 24 will fail back to 12 hour default
+    if {$hour < 12} {
+      set ampm "AM";
+      if {$hour == 0} {
+        set hour 12;
+      }
+    } else {
+      set ampm "PM";
+      if {$hour > 12} {
+        set hour [expr $hour - 12];
+      }
+    }
   
-  playSilence 100;
-  playMsg "Core" $ampm;
+    playMsg "Default" [expr $hour];
+    if {$minute != 0} {
+      if {[string length $minute] == 1} {
+        set minute "o$minute";
+      }
+      playTwoDigitNumber $minute;
+    }
+    playSilence 100;
+    playMsg "Core" $ampm;
+  }
+}
+
+
+#
+# Say the given frequency as intelligently as popssible
+#
+#   fq -- The frequency in Hz
+#
+proc playFrequency {fq} {
+  if {$fq < 1000} {
+    set unit "Hz"
+  } elseif {$fq < 1000000} {
+    set fq [expr {$fq / 1000.0}]
+    set unit "kHz"
+  } elseif {$fq < 1000000000} {
+    set fq [expr {$fq / 1000000.0}]
+    set unit "MHz"
+  } else {
+    set fq [expr {$fq / 1000000000.0}]
+    set unit "GHz"
+  }
+  playNumber [string trimright [format "%.3f" $fq] ".0"]
+  playMsg "Core" $unit
 }
 
 

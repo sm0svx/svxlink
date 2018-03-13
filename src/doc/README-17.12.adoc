@@ -1,0 +1,146 @@
+SvxLink release 17.12 -- 30 Dec 2017
+------------------------------------
+The biggest news in this release is the initial revision of the SvxReflector
+application. The SvxReflector application is meant to be used as a center point
+to link SvxLink nodes together. The new SvxLink ReflectorLogic logic core is
+used to connect a SvxLink node to the reflector server. One or more logics can
+then be connected to the refelctor using normal logic linking.
+
+In addition a lot of smaller feature additions have been made and also a number
+of bugs have been fixed. The full list of changes and more details can be found
+below. Information on configuration of new features can be found in the manual
+pages.
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Complete ChangeLog for SvxLink Server version 1.6.0
+---------------------------------------------------
+
+* ModuleMetarInfo: smaller changes e.g. additional tcl function for raw
+  output
+
+* ModuleMetarInfo: Because of termination the metar service on noaa.gov some
+  changes were needed in the module (weather.noaa.gov - >
+  aviationweather.gov), better debug output if a metar can not be announced
+
+* New argument "call" to EchoLink::is_receiving TCL event handler.
+  Patch by hsmade.
+
+* New TCL event handler EchoLink::client_list_changed.
+  Patch by hsmade.
+
+* New TCL function playDtmf. Patch by DL1HRC / Adi.
+
+* ModuleEchoLink: Add command PTY that can be used to send commands to the
+  EchoLink module at runtime. Patch by hsmade.
+
+* RemoteTrx now display squelch open/close even when disconnected from
+  the main system.
+
+* Small bugfix in the LocationInfo functionality that made SvxLink exit
+  uncleanly, possibly with a segmentation fault.
+
+* New TCL command, injectDtmf, to inject DTMF digits into the command
+  stream just as if they were received on the receiver. This function
+  can for example be used in conjuction with the dtmf_digit_received and
+  dtmf_cmd_received functions to remap commands to something different or
+  inventing compound commands.
+
+* ModuleTclVoiceMail: SvxLink would not start if the HOME environment
+  variable was not set. That prevented proper operation from system
+  startcripts.
+
+* ModuleFrn: Now possible to specify a backup server that is used when the
+  connection to the primary server fail. Use the new configuration variables
+  SERVER_BACKUP and PORT_BACKUP to configure the backup server.
+  Patch by sh123.
+
+* New command PTY for controlling the receiver voter. It's possible to
+  enable and disable receivers using the ENABLE and DISABLE commands.
+  Use the COMMAND_PTY config variable in the voter configuration section
+  to set it up.
+
+* New command PTY for injecting DTMF digits into a logic core. Use
+  configuration variable DTMF_CTRL_PTY to set the path to the PTY.
+  The PTY will also emit the DTMF digits received on the RF.
+
+* New configuration variable GPIO_PATH for PTT and squelch configurations that
+  use GPIO. On some hardware platforms the path to control GPIO pins is not
+  standard. This configuration variable can be used to set the path.
+
+* Bugfix: Setting FQ_CORR=0 in a WbRx configuration section resulted in an
+  error message
+
+* FQ_CORR can now be negative
+
+* New TCL event handing function EchoLink::info_received that is called when
+  an info message is received from a remote EchoLink station.
+
+* ModuleEchoLink: The connected TCL event handling function now also is given
+  the callsign.
+
+* Bugfix: The squelch detector was not able to handle larger audio blocks than
+  256 bytes. It now can.
+
+* Bugfix: Could not handle WAV files that contained other subchunks than 'fmt'
+  or 'data'. Reading would fail for WAV files containing for example 'LIST'
+  or 'id3' subchunks.
+
+* New application SvxReflector that is used to link multiple SvxLink nodes
+  together. On the SvxLink node side the new ReflectorLogic logic core is used
+  to connect to the SvxReflector server.
+
+
+
+Complete ChangeLog for Qtel version 1.2.3
+-----------------------------------------
+
+* Support for Qt5 added. Patch contributed by Richard Neese.
+
+* Updated Turkish translation. Patch contributed by TA3CP.
+
+
+
+Complete ChangeLog for the EchoLib library version 1.3.3
+--------------------------------------------------------
+
+* Fix return value inconsistency in EchoLinkQso. Patch by Steve DH1DM.
+
+
+
+Complete ChangeLog for the Async library version 1.5.0
+------------------------------------------------------
+
+* Support for Qt5 added. Patch contributed by Richard Neese.
+
+* Bugfix in AsyncCppDnsLookupWorker: Lookup could hang due to mutex
+  locking issues. Patch by Steve/DH1DM.
+
+* Bugfix in AsyncTcpClient: An assertion error could occur if the connect
+  method was called twice.
+
+* Bugfix in AsyncTcpServer: Fix memory leak
+
+* UdpSocket: The dataReceived signal now also provide the remote UDP port
+  number
+
+* Bugfix in AsyncAudioDeviceAlsa/AsyncAudioIO: Assertion for some sound
+  boards in Async::Timer::setEnable due to the
+  AudioDeviceAlsa::samplesToWrite function returning a negative value.
+
+* Now possible to ask the AudioEncoder and AudioDecoder if a codec is
+  supported or not.
+
+* AudioSelector bugfix: The output was not flushed when disconnecting
+  the active source. This hung the audio stream. In the process of fixing
+  that bug the AudioSelector was to a large part rewritten. The new
+  implementation also made it possible to implement seamless switches (no
+  flush when switching between two active streams).
+
+* AudioProcessor bugfix: State could get corrupted due to double call of
+  sample output function.
+
+* TcpClient: DNS lookup is now done on every reconnect.
+
+* AudioDeviceAlsa: Relaxed assertion for snd_pcm_readi so that fewer frames
+  than requested may be returned.

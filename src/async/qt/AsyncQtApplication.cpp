@@ -148,7 +148,7 @@ QtApplication::QtApplication(int &argc, char **argv)
 
 QtApplication::~QtApplication(void)
 {
-  
+  clearTasks();
 } /* QtApplication::~QtApplication */
 
 

@@ -281,7 +281,7 @@ if {![file exists $CFG_SPOOL_DIR/vhfdx/archive]} {
 }
 
 append func $module_name "::check_for_alerts";
-Logic::addTimerTickSubscriber $func;
+Logic::addMinuteTickSubscriber $func;
 
 
 

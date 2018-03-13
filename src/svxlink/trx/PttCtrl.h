@@ -143,6 +143,8 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
      *	      	      	  turn it off
      */
     sigc::signal<void, bool> transmitterStateChange;
+
+    sigc::signal<bool, bool> preTransmitterStateChange;
     
     
   private:

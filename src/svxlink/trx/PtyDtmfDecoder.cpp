@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -51,8 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "RefCountingPty.h"
 #include "PtyDtmfDecoder.h"
-
 
 
 /****************************************************************************
@@ -122,7 +121,7 @@ PtyDtmfDecoder::PtyDtmfDecoder(Config &cfg, const string &name)
 
 PtyDtmfDecoder::~PtyDtmfDecoder(void)
 {
-  delete pty;
+  if (pty != 0) pty->destroy();
   pty = 0;
 } /* PtyDtmfDecoder::~PtyDtmfDecoder */
 
@@ -142,15 +141,14 @@ bool PtyDtmfDecoder::initialize(void)
     return false;
   }
 
-  pty = new Pty(dtmf_pty);
+  pty = RefCountingPty::instance(dtmf_pty);
   if (pty == 0)
   {
     return false;
   }
   pty->dataReceived.connect(
       sigc::mem_fun(*this, &PtyDtmfDecoder::dataReceived));
-  return pty->open();
-
+  return true;
 } /* PtyDtmfDecoder::initialize */
 
 
@@ -194,10 +192,12 @@ void PtyDtmfDecoder::dataReceived(const void *buf, size_t count)
     {
       digitActive('#'); // DTMF digit F==# activated
     }
+    /*
     else
     {
       cerr << "*** WARNING: Illegal DTMF PTY command received: " << cmd << endl;
     }
+    */
   }
 } /* PtyDtmfDecoder::dataReceived */
 

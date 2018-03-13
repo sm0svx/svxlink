@@ -178,6 +178,12 @@ class WbRxRtlSdr : public sigc::trackable
     void unregisterDdr(Ddr *ddr);
 
     /**
+     * @brief   Notify the wbrx that the nbfq of this DDR have changed
+     * @param   ddr Pointer to the Ddr object that has changed
+     */
+    void updateDdrFq(Ddr *ddr);
+
+    /**
      * @brief   Get the name of this tuner object
      * @returns Returns the name of this tuner object
      */

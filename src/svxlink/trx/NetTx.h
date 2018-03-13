@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -170,15 +170,45 @@ class NetTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
+     * @param   duration The tone duration in milliseconds
      */
-    virtual void sendDtmf(const std::string& digits);
+    virtual void sendDtmf(const std::string& digits, unsigned duration);
+
+    /**
+     * @brief   Set the signal level value that should be transmitted
+     * @param   siglev The signal level to transmit
+     * @param   rx_id  The id of the receiver that received the signal
+     *
+     * This function does not set the output power of the transmitter but
+     * instead sets a signal level value that is transmitted with the
+     * transmission if the specific Tx object supports it. This can be used
+     * on a link transmitter to transport signal level measurements to the
+     * link receiver.
+     */
+    virtual void setTransmittedSignalStrength(char rx_id, float siglev);
+
+    /**
+     * @brief 	Send a data frame
+     * @param 	msg The frame data
+     */
+    virtual void sendData(const std::vector<uint8_t> &msg);
     
+    /**
+     * @brief   Set the transmitter frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq);
+
+    /**
+     * @brief   Set the transmitter modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    virtual void setModulation(Modulation::Type mod);
 
   protected:
 
   private:
     Async::Config     	  &cfg;
-    std::string       	  name;
     NetTrxTcpClient   	  *tcp_con;
     bool                  log_disconnects_once;
     bool                  log_disconnect;
@@ -190,6 +220,8 @@ class NetTx : public Tx
     bool      	      	  pending_flush;
     bool      	      	  unflushed_samples;
     Async::AudioEncoder   *audio_enc;
+    unsigned              fq;
+    Modulation::Type      modulation;
     
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);

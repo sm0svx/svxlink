@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -150,7 +150,7 @@ class MultiTx : public Tx
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
      */
-    virtual bool isTransmitting(void) const;
+    //virtual bool isTransmitting(void) const;
     
     /**
      * @brief 	Enable/disable CTCSS on TX
@@ -161,12 +161,14 @@ class MultiTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
+     * @param   duration The tone duration in milliseconds
      */
-    virtual void sendDtmf(const std::string& digits);
+    virtual void sendDtmf(const std::string& digits, unsigned duration);
     
     /**
      * @brief   Set the signal level value that should be transmitted
      * @param   siglev The signal level to transmit
+     * @param   rx_id  The id of the receiver that received the signal
      *
      * This function does not set the output power of the transmitter but
      * instead sets a signal level value that is transmitted with the
@@ -174,19 +176,24 @@ class MultiTx : public Tx
      * on a link transmitter to transport signal level measurements to the
      * link receiver.
      */
-    virtual void setTransmittedSignalStrength(float siglev);
+    virtual void setTransmittedSignalStrength(char rx_id, float siglev);
+
+    /**
+     * @brief 	Send a data frame
+     * @param 	msg The frame data
+     */
+    virtual void sendData(const std::vector<uint8_t> &msg);
     
   protected:
     
   private:
     Async::Config     	  &cfg;
-    std::string       	  m_name;
     std::list<Tx *>   	  txs;
     Async::AudioSplitter  *splitter;
     
     MultiTx(const MultiTx&);
     MultiTx& operator=(const MultiTx&);
-    void onTransmitterStateChange(bool is_transmitting);
+    void onTransmitterStateChange(void);
     
 };  /* class MultiTx */
 

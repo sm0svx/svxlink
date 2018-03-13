@@ -71,7 +71,7 @@ using namespace std;
  *
  ****************************************************************************/
 
-#define BLOCK_SIZE  512
+#define BLOCK_SIZE  512U
 
 
 
@@ -123,22 +123,22 @@ DtmfEncoder::DtmfEncoder(int sampling_rate)
 {
   if (tone_map.empty())
   {
-    tone_map['1'] = pair<int, int>(697, 1209);
-    tone_map['2'] = pair<int, int>(697, 1336);
-    tone_map['3'] = pair<int, int>(697, 1477);
-    tone_map['A'] = pair<int, int>(697, 1633);
-    tone_map['4'] = pair<int, int>(770, 1209);
-    tone_map['5'] = pair<int, int>(770, 1336);
-    tone_map['6'] = pair<int, int>(770, 1477);
-    tone_map['B'] = pair<int, int>(770, 1633);
-    tone_map['7'] = pair<int, int>(852, 1209);
-    tone_map['8'] = pair<int, int>(852, 1336);
-    tone_map['9'] = pair<int, int>(852, 1477);
-    tone_map['C'] = pair<int, int>(852, 1633);
-    tone_map['*'] = pair<int, int>(941, 1209);
-    tone_map['0'] = pair<int, int>(941, 1336);
-    tone_map['#'] = pair<int, int>(941, 1477);
-    tone_map['D'] = pair<int, int>(941, 1633);
+    tone_map['1'] = make_pair(697, 1209);
+    tone_map['2'] = make_pair(697, 1336);
+    tone_map['3'] = make_pair(697, 1477);
+    tone_map['A'] = make_pair(697, 1633);
+    tone_map['4'] = make_pair(770, 1209);
+    tone_map['5'] = make_pair(770, 1336);
+    tone_map['6'] = make_pair(770, 1477);
+    tone_map['B'] = make_pair(770, 1633);
+    tone_map['7'] = make_pair(852, 1209);
+    tone_map['8'] = make_pair(852, 1336);
+    tone_map['9'] = make_pair(852, 1477);
+    tone_map['C'] = make_pair(852, 1633);
+    tone_map['*'] = make_pair(941, 1209);
+    tone_map['0'] = make_pair(941, 1336);
+    tone_map['#'] = make_pair(941, 1477);
+    tone_map['D'] = make_pair(941, 1633);
   }
   
 } /* DtmfEncoder::DtmfEncoder */
@@ -179,10 +179,17 @@ int DtmfEncoder::digitPower(void) const
 } /* DtmfEncoder::digitPower */
 
 
-void DtmfEncoder::send(const std::string &str)
+void DtmfEncoder::send(const std::string &str, unsigned duration)
 {
   is_sending_digits = true;
-  current_str += str;
+  //current_str += str;
+  for (size_t i=0; i<str.size(); ++i)
+  {
+    send_queue.push_back(SendQueueItem(
+                           str[i],
+                           duration * sampling_rate / 1000
+                         ));
+  }
   playNextDigit();
 } /* DtmfEncoder::send */
 
@@ -266,14 +273,17 @@ void DtmfEncoder::playNextDigit(void)
     return;
   }
   
-  if (current_str.empty())
+  if (send_queue.empty())
   {
     sinkFlushSamples();
     return;
   }
   
-  char digit = current_str[0];
-  current_str = current_str.substr(1);
+  //char digit = current_str[0];
+  //current_str = current_str.substr(1);
+  char digit = send_queue.front().digit;
+  length = send_queue.front().duration;
+  send_queue.pop_front();
   if (tone_map.count(digit) == 0)
   {
     playNextDigit();
@@ -285,7 +295,10 @@ void DtmfEncoder::playNextDigit(void)
   low_tone = tone_map[digit].first;
   high_tone = tone_map[digit].second;
   pos = 0;
-  length = tone_length;
+  if (length <= 0)
+  {
+    length = tone_length;
+  }
   is_playing = true;
   
   writeAudio();
@@ -300,8 +313,8 @@ void DtmfEncoder::writeAudio(void)
   
   do
   {
-    int count = min(BLOCK_SIZE, length - pos);
-    for (int i=0; i<count; ++i)
+    unsigned count = min(BLOCK_SIZE, length - pos);
+    for (unsigned i=0; i<count; ++i)
     {
       if (low_tone > 0)
       {

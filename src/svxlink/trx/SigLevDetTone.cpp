@@ -185,6 +185,11 @@ SigLevDetTone::~SigLevDetTone(void)
 
 bool SigLevDetTone::initialize(Config &cfg, const string& name, int sample_rate)
 {
+  if (!SigLevDet::initialize(cfg, name, sample_rate))
+  {
+    return false;
+  }
+
   if (sample_rate != 16000)
   {
     cerr << "*** ERROR: The tone signal level detector only works at 16kHz "

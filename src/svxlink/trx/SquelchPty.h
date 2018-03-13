@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -51,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "RefCountingPty.h"
 #include "Squelch.h"
 
 
@@ -123,7 +123,7 @@ class SquelchPty : public Squelch
      */
     ~SquelchPty(void)
     {
-      delete pty;
+      if (pty != 0) pty->destroy();
     }
 
     /**
@@ -147,14 +147,14 @@ class SquelchPty : public Squelch
         return false;
       }
 
-      pty = new Async::Pty(link_path);
+      pty = RefCountingPty::instance(link_path);
       if (pty == 0)
       {
         return false;
       }
       pty->dataReceived.connect(
           sigc::mem_fun(*this, &SquelchPty::dataReceived));
-      return pty->open();
+      return true;
     }
 
   protected:
@@ -170,7 +170,7 @@ class SquelchPty : public Squelch
     }
 
   private:
-    Async::Pty  *pty;
+    RefCountingPty  *pty;
 
     SquelchPty(const SquelchPty&);
     SquelchPty& operator=(const SquelchPty&);

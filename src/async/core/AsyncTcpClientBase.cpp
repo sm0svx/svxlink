@@ -64,6 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncFdWatch.h"
 #include "AsyncDnsLookup.h"
 #include "AsyncTcpClient.h"
+#include "AsyncApplication.h"
 
 
 /****************************************************************************
@@ -94,10 +95,13 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Prototypes
+ * Prototypes / Local functions
  *
  ****************************************************************************/
 
+namespace {
+  void deleteDnsObject(DnsLookup *dns) { delete dns; }
+};
 
 
 /****************************************************************************
@@ -136,6 +140,12 @@ TcpClientBase::TcpClientBase(TcpConnection *con, const string& remote_host,
                              uint16_t remote_port)
   : con(con), dns(0), remote_host(remote_host), sock(-1), wr_watch(0)
 {
+  IpAddress ip_addr(remote_host);
+  if (!ip_addr.isEmpty())
+  {
+    con->setRemoteAddr(ip_addr);
+    this->remote_host = ip_addr.toString();
+  }
   con->setRemotePort(remote_port);
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpClientBase::connectHandler));
@@ -170,6 +180,12 @@ void TcpClientBase::bind(const IpAddress& bind_ip)
 void TcpClientBase::connect(const string &remote_host, uint16_t remote_port)
 {
   this->remote_host = remote_host;
+  IpAddress ip_addr(remote_host);
+  if (!ip_addr.isEmpty())
+  {
+    con->setRemoteAddr(ip_addr);
+    this->remote_host = ip_addr.toString();
+  }
   con->setRemotePort(remote_port);
   connect();
 } /* TcpClientBase::connect */
@@ -193,7 +209,8 @@ void TcpClientBase::connect(void)
     return;
   }
 
-  if (con->remoteHost().isEmpty())
+  if (con->remoteHost().isEmpty() ||
+      (remote_host != con->remoteHost().toString()))
   {
     assert(!remote_host.empty());
     dns = new DnsLookup(remote_host);
@@ -240,7 +257,8 @@ void TcpClientBase::dnsResultsReady(DnsLookup& dns_lookup)
 {
   vector<IpAddress> result = dns->addresses();
   
-  delete dns;
+    // Avoid memory leak by not deleting the dns object in the connected slot
+  Application::app().runTask(sigc::bind(&deleteDnsObject, dns));
   dns = 0;
   
   if (result.empty() || result[0].isEmpty())

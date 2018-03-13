@@ -6,6 +6,7 @@ if(WITH_SYSTEMD)
   add_subdirectory(systemd)
 endif(WITH_SYSTEMD)
 
+add_subdirectory(digital)
 add_subdirectory(trx)
 add_subdirectory(svxlink)
 add_subdirectory(modules)
