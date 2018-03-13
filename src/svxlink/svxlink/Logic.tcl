@@ -208,7 +208,7 @@ if {[$CFG_LONG_VOICE_ID_ENABLE != 0]} {
   playSilence 100;
   playTime $hour $minute;
   playSilence 500;
-  
+
     # Call the "status_report" function in all modules if no module is active
   if {$active_module == ""} {
     foreach module [split $loaded_modules " "] {
@@ -219,7 +219,7 @@ if {[$CFG_LONG_VOICE_ID_ENABLE != 0]} {
       }
     }
   }
-  
+
   playSilence 500;
 }
     
