@@ -170,11 +170,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0),
-	m_short_voice_id_enable("1"),			m_short_cw_id_enable("1"),
-	m_short_announce("short_annouce.wav"),	m_short_announce_enable("0"),
-	m_long_voice_id_enable("1"),			m_long_cw_id_enable("1"),
-	m_long_announce("long_annouce.wav"),	m_long_announce_enable("0")
+    dtmf_ctrl_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -251,26 +247,6 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-
-  // Variable to set short Voice ID enable
-  if (cfg().getValue(name(), "SHORT_VOICE_ID_ENABLE", m_short_voice_id_enable))
-  {
-  }   
-  
-  // Variable to set long Voice ID enable
-  if (cfg().getValue(name(), "LONG_VOICE_ID_ENABLE", m_long_voice_id_enable))
-  {
-  }
-
-  // Variable to set short CW ID enable
-  if (cfg().getValue(name(), "SHORT_CW_ID_ENABLE", m_short_cw_id_enable))
-  {
-  }
-  
-  // Variable to set Long CW ID enable
-  if (cfg().getValue(name(), "LONG_CW_ID_ENABLE", m_long_cw_id_enable))
-  {
-  }
   
   int exec_cmd_on_sql_close = -1;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
@@ -292,7 +268,7 @@ bool Logic::initialize(void)
     if (!state_pty->open())
     {
       cerr << "*** ERROR: Could not open state PTY "
-           << state_pty_path << " as spcified in configuration variable "
+           << state_pty_path << " as specified in configuration variable "
            << name() << "/" << "STATE_PTY" << endl;
       cleanup();
       return false;
@@ -307,7 +283,7 @@ bool Logic::initialize(void)
     if (!dtmf_ctrl_pty->open())
     {
       cerr << "*** ERROR: Could not open control PTY "
-           << dtmf_ctrl_pty_path << " as spcified in configuration variable "
+           << dtmf_ctrl_pty_path << " as specified in configuration variable "
            << name() << "/" << "DTMF_CTRL_PTY" << endl;
       cleanup();
       return false;
@@ -616,17 +592,6 @@ bool Logic::initialize(void)
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
-  // configure variables to allow user to configure CW & VOICE ID enables
-  event_handler->setVariable("short_voice_id_enable", m_short_voice_id_enable);
-  event_handler->setVariable("short_cw_id_enable", m_short_cw_id_enable);
-  event_handler->setVariable("long_voice_id_enable", m_long_voice_id_enable);
-  event_handler->setVariable("long_cw_id_enable", m_long_cw_id_enable);
-  // configure variables to setup custom short announcements
-  event_handler->setVariable("short_announce", m_short_announce);
-  event_handler->setVariable("short_announce_enable", m_short_announce_enable);
-    // configure variables to setup custom short announcements
-  event_handler->setVariable("long_announce", m_long_announce);
-  event_handler->setVariable("long_announce_enable", m_long_announce_enable);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);

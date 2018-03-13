@@ -126,19 +126,21 @@ proc manual_identification {} {
 #   hour    - The hour on which this identification occur
 #   minute  - The hour on which this identification occur
 #
+variable Logic::CFG_SHORT_ANNOUNCE
+puts "### SHORT_ANNOUNCE=$CFG_SHORT_ANNOUNCE"
+variable Logic::CFG_SHORT_ANNOUNCE_ENABLE
+puts "### SHORT_ANNOUNCE_ENABLE=$CFG_SHORT_ANNOUNCE_ENABLE"
+variable Logic::CFG_SHORT_VOICE_ID_ENABLE
+puts "### SHORT_VOICE_ID_ENABLE=$CFG_SHORT_VOICE_ID_ENABLE"
+variable Logic::CFG_SHORT_CW_ID_ENABLE
+puts "### SHORT_CW_ID_ENABLE=$CFG_SHORT_CW_ID_ENABLE"
+
 proc send_short_ident {{hour -1} {minute -1}} {
   global mycall;
-  global short_voice_id_enable;
-  global short_cw_id_enable;
-  global short_announce;
-  global short_announce_enable;
   variable CFG_TYPE;
   # only play voice id if not disabled (default to enabled)
   
-  #puts $short_voice_id_enable
-  #puts $short_cw_id_enable
-  
-  if {$short_voice_id_enable != 0} {
+  if {[$CFG_SHORT_VOICE_ID_ENABLE != 0]} {
     puts "Playing short voice ID"
     spellWord $mycall;
     if {$CFG_TYPE == "Repeater"} {
@@ -148,8 +150,8 @@ proc send_short_ident {{hour -1} {minute -1}} {
   }
   # play announcements if either path is valid, otherwise print message to
   # the log file
-  if {$short_announce_enable == 1} {
-    set announcement_path "/var/lib/svxlink/sounds/announcement/$short_announcement"
+  if {[$CFG_SHORT_ANNOUNCE_ENABLE == 1]} {
+    set announcement_path "/var/lib/svxlink/sounds/announcement/$CFG_SHORT_ANNOUNCE"
     set fexist1 [file exist $path]
     if {$fexist1} {
       playFile $announcement_path
@@ -160,7 +162,7 @@ proc send_short_ident {{hour -1} {minute -1}} {
             }
     }
     # only play CW id if not disabled (default to enabled)
-    if {$short_cw_id_enable !=0} {
+    if {[$CFG_SHORT_CW_ID_ENABLE !=0]} {
             puts "Playing long CW ID"
             if {$CFG_TYPE == "Repeater"} {
                 set call "$mycall/R"
@@ -178,18 +180,23 @@ proc send_short_ident {{hour -1} {minute -1}} {
 #   hour    - The hour on which this identification occur
 #   minute  - The hour on which this identification occur
 #
+variable Logic::CFG_LONG_ANNOUNCE
+puts "### LONG_ANNOUNCE=$CFG_LONG_ANNOUNCE"
+variable Logic::CFG_LONG_ANNOUNCE_ENABLE
+puts "### LONG_ANNOUNCE_ENABLE=$CFG_LONG_ANNOUNCE_ENABLE"
+variable Logic::CFG_LONG_VOICE_ID_ENABLE
+puts "### LONG_VOICE_ID_ENABLE=$CFG_LONG_VOICE_ID_ENABLE"
+variable Logic::CFG_LONG_CW_ID_ENABLE
+puts "### LONG_CW_ID_ENABLE=$CFG_LONG_CW_ID_ENABLE"
+
 proc send_long_ident {hour minute} {
   global mycall;
   global loaded_modules;
   global active_module;
-  global long_voice_id_enable;
-  global long_cw_id_enable;
-  global long_announce;
-  global long_announce_enable;
   variable CFG_TYPE;
 
-# only play the voice ID if not disabled (defualt to enabled)
-if {$long_voice_id_enable !=0} {
+# only play the voice ID if not disabled (default to enabled)
+if {[$CFG_LONG_VOICE_ID_ENABLE != 0]} {
   puts "Playing Long voice ID"
   spellWord $mycall;
   if {$CFG_TYPE == "Repeater"} {
@@ -218,8 +225,8 @@ if {$long_voice_id_enable !=0} {
     
   # play announcements if either path is valid, otherwise print message to
   # the log file
-  if {$long_announce_enable == 1} {
-    set announcement_path "/var/lib/svxlink/sounds/announcement/$long_announcement"
+  if {[$CFG_LONG_ANNOUNCE_ENABLE == 1]} {
+    set announcement_path "/var/lib/svxlink/sounds/announcement/$CFG_LONG_ANNOUNCE"
     set fexist1 [file exist $path]
     if {$fexist1} {
       playFile $announcement_path
@@ -231,7 +238,7 @@ if {$long_voice_id_enable !=0} {
   }
 
   # only play CW id if not disabled (default to enabled)
-  if {$long_cw_id_enable !=0} {
+  if {[$CFG_LONG_CW_ID_ENABLE != 0]} {
     puts "Playing long CW ID"
     if {$CFG_TYPE == "Repeater"} {
       set call "$mycall/R"
