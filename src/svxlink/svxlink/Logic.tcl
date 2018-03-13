@@ -126,13 +126,13 @@ proc manual_identification {} {
 #   hour    - The hour on which this identification occur
 #   minute  - The hour on which this identification occur
 #
-variable Logic::CFG_SHORT_ANNOUNCE
+variable ::Logic::CFG_SHORT_ANNOUNCE
 puts "### SHORT_ANNOUNCE=$CFG_SHORT_ANNOUNCE"
-variable Logic::CFG_SHORT_ANNOUNCE_ENABLE
+variable ::Logic::CFG_SHORT_ANNOUNCE_ENABLE
 puts "### SHORT_ANNOUNCE_ENABLE=$CFG_SHORT_ANNOUNCE_ENABLE"
-variable Logic::CFG_SHORT_VOICE_ID_ENABLE
+variable ::Logic::CFG_SHORT_VOICE_ID_ENABLE
 puts "### SHORT_VOICE_ID_ENABLE=$CFG_SHORT_VOICE_ID_ENABLE"
-variable Logic::CFG_SHORT_CW_ID_ENABLE
+variable ::Logic::CFG_SHORT_CW_ID_ENABLE
 puts "### SHORT_CW_ID_ENABLE=$CFG_SHORT_CW_ID_ENABLE"
 
 proc send_short_ident {{hour -1} {minute -1}} {
@@ -180,13 +180,13 @@ proc send_short_ident {{hour -1} {minute -1}} {
 #   hour    - The hour on which this identification occur
 #   minute  - The hour on which this identification occur
 #
-variable Logic::CFG_LONG_ANNOUNCE
+variable ::Logic::CFG_LONG_ANNOUNCE
 puts "### LONG_ANNOUNCE=$CFG_LONG_ANNOUNCE"
-variable Logic::CFG_LONG_ANNOUNCE_ENABLE
+variable ::Logic::CFG_LONG_ANNOUNCE_ENABLE
 puts "### LONG_ANNOUNCE_ENABLE=$CFG_LONG_ANNOUNCE_ENABLE"
-variable Logic::CFG_LONG_VOICE_ID_ENABLE
+variable ::Logic::CFG_LONG_VOICE_ID_ENABLE
 puts "### LONG_VOICE_ID_ENABLE=$CFG_LONG_VOICE_ID_ENABLE"
-variable Logic::CFG_LONG_CW_ID_ENABLE
+variable ::Logic::CFG_LONG_CW_ID_ENABLE
 puts "### LONG_CW_ID_ENABLE=$CFG_LONG_CW_ID_ENABLE"
 
 proc send_long_ident {hour minute} {
