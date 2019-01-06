@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncAudioFilter.h>
+#include <AsyncAudioSplitter.h>
 
 
 /****************************************************************************
@@ -119,6 +120,9 @@ class.
 class SquelchCtcss : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "CTCSS";
+
     /**
      * @brief 	Default constuctor
      */
@@ -320,18 +324,6 @@ class SquelchCtcss : public Squelch
     }
 
     /**
-     * @brief   Set the time the squelch should hang open after squelch close
-     * @param   hang The number of milliseconds to hang
-     */
-    virtual void setHangtime(int hang)
-    {
-      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
-      {
-        (*it)->setUndetectDelay(hang);
-      }
-    }
-
-    /**
       * @brief   Set the time a squelch open should be delayed
       * @param   delay The delay in milliseconds
       */
@@ -363,6 +355,18 @@ class SquelchCtcss : public Squelch
     int processSamples(const float *samples, int count)
     {
       return m_splitter->writeSamples(samples, count);
+    }
+
+    /**
+     * @brief   Set the time the squelch should hang open after squelch close
+     * @param   hang The number of milliseconds to hang
+     */
+    virtual void setCurrentHangtime(int hang)
+    {
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
+      {
+        (*it)->setUndetectDelay(hang);
+      }
     }
 
   private:

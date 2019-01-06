@@ -75,12 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SigLevDet.h"
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
-#include "SquelchVox.h"
 #include "SquelchCtcss.h"
-#include "SquelchSerial.h"
-#include "SquelchSigLev.h"
-#include "SquelchEvDev.h"
-#include "SquelchGpio.h"
 #include "LocalRxBase.h"
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
@@ -89,11 +84,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "HdlcDeframer.h"
 #include "Tx.h"
 #include "Emphasis.h"
-#include "SquelchPty.h"
-#include "SquelchOpen.h"
-#ifdef HAS_HIDRAW_SUPPORT
-#include "SquelchHidraw.h"
-#endif
 
 
 /****************************************************************************
@@ -230,8 +220,6 @@ class AudioUdpSink : public UdpSocket, public AudioSink
 
 namespace {
   typedef const char *CfgTag;
-  CfgTag CFG_SQL_HANGTIME                 = "SQL_HANGTIME";
-  CfgTag CFG_SQL_EXTENDED_HANGTIME        = "SQL_EXTENDED_HANGTIME";
   CfgTag CFG_SQL_EXTENDED_HANGTIME_THRESH = "SQL_EXTENDED_HANGTIME_THRESH";
 };
 
@@ -354,14 +342,9 @@ bool LocalRxBase::initialize(void)
   prev_src->registerSink(siglevdet_splitter, true);
 
     // Create the signal level detector
-  siglevdet = SigLevDetFactoryBase::createNamedSigLevDet(cfg(), name());
-  if ((siglevdet == 0) ||
-      (!siglevdet->initialize(cfg(), name(), INTERNAL_SAMPLE_RATE)))
+  siglevdet = createSigLevDet(cfg(), name());
+  if (siglevdet == 0)
   {
-    cout << "*** ERROR: Could not initialize the signal level detector for "
-         << "receiver " << name() << endl;
-    delete siglevdet;
-    siglevdet = 0;
     return false;
   }
   siglevdet->setIntegrationTime(0);
@@ -416,72 +399,32 @@ bool LocalRxBase::initialize(void)
     return false;
   }
 
-  if (sql_det_str == "OPEN")
-  {
-    squelch_det = new SquelchOpen;
-  }
-  else if (sql_det_str == "VOX")
-  {
-    squelch_det = new SquelchVox;
-  }
-  else if (sql_det_str == "CTCSS")
-  {
-    SquelchCtcss *squelch_ctcss = new SquelchCtcss;
-    squelch_ctcss->snrUpdated.connect(ctcssSnrUpdated.make_slot());
-    squelch_det = squelch_ctcss;
-  }
-  else if (sql_det_str == "SERIAL")
-  {
-    squelch_det = new SquelchSerial;
-  }
-  else if (sql_det_str == "SIGLEV")
-  {
-    squelch_det = new SquelchSigLev(siglevdet);
-  }
-  else if (sql_det_str == "EVDEV")
-  {
-    squelch_det = new SquelchEvDev;
-  }
-  else if (sql_det_str == "GPIO")
-  {
-    squelch_det = new SquelchGpio;
-  }
-  else if (sql_det_str == "PTY")
-  {
-    squelch_det = new SquelchPty;
-  }
-#ifdef HAS_HIDRAW_SUPPORT
-  else if (sql_det_str == "HIDRAW")
-  {
-    squelch_det = new SquelchHidraw;
-  }
-#endif
-  else
+  squelch_det = createSquelch(sql_det_str);
+  if (squelch_det == 0)
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
-      	 << name() << "/SQL_DET. Legal values are: OPEN, VOX, CTCSS, SIGLEV, "
-	 << "EVDEV, GPIO, PTY and SERIAL\n";
+         << name() << "/SQL_DET. Legal squelch types are: "
+         << SquelchFactory::validFactories() << std::endl;
     // FIXME: Cleanup
     return false;
   }
-  
   if (!squelch_det->initialize(cfg(), name()))
   {
-    cerr << "*** ERROR: Squelch detector initialization failed for RX \""
-      	 << name() << "\"\n";
+    std::cerr << "*** ERROR: Squelch detector initialization failed for RX \""
+              << name() << "\"" << std::endl;
     delete squelch_det;
     squelch_det = 0;
     // FIXME: Cleanup
     return false;
   }
+  if (sql_det_str == SquelchCtcss::OBJNAME)
+  {
+    SquelchCtcss *squelch_ctcss = dynamic_cast<SquelchCtcss*>(squelch_det);
+    squelch_ctcss->snrUpdated.connect(ctcssSnrUpdated.make_slot());
+  }
 
   readyStateChanged.connect(mem_fun(*this, &LocalRxBase::rxReadyStateChanged));
 
-  if (cfg().getValue(name(), CFG_SQL_HANGTIME, sql_hangtime))
-  {
-    squelch_det->setHangtime(sql_hangtime);
-  }
-  cfg().getValue(name(), CFG_SQL_EXTENDED_HANGTIME, sql_extended_hangtime);
   cfg().getValue(name(), CFG_SQL_EXTENDED_HANGTIME_THRESH,
                          sql_extended_hangtime_thresh);
 
@@ -962,14 +905,9 @@ void LocalRxBase::setSqlHangtimeFromSiglev(float siglev)
 {
   if (sql_extended_hangtime_thresh > 0)
   {
-    if ((siglev > sql_extended_hangtime_thresh) || (mute_state != MUTE_NONE))
-    {
-      squelch_det->setHangtime(sql_hangtime);
-    }
-    else
-    {
-      squelch_det->setHangtime(sql_extended_hangtime);
-    }
+    squelch_det->enableExtendedHangtime(
+        ((siglev < sql_extended_hangtime_thresh) &&
+         (mute_state == MUTE_NONE)));
   }
 } /* LocalRxBase::setSqlHangtime */
 
@@ -1014,23 +952,7 @@ void LocalRxBase::cfgUpdated(const std::string& section, const std::string& tag)
   //          << std::endl;
   if (section == name())
   {
-    if (tag == CFG_SQL_HANGTIME)
-    {
-      if (cfg().getValue(name(), CFG_SQL_HANGTIME, sql_hangtime))
-      {
-        squelch_det->setHangtime(sql_hangtime);
-      }
-      std::cout << "Setting " << CFG_SQL_HANGTIME << " to " << sql_hangtime
-                << " for receiver " << name() << std::endl;
-    }
-    else if (tag == CFG_SQL_EXTENDED_HANGTIME)
-    {
-      cfg().getValue(name(), CFG_SQL_EXTENDED_HANGTIME, sql_extended_hangtime);
-      std::cout << "Setting " << CFG_SQL_EXTENDED_HANGTIME << " to "
-                << sql_extended_hangtime
-                << " for receiver " << name() << std::endl;
-    }
-    else if (tag == CFG_SQL_EXTENDED_HANGTIME_THRESH)
+    if (tag == CFG_SQL_EXTENDED_HANGTIME_THRESH)
     {
       cfg().getValue(name(), CFG_SQL_EXTENDED_HANGTIME_THRESH,
                      sql_extended_hangtime_thresh);

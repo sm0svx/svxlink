@@ -117,10 +117,8 @@ namespace Async
 class SigLevDetDdr : public SigLevDet
 {
   public:
-    struct Factory : public SigLevDetFactory<SigLevDetDdr>
-    {
-      Factory(void) : SigLevDetFactory<SigLevDetDdr>("DDR") {}
-    };
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "DDR";
 
     /**
      * @brief 	Default constuctor
