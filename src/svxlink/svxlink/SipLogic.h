@@ -185,8 +185,15 @@ class SipLogic : public LogicBase
     struct timeval            m_last_talker_timestamp;
     Async::Pty                *dtmf_ctrl_pty;
     uint16_t                  m_calltimeout;
-//    sip::_AudioMedia          *aud_med;
+    sip::_AudioMedia          *sip_buf;
     Async::Timer              m_call_timeout_timer;
+
+    struct smpl
+    {
+      uint16_t               *sample_buf;
+      int                    count;
+    };
+    smpl                     outsample;
 
     sip::_AudioMedia         *media;
 
@@ -198,8 +205,6 @@ class SipLogic : public LogicBase
     bool setAudioCodec(const std::string& codec_name);
     void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
-//    void sipWriteSamples(pjmedia_port med_port, pjmedia_frame *put_frame);
-    void sipWriteSamples(uint8_t *samples, pj_size_t count);
     void hangupCalls(std::vector<sip::_Call *> calls);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void sendEncodedAudio(const void *buf, int count);

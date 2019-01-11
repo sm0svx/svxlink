@@ -179,16 +179,6 @@ namespace sip {
         unregisterMediaPort();
       }
 
-      void getFrame(const void *buf, int count)
-      {
-/*      get_frame = 0;
-        memcpy(get_frame->buf, buf, count);
-        get_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
-        get_frame->size = count;
-        pjmedia_port_get_frame(&mediaPort, get_frame);
-*/
-      } /* _AudioMedia::getFrame */
-
 
     private:
       SipLogic &slogic;
@@ -508,7 +498,7 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
   prm.opt.videoCount = 0;
 
   cout << "+++ Incoming Call: " <<  ci.remoteUri << " ["
-            << ci.stateText << "]" << endl;
+            << ci.remoteContact << "]" << endl;
 
   calls.push_back(call);
   prm.statusCode = (pjsip_status_code)200;
@@ -537,10 +527,9 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
   {
     if (ci.media[0].type == PJMEDIA_TYPE_AUDIO)
     {
-      sip::_AudioMedia *aud_med 
-                     = static_cast<sip::_AudioMedia *>(call->getMedia(0));
-      aud_med->startTransmit(*media);
-      media->startTransmit(*aud_med);
+      sip_buf = static_cast<sip::_AudioMedia *>(call->getMedia(0));
+      sip_buf->startTransmit(*media);
+      media->startTransmit(*sip_buf);
     }
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
@@ -565,51 +554,103 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 } /* SipLogic::onMediaState */
 
 
+/*
+ * store SvxLink audio stream into buffer
+ */
 void SipLogic::sendEncodedAudio(const void *buf, int count)
 {
   if (m_flush_timeout_timer.isEnabled())
   {
     m_flush_timeout_timer.setEnable(false);
   }
-//  aud_med->getFrame(buf, count);
+
+  int pos = outsample.count;
+  memcpy(outsample.sample_buf + pos, buf, count);
+  outsample.count += count;
 } /* SipLogic::sendEncodedAudio */
 
 
+/*
+ * incoming SvxLink audio stream to SIP
+ */
 pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
+  int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
+  int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
+  frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+
+  if (outsample.count > count)
+  {
+    memcpy(samples, outsample.sample_buf, count);
+    memmove(outsample.sample_buf, outsample.sample_buf + count, outsample.count - count);
+    outsample.count -= count;
+  }
+  else 
+  {
+    memcpy(samples, outsample.sample_buf, outsample.count);
+    for (int i=outsample.count; i < count; i++)
+    {
+      samples[i] = 0;
+    }
+    outsample.count = 0;
+  }
+
   return PJ_SUCCESS;
 } /* SipLogic::mediaPortGetFrame */
 
 
+/*
+ * incoming SIP audio to SvxLink
+ */
 pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
+  int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
+  int16_t *samples = static_cast<int16_t *>(frame->buf);
+  frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+
+  m_dec->writeEncodedSamples(samples, count);
   return PJ_SUCCESS;
 } /* SipLogic::mediaPortPutFrame */
 
 
-void SipLogic::sipWriteSamples(uint8_t *samples, pj_size_t count)
-{
-//  m_dec->writeEncodedSamples(samples, count);
-} /* SipLogic::sipWriteSamples */
-
-
 void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 {
-  cout << "onCallState" << endl;
   pj::CallInfo ci = call->getInfo();
 
-  if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
-  {
-    for (std::vector<sip::_Call *>::iterator it=calls.begin();
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
+  {
+    if (*it == call)
     {
-      if (*it == call)
+       // call disconnected
+      if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
       {
-        cout << "+++ call disconnected" << endl;
+        cout << "+++ call disconnected, duration " 
+             << (*it)->getInfo().totalDuration.sec << "." 
+             << (*it)->getInfo().totalDuration.msec << " secs" << endl;
         m_enc->allEncodedSamplesFlushed();
         calls.erase(it);
-        break;
       }
+
+       // incoming call
+      if (ci.state == PJSIP_INV_STATE_INCOMING)
+      {
+        cout << "+++ incoming call" << endl;
+      }
+
+       // connecting
+      if (ci.state == PJSIP_INV_STATE_CONNECTING)
+      {
+        cout << "+++ connecting" << endl;
+      }
+
+       // calling
+      if (ci.state == PJSIP_INV_STATE_CALLING)
+      {
+        cout << "+++ calling" << endl;
+      }
+
+      break;
     }
   }
 } /* SipLogic::onCallState */
@@ -687,7 +728,8 @@ void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
        it != calls.end(); it++)
   {
     cout << "+++ hangup call " << (*it)->getInfo().remoteUri
-         << endl;
+         << ", duration " << (*it)->getInfo().totalDuration.sec 
+         << " secs" << endl;
     (*it)->hangup(prm);
     calls.erase(it);
   }
