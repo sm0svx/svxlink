@@ -118,18 +118,13 @@ namespace Async
 
 A_detailed_class_description
 
-\include Template_demo.cpp
+\include AsyncMutex_demo.cpp
 */
 class Mutex
 {
   public:
     /**
      * @brief Default constructor
-     *
-     * Because the default constructor is constexpr, static mutexes are
-     * initialized as part of static non-local initialization, before any
-     * dynamic non-local initialization begins. This makes it safe to lock a
-     * mutex in a constructor of any static object.
      */
     Mutex(void) noexcept
       : m_lk(m_mu), m_pending(0), m_main_thread(std::this_thread::get_id())
@@ -197,7 +192,6 @@ class Mutex
         exit(1);
       }
       m_mu.lock();
-      //m_done = false;
       //std::cout << "Mutex::lock: EXIT" << std::endl;
     }
 
@@ -207,7 +201,6 @@ class Mutex
     {
       //std::cout << "Mutex::unlock" << std::endl;
       assert(m_main_thread != std::this_thread::get_id());
-      //m_done = true;
       m_pending -= 1;
       m_mu.unlock();
       m_cond.notify_one();
@@ -217,7 +210,6 @@ class Mutex
     std::mutex                    m_mu;
     std::unique_lock<std::mutex>  m_lk;
     std::condition_variable       m_cond;
-    //bool                          m_done = true;
     std::atomic<unsigned>         m_pending;
     int                           m_pipe_wr = -1;
     Async::FdWatch*               m_rd_watch = 0;
@@ -231,12 +223,6 @@ class Mutex
       while ((cnt = read(w->fd(), &ch, 1)) > 0)
       {
         m_cond.wait(m_lk, [this]{ return m_pending == 0; });
-        //while (m_pending > 0)
-        //{
-        //  std::cout << "Mutex::unlockHandler: Before wait" << std::endl;
-        //  m_cond.wait(m_lk);
-        //  std::cout << "Mutex::unlockHandler: After wait" << std::endl;
-        //}
       }
       if (cnt == -1)
       {
