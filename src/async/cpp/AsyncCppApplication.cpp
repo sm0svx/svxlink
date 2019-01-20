@@ -172,6 +172,7 @@ CppApplication::CppApplication(void)
 
 CppApplication::~CppApplication(void)
 {
+  destroy();
   clearTasks();
 } /* CppApplication::~CppApplication */
 

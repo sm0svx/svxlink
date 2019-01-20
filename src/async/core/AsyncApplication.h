@@ -176,7 +176,14 @@ class Application : public sigc::trackable
      * and the second is an integer.
      */
     void runTask(sigc::slot<void> task);
-    
+
+    /**
+     * @brief   Signal that is emitted just before destruction
+     *
+     * This signal is emitted right before the Application object is destroyed.
+     */
+    sigc::signal<void> destroy;
+
   protected:
     void clearTasks(void);
     
