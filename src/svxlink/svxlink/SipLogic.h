@@ -49,8 +49,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioDecoder.h>
-#include <AsyncAudioEncoder.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioPassthrough.h>
@@ -167,8 +165,7 @@ class SipLogic : public LogicBase
     std::string               m_schema;
     Async::AudioPassthrough*  m_logic_con_in;
     Async::AudioSource*       m_logic_con_out;
-    Async::AudioDecoder*      m_dec;
-    Async::AudioEncoder*      m_enc;
+    Async::AudioPassthrough*  m_out_src;
     uint16_t                  m_siploglevel;
     bool                      m_autoanswer;
     std::string               m_autoconnect;
@@ -206,11 +203,12 @@ class SipLogic : public LogicBase
     void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
     void hangupCalls(std::vector<sip::_Call *> calls);
+    void hangupCall(sip::_Call *call);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
-    void sendEncodedAudio(const void *buf, int count);
+    void audioStreamStateChange(bool is_active, bool is_idle);
+    int sendAudio(void *buf, int count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
-    void flushEncodedAudio(void);
-    void allEncodedSamplesFlushed(void);
+    void flushAudio(void);
     void callTimeout(Async::Timer *t=0);
     void flushTimeout(Async::Timer *t=0);
 

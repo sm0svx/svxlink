@@ -47,7 +47,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioPassthrough.h>
+#include <AsyncSigCAudioSink.h>
 #include <AsyncPty.h>
+#include <AsyncAudioInterpolator.h>
+#include <AsyncAudioDecimator.h>
 
 
 /****************************************************************************
@@ -57,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "SipLogic.h"
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -185,13 +189,13 @@ namespace sip {
       pjmedia_port mediaPort;
 
 
-      static pj_status_t callback_getFrame(pjmedia_port *port, pjmedia_frame *frame) 
+      static pj_status_t callback_getFrame(pjmedia_port *port, pjmedia_frame *frame)
       {
         SipLogic *slogic = static_cast<SipLogic *>(port->port_data.pdata);
         return slogic->mediaPortGetFrame(port, frame);
       } /* callback_getFrame */
 
-      static pj_status_t callback_putFrame(pjmedia_port *port, pjmedia_frame *frame) 
+      static pj_status_t callback_putFrame(pjmedia_port *port, pjmedia_frame *frame)
       {
         SipLogic *slogic = static_cast<SipLogic *>(port->port_data.pdata);
         return slogic->mediaPortPutFrame(port, frame);
@@ -263,7 +267,7 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_dec(0), m_enc(0), m_siploglevel(0), m_autoanswer(false),
+    m_out_src(0), m_siploglevel(0), m_autoanswer(false),
     m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
@@ -282,10 +286,8 @@ SipLogic::~SipLogic(void)
   m_logic_con_in = 0;
   delete m_logic_con_out;
   m_logic_con_out = 0;
-  delete m_enc;
-  m_enc = 0;
-  delete m_dec;
-  m_dec = 0;
+  delete m_out_src;
+  m_out_src = 0;
   delete acc;
   delete dtmf_ctrl_pty;
   delete media;
@@ -346,7 +348,7 @@ bool SipLogic::initialize(void)
     dtmf_ctrl_pty = new Async::Pty(dtmf_ctrl_pty_path);
     if (!dtmf_ctrl_pty->open())
     {
-      cerr << "*** ERROR: Could not open dtmf sip PTY " << dtmf_ctrl_pty_path 
+      cerr << "*** ERROR: Could not open dtmf sip PTY " << dtmf_ctrl_pty_path
            << " as specified in configuration variable " << name()
            << "/" << "DTMF_CTRL_PTY" << endl;
       return false;
@@ -413,12 +415,12 @@ bool SipLogic::initialize(void)
 
   media = new sip::_AudioMedia(*this, 60);
 
-   // Create logic connection incoming audio passthrough
-  m_logic_con_in = new Async::AudioPassthrough;
+  /****************************************************/
 
-    // Create dummy audio codec used before setting the real encoder
-  if (!setAudioCodec("DUMMY")) { return false; }
-  AudioSource *prev_src = m_dec;
+  AudioSource *prev_src = m_out_src;
+
+   // incoming sip audio to this logic
+  m_logic_con_in = new Async::AudioPassthrough;
 
    // Create jitter FIFO if jitter buffer delay > 0
   unsigned jitter_buffer_delay = 0;
@@ -438,8 +440,34 @@ bool SipLogic::initialize(void)
     prev_src->registerSink(passthrough, true);
     prev_src = passthrough;
   }
+
+  /****************************************************/
+
+  AudioSink *m_in_src = 0;
+
+    // adapt the differe sample rates SvxLink<->Sip (16k<->8k)
+  if (INTERNAL_SAMPLE_RATE == 16000)
+  {
+      // SipLogic -> SvxLink core
+    AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
+                                                  coeff_16_8_taps);
+    prev_src->registerSink(i1, true);
+    prev_src = i1;
+
+      // SvxLink core -> SipLogic
+    AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
+    m_in_src->registerSource(d2);
+    m_in_src = d2;
+  }
+
+  SigCAudioSink *as = m_in_src;
+
+
+  m_logic_con_in->registerSink(m_in_src, false);
+
   m_logic_con_out = prev_src;
 
+   // init this Logic
   if (!LogicBase::initialize())
   {
     cout << "*** ERROR initializing SipLogic" << endl;
@@ -554,10 +582,15 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 } /* SipLogic::onMediaState */
 
 
+void SipLogic::audioStreamStateChange(bool is_active, bool is_idle)
+{
+} /* */
+
+
 /*
  * store SvxLink audio stream into buffer
  */
-void SipLogic::sendEncodedAudio(const void *buf, int count)
+int SipLogic::sendAudio(void *buf, int count)
 {
   if (m_flush_timeout_timer.isEnabled())
   {
@@ -567,7 +600,8 @@ void SipLogic::sendEncodedAudio(const void *buf, int count)
   int pos = outsample.count;
   memcpy(outsample.sample_buf + pos, buf, count);
   outsample.count += count;
-} /* SipLogic::sendEncodedAudio */
+  return count;
+} /* SipLogic::sendAudio */
 
 
 /*
@@ -585,7 +619,7 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
     memmove(outsample.sample_buf, outsample.sample_buf + count, outsample.count - count);
     outsample.count -= count;
   }
-  else 
+  else
   {
     memcpy(samples, outsample.sample_buf, outsample.count);
     for (int i=outsample.count; i < count; i++)
@@ -605,10 +639,10 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
 pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
-  int16_t *samples = static_cast<int16_t *>(frame->buf);
+  float *samples = static_cast<float *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
-  m_dec->writeEncodedSamples(samples, count);
+  m_out_src->writeSamples(samples, count);
   return PJ_SUCCESS;
 } /* SipLogic::mediaPortPutFrame */
 
@@ -625,10 +659,10 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // call disconnected
       if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
       {
-        cout << "+++ call disconnected, duration " 
-             << (*it)->getInfo().totalDuration.sec << "." 
+        cout << "+++ call disconnected, duration "
+             << (*it)->getInfo().totalDuration.sec << "."
              << (*it)->getInfo().totalDuration.msec << " secs" << endl;
-        m_enc->allEncodedSamplesFlushed();
+        m_out_src->allSamplesFlushed();
         calls.erase(it);
       }
 
@@ -656,56 +690,9 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 } /* SipLogic::onCallState */
 
 
-bool SipLogic::setAudioCodec(const std::string& codec_name)
-{
-  delete m_enc;
-  m_enc = Async::AudioEncoder::create(codec_name);
-  if (m_enc == 0)
-  {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to initialize " << codec_name
-         << " audio encoder" << endl;
-    m_enc = Async::AudioEncoder::create("DUMMY");
-    assert(m_enc != 0);
-    return false;
-  }
-  m_enc->writeEncodedSamples.connect(
-      mem_fun(*this, &SipLogic::sendEncodedAudio));
-  m_enc->flushEncodedSamples.connect(
-      mem_fun(*this, &SipLogic::flushEncodedAudio));
-  m_logic_con_in->registerSink(m_enc, false);
-
-  AudioSink *sink = 0;
-  if (m_dec != 0)
-  {
-    sink = m_dec->sink();
-    m_dec->unregisterSink();
-    delete m_dec;
-  }
-  m_dec = Async::AudioDecoder::create(codec_name);
-  if (m_dec == 0)
-  {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to initialize " << codec_name
-         << " audio decoder" << endl;
-    m_dec = Async::AudioDecoder::create("DUMMY");
-    assert(m_dec != 0);
-    return false;
-  }
-  m_dec->allEncodedSamplesFlushed.connect(
-      mem_fun(*this, &SipLogic::allEncodedSamplesFlushed));
-  if (sink != 0)
-  {
-    m_dec->registerSink(sink, true);
-  }
-
-  return true;
-} /* SipLogic::setAudioCodec */
-
-
 void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
-  cout << "+++ Dtmf digit received: " << prm.digit 
+  cout << "+++ Dtmf digit received: " << prm.digit
        << " code=" << call->getId() << endl;
 } /* SipLogic::onDtmfDigit */
 
@@ -718,9 +705,10 @@ void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 } /* SipLogic::onRegState */
 
 
+// hangup all calls
 void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
 {
-  m_enc->allEncodedSamplesFlushed();
+  m_out_src->allSamplesFlushed();
 
   CallOpParam prm(true);
 
@@ -728,16 +716,39 @@ void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
        it != calls.end(); it++)
   {
     cout << "+++ hangup call " << (*it)->getInfo().remoteUri
-         << ", duration " << (*it)->getInfo().totalDuration.sec 
+         << ", duration " << (*it)->getInfo().totalDuration.sec
          << " secs" << endl;
     (*it)->hangup(prm);
     calls.erase(it);
   }
 } /* SipLogic::hangupCalls */
 
+
+// hangup a single call
+void SipLogic::hangupCall(sip::_Call *call)
+{
+  CallOpParam prm(true);
+
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
+       it != calls.end(); it++)
+  {
+    if (*it == call)
+    {
+      m_out_src->allSamplesFlushed();
+      cout << "+++ hangup call " << (*it)->getInfo().remoteUri
+           << ", duration " << (*it)->getInfo().totalDuration.sec
+           << " secs" << endl;
+      (*it)->hangup(prm);
+      calls.erase(it);
+      break;
+    }
+  }
+}
+
+
 /**
  *  dial-out by sending a string over Pty device, e.g.
- *  echo "C12345#" > /tmp/sippty 
+ *  echo "C12345#" > /tmp/sippty
  *  method converts it to a valid dial string:
  *  "sip:12345@sipserver"
 **/
@@ -768,15 +779,10 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 } /* SipLogic::dtmfCtrlPtyCmdReceived */
 
 
-void SipLogic::flushEncodedAudio(void)
+void SipLogic::flushAudio(void)
 {
   m_flush_timeout_timer.setEnable(true);
-} /* SipLogic::flushEncodedAudio */
-
-
-void SipLogic::allEncodedSamplesFlushed(void)
-{
-} /* SipLogic::allEncodedSamplesFlushed */
+} /* SipLogic::flushAudio */
 
 
 void SipLogic::callTimeout(Async::Timer *t)
@@ -790,7 +796,7 @@ void SipLogic::callTimeout(Async::Timer *t)
 void SipLogic::flushTimeout(Async::Timer *t)
 {
   m_flush_timeout_timer.setEnable(false);
-  m_enc->allEncodedSamplesFlushed();
+  m_out_src->allSamplesFlushed();
 } /* SipLogic::flushTimeout */
 
 /*
