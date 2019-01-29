@@ -1,4 +1,4 @@
- 1.7.0 -- ?? ??? 2018
+ 1.7.0 -- ?? ??? 2019
 ----------------------
 
 * Now possible to set the roger sound to be always on in the SimplexLogic, even
@@ -103,6 +103,8 @@
 * New configuration variable for logic cores, PHONETIC_SPELLING, which if set
   to 0 will spell words using plain letters instead of the default phonetic
   spelling. Not all language packs support this feature.
+
+* Now possible to set audio codec parameters for ReflectorLogic.
 
 
 
