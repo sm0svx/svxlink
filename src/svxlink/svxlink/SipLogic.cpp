@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncPty.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDecimator.h>
+#include <AsyncAudioReader.h>
 
 
 /****************************************************************************
@@ -267,7 +268,7 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_out_src(0), m_siploglevel(0), m_autoanswer(false),
+    m_out_src(0), m_in_src(0), m_siploglevel(0), m_autoanswer(false),
     m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
@@ -443,9 +444,9 @@ bool SipLogic::initialize(void)
 
   /****************************************************/
 
-  AudioSink *m_in_src = 0;
+  m_logic_con_in->registerSink(m_in_src, false);
 
-    // adapt the differe sample rates SvxLink<->Sip (16k<->8k)
+   // adapt the differet sample rates SvxLink<->Sip (16k<->8k)
   if (INTERNAL_SAMPLE_RATE == 16000)
   {
       // SipLogic -> SvxLink core
@@ -460,10 +461,9 @@ bool SipLogic::initialize(void)
     m_in_src = d2;
   }
 
-  SigCAudioSink *as = m_in_src;
-
-
-  m_logic_con_in->registerSink(m_in_src, false);
+  AudioPassthrough *m_pt = new AudioPassthrough();
+  m_pt->registerSink(m_ar, false);
+  m_in_src = m_pt;
 
   m_logic_con_out = prev_src;
 
@@ -582,51 +582,21 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 } /* SipLogic::onMediaState */
 
 
-void SipLogic::audioStreamStateChange(bool is_active, bool is_idle)
-{
-} /* */
-
 
 /*
- * store SvxLink audio stream into buffer
- */
-int SipLogic::sendAudio(void *buf, int count)
-{
-  if (m_flush_timeout_timer.isEnabled())
-  {
-    m_flush_timeout_timer.setEnable(false);
-  }
-
-  int pos = outsample.count;
-  memcpy(outsample.sample_buf + pos, buf, count);
-  outsample.count += count;
-  return count;
-} /* SipLogic::sendAudio */
-
-
-/*
- * incoming SvxLink audio stream to SIP
+ * incoming SvxLink audio stream to SIP client
  */
 pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
+
+  float *smpl;
+  int got = 0;
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
   int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
-  if (outsample.count > count)
+  if (got = m_ar->readSamples(smpl, count) > 0)
   {
-    memcpy(samples, outsample.sample_buf, count);
-    memmove(outsample.sample_buf, outsample.sample_buf + count, outsample.count - count);
-    outsample.count -= count;
-  }
-  else
-  {
-    memcpy(samples, outsample.sample_buf, outsample.count);
-    for (int i=outsample.count; i < count; i++)
-    {
-      samples[i] = 0;
-    }
-    outsample.count = 0;
   }
 
   return PJ_SUCCESS;
@@ -634,7 +604,7 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
 
 
 /*
- * incoming SIP audio to SvxLink
+ * incoming SIP audio stream to SvxLink
  */
 pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
