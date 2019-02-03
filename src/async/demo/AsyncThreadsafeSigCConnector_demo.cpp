@@ -6,6 +6,7 @@
 #include <AsyncCppApplication.h>
 #include <AsyncTimer.h>
 #include <AsyncThreadsafeSigCConnector.h>
+#include <AsyncThreadSigCAsyncConnector.h>
 
 std::atomic<bool> done(false);
 
@@ -13,9 +14,10 @@ struct MyThread
 {
   void operator()(int n)
   {
+    int cnt = n;
     while (!done)
     {
-      sig(n);
+      sig(cnt++);
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }
@@ -37,6 +39,7 @@ void timeout(Async::Timer* t)
 
 void handle_signal(int signum)
 {
+  std::cout << "EXIT" << std::endl;
   Async::Application::app().quit();
 }
 
@@ -49,17 +52,20 @@ int main(void)
 
     // Create a thread and handler object then connect a signal from the thread
     // object to a member function in the handler object
-  MyThread th;
+  MyThread my_thread;
   MyHandler h;
   Async::ThreadsafeSigCConnector<void, int> con(
-      th.sig, sigc::mem_fun(h, &MyHandler::mySlot));
+      my_thread.sig, sigc::mem_fun(h, &MyHandler::mySlot));
+  MyHandler h2;
+  Async::ThreadSigCAsyncConnector<int> async_con(
+      my_thread.sig, sigc::mem_fun(h, &MyHandler::mySlot));
 
     // Create an Async::Timer which show that the main thread is alive
   Async::Timer tmo(1000, Async::Timer::TYPE_PERIODIC);
   tmo.expired.connect(sigc::ptr_fun(timeout));
 
     // Start the thread
-  std::thread t(th, 42);
+  std::thread t(my_thread, 42);
 
     // Execute the main thread
   app.exec();
