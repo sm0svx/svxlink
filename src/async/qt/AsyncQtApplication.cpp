@@ -155,6 +155,7 @@ QtApplication::~QtApplication(void)
 void QtApplication::exec(void)
 {
   QApplication::exec();
+  execDone();
 } /* QtApplication::exec */
 
 

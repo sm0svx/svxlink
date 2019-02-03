@@ -324,6 +324,8 @@ void CppApplication::exec(void)
   close(sighandler_pipe[1]);
   close(sighandler_pipe[0]);
   sighandler_pipe[0] = sighandler_pipe[1] = -1;
+
+  execDone();
 } /* CppApplication::exec */
 
 

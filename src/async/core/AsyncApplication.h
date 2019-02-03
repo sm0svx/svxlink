@@ -178,6 +178,14 @@ class Application : public sigc::trackable
     void runTask(sigc::slot<void> task);
 
     /**
+     * @brief   Signal that is emitted when the exec function exit
+     *
+     * This signal is emitted at the end of the exec function, just before
+     * it exits.
+     */
+    sigc::signal<void> execDone;
+
+    /**
      * @brief   Signal that is emitted just before destruction
      *
      * This signal is emitted right before the Application object is destroyed.
