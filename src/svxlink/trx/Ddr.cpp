@@ -1,14 +1,14 @@
 /**
-@file	 Ddr.cpp
-@brief   A receiver class to handle digital drop receivers
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-07-16
+@file   Ddr.cpp
+@brief  A receiver class to handle digital drop receivers
+@author Tobias Blomberg / SM0SVX
+@date   2014-07-16
 
 This file contains a class that handle local digital drop receivers.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
@@ -35,9 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
 #include <sigc++/sigc++.h>
 
 #include <cstring>
@@ -46,10 +42,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 #include <complex>
-#include <fstream>
 #include <algorithm>
-#include <iterator>
 #include <deque>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 
 /****************************************************************************
@@ -61,6 +58,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 #include <AsyncTcpClient.h>
+#include <AsyncThreadSigCAsyncConnector.h>
+#include <AsyncAudioThreadSource.h>
+#include <AsyncThreadSigCSignal.h>
 
 
 /****************************************************************************
@@ -81,9 +81,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace sigc;
 using namespace Async;
-
 
 
 /****************************************************************************
@@ -130,8 +128,7 @@ namespace {
         this->taps = taps;
 
         delete [] p_Z;
-        p_Z = new T[taps];
-        memset(p_Z, 0, taps * sizeof(*p_Z));
+        p_Z = new T[taps]{0};
       }
 
       void setGain(double gain_adjust)
@@ -469,34 +466,11 @@ namespace {
   }; /* AGC */
 
 
-  class Demodulator : public Async::AudioSource
+  class Demodulator : public Async::AudioThreadSource
   {
     public:
       virtual ~Demodulator(void) {}
-
-      virtual void iq_received(vector<WbRxRtlSdr::Sample> samples) = 0;
-
-      /**
-       * @brief Resume audio output to the sink
-       * 
-       * This function must be reimplemented by the inheriting class. It
-       * will be called when the registered audio sink is ready to accept
-       * more samples.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void resumeOutput(void) { }
-
-    protected:
-      /**
-       * @brief The registered sink has flushed all samples
-       *
-       * This function should be implemented by the inheriting class. It
-       * will be called when all samples have been flushed in the
-       * registered sink. If it is not reimplemented, a handler must be set
-       * that handle the function call.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void allSamplesFlushed(void) { }
+      virtual void iq_received(const vector<WbRxRtlSdr::Sample>& samples) = 0;
   };
 
 
@@ -554,7 +528,7 @@ namespace {
         dec->setGain(adj_db);
       }
 
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      void iq_received(const vector<WbRxRtlSdr::Sample>& samples)
       {
           // From article-sdr-is-qs.pdf: Watch your Is and Qs:
           //   FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
@@ -581,7 +555,7 @@ namespace {
         }
         vector<float> dec_audio;
         dec->decimate(dec_audio, audio);
-        sinkWriteSamples(&dec_audio[0], dec_audio.size());
+        writeSamples(&dec_audio[0], dec_audio.size());
       }
 
     private:
@@ -603,7 +577,7 @@ namespace {
         agc.setReference(1);
       }
 
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      void iq_received(const vector<WbRxRtlSdr::Sample>& samples)
       {
         vector<WbRxRtlSdr::Sample> gain_adjusted;
         agc.iq_received(gain_adjusted, samples);
@@ -640,7 +614,7 @@ namespace {
         use_lsb = use;
       }
 
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      void iq_received(const vector<WbRxRtlSdr::Sample>& samples)
       {
         vector<float> Q, Qh, audio;
         Q.reserve(samples.size());
@@ -691,7 +665,7 @@ namespace {
         trans.setOffset(lsb ? 2000 : -2000);
       }
 
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      void iq_received(const vector<WbRxRtlSdr::Sample>& samples)
       {
         vector<WbRxRtlSdr::Sample> gain_adjusted;
         agc.iq_received(gain_adjusted, samples);
@@ -729,7 +703,7 @@ namespace {
         agc.setReference(0.05);
       }
 
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      void iq_received(const vector<WbRxRtlSdr::Sample>& samples)
       {
         vector<WbRxRtlSdr::Sample> gain_adjusted;
         agc.iq_received(gain_adjusted, samples);
@@ -968,152 +942,194 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 {
   public:
     Channel(int fq_offset, unsigned sample_rate)
-      : sample_rate(sample_rate), channelizer(0),
-        fm_demod(32000, 5000.0), ssb_demod(16000), cw_demod(16000), demod(0),
-        trans(sample_rate, fq_offset), enabled(true), ch_offset(0),
-        fq_offset(fq_offset)
+      : m_sample_rate(sample_rate), m_channelizer(0),
+        m_fm_demod(32000, 5000.0), m_ssb_demod(16000), m_cw_demod(16000),
+        m_demod(0), m_trans(sample_rate, fq_offset), m_enabled(false),
+        m_ch_offset(0), m_fq_offset(fq_offset)
     {
     }
 
     ~Channel(void)
     {
-      delete channelizer;
+      disable();
+      delete m_channelizer;
     }
 
     bool initialize(void)
     {
-      if (sample_rate == 2400000)
+      if (m_sample_rate == 2400000)
       {
-        channelizer = new Channelizer2400;
+        m_channelizer = new Channelizer2400;
       }
-      else if (sample_rate == 960000)
+      else if (m_sample_rate == 960000)
       {
-        channelizer = new Channelizer960;
+        m_channelizer = new Channelizer960;
       }
       else
       {
-        cout << "*** ERROR: Unsupported tuner sampling rate " << sample_rate
+        cout << "*** ERROR: Unsupported tuner sampling rate " << m_sample_rate
              << ". Legal values are: 960000 and 2400000\n";
         return false;
       }
       setModulation(Modulation::MOD_FM);
-      channelizer->preDemod.connect(preDemod.make_slot());
+      m_channelizer->preDemod.connect(preDemod.make_slot());
       return true;
     }
 
     void setFqOffset(int fq_offset)
     {
-      this->fq_offset = fq_offset;
-      trans.setOffset(fq_offset - ch_offset);
+      std::lock_guard<std::mutex> lk(m_process_mu);
+      m_fq_offset = fq_offset;
+      m_trans.setOffset(fq_offset - m_ch_offset);
     }
 
     void setModulation(Modulation::Type mod)
     {
-      demod = 0;
-      ch_offset = 0;
+      std::lock_guard<std::mutex> lk(m_process_mu);
+      m_demod = 0;
+      m_ch_offset = 0;
       switch (mod)
       {
         case Modulation::MOD_FM:
-          channelizer->setBw(Channelizer::BW_20K);
-          fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
-          demod = &fm_demod;
+          m_channelizer->setBw(Channelizer::BW_20K);
+          m_fm_demod.setDemodParams(m_channelizer->chSampRate(), 5000);
+          m_demod = &m_fm_demod;
           break;
         case Modulation::MOD_NBFM:
-          channelizer->setBw(Channelizer::BW_10K);
-          fm_demod.setDemodParams(channelizer->chSampRate(), 2500);
-          demod = &fm_demod;
+          m_channelizer->setBw(Channelizer::BW_10K);
+          m_fm_demod.setDemodParams(m_channelizer->chSampRate(), 2500);
+          m_demod = &m_fm_demod;
           break;
         case Modulation::MOD_WBFM:
-          channelizer->setBw(Channelizer::BW_WIDE);
-          fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
-          demod = &fm_demod;
+          m_channelizer->setBw(Channelizer::BW_WIDE);
+          m_fm_demod.setDemodParams(m_channelizer->chSampRate(), 75000);
+          m_demod = &m_fm_demod;
           break;
         case Modulation::MOD_AM:
-          channelizer->setBw(Channelizer::BW_10K);
-          demod = &am_demod;
+          m_channelizer->setBw(Channelizer::BW_10K);
+          m_demod = &m_am_demod;
           break;
         case Modulation::MOD_NBAM:
-          channelizer->setBw(Channelizer::BW_6K);
-          demod = &am_demod;
+          m_channelizer->setBw(Channelizer::BW_6K);
+          m_demod = &m_am_demod;
           break;
         case Modulation::MOD_USB:
 #ifdef USE_SSB_PHASE_DEMOD
-          channelizer->setBw(Channelizer::BW_6K);
+          m_channelizer->setBw(Channelizer::BW_6K);
 #else
-          channelizer->setBw(Channelizer::BW_3K);
-          ch_offset = -2000;
+          m_channelizer->setBw(Channelizer::BW_3K);
+          m_ch_offset = -2000;
 #endif
-          ssb_demod.useLsb(false);
-          demod = &ssb_demod;
+          m_ssb_demod.useLsb(false);
+          m_demod = &m_ssb_demod;
           break;
         case Modulation::MOD_LSB:
 #ifdef USE_SSB_PHASE_DEMOD
-          channelizer->setBw(Channelizer::BW_6K);
+          m_channelizer->setBw(Channelizer::BW_6K);
 #else
-          channelizer->setBw(Channelizer::BW_3K);
-          ch_offset = 2000;
+          m_channelizer->setBw(Channelizer::BW_3K);
+          m_ch_offset = 2000;
 #endif
-          ssb_demod.useLsb(true);
-          demod = &ssb_demod;
+          m_ssb_demod.useLsb(true);
+          m_demod = &m_ssb_demod;
           break;
         case Modulation::MOD_CW:
-          channelizer->setBw(Channelizer::BW_500);
-          demod = &cw_demod;
+          m_channelizer->setBw(Channelizer::BW_500);
+          m_demod = &m_cw_demod;
           break;
         case Modulation::MOD_WBCW:
-          channelizer->setBw(Channelizer::BW_3K);
-          demod = &cw_demod;
+          m_channelizer->setBw(Channelizer::BW_3K);
+          m_demod = &m_cw_demod;
           break;
         case Modulation::MOD_UNKNOWN:
           break;
       }
-      setFqOffset(fq_offset);
-      assert((demod != 0) && "Channel::setModulation: Unknown modulation");
-      setHandler(demod);
+      m_trans.setOffset(m_fq_offset - m_ch_offset);
+      assert((m_demod != 0) && "Channel::setModulation: Unknown modulation");
+      setHandler(m_demod);
     }
 
     unsigned chSampRate(void) const
     {
-      return channelizer->chSampRate();
+      std::lock_guard<std::mutex> lk(m_process_mu);
+      return m_channelizer->chSampRate();
     }
 
-    void iq_received(vector<WbRxRtlSdr::Sample> samples)
+    void iq_received(const vector<WbRxRtlSdr::Sample>& samples)
     {
-      if (enabled)
+      if (m_enabled)
       {
-        vector<WbRxRtlSdr::Sample> translated, channelized;
-        trans.iq_received(translated, samples);
-        channelizer->iq_received(channelized, translated);
-        demod->iq_received(channelized);
+        {
+          std::lock_guard<std::mutex> lk(m_iq_buf_mu);
+          m_iq_buf.insert(m_iq_buf.end(), samples.begin(), samples.end());
+        }
+        m_cond.notify_one();
       }
     };
 
+    void operator()(void)
+    {
+      for (;;)
+      {
+        std::vector<WbRxRtlSdr::Sample> samples, translated, channelized;
+        {
+          std::unique_lock<std::mutex> lk(m_iq_buf_mu);
+          m_cond.wait(lk, [this]{ return !m_iq_buf.empty() || !m_enabled; });
+          if (!m_enabled) return;
+          samples.swap(m_iq_buf);
+        }
+        {
+          std::lock_guard<std::mutex> lk(m_process_mu);
+          m_trans.iq_received(translated, samples);
+          m_channelizer->iq_received(channelized, translated);
+          m_demod->iq_received(channelized);
+        }
+      }
+    }
+
     void enable(void)
     {
-      enabled = true;
+      if (!m_th.joinable())
+      {
+        m_enabled = true;
+        m_th = std::thread(std::ref(*this));
+      }
     }
 
     void disable(void)
     {
-      enabled = false;
+      if (m_th.joinable())
+      {
+        {
+          std::lock_guard<std::mutex> lk(m_iq_buf_mu);
+          m_enabled = false;
+        }
+        m_cond.notify_one();
+        m_th.join();
+      }
     }
 
-    bool isEnabled(void) const { return enabled; }
+    bool isEnabled(void) const { return m_enabled; }
 
-    sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
+    ThreadSigCSignal<void, const std::vector<RtlTcp::Sample>> preDemod;
 
   private:
-    unsigned sample_rate;
-    Channelizer *channelizer;
-    DemodulatorFm fm_demod;
-    DemodulatorAm am_demod;
-    DemodulatorSsb ssb_demod;
-    DemodulatorCw cw_demod;
-    Demodulator *demod;
-    Translate trans;
-    bool enabled;
-    int ch_offset;
-    int fq_offset;
+    unsigned                        m_sample_rate;
+    Channelizer *                   m_channelizer;
+    DemodulatorFm                   m_fm_demod;
+    DemodulatorAm                   m_am_demod;
+    DemodulatorSsb                  m_ssb_demod;
+    DemodulatorCw                   m_cw_demod;
+    Demodulator *                   m_demod;
+    Translate                       m_trans;
+    bool                            m_enabled;
+    int                             m_ch_offset;
+    int                             m_fq_offset;
+    std::vector<WbRxRtlSdr::Sample> m_iq_buf;
+    std::mutex                      m_iq_buf_mu;
+    std::condition_variable         m_cond;
+    std::thread                     m_th;
+    mutable std::mutex              m_process_mu;
 }; /* Channel */
 
 
@@ -1229,7 +1245,7 @@ bool Ddr::initialize(void)
     return false;
   }
   channel->preDemod.connect(preDemod.make_slot());
-  rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
+  rtl->iqReceived.connect(sigc::mem_fun(*channel, &Channel::iq_received));
   rtl->readyStateChanged.connect(readyStateChanged.make_slot());
 
   string modstr("FM");
@@ -1256,6 +1272,8 @@ bool Ddr::initialize(void)
   }
 
   tunerFqChanged(rtl->centerFq());
+
+  channel->enable();
 
   return true;
 } /* Ddr:initialize */
