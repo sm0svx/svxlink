@@ -39,7 +39,6 @@ An example of how to use the Async::Mutex class
  ****************************************************************************/
 
 #include <mutex>
-#include <atomic>
 #include <condition_variable>
 #include <cstring>
 #include <unistd.h>
@@ -127,7 +126,7 @@ class Mutex
      * @brief Default constructor
      */
     Mutex(void) noexcept
-      : m_lk(m_mu), m_pending(0), m_main_thread(std::this_thread::get_id())
+      : m_main_thread(std::this_thread::get_id()), m_lock_owner(m_main_thread)
     {
       //std::cout << "Mutex::Mutex" << std::endl;
       int pipefd[2];
@@ -147,6 +146,9 @@ class Mutex
       m_pipe_wr = pipefd[1];
       m_rd_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
       m_rd_watch->activity.connect(sigc::mem_fun(*this, &Mutex::unlockHandler));
+
+      Async::Application::app().execDone.connect(
+          sigc::mem_fun(*this, &Mutex::mainThreadDone));
     }
 
     /**
@@ -162,8 +164,9 @@ class Mutex
      */
     ~Mutex(void)
     {
-      assert(m_main_thread == std::this_thread::get_id());
-      assert(m_lk.owns_lock());
+      assert((m_main_thread == std::this_thread::get_id())
+          || (m_main_thread == std::thread::id()));
+      assert(m_lock_owner == m_main_thread);
       //std::cout << "Mutex::~Mutex" << std::endl;
       int pipe_rd = m_rd_watch->fd();
       delete m_rd_watch;
@@ -171,6 +174,7 @@ class Mutex
       close(m_pipe_wr);
       m_pipe_wr = -1;
       close(pipe_rd);
+      pipe_rd = -1;
     }
 
     Mutex& operator=(const Mutex&) = delete;
@@ -182,47 +186,61 @@ class Mutex
      */
     void lock(void)
     {
-      //std::cout << "Mutex::lock: ENTER" << std::endl;
       assert(m_main_thread != std::this_thread::get_id());
-      m_pending += 1;
       if (write(m_pipe_wr, "", 1) == -1)
       {
         std::cerr << "*** ERROR: Could not write to pipe in Async::Mutex::lock: "
                   << strerror(errno) << std::endl;
         exit(1);
       }
-      m_mu.lock();
-      //std::cout << "Mutex::lock: EXIT" << std::endl;
+      std::unique_lock<std::mutex> lk(m_mu);
+      //std::cout << "### Mutex::lock: ENTER" << std::endl;
+      m_cond.wait(lk,
+          [this]{ return m_lock_owner == std::thread::id(); });
+      m_lock_owner = std::this_thread::get_id();
+      //std::cout << "### Mutex::lock: EXIT" << std::endl;
     }
 
     //bool try_lock() { return m_mu.try_lock(); }
 
     void unlock(void)
     {
-      //std::cout << "Mutex::unlock" << std::endl;
       assert(m_main_thread != std::this_thread::get_id());
-      m_pending -= 1;
-      m_mu.unlock();
+      std::unique_lock<std::mutex> lk(m_mu);
+      //std::cout << "### Mutex::unlock: ENTER" << std::endl;
+      assert(m_lock_owner == std::this_thread::get_id());
+      m_lock_owner = m_main_thread;
+      //std::cout << "### Mutex::unlock: EXIT" << std::endl;
+      lk.unlock();
       m_cond.notify_one();
     }
 
   private:
     std::mutex                    m_mu;
-    std::unique_lock<std::mutex>  m_lk;
+    //std::condition_variable       m_lock_cond;
     std::condition_variable       m_cond;
-    std::atomic<unsigned>         m_pending;
     int                           m_pipe_wr = -1;
     Async::FdWatch*               m_rd_watch = 0;
     std::thread::id               m_main_thread;
+    std::thread::id               m_lock_owner;
 
     void unlockHandler(FdWatch *w)
     {
-      //std::cout << "Mutex::unlockHandler: ENTER" << std::endl;
-      int cnt = -1;
+      //std::cout << "### Mutex::unlockHandler: ENTER" << std::endl;
+      ssize_t cnt = -1;
       char ch;
       while ((cnt = read(w->fd(), &ch, 1)) > 0)
       {
-        m_cond.wait(m_lk, [this]{ return m_pending == 0; });
+        std::unique_lock<std::mutex> lk(m_mu);
+        if (m_lock_owner == m_main_thread)
+        {
+          m_lock_owner = std::thread::id();
+          lk.unlock();
+          m_cond.notify_one();
+          lk.lock();
+        }
+        m_cond.wait(lk,
+            [this]{ return m_lock_owner == m_main_thread; });
       }
       if (cnt == -1)
       {
@@ -234,7 +252,18 @@ class Mutex
           exit(1);
         }
       }
-      //std::cout << "Mutex::unlockHandler: EXIT" << std::endl;
+      //std::cout << "### Mutex::unlockHandler: EXIT" << std::endl;
+    }
+
+    void mainThreadDone(void)
+    {
+      {
+        std::lock_guard<std::mutex> lk(m_mu);
+        //std::cout << "mainThreadDone: EXIT" << std::endl;
+        assert(m_lock_owner == m_main_thread);
+        m_lock_owner = m_main_thread = std::thread::id();
+      }
+      m_cond.notify_one();
     }
 
 };  /* class Mutex */
