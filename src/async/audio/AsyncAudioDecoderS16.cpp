@@ -123,9 +123,9 @@ AudioDecoderS16::~AudioDecoderS16(void)
 } /* AudioDecoderS16::~AudioDecoderS16 */
 
 
-void AudioDecoderS16::writeEncodedSamples(void *buf, int size)
+void AudioDecoderS16::writeEncodedSamples(const void *buf, int size)
 {
-  int16_t *s16_samples = reinterpret_cast<int16_t *>(buf);
+  const int16_t *s16_samples = reinterpret_cast<const int16_t *>(buf);
   int count = size / sizeof(int16_t);
   float samples[count];
   for (int i=0; i<count; ++i)

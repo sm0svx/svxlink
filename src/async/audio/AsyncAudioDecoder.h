@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for an audio decoder.
 */
-class AudioDecoder : public AudioSource, public sigc::trackable
+class AudioDecoder : public AudioSource, virtual public sigc::trackable
 {
   public:
     /**
@@ -126,15 +126,13 @@ class AudioDecoder : public AudioSource, public sigc::trackable
     static AudioDecoder *create(const std::string &name);
     
     /**
-     * @brief 	Default constuctor
+     * @brief   Release a previously created decoder
+     *
+     * This function is used instead of 'delete' to deallocate a decoder.
+     * Calling it twice is not allowed.
      */
-    AudioDecoder(void) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    virtual ~AudioDecoder(void) {}
-    
+    virtual void release(void) { delete this; }
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
@@ -158,7 +156,7 @@ class AudioDecoder : public AudioSource, public sigc::trackable
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    virtual void writeEncodedSamples(void *buf, int size) = 0;
+    virtual void writeEncodedSamples(const void *buf, int size) = 0;
     
     /**
      * @brief Call this function when all encoded samples have been received
@@ -166,32 +164,44 @@ class AudioDecoder : public AudioSource, public sigc::trackable
     virtual void flushEncodedSamples(void) { sinkFlushSamples(); }
     
     /**
-     * @brief Resume audio output to the sink
-     * 
-     * This function will be called when the registered audio sink is ready to
-     * accept more samples.
-     * This function is normally only called from a connected sink object.
-     */
-    virtual void resumeOutput(void) {}
-    
-    /**
      * @brief This signal is emitted when all encoded samples have been flushed
      */
     sigc::signal<void> allEncodedSamplesFlushed;
-    
 
   protected:
+    class DefaultSourceHandler : public Async::AudioSource
+    {
+      public:
+        DefaultSourceHandler(AudioDecoder *dec) : m_dec(dec) {}
+        virtual void resumeOutput(void) {}
+      protected:
+        virtual void allSamplesFlushed(void)
+        {
+          m_dec->allEncodedSamplesFlushed();
+        }
+      private:
+        AudioDecoder *m_dec;
+    };
+
     /**
-     * @brief The registered sink has flushed all samples
-     *
-     * This function will be called when all samples have been flushed in the
-     * registered sink.
-     * This function is normally only called from a connected sink object.
+     * @brief 	Default constuctor
      */
-    virtual void allSamplesFlushed(void) { allEncodedSamplesFlushed(); }
-    
-    
+    AudioDecoder(void) : m_default_source_handler(this)
+    {
+      if (handler() == 0)
+      {
+        setHandler(&m_default_source_handler);
+      }
+    }
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioDecoder(void) {}
+
   private:
+    DefaultSourceHandler m_default_source_handler;
+
     AudioDecoder(const AudioDecoder&);
     AudioDecoder& operator=(const AudioDecoder&);
     

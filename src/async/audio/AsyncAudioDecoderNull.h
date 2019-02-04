@@ -141,7 +141,7 @@ class AudioDecoderNull : public AudioDecoder
      * will contain a 16 bit unsigned integer that indicate how many zero
      * samples that should be written to the audio sink.
      */
-    virtual void writeEncodedSamples(void *buf, int size)
+    virtual void writeEncodedSamples(const void *buf, int size)
     {
         // Sanity check
       if (size != sizeof(uint16_t))
@@ -150,7 +150,7 @@ class AudioDecoderNull : public AudioDecoder
       }
 
         // Decode incoming buffer
-      uint8_t *ptr = reinterpret_cast<uint8_t*>(buf);
+      const uint8_t *ptr = reinterpret_cast<const uint8_t*>(buf);
       uint16_t cnt = static_cast<uint16_t>(ptr[0]);
       cnt |= static_cast<uint16_t>(ptr[1]) << 8;
 

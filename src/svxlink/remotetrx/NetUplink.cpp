@@ -146,8 +146,16 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
 
 NetUplink::~NetUplink(void)
 {
-  delete audio_enc;
-  delete audio_dec;
+  if (audio_enc != 0)
+  {
+    audio_enc->release();
+    audio_enc = 0;
+  }
+  if (audio_dec != 0)
+  {
+    audio_dec->release();
+    audio_dec = 0;
+  }
   delete fifo;
   delete tx_selector;
   delete rx_splitter;
@@ -278,12 +286,15 @@ void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
   if (audio_enc != 0)
   {
     rx_splitter->removeSink(audio_enc);
-    delete audio_enc;
+    audio_enc->release();
     audio_enc = 0;
   }
   
-  delete audio_dec;
-  audio_dec = 0;
+  if (audio_dec != 0)
+  {
+    audio_dec->release();
+    audio_dec = 0;
+  }
   
   con = incoming_con;
   con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
@@ -581,7 +592,7 @@ void NetUplink::handleMsg(Msg *msg)
       if (audio_enc != 0)
       {
 	rx_splitter->removeSink(audio_enc);
-	delete audio_enc;
+	audio_enc->release();
       }
       audio_enc = AudioEncoder::create(codec_msg->name());
       if (audio_enc != 0)
@@ -616,7 +627,10 @@ void NetUplink::handleMsg(Msg *msg)
     {
       MsgTxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgTxAudioCodecSelect *>(msg);
-      delete audio_dec;
+      if (audio_dec != 0)
+      {
+        audio_dec->release();
+      }
       audio_dec = AudioDecoder::create(codec_msg->name());
       if (audio_dec != 0)
       {

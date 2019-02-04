@@ -133,7 +133,7 @@ class AudioDecoderRaw : public AudioDecoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    virtual void writeEncodedSamples(void *buf, int size)
+    virtual void writeEncodedSamples(const void *buf, int size)
     {
       const float *samples = reinterpret_cast<const float *>(buf);
       int count = size / sizeof(*samples);

@@ -72,7 +72,7 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp
            AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
            AsyncAudioDeviceUDP.cpp AsyncAudioNoiseAdder.cpp
-           AsyncAudioFsf.cpp)
+           AsyncAudioFsf.cpp AsyncAudioCodecAmbe.cpp)
 
 if(Speex_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp)
@@ -113,6 +113,9 @@ if (BUILD_STATIC_LIBS)
   set_target_properties(${LIBNAME}_static PROPERTIES OUTPUT_NAME ${LIBNAME})
   target_link_libraries(${LIBNAME}_static ${LIBS})
 endif(BUILD_STATIC_LIBS)
+
+add_executable(ambe_test ambe_test.cpp)
+target_link_libraries(ambe_test asyncaudio asynccpp asynccore)
 
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})

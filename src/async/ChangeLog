@@ -6,6 +6,8 @@
 * Add method Async::Config::listSections() making it possible to list all
   configuration sections.
 
+* Add serial speed 460800 to Async::Serial.
+
 
 
  1.5.0 -- 30 Dec 2017

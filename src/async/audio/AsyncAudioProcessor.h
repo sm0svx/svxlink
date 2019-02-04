@@ -127,6 +127,12 @@ class AudioProcessor : public AudioSink, public AudioSource, public sigc::tracka
      * @brief 	Destructor
      */
     virtual ~AudioProcessor(void);
+
+    /**
+     * @brief   Set a new buffer size
+     * @param   bufsize The new buffer size in samples to set
+     */
+    void setBufferSize(size_t bufsize);
   
     /**
      * @brief 	Write audio to the filter
@@ -175,9 +181,10 @@ class AudioProcessor : public AudioSink, public AudioSource, public sigc::tracka
     
     
   private:
-    static const int BUFSIZE = 256;
+    static const int DEFAULT_BUFSIZE = 256;
     
-    float     	buf[BUFSIZE];
+    float*    	buf;
+    int         m_bufsize;
     int       	buf_cnt;
     bool      	do_flush;
     bool      	input_stopped;

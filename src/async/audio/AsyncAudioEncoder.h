@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for implementing an audio encoder.
 */
-class AudioEncoder : public AudioSink, public sigc::trackable
+class AudioEncoder : public AudioSink, virtual public sigc::trackable
 {
   public:
     /**
@@ -126,15 +126,13 @@ class AudioEncoder : public AudioSink, public sigc::trackable
     static AudioEncoder *create(const std::string &name);
     
     /**
-     * @brief 	Default constuctor
+     * @brief   Release a previously created encoder
+     *
+     * This function is used instead of 'delete' to deallocate an encoder.
+     * Calling it twice is not allowed.
      */
-    AudioEncoder(void) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~AudioEncoder(void) {}
-  
+    virtual void release(void) { delete this; }
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
@@ -166,7 +164,7 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * sourceAllSamplesFlushed function.
      * This function is normally only called from a connected source object.
      */
-    virtual void flushSamples(void) { flushEncodedSamples(); }
+    //virtual void flushSamples(void) { flushEncodedSamples(); }
     
     /**
      * @brief 	A signal emitted when encoded samples are available
@@ -182,8 +180,36 @@ class AudioEncoder : public AudioSink, public sigc::trackable
     
   
   protected:
-    
+    class DefaultSinkHandler : public Async::AudioSink
+    {
+      public:
+        DefaultSinkHandler(AudioEncoder *enc) : m_enc(enc) {}
+        virtual void flushSamples(void) { m_enc->flushEncodedSamples(); }
+      private:
+        AudioEncoder *m_enc;
+    };
+
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioEncoder(void)
+      : m_default_sink_handler(this)
+    {
+      if (handler() == 0)
+      {
+        setHandler(&m_default_sink_handler);
+      }
+    }
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioEncoder(void) {}
+
+
   private:
+    DefaultSinkHandler m_default_sink_handler;
+
     AudioEncoder(const AudioEncoder&);
     AudioEncoder& operator=(const AudioEncoder&);
     

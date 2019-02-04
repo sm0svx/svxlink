@@ -116,18 +116,29 @@ using namespace Async;
  ****************************************************************************/
 
 AudioProcessor::AudioProcessor(void)
-  : buf_cnt(0), do_flush(false), input_stopped(false),
-    output_stopped(false), input_rate(1), output_rate(1), input_buf(0),
-    input_buf_cnt(0), input_buf_size(0)
+  : buf(0), m_bufsize(DEFAULT_BUFSIZE), buf_cnt(0), do_flush(false),
+    input_stopped(false), output_stopped(false), input_rate(1), output_rate(1),
+    input_buf(0), input_buf_cnt(0), input_buf_size(0)
 {
-  
+  setBufferSize(m_bufsize);
 } /* AudioProcessor::AudioProcessor */
 
 
 AudioProcessor::~AudioProcessor(void)
 {
   delete [] input_buf;
+  input_buf = 0;
+  delete [] buf;
+  buf = 0;
 } /* AudioProcessor::~AudioProcessor */
+
+
+void AudioProcessor::setBufferSize(size_t bufsize)
+{
+  delete [] buf;
+  m_bufsize = bufsize;
+  buf = new float[bufsize];
+} /* AudioProcessor::setBufferSize */
 
 
 int AudioProcessor::writeSamples(const float *samples, int len)
@@ -142,7 +153,7 @@ int AudioProcessor::writeSamples(const float *samples, int len)
   writeFromBuf();
 
     // Calculate the maximum number of samples we are able to process
-  int max_proc = (BUFSIZE - buf_cnt) * input_rate / output_rate;
+  int max_proc = (m_bufsize - buf_cnt) * input_rate / output_rate;
   if (max_proc == 0)
   {
     input_stopped = true;
@@ -229,7 +240,7 @@ void AudioProcessor::flushSamples(void)
 
 void AudioProcessor::resumeOutput(void)
 {
-  //cout << "AudioProcessor::resumeOutput" << endl;
+  //cout << "### AudioProcessor::resumeOutput" << endl;
   output_stopped = false;
   writeFromBuf();
 } /* AudioProcessor::resumeOutput */
@@ -351,7 +362,7 @@ void AudioProcessor::writeFromBuf(void)
     
   output_stopped = (written == 0);
 
-  if (input_stopped && (buf_cnt < BUFSIZE))
+  if (input_stopped && (buf_cnt < m_bufsize))
   {
     input_stopped = false;
     Application::app().runTask(

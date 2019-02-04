@@ -289,7 +289,7 @@ void SigLevDetNoise::reset(void)
  *
  ****************************************************************************/
 
-int SigLevDetNoise::processSamples(float *samples, int count)
+int SigLevDetNoise::processSamples(const float *samples, int count)
 {
   for (int i=0; i<count; ++i)
   {

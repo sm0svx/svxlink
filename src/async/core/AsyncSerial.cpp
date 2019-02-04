@@ -287,6 +287,9 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
     case 230400:
       serial_speed = B230400;
       break;
+    case 460800:
+      serial_speed = B460800;
+      break;
     default:
       errno = EINVAL;
       return false;

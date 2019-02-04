@@ -124,7 +124,7 @@ AudioDecoderGsm::~AudioDecoderGsm(void)
 } /* AudioDecoderGsm::~AudioDecoderGsm */
 
 
-void AudioDecoderGsm::writeEncodedSamples(void *buf, int size)
+void AudioDecoderGsm::writeEncodedSamples(const void *buf, int size)
 {
   unsigned char *ptr = (unsigned char *)buf;
   

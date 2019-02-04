@@ -389,7 +389,7 @@ void EchoLinkQsoTest::onStateChange(Qso::State state)
 } /* EchoLinkQsoTest::onStateChange */
 
 
-int EchoLinkQsoTest::micAudioRead(float *buf, int len)
+int EchoLinkQsoTest::micAudioRead(const float *buf, int len)
 {
   if (is_transmitting)
   {
