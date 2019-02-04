@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncPty.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDecimator.h>
+#include <AsyncAudioDecoder.h>
 #include <AsyncAudioReader.h>
 
 
@@ -268,8 +269,8 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_out_src(0), m_in_src(0), m_siploglevel(0), m_autoanswer(false),
-    m_autoconnect(""), m_sip_port(5060),
+    m_dec(0), m_ar(0),  m_out_pt(0), m_siploglevel(0),
+    m_autoanswer(false), m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
     m_calltimeout(45), m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false)
@@ -293,6 +294,16 @@ SipLogic::~SipLogic(void)
   delete dtmf_ctrl_pty;
   delete media;
   media = 0;
+  delete m_dec;
+  m_dec = 0;
+  //delete m_src_in;
+  //m_src_in = 0;
+  delete m_out_src;
+  m_out_src = 0;
+  delete m_ar;
+  m_ar=0;
+  delete m_out_pt;
+  m_out_pt = 0;
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
   {
@@ -417,11 +428,26 @@ bool SipLogic::initialize(void)
   media = new sip::_AudioMedia(*this, 60);
 
   /****************************************************/
+  AudioSink *sink = 0;
 
-  AudioSource *prev_src = m_out_src;
+  m_dec = Async::AudioDecoder::create("RAW");
+  if (m_dec == 0)
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to initialize RAW"
+         << " audio decoder" << endl;
+    m_dec = Async::AudioDecoder::create("DUMMY");
+    assert(m_dec != 0);
+    return false;
+  }
+  m_dec->allEncodedSamplesFlushed.connect(
+      mem_fun(*this, &SipLogic::allSamplesFlushed));
+  if (sink != 0)
+  {
+    m_dec->registerSink(sink, true);
+  }
 
-   // incoming sip audio to this logic
-  m_logic_con_in = new Async::AudioPassthrough;
+  AudioSource *prev_src = m_dec;
 
    // Create jitter FIFO if jitter buffer delay > 0
   unsigned jitter_buffer_delay = 0;
@@ -444,7 +470,12 @@ bool SipLogic::initialize(void)
 
   /****************************************************/
 
-  m_logic_con_in->registerSink(m_in_src, false);
+   // incoming sip audio to this logic
+  m_logic_con_in = new Async::AudioPassthrough;
+
+  AudioSource *m_src_in = new AudioSource();
+
+  /****************************************************/
 
    // adapt the differet sample rates SvxLink<->Sip (16k<->8k)
   if (INTERNAL_SAMPLE_RATE == 16000)
@@ -457,15 +488,20 @@ bool SipLogic::initialize(void)
 
       // SvxLink core -> SipLogic
     AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
-    m_in_src->registerSource(d2);
-    m_in_src = d2;
+    m_src_in->registerSink(d2, true);
+    m_src_in = d2;
   }
 
-  AudioPassthrough *m_pt = new AudioPassthrough();
-  m_pt->registerSink(m_ar, false);
-  m_in_src = m_pt;
+  //m_out_pt = new AudioPassthrough;
+  //m_out_pt->registerSink(m_logic_con_in, true);
+  //m_out_pt->registerSource(m_src_in);
 
-  m_logic_con_out = prev_src;
+  m_ar = new AudioReader;
+  m_logic_con_in->registerSink(m_ar, true);
+
+  m_out_src = new AudioPassthrough;
+  m_out_src->registerSource(prev_src);
+  m_logic_con_out = m_out_src;
 
    // init this Logic
   if (!LogicBase::initialize())
@@ -589,14 +625,25 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
 
-  float *smpl;
   int got = 0;
+  float smpl[961];
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
-  int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
+  pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
-  if (got = m_ar->readSamples(smpl, count) > 0)
+  got = m_ar->readSamples(smpl, count);
+
+  if (got > 0)
   {
+    for (int i = 0; i < got; i++)
+    {
+      samples[i] = static_cast<pj_int16_t>(smpl[i] * 32768);
+    }
+  }
+
+  while (++got < count)
+  {
+    samples[got] = (pj_int16_t) 0;
   }
 
   return PJ_SUCCESS;
@@ -608,11 +655,21 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
  */
 pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
-  int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
-  float *samples = static_cast<float *>(frame->buf);
-  frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
-  m_out_src->writeSamples(samples, count);
+  int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
+  pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
+  frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+  float* smpl = new float[count+1]();
+
+  for (int i=0; i < count; i++)
+  {
+    smpl[i] = (float) (samples[i] / 32768.0);
+  }
+
+  if (count > 0)
+  {
+    m_out_src->writeSamples(smpl, count);
+  }
   return PJ_SUCCESS;
 } /* SipLogic::mediaPortPutFrame */
 
@@ -713,7 +770,7 @@ void SipLogic::hangupCall(sip::_Call *call)
       break;
     }
   }
-}
+} /* SipLogic::hangupCall */
 
 
 /**
@@ -753,6 +810,11 @@ void SipLogic::flushAudio(void)
 {
   m_flush_timeout_timer.setEnable(true);
 } /* SipLogic::flushAudio */
+
+
+void SipLogic::allSamplesFlushed(void)
+{
+} /* SipLogic::allSamplesFlushed */
 
 
 void SipLogic::callTimeout(Async::Timer *t)

@@ -52,6 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioPassthrough.h>
+#include <AsyncAudioDecoder.h>
+#include <AsyncAudioEncoder.h>
 #include <AsyncAudioReader.h>
 
 
@@ -167,8 +169,10 @@ class SipLogic : public LogicBase
     Async::AudioPassthrough*  m_logic_con_in;
     Async::AudioSource*       m_logic_con_out;
     Async::AudioPassthrough*  m_out_src;
-    Async::AudioSink*         m_in_src;
+    Async::AudioDecoder*      m_dec;
     Async::AudioReader*       m_ar;
+    //Async::AudioSource*       m_src_in;
+    Async::AudioPassthrough*  m_out_pt;
     uint16_t                  m_siploglevel;
     bool                      m_autoanswer;
     std::string               m_autoconnect;
@@ -209,6 +213,8 @@ class SipLogic : public LogicBase
     void hangupCall(sip::_Call *call);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
+    void sendAudio(const void *buf, int count);
+    void allSamplesFlushed(void);
     void flushAudio(void);
     void callTimeout(Async::Timer *t=0);
     void flushTimeout(Async::Timer *t=0);
