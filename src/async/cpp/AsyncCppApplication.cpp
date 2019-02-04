@@ -236,7 +236,7 @@ void CppApplication::exec(void)
 	timeout_ptr, NULL);
     if (dcnt == -1)
     {
-      if (errno == EINTR)
+      if ((errno == EINTR) || (errno == EAGAIN))
       {
       	continue;
       }
