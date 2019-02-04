@@ -1,4 +1,4 @@
- 1.7.0 -- ?? ??? 2018
+ 1.7.0 -- ?? ??? 2019
 ----------------------
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
   switched to https only. Read documentation and/or README in directory 
@@ -103,12 +103,23 @@
   only one "Turning the transmitter ON/OFF" is displayed instead of one for
   each transmitter.
 
+* New configuration variable for logic cores, PHONETIC_SPELLING, which if set
+  to 0 will spell words using plain letters instead of the default phonetic
+  spelling. Not all language packs support this feature.
 
- 1.6.1 -- 21 Jan 2018
+* Now possible to set audio codec parameters for ReflectorLogic.
+
+
+
+ 1.6.1 -- 01 Mar 2018
 ----------------------
 
 * ModuleEchoLink bugfix: Echolink remote roger beep was sent even though
   listen only mode was active on the local node.
+
+* Bugfix in the --logfile command line argument handling for svxlink,
+  remotetrx and svxreflector. Under some circumstances SvxLink would crash
+  with strange errors if used with a logfile.
 
 
 
