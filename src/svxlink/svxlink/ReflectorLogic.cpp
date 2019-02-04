@@ -871,6 +871,21 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
       mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
   m_logic_con_in->registerSink(m_enc, false);
 
+  string opt_prefix(m_enc->name());
+  opt_prefix += "_ENC_";
+  list<string> names = cfg().listSection(name());
+  for (list<string>::const_iterator nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg().getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      m_enc->setOption(opt_name, opt_value);
+    }
+  }
+  m_enc->printCodecParams();
+
   AudioSink *sink = 0;
   if (m_dec != 0)
   {
@@ -894,6 +909,20 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
   {
     m_dec->registerSink(sink, true);
   }
+
+  opt_prefix = string(m_dec->name()) + "_DEC_";
+  names = cfg().listSection(name());
+  for (list<string>::const_iterator nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg().getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      m_dec->setOption(opt_name, opt_value);
+    }
+  }
+  m_dec->printCodecParams();
 
   return true;
 } /* ReflectorLogic::setAudioCodec */
