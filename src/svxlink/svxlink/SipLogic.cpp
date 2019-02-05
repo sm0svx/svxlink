@@ -1,12 +1,12 @@
 /**
 @file	 SipLogic.cpp
 @brief   A logic core that connect a Sip server e.g. Asterisk
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@author  Tobias Blomberg / SM0SVX & Christian Stussak & Adi Bier / DL1HRC
 @date	 2018-02-12
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,8 +49,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncPty.h>
-#include <AsyncAudioInterpolator.h>
-#include <AsyncAudioDecimator.h>
 #include <AsyncAudioDecoder.h>
 #include <AsyncAudioReader.h>
 
@@ -226,12 +224,6 @@ namespace sip {
         mediaPort.get_frame = &callback_getFrame;
         mediaPort.put_frame = &callback_putFrame;
 
-      /* if (pjmedia_port_put_frame(&mediaPort, put_frame) == PJ_SUCCESS)
-         {
-           put_frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
-           uint8_t *samples = reinterpret_cast<uint8_t*>(put_frame->buf);
-         }
-      */
       } /* _AudioMedia::createMediaPort */
   };
 }
@@ -296,12 +288,10 @@ SipLogic::~SipLogic(void)
   media = 0;
   delete m_dec;
   m_dec = 0;
-  //delete m_src_in;
-  //m_src_in = 0;
   delete m_out_src;
   m_out_src = 0;
   delete m_ar;
-  m_ar=0;
+  m_ar = 0;
   delete m_out_pt;
   m_out_pt = 0;
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
@@ -425,7 +415,8 @@ bool SipLogic::initialize(void)
   acc->onCall.connect(mem_fun(*this, &SipLogic::onIncomingCall));
   acc->onState.connect(mem_fun(*this, &SipLogic::onRegState));
 
-  media = new sip::_AudioMedia(*this, 60);
+   // number of samples = INTERNAL_SAMPLE_RATE * frameTimeLen /1000
+  media = new sip::_AudioMedia(*this, 48);
 
   /****************************************************/
   AudioSink *sink = 0;
@@ -473,29 +464,11 @@ bool SipLogic::initialize(void)
    // incoming sip audio to this logic
   m_logic_con_in = new Async::AudioPassthrough;
 
-  AudioSource *m_src_in = new AudioSource();
-
-  /****************************************************/
-
-   // adapt the differet sample rates SvxLink<->Sip (16k<->8k)
-  if (INTERNAL_SAMPLE_RATE == 16000)
-  {
-      // SipLogic -> SvxLink core
-    AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
-                                                  coeff_16_8_taps);
-    prev_src->registerSink(i1, true);
-    prev_src = i1;
-
-      // SvxLink core -> SipLogic
-    AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
-    m_src_in->registerSink(d2, true);
-    m_src_in = d2;
-  }
-
-  //m_out_pt = new AudioPassthrough;
-  //m_out_pt->registerSink(m_logic_con_in, true);
-  //m_out_pt->registerSource(m_src_in);
-
+  /*
+     The AudioReader is used to request samples FROM SvxLink framework
+     Problem here: SvxLink is using signals, pjsip is using callbacks
+     task: synchronize both frameworks
+  */
   m_ar = new AudioReader;
   m_logic_con_in->registerSink(m_ar, true);
 
@@ -626,14 +599,12 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
 {
 
   int got = 0;
-  float smpl[961];
+  float smpl[769];
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
   pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
-  got = m_ar->readSamples(smpl, count);
-
-  if (got > 0)
+  if ((got = m_ar->readSamples(smpl, count)) > 0)
   {
     for (int i = 0; i < got; i++)
     {
@@ -641,6 +612,13 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
     }
   }
 
+  /*
+    The pjsip framework requests 768 samples on every call. The SvxLink
+    framework can only deliver samples if the sql isn't closed and
+    m_logic_con_in provides some. Since the documentation of pjsip is poor
+    I can not predict the behaviour if we provide less samples than the
+    requested number. So we will the buffer with 0
+  */
   while (++got < count)
   {
     samples[got] = (pj_int16_t) 0;

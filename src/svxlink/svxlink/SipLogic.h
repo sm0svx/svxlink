@@ -1,7 +1,7 @@
 /**
 @file	 SipLogic.h
 @brief   A logic core that connect to a Sip Server e.g. Asterisk
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@author  Tobias Blomberg / SM0SVX & Christian Stussak & Adi Bier / DL1HRC
 @date	 2018-02-12
 
 \verbatim
@@ -53,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioDecoder.h>
-#include <AsyncAudioEncoder.h>
 #include <AsyncAudioReader.h>
 
 
@@ -171,7 +170,6 @@ class SipLogic : public LogicBase
     Async::AudioPassthrough*  m_out_src;
     Async::AudioDecoder*      m_dec;
     Async::AudioReader*       m_ar;
-    //Async::AudioSource*       m_src_in;
     Async::AudioPassthrough*  m_out_pt;
     uint16_t                  m_siploglevel;
     bool                      m_autoanswer;
