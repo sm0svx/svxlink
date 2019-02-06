@@ -170,7 +170,6 @@ class SipLogic : public LogicBase
     Async::AudioPassthrough*  m_out_src;
     Async::AudioDecoder*      m_dec;
     Async::AudioReader*       m_ar;
-    Async::AudioPassthrough*  m_out_pt;
     uint16_t                  m_siploglevel;
     bool                      m_autoanswer;
     std::string               m_autoconnect;
@@ -189,15 +188,7 @@ class SipLogic : public LogicBase
     uint16_t                  m_calltimeout;
     sip::_AudioMedia          *sip_buf;
     Async::Timer              m_call_timeout_timer;
-
-    struct smpl
-    {
-      uint16_t               *sample_buf;
-      int                    count;
-    };
-    smpl                     outsample;
-
-    sip::_AudioMedia         *media;
+    sip::_AudioMedia          *media;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);

@@ -261,7 +261,7 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_dec(0), m_ar(0),  m_out_pt(0), m_siploglevel(0),
+    m_dec(0), m_ar(0),  m_siploglevel(0),
     m_autoanswer(false), m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
@@ -283,7 +283,11 @@ SipLogic::~SipLogic(void)
   delete m_out_src;
   m_out_src = 0;
   delete acc;
+  acc = 0;
   delete dtmf_ctrl_pty;
+  dtmf_ctrl_pty = 0;
+  delete sip_buf;
+  sip_buf = 0;
   delete media;
   media = 0;
   delete m_dec;
@@ -292,15 +296,12 @@ SipLogic::~SipLogic(void)
   m_out_src = 0;
   delete m_ar;
   m_ar = 0;
-  delete m_out_pt;
-  m_out_pt = 0;
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
   {
     calls.erase(it);
     *it = 0;
   }
-  dtmf_ctrl_pty = 0;
   ep.libDestroy();
 } /* SipLogic::~SipLogic */
 
@@ -435,7 +436,7 @@ bool SipLogic::initialize(void)
       mem_fun(*this, &SipLogic::allSamplesFlushed));
   if (sink != 0)
   {
-    m_dec->registerSink(sink, true);
+    m_dec->registerSink(sink, false);
   }
 
   AudioSource *prev_src = m_dec;
@@ -470,7 +471,7 @@ bool SipLogic::initialize(void)
      task: synchronize both frameworks
   */
   m_ar = new AudioReader;
-  m_logic_con_in->registerSink(m_ar, true);
+  //m_logic_con_in->registerSink(m_ar, true);
 
   m_out_src = new AudioPassthrough;
   m_out_src->registerSource(prev_src);
@@ -567,6 +568,7 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
       sip_buf = static_cast<sip::_AudioMedia *>(call->getMedia(0));
       sip_buf->startTransmit(*media);
       media->startTransmit(*sip_buf);
+      m_logic_con_in->registerSink(m_ar, true);
     }
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
@@ -591,7 +593,6 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 } /* SipLogic::onMediaState */
 
 
-
 /*
  * incoming SvxLink audio stream to SIP client
  */
@@ -599,8 +600,9 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
 {
 
   int got = 0;
-  float smpl[769];
+  //float smpl[769];
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
+  float* smpl = new float[count+1]();
   pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
@@ -617,7 +619,7 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
     framework can only deliver samples if the sql isn't closed and
     m_logic_con_in provides some. Since the documentation of pjsip is poor
     I can not predict the behaviour if we provide less samples than the
-    requested number. So we will the buffer with 0
+    requested number. So we will fill the buffer with 0
   */
   while (++got < count)
   {
@@ -648,6 +650,7 @@ pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame
   {
     m_out_src->writeSamples(smpl, count);
   }
+
   return PJ_SUCCESS;
 } /* SipLogic::mediaPortPutFrame */
 
@@ -668,6 +671,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
              << (*it)->getInfo().totalDuration.sec << "."
              << (*it)->getInfo().totalDuration.msec << " secs" << endl;
         m_out_src->allSamplesFlushed();
+        m_logic_con_in->unregisterSink();
         calls.erase(it);
       }
 
@@ -705,8 +709,9 @@ void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
-  std::cout << "+++ " << (ai.regIsActive ? "Registered code=" :
-            "Unregistered code=") << prm.code << std::endl;
+  std::cout << "+++ " << m_sipserver << ":" << m_sip_port
+    << (ai.regIsActive ? " " : " un") << "registered, code="
+    << prm.code << std::endl;
 } /* SipLogic::onRegState */
 
 
@@ -740,6 +745,7 @@ void SipLogic::hangupCall(sip::_Call *call)
     if (*it == call)
     {
       m_out_src->allSamplesFlushed();
+      m_dec->flushEncodedSamples();
       cout << "+++ hangup call " << (*it)->getInfo().remoteUri
            << ", duration " << (*it)->getInfo().totalDuration.sec
            << " secs" << endl;
@@ -807,6 +813,7 @@ void SipLogic::flushTimeout(Async::Timer *t)
 {
   m_flush_timeout_timer.setEnable(false);
   m_out_src->allSamplesFlushed();
+  m_dec->flushEncodedSamples();
 } /* SipLogic::flushTimeout */
 
 /*
