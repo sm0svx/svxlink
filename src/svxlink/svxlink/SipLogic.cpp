@@ -466,12 +466,11 @@ bool SipLogic::initialize(void)
   m_logic_con_in = new Async::AudioPassthrough;
 
   /*
-     The AudioReader is used to request samples FROM SvxLink framework
-     Problem here: SvxLink is using signals, pjsip is using callbacks
-     task: synchronize both frameworks
+    The AudioReader is used to request samples FROM SvxLink framework
+    Problem here: SvxLink is using signals, pjsip is using callbacks
+    task: synchronize both frameworks
   */
   m_ar = new AudioReader;
-  //m_logic_con_in->registerSink(m_ar, true);
 
   m_out_src = new AudioPassthrough;
   m_out_src->registerSource(prev_src);
@@ -671,8 +670,12 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
              << (*it)->getInfo().totalDuration.sec << "."
              << (*it)->getInfo().totalDuration.msec << " secs" << endl;
         m_out_src->allSamplesFlushed();
-        m_logic_con_in->unregisterSink();
+        m_dec->flushEncodedSamples();
         calls.erase(it);
+        if (calls.empty())
+        {
+          m_logic_con_in->unregisterSink();
+        }
       }
 
        // incoming call
