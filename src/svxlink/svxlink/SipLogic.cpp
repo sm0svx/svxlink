@@ -49,7 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncPty.h>
-#include <AsyncAudioDecoder.h>
+#include <AsyncAudioValve.h>
 #include <AsyncAudioReader.h>
 
 
@@ -60,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "SipLogic.h"
+#include "SquelchVox.h"
 #include "multirate_filter_coeff.h"
 
 
@@ -261,11 +262,12 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_dec(0), m_ar(0),  m_siploglevel(0),
+    m_outto_sip(0), m_infrom_sip(0), m_siploglevel(0),
     m_autoanswer(false), m_autoconnect(""), m_sip_port(5060),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
-    m_calltimeout(45), m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false)
+    m_calltimeout(45), m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
+    m_semiduplex(false), squelch_det(0)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::flushTimeout));
@@ -290,10 +292,6 @@ SipLogic::~SipLogic(void)
   sip_buf = 0;
   delete media;
   media = 0;
-  delete m_dec;
-  m_dec = 0;
-  delete m_out_src;
-  m_out_src = 0;
   delete m_ar;
   m_ar = 0;
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
@@ -361,6 +359,7 @@ bool SipLogic::initialize(void)
   }
 
   cfg().getValue(name(), "AUTOANSWER", m_autoanswer); // auto pickup the call
+  cfg().getValue(name(), "SEMI_DUPLEX", m_semiduplex); // only for RepeaterLogics
   cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto connect a number
   cfg().getValue(name(), "CALLERNAME", m_callername);
   cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-6
@@ -408,7 +407,8 @@ bool SipLogic::initialize(void)
   try {
     acc->create(acc_cfg);
   } catch (Error& err) {
-    cout << "*** ERROR: creating account: " << acc_cfg.idUri << endl;
+    cout << ":*** ERROR creating account: "
+         << acc_cfg.idUri << " in " << name() << endl;
     return false;
   }
 
@@ -419,27 +419,10 @@ bool SipLogic::initialize(void)
    // number of samples = INTERNAL_SAMPLE_RATE * frameTimeLen /1000
   media = new sip::_AudioMedia(*this, 48);
 
-  /****************************************************/
-  AudioSink *sink = 0;
-
-  m_dec = Async::AudioDecoder::create("RAW");
-  if (m_dec == 0)
-  {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to initialize RAW"
-         << " audio decoder" << endl;
-    m_dec = Async::AudioDecoder::create("DUMMY");
-    assert(m_dec != 0);
-    return false;
-  }
-  m_dec->allEncodedSamplesFlushed.connect(
-      mem_fun(*this, &SipLogic::allSamplesFlushed));
-  if (sink != 0)
-  {
-    m_dec->registerSink(sink, false);
-  }
-
-  AudioSource *prev_src = m_dec;
+  /*************** incoming from sip ****************************/
+  // handler for incoming sip audio stream
+  m_out_src = new AudioPassthrough;
+  AudioSource *prev_src = m_out_src;
 
    // Create jitter FIFO if jitter buffer delay > 0
   unsigned jitter_buffer_delay = 0;
@@ -460,26 +443,62 @@ bool SipLogic::initialize(void)
     prev_src = passthrough;
   }
 
-  /****************************************************/
+  AudioSplitter *splitter = new AudioSplitter;
+  prev_src->registerSink(splitter, true);
+  prev_src = splitter;
 
-   // incoming sip audio to this logic
+  m_infrom_sip = new AudioValve;
+  m_infrom_sip->setOpen(false);
+  prev_src->registerSink(m_infrom_sip, true);
+  prev_src = m_infrom_sip;
+
+  if (!m_semiduplex)
+  {
+    squelch_det = new SquelchVox;
+    if (!squelch_det->initialize(cfg(), name()))
+    {
+      cerr << ":*** ERROR: Squelch detector initialization failed for "
+           << name() << "\n";
+      delete squelch_det;
+      squelch_det = 0;
+      // FIXME: Cleanup
+      return false;
+    }
+    if (cfg().getValue(name(), "SQL_HANGTIME", sql_hangtime))
+    {
+      squelch_det->setHangtime(sql_hangtime);
+    }
+    squelch_det->squelchOpen.connect(mem_fun(*this, &SipLogic::onSquelchOpen));
+    splitter->addSink(squelch_det, true);
+    cout << name() << ": Simplexmode, using VOX squelch for Sip." << endl;
+  }
+  else {
+    cout << name() << ": Semiduplexmode, no squelch for Sip." << endl;
+  }
+
+  m_logic_con_out = prev_src;
+
+  /*************** outgoing to sip ********************/
+
+   // handler for audio stream from logic to sip
   m_logic_con_in = new Async::AudioPassthrough;
 
-  /*
-    The AudioReader is used to request samples FROM SvxLink framework
-    Problem here: SvxLink is using signals, pjsip is using callbacks
-    task: synchronize both frameworks
-  */
-  m_ar = new AudioReader;
+   // the audio valve to control the incoming samples
+  m_outto_sip = new AudioValve;
+  m_outto_sip->setOpen(false);
 
-  m_out_src = new AudioPassthrough;
-  m_out_src->registerSource(prev_src);
-  m_logic_con_out = m_out_src;
+   // the Audio reader to get and handle the samples later
+   // when connected
+  m_ar = new AudioReader;
+  m_ar->registerSource(m_outto_sip);
+
+  m_logic_con_in->registerSink(m_outto_sip, true);
+
 
    // init this Logic
   if (!LogicBase::initialize())
   {
-    cout << "*** ERROR initializing SipLogic" << endl;
+    cout << "*** ERROR initializing SipLogic: " << name() << endl;
     return false;
   }
 
@@ -509,7 +528,7 @@ bool SipLogic::initialize(void)
 
 void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 {
-  cout << "+++ Calling \"" << dest_uri << "\"" << endl;
+  cout << name() << ":+++ Calling \"" << dest_uri << "\"" << endl;
 
   CallOpParam prm(true);
   prm.opt.audioCount = 1;
@@ -521,7 +540,7 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
     calls.push_back(call);
     m_call_timeout_timer.setEnable(true);
   } catch (Error& err) {
-    cout << "*** ERROR: " << err.info() << endl;
+    cout << "*** ERROR: " << err.info() << " in " << name() << endl;
   }
 } /* SipLogic::makeCall */
 
@@ -534,7 +553,7 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
   prm.opt.audioCount = 1;
   prm.opt.videoCount = 0;
 
-  cout << "+++ Incoming Call: " <<  ci.remoteUri << " ["
+  cout << name() << "+++ Incoming Call: " <<  ci.remoteUri << " ["
             << ci.remoteContact << "]" << endl;
 
   calls.push_back(call);
@@ -556,7 +575,7 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
 
   if (ci.media.size() != 1)
   {
-    cout << "*** ERROR: media size not 1" << endl;
+    cout << "*** ERROR: media size not 1 in " << name() << endl;
     return;
   }
 
@@ -567,27 +586,33 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
       sip_buf = static_cast<sip::_AudioMedia *>(call->getMedia(0));
       sip_buf->startTransmit(*media);
       media->startTransmit(*sip_buf);
-      m_logic_con_in->registerSink(m_ar, true);
+      m_infrom_sip->setOpen(true);
+      m_outto_sip->setOpen(true);
     }
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
   {
-    cout << "+++ Call currently has no media, or the media is not used."
+    cout << name()
+         << ":+++ Call currently has no media, or the media is not used."
          << endl;
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_LOCAL_HOLD)
   {
-    cout << "+++ The media is currently put on hold by local endpoint."
+    cout << name()
+         << ":+++ The media is currently put on hold by local endpoint."
          << endl;
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_REMOTE_HOLD)
   {
-    cout << "+++ The media is currently put on hold by remote endpoint."
+    cout << name()
+         << ":+++ The media is currently put on hold by remote endpoint."
          << endl;
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_ERROR)
   {
-    cout << "*** ERROR: The Sip audio media has reported an error." << endl;
+    cout << name()
+         << ":*** ERROR: The Sip audio media has reported an error."
+         << endl;
   }
 } /* SipLogic::onMediaState */
 
@@ -599,7 +624,6 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
 {
 
   int got = 0;
-  //float smpl[769];
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
   float* smpl = new float[count+1]();
   pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
@@ -609,8 +633,10 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
   {
     for (int i = 0; i < got; i++)
     {
-      samples[i] = static_cast<pj_int16_t>(smpl[i] * 32768);
+      samples[i] = (pj_int16_t)(smpl[i] * 32768);
     }
+    // mit Pointer Arithmetik idR schneller
+    // for(float* s = smpl; s < smpl + sizeof(float)*got; s += sizeof(float))
   }
 
   /*
@@ -636,17 +662,16 @@ pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame
 {
 
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
-  pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
-  frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
-  float* smpl = new float[count+1]();
-
-  for (int i=0; i < count; i++)
-  {
-    smpl[i] = (float) (samples[i] / 32768.0);
-  }
 
   if (count > 0)
   {
+    pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
+    frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
+    float* smpl = new float[count+1]();
+    for (int i=0; i < count; i++)
+    {
+      smpl[i] = (float) (samples[i] / 32768.0);
+    }
     m_out_src->writeSamples(smpl, count);
   }
 
@@ -666,34 +691,34 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // call disconnected
       if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
       {
-        cout << "+++ call disconnected, duration "
+        cout << name() << ":+++ call disconnected, duration "
              << (*it)->getInfo().totalDuration.sec << "."
              << (*it)->getInfo().totalDuration.msec << " secs" << endl;
         m_out_src->allSamplesFlushed();
-        m_dec->flushEncodedSamples();
         calls.erase(it);
         if (calls.empty())
         {
-          m_logic_con_in->unregisterSink();
+          m_outto_sip->setOpen(false);
+          m_infrom_sip->setOpen(false);
         }
       }
 
        // incoming call
       if (ci.state == PJSIP_INV_STATE_INCOMING)
       {
-        cout << "+++ incoming call" << endl;
+        cout << name() << ":+++ incoming call" << endl;
       }
 
        // connecting
       if (ci.state == PJSIP_INV_STATE_CONNECTING)
       {
-        cout << "+++ connecting" << endl;
+        cout << name() << ":+++ connecting" << endl;
       }
 
        // calling
       if (ci.state == PJSIP_INV_STATE_CALLING)
       {
-        cout << "+++ calling" << endl;
+        cout << name() << ":+++ calling" << endl;
       }
 
       break;
@@ -748,7 +773,6 @@ void SipLogic::hangupCall(sip::_Call *call)
     if (*it == call)
     {
       m_out_src->allSamplesFlushed();
-      m_dec->flushEncodedSamples();
       cout << "+++ hangup call " << (*it)->getInfo().remoteUri
            << ", duration " << (*it)->getInfo().totalDuration.sec
            << " secs" << endl;
@@ -816,8 +840,15 @@ void SipLogic::flushTimeout(Async::Timer *t)
 {
   m_flush_timeout_timer.setEnable(false);
   m_out_src->allSamplesFlushed();
-  m_dec->flushEncodedSamples();
 } /* SipLogic::flushTimeout */
+
+
+void SipLogic::onSquelchOpen(bool is_open)
+{
+  cout << name() << ": The Sip squelch is "
+       << (is_open ? "OPEN" : "CLOSED") << endl;
+  m_infrom_sip->setOpen(is_open);
+} /* SipLogic::onSquelchOpen */
 
 /*
  * This file has not been truncated

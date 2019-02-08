@@ -584,6 +584,27 @@ AUTOANSWER=(0|1)
 Define a party that will being connected after upon startup of SvxLink.
 AUTOCONNECT=user123@sipaccount.com
 .TP
+.B SEMI_DUPLEX
+If enabled no VOX squelch is used for Sip clients. That means that the AudioUdpSink
+stream is sent continuously to the connected SvxLink nodes. It's only meaningful if
+all nodes are Repeaters.
+SEMI_DUPLEX=(0|1)
+.TP
+.B VOX_FILTER_DEPTH
+see "Local Receiver Section"
+.TP
+.B VOX_THRESH
+see "Local Receiver Section"
+.TP
+.B SQL_START_DELAY
+see "Local Receiver Section"
+.TP
+.B SQL_DELAY
+see "Local Receiver Section"
+.TP
+.B SQL_HANGTIME
+see "Local Receiver Section"
+.TP
 .B SIP_LOGLEVEL
 The debug output of the pjsip library (0..6)
 .TP

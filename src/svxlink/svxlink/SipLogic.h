@@ -52,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioPassthrough.h>
-#include <AsyncAudioDecoder.h>
+#include <AsyncAudioValve.h>
 #include <AsyncAudioReader.h>
 
 
@@ -89,6 +89,7 @@ namespace Async
 {
   class Pty;
 };
+class Squelch;
 
 
 /****************************************************************************
@@ -168,7 +169,8 @@ class SipLogic : public LogicBase
     Async::AudioPassthrough*  m_logic_con_in;
     Async::AudioSource*       m_logic_con_out;
     Async::AudioPassthrough*  m_out_src;
-    Async::AudioDecoder*      m_dec;
+    Async::AudioValve*        m_outto_sip;
+    Async::AudioValve*        m_infrom_sip;
     Async::AudioReader*       m_ar;
     uint16_t                  m_siploglevel;
     bool                      m_autoanswer;
@@ -189,6 +191,10 @@ class SipLogic : public LogicBase
     sip::_AudioMedia          *sip_buf;
     Async::Timer              m_call_timeout_timer;
     sip::_AudioMedia          *media;
+    bool                      m_semiduplex;
+    Squelch   	      	      *squelch_det;
+    unsigned                  sql_hangtime;
+
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -202,11 +208,11 @@ class SipLogic : public LogicBase
     void hangupCall(sip::_Call *call);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
-    void sendAudio(const void *buf, int count);
     void allSamplesFlushed(void);
     void flushAudio(void);
     void callTimeout(Async::Timer *t=0);
     void flushTimeout(Async::Timer *t=0);
+    void onSquelchOpen(bool is_open);
 
 };  /* class SipLogic */
 
