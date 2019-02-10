@@ -280,16 +280,14 @@ SipLogic::~SipLogic(void)
 {
   delete m_logic_con_in;
   m_logic_con_in = 0;
-  delete m_logic_con_out;
-  m_logic_con_out = 0;
+ // delete m_logic_con_out;
+ // m_logic_con_out = 0;
   delete m_out_src;
   m_out_src = 0;
   delete acc;
   acc = 0;
   delete dtmf_ctrl_pty;
   dtmf_ctrl_pty = 0;
-  delete sip_buf;
-  sip_buf = 0;
   delete media;
   media = 0;
   delete m_ar;
@@ -340,6 +338,9 @@ bool SipLogic::initialize(void)
          << endl;
     return false;
   }
+
+  std::string m_sipregistrar;
+  cfg().getValue(name(), "SIPREGISTRAR", m_sipregistrar);
 
   std::string dtmf_ctrl_pty_path;
   cfg().getValue(name(), "DTMF_CTRL_PTY", dtmf_ctrl_pty_path);
@@ -397,7 +398,7 @@ bool SipLogic::initialize(void)
   acc_cfg.idUri += m_sipserver;
   acc_cfg.idUri += ">";
   acc_cfg.regConfig.registrarUri = "sip:";
-  acc_cfg.regConfig.registrarUri += m_sipserver;
+  acc_cfg.regConfig.registrarUri += m_sipregistrar;
   acc_cfg.regConfig.timeoutSec = m_reg_timeout;
 
   acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo(
@@ -473,6 +474,7 @@ bool SipLogic::initialize(void)
     cout << name() << ": Simplexmode, using VOX squelch for Sip." << endl;
   }
   else {
+    // ToDo
     cout << name() << ": Semiduplexmode, no squelch for Sip." << endl;
   }
 
@@ -493,7 +495,6 @@ bool SipLogic::initialize(void)
   m_ar->registerSource(m_outto_sip);
 
   m_logic_con_in->registerSink(m_outto_sip, true);
-
 
    // init this Logic
   if (!LogicBase::initialize())
