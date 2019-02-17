@@ -123,7 +123,7 @@ class RtlUsb : public RtlSdr
      * @brief 	Constructor
      * @param   match Device match string
      */
-    RtlUsb(const std::string &match);
+    RtlUsb(const std::string& name, const std::string& match);
   
     /**
      * @brief 	Destructor
@@ -236,7 +236,7 @@ class RtlUsb : public RtlSdr
     RtlUsb& operator=(const RtlUsb&);
     void rtlReader(void);
     void rtlSamplesReceived(void);
-    void initializeDongle(void);
+    void initializeDongle(const std::string& name);
     void verboseClose(void);
     int verboseDeviceSearch(const char *s);
     

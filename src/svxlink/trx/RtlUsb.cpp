@@ -300,13 +300,13 @@ class RtlUsb::SampleBuffer : public sigc::trackable
  *
  ****************************************************************************/
 
-RtlUsb::RtlUsb(const std::string &match)
+RtlUsb::RtlUsb(const std::string& name, const std::string &match)
   : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), rtl_reader_thread(),
     dev_match(match), dev_name("?"), sample_buf(0),
     rtl_reader_thread_started(false)
 {
   reconnect_timer.expired.connect(
-      hide(mem_fun(*this, &RtlUsb::initializeDongle)));
+      hide(sigc::bind(sigc::mem_fun(*this, &RtlUsb::initializeDongle), name)));
 } /* RtlUsb::RtlUsb */
 
 
@@ -600,7 +600,7 @@ void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
 #endif
 
 
-void RtlUsb::initializeDongle(void)
+void RtlUsb::initializeDongle(const std::string& name)
 {
   assert(dev == NULL);
 
@@ -681,6 +681,9 @@ void RtlUsb::initializeDongle(void)
     verboseClose();
     return;
   }
+#ifdef _GNU_SOURCE
+  pthread_setname_np(rtl_reader_thread, name.c_str());
+#endif
   rtl_reader_thread_started = true;
 
   char vendor[256], product[256], serial[256];

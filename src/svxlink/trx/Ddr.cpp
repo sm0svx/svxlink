@@ -941,8 +941,8 @@ namespace {
 class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 {
   public:
-    Channel(int fq_offset, unsigned sample_rate)
-      : m_sample_rate(sample_rate), m_channelizer(0),
+    Channel(const std::string& name, int fq_offset, unsigned sample_rate)
+      : m_name(name), m_sample_rate(sample_rate), m_channelizer(0),
         m_fm_demod(32000, 5000.0), m_ssb_demod(16000), m_cw_demod(16000),
         m_demod(0), m_trans(sample_rate, fq_offset), m_enabled(false),
         m_ch_offset(0), m_fq_offset(fq_offset)
@@ -1069,6 +1069,9 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 
     void operator()(void)
     {
+#ifdef _GNU_SOURCE
+      pthread_setname_np(pthread_self(), m_name.c_str());
+#endif
       for (;;)
       {
         std::vector<WbRxRtlSdr::Sample> samples, translated, channelized;
@@ -1114,6 +1117,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
     ThreadSigCSignal<void, const std::vector<RtlTcp::Sample>> preDemod;
 
   private:
+    const std::string               m_name;
     unsigned                        m_sample_rate;
     Channelizer *                   m_channelizer;
     DemodulatorFm                   m_fm_demod;
@@ -1235,7 +1239,7 @@ bool Ddr::initialize(void)
   }
   rtl->registerDdr(this);
 
-  channel = new Channel(fq-rtl->centerFq(), rtl->sampleRate());
+  channel = new Channel(name(), fq-rtl->centerFq(), rtl->sampleRate());
   if (!channel->initialize())
   {
     cout << "*** ERROR: Could not initialize channel object for receiver "

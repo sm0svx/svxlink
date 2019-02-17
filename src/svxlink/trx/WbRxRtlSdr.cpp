@@ -159,7 +159,7 @@ WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
     string dev_match = "0";
     cfg.getValue(name, "DEV_MATCH", dev_match);
     //cout << "###   DEV_MATCH   = " << dev_match << endl;
-    rtl = new RtlUsb(dev_match);
+    rtl = new RtlUsb(name, dev_match);
   }
 #endif
   else
