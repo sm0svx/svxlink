@@ -6,12 +6,12 @@
 #include <AsyncMutex.h>
 #include <AsyncTimer.h>
 
-
 class MyThread
 {
   public:
     MyThread(int id) : m_id(id) {}
 
+      // Thread entrypoint
     void operator()(void)
     {
       int seq = 0;
@@ -22,11 +22,9 @@ class MyThread
             // thread. If we do not do this (try commenting the row below out)
             // there will be many strange hard to diagnose errors like
             // misbehavior, segmentation faults and hangs.
-            // Only one thread, the one holding a Async::Mutex lock, will be
-            // allowed to run. Note that all instances of Async::Mutex are
-            // connected so only one thread will be allowed to lock it's mutex,
-            // even though it's not the same instance of Async::Mutex.
           std::lock_guard<Async::Mutex> lk(m_mu);
+
+            // We can now safely add a timer on the main Async thread
           Async::Timer *t = new Async::Timer(0);
           t->expired.connect(sigc::bind(
                 sigc::mem_fun(*this, &MyThread::handleTimeout), seq++));
@@ -40,6 +38,7 @@ class MyThread
     int           m_expected_seq = 0;
     int           m_id;
 
+      // This function is executed on the main thread
     void handleTimeout(Async::Timer* t, int seq)
     {
       std::cout << "MyThread::handleTimeout called["
@@ -58,7 +57,7 @@ int main(void)
 {
   Async::CppApplication app;
 
-    // Set up an Async timer to mess with the thread that also set up a timer.
+    // Set up an Async timer to mess with the threads that also set up timers.
   Async::Timer t(1, Async::Timer::TYPE_PERIODIC);
 
     // Start a couple of threads

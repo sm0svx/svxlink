@@ -14,7 +14,7 @@ set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncTcpConnection.cpp AsyncConfig.cpp AsyncSerial.cpp
            AsyncSerialDevice.cpp AsyncFileReader.cpp
            AsyncAtTimer.cpp AsyncExec.cpp AsyncPty.cpp AsyncPtyStreamBuf.cpp
-           AsyncFramedTcpConnection.cpp)
+           AsyncFramedTcpConnection.cpp AsyncMutex.cpp)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})
