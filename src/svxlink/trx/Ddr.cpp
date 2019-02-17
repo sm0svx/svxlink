@@ -555,7 +555,7 @@ namespace {
         }
         vector<float> dec_audio;
         dec->decimate(dec_audio, audio);
-        writeSamples(&dec_audio[0], dec_audio.size());
+        sinkWriteSamples(&dec_audio[0], dec_audio.size());
       }
 
     private:

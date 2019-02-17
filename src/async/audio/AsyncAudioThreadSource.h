@@ -41,8 +41,8 @@ An example of how to use the Async::AudioThreadSource class
 
 #include <vector>
 #include <mutex>
-#include <atomic>
-#include <iostream>
+#include <condition_variable>
+//#include <iostream>
 
 
 /****************************************************************************
@@ -131,96 +131,107 @@ class AudioThreadSource : public Async::AudioSource
     AudioThreadSource(void) {}
 
     /**
-     * @brief   Destructor
+     * @brief   No copy constructor
      */
-    ~AudioThreadSource(void) {}
+    AudioThreadSource(const AudioThreadSource&) = delete;
 
     /**
-     * @brief   Write samples into this audio sink
+     * @brief   Destructor
+     */
+    //~AudioThreadSource(void) {}
+
+    /*
+     * @brief   No assignment operator
+     */
+    AudioThreadSource& operator=(const AudioThreadSource&) = delete;
+
+  protected:
+    /**
+     * @brief   Queue samples for delivery to the connected sink
      * @param   samples The buffer containing the samples
      * @param   count The number of samples in the buffer
-     * @return  Returns the number of samples that has been taken care of
      *
-     * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
-     * This function is normally only called from a connected source object.
+     * This function is used to queue audio for later delivery to the connected
+     * audio sink. If a flush is pending, calling this function will cancel the
+     * flush.
      */
-    void writeSamples(const float *samples, int count)
+    virtual int sinkWriteSamples(const float *samples, int count)
     {
       {
-        std::lock_guard<std::mutex> lk(in_buf_mu);
-        flush = false;
-        in_buf.insert(in_buf.end(), samples, samples+count);
+        std::lock_guard<std::mutex> lk(m_in_buf_mu);
+        m_flush = false;
+        m_in_buf.insert(m_in_buf.end(), samples, samples+count);
       }
       {
         std::lock_guard<Async::Mutex> lk(m_mu);
         Async::Application::app().runTask(
             sigc::mem_fun(*this, &AudioThreadSource::resumeOutput));
       }
+      return count;
     }
 
     /**
-     * @brief   Tell the sink to flush the previously written samples
+     * @brief   Flush samples in the connected sink when the queue is empty
      *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     * This function is normally only called from a connected source object.
+     * This function is used to tell the connected sink to flush previously
+     * written samples when the queue is empty. If the writeSamples function is
+     * called before the queue is empty, the flush is cancelled.
      */
-    void flushSamples(void)
+    virtual void sinkFlushSamples(void)
     {
       std::lock_guard<Async::Mutex> lk(m_mu);
-      flush = true;
+      m_flush = true;
       Async::Application::app().runTask(
           sigc::mem_fun(*this, &AudioThreadSource::resumeOutput));
     }
 
-  protected:
+    void waitForAllSamplesFlushed(void)
+    {
+      std::unique_lock<Async::Mutex> lk(m_mu);
+      m_all_flushed_cond.wait(lk, [this]{ return m_all_flushed; });
+    }
 
   private:
-    Async::Mutex        m_mu;
-    std::mutex          in_buf_mu;
-    std::vector<float>  in_buf;
-    std::vector<float>  out_buf;
-    std::vector<float>::iterator out_buf_it = out_buf.begin();
-    bool                flush = false;
-    bool                m_unflushed = false;
-
-    AudioThreadSource(const AudioThreadSource&);
-    AudioThreadSource& operator=(const AudioThreadSource&);
+    Async::Mutex                  m_mu;
+    std::mutex                    m_in_buf_mu;
+    std::vector<float>            m_in_buf;
+    std::vector<float>            m_out_buf;
+    std::vector<float>::iterator  m_out_buf_it = m_out_buf.begin();
+    bool                          m_flush = false;
+    bool                          m_unflushed = false;
+    bool                          m_all_flushed = true;
+    std::condition_variable_any   m_all_flushed_cond;
 
     /**
      * @brief Resume audio output to the sink
      *
      * This function will be called when the registered audio sink is ready
-     * to accept more samples.
-     * This function is normally only called from a connected sink object.
+     * to accept more samples. It is also called when more samples have been
+     * written to the queue or if the flushSamples function is called.
      */
     virtual void resumeOutput(void)
     {
-      //std::cout << "### resumeOutput" << std::endl;
       for (;;)
       {
         {
-          std::lock_guard<std::mutex> lk(in_buf_mu);
-          if (out_buf.empty() && !in_buf.empty())
+          std::lock_guard<std::mutex> lk(m_in_buf_mu);
+          if (m_out_buf.empty() && !m_in_buf.empty())
           {
-            out_buf.swap(in_buf);
-            out_buf_it = out_buf.begin();
+            m_out_buf.swap(m_in_buf);
+            m_out_buf_it = m_out_buf.begin();
           }
         }
-        if (!out_buf.empty())
+        if (!m_out_buf.empty())
         {
           m_unflushed = true;
-          //std::cout << "### sinkWriteSamples" << std::endl;
-          int cnt = sinkWriteSamples(&(*out_buf_it), out_buf.end()-out_buf_it);
+          int cnt = AudioSource::sinkWriteSamples(&(*m_out_buf_it),
+              m_out_buf.end()-m_out_buf_it);
           if (cnt > 0)
           {
-            out_buf_it += cnt;
-            if (out_buf_it == out_buf.end())
+            m_out_buf_it += cnt;
+            if (m_out_buf_it == m_out_buf.end())
             {
-              out_buf.clear();
+              m_out_buf.clear();
             }
           }
           else
@@ -230,16 +241,17 @@ class AudioThreadSource : public Async::AudioSource
         }
         else
         {
-          if (flush)
+          if (m_flush)
           {
             {
-              std::lock_guard<std::mutex> lk(in_buf_mu);
-              flush = false;
+              std::lock_guard<std::mutex> lk(m_in_buf_mu);
+              m_flush = false;
             }
             if (m_unflushed)
             {
               m_unflushed = false;
-              sinkFlushSamples();
+              m_all_flushed = false;
+              AudioSource::sinkFlushSamples();
             }
           }
           break;
@@ -254,7 +266,11 @@ class AudioThreadSource : public Async::AudioSource
      * registered sink.
      * This function is normally only called from a connected sink object.
      */
-    virtual void allSamplesFlushed(void) {}
+    virtual void allSamplesFlushed(void)
+    {
+      m_all_flushed = true;
+      m_all_flushed_cond.notify_all();
+    }
 
 };  /* class AudioThreadSource */
 

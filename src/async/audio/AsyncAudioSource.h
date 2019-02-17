@@ -221,8 +221,8 @@ class AudioSource
      * that was taken care of. Samples that was not taken care of should
      * normally be written again to the sink.
      */
-    int sinkWriteSamples(const float *samples, int len);
-    
+    virtual int sinkWriteSamples(const float *samples, int len);
+
     /*
      * @brief 	Tell the sink to flush any buffered samples
      *
@@ -232,8 +232,8 @@ class AudioSource
      * If there is no registered sink the allSamplesFlushed function will be
      * called right away.
      */
-    void sinkFlushSamples(void);
-    
+    virtual void sinkFlushSamples(void);
+
     /**
      * @brief 	Setup another source to handle the outgoing audio
      * @param 	handler The source to handle the audio
