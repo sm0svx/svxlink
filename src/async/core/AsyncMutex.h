@@ -1,8 +1,8 @@
 /**
-@file	 AsyncMutex.h
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2019-01-19
+@file   AsyncMutex.h
+@brief  A mutex for synchronizing threads with the main Async thread
+@author Tobias Blomberg / SM0SVX
+@date   2019-01-19
 
 \verbatim
 Async - A library for programming event driven applications
@@ -28,7 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 An example of how to use the Async::Mutex class
 */
 
-
 #ifndef ASYNC_MUTEX_INCLUDED
 #define ASYNC_MUTEX_INCLUDED
 
@@ -38,8 +37,10 @@ An example of how to use the Async::Mutex class
  *
  ****************************************************************************/
 
+#include <iostream>
 #include <mutex>
 #include <condition_variable>
+#include <cassert>
 #include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
@@ -52,6 +53,7 @@ An example of how to use the Async::Mutex class
  ****************************************************************************/
 
 #include <AsyncFdWatch.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -111,11 +113,27 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief  Synchronize execution from a thread with the main Async thread
 @author Tobias Blomberg / SM0SVX
 @date   2019-01-19
 
-A_detailed_class_description
+This class is used to synchronize the execution of a thread with the main Async
+thread so that it is safe to access shared resources. When a thread holds the
+lock the main Async thread is guaranteed to be in a safe place. All other
+threads trying to get the same lock will be blocked until the thread holding
+the lock release it.
+
+As always with locks, try to hold the lock the shortest time possible since it
+will block the main Async thread while the lock is held. That for example means
+that no timer handlers nor file descriptor watch handlers will be called
+
+Note that locking this mutex is almost always expensive since the main Async
+thread own the lock if no other thread owns it. The main thread must then get
+to a safe place before the mutex can be locked by another thread. Only use this
+mutex if synchronization with the main Async thread is needed. If the purpose
+is to only synchronize between other threads, use a standard mutex. A standard
+mutex is also sufficient if synchronizing access to some data structure that
+you have full control over.
 
 \include AsyncMutex_demo.cpp
 */
@@ -126,9 +144,11 @@ class Mutex
      * @brief Default constructor
      */
     Mutex(void) noexcept
-      : m_main_thread(std::this_thread::get_id()), m_lock_owner(m_main_thread)
+      : m_main_thread(Async::Application::app().threadId()),
+        m_lock_owner(m_main_thread)
     {
-      //std::cout << "Mutex::Mutex" << std::endl;
+      assert((std::this_thread::get_id() == m_main_thread) &&
+             "Async::Mutex objects must be created in the Async main thread");
       int pipefd[2];
       if (pipe(pipefd) != 0)
       {
@@ -145,7 +165,7 @@ class Mutex
       }
       m_pipe_wr = pipefd[1];
       m_rd_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-      m_rd_watch->activity.connect(sigc::mem_fun(*this, &Mutex::unlockHandler));
+      m_rd_watch->activity.connect(sigc::mem_fun(*this, &Mutex::lockHandler));
 
       Async::Application::app().execDone.connect(
           sigc::mem_fun(*this, &Mutex::mainThreadDone));
@@ -167,7 +187,6 @@ class Mutex
       assert((m_main_thread == std::this_thread::get_id())
           || (m_main_thread == std::thread::id()));
       assert(m_lock_owner == m_main_thread);
-      //std::cout << "Mutex::~Mutex" << std::endl;
       int pipe_rd = m_rd_watch->fd();
       delete m_rd_watch;
       m_rd_watch = 0;
@@ -180,13 +199,19 @@ class Mutex
     Mutex& operator=(const Mutex&) = delete;
 
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief   Lock the mutex
+     *
+     * Calling this function will lock the mutex if it's not already locked by
+     * another thread. If the lock is held by another thread this thread will
+     * block until the lock can be acquired.
+     * NOTE: Never call this function from the main Async thread.
      */
     void lock(void)
     {
-      assert(m_main_thread != std::this_thread::get_id());
+      if (Async::Application::app().threadId() == std::this_thread::get_id())
+      {
+        return;
+      }
       if (write(m_pipe_wr, "", 1) == -1)
       {
         std::cerr << "*** ERROR: Could not write to pipe in Async::Mutex::lock: "
@@ -194,72 +219,72 @@ class Mutex
         exit(1);
       }
       std::unique_lock<std::mutex> lk(m_mu);
-      //std::cout << "### Mutex::lock: ENTER" << std::endl;
       m_cond.wait(lk,
           [this]{ return m_lock_owner == std::thread::id(); });
       m_lock_owner = std::this_thread::get_id();
-      //std::cout << "### Mutex::lock: EXIT" << std::endl;
     }
 
     //bool try_lock() { return m_mu.try_lock(); }
 
+    /**
+     * @brief   Unlock the mutex
+     *
+     * Unlock a previously locked mutex. It is not allowed to call this
+     * function if the calling thread does not own the lock.
+     * NOTE: Never call this function from the main Async thread.
+     */
     void unlock(void)
     {
-      assert(m_main_thread != std::this_thread::get_id());
+      if (Async::Application::app().threadId() == std::this_thread::get_id())
+      {
+        return;
+      }
       std::unique_lock<std::mutex> lk(m_mu);
-      //std::cout << "### Mutex::unlock: ENTER" << std::endl;
       assert(m_lock_owner == std::this_thread::get_id());
       m_lock_owner = m_main_thread;
-      //std::cout << "### Mutex::unlock: EXIT" << std::endl;
       lk.unlock();
       m_cond.notify_one();
     }
 
   private:
     std::mutex                    m_mu;
-    //std::condition_variable       m_lock_cond;
     std::condition_variable       m_cond;
     int                           m_pipe_wr = -1;
     Async::FdWatch*               m_rd_watch = 0;
     std::thread::id               m_main_thread;
     std::thread::id               m_lock_owner;
 
-    void unlockHandler(FdWatch *w)
+    void lockHandler(FdWatch *w)
     {
-      //std::cout << "### Mutex::unlockHandler: ENTER" << std::endl;
       ssize_t cnt = -1;
-      char ch;
-      while ((cnt = read(w->fd(), &ch, 1)) > 0)
+      char buf[256];
+      while ((cnt > 0) || ((cnt = read(w->fd(), buf, sizeof(buf))) > 0))
       {
         std::unique_lock<std::mutex> lk(m_mu);
-        if (m_lock_owner == m_main_thread)
-        {
-          m_lock_owner = std::thread::id();
-          lk.unlock();
-          m_cond.notify_one();
-          lk.lock();
-        }
-        m_cond.wait(lk,
-            [this]{ return m_lock_owner == m_main_thread; });
+        assert(m_lock_owner == m_main_thread);
+        m_lock_owner = std::thread::id();
+        lk.unlock();
+        m_cond.notify_one();
+        lk.lock();
+        m_cond.wait(lk, [this]{ return m_lock_owner == m_main_thread; });
+        cnt -= 1;
       }
       if (cnt == -1)
       {
         if ((errno != EAGAIN) && (errno != EWOULDBLOCK))
         {
           std::cerr << "*** ERROR: Could not read pipe in "
-                       "Async::Mutex::unlockHandler: "
+                       "Async::Mutex::lockHandler: "
                     << strerror(errno) << std::endl;
           exit(1);
         }
       }
-      //std::cout << "### Mutex::unlockHandler: EXIT" << std::endl;
     }
 
     void mainThreadDone(void)
     {
       {
         std::lock_guard<std::mutex> lk(m_mu);
-        //std::cout << "mainThreadDone: EXIT" << std::endl;
         assert(m_lock_owner == m_main_thread);
         m_lock_owner = m_main_thread = std::thread::id();
       }
@@ -272,8 +297,6 @@ class Mutex
 } /* namespace */
 
 #endif /* ASYNC_MUTEX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

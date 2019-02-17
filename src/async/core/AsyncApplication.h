@@ -9,7 +9,7 @@ application that use the Async classes.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2019 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <thread>
 
 
 /****************************************************************************
@@ -178,6 +179,11 @@ class Application : public sigc::trackable
     void runTask(sigc::slot<void> task);
 
     /**
+     * @brief Get the thread ID for the main Async thread
+     */
+    std::thread::id threadId(void) const { return thread_id; }
+
+    /**
      * @brief   Signal that is emitted when the exec function exit
      *
      * This signal is emitted at the end of the exec function, just before
@@ -203,9 +209,10 @@ class Application : public sigc::trackable
     typedef std::list<sigc::slot<void> > SlotList;
 
     static Application *app_ptr;
-    
-    SlotList task_list;
-    Timer    *task_timer;
+
+    SlotList              task_list;
+    Timer*                task_timer;
+    const std::thread::id thread_id;
 
     void taskTimerExpired(void);
     virtual void addFdWatch(FdWatch *fd_watch) = 0;

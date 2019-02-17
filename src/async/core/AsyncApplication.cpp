@@ -142,6 +142,7 @@ Application &Application::app(void)
  *------------------------------------------------------------------------
  */
 Application::Application(void)
+  : thread_id(std::this_thread::get_id())
 {
   assert(app_ptr == 0);
   app_ptr = this;  
