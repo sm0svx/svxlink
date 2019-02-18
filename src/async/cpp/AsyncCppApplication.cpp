@@ -9,7 +9,7 @@
  *
  * \verbatim
  * Async - A library for programming event driven applications
- * Copyright (C) 2003  Tobias Blomberg
+ * Copyright (C) 2003-2019 Tobias Blomberg
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -266,7 +266,7 @@ void CppApplication::exec(void)
     
       /* Check for activity on the read watch file descriptors */
     witer=rd_watch_map.begin();
-    while (witer != rd_watch_map.end())
+    while ((dcnt > 0) && (witer != rd_watch_map.end()))
     {
       next_witer = witer;
       ++next_witer;
@@ -287,7 +287,7 @@ void CppApplication::exec(void)
     
       /* Check for activity on the write watch file descriptors */
     witer=wr_watch_map.begin();
-    while (witer != wr_watch_map.end())
+    while ((dcnt > 0) && (witer != wr_watch_map.end()))
     {
       next_witer = witer;
       ++next_witer;
