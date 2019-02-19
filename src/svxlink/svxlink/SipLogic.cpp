@@ -375,18 +375,23 @@ bool SipLogic::initialize(void)
   m_call_timeout_timer.setTimeout(m_calltimeout * 1000);
 
    // create SipEndpoint - init library
-  ep.libCreate();
-  pj::EpConfig ep_cfg;
-  ep_cfg.logConfig.level = m_siploglevel; // set the debug level of pj
-  pj_log_set_level(m_siploglevel);
-  ep.libInit(ep_cfg);
-  ep.audDevManager().setNullDev(); // do not init a hw audio device
+  try {
+    ep.libCreate();
+    pj::EpConfig ep_cfg;
+    ep_cfg.logConfig.level = m_siploglevel; // set the debug level of pj
+    pj_log_set_level(m_siploglevel);
+    ep.libInit(ep_cfg);
+    ep.audDevManager().setNullDev(); // do not init a hw audio device
 
-   // Transport
-  TransportConfig tcfg;
-  tcfg.port = m_sip_port;
-  ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
-  ep.libStart();
+    // Sip transport layer creation
+    TransportConfig tcfg;
+    tcfg.port = m_sip_port;
+    ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+    ep.libStart();
+  } catch (Error& err) {
+    cout << "*** ERROR creating Sip transport layer." << endl;
+    return false;
+  }
 
    // add SipAccount
   AccountConfig acc_cfg;
