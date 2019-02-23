@@ -167,13 +167,13 @@ CppApplication::CppApplication(void)
   FD_ZERO(&rd_set);
   FD_ZERO(&wr_set);
   sighandler_pipe[0] = sighandler_pipe[1] = -1;
+  construct();
 } /* CppApplication::CppApplication */
 
 
 CppApplication::~CppApplication(void)
 {
   destroy();
-  clearTasks();
 } /* CppApplication::~CppApplication */
 
 

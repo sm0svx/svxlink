@@ -40,7 +40,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <deque>
 #include <thread>
+#include <mutex>
 
 
 /****************************************************************************
@@ -166,22 +168,25 @@ class Application : public sigc::trackable
      *
      * Use it something like this to call a function taking no arguments:
      *
-     *   runTask(mem_fun(*this, &MyClass::func));
+     *   runTask(sigc::mem_fun(*this, &MyClass::func));
      *
      * If the function need arguments passed to it, they must be bound to the
      * slot using the sigc::bind function:
      *
-     *   runTask(sigc::bind(mem_fun(*this, &MyClass::func), true, my_int));
+     *   runTask(sigc::bind(sigc::mem_fun(*this, &MyClass::func), true, 42));
      *
      * In this case the function take two arguments where the first is a bool
      * and the second is an integer.
+     *
+     * This function is thread safe so a separate thread can add tasks which
+     * are then executed on the main Async thread.
      */
     void runTask(sigc::slot<void> task);
 
     /**
      * @brief Get the thread ID for the main Async thread
      */
-    std::thread::id threadId(void) const { return thread_id; }
+    std::thread::id threadId(void) const { return m_main_thread_id; }
 
     /**
      * @brief   Signal that is emitted when the exec function exit
@@ -194,27 +199,36 @@ class Application : public sigc::trackable
     /**
      * @brief   Signal that is emitted just before destruction
      *
+     * This signal is emitted right after the Application object is constructed.
+     */
+    sigc::signal<void> construct;
+
+    /**
+     * @brief   Signal that is emitted just before destruction
+     *
      * This signal is emitted right before the Application object is destroyed.
      */
     sigc::signal<void> destroy;
 
-  protected:
-    void clearTasks(void);
-    
   private:
     friend class FdWatch;
     friend class Timer;
     friend class DnsLookup;
-    
-    typedef std::list<sigc::slot<void> > SlotList;
+
+    typedef std::deque<sigc::slot<void>> SlotList;
 
     static Application *app_ptr;
 
-    SlotList              task_list;
-    Timer*                task_timer;
-    const std::thread::id thread_id;
+    const std::thread::id m_main_thread_id;
+    SlotList              m_task_queue;
+    Timer*                m_task_timer;
+    std::mutex            m_task_mu;
+    Async::FdWatch*       m_task_rd_watch = 0;
+    int                   m_task_wr_pipe = -1;
 
-    void taskTimerExpired(void);
+    void processTaskQueue(void);
+    void handleTaskWatch(Async::FdWatch* w);
+    void clearTasks(void);
     virtual void addFdWatch(FdWatch *fd_watch) = 0;
     virtual void delFdWatch(FdWatch *fd_watch) = 0;
     virtual void addTimer(Timer *timer) = 0;

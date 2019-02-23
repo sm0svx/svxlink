@@ -9,7 +9,7 @@ application that use the Async classes.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2019 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,12 +35,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/select.h>
 #include <stdlib.h>
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
+#include <cstring>
 
 
 /****************************************************************************
@@ -142,29 +145,63 @@ Application &Application::app(void)
  *------------------------------------------------------------------------
  */
 Application::Application(void)
-  : thread_id(std::this_thread::get_id())
+  : m_main_thread_id(std::this_thread::get_id())
 {
   assert(app_ptr == 0);
   app_ptr = this;  
-  task_timer = new Async::Timer(0, Timer::TYPE_ONESHOT, false);
-  task_timer->expired.connect(
-      sigc::hide(mem_fun(*this, &Application::taskTimerExpired)));
+
+  m_task_timer = new Async::Timer(0, Timer::TYPE_ONESHOT, false);
+  m_task_timer->expired.connect(
+      sigc::hide(mem_fun(*this, &Application::processTaskQueue)));
+  int pipefd[2];
+  if (pipe(pipefd) == -1)
+  {
+    std::cerr << "*** ERROR: Could not create pipe in Async::Application: "
+              << strerror(errno) << std::endl;
+    abort();
+  }
+  m_task_rd_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD, false);
+  m_task_rd_watch->activity.connect(
+      sigc::mem_fun(this, &Application::handleTaskWatch));
+  m_task_wr_pipe = pipefd[1];
+  construct.connect(
+      sigc::bind(sigc::mem_fun(*m_task_rd_watch, &FdWatch::setEnabled), true));
+  destroy.connect(sigc::mem_fun(*this, &Application::clearTasks));
 } /* Application::Application */
 
 
 Application::~Application(void)
 {
-  delete task_timer;
-  task_timer = 0;
+  delete m_task_timer;
+  m_task_timer = 0;
+  close(m_task_rd_watch->fd());
+  delete m_task_rd_watch;
+  m_task_rd_watch = 0;
+  close(m_task_wr_pipe);
+  m_task_wr_pipe = -1;
 } /* Application::~Application */
 
 
 void Application::runTask(sigc::slot<void> task)
 {
-  task_list.push_back(task);
-  task_timer->setEnable(true);
+  {
+    std::lock_guard<std::mutex> lk(m_task_mu);
+    m_task_queue.push_back(task);
+  }
+  if (std::this_thread::get_id() == m_main_thread_id)
+  {
+    m_task_timer->setEnable(true);
+  }
+  else
+  {
+    if (write(m_task_wr_pipe, "", 1) == -1)
+    {
+      std::cerr << "*** ERROR: Could not write to pipe in Async::Application: "
+                << std::strerror(errno) << std::endl;
+      abort();
+    }
+  }
 } /* Application::runTask */
-
 
 
 /****************************************************************************
@@ -173,11 +210,6 @@ void Application::runTask(sigc::slot<void> task)
  *
  ****************************************************************************/
 
-void Application::clearTasks(void)
-{
-  task_list.clear();
-  task_timer->setEnable(false);
-} /* Application::clearTasks */
 
 
 /****************************************************************************
@@ -186,16 +218,46 @@ void Application::clearTasks(void)
  *
  ****************************************************************************/
 
-void Application::taskTimerExpired(void)
+void Application::processTaskQueue(void)
 {
+  std::unique_lock<std::mutex> lk(m_task_mu);
   SlotList::iterator it;
-  for (it=task_list.begin(); it!=task_list.end(); ++it)
+  while ((it=m_task_queue.begin()) != m_task_queue.end())
   {
+    lk.unlock();
     (*it)();
+    lk.lock();
+    if (!m_task_queue.empty())
+    {
+      m_task_queue.pop_front();
+    }
   }
-  clearTasks();
-} /* Application::taskTimerExpired */
+  m_task_timer->setEnable(false);
+} /* Application::processTaskQueue */
 
+
+void Application::handleTaskWatch(Async::FdWatch* w)
+{
+  char buf[256];
+  ssize_t cnt = read(w->fd(), buf, sizeof(buf));
+  if (cnt == -1)
+  {
+    std::cerr << "*** ERROR: Could not read pipe in "
+                 "Async::Application::handleTaskWatch: "
+              << std::strerror(errno) << std::endl;
+    abort();
+  }
+  processTaskQueue();
+} /* Application::handleTaskWatch */
+
+
+void Application::clearTasks(void)
+{
+  std::lock_guard<std::mutex> lk(m_task_mu);
+  m_task_queue.clear();
+  m_task_timer->setEnable(false);
+  m_task_rd_watch->setEnabled(false);
+} /* Application::clearTasks */
 
 
 /*

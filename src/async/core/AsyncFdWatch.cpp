@@ -119,10 +119,10 @@ FdWatch::FdWatch(void)
 } /* FdWatch::FdWatch */
 
 
-FdWatch::FdWatch(int fd, FdWatchType type)
-  : m_fd(fd), m_type(type), m_enabled(true)
+FdWatch::FdWatch(int fd, FdWatchType type, bool enabled)
+  : m_fd(fd), m_type(type), m_enabled(false)
 {
-  Application::app().addFdWatch(this);
+  setEnabled(enabled);
 } /* FdWatch::FdWatch */
 
 

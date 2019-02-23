@@ -9,7 +9,7 @@ file descriptor, a signal is emitted.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2019 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -135,18 +135,19 @@ class FdWatch : public sigc::trackable
      * filedescriptor to watch and the type of watch.
      */
     FdWatch(void);
-    
+
     /**
      * @brief Constructor
      *
      * Add the given file descriptor to the watch list and watch it for
      * incoming data (FD_WATCH_RD) or write buffer space available
      * (FD_WATCH_WR).
-     * @param fd    The file descriptor to watch
-     * @param type  The type of watch to create (see @ref FdWatchType)
+     * @param fd        The file descriptor to watch
+     * @param type      The type of watch to create (see @ref FdWatchType)
+     * @param enabled   Decide whether the watch should start as enabled or not
      */
-    FdWatch(int fd, FdWatchType type);
-    
+    FdWatch(int fd, FdWatchType type, bool enabled=true);
+
     /**
      * @brief Destructor
      */
