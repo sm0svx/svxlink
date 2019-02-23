@@ -1,6 +1,6 @@
 /**
 @file   AsyncThreadSigCSignal.h
-@brief  A_brief_description_for_this_file
+@brief  A threadsafe SigC signal
 @author Tobias Blomberg / SM0SVX
 @date   2019-02-02
 
@@ -39,12 +39,6 @@ An example of how to use the Async::ThreadSigCSignal class
  *
  ****************************************************************************/
 
-#include <unistd.h>
-#include <iostream>
-#include <cassert>
-#include <cstring>
-#include <mutex>
-#include <list>
 #include <sigc++/sigc++.h>
 
 
@@ -54,7 +48,7 @@ An example of how to use the Async::ThreadSigCSignal class
  *
  ****************************************************************************/
 
-#include <AsyncFdWatch.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -114,11 +108,19 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief  A_brief_class_description
+@brief  A threadsafe SigC signal
 @author Tobias Blomberg / SM0SVX
 @date   2019-02-02
 
-A_detailed_class_description
+This class is implemented as close as possible to mimic a sigc::signal but with
+thread safety in mind. When the signal is emitted, instead of calling it
+directly, it will be added to a queue. The queue is then processed from the
+Async main thread in a safe manner so that all connected slots are called from
+the main thread.
+
+If the signal is emitted from the main Async thread it will still be queued so
+this may be used if a signal emission need to be delayed so that is is called
+from the main Async loop.
 
 \include AsyncThreadSigCSignal_demo.cpp
 */
@@ -133,71 +135,100 @@ class ThreadSigCSignal
     typedef typename signal_type::iterator          iterator;
     typedef typename signal_type::const_iterator    const_iterator;
 
-    ThreadSigCSignal(void)
-    {
-      int pipefd[2];
-      if (pipe(pipefd) == -1)
-      {
-        std::cerr << "*** ERROR: Could not create pipe in "
-                     "ThreadSigCSignal: "
-                  << strerror(errno) << std::endl;
-        abort();
-      }
-      m_rd_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-      m_rd_watch->activity.connect(
-          sigc::mem_fun(this, &ThreadSigCSignal::processQueue));
-      m_wr_pipe = pipefd[1];
-    }
+    /**
+     * @brief   Default constructor
+     */
+    ThreadSigCSignal(void) {}
 
+    /**
+     * @brief   The copy constructor is deleted
+     */
     ThreadSigCSignal(const ThreadSigCSignal&) = delete;
 
-    ~ThreadSigCSignal()
-    {
-      m_rd_watch->setEnabled(false);
-      close(m_rd_watch->fd());
-      delete m_rd_watch;
-      m_rd_watch = 0;
-      close(m_wr_pipe);
-      m_wr_pipe = -1;
-    }
-
+    /**
+     * @brief   The assignment operator is deleted
+     */
     ThreadSigCSignal& operator=(const ThreadSigCSignal&) = delete;
 
     /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
+     * @brief   Connect this signal to the given slot
+     * @param   slt The slot to connect to
+     * @return  Returns a sigc::connection object
      */
     iterator connect(const slot_type& slt)
     {
       return m_sig.connect(slt);
     }
 
+    /**
+     * @brief   Queue the emission of this signal
+     * @param   arg Zero or more arguments depending on the signal declaration
+     * @return  Always return the default value of the specified return type
+     *
+     * This function will add a signal emission to the emission queue. Since
+     * the emission is delayed there is no way of returning the return value
+     * from the slot(s). This function will instead return the default value of
+     * the specified return type.
+     */
     result_type emit(Args... args)
     {
       return queueSignal(false, args...);
     }
 
+    /**
+     * @brief   Queue the emission of this signal in reverse order
+     * @param   arg Zero or more arguments depending on the signal declaration
+     * @return  Always return the default value of the specified return type
+     *
+     * This function will add a signal emission to the emission queue. Since
+     * the emission is delayed there is no way of returning the return value
+     * from the slot(s). This function will instead return the default value of
+     * the specified return type.
+     * The connected slots will be called in the reverse order in comparison to
+     * the order they were added.
+     */
     result_type emit_reverse(Args... args)
     {
       return queueSignal(true, args...);
     }
 
+    /**
+     * @brief   Queue the emission of this signal
+     * @param   arg Zero or more arguments depending on the signal declaration
+     * @return  Always return the default value of the specified return type
+     *
+     * This function will add a signal emission to the emission queue. Since
+     * the emission is delayed there is no way of returning the return value
+     * from the slot(s). This function will instead return the default value of
+     * the specified return type.
+     */
     result_type operator()(Args... args)
     {
       return queueSignal(false, args...);
     }
 
+    /**
+     * @brief   Return a slot that emits this signal
+     * @return  A new slot is returned
+     */
     slot_type make_slot(void)
     {
       return sigc::mem_fun(*this, &ThreadSigCSignal::emit);
     }
 
+    /**
+     * @brief   Return a list of the connected slots
+     * @return  The slot list is returned
+     */
     slot_list_type slots(void)
     {
       return m_sig.slots();
     }
 
+    /**
+     * @brief   Return a list of the connected slots
+     * @return  The slot list is returned
+     */
     const slot_list_type slots(void) const
     {
       return m_sig.slots();
@@ -205,54 +236,20 @@ class ThreadSigCSignal
 
   private:
     sigc::signal<T_ret, Args...>  m_sig;
-    std::list<sigc::slot<void>>   m_queue;
-    std::mutex                    m_queue_mu;
-    Async::FdWatch*               m_rd_watch = 0;
-    int                           m_wr_pipe = -1;
 
     result_type queueSignal(bool reverse, Args... args)
     {
+      if (reverse)
       {
-        std::lock_guard<std::mutex> lk(m_queue_mu);
-        if (reverse)
-        {
-          m_queue.push_back(sigc::bind(
-                sigc::mem_fun(m_sig, &signal_type::emit_reverse), args...));
-        }
-        else
-        {
-          m_queue.push_back(sigc::bind(
-                sigc::mem_fun(m_sig, &signal_type::emit), args...));
-        }
+        Application::app().runTask(sigc::bind(
+              sigc::mem_fun(m_sig, &signal_type::emit_reverse), args...));
       }
-      if (write(m_wr_pipe, "", 1) == -1)
+      else
       {
-        std::cerr << "*** ERROR: Could not write to pipe in "
-                     "Async::ThreadsafeSigCConnector: "
-                  << std::strerror(errno) << std::endl;
-        abort();
+        Application::app().runTask(sigc::bind(
+              sigc::mem_fun(m_sig, &signal_type::emit), args...));
       }
       return result_type();
-    }
-
-    void processQueue(FdWatch *w)
-    {
-      char buf[256];
-      ssize_t cnt = read(w->fd(), buf, sizeof(buf));
-      if (cnt == -1)
-      {
-        std::cerr << "*** ERROR: Could not read pipe in "
-                     "ThreadSigCSignal::processQueue: "
-                  << std::strerror(errno) << std::endl;
-        abort();
-      }
-      std::lock_guard<std::mutex> lk(m_queue_mu);
-      assert(static_cast<ssize_t>(m_queue.size()) >= cnt);
-      for (ssize_t i=0; i<cnt; ++i)
-      {
-        m_queue.front()();
-        m_queue.pop_front();
-      }
     }
 };  /* class ThreadSigCSignal */
 
@@ -260,7 +257,6 @@ class ThreadSigCSignal
 } /* namespace */
 
 #endif /* ASYNC_THREAD_SIGC_SIGNAL_INCLUDED */
-
 
 /*
  * This file has not been truncated
