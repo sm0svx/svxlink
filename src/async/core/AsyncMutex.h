@@ -81,7 +81,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class FdWatch;
 
 
 /****************************************************************************
@@ -200,14 +199,12 @@ class Mutex
     static std::mutex               mu;
     static std::condition_variable  lock_available_cond;
     static std::condition_variable  no_locks_waiting_cond;
-    static int                      pipe_wr;
-    static Async::FdWatch*          rd_watch;
     static std::thread::id          main_thread;
     static std::thread::id          lock_owner;
-    static size_t                   instance_cnt;
     static size_t                   lock_wait_cnt;
+    static bool                     lock_handler_pending;
 
-    static void lockHandler(FdWatch *w);
+    static void lockHandler(void);
     static void mainThreadDone(void);
 
 };  /* class Mutex */
