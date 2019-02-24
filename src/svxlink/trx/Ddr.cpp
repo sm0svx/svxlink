@@ -58,7 +58,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 #include <AsyncTcpClient.h>
-#include <AsyncThreadSigCAsyncConnector.h>
 #include <AsyncAudioThreadSource.h>
 #include <AsyncThreadSigCSignal.h>
 
