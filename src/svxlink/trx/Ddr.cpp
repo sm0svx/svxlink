@@ -127,7 +127,7 @@ namespace {
         this->taps = taps;
 
         delete [] p_Z;
-        p_Z = new T[taps]{0};
+        p_Z = new T[taps]();
       }
 
       void setGain(double gain_adjust)
