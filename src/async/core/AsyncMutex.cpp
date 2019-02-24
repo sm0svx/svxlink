@@ -196,7 +196,7 @@ void Mutex::lockHandler(void)
 {
   std::unique_lock<std::mutex> lk(mu);
   assert(lock_owner == main_thread);
-  if (lock_wait_cnt > 0)
+  while (lock_wait_cnt > 0)
   {
     lock_owner = std::thread::id();
     lk.unlock();
