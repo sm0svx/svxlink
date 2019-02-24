@@ -49,6 +49,7 @@ An example of how to use the Async::ThreadSigCSignal class
  ****************************************************************************/
 
 #include <AsyncApplication.h>
+#include <AsyncMutex.h>
 
 
 /****************************************************************************
@@ -118,9 +119,19 @@ directly, it will be added to a queue. The queue is then processed from the
 Async main thread in a safe manner so that all connected slots are called from
 the main thread.
 
+There also is a synchrorous mode where the queue is not used and the connected
+slot is called directly after grabbing an Async::Mutex lock. The negative side
+of using synchronous mode is that all threads wanting to grab an Async::Mutex
+will block until the signal emission processing have finished. It probably is
+best to not use synchronous mode in most cases. One case where synchronouns
+mode have to be used is if the return value of the connected slot(s) is
+important since the non-synchronous mode cannot provide the signal emitter with
+the return value from the connected slot(s).
+
 If the signal is emitted from the main Async thread it will still be queued so
-this may be used if a signal emission need to be delayed so that is is called
-from the main Async loop.
+this may be used if a signal emission need to be delayed so that it is called
+from the main Async loop. Note that if synchronous mode has been activated the
+queue will not be used and the signal will behave like a normal sigc::signal.
 
 \include AsyncThreadSigCSignal_demo.cpp
 */
@@ -135,10 +146,18 @@ class ThreadSigCSignal
     typedef typename signal_type::iterator          iterator;
     typedef typename signal_type::const_iterator    const_iterator;
 
+    enum Mode { NON_SYNCHRONOUS, SYNCHRONOUS };
+
     /**
-     * @brief   Default constructor
+     * @brief   Constructor
+     * @param   mode Choose mode of operation
+     *
+     * If SYNCHRONOUS mode is set, when the signal is emitted it will not be
+     * queued but rather the connected slot will be called directly after
+     * grabbing an Async::Mutex lock. THe default is non-synchronous mode
+     * where the signal emission is queued.
      */
-    ThreadSigCSignal(void) {}
+    ThreadSigCSignal(Mode mode=NON_SYNCHRONOUS) : m_mode(mode) {}
 
     /**
      * @brief   The copy constructor is deleted
@@ -172,7 +191,7 @@ class ThreadSigCSignal
      */
     result_type emit(Args... args)
     {
-      return queueSignal(false, args...);
+      return handleSignal(args...);
     }
 
     /**
@@ -189,7 +208,7 @@ class ThreadSigCSignal
      */
     result_type emit_reverse(Args... args)
     {
-      return queueSignal(true, args...);
+      return handleReverseSignal(args...);
     }
 
     /**
@@ -204,7 +223,7 @@ class ThreadSigCSignal
      */
     result_type operator()(Args... args)
     {
-      return queueSignal(false, args...);
+      return handleSignal(args...);
     }
 
     /**
@@ -236,18 +255,35 @@ class ThreadSigCSignal
 
   private:
     sigc::signal<T_ret, Args...>  m_sig;
+    const Mode                    m_mode;
+    Async::Mutex                  m_mu;
 
-    result_type queueSignal(bool reverse, Args... args)
+    result_type handleSignal(Args... args)
     {
-      if (reverse)
+      if (m_mode == SYNCHRONOUS)
       {
-        Application::app().runTask(sigc::bind(
-              sigc::mem_fun(m_sig, &signal_type::emit_reverse), args...));
+        std::lock_guard<Async::Mutex> lk(m_mu);
+        return m_sig.emit(args...);
       }
       else
       {
         Application::app().runTask(sigc::bind(
               sigc::mem_fun(m_sig, &signal_type::emit), args...));
+      }
+      return result_type();
+    }
+
+    result_type handleReverseSignal(Args... args)
+    {
+      if (m_mode == SYNCHRONOUS)
+      {
+        std::lock_guard<Async::Mutex> lk(m_mu);
+        return m_sig.emit_reverse(args...);
+      }
+      else
+      {
+        Application::app().runTask(sigc::bind(
+              sigc::mem_fun(m_sig, &signal_type::emit_reverse), args...));
       }
       return result_type();
     }
