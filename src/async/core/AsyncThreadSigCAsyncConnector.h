@@ -39,12 +39,10 @@ An example of how to use the Async::ThreadSigCAsyncConnector class
  *
  ****************************************************************************/
 
-#include <unistd.h>
 #include <iostream>
 #include <cassert>
-#include <cstring>
 #include <mutex>
-#include <list>
+#include <deque>
 #include <sigc++/sigc++.h>
 
 
@@ -54,7 +52,7 @@ An example of how to use the Async::ThreadSigCAsyncConnector class
  *
  ****************************************************************************/
 
-#include <AsyncFdWatch.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -130,41 +128,20 @@ class ThreadSigCAsyncConnector
      * @brief   Constructor
      * @param   sig The signal to connect
      * @param   slt The slot to connect the signal to
+     * @param   synchronous Set to \em true to call the signal directly
      */
     ThreadSigCAsyncConnector(sigc::signal<void, Args...>& sig,
-                            const sigc::slot<void, Args...>& slt)
-      : m_slt(slt)
+                             const sigc::slot<void, Args...>& slt,
+                             bool synchronous=false)
+      : m_slt(slt), m_synchronous(synchronous)
     {
-      //std::cout << "ThreadSigCAsyncConnector" << std::endl;
       assert(!m_slt.empty());
       sig.connect(sigc::mem_fun(*this, &ThreadSigCAsyncConnector::sigHandler));
-
-      int pipefd[2];
-      if (pipe(pipefd) == -1)
-      {
-        std::cerr << "*** ERROR: Could not create pipe in "
-                     "ThreadSigCAsyncConnector: "
-                  << strerror(errno) << std::endl;
-        abort();
-      }
-      m_rd_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-      m_rd_watch->activity.connect(
-          sigc::mem_fun(this, &ThreadSigCAsyncConnector::processQueue));
-      m_wr_pipe = pipefd[1];
     }
 
     ThreadSigCAsyncConnector(const ThreadSigCAsyncConnector&) = delete;
 
-    ~ThreadSigCAsyncConnector()
-    {
-      //std::cout << "~ThreadSigCAsyncConnector" << std::endl;
-      m_rd_watch->setEnabled(false);
-      close(m_rd_watch->fd());
-      delete m_rd_watch;
-      m_rd_watch = 0;
-      close(m_wr_pipe);
-      m_wr_pipe = -1;
-    }
+    ~ThreadSigCAsyncConnector(void) {}
 
     ThreadSigCAsyncConnector& operator=(const ThreadSigCAsyncConnector&) = delete;
 
@@ -175,42 +152,26 @@ class ThreadSigCAsyncConnector
      */
 
   private:
-    sigc::slot<void, Args...>   m_slt;
-    std::list<sigc::slot<void>> m_queue;
-    std::mutex                  m_queue_mu;
-    Async::FdWatch*             m_rd_watch = 0;
-    int                         m_wr_pipe = -1;
+    sigc::slot<void, Args...>     m_slt;
+    std::deque<sigc::slot<void>>  m_queue;
+    std::mutex                    m_queue_mu;
+    bool                          m_synchronous = false;
 
     void sigHandler(Args... args)
     {
       std::lock_guard<std::mutex> lk(m_queue_mu);
-      //std::cout << "ThreadsafeSigCConnection::asyncSigHandler" << std::endl;
       m_queue.push_back(sigc::bind(m_slt, args...));
-      if (write(m_wr_pipe, "", 1) == -1)
-      {
-        std::cerr << "*** ERROR: Could not write to pipe in "
-                     "Async::ThreadsafeSigCConnector: "
-                  << std::strerror(errno) << std::endl;
-        abort();
-      }
+      Application::app().runTask(sigc::mem_fun(*this, &ThreadSigCAsyncConnector::processQueue));
     }
 
-    void processQueue(FdWatch *w)
+    void processQueue(void)
     {
-      char buf[256];
-      ssize_t cnt = read(w->fd(), buf, sizeof(buf));
-      if (cnt == -1)
+      std::unique_lock<std::mutex> lk(m_queue_mu);
+      while (!m_queue.empty())
       {
-        std::cerr << "*** ERROR: Could not read pipe in "
-                     "ThreadSigCAsyncConnector::processQueue: "
-                  << std::strerror(errno) << std::endl;
-        abort();
-      }
-      std::lock_guard<std::mutex> lk(m_queue_mu);
-      assert(static_cast<ssize_t>(m_queue.size()) >= cnt);
-      for (ssize_t i=0; i<cnt; ++i)
-      {
+        lk.unlock();
         m_queue.front()();
+        lk.lock();
         m_queue.pop_front();
       }
     }

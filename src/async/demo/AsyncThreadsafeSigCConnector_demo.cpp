@@ -7,6 +7,7 @@
 #include <AsyncTimer.h>
 #include <AsyncThreadsafeSigCConnector.h>
 #include <AsyncThreadSigCAsyncConnector.h>
+#include <AsyncThreadSigCSignal.h>
 
 std::atomic<bool> done(false);
 
@@ -26,9 +27,15 @@ struct MyThread
 
 struct MyHandler : public sigc::trackable
 {
+  std::string m_name;
+  MyHandler(const std::string& name) : m_name(name) {}
   void mySlot(int n)
   {
-    std::cout << "MyHandler::mySlot: " << n << std::endl;
+    std::cout << "MyHandler::mySlot[" << m_name << "]: ";
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::cout << n;
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::cout << std::endl;
   }
 };
 
@@ -53,12 +60,13 @@ int main(void)
     // Create a thread and handler object then connect a signal from the thread
     // object to a member function in the handler object
   MyThread my_thread;
-  MyHandler h;
-  Async::ThreadsafeSigCConnector<void, int> con(
-      my_thread.sig, sigc::mem_fun(h, &MyHandler::mySlot));
-  MyHandler h2;
-  Async::ThreadSigCAsyncConnector<int> async_con(
-      my_thread.sig, sigc::mem_fun(h, &MyHandler::mySlot));
+  MyHandler h1("h1");
+  Async::ThreadsafeSigCConnector<void, int> con1(
+      my_thread.sig, sigc::mem_fun(h1, &MyHandler::mySlot));
+
+  MyHandler h2("h2");
+  Async::ThreadSigCAsyncConnector<int> async_con2(
+      my_thread.sig, sigc::mem_fun(h2, &MyHandler::mySlot));
 
     // Create an Async::Timer which show that the main thread is alive
   Async::Timer tmo(1000, Async::Timer::TYPE_PERIODIC);
