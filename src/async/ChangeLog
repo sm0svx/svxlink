@@ -6,6 +6,20 @@
 * Add method Async::Config::listSections() making it possible to list all
   configuration sections.
 
+* A C++11 compatible compiler is now required.
+
+* The Async::Application::runTask() framework is now threadsafe.
+
+* New class Async::AudioThreadSource, a threadsafe audio source.
+
+* Now possible to create an Async::FdWatch in disabled state.
+
+* New class Async::Mutex, a mutex for synchronizing execution between the main
+  Async thread and other threads.
+
+* New class Async::ThreadSigCSignal, a threadsafe variant of the sigc::signal
+  class.
+
 
 
  1.5.0 -- 30 Dec 2017

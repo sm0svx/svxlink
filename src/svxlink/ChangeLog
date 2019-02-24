@@ -106,6 +106,12 @@
 
 * Now possible to set audio codec parameters for ReflectorLogic.
 
+* A C++11 compatible compiler is now required.
+
+* Each DDR (e.g RTL-SDR dongle digital receiver) now run in its own thread
+  which makes it possible to run multiple receivers on a Raspberry Pi for
+  example.
+
 
 
  1.6.1 -- 01 Mar 2018
