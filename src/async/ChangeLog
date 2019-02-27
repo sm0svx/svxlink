@@ -1,10 +1,12 @@
- 1.6.0 -- ?? ??? 2018
+ 1.6.0 -- ?? ??? 2019
 ----------------------
 
 * New class Async::AudioFsf, an implementation of a frequency sampling filter.
 
 * Add method Async::Config::listSections() making it possible to list all
   configuration sections.
+
+* Small optimization in the Async::CppApplication main loop.
 
 * A C++11 compatible compiler is now required.
 
