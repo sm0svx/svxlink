@@ -160,41 +160,23 @@ class SipLogic : public LogicBase
 
 
   private:
-
-    std::string               m_username;
-    std::string               m_password;
     std::string               m_sipserver;
-    std::string               m_sipextension;
-    std::string               m_schema;
     Async::AudioPassthrough*  m_logic_con_in;
     Async::AudioSource*       m_logic_con_out;
     Async::AudioPassthrough*  m_out_src;
     Async::AudioValve*        m_outto_sip;
     Async::AudioValve*        m_infrom_sip;
     Async::AudioReader*       m_ar;
-    uint16_t                  m_siploglevel;
     bool                      m_autoanswer;
-    std::string               m_autoconnect;
     uint16_t                  m_sip_port;
-    pj::Endpoint              ep;
     sip::_Account             *acc;
     std::vector<sip::_Call *> calls;
-    Async::Timer              m_heartbeat_timer;
-    Async::Timer              m_flush_timeout_timer;
-    uint16_t                  m_reg_timeout;
-    std::string               m_callername;
-
-    Async::Timer              m_reconnect_timer;
-    struct timeval            m_last_talker_timestamp;
     Async::Pty                *dtmf_ctrl_pty;
-    uint16_t                  m_calltimeout;
-    sip::_AudioMedia          *sip_buf;
+    pj::AudioMedia            *sip_buf;
     Async::Timer              m_call_timeout_timer;
     sip::_AudioMedia          *media;
-    bool                      m_semiduplex;
     Squelch   	      	      *squelch_det;
-    unsigned                  sql_hangtime;
-
+    pj::Endpoint ep;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);

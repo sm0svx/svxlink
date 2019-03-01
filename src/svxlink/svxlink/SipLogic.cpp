@@ -262,15 +262,11 @@ namespace sip {
 
 SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_outto_sip(0), m_infrom_sip(0), m_siploglevel(0),
-    m_autoanswer(false), m_autoconnect(""), m_sip_port(5060),
-    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
-    m_reg_timeout(300), m_callername("SvxLink"), dtmf_ctrl_pty(0),
-    m_calltimeout(45), m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
-    m_semiduplex(false), squelch_det(0)
+    m_outto_sip(0), m_infrom_sip(0), m_autoanswer(false),
+    m_sip_port(5060), dtmf_ctrl_pty(0),
+    m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
+    squelch_det(0)
 {
-  m_flush_timeout_timer.expired.connect(
-      mem_fun(*this, &SipLogic::flushTimeout));
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
 } /* SipLogic::SipLogic */
@@ -280,8 +276,6 @@ SipLogic::~SipLogic(void)
 {
   delete m_logic_con_in;
   m_logic_con_in = 0;
- // delete m_logic_con_out;
- // m_logic_con_out = 0;
   delete m_out_src;
   m_out_src = 0;
   delete acc;
@@ -298,12 +292,12 @@ SipLogic::~SipLogic(void)
     calls.erase(it);
     *it = 0;
   }
-  ep.libDestroy();
 } /* SipLogic::~SipLogic */
 
 
 bool SipLogic::initialize(void)
 {
+  std::string m_username;
   if (!cfg().getValue(name(), "USERNAME", m_username))
   {
     cerr << "*** ERROR: " << name() << "/USERNAME missing in configuration"
@@ -311,6 +305,7 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+  std::string m_password;
   if (!cfg().getValue(name(), "PASSWORD", m_password))
   {
     cerr << "*** ERROR: " << name() << "/PASSWORD missing in configuration"
@@ -325,6 +320,7 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+  std::string m_sipextension;
   if (!cfg().getValue(name(), "SIPEXTENSION", m_sipextension))
   {
     cerr << "*** ERROR: " << name() << "/SIPEXTENSION missing in configuration"
@@ -332,6 +328,7 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+  std::string m_schema;
   if (!cfg().getValue(name(), "SIPSCHEMA", m_schema))
   {
     cerr << "*** ERROR: " << name() << "/SIPSCHEMA missing in configuration"
@@ -360,38 +357,51 @@ bool SipLogic::initialize(void)
   }
 
   cfg().getValue(name(), "AUTOANSWER", m_autoanswer); // auto pickup the call
+
+  bool m_semiduplex = false;
   cfg().getValue(name(), "SEMI_DUPLEX", m_semiduplex); // only for RepeaterLogics
+
+  std::string  m_autoconnect = "";
   cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto connect a number
+
+  std::string m_callername("SvxLink");
   cfg().getValue(name(), "CALLERNAME", m_callername);
+
+  uint16_t  m_siploglevel = 3;
   cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-6
   if (m_siploglevel < 0 || m_siploglevel > 6) m_siploglevel = 3;
 
   cfg().getValue(name(), "SIPPORT", m_sip_port); // SIP udp-port default: 5060
+
+  uint16_t m_reg_timeout = 300;
   cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
   if (m_reg_timeout < 60 || m_reg_timeout > 1000) m_reg_timeout = 300;
 
+  uint16_t m_calltimeout = 45;
   cfg().getValue(name(), "CALL_TIMEOUT", m_calltimeout);
   if (m_calltimeout < 5 || m_calltimeout > 100) m_calltimeout = 45;
   m_call_timeout_timer.setTimeout(m_calltimeout * 1000);
 
+ // pj::Endpoint ep;
+
    // create SipEndpoint - init library
   try {
-    ep.libCreate();
     pj::EpConfig ep_cfg;
     ep_cfg.logConfig.level = m_siploglevel; // set the debug level of pj
     pj_log_set_level(m_siploglevel);
+    ep.libCreate();
     ep.libInit(ep_cfg);
     ep.audDevManager().setNullDev(); // do not init a hw audio device
-
-    // Sip transport layer creation
-    TransportConfig tcfg;
-    tcfg.port = m_sip_port;
-    ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
-    ep.libStart();
   } catch (Error& err) {
     cout << "*** ERROR creating Sip transport layer." << endl;
     return false;
   }
+
+  // Sip transport layer creation
+  TransportConfig tcfg;
+  tcfg.port = m_sip_port;
+  ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+  ep.libStart();
 
    // add SipAccount
   AccountConfig acc_cfg;
@@ -405,7 +415,6 @@ bool SipLogic::initialize(void)
   acc_cfg.regConfig.registrarUri = "sip:";
   acc_cfg.regConfig.registrarUri += m_sipregistrar;
   acc_cfg.regConfig.timeoutSec = m_reg_timeout;
-
   acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo(
                       m_schema, "*", m_username, 0, m_password));
 
@@ -457,6 +466,8 @@ bool SipLogic::initialize(void)
   m_infrom_sip->setOpen(false);
   prev_src->registerSink(m_infrom_sip, true);
   prev_src = m_infrom_sip;
+
+  unsigned sql_hangtime = 1200;
 
   if (!m_semiduplex)
   {
@@ -589,11 +600,13 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
   {
     if (ci.media[0].type == PJMEDIA_TYPE_AUDIO)
     {
-      sip_buf = static_cast<sip::_AudioMedia *>(call->getMedia(0));
-      sip_buf->startTransmit(*media);
-      media->startTransmit(*sip_buf);
-      m_infrom_sip->setOpen(true);
-      m_outto_sip->setOpen(true);
+      if (call->hasMedia() && call->getMedia(0) != NULL) {
+        sip_buf = static_cast<pj::AudioMedia *>(call->getMedia(0));
+        sip_buf->startTransmit(*media);
+        media->startTransmit(*sip_buf);
+        m_infrom_sip->setOpen(true);
+        m_outto_sip->setOpen(true);
+      }
     }
   }
   else if (ci.media[0].status == PJSUA_CALL_MEDIA_NONE)
@@ -743,7 +756,7 @@ void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
-  std::cout << "+++ " << m_sipserver << ":" << m_sip_port
+  std::cout << "+++ " << m_sipserver
     << (ai.regIsActive ? " " : " un") << "registered, code="
     << prm.code << std::endl;
 } /* SipLogic::onRegState */
@@ -825,7 +838,6 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 
 void SipLogic::flushAudio(void)
 {
-  m_flush_timeout_timer.setEnable(true);
 } /* SipLogic::flushAudio */
 
 
@@ -844,7 +856,6 @@ void SipLogic::callTimeout(Async::Timer *t)
 
 void SipLogic::flushTimeout(Async::Timer *t)
 {
-  m_flush_timeout_timer.setEnable(false);
   m_out_src->allSamplesFlushed();
 } /* SipLogic::flushTimeout */
 
