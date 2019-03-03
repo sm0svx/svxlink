@@ -265,13 +265,16 @@ void SquelchHidraw::hidrawActivity(FdWatch *watch)
     return;
   }
 
-  if (!signalDetected() && (buf[0] & pin))
+  bool pin_state = (buf[0] & pin);
+  if (active_low) pin_state = !pin_state;
+
+  if (!signalDetected() && pin_state)
   {
-    setSignalDetected(active_low ^ true);
+    setSignalDetected(true);
   }
-  else if (signalDetected() && !(buf[0] & pin))
+  else if (signalDetected() && !pin_state)
   {
-    setSignalDetected(active_low ^ false);
+    setSignalDetected(false);
   }
 } /* SquelchHidraw::hidrawActivity */
 
