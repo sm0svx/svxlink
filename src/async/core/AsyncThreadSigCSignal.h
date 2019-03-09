@@ -50,6 +50,7 @@ An example of how to use the Async::ThreadSigCSignal class
 
 #include <AsyncApplication.h>
 #include <AsyncMutex.h>
+#include <AsyncTaskRunner.h>
 
 
 /****************************************************************************
@@ -165,6 +166,16 @@ class ThreadSigCSignal
     ThreadSigCSignal(const ThreadSigCSignal&) = delete;
 
     /**
+     * @brief   Destructor
+     */
+    ~ThreadSigCSignal(void)
+    {
+      m_runner.cancel();
+      std::lock_guard<Async::Mutex> lk(m_mu);
+      m_sig.clear();
+    }
+
+    /**
      * @brief   The assignment operator is deleted
      */
     ThreadSigCSignal& operator=(const ThreadSigCSignal&) = delete;
@@ -189,9 +200,10 @@ class ThreadSigCSignal
      * from the slot(s). This function will instead return the default value of
      * the specified return type.
      */
-    result_type emit(Args... args)
+    template <typename... T>
+    result_type emit(T&&... args)
     {
-      return handleSignal(args...);
+      return handleSignal(std::forward<T>(args)...);
     }
 
     /**
@@ -206,9 +218,10 @@ class ThreadSigCSignal
      * The connected slots will be called in the reverse order in comparison to
      * the order they were added.
      */
-    result_type emit_reverse(Args... args)
+    template <typename... T>
+    result_type emit_reverse(T&&... args)
     {
-      return handleReverseSignal(args...);
+      return handleReverseSignal(std::forward<T>(args)...);
     }
 
     /**
@@ -221,9 +234,10 @@ class ThreadSigCSignal
      * from the slot(s). This function will instead return the default value of
      * the specified return type.
      */
-    result_type operator()(Args... args)
+    template <typename... T>
+    result_type operator()(T&&... args)
     {
-      return handleSignal(args...);
+      return handleSignal(std::forward<T>(args)...);
     }
 
     /**
@@ -232,7 +246,7 @@ class ThreadSigCSignal
      */
     slot_type make_slot(void)
     {
-      return sigc::mem_fun(*this, &ThreadSigCSignal::emit);
+      return sigc::mem_fun(*this, &ThreadSigCSignal::handleSignal<Args...>);
     }
 
     /**
@@ -254,36 +268,37 @@ class ThreadSigCSignal
     }
 
   private:
-    sigc::signal<T_ret, Args...>  m_sig;
-    const Mode                    m_mode;
-    Async::Mutex                  m_mu;
+    sigc::signal<T_ret, Args...>    m_sig;
+    const Mode                      m_mode;
+    Async::Mutex                    m_mu;
+    Async::TaskRunner               m_runner;
 
-    result_type handleSignal(Args... args)
+    template <typename... T>
+    result_type handleSignal(T&&... args)
     {
       if (m_mode == SYNCHRONOUS)
       {
         std::lock_guard<Async::Mutex> lk(m_mu);
-        return m_sig.emit(args...);
+        return m_sig.emit(std::forward<T>(args)...);
       }
       else
       {
-        Application::app().runTask(sigc::bind(
-              sigc::mem_fun(m_sig, &signal_type::emit), args...));
+        m_runner(&signal_type::emit, &m_sig, std::forward<T>(args)...);
       }
       return result_type();
     }
 
-    result_type handleReverseSignal(Args... args)
+    template <typename... T>
+    result_type handleReverseSignal(T&&... args)
     {
       if (m_mode == SYNCHRONOUS)
       {
         std::lock_guard<Async::Mutex> lk(m_mu);
-        return m_sig.emit_reverse(args...);
+        return m_sig.emit_reverse(std::forward<T>(args)...);
       }
       else
       {
-        Application::app().runTask(sigc::bind(
-              sigc::mem_fun(m_sig, &signal_type::emit_reverse), args...));
+        m_runner(&signal_type::emit_reverse, &m_sig, std::forward<T>(args)...);
       }
       return result_type();
     }
