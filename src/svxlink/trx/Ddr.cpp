@@ -1113,7 +1113,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 
     bool isEnabled(void) const { return m_enabled; }
 
-    ThreadSigCSignal<void, const std::vector<RtlTcp::Sample>> preDemod;
+    ThreadSigCSignal<void, const std::vector<RtlTcp::Sample>&> preDemod;
 
   private:
     const std::string               m_name;
