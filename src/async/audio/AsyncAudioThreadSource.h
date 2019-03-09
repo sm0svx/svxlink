@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncApplication.h>
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
+#include <AsyncTaskRunner.h>
 
 
 /****************************************************************************
@@ -115,6 +116,11 @@ namespace Async
 This is a base class for writing threadsafe audio source classes. This is of
 use when the audio source is running in a separate thread, not in the Async
 main thread.
+
+Note that all administrative functions like connecting and disconnecting sinks
+must be executed from the main Async thread. The same goes for destroying an
+object. It is only the functions sinkWriteSamples and sinkFlushSamples that are
+threadsafe.
 */
 class AudioThreadSource : public Async::AudioSource
 {
@@ -132,7 +138,10 @@ class AudioThreadSource : public Async::AudioSource
     /**
      * @brief   Destructor
      */
-    //~AudioThreadSource(void) {}
+    virtual ~AudioThreadSource(void)
+    {
+      assert(std::this_thread::get_id() == Async::Application::app().threadId());
+    }
 
     /*
      * @brief   No assignment operator
@@ -155,9 +164,12 @@ class AudioThreadSource : public Async::AudioSource
         std::lock_guard<std::mutex> lk(m_in_buf_mu);
         m_flush = false;
         m_in_buf.insert(m_in_buf.end(), samples, samples+count);
+        if (!m_pending_processing)
+        {
+          m_pending_processing = true;
+          m_runner(&AudioThreadSource::resumeOutput, this);
+        }
       }
-      Async::Application::app().runTask(
-          sigc::mem_fun(*this, &AudioThreadSource::resumeOutput));
       return count;
     }
 
@@ -173,11 +185,21 @@ class AudioThreadSource : public Async::AudioSource
       {
         std::lock_guard<std::mutex> lk(m_in_buf_mu);
         m_flush = true;
+        if (!m_pending_processing)
+        {
+          m_pending_processing = true;
+          m_runner(&AudioThreadSource::resumeOutput, this);
+        }
       }
-      Async::Application::app().runTask(
-          sigc::mem_fun(*this, &AudioThreadSource::resumeOutput));
     }
 
+    /**
+     * @brief   Block execution until all samples have been flushed
+     *
+     * This function can be used to wait until the sink has flushed all sampled
+     * written to it. Note that calling this function must be preceeded by a
+     * call to sinkFlushSamples or it will block forever.
+     */
     void waitForAllSamplesFlushed(void)
     {
       std::unique_lock<std::mutex> lk(m_all_flushed_mu);
@@ -193,6 +215,8 @@ class AudioThreadSource : public Async::AudioSource
     bool                          m_all_flushed = true;
     std::mutex                    m_all_flushed_mu;
     std::condition_variable_any   m_all_flushed_cond;
+    bool                          m_pending_processing = false;
+    Async::TaskRunner             m_runner;
 
     /**
      * @brief Resume audio output to the sink
@@ -201,12 +225,13 @@ class AudioThreadSource : public Async::AudioSource
      * to accept more samples. It is also called when more samples have been
      * written to the queue or if the sinkFlushSamples function is called.
      */
-    virtual void resumeOutput(void)
+    void resumeOutput(void)
     {
       for (;;)
       {
         {
           std::lock_guard<std::mutex> lk(m_in_buf_mu);
+          m_pending_processing = false;
           if (m_out_buf.empty() && !m_in_buf.empty())
           {
             m_out_buf.swap(m_in_buf);
@@ -257,7 +282,7 @@ class AudioThreadSource : public Async::AudioSource
      * registered sink.
      * This function is normally only called from a connected sink object.
      */
-    virtual void allSamplesFlushed(void)
+    void allSamplesFlushed(void)
     {
       {
         std::lock_guard<std::mutex> lk(m_all_flushed_mu);
@@ -265,7 +290,6 @@ class AudioThreadSource : public Async::AudioSource
       }
       m_all_flushed_cond.notify_all();
     }
-
 };  /* class AudioThreadSource */
 
 
