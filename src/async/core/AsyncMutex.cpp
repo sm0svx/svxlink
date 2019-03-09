@@ -146,7 +146,7 @@ void Mutex::lock(void)
   if (!lock_handler_pending)
   {
     lock_handler_pending = true;
-    Application::app().runTask(sigc::ptr_fun(&Mutex::lockHandler));
+    Application::app().runTask(&Mutex::lockHandler);
   }
   lock_wait_cnt += 1;
   lock_available_cond.wait(lk, []{ return lock_owner == std::thread::id(); });
