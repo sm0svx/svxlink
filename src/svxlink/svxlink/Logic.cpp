@@ -1582,8 +1582,6 @@ void Logic::cleanup(void)
   }
 
   delete event_handler;               event_handler = 0;
-  delete m_tx;        	      	      m_tx = 0;
-  delete m_rx;        	      	      m_rx = 0;
   delete msg_handler; 	      	      msg_handler = 0;
   delete audio_to_module_selector;    audio_to_module_selector = 0;
   delete tx_audio_selector;   	      tx_audio_selector = 0;
@@ -1592,6 +1590,8 @@ void Logic::cleanup(void)
   delete qso_recorder;                qso_recorder = 0;
   delete state_pty;                   state_pty = 0;
   delete dtmf_ctrl_pty;               dtmf_ctrl_pty = 0;
+  delete m_tx;        	      	      m_tx = 0;
+  delete m_rx;        	      	      m_rx = 0;
 } /* Logic::cleanup */
 
 
