@@ -108,6 +108,7 @@ using namespace Async;
  ****************************************************************************/
 
 Application *Application::app_ptr = 0;
+Application::TaskId Application::next_task_id = Application::TaskId()+1;
 
 
 /****************************************************************************
@@ -182,26 +183,35 @@ Application::~Application(void)
 } /* Application::~Application */
 
 
-void Application::runTask(sigc::slot<void> task)
+void Application::cancelTask(TaskId task_id)
 {
+  if (task_id != TaskId())
   {
-    std::lock_guard<std::mutex> lk(m_task_mu);
-    m_task_queue.push_back(task);
-  }
-  if (std::this_thread::get_id() == m_main_thread_id)
-  {
-    m_task_timer->setEnable(true);
-  }
-  else
-  {
-    if (write(m_task_wr_pipe, "", 1) == -1)
+    std::lock_guard<std::recursive_mutex> lk(m_task_mu);
+    TaskQueue::iterator it = m_task_queue.find(task_id);
+    if (it != m_task_queue.end())
     {
-      std::cerr << "*** ERROR: Could not write to pipe in Async::Application: "
-                << std::strerror(errno) << std::endl;
-      abort();
+      delete (*it).second;
+      (*it).second = 0;
     }
   }
-} /* Application::runTask */
+} /* Application::cancelTask */
+
+
+void Application::cancelTasks(TaskRunner *owner)
+{
+  assert(owner != 0);
+  std::lock_guard<std::recursive_mutex> lk(m_task_mu);
+  for (auto it=m_task_queue.begin(); it!=m_task_queue.end(); ++it)
+  {
+    TaskBase *task = (*it).second;
+    if ((task != 0) && (task->owner() == owner))
+    {
+      delete (*it).second;
+      (*it).second = 0;
+    }
+  }
+} /* Application::cancelTasks */
 
 
 /****************************************************************************
@@ -218,19 +228,50 @@ void Application::runTask(sigc::slot<void> task)
  *
  ****************************************************************************/
 
+Application::TaskId Application::addTaskToQueue(Application::TaskBase *task)
+{
+  TaskId task_id;
+  {
+    std::lock_guard<std::recursive_mutex> lk(m_task_mu);
+    do
+    {
+      task_id = next_task_id++;
+    } while (task_id == TaskId());
+    m_task_queue.emplace(task_id, task);
+  }
+  if (std::this_thread::get_id() == m_main_thread_id)
+  {
+    m_task_timer->setEnable(true);
+  }
+  else
+  {
+    if (::write(m_task_wr_pipe, "", 1) == -1)
+    {
+      std::cerr << "*** ERROR: Could not write to pipe in Async::Application: "
+                << std::strerror(errno) << std::endl;
+      abort();
+    }
+  }
+  return task_id;
+} /* Application::addTaskToQueue */
+
+
 void Application::processTaskQueue(void)
 {
-  std::unique_lock<std::mutex> lk(m_task_mu);
-  SlotList::iterator it;
-  while ((it=m_task_queue.begin()) != m_task_queue.end())
+  std::unique_lock<std::recursive_mutex> lk(m_task_mu);
+  while (!m_task_queue.empty())
   {
-    lk.unlock();
-    (*it)();
-    lk.lock();
-    if (!m_task_queue.empty())
+    TaskQueue::iterator it = m_task_queue.begin();
+    TaskBase *task = (*it).second;
+    (*it).second = 0;
+    if (task != 0)
     {
-      m_task_queue.pop_front();
+      lk.unlock();
+      (*task)();
+      lk.lock();
+      delete task;
     }
+    m_task_queue.erase(it);
   }
   m_task_timer->setEnable(false);
 } /* Application::processTaskQueue */
@@ -253,7 +294,11 @@ void Application::handleTaskWatch(Async::FdWatch* w)
 
 void Application::clearTasks(void)
 {
-  std::lock_guard<std::mutex> lk(m_task_mu);
+  std::lock_guard<std::recursive_mutex> lk(m_task_mu);
+  for (auto& item : m_task_queue)
+  {
+    delete item.second;
+  }
   m_task_queue.clear();
   m_task_timer->setEnable(false);
   m_task_rd_watch->setEnabled(false);
