@@ -237,7 +237,7 @@ Application::TaskId Application::addTaskToQueue(Application::TaskBase *task)
     {
       task_id = next_task_id++;
     } while (task_id == TaskId());
-    m_task_queue.emplace(task_id, task);
+    m_task_queue.insert(std::make_pair(task_id, task));
   }
   if (std::this_thread::get_id() == m_main_thread_id)
   {
