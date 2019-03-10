@@ -106,6 +106,10 @@
 
 * Now possible to set audio codec parameters for ReflectorLogic.
 
+* Bugfix: Reset squelch RX id after sending roger sound so that the following
+  roger sounds that may be triggered by non-rx events will send the "neutral"
+  roger sound.
+
 * A C++11 compatible compiler is now required.
 
 * Each DDR (e.g RTL-SDR dongle digital receiver) now run in its own thread
