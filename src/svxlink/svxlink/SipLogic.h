@@ -176,7 +176,7 @@ class SipLogic : public LogicBase
     Async::Timer              m_call_timeout_timer;
     sip::_AudioMedia          *media;
     Squelch   	      	      *squelch_det;
-    pj::Endpoint ep;
+    pj::Endpoint               ep;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
