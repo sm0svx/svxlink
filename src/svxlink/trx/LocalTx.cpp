@@ -685,6 +685,7 @@ bool LocalTx::initialize(void)
     return false;
   }
 
+  audio_io->close();
   return true;
   
 } /* LocalTx::initialize */
