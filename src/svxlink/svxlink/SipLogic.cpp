@@ -202,7 +202,6 @@ namespace sip {
         return slogic->mediaPortPutFrame(port, frame);
       } /* callback_putFrame */
 
-
       void createMediaPort(int frameTimeLength)
       {
         pj_str_t name = pj_str((char *) "SvxLinkMediaPort");
@@ -265,7 +264,7 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     m_outto_sip(0), m_infrom_sip(0), m_autoanswer(false),
     m_sip_port(5060), dtmf_ctrl_pty(0),
     m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
-    squelch_det(0)
+    squelch_det(0), m_allowed("")
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -382,6 +381,8 @@ bool SipLogic::initialize(void)
   if (m_calltimeout < 5 || m_calltimeout > 100) m_calltimeout = 45;
   m_call_timeout_timer.setTimeout(m_calltimeout * 1000);
 
+  cfg().getValue(name(), "ALLOWED_NUMBERS", m_allowed);
+
    // create SipEndpoint - init library
   try {
     pj::EpConfig ep_cfg;
@@ -479,8 +480,8 @@ bool SipLogic::initialize(void)
     squelch_det = new SquelchVox;
     if (!squelch_det->initialize(cfg(), name()))
     {
-      cerr << ":*** ERROR: Squelch detector initialization failed for "
-           << name() << "\n";
+      cerr << name() << ":*** ERROR: Squelch detector initialization failed"
+           << endl;
       delete squelch_det;
       squelch_det = 0;
       // FIXME: Cleanup
@@ -520,7 +521,7 @@ bool SipLogic::initialize(void)
    // init this Logic
   if (!LogicBase::initialize())
   {
-    cout << "*** ERROR initializing SipLogic: " << name() << endl;
+    cout << name() << "*** ERROR initializing SipLogic: " << name() << endl;
     return false;
   }
 
@@ -550,7 +551,7 @@ bool SipLogic::initialize(void)
 
 void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 {
-  cout << name() << ":+++ Calling \"" << dest_uri << "\"" << endl;
+  cout << name() << ": Calling \"" << dest_uri << "\"" << endl;
 
   CallOpParam prm(true);
   prm.opt.audioCount = 1;
@@ -562,7 +563,7 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
     calls.push_back(call);
     m_call_timeout_timer.setEnable(true);
   } catch (Error& err) {
-    cout << "*** ERROR: " << err.info() << " in " << name() << endl;
+    cout << name() << ": *** ERROR: " << err.info() << endl;
   }
 } /* SipLogic::makeCall */
 
@@ -575,13 +576,18 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
   prm.opt.audioCount = 1;
   prm.opt.videoCount = 0;
 
-  cout << name() << "+++ Incoming Call: " <<  ci.remoteUri << " ["
-            << ci.remoteContact << "]" << endl;
+  std::string caller = getCallerNumber(ci.remoteContact);
 
-  calls.push_back(call);
-  prm.statusCode = (pjsip_status_code)200;
-  if (m_autoanswer)
+  cout << name() << ": Incoming Call from " <<  caller << " ["
+            << ci.remoteContact << "] " << ci.callIdString
+            << endl;
+
+  size_t found = caller.find(m_allowed);
+
+  if (m_autoanswer && (found != std::string::npos))
   {
+    prm.statusCode = (pjsip_status_code)200;
+    calls.push_back(call);
     call->answer(prm);
     call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
     call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
@@ -715,7 +721,9 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // call disconnected
       if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
       {
-        cout << name() << ":+++ call disconnected, duration "
+        cout << name()
+             << ": Call hangup (" << getCallerNumber(ci.remoteContact)
+             << "), duration "
              << (*it)->getInfo().totalDuration.sec << "."
              << (*it)->getInfo().totalDuration.msec << " secs" << endl;
         m_out_src->allSamplesFlushed();
@@ -723,26 +731,27 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
         if (calls.empty())
         {
           m_outto_sip->setOpen(false);
-          m_infrom_sip->setOpen(false);
+          //m_infrom_sip->setOpen(false);
+          onSquelchOpen(false);
         }
       }
 
        // incoming call
       if (ci.state == PJSIP_INV_STATE_INCOMING)
       {
-        cout << name() << ":+++ incoming call" << endl;
+        cout << name() << ": Incoming call" << endl;
       }
 
        // connecting
       if (ci.state == PJSIP_INV_STATE_CONNECTING)
       {
-        cout << name() << ":+++ connecting" << endl;
+        cout << name() << ": Connecting" << endl;
       }
 
        // calling
       if (ci.state == PJSIP_INV_STATE_CALLING)
       {
-        cout << name() << ":+++ calling" << endl;
+        cout << name() << ": Calling" << endl;
       }
 
       break;
@@ -753,7 +762,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 
 void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
-  cout << "+++ Dtmf digit received: " << prm.digit
+  cout << name() << ": Dtmf digit received: " << prm.digit
        << " code=" << call->getId() << endl;
 } /* SipLogic::onDtmfDigit */
 
@@ -761,7 +770,7 @@ void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
-  std::cout << "+++ " << m_sipserver
+  std::cout << name() << ": " << m_sipserver
     << (ai.regIsActive ? " " : " un") << "registered, code="
     << prm.code << std::endl;
 } /* SipLogic::onRegState */
@@ -777,7 +786,7 @@ void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
        it != calls.end(); it++)
   {
-    cout << "+++ hangup call " << (*it)->getInfo().remoteUri
+    cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
          << ", duration " << (*it)->getInfo().totalDuration.sec
          << " secs" << endl;
     (*it)->hangup(prm);
@@ -797,7 +806,7 @@ void SipLogic::hangupCall(sip::_Call *call)
     if (*it == call)
     {
       m_out_src->allSamplesFlushed();
-      cout << "+++ hangup call " << (*it)->getInfo().remoteUri
+      cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
            << ", duration " << (*it)->getInfo().totalDuration.sec
            << " secs" << endl;
       (*it)->hangup(prm);
@@ -851,9 +860,23 @@ void SipLogic::allSamplesFlushed(void)
 } /* SipLogic::allSamplesFlushed */
 
 
+std::string SipLogic::getCallerNumber(std::string uri)
+{
+  size_t pos = uri.find(':');
+  size_t pos2 = uri.find('@');
+
+  if (pos != std::string::npos && pos2 != std::string::npos)
+  {
+    return uri.substr(pos + 1 , pos2 - pos - 1);
+  }
+  return "unknown";
+
+} /* SipLogic::getCallerNumber */
+
+
 void SipLogic::callTimeout(Async::Timer *t)
 {
-  cout << "+++ called party is not at home." << endl;
+  cout << name() << ": Called party is not at home." << endl;
   m_call_timeout_timer.setEnable(false);
   m_call_timeout_timer.reset();
 } /* SipLogic::flushTimeout */

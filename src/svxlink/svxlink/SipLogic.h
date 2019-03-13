@@ -177,6 +177,7 @@ class SipLogic : public LogicBase
     sip::_AudioMedia          *media;
     Squelch   	      	      *squelch_det;
     pj::Endpoint               ep;
+    std::string               m_allowed;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -191,6 +192,7 @@ class SipLogic : public LogicBase
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
     void allSamplesFlushed(void);
+    std::string getCallerNumber(std::string uri);
     void flushAudio(void);
     void callTimeout(Async::Timer *t=0);
     void flushTimeout(Async::Timer *t=0);
