@@ -582,7 +582,7 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
             << ci.remoteContact << "] " << ci.callIdString
             << endl;
 
-  size_t found = caller.find(m_allowed);
+  size_t found = m_allowed.find(caller);
 
   if (m_autoanswer && (found != std::string::npos))
   {
