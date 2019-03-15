@@ -1,7 +1,7 @@
 #
-# SipLogic experimental
+# SipLogic (beta)
 # Adi Bier / DL1HRC (dl1hrc@gmx.de)
-# V0.1.0
+# V0.2.0 - 15.03.2019
 #
 svxlink.conf is a sample configuration for a SipLogic connected to a Fritzbox 
 by AVM. Remember that a Fritzbox requires a sip login and password with 
