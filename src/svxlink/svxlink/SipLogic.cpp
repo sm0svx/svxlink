@@ -208,7 +208,8 @@ namespace sip {
 
         pj_status_t status = pjmedia_port_info_init(&(mediaPort.info),
                              &name,
-                             PJMEDIA_SIG_CLASS_PORT_AUD('s', 'i'),
+                             //PJMEDIA_SIG_CLASS_PORT_AUD('s', 'i'),
+                             PJMEDIA_SIG_PORT_STREAM,
                              INTERNAL_SAMPLE_RATE,
                              1,
                              16,
