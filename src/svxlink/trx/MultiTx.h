@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -150,7 +150,7 @@ class MultiTx : public Tx
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
      */
-    virtual bool isTransmitting(void) const;
+    //virtual bool isTransmitting(void) const;
     
     /**
      * @brief 	Enable/disable CTCSS on TX
@@ -188,13 +188,12 @@ class MultiTx : public Tx
     
   private:
     Async::Config     	  &cfg;
-    std::string       	  m_name;
     std::list<Tx *>   	  txs;
     Async::AudioSplitter  *splitter;
     
     MultiTx(const MultiTx&);
     MultiTx& operator=(const MultiTx&);
-    void onTransmitterStateChange(bool is_transmitting);
+    void onTransmitterStateChange(void);
     
 };  /* class MultiTx */
 

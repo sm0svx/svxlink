@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <RefCountingPty.h>
 #include "Tx.h"
 
 
@@ -163,12 +164,6 @@ class LocalTx : public Tx
     void setTxCtrlMode(TxCtrlMode mode);
     
     /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
-     */
-    bool isTransmitting(void) const { return is_transmitting; }
-    
-    /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
@@ -200,11 +195,21 @@ class LocalTx : public Tx
      */
     void setTransmittedSignalStrength(char rx_id, float siglev);
     
+    /**
+     * @brief   Set the transmitter frequency
+     * @param   fq The frequency in Hz
+     */
+    void setFq(unsigned fq);
+
+    /**
+     * @brief   Set the transmitter modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    void setModulation(Modulation::Type mod);
+
   private:
-    std::string       	    name;
     Async::Config     	    &cfg;
     Async::AudioIO    	    *audio_io;
-    bool      	      	    is_transmitting;
     Async::Timer      	    *txtot;
     bool      	      	    tx_timeout_occured;
     int       	      	    tx_timeout;
@@ -229,6 +234,7 @@ class LocalTx : public Tx
     bool                    fsk_first_packet_transmitted;
     HdlcFramer              *hdlc_framer_ib;
     AfskModulator           *fsk_mod_ib;
+    RefCountingPty          *ctrl_pty;
     
     void txTimeoutOccured(Async::Timer *t);
     bool setPtt(bool tx, bool with_hangtime=false);

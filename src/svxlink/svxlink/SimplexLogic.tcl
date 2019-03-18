@@ -25,7 +25,7 @@ if {$logic_name != [namespace tail [namespace current]]} {
 proc startup {} {
   global logic_name;
   append func $logic_name "::checkPeriodicIdentify";
-  Logic::addTimerTickSubscriber $func;
+  Logic::addMinuteTickSubscriber $func;
   Logic::startup;
 }
 
@@ -165,6 +165,14 @@ proc link_already_active {name} {
 #
 proc every_minute {} {
   Logic::every_minute;
+}
+
+
+#
+# Executed once every second
+#
+proc every_second {} {
+  Logic::every_second;
 }
 
 

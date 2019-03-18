@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <Modulation.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 
@@ -220,6 +221,18 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @returns Returns \em true if the receiver is ready for operation
      */
     virtual bool isReady(void) const { return true; }
+
+    /**
+     * @brief   Set the receiver frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq) {}
+
+    /**
+     * @brief   Set the receiver modulation mode
+     * @param   mod The modulation to set (@see Modulation::Type)
+     */
+    virtual void setModulation(Modulation::Type mod) {}
 
     /**
      * @brief 	A signal that indicates if the squelch is open or not

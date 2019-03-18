@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <Modulation.h>
 #include <Tx.h>
 #include <Rx.h>
 
@@ -172,7 +173,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 6;
+    static const uint16_t MINOR = 7;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -429,7 +430,6 @@ class MsgAudio : public Msg
 
 
 
-
 /******************************** RX Messages ********************************/
 
 class MsgSetMuteState : public Msg
@@ -474,6 +474,34 @@ class MsgReset : public Msg
     MsgReset(void) : Msg(TYPE, sizeof(MsgReset)) {}
     
 }; /* MsgReset */
+
+
+class MsgSetRxFq : public Msg
+{
+  public:
+    static const unsigned TYPE = 203;
+    MsgSetRxFq(unsigned fq)
+      : Msg(TYPE, sizeof(MsgSetRxFq)), m_fq(fq) {}
+    unsigned fq(void) const { return m_fq; }
+
+  private:
+    uint32_t  m_fq;
+
+}; /* MsgSetRxFq */
+
+
+class MsgSetRxModulation : public Msg
+{
+  public:
+    static const unsigned TYPE = 204;
+    MsgSetRxModulation(Modulation::Type mod)
+      : Msg(TYPE, sizeof(MsgSetRxModulation)), m_modulation(mod) {}
+    Modulation::Type modulation(void) const { return m_modulation; }
+
+  private:
+    Modulation::Type  m_modulation;
+
+}; /* MsgSetRxModulation */
 
 
 
@@ -642,6 +670,33 @@ class MsgTransmittedSignalStrength : public Msg
 }; /* MsgTransmittedSignalStrength */
 
 
+class MsgSetTxFq : public Msg
+{
+  public:
+    static const unsigned TYPE = 305;
+    MsgSetTxFq(unsigned fq)
+      : Msg(TYPE, sizeof(MsgSetTxFq)), m_fq(fq) {}
+    unsigned fq(void) const { return m_fq; }
+
+  private:
+    uint32_t  m_fq;
+
+}; /* MsgSetTxFq */
+
+
+class MsgSetTxModulation : public Msg
+{
+  public:
+    static const unsigned TYPE = 306;
+    MsgSetTxModulation(Modulation::Type mod)
+      : Msg(TYPE, sizeof(MsgSetTxModulation)), m_modulation(mod) {}
+    Modulation::Type modulation(void) const { return m_modulation; }
+
+  private:
+    Modulation::Type  m_modulation;
+
+}; /* MsgSetTxModulation */
+
 
 
 class MsgTxTimeout : public Msg
@@ -665,7 +720,7 @@ class MsgTransmitterStateChange : public Msg
   private:
     bool m_is_transmitting;
     
-}; /* MsgTxTimeout */
+}; /* MsgTransmitterStateChange */
 
 
 class MsgAllSamplesFlushed : public Msg
@@ -674,7 +729,7 @@ class MsgAllSamplesFlushed : public Msg
     static const unsigned TYPE = 352;
     MsgAllSamplesFlushed(void)
       : Msg(TYPE, sizeof(MsgAllSamplesFlushed)) {}
-}; /* MsgTxTimeout */
+}; /* MsgAllSamplesFlushed */
 
 
 #pragma pack(pop)

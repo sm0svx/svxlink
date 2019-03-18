@@ -94,7 +94,8 @@ def get_langpacks():
                     if fname_match is None:
                         continue
                     samprate = fname_match.group(1)
-                    if asset['content_type'] == 'application/x-bzip2':
+                    if asset['content_type'] == 'application/x-bzip2' or \
+                       asset['content_type'] == 'application/x-bzip':
                         #print "  %s: %s %s" % (asset['name'], asset['content_type'], asset['browser_download_url'])
                         langpack = {
                                 'lang': lang,

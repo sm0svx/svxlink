@@ -116,7 +116,7 @@ using namespace Async;
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : LocalRxBase(cfg, name), cfg(cfg), audio_io(0)
+  : LocalRxBase(cfg, name), cfg(cfg), audio_io(0), ctrl_pty(0)
 {
 } /* LocalRx::LocalRx */
 
@@ -125,6 +125,7 @@ LocalRx::~LocalRx(void)
 {
   delete audio_io;
   audio_io = 0;
+  if (ctrl_pty != 0) ctrl_pty->destroy();
 } /* LocalRx::~LocalRx */
 
 
@@ -145,6 +146,17 @@ bool LocalRx::initialize(void)
     return false;
   }
   
+  string ctrl_pty_name;
+  if (cfg.getValue(name(), "CTRL_PTY", ctrl_pty_name))
+  {
+    ctrl_pty = RefCountingPty::instance(ctrl_pty_name);
+    if (ctrl_pty == 0)
+    {
+      cerr << "*** ERROR: Could not create control PTY in " << name() << endl;
+      return false;
+    }
+  }
+
     // Create the audio IO object
     //FIXME: Check that the audio device is correctly initialized
     //       before continuing.
@@ -159,6 +171,39 @@ bool LocalRx::initialize(void)
   
 } /* LocalRx:initialize */
 
+
+void LocalRx::setFq(unsigned fq)
+{
+  if (ctrl_pty != 0)
+  {
+    ostringstream ss;
+    ss << "f" << fq << ";";
+    ssize_t ret = ctrl_pty->write(ss.str().c_str(), ss.str().size());
+    if (ret != static_cast<ssize_t>(ss.str().size()))
+    {
+      cerr << "*** WARNING[" << name() << "]: Failed to write set receiver "
+              "frequency command to PTY " << ctrl_pty->name()
+           << ": " << ss.str() << endl;
+    }
+  }
+} /* LocalRx::setFq */
+
+
+void LocalRx::setModulation(Modulation::Type mod)
+{
+  if (ctrl_pty != 0)
+  {
+    ostringstream ss;
+    ss << "m" << Modulation::toString(mod) << ";";
+    ssize_t ret = ctrl_pty->write(ss.str().c_str(), ss.str().size());
+    if (ret != static_cast<ssize_t>(ss.str().size()))
+    {
+      cerr << "*** WARNING[" << name() << "]: Failed to write set receiver "
+              "modulation command to PTY " << ctrl_pty->name()
+           << ": " << ss.str() << endl;
+    }
+  }
+} /* LocalRx::setModulation */
 
 
 /****************************************************************************
