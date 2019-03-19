@@ -1,21 +1,19 @@
-Metar information module for SvxLink (based on the latest trunk
-from Feb 2017) by Adi, DL1HRC
+Metar information module for SvxLink 
+by Adi / DL1HRC
 
 VERSION 1.0.99.0 (21 Feb 2017)
-
+VERSION 1.2.0.0 (12 Mar 2018)
 
 
 CHANGES:
-- two ways to request a METAR information from different web services
-- new configuration params
-- cloudtypes procedure added
-
+- support for https since aviationweather.gov has switched to secure 
+  http
 
 
 FUNCTION:
 
 Get METAR (weather) information from ICAO locations, usually airports and 
-gives them out. With V1.0.99.0 you can request a METAR from an
+gives them out. With V1.2.0.0 you can request a METAR from an
 airport of your interest.
 
 command  function
@@ -117,8 +115,9 @@ Configure the type of service
 
 SERVER=xxxx
 Configure a hostname providing METAR information, e.g.
-SERVER=tgftp.nws.noaa.gov
-Please omit http:// here!
+SERVER=http://tgftp.nws.noaa.gov or SERVER=https://aviationweather.gov
+The protocol type (https://) _must_ be included if you want to use secure
+http otherwise http is used.
 
 LINK=xxx/yyy/zzz
 The path on the webserver where the MEATAR file can be found, e.g.

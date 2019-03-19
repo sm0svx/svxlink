@@ -5,7 +5,7 @@ set(MODNAME MetarInfo)
 #set(MODSRC xyz.cpp)
 
 # Project libraries to link to
-#set(LIBS ${LIBS} echolib)
+set(LIBS ${LIBS} ${CURL_LIBRARY})
 
 # The version tag name without the VER_ prefix
 set(VERNAME ${MODNAME})
