@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <map>
 #include <iostream>
+#include <curl/curl.h>
 
 
 /****************************************************************************
@@ -52,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
-#include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
 
 
@@ -90,6 +90,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async {
+  class Timer;
+};
 
 
 /****************************************************************************
@@ -149,11 +152,12 @@ class ModuleMetarInfo : public Module
     typedef std::map<std::string, std::string> Repdefs;
     Repdefs repstr;
 
-    Async::TcpClient<> *con;
     std::string html;
     std::string type;
     std::string server;
     std::string link;
+    CURL *http_handle; 
+    CURLM *multi_handle;
 
     bool initialize(void);
     void activateInit(void);
@@ -163,10 +167,8 @@ class ModuleMetarInfo : public Module
     void dtmfCmdReceivedWhenIdle(const std::string& cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
-    void onDisconnected(Async::TcpClient<>::TcpConnection *con,
-                        Async::TcpClient<>::DisconnectReason reason);
-    void onConnected(void);
     void openConnection(void);
+    void onTimeout(void);
     std::string getSlp(std::string token);
     std::string getTempTime(std::string token);
     std::string getTempinRmk(std::string token);
@@ -177,8 +179,7 @@ class ModuleMetarInfo : public Module
     std::string getPrecipitation(std::string token);
     std::string getCloudType(std::string token);
     void isRwyState(std::string &retval, std::string token);
-    int  onDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
-              int count);
+    void onData(std::string metarinput, size_t count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string utctoken);
@@ -202,7 +203,6 @@ class ModuleMetarInfo : public Module
     void say(std::stringstream &tmp);
     int handleMetar(std::string input);
     std::string getXmlParam(std::string token, std::string input);
-
 };  /* class ModuleMetarInfo */
 
 
