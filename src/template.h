@@ -1,8 +1,8 @@
 /**
-@file	 Template.h
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2019-
+@file   Template.h
+@brief  A_brief_description_for_this_file
+@author Tobias Blomberg / SM0SVX
+@date   2019-
 
 A_detailed_description_for_this_file
 
@@ -108,7 +108,7 @@ namespace MyNameSpace
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief  A_brief_class_description
 @author Tobias Blomberg / SM0SVX
 @date   2019-
 
@@ -120,19 +120,19 @@ class Template
 {
   public:
     /**
-     * @brief 	Default constructor
+     * @brief   Default constructor
      */
     Template(void);
 
     /**
-     * @brief 	Destructor
+     * @brief   Destructor
      */
     ~Template(void);
 
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief   A_brief_member_function_description
+     * @param   param1 Description_of_param1
+     * @return  Return_value_of_this_member_function
      */
 
   protected:
@@ -147,8 +147,6 @@ class Template
 } /* namespace */
 
 #endif /* TEMPLATE_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

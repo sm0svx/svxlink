@@ -1,5 +1,8 @@
  1.7.0 -- ?? ??? 2019
 ----------------------
+* MetarInfo now supports secure http (https) since aviationweather.gov has 
+  switched to https only. Read documentation and/or README in directory 
+  modules/metarinfo for changes.
 
 * The new SipLogic has been introduced
 
@@ -107,6 +110,10 @@
   spelling. Not all language packs support this feature.
 
 * Now possible to set audio codec parameters for ReflectorLogic.
+
+* Bugfix: Reset squelch RX id after sending roger sound so that the following
+  roger sounds that may be triggered by non-rx events will send the "neutral"
+  roger sound.
 
 
 

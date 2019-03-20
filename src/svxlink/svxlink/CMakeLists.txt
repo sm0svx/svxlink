@@ -44,6 +44,17 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   include_directories(${DL_INCLUDES})
 endif()
 
+# Find libcurl libraries
+FIND_PACKAGE(CURL)
+if(CURL_FOUND)
+   set(LIBS ${LIBS} ${CURL_LIBRARIES})
+   set(LIBS ${LIBS} ${CURL_LIBRARY})
+   set(CMAKE_REQUIRED_LIBRARIES "${CURL_LIBRARIES}")
+   INCLUDE_DIRECTORIES(${CURL_INCLUDE_DIRS})
+ else(CURL_FOUND)
+   message(FATAL_ERROR "Could not find the CURL library and development files.")
+endif(CURL_FOUND)
+
 # Add project libraries
 set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
 

@@ -187,6 +187,7 @@ proc send_rgr_sound {} {
   if {$sql_rx_id != "?"} {
     # 150 CPM, 1000 Hz, -4 dBFS
     CW::play $sql_rx_id 150 1000 -4
+    set sql_rx_id "?"
   } else {
     playTone 440 500 100
   }

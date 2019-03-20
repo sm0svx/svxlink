@@ -6,6 +6,7 @@
 * Add method Async::Config::listSections() making it possible to list all
   configuration sections.
 
+* Small optimization in the Async::CppApplication main loop.
 
 
  1.5.0 -- 30 Dec 2017

@@ -143,6 +143,7 @@ ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
 
 ModuleTrx::~ModuleTrx(void)
 {
+  setTrx("NONE", "NONE");
   AudioSink::clearHandler();
   AudioSource::clearHandler();
   delete rx;
@@ -294,12 +295,22 @@ bool ModuleTrx::initialize(void)
     }
 
     cfg().getValue(section, "SHORTCUT", band.shortcut);
-    cfg().getValue(section, "RX_NAME", band.rx_name);
-    cfg().getValue(section, "TX_NAME", band.tx_name);
+    cfg().getValue(section, "RX", band.rx_name);
+    cfg().getValue(section, "TX", band.tx_name);
     cfg().getValue(section, "RX_TIMEOUT", band.rx_timeout);
 
     bands.push_back(band);
 
+    string rx_name(band.rx_name);
+    if (rx_name.find(cfgName()) == 0)
+    {
+      rx_name.erase(0, cfgName().size());
+    }
+    string tx_name(band.tx_name);
+    if (tx_name.find(cfgName()) == 0)
+    {
+      tx_name.erase(0, cfgName().size());
+    }
     cout << "\t"
          << " " << setw(10) << band.name
          << " " << setw(9) << (band.fqstart / 1000.0)
@@ -307,11 +318,13 @@ bool ModuleTrx::initialize(void)
          << " " << setw(5) << (band.fqtxshift / 1000.0)
          << " " << setw(4) << Modulation::toString(band.mod)
          << " " << setw(5) << band.shortcut
-         << " " << setw(10) << band.rx_name
-         << " " << setw(10) << band.tx_name
+         << " " << setw(10) << rx_name
+         << " " << setw(10) << tx_name
          //<< " " << setw(3) << band.rx_timeout
          << endl;
   }
+
+  setTrx("NONE", "NONE");
 
   return true;
 
@@ -323,6 +336,10 @@ bool ModuleTrx::setTrx(const ModuleTrx::TxName& tx_name,
 {
   if ((rx == 0) || (rx_name != rx->name()))
   {
+    if (rx != 0)
+    {
+      rx->reset();
+    }
     AudioSource::clearHandler();
     delete rx;
     rx = RxFactory::createNamedRx(cfg(), rx_name);
@@ -371,7 +388,7 @@ bool ModuleTrx::setTrx(const ModuleTrx::TxName& tx_name,
  */
 void ModuleTrx::activateInit(void)
 {
-  setTrx("NONE", "NONE");
+  //setTrx("NONE", "NONE");
 } /* activateInit */
 
 
@@ -393,14 +410,15 @@ void ModuleTrx::deactivateCleanup(void)
   processEvent("set_frequency 0");
   current_band = 0;
   rx_timeout_timer.setEnable(false);
-  rx->setMuteState(Rx::MUTE_ALL);
-  AudioSource::clearHandler();
-  delete rx;
-  rx = 0;
-  tx->setTxCtrlMode(Tx::TX_OFF);
-  AudioSink::clearHandler();
-  delete tx;
-  tx = 0;
+  setTrx("NONE", "NONE");
+  //rx->reset();
+  //AudioSource::clearHandler();
+  //delete rx;
+  //rx = 0;
+  //tx->setTxCtrlMode(Tx::TX_OFF);
+  //AudioSink::clearHandler();
+  //delete tx;
+  //tx = 0;
 } /* deactivateCleanup */
 
 
@@ -513,7 +531,8 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
     }
 
     ios_base::fmtflags orig_cout_flags(cout.flags());
-    cout << cfgName() << ": Setting transceiver to "
+    cout << cfgName() << ": Setting transceiver (RX=" << band->rx_name
+         << " TX=" << band->tx_name << ") to "
          << setprecision(3) << fixed << fqin << "kHz "
          << Modulation::toString(band->mod) << endl;
     cout.flags(orig_cout_flags);

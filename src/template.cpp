@@ -1,8 +1,8 @@
 /**
-@file	 Template.cpp
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2019-
+@file   Template.cpp
+@brief  A_brief_description_for_this_file
+@author Tobias Blomberg / SM0SVX
+@date   2019-
 
 A_detailed_description_for_this_file
 
@@ -121,8 +121,6 @@ Template::~Template(void)
 } /* Template::~Template */
 
 
-
-
 /****************************************************************************
  *
  * Protected member functions
@@ -137,9 +135,6 @@ Template::~Template(void)
  *
  ****************************************************************************/
 
-
-
 /*
  * This file has not been truncated
  */
-
