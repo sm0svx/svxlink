@@ -587,7 +587,29 @@ AUTOANSWER=(0|1)
 Define a party that will being connected after upon startup of SvxLink.
 AUTOCONNECT=user123@sipaccount.com
 .TP
-.B SEMI_DUPLEX
+.B REJECT_INCOMING
+Reject all incoming phone calls where the remote number match this regular
+expression. For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B ACCEPT_INCOMING
+Only accept incoming phone calls where the remote number match this regular
+expression.
+For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B REJECT_OUTGOING
+Reject all outgoing phone calls where the remote number match this regular
+expression. For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B ACCEPT_OUTGOING
+Only accept outgoing phone calls where the remote number match this regular
+expression.
+For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B SEMI_DUPLEX (ToDo)
 If enabled no VOX squelch is used for Sip clients. That means that the audio
 stream from the SipLogic is sent continuously to the connected SvxLink nodes.
 That is only meaningful if all connected nodes are repeaters.
@@ -619,14 +641,12 @@ audio. Default: 0.
 .TP
 .B REG_TIMEOUT
 Time in seconds to renewal the registration at the sip server.
-.
 .TP
 .B CALL_TIMEOUT
 Time in seconds after an outgoing call will be terminate when the party will not
 pickup the call.
-.
 .TP
-.B DTMF_CTRL_PTY
+.B SIP_CTRL_PTY
 Using this configuration variable it is possible to specify a path to a UNIX 98
 PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
 a softlink to the actual slave PTY. For that reason, SvxLink must have write
@@ -635,8 +655,7 @@ commands to the PTY is as simple as doing a
 .B "echo '*1#' > /path/to/pty"
 after starting SvxLink. The device works bidirectional, received dtmf characters
 (from local application) are output via this interface.
-
-Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
+Example: SIP_CTRL_PTY=/dev/shm/dtmf_ctrl
 .
 .SS QSO Recorder Section
 .

@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <iostream>
 #include <sigc++/sigc++.h>
+#include <regex.h>
 
 #include <pjmedia.h>
 #include <pjsua-lib/pjsua.h>
@@ -177,7 +178,10 @@ class SipLogic : public LogicBase
     sip::_AudioMedia          *media;
     Squelch   	      	      *squelch_det;
     pj::Endpoint               ep;
-    std::string               m_allowed;
+    regex_t   	         	  *accept_incoming_regex;
+    regex_t                   *reject_incoming_regex;
+    regex_t   	         	  *accept_outgoing_regex;
+    regex_t                   *reject_outgoing_regex;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
