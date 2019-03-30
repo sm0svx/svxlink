@@ -652,7 +652,7 @@ PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
 a softlink to the actual slave PTY. For that reason, SvxLink must have write
 permissions in the directory where the softlink should be created. Sending
 commands to the PTY is as simple as doing a
-.B "echo '*1#' > /path/to/pty"
+.B "echo 'C1#' > /path/to/pty"
 after starting SvxLink. The device works bidirectional, received dtmf characters
 (from local application) are output via this interface.
 Example: SIP_CTRL_PTY=/dev/shm/dtmf_ctrl
