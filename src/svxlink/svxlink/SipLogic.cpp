@@ -387,17 +387,19 @@ bool SipLogic::initialize(void)
   cfg().getValue(name(), "SEMI_DUPLEX", m_semiduplex); // only for RepeaterLogics
 
   std::string  m_autoconnect = "";
-  cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto connect a number
-  size_t pos = m_autoconnect.find("sip:");
-  size_t pos2 = m_autoconnect.find('@');
-  if (pos == std::string::npos || pos2 == std::string::npos)
+  if (cfg().getValue(name(), "AUTOCONNECT", m_autoconnect)) // auto connect a number
   {
-    cout << name()
-         << ": *** WARNING AUTOCONNECT=" << m_autoconnect
-         << " is incorrect. It must begin with \"sip:\" and have "
-         << "an uri, e.g.:\n\"AUTOCONNECT=sip:1234567@sipserver.com\"\n"
-         << "*** Autoconnect failed! ***\n" << endl;
-    m_autoconnect = "";
+    size_t pos = m_autoconnect.find("sip:");
+    size_t pos2 = m_autoconnect.find('@');
+    if (pos == std::string::npos || pos2 == std::string::npos)
+    {
+      cout << name()
+           << ": *** WARNING AUTOCONNECT=" << m_autoconnect
+           << " is incorrect. It must begin with \"sip:\" and have "
+           << "an uri, e.g.:\n\"AUTOCONNECT=sip:1234567@sipserver.com\"\n"
+           << "*** Autoconnect failed! ***\n" << endl;
+      m_autoconnect = "";
+    }
   }
 
   std::string m_callername("SvxLink");
