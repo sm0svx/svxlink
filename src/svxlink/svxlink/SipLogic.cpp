@@ -685,7 +685,7 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 
   try {
     call->makeCall(dest_uri, prm);
-    calls.push_back(call);
+    registerCall(call);
     m_call_timeout_timer.setEnable(true);
   } catch (Error& err) {
     cout << name() << ": *** ERROR: " << err.info() << endl;
@@ -717,13 +717,19 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
     && m_autoanswer)
   {
     prm.statusCode = (pjsip_status_code)200;
-    calls.push_back(call);
+    registerCall(call);
     call->answer(prm);
-    call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
-    call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
-    call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
   }
 } /* SipLogic::onIncomingCall */
+
+
+void SipLogic::registerCall(sip::_Call *call)
+{
+  calls.push_back(call);
+  call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
+  call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
+  call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
+} /* SipLogic::registerCall */
 
 
 void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
@@ -876,6 +882,8 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
       if (ci.state == PJSIP_INV_STATE_CONNECTING)
       {
         cout << name() << ": Connecting" << endl;
+        m_call_timeout_timer.setEnable(false);
+        m_call_timeout_timer.reset();
       }
 
        // calling
@@ -949,28 +957,36 @@ void SipLogic::hangupCall(sip::_Call *call)
 
 /**
  *  dial-out by sending a string over Pty device, e.g.
- *  echo "C12345#" > /tmp/sippty
+ *  echo "C12345#" > /tmp/sip_pty
  *  method converts it to a valid dial string:
- *  "sip:12345@sipserver"
+ *  "sip:12345@sipserver.com"
 **/
 void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 {
-  string m_dtmf_incoming = reinterpret_cast<const char*>(buf);
+  const char *buffer = reinterpret_cast<const char*>(buf);
 
-  if (acc != 0)
+  if (acc != 0 && count > 2)
   {
-     // hanging up all calls with "C#"
-    if (m_dtmf_incoming == "C#")
+      // hanging up all calls with "C#"
+    if (buffer[0] == 'C')
     {
-      hangupCalls(calls);
-    }
-
-     // calling a party with "C12345#"
-    if (m_dtmf_incoming[0] == 'C' && count > 3)
-    {
-      // "C12345#" -> sip:12345@sipserver.de
+      if (buffer[1] == '#')
+      {
+        hangupCalls(calls);
+        return;
+      }
+      
+        // calling a party with "C12345#"
+        // "C12345#" -> sip:12345@sipserver.de
       string tocall = "sip:";
-      tocall += m_dtmf_incoming.substr(1, count-3);
+      for (size_t i=1; i<count; ++i)
+      {
+        const char &ch = buffer[i];
+        if (::isdigit(ch))
+        {         
+          tocall += ch;
+        }
+      }
       tocall += "@";
       tocall += m_sipserver;
       makeCall(acc, tocall);
@@ -1009,6 +1025,7 @@ void SipLogic::callTimeout(Async::Timer *t)
   cout << name() << ": Called party is not at home." << endl;
   m_call_timeout_timer.setEnable(false);
   m_call_timeout_timer.reset();
+  
 } /* SipLogic::flushTimeout */
 
 

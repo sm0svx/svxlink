@@ -196,6 +196,7 @@ class SipLogic : public LogicBase
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
     void onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm);
     void allSamplesFlushed(void);
+    void registerCall(sip::_Call *call);
     std::string getCallerNumber(std::string uri);
     void flushAudio(void);
     void callTimeout(Async::Timer *t=0);
