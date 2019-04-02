@@ -917,18 +917,12 @@ void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 // hangup all calls
 void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
 {
-  m_out_src->allSamplesFlushed();
-
   CallOpParam prm(true);
 
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
        it != calls.end(); it++)
   {
-    cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
-         << ", duration " << (*it)->getInfo().totalDuration.sec
-         << " secs" << endl;
-    (*it)->hangup(prm);
-    calls.erase(it);
+    hangupCall(*it);
   }
 } /* SipLogic::hangupCalls */
 
@@ -937,13 +931,13 @@ void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
 void SipLogic::hangupCall(sip::_Call *call)
 {
   CallOpParam prm(true);
-
+  m_out_src->allSamplesFlushed();
+  
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
        it != calls.end(); it++)
   {
     if (*it == call)
     {
-      m_out_src->allSamplesFlushed();
       cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
            << ", duration " << (*it)->getInfo().totalDuration.sec
            << " secs" << endl;
@@ -952,6 +946,7 @@ void SipLogic::hangupCall(sip::_Call *call)
       break;
     }
   }
+  m_outto_sip->setOpen(false);
 } /* SipLogic::hangupCall */
 
 
@@ -965,7 +960,7 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 {
   const char *buffer = reinterpret_cast<const char*>(buf);
 
-  if (acc != 0 && count > 2)
+  if (acc != 0 && count > 1)
   {
       // hanging up all calls with "C#"
     if (buffer[0] == 'C')
