@@ -264,6 +264,7 @@ void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
     // Delete myself if this was the last DDR
   if (ddrs.empty())
   {
+    instances.erase(m_name);
     delete this;
   }
 } /* WbRxRtlSdr::unregisterDdr */
