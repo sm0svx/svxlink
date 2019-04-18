@@ -9,3 +9,9 @@ RUNASUSER=@SVXLINK_USER@
 
 # Specify which configuration file to use
 CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/remotetrx.conf
+
+# Where to place the log file
+LOGFILE=@LOCAL_STATE_DIR@/log/remotetrx
+
+# Where to place the PID file
+PIDFILE=/run/remotetrx.pid
