@@ -34,7 +34,7 @@ gpio_in_setup()
       echo "$ACTIVE_LOW" > $GPIO_PATH/$PIN/active_low
     [ -n "$GPIO_USER" ] && chown "$GPIO_USER" $GPIO_PATH/$PIN/value
     [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" $GPIO_PATH/$PIN/value
-    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" $GPIOPATH/$PIN/value
+    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" $GPIO_PATH/$PIN/value
   fi
 }
 
