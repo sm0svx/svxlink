@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cmath>
 #include <cassert>
+#include <iostream>
 
 
 /****************************************************************************
@@ -122,8 +123,9 @@ class AudioGenerator : public Async::AudioSource
      * @brief The type of waveform to generate
      */
     typedef enum {
-      SIN,    ///< Sine wave
-      SQUARE  ///< Square wave
+      SIN,      ///< Sine wave
+      SQUARE,   ///< Square wave
+      TRIANGLE  ///< Triangular wave
     } Waveform;
 
     /**
@@ -247,6 +249,9 @@ class AudioGenerator : public Async::AudioSource
         case SQUARE:
           m_peak = sqrt(m_power);
           break;
+        case TRIANGLE:
+          m_peak = sqrt(3.0f * m_power);
+          break;
         default:
           m_peak = 0.0f;
           break;
@@ -272,6 +277,24 @@ class AudioGenerator : public Async::AudioSource
               break;
             case SQUARE:
               buf[i] = (arg < M_PI) ? m_peak : -m_peak;
+              break;
+            case TRIANGLE:
+              if (arg < M_PI / 2.0f)
+              {
+                buf[i] = m_peak * arg * 2.0f / M_PI;
+              }
+              else if (arg < M_PI)
+              {
+                buf[i] = m_peak * (2.0f - 2.0 * arg / M_PI);
+              }
+              else if (arg < 3.0f * M_PI / 2.0f)
+              {
+                buf[i] = -m_peak * (2.0f * arg / M_PI - 2.0f);
+              }
+              else
+              {
+                buf[i] = -m_peak * (4.0f - 2.0f * arg / M_PI);
+              }
               break;
             default:
               buf[i] = 0;
