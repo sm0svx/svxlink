@@ -576,6 +576,12 @@ A jitter buffer is used to prevent gaps in the audio when the network
 connection do not provide a steady flow of data. Set this configuration
 variable to the number of milliseconds to buffer before starting to process the
 audio. Default: 0.
+.RE
+
+It is also possible to set audio codec parameters using the same configuration
+variables as documented for networked receivers and transmitters. For example,
+to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
+to something lower than 9.
 .
 .SS QSO Recorder Section
 .

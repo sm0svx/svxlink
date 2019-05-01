@@ -557,7 +557,7 @@ bool Logic::initialize(void)
   }
   tx().transmitterStateChange.connect(
       mem_fun(*this, &Logic::transmitterStateChange));
-  prev_tx_src->registerSink(m_tx, true);
+  prev_tx_src->registerSink(m_tx);
   prev_tx_src = 0;
 
     // Create the message handler
@@ -1273,11 +1273,13 @@ void Logic::loadModule(const string& module_cfg_name)
 
 void Logic::unloadModules(void)
 {
+  deactivateModule(0);
   list<Module *>::iterator it;
   for (it=modules.begin(); it!=modules.end(); ++it)
   {
-    void *plugin_handle = (*it)->pluginHandle();
-    delete *it;
+    Module *module = *it;
+    void *plugin_handle = module->pluginHandle();
+    delete module;
     dlclose(plugin_handle);
   }
   modules.clear();
@@ -1564,7 +1566,11 @@ void Logic::cleanup(void)
     tx().setTxCtrlMode(Tx::TX_OFF);
   }
 
-  delete event_handler;       	      event_handler = 0;
+  if (m_rx != 0)
+  {
+    m_rx->reset();
+  }
+
   unloadModules();
   exec_cmd_on_sql_close_timer.setEnable(false);
   rgr_sound_timer.setEnable(false);
@@ -1575,9 +1581,10 @@ void Logic::cleanup(void)
     LinkManager::instance()->deleteLogic(this);
   }
 
-  delete msg_handler; 	      	      msg_handler = 0;
+  delete event_handler;               event_handler = 0;
   delete m_tx;        	      	      m_tx = 0;
   delete m_rx;        	      	      m_rx = 0;
+  delete msg_handler; 	      	      msg_handler = 0;
   delete audio_to_module_selector;    audio_to_module_selector = 0;
   delete tx_audio_selector;   	      tx_audio_selector = 0;
   delete audio_from_module_selector;  audio_from_module_selector = 0;
