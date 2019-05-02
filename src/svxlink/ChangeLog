@@ -113,6 +113,9 @@
   roger sounds that may be triggered by non-rx events will send the "neutral"
   roger sound.
 
+* Bugfix: The squelch detection logic for HIDRAW squelch was wrong so it did
+  not work for active low devices.
+
 
 
  1.6.1 -- 01 Mar 2018
