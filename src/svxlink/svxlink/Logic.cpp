@@ -579,7 +579,7 @@ bool Logic::initialize(void)
   tx_audio_mixer->addSource(msg_pacer);
   prev_tx_src = 0;
 
-  event_handler = new EventHandler(event_handler_str, this);
+  event_handler = new EventHandler(event_handler_str, name());
   event_handler->playFile.connect(mem_fun(*this, &Logic::playFile));
   event_handler->playSilence.connect(mem_fun(*this, &Logic::playSilence));
   event_handler->playTone.connect(mem_fun(*this, &Logic::playTone));
