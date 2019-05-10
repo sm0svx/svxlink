@@ -28,6 +28,15 @@ variable min_time_between_ident 120;
 variable short_ident_interval 0;
 variable long_ident_interval 0;
 
+variable short_voice_id_enable  1
+variable short_cw_id_enable     0
+variable short_announce_enable  0
+variable short_announce         ""
+
+variable long_voice_id_enable   1
+variable long_cw_id_enable      0
+variable long_announce_enable   0
+variable long_announce          ""
 
 #
 # The ident_only_after_tx variable indicates if identification is only to
@@ -126,23 +135,23 @@ proc manual_identification {} {
 #
 # Executed when a short identification should be sent
 #   hour    - The hour on which this identification occur
-#   minute  - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
 #
-variable ::Logic::CFG_SHORT_ANNOUNCE
-puts "### SHORT_ANNOUNCE=$CFG_SHORT_ANNOUNCE"
-variable ::Logic::CFG_SHORT_ANNOUNCE_ENABLE
-puts "### SHORT_ANNOUNCE_ENABLE=$CFG_SHORT_ANNOUNCE_ENABLE"
-variable ::Logic::CFG_SHORT_VOICE_ID_ENABLE
-puts "### SHORT_VOICE_ID_ENABLE=$CFG_SHORT_VOICE_ID_ENABLE"
-variable ::Logic::CFG_SHORT_CW_ID_ENABLE
-puts "### SHORT_CW_ID_ENABLE=$CFG_SHORT_CW_ID_ENABLE"
-
 proc send_short_ident {{hour -1} {minute -1}} {
   global mycall;
   variable CFG_TYPE;
-  # only play voice id if not disabled (default to enabled)
-  
-  if {[$CFG_SHORT_VOICE_ID_ENABLE != 0]} {
+  variable short_announce
+  variable short_announce_enable
+  variable short_voice_id_enable
+  variable short_cw_id_enable
+
+  puts "### SHORT_VOICE_ID_ENABLE=$short_voice_id_enable"
+  puts "### SHORT_CW_ID_ENABLE=$short_cw_id_enable"
+  puts "### SHORT_ANNOUNCE_ENABLE=$short_announce_enable"
+  puts "### SHORT_ANNOUNCE=$short_announce"
+
+  # Play voice id if enabled
+  if {$short_voice_id_enable} {
     puts "Playing short voice ID"
     spellWord $mycall;
     if {$CFG_TYPE == "Repeater"} {
@@ -150,97 +159,96 @@ proc send_short_ident {{hour -1} {minute -1}} {
     }
     playSilence 500;
   }
-  # play announcements if either path is valid, otherwise print message to
-  # the log file
-  if {[$CFG_SHORT_ANNOUNCE_ENABLE == 1]} {
-    set announcement_path "/var/lib/svxlink/sounds/announcement/$CFG_SHORT_ANNOUNCE"
-    set fexist1 [file exist $path]
-    if {$fexist1} {
-      playFile $announcement_path
-               playSilence 500
-        } else {
-         playFile "CustomIdent" "Long_ID.wav"
-                playSilence 500
-            }
+
+  # Play announcement file if enabled
+  if {$short_announce_enable} {
+    puts "Playing short announce"
+    set announcement_path "/var/lib/svxlink/sounds/announcement/$short_announce"
+    if [file exist "$announcement_path"] {
+      playFile "$announcement_path"
+      playSilence 500
+    } else {
+      playMsg "CustomIdent" "Long_ID.wav"
+      playSilence 500
     }
-    # only play CW id if not disabled (default to enabled)
-    if {[$CFG_SHORT_CW_ID_ENABLE !=0]} {
-            puts "Playing long CW ID"
-            if {$CFG_TYPE == "Repeater"} {
-                set call "$mycall/R"
-                CW::play $call
-            } else {
-                CW::play $mycall
-            }
-            playSilence 500;
-        }
   }
+
+  # Play CW id if enabled
+  if {$short_cw_id_enable} {
+    puts "Playing short CW ID"
+    if {$CFG_TYPE == "Repeater"} {
+      set call "$mycall/R"
+      CW::play $call
+    } else {
+      CW::play $mycall
+    }
+    playSilence 500;
+  }
+}
 
 
 #
 # Executed when a long identification (e.g. hourly) should be sent
 #   hour    - The hour on which this identification occur
-#   minute  - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
 #
-variable ::Logic::CFG_LONG_ANNOUNCE
-puts "### LONG_ANNOUNCE=$CFG_LONG_ANNOUNCE"
-variable ::Logic::CFG_LONG_ANNOUNCE_ENABLE
-puts "### LONG_ANNOUNCE_ENABLE=$CFG_LONG_ANNOUNCE_ENABLE"
-variable ::Logic::CFG_LONG_VOICE_ID_ENABLE
-puts "### LONG_VOICE_ID_ENABLE=$CFG_LONG_VOICE_ID_ENABLE"
-variable ::Logic::CFG_LONG_CW_ID_ENABLE
-puts "### LONG_CW_ID_ENABLE=$CFG_LONG_CW_ID_ENABLE"
-
 proc send_long_ident {hour minute} {
   global mycall;
   global loaded_modules;
   global active_module;
   variable CFG_TYPE;
+  variable long_announce
+  variable long_announce_enable
+  variable long_voice_id_enable
+  variable long_cw_id_enable
 
-# only play the voice ID if not disabled (default to enabled)
-if {[$CFG_LONG_VOICE_ID_ENABLE != 0]} {
-  puts "Playing Long voice ID"
-  spellWord $mycall;
-  if {$CFG_TYPE == "Repeater"} {
-    playMsg "Core" "repeater";
-  }
-  playSilence 500;
-  # announce the time
-  playMsg "Core" "the_time_is";
-  playSilence 100;
-  playTime $hour $minute;
-  playSilence 500;
+  puts "### LONG_VOICE_ID_ENABLE=$long_voice_id_enable"
+  puts "### LONG_CW_ID_ENABLE=$long_cw_id_enable"
+  puts "### LONG_ANNOUNCE_ENABLE=$long_announce_enable"
+  puts "### LONG_ANNOUNCE=$long_announce"
+
+  # Play the voice ID if enabled
+  if {$long_voice_id_enable} {
+    puts "Playing Long voice ID"
+    spellWord $mycall;
+    if {$CFG_TYPE == "Repeater"} {
+      playMsg "Core" "repeater";
+    }
+    playSilence 500;
+    playMsg "Core" "the_time_is";
+    playSilence 100;
+    playTime $hour $minute;
+    playSilence 500;
 
     # Call the "status_report" function in all modules if no module is active
-  if {$active_module == ""} {
-    foreach module [split $loaded_modules " "] {
-      set func "::";
-      append func $module "::status_report";
-      if {"[info procs $func]" ne ""} {
-        $func;
+    if {$active_module == ""} {
+      foreach module [split $loaded_modules " "] {
+        set func "::";
+        append func $module "::status_report";
+        if {"[info procs $func]" ne ""} {
+          $func;
+        }
       }
     }
+
+    playSilence 500;
   }
 
-  playSilence 500;
-}
-    
-  # play announcements if either path is valid, otherwise print message to
-  # the log file
-  if {[$CFG_LONG_ANNOUNCE_ENABLE == 1]} {
-    set announcement_path "/var/lib/svxlink/sounds/announcement/$CFG_LONG_ANNOUNCE"
-    set fexist1 [file exist $path]
-    if {$fexist1} {
-      playFile $announcement_path
+  # Play announcement if enabled
+  if {$long_announce_enable} {
+    puts "Playing long announce"
+    set announcement_path "/var/lib/svxlink/sounds/announcement/$long_announce"
+    if [file exist "$announcement_path"] {
+      playFile "$announcement_path"
       playSilence 500
     } else {
-      playFile "CustomIdent" "Long_ID.wav"
+      playMsg "CustomIdent" "Long_ID.wav"
       playSilence 500
     }
   }
 
-  # only play CW id if not disabled (default to enabled)
-  if {[$CFG_LONG_CW_ID_ENABLE != 0]} {
+  # Play CW id if enabled
+  if {$long_cw_id_enable} {
     puts "Playing long CW ID"
     if {$CFG_TYPE == "Repeater"} {
       set call "$mycall/R"
@@ -249,9 +257,8 @@ if {[$CFG_LONG_VOICE_ID_ENABLE != 0]} {
       CW::play $mycall
     }
     playSilence 100
-  }  
+  }
 }
-
 
 
 #
@@ -716,6 +723,37 @@ if [info exists CFG_IDENT_ONLY_AFTER_TX] {
   }
 }
 
+if [info exists CFG_SHORT_ANNOUNCE_ENABLE] {
+  set short_announce_enable $CFG_SHORT_ANNOUNCE_ENABLE
+}
+
+if [info exists CFG_SHORT_ANNOUNCE] {
+  set short_announce $CFG_SHORT_ANNOUNCE
+}
+
+if [info exists CFG_SHORT_VOICE_ID_ENABLE] {
+  set short_voice_id_enable $CFG_SHORT_VOICE_ID_ENABLE
+}
+
+if [info exists CFG_SHORT_CW_ID_ENABLE] {
+  set short_cw_id_enable $CFG_SHORT_CW_ID_ENABLE
+}
+
+if [info exists CFG_LONG_ANNOUNCE_ENABLE] {
+  set long_announce_enable $CFG_LONG_ANNOUNCE_ENABLE
+}
+
+if [info exists CFG_LONG_ANNOUNCE] {
+  set long_announce $CFG_LONG_ANNOUNCE
+}
+
+if [info exists CFG_LONG_VOICE_ID_ENABLE] {
+  set long_voice_id_enable $CFG_LONG_VOICE_ID_ENABLE
+}
+
+if [info exists CFG_LONG_CW_ID_ENABLE] {
+  set long_cw_id_enable $CFG_LONG_CW_ID_ENABLE
+}
 
 
 # end of namespace
