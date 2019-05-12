@@ -91,6 +91,7 @@ AUTH_KEY="Change this key now!"
 [SipLogic]
 TYPE=Sip
 SIPSERVER=reflector.example.com
+#SIPREGISTRAR=proxy.mysipnetwork.com
 SIPPORT=5060
 USERNAME=user
 PASSWORD=secret
