@@ -265,7 +265,8 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     m_outto_sip(0), m_infrom_sip(0), m_autoanswer(false),
     m_sip_port(5060), dtmf_ctrl_pty(0),
     m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
-    squelch_det(0), m_allowed("")
+    squelch_det(0), accept_incoming_regex(0), reject_incoming_regex(0),
+    accept_outgoing_regex(0), reject_outgoing_regex(0)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -291,6 +292,30 @@ SipLogic::~SipLogic(void)
   {
     calls.erase(it);
     *it = 0;
+  }
+  if (accept_incoming_regex != 0)
+  {
+    regfree(accept_incoming_regex);
+    delete accept_incoming_regex;
+    accept_incoming_regex = 0;
+  }
+  if (reject_incoming_regex != 0)
+  {
+    regfree(reject_incoming_regex);
+    delete reject_incoming_regex;
+    reject_incoming_regex = 0;
+  }
+  if (accept_outgoing_regex != 0)
+  {
+    regfree(accept_outgoing_regex);
+    delete accept_outgoing_regex;
+    accept_outgoing_regex = 0;
+  }
+  if (reject_outgoing_regex != 0)
+  {
+    regfree(reject_outgoing_regex);
+    delete reject_outgoing_regex;
+    reject_outgoing_regex = 0;
   }
 } /* SipLogic::~SipLogic */
 
@@ -340,7 +365,7 @@ bool SipLogic::initialize(void)
   cfg().getValue(name(), "SIPREGISTRAR", m_sipregistrar);
 
   std::string dtmf_ctrl_pty_path;
-  cfg().getValue(name(), "DTMF_CTRL_PTY", dtmf_ctrl_pty_path);
+  cfg().getValue(name(), "SIP_CTRL_PTY", dtmf_ctrl_pty_path);
 
   if (!dtmf_ctrl_pty_path.empty())
   {
@@ -349,7 +374,7 @@ bool SipLogic::initialize(void)
     {
       cerr << "*** ERROR: Could not open dtmf sip PTY " << dtmf_ctrl_pty_path
            << " as specified in configuration variable " << name()
-           << "/" << "DTMF_CTRL_PTY" << endl;
+           << "/" << "SIP_CTRL_PTY" << endl;
       return false;
     }
     dtmf_ctrl_pty->dataReceived.connect(
@@ -362,7 +387,20 @@ bool SipLogic::initialize(void)
   cfg().getValue(name(), "SEMI_DUPLEX", m_semiduplex); // only for RepeaterLogics
 
   std::string  m_autoconnect = "";
-  cfg().getValue(name(), "AUTOCONNECT", m_autoconnect); // auto connect a number
+  if (cfg().getValue(name(), "AUTOCONNECT", m_autoconnect)) // auto connect a number
+  {
+    size_t pos = m_autoconnect.find("sip:");
+    size_t pos2 = m_autoconnect.find('@');
+    if (pos == std::string::npos || pos2 == std::string::npos)
+    {
+      cout << name()
+           << ": *** WARNING AUTOCONNECT=" << m_autoconnect
+           << " is incorrect. It must begin with \"sip:\" and have "
+           << "an uri, e.g.:\n\"AUTOCONNECT=sip:1234567@sipserver.com\"\n"
+           << "*** Autoconnect failed! ***\n" << endl;
+      m_autoconnect = "";
+    }
+  }
 
   std::string m_callername("SvxLink");
   cfg().getValue(name(), "CALLERNAME", m_callername);
@@ -382,7 +420,78 @@ bool SipLogic::initialize(void)
   if (m_calltimeout < 5 || m_calltimeout > 100) m_calltimeout = 45;
   m_call_timeout_timer.setTimeout(m_calltimeout * 1000);
 
-  cfg().getValue(name(), "ALLOWED_NUMBERS", m_allowed);
+  std::string value;
+  if (!cfg().getValue(name(), "ACCEPT_INCOMING", value))
+  {
+    value = "^.*$";
+  }
+  accept_incoming_regex = new regex_t;
+  int err = regcomp(accept_incoming_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, accept_incoming_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, accept_incoming_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << name() << "/ACCEPT_INCOMING: "
+         << msg << endl;
+    return false;
+  }
+
+  if (!cfg().getValue(name(), "REJECT_INCOMING", value))
+  {
+    value = "^$";
+  }
+  reject_incoming_regex = new regex_t;
+  err = regcomp(reject_incoming_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, reject_incoming_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, reject_incoming_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << name() << "/REJECT_INCOMING: "
+         << msg << endl;
+    return false;
+  }
+
+   if (!cfg().getValue(name(), "ACCEPT_OUTGOING", value))
+  {
+    value = "^.*$";
+  }
+  accept_outgoing_regex = new regex_t;
+  err = regcomp(accept_outgoing_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, accept_outgoing_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, accept_outgoing_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << name() << "/ACCEPT_OUTGOING: "
+         << msg << endl;
+    return false;
+  }
+
+  if (!cfg().getValue(name(), "REJECT_OUTGOING", value))
+  {
+    value = "^$";
+  }
+  reject_outgoing_regex = new regex_t;
+  err = regcomp(reject_outgoing_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, reject_outgoing_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, reject_outgoing_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << name() << "/REJECT_OUTGOING: "
+         << msg << endl;
+    return false;
+  }
 
    // create SipEndpoint - init library
   try {
@@ -498,7 +607,9 @@ bool SipLogic::initialize(void)
   }
   else {
     // ToDo
-    cout << name() << ": Semiduplexmode, no squelch for Sip." << endl;
+    cout << name() << ": *** Semiduplexmode is still not implemented *** "
+         << " -> use SEMI_DUPLEX=0" << endl;
+    return false;
   }
 
   m_logic_con_out = prev_src;
@@ -552,6 +663,19 @@ bool SipLogic::initialize(void)
 
 void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 {
+
+  std::string caller = getCallerNumber(dest_uri);
+
+  if ((regexec(reject_outgoing_regex, caller.c_str(),
+	       0, 0, 0) == 0) ||
+      (regexec(accept_outgoing_regex, caller.c_str(),
+	       0, 0, 0) != 0))
+  {
+    cout << "*** WARNING: Dropping outgoing call to \"" << caller <<
+            "\" due to configuration.\n";
+    return;
+  }
+
   cout << name() << ": Calling \"" << dest_uri << "\"" << endl;
 
   CallOpParam prm(true);
@@ -561,7 +685,7 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 
   try {
     call->makeCall(dest_uri, prm);
-    calls.push_back(call);
+    registerCall(call);
     m_call_timeout_timer.setEnable(true);
   } catch (Error& err) {
     cout << name() << ": *** ERROR: " << err.info() << endl;
@@ -583,18 +707,29 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
             << ci.remoteContact << "] " << ci.callIdString
             << endl;
 
-  size_t found = m_allowed.find(caller);
+  if (regexec(reject_incoming_regex, caller.c_str(), 0, 0, 0) == 0)
+  {
+    cout << "*** WARNING: Dropping incoming call due to configuration.\n";
+    return;
+  }
 
-  if (m_autoanswer && (found != std::string::npos))
+  if (regexec(accept_incoming_regex, caller.c_str(), 0, 0, 0) == 0
+    && m_autoanswer)
   {
     prm.statusCode = (pjsip_status_code)200;
-    calls.push_back(call);
+    registerCall(call);
     call->answer(prm);
-    call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
-    call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
-    call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
   }
 } /* SipLogic::onIncomingCall */
+
+
+void SipLogic::registerCall(sip::_Call *call)
+{
+  calls.push_back(call);
+  call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
+  call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
+  call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
+} /* SipLogic::registerCall */
 
 
 void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
@@ -747,6 +882,8 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
       if (ci.state == PJSIP_INV_STATE_CONNECTING)
       {
         cout << name() << ": Connecting" << endl;
+        m_call_timeout_timer.setEnable(false);
+        m_call_timeout_timer.reset();
       }
 
        // calling
@@ -780,18 +917,12 @@ void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 // hangup all calls
 void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
 {
-  m_out_src->allSamplesFlushed();
-
   CallOpParam prm(true);
 
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
        it != calls.end(); it++)
   {
-    cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
-         << ", duration " << (*it)->getInfo().totalDuration.sec
-         << " secs" << endl;
-    (*it)->hangup(prm);
-    calls.erase(it);
+    hangupCall(*it);
   }
 } /* SipLogic::hangupCalls */
 
@@ -800,13 +931,13 @@ void SipLogic::hangupCalls(std::vector<sip::_Call *> calls)
 void SipLogic::hangupCall(sip::_Call *call)
 {
   CallOpParam prm(true);
-
+  m_out_src->allSamplesFlushed();
+  
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
        it != calls.end(); it++)
   {
     if (*it == call)
     {
-      m_out_src->allSamplesFlushed();
       cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
            << ", duration " << (*it)->getInfo().totalDuration.sec
            << " secs" << endl;
@@ -815,33 +946,42 @@ void SipLogic::hangupCall(sip::_Call *call)
       break;
     }
   }
+  m_outto_sip->setOpen(false);
 } /* SipLogic::hangupCall */
 
 
 /**
  *  dial-out by sending a string over Pty device, e.g.
- *  echo "C12345#" > /tmp/sippty
+ *  echo "C12345#" > /tmp/sip_pty
  *  method converts it to a valid dial string:
- *  "sip:12345@sipserver"
+ *  "sip:12345@sipserver.com"
 **/
 void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 {
-  string m_dtmf_incoming = reinterpret_cast<const char*>(buf);
+  const char *buffer = reinterpret_cast<const char*>(buf);
 
-  if (acc != 0)
+  if (acc != 0 && count > 1)
   {
-     // hanging up all calls with "C#"
-    if (m_dtmf_incoming == "C#")
+      // hanging up all calls with "C#"
+    if (buffer[0] == 'C')
     {
-      hangupCalls(calls);
-    }
-
-     // calling a party with "C12345#"
-    if (m_dtmf_incoming[0] == 'C' && count > 3)
-    {
-      // "C12345#" -> sip:12345@sipserver.de
+      if (buffer[1] == '#')
+      {
+        hangupCalls(calls);
+        return;
+      }
+      
+        // calling a party with "C12345#"
+        // "C12345#" -> sip:12345@sipserver.de
       string tocall = "sip:";
-      tocall += m_dtmf_incoming.substr(1, count-3);
+      for (size_t i=1; i<count; ++i)
+      {
+        const char &ch = buffer[i];
+        if (::isdigit(ch))
+        {         
+          tocall += ch;
+        }
+      }
       tocall += "@";
       tocall += m_sipserver;
       makeCall(acc, tocall);
@@ -880,6 +1020,7 @@ void SipLogic::callTimeout(Async::Timer *t)
   cout << name() << ": Called party is not at home." << endl;
   m_call_timeout_timer.setEnable(false);
   m_call_timeout_timer.reset();
+  
 } /* SipLogic::flushTimeout */
 
 
