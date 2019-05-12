@@ -1,4 +1,4 @@
-.TH DEVCAL 1 "DECEMBER 2017" Linux "User Manuals"
+.TH DEVCAL 1 "APRIL 2019" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -218,7 +218,7 @@ Make sure that devcal is started in measurement mode like when the deviation on
 the calibration transmitter was measured above. Then, on the system being
 calibrated, start the transmitter calibration.
 
-  devcal -t -f1750 -d3200 /path/to/svxlink.conf RxRtl
+  devcal -t -f1750 -d3200 /path/to/svxlink.conf Tx1
 
 The value of 3200 was the one we measured in the first step. Adjust it to match
 your own measurements. Adjust the output level using alsamixer and MASTER_GAIN
@@ -240,11 +240,11 @@ transceivers. This is an issue that remains to find the cause of.
 ASYNC_AUDIO_NOTRIGGER
 Set this environment variable to 1 if you get an error about
 .B ioctl: Broken pipe
-during remotetrx server startup when using OSS audio.
+during devcal startup when using OSS audio.
 .
 .SH AUTHOR
 .
-Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
 .
 .SH REPORTING BUGS
 .

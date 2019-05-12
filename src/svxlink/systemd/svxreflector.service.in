@@ -1,14 +1,32 @@
+# This file is part of SvxLink -- a voice services system for ham radio
+#
+# Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 [Unit]
 Description=SvxReflector SvxLink node linking software
 Documentation=man:svxreflector(1)
 After=network.target remote-fs.target syslog.target time.target
 
 [Service]
-EnvironmentFile=/etc/default/svxreflector
-PIDFile=/run/svxreflector.pid
-ExecStartPre=-/bin/touch /var/log/svxreflector
-ExecStartPre=-/bin/chown $RUNASUSER /var/log/svxreflector
-ExecStart=/bin/sh -c '@BIN_INSTALL_DIR@/svxreflector --logfile=/var/log/svxreflector --config=$CFGFILE --pidfile=/run/svxreflector.pid --runasuser=$RUNASUSER'
+EnvironmentFile=@SYSTEMD_DEFAULTS_FILES_DIR@/svxreflector
+PIDFile=${PIDFILE}
+ExecStartPre=-/bin/touch ${LOGFILE}
+ExecStartPre=-/bin/chown ${RUNASUSER} ${LOGFILE}
+ExecStart=@BIN_INSTALL_DIR@/svxreflector --logfile=${LOGFILE} --config=${CFGFILE} --pidfile=${PIDFILE} --runasuser=${RUNASUSER}
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60

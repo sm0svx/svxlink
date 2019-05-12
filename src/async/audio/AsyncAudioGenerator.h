@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioGenerator.h
+@file    AsyncAudioGenerator.h
 @brief   An audio generator
 @author  Tobias Blomberg / SM0SVX
-@date	 2015-09-28
+@date    2015-09-28
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cmath>
+#include <cassert>
+#include <iostream>
 
 
 /****************************************************************************
@@ -78,7 +80,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -103,7 +105,7 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A class for generating periodic audio signals
+@brief  A class for generating periodic audio signals
 @author Tobias Blomberg / SM0SVX
 @date   2015-09-28
 
@@ -121,8 +123,9 @@ class AudioGenerator : public Async::AudioSource
      * @brief The type of waveform to generate
      */
     typedef enum {
-      SIN,    ///< Sine wave
-      SQUARE  ///< Square wave
+      SIN,      ///< Sine wave
+      SQUARE,   ///< Square wave
+      TRIANGLE  ///< Triangular wave
     } Waveform;
 
     /**
@@ -130,11 +133,12 @@ class AudioGenerator : public Async::AudioSource
      * @param   wf The waveform to use (@see Waveform)
      */
     explicit AudioGenerator(Waveform wf=SIN)
-      : pos(0), fq(0.0), level(0.0), sample_rate(INTERNAL_SAMPLE_RATE),
-        waveform(wf), power(0.0)
+      : m_arg(0.0f), m_arginc(0.0f), m_peak(0.0f),
+        m_sample_rate(INTERNAL_SAMPLE_RATE), m_waveform(wf), m_power(0.0f),
+        m_enabled(false)
     {
     }
-    
+
     /**
      * @brief   Destructor
      */
@@ -149,32 +153,33 @@ class AudioGenerator : public Async::AudioSource
      */
     void setWaveform(Waveform wf)
     {
-      waveform = wf;
+      m_waveform = wf;
       calcLevel();
     }
-    
+
     /**
      * @brief   Set the audio frequency
      * @param   tone_fq The frequency in Hz
      */
-    void setFq(double tone_fq)
+    void setFq(float tone_fq)
     {
-      fq = tone_fq;
+      m_arginc = 2.0f * M_PI * tone_fq / m_sample_rate;
+      assert(m_arginc <= M_PI);
     }
-    
+
     /**
      * @brief   Set the power of the generated signal
-     * @param   pwr_db The power of the signal in dB
+     * @param   pwr_db The power of the signal in dBFS
      *
      * Use this function to set the power of the generated signal. 0dB power is
      * defined as a full-scale sine wave.
      */
     void setPower(float pwr_db)
     {
-      power = pow(10.0, pwr_db / 10.0f) / 2;
+      m_power = powf(10.0f, pwr_db / 10.0f) / 2.0f;
       calcLevel();
     }
-    
+
     /**
      * @brief   Enable or disable the generator
      * @param   enable Set to \em true to enable the generator or \em false
@@ -182,23 +187,31 @@ class AudioGenerator : public Async::AudioSource
      */
     void enable(bool enable)
     {
-      if (enable && (fq != 0))
+      m_enabled = enable;
+      if (enable)
       {
-        pos = 0;
+        m_arg = 0.0f;
         writeSamples();
+      }
+      else
+      {
+        sinkFlushSamples();
       }
     }
 
     /**
      * @brief Resume audio output to the sink
-     * 
+     *
      * This function is normally only called from a connected sink object.
      */
     void resumeOutput(void)
     {
-      writeSamples();
+      if (m_enabled)
+      {
+        writeSamples();
+      }
     }
-    
+
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -207,36 +220,40 @@ class AudioGenerator : public Async::AudioSource
     void allSamplesFlushed(void)
     {
     }
-    
+
   private:
     static const int BLOCK_SIZE = 128;
-    
-    unsigned  pos;
-    double    fq;
-    double    level;
-    int       sample_rate;
-    Waveform  waveform;
-    float     power;
-    
+
+    float     m_arg;
+    float     m_arginc;
+    float     m_peak;
+    int       m_sample_rate;
+    Waveform  m_waveform;
+    float     m_power;
+    bool      m_enabled;
+
     AudioGenerator(const AudioGenerator&);
     AudioGenerator& operator=(const AudioGenerator&);
-    
+
     /**
      * @brief   Calculate the peak level corresponding to the set power for
      *          the set waveform
      */
     void calcLevel(void)
     {
-      switch (waveform)
+      switch (m_waveform)
       {
         case SIN:
-          level = sqrt(2 * power);
+          m_peak = sqrt(2.0f * m_power);
           break;
         case SQUARE:
-          level = sqrt(power);
+          m_peak = sqrt(m_power);
+          break;
+        case TRIANGLE:
+          m_peak = sqrt(3.0f * m_power);
           break;
         default:
-          level = 1.0;
+          m_peak = 0.0f;
           break;
       }
     }
@@ -246,38 +263,66 @@ class AudioGenerator : public Async::AudioSource
      */
     void writeSamples(void)
     {
-      int written;
-      do {
-	float buf[BLOCK_SIZE];
-	for (int i=0; i<BLOCK_SIZE; ++i)
-	{
-          switch (waveform)
+      int written = 0;
+      do
+      {
+        float buf[BLOCK_SIZE];
+        float arg = m_arg;
+        for (int i=0; i<BLOCK_SIZE; ++i)
+        {
+          switch (m_waveform)
           {
             case SIN:
-      	      buf[i] = level * sin(2 * M_PI * fq * (pos+i) / sample_rate);
+              buf[i] = m_peak * sinf(arg);
               break;
             case SQUARE:
-      	      buf[i] = level * (sin(2 * M_PI * fq * (pos+i) / sample_rate)
-                                > 0.0 ? 1 : -1);
+              buf[i] = (arg < M_PI) ? m_peak : -m_peak;
+              break;
+            case TRIANGLE:
+              if (arg < M_PI / 2.0f)
+              {
+                buf[i] = m_peak * arg * 2.0f / M_PI;
+              }
+              else if (arg < M_PI)
+              {
+                buf[i] = m_peak * (2.0f - 2.0 * arg / M_PI);
+              }
+              else if (arg < 3.0f * M_PI / 2.0f)
+              {
+                buf[i] = -m_peak * (2.0f * arg / M_PI - 2.0f);
+              }
+              else
+              {
+                buf[i] = -m_peak * (4.0f - 2.0f * arg / M_PI);
+              }
               break;
             default:
               buf[i] = 0;
               break;
           }
-	}
-	written = sinkWriteSamples(buf, BLOCK_SIZE);
-	pos += written;
-      } while (written != 0);
+          arg += m_arginc;
+          if (arg >= 2.0f * M_PI)
+          {
+            arg -= 2.0f * M_PI;
+          }
+        }
+        written = sinkWriteSamples(buf, BLOCK_SIZE);
+        if (written > 0)
+        {
+          m_arg += written * m_arginc;
+          while (m_arg >= 2.0f * M_PI)
+          {
+            m_arg -= 2.0f * M_PI;
+          }
+        }
+      } while (m_enabled && (written > 0));
     }
-    
 };  /* class AudioGenerator */
 
 
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_GENERATOR_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
