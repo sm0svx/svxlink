@@ -9,7 +9,7 @@ A module (plugin) to request the latest METAR (weather) information from
 by using ICAO shortcuts.
 Look at http://en.wikipedia.org/wiki/METAR for further information
 
-Copyright (C) 2009-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2009-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -826,6 +826,7 @@ void ModuleMetarInfo::openConnection()
 
   Http *http = new Http();
 
+  html = "";
   std::string path = server;
               path += link;
               path += icao;
@@ -868,7 +869,6 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
       cout << "Metar information not available" << endl;
       temp << "metar_not_valid";
       say(temp);
-      html = "";
       return;
     }
 
@@ -881,7 +881,6 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
 
     if (metar.length() > 0)
     {
-      html = "";
       if (debug)
       {
         cout << "XML-METAR: " << metar << endl;
@@ -900,7 +899,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
   // the TXT version of METAR
   else 
   {
-    // This is a MEATAR-report:
+    // This is a METAR-report:
     //
     // 2009/04/07 13:20
     // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
@@ -908,26 +907,46 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     size_t found;
     StrList values;
     std::stringstream temp;
+
     splitStr(values, html, "\n");
-    metar = values.back();  // contains the METAR
-
-    if (debug)
-    {
-      cout << "TXT-METAR: " << metar << endl;
-    }
-
-    values.pop_back();
-    std::string metartime = values.back();  // and the time at UTC
 
     // split \n -> <SPACE>
     while ((found = html.find('\n')) != string::npos) html[found] = ' ';
-
     if (html.find("404 Not Found") != string::npos)
     {
       cout << "ERROR 404 from webserver -> no such airport\n";
       temp << "no_such_airport";
       say(temp);
       return;
+    }
+
+    metar = values.back();  // contains the METAR
+    values.pop_back();
+    std::string metartime = values.back();  // and the time at UTC
+
+     // check of valid metar file format
+    regex_t re;
+    std::string reg = "^[0-9]{4}/[0-9]{2}/[0-9]{2}";
+    if (!rmatch(metartime, reg, &re))
+    {
+      cout << "ERROR: wrong Metarfile format, first line should have the date + UTC and "
+           << "must have 16 digits, e.g.:\n"
+           << "2019/04/07 13:20" << endl;
+      return;
+    }
+    regfree(&re);
+
+    if ((metar.find(icao)) == string::npos)
+    {
+      cout << "ERROR: wrong Metarfile format, second line must begin with the correct "
+           << "ICAO airport code (" << icao << ") configured in ModuleMetarInfo.conf,"
+           << "but is \"" << metar << "\"" << endl;
+      return;
+    }
+
+    if (debug)
+    {
+      cout << "TXT-METAR: " << metar << endl;
     }
 
     // check if METAR is actual
@@ -1363,7 +1382,7 @@ int ModuleMetarInfo::checkToken(std::string token)
     mre["^r[0-8][0-9](ll|l|c|r|rr)?/([0-9]|/|c)([1259]|/|l)([0-9]|/|r)([0-9]|/|d)([0-9]|/){2}$"] = ALLRWYSTATE;
     mre["^vv[0-9]{3}$"]                              = VERTICALVIEW;
     mre["^(\\+|\\-|vc|re)?([bdfimprstv][a-z]){1,2}$"]= ACTUALWX;
-    mre["^rwy[0-9]{2}(ll|l|c|r|rr)?$"]               = RUNWAY;
+    mre["^r(wy)?[0-9]{2}(ll|l|c|r|rr)?$"]             = RUNWAY;
     mre["^cig$"]                                       = CEILING;
     mre["^[1-9]$"]                                   = IS1STPARTOFVIEW;
     mre["^rmk$"]                                       = RMK;
@@ -2073,8 +2092,9 @@ bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
    stringstream ss;
    std::map <string, string>::iterator it;
 
-   ss << token.substr(3,2);
-   token.erase(0,5);
+   token.erase(0,token.find("wy")+2);
+   ss << token.substr(0,2);
+   token.erase(0,3);
 
    if (token.length() > 0)
    {
@@ -2255,7 +2275,7 @@ int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
 
   return L.size();
 
-} /* ModuleMetarInfo::splitStr */
+} /* ModuleMetarInfo::splitEmptyStr */
 
 
 /*
