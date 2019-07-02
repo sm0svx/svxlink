@@ -163,9 +163,8 @@ proc send_short_ident {{hour -1} {minute -1}} {
   # Play announcement file if enabled
   if {$short_announce_enable} {
     puts "Playing short announce"
-    set announcement_path "/var/lib/svxlink/sounds/announcement/$short_announce"
-    if [file exist "$announcement_path"] {
-      playFile "$announcement_path"
+    if [file exist "$short_announce"] {
+      playFile "$short_announce"
       playSilence 500
     } else {
       playMsg "CustomIdent" "Long_ID.wav"
@@ -237,9 +236,8 @@ proc send_long_ident {hour minute} {
   # Play announcement if enabled
   if {$long_announce_enable} {
     puts "Playing long announce"
-    set announcement_path "/var/lib/svxlink/sounds/announcement/$long_announce"
-    if [file exist "$announcement_path"] {
-      playFile "$announcement_path"
+    if [file exist "$long_announce"] {
+      playFile "$long_announce"
       playSilence 500
     } else {
       playMsg "CustomIdent" "Long_ID.wav"
