@@ -31,12 +31,12 @@ variable long_ident_interval 0;
 variable short_voice_id_enable  1
 variable short_cw_id_enable     0
 variable short_announce_enable  0
-variable short_announce         ""
+variable short_announce_file    ""
 
 variable long_voice_id_enable   1
 variable long_cw_id_enable      0
 variable long_announce_enable   0
-variable long_announce          ""
+variable long_announce_file     ""
 
 #
 # The ident_only_after_tx variable indicates if identification is only to
@@ -140,7 +140,7 @@ proc manual_identification {} {
 proc send_short_ident {{hour -1} {minute -1}} {
   global mycall;
   variable CFG_TYPE;
-  variable short_announce
+  variable short_announce_file
   variable short_announce_enable
   variable short_voice_id_enable
   variable short_cw_id_enable
@@ -148,7 +148,7 @@ proc send_short_ident {{hour -1} {minute -1}} {
   puts "### SHORT_VOICE_ID_ENABLE=$short_voice_id_enable"
   puts "### SHORT_CW_ID_ENABLE=$short_cw_id_enable"
   puts "### SHORT_ANNOUNCE_ENABLE=$short_announce_enable"
-  puts "### SHORT_ANNOUNCE=$short_announce"
+  puts "### SHORT_ANNOUNCE_FILE=$short_announce_file"
 
   # Play voice id if enabled
   if {$short_voice_id_enable} {
@@ -163,8 +163,8 @@ proc send_short_ident {{hour -1} {minute -1}} {
   # Play announcement file if enabled
   if {$short_announce_enable} {
     puts "Playing short announce"
-    if [file exist "$short_announce"] {
-      playFile "$short_announce"
+    if [file exist "$short_announce_file"] {
+      playFile "$short_announce_file"
       playSilence 500
     } else {
       playMsg "CustomIdent" "Long_ID.wav"
@@ -196,7 +196,7 @@ proc send_long_ident {hour minute} {
   global loaded_modules;
   global active_module;
   variable CFG_TYPE;
-  variable long_announce
+  variable long_announce_file
   variable long_announce_enable
   variable long_voice_id_enable
   variable long_cw_id_enable
@@ -204,7 +204,7 @@ proc send_long_ident {hour minute} {
   puts "### LONG_VOICE_ID_ENABLE=$long_voice_id_enable"
   puts "### LONG_CW_ID_ENABLE=$long_cw_id_enable"
   puts "### LONG_ANNOUNCE_ENABLE=$long_announce_enable"
-  puts "### LONG_ANNOUNCE=$long_announce"
+  puts "### LONG_ANNOUNCE_FILE=$long_announce_file"
 
   # Play the voice ID if enabled
   if {$long_voice_id_enable} {
@@ -236,8 +236,8 @@ proc send_long_ident {hour minute} {
   # Play announcement if enabled
   if {$long_announce_enable} {
     puts "Playing long announce"
-    if [file exist "$long_announce"] {
-      playFile "$long_announce"
+    if [file exist "$long_announce_file"] {
+      playFile "$long_announce_file"
       playSilence 500
     } else {
       playMsg "CustomIdent" "Long_ID.wav"
@@ -725,8 +725,8 @@ if [info exists CFG_SHORT_ANNOUNCE_ENABLE] {
   set short_announce_enable $CFG_SHORT_ANNOUNCE_ENABLE
 }
 
-if [info exists CFG_SHORT_ANNOUNCE] {
-  set short_announce $CFG_SHORT_ANNOUNCE
+if [info exists CFG_SHORT_ANNOUNCE_FILE] {
+  set short_announce_file $CFG_SHORT_ANNOUNCE_FILE
 }
 
 if [info exists CFG_SHORT_VOICE_ID_ENABLE] {
@@ -741,8 +741,8 @@ if [info exists CFG_LONG_ANNOUNCE_ENABLE] {
   set long_announce_enable $CFG_LONG_ANNOUNCE_ENABLE
 }
 
-if [info exists CFG_LONG_ANNOUNCE] {
-  set long_announce $CFG_LONG_ANNOUNCE
+if [info exists CFG_LONG_ANNOUNCE_FILE] {
+  set long_announce_file $CFG_LONG_ANNOUNCE_FILE
 }
 
 if [info exists CFG_LONG_VOICE_ID_ENABLE] {
