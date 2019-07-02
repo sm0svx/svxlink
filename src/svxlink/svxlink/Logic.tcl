@@ -145,11 +145,6 @@ proc send_short_ident {{hour -1} {minute -1}} {
   variable short_voice_id_enable
   variable short_cw_id_enable
 
-  puts "### SHORT_VOICE_ID_ENABLE=$short_voice_id_enable"
-  puts "### SHORT_CW_ID_ENABLE=$short_cw_id_enable"
-  puts "### SHORT_ANNOUNCE_ENABLE=$short_announce_enable"
-  puts "### SHORT_ANNOUNCE_FILE=$short_announce_file"
-
   # Play voice id if enabled
   if {$short_voice_id_enable} {
     puts "Playing short voice ID"
@@ -198,11 +193,6 @@ proc send_long_ident {hour minute} {
   variable long_voice_id_enable
   variable long_cw_id_enable
 
-  puts "### LONG_VOICE_ID_ENABLE=$long_voice_id_enable"
-  puts "### LONG_CW_ID_ENABLE=$long_cw_id_enable"
-  puts "### LONG_ANNOUNCE_ENABLE=$long_announce_enable"
-  puts "### LONG_ANNOUNCE_FILE=$long_announce_file"
-
   # Play the voice ID if enabled
   if {$long_voice_id_enable} {
     puts "Playing Long voice ID"
@@ -230,7 +220,7 @@ proc send_long_ident {hour minute} {
     playSilence 500;
   }
 
-  # Play announcement if enabled
+  # Play announcement file if enabled
   if {$long_announce_enable} {
     puts "Playing long announce"
     if [file exist "$long_announce_file"] {
