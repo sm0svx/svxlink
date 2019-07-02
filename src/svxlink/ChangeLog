@@ -118,6 +118,9 @@
 
 * Bugfix: The EchoLink module could crash when encountering TCL errors.
 
+* ModuleMetarInfo: Windshear now with runway, error handling for metar txt
+  file, fix some typo
+
 
 
  1.6.1 -- 01 Mar 2018
