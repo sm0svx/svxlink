@@ -166,9 +166,6 @@ proc send_short_ident {{hour -1} {minute -1}} {
     if [file exist "$short_announce_file"] {
       playFile "$short_announce_file"
       playSilence 500
-    } else {
-      playMsg "CustomIdent" "Long_ID.wav"
-      playSilence 500
     }
   }
 
@@ -238,9 +235,6 @@ proc send_long_ident {hour minute} {
     puts "Playing long announce"
     if [file exist "$long_announce_file"] {
       playFile "$long_announce_file"
-      playSilence 500
-    } else {
-      playMsg "CustomIdent" "Long_ID.wav"
       playSilence 500
     }
   }
