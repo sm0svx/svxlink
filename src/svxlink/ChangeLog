@@ -121,6 +121,16 @@
 * ModuleMetarInfo: Windshear now with runway, error handling for metar txt
   file, fix some typo
 
+* Adding new Config options related to enabling IDs.
+  Adding several config options to allow user to configure VOICE/CW/Custom
+  announcements during the short and long ID processes.  This allows the
+  settings to be on a channel by channel basis rather than having a single
+  file for all channels.
+  New logic configuration variables: SHORT_VOICE_ID_ENABLE,
+  SHORT_CW_ID_ENABLE, SHORT_ANNOUNCE_ENABLE, SHORT_ANNOUNCE_FILE,
+  LONG_VOICE_ID_ENABLE, LONG_CW_ID_ENABLE, LONG_ANNOUNCE_ENABLE,
+  LONG_ANNOUNCE_FILE. See manual page svxling.conf (5) for more info.
+
 
 
  1.6.1 -- 01 Mar 2018
