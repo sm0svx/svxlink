@@ -268,7 +268,7 @@ bool Logic::initialize(void)
     if (!state_pty->open())
     {
       cerr << "*** ERROR: Could not open state PTY "
-           << state_pty_path << " as spcified in configuration variable "
+           << state_pty_path << " as specified in configuration variable "
            << name() << "/" << "STATE_PTY" << endl;
       cleanup();
       return false;
@@ -283,7 +283,7 @@ bool Logic::initialize(void)
     if (!dtmf_ctrl_pty->open())
     {
       cerr << "*** ERROR: Could not open control PTY "
-           << dtmf_ctrl_pty_path << " as spcified in configuration variable "
+           << dtmf_ctrl_pty_path << " as specified in configuration variable "
            << name() << "/" << "DTMF_CTRL_PTY" << endl;
       cleanup();
       return false;
