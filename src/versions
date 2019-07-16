@@ -1,3 +1,6 @@
+# Project release version
+PROJECT=master
+
 # Version for the Qtel application
 QTEL=1.2.4
 
