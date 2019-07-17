@@ -360,12 +360,20 @@ execute_process(
   COMMAND tr - .
   COMMAND tr -d '\n'
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  OUTPUT_VARIABLE CPACK_PACKAGE_VERSION)
+  OUTPUT_VARIABLE CPACK_PACKAGE_VERSION
+  ERROR_QUIET)
+if (NOT CPACK_PACKAGE_VERSION)
+  set(CPACK_PACKAGE_VERSION "${VER_PROJECT}")
+endif()
 message(STATUS "Package Version = ${CPACK_PACKAGE_VERSION}")
-#set(CPACK_PACKAGE_VERSION "0.1.3")
 set(CPACK_PACKAGE_DESCRIPTION
-  "The SvxLink project develops an advanced voice services system for ham radio use. It can be run on a simplex frequency or act as a repeaster controller.")
+  "The SvxLink project develops an advanced voice services system for ham radio use. It can be run on a simplex frequency or act as a repeater controller.")
+set(CPACK_PACKAGE_VENDOR "SM0SVX")
 set(CPACK_PACKAGE_CONTACT
   "SvxLink Community <svxlink-devel@lists.sourceforge.net>")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/../COPYRIGHT")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/../README.adoc")
+
 #set(CPACK_GENERATOR "DEB")
+
 include(CPack)
