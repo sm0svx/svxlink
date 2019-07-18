@@ -216,6 +216,13 @@ class EventHandler : public sigc::trackable
      * @param 	duration  The duration of each digit in milliseconds
      */
     sigc::signal<void, const std::string&, int> injectDtmf;
+
+    /**
+     * @brief   A signal that is emitted when the TCL script want to call
+     *          a sip user
+     * @param   The phone number of the user
+     */
+    sigc::signal<void, const std::string&> initCall;
     
   protected:
 
@@ -239,6 +246,8 @@ class EventHandler : public sigc::trackable
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
     static int injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                    int argc, const char *argv[]);
+    static int initCallHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
 
 };  /* class EventHandler */
