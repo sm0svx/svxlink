@@ -99,7 +99,7 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
-install(FILES RepeaterLogic.tcl SimplexLogic.tcl Module.tcl Logic.tcl CW.tcl
+install(FILES RepeaterLogic.tcl SimplexLogic.tcl SipLogic.tcl Module.tcl Logic.tcl CW.tcl
   SelCall.tcl locale.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
   )

@@ -91,6 +91,8 @@ namespace Async
   class Pty;
 };
 class Squelch;
+class MsgHandler;
+class EventHandler;
 
 
 /****************************************************************************
@@ -156,9 +158,19 @@ class SipLogic : public LogicBase
     pj_status_t mediaPortGetFrame(pjmedia_port *med_port, pjmedia_frame *put_frame);
     pj_status_t mediaPortPutFrame(pjmedia_port *med_port, pjmedia_frame *put_frame);
 
+    virtual void playFile(const std::string& path);
+    virtual void playSilence(int length);
+    virtual void initCall(const std::string& remote);
+
+    void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
+
+    void processEvent(const std::string& event);
+
 
   protected:
 
+    virtual void allMsgsWritten(void);
+    void checkIdle(void);
 
   private:
     std::string               m_sipserver;
@@ -182,6 +194,10 @@ class SipLogic : public LogicBase
     regex_t                   *reject_incoming_regex;
     regex_t   	         	  *accept_outgoing_regex;
     regex_t                   *reject_outgoing_regex;
+    MsgHandler                *msg_handler;
+    EventHandler              *event_handler;
+    bool                      report_events_as_idle;
+    bool                      startup_finished;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);

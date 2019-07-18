@@ -59,6 +59,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "EventHandler.h"
+#include "MsgHandler.h"
 #include "SipLogic.h"
 #include "SquelchVox.h"
 #include "multirate_filter_coeff.h"
@@ -266,7 +268,9 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     m_sip_port(5060), dtmf_ctrl_pty(0),
     m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
     squelch_det(0), accept_incoming_regex(0), reject_incoming_regex(0),
-    accept_outgoing_regex(0), reject_outgoing_regex(0)
+    accept_outgoing_regex(0), reject_outgoing_regex(0),
+    msg_handler(0), event_handler(0), report_events_as_idle(false),
+    startup_finished(false)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -287,6 +291,10 @@ SipLogic::~SipLogic(void)
   media = 0;
   delete m_ar;
   m_ar = 0;
+  delete event_handler;
+  event_handler = 0;
+  delete msg_handler;
+  msg_handler = 0;
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
   {
@@ -519,6 +527,28 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+    // the event handler
+  string event_handler_str;
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  {
+    cerr << name() << ":*** ERROR: Config variable EVENT_HANDLER not set"
+         << endl;
+    return false;
+  }
+  event_handler = new EventHandler(event_handler_str, name());
+  event_handler->setVariable("is_core_event_handler", "1");
+  event_handler->setVariable("logic_name", name().c_str());
+  event_handler->playFile.connect(mem_fun(*this, &SipLogic::playFile));
+  event_handler->initCall.connect(mem_fun(*this, &SipLogic::initCall));
+  event_handler->processEvent("namespace eval SipLogic {}");
+
+  if (!event_handler->initialize())
+  {
+    cout << name() << ":*** ERROR initializing eventhandler in SipLogic."
+         << endl;
+    return false;
+  }
+
    // add SipAccount
   AccountConfig acc_cfg;
   acc_cfg.idUri = "\"";
@@ -583,6 +613,11 @@ bool SipLogic::initialize(void)
   prev_src->registerSink(m_infrom_sip, true);
   prev_src = m_infrom_sip;
 
+    // Create the message handler for announcements
+  msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
+  msg_handler->allMsgsWritten.connect(mem_fun(*this, &SipLogic::allMsgsWritten));
+  prev_src = msg_handler;
+
   unsigned sql_hangtime = 1200;
 
   if (!m_semiduplex)
@@ -633,7 +668,7 @@ bool SipLogic::initialize(void)
    // init this Logic
   if (!LogicBase::initialize())
   {
-    cout << name() << "*** ERROR initializing SipLogic: " << name() << endl;
+    cout << name() << ":*** ERROR initializing SipLogic." << endl;
     return false;
   }
 
@@ -642,6 +677,13 @@ bool SipLogic::initialize(void)
   {
     makeCall(acc, m_autoconnect);
   }
+
+  processEvent("startup");
+
+  // enable the execution of external tcl procedures since it handles start infor-
+  // mation (registrations, ...) too. The sip-startup procedure must beeing
+  // completely finished before the tcl procedures could be started
+  startup_finished = true;
 
   return true;
 } /* SipLogic::initialize */
@@ -653,6 +695,10 @@ bool SipLogic::initialize(void)
  *
  ****************************************************************************/
 
+void SipLogic::checkIdle(void)
+{
+  //setIdle(getIdleState());
+} /* SipLogic::checkIdle */
 
 
 /****************************************************************************
@@ -663,7 +709,7 @@ bool SipLogic::initialize(void)
 
 void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 {
-
+  stringstream ss;
   std::string caller = getCallerNumber(dest_uri);
 
   if ((regexec(reject_outgoing_regex, caller.c_str(),
@@ -671,12 +717,13 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
       (regexec(accept_outgoing_regex, caller.c_str(),
 	       0, 0, 0) != 0))
   {
-    cout << "*** WARNING: Dropping outgoing call to \"" << caller <<
-            "\" due to configuration.\n";
+    ss << "drop_outgoing_call \"" << dest_uri << "\"";
+    processEvent(ss.str());
     return;
   }
 
-  cout << name() << ": Calling \"" << dest_uri << "\"" << endl;
+  ss << "calling \"" << dest_uri << "\"";
+  processEvent(ss.str());
 
   CallOpParam prm(true);
   prm.opt.audioCount = 1;
@@ -703,13 +750,14 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 
   std::string caller = getCallerNumber(ci.remoteContact);
 
-  cout << name() << ": Incoming Call from " <<  caller << " ["
-            << ci.remoteContact << "] " << ci.callIdString
-            << endl;
+  stringstream ss;
+  ss << "ringing \"" << ci.remoteContact << "\"";
+  processEvent(ss.str());
 
   if (regexec(reject_incoming_regex, caller.c_str(), 0, 0, 0) == 0)
   {
-    cout << "*** WARNING: Dropping incoming call due to configuration.\n";
+    ss << "reject_incoming_call \"" << ci.remoteContact << "\"";
+    processEvent(ss.str());
     return;
   }
 
@@ -847,6 +895,7 @@ pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame
 
 void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 {
+  stringstream ss;
   pj::CallInfo ci = call->getInfo();
 
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
@@ -875,13 +924,15 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // incoming call
       if (ci.state == PJSIP_INV_STATE_INCOMING)
       {
-        cout << name() << ": Incoming call" << endl;
+        ss << "incoming_call " << ci.remoteContact;
+        processEvent(ss.str());
       }
 
        // connecting
       if (ci.state == PJSIP_INV_STATE_CONNECTING)
       {
-        cout << name() << ": Connecting" << endl;
+        ss << "pickup_call " << ci.remoteContact;
+        processEvent(ss.str());
         m_call_timeout_timer.setEnable(false);
         m_call_timeout_timer.reset();
       }
@@ -889,6 +940,8 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // calling
       if (ci.state == PJSIP_INV_STATE_CALLING)
       {
+        ss << "outgoing_call " << ci.remoteContact;
+        processEvent(ss.str());
         cout << name() << ": Calling" << endl;
       }
 
@@ -900,17 +953,20 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 
 void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
-  cout << name() << ": Dtmf digit received: " << prm.digit
-       << " code=" << call->getId() << endl;
+  pj::CallInfo ci = call->getInfo();
+  stringstream ss;
+  ss << "dtmf_digit_received " << prm.digit << " " << ci.remoteContact;
+  processEvent(ss.str());
 } /* SipLogic::onDtmfDigit */
 
 
 void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
 {
   pj::AccountInfo ai = acc->getInfo();
-  std::cout << name() << ": " << m_sipserver
-    << (ai.regIsActive ? " " : " un") << "registered, code="
-    << prm.code << std::endl;
+  stringstream ss;
+  ss << "registration_state " << m_sipserver << " "
+     << ai.regIsActive << " " << prm.code;
+  processEvent(ss.str());
 } /* SipLogic::onRegState */
 
 
@@ -932,15 +988,17 @@ void SipLogic::hangupCall(sip::_Call *call)
 {
   CallOpParam prm(true);
   m_out_src->allSamplesFlushed();
-  
+
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
        it != calls.end(); it++)
   {
     if (*it == call)
     {
-      cout << name() << ": Hangup call " << (*it)->getInfo().remoteUri
-           << ", duration " << (*it)->getInfo().totalDuration.sec
-           << " secs" << endl;
+      stringstream ss;
+      ss << "hangup_call \"" << (*it)->getInfo().remoteUri << "\" "
+         << (*it)->getInfo().totalDuration.sec;
+      processEvent(ss.str());
+
       (*it)->hangup(prm);
       calls.erase(it);
       break;
@@ -954,7 +1012,7 @@ void SipLogic::hangupCall(sip::_Call *call)
  *  dial-out by sending a string over Pty device, e.g.
  *  echo "C12345#" > /tmp/sip_pty
  *  method converts it to a valid dial string:
- *  "sip:12345@sipserver.com"
+ *  "sip:12345@sipserver.com:5060"
 **/
 void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 {
@@ -970,7 +1028,7 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
         hangupCalls(calls);
         return;
       }
-      
+
         // calling a party with "C12345#"
         // "C12345#" -> sip:12345@sipserver.de
       string tocall = "sip:";
@@ -978,7 +1036,7 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
       {
         const char &ch = buffer[i];
         if (::isdigit(ch))
-        {         
+        {
           tocall += ch;
         }
       }
@@ -1017,10 +1075,12 @@ std::string SipLogic::getCallerNumber(std::string uri)
 
 void SipLogic::callTimeout(Async::Timer *t)
 {
-  cout << name() << ": Called party is not at home." << endl;
+  stringstream ss;
+  ss << "call_timeout";
+  processEvent(ss.str());
   m_call_timeout_timer.setEnable(false);
   m_call_timeout_timer.reset();
-  
+
 } /* SipLogic::flushTimeout */
 
 
@@ -1036,6 +1096,41 @@ void SipLogic::onSquelchOpen(bool is_open)
        << (is_open ? "OPEN" : "CLOSED") << endl;
   m_infrom_sip->setOpen(is_open);
 } /* SipLogic::onSquelchOpen */
+
+
+void SipLogic::allMsgsWritten(void)
+{
+  //cout << "SipLogic::allMsgsWritten\n";
+
+} /* SipLogic::allMsgsWritten */
+
+
+void SipLogic::processEvent(const string& event)
+{
+  if (!startup_finished) return;
+  msg_handler->begin();
+  event_handler->processEvent(name() + "::" + event);
+  msg_handler->end();
+} /* SipLogic::processEvent */
+
+
+void SipLogic::playFile(const string& path)
+{
+  msg_handler->playFile(path, report_events_as_idle);
+} /* SipLogic::playFile */
+
+
+void SipLogic::playSilence(int length)
+{
+  msg_handler->playSilence(length, report_events_as_idle);
+} /* SipLogic::playSilence */
+
+
+void SipLogic::initCall(const string& remote)
+{
+  makeCall(acc, remote);
+} /* SipLogic::initCall */
+
 
 /*
  * This file has not been truncated
