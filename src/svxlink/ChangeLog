@@ -131,9 +131,10 @@
   LONG_VOICE_ID_ENABLE, LONG_CW_ID_ENABLE, LONG_ANNOUNCE_ENABLE,
   LONG_ANNOUNCE_FILE. See manual page svxling.conf (5) for more info.
 
-* Now possible to configure SvxLink to keep audio devices open once opened.
-  The normal behavior in SvxLink is to open and close audio devices as needed.
-  In a local RX and/or TX section set the variable AUDIO_DEV_KEEP_OPEN=1.
+* Now possible to configure SvxLink to keep audio devices open from
+  application start to exit. The normal behavior in SvxLink is to open and
+  close audio devices as needed. In a local RX and/or TX section set the
+  variable AUDIO_DEV_KEEP_OPEN=1.
 
 
 

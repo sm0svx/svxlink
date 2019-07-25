@@ -669,6 +669,8 @@ bool LocalRxBase::initialize(void)
     // the LocalRxBase class
   setHandler(prev_src);
   
+  cfg.getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
+
     // Open the audio device for reading
   if (!audioOpen())
   {
@@ -685,8 +687,6 @@ bool LocalRxBase::initialize(void)
     voiceband_splitter->addSink(calldet, true);
     //cout << "### Enabling 1750Hz muting\n";
   }
-
-  cfg.getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
 
   return true;
   

@@ -259,7 +259,10 @@ LocalTx::LocalTx(Config& cfg, const string& name)
 LocalTx::~LocalTx(void)
 {
   transmit(false);
-  audio_io->close();
+  if (audio_io != 0)
+  {
+    audio_io->close();
+  }
   
   clearHandler();
   delete input_handler;
@@ -370,6 +373,12 @@ bool LocalTx::initialize(void)
 #endif
 
   cfg.getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
+  if (audio_dev_keep_open && !audio_io->open(AudioIO::MODE_WR))
+  {
+    cerr << "*** ERROR: Could not open audio device for transmitter \""
+         << name() << "\"\n";
+    return false;
+  }
 
   sine_gen = new SineGenerator(audio_dev, audio_channel);
   sine_gen->setKeepOpen(audio_dev_keep_open);
