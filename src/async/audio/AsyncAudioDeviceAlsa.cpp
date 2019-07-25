@@ -8,7 +8,7 @@ Implements the low level interface to an Alsa audio device.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,7 +37,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 #include <poll.h>
 #include <iostream>
+#include <sstream>
 #include <cmath>
+#include <cstring>
 
 
 /****************************************************************************
@@ -191,9 +193,16 @@ REGISTER_AUDIO_DEVICE_TYPE("alsa", AudioDeviceAlsa);
 AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
   : AudioDevice(dev_name), play_block_size(0), play_block_count(0),
     rec_block_size(0), rec_block_count(0), play_handle(0), 
-    rec_handle(0), play_watch(0), rec_watch(0), duplex(false)
+    rec_handle(0), play_watch(0), rec_watch(0), duplex(false),
+    zerofill_on_underflow(false)
 {
   assert(AudioDeviceAlsa_creator_registered);
+
+  char *zerofill_str = getenv("ASYNC_AUDIO_ALSA_ZEROFILL");
+  if (zerofill_str != 0)
+  {
+    istringstream(zerofill_str) >> zerofill_on_underflow;
+  }
 
   snd_pcm_t *play, *capture;
 
@@ -482,9 +491,16 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
     int blocks_avail = getBlocks(buf, blocks_to_read);
     if (blocks_avail == 0) 
     {
-      //printf("No blocks available to write\n");
-      watch->setEnabled(false);
-      return;
+      if (zerofill_on_underflow)
+      {
+        blocks_avail = 1;
+        memset(buf, 0, blocks_avail * play_block_size);
+      }
+      else
+      {
+        watch->setEnabled(false);
+        return;
+      }
     }
     
     int frames_to_write = blocks_avail * play_block_size;

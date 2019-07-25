@@ -1,4 +1,4 @@
- 1.6.0 -- ?? ??? 2018
+ 1.6.0 -- ?? ??? 2019
 ----------------------
 
 * New class Async::AudioFsf, an implementation of a frequency sampling filter.
@@ -7,6 +7,12 @@
   configuration sections.
 
 * Small optimization in the Async::CppApplication main loop.
+
+* AudioDeviceAlsa can now write zeros to the audio device on underflow. That
+  is, when the audio device is open but there is no audio to write zeros will
+  be written instead. Enable this behavior by setting the environment variable
+  ASYNC_AUDIO_ALSA_ZEROFILL=1.
+
 
 
  1.5.0 -- 30 Dec 2017
