@@ -87,6 +87,7 @@ HOST=reflector.example.com
 CALLSIGN="MYCALL"
 AUTH_KEY="Change this key now!"
 #JITTER_BUFFER_DELAY=0
+DEFAULT_TG=24099
 
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD

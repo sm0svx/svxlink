@@ -125,7 +125,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
-    m_con_state(STATE_DISCONNECTED), m_enc(0)
+    m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -223,6 +223,8 @@ bool ReflectorLogic::initialize(void)
     prev_src = passthrough;
   }
   m_logic_con_out = prev_src;
+
+  cfg().getValue(name(), "DEFAULT_TG", m_default_tg);
 
   if (!LogicBase::initialize())
   {
@@ -491,6 +493,7 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 
   m_con_state = STATE_CONNECTED;
 
+  sendMsg(MsgSwitchTG(m_default_tg));
   sendUdpMsg(MsgUdpHeartbeat());
 
 } /* ReflectorLogic::handleMsgAuthChallenge */

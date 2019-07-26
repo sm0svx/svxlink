@@ -184,6 +184,7 @@ class ReflectorLogic : public LogicBase
     struct timeval            m_last_talker_timestamp;
     ConState                  m_con_state;
     Async::AudioEncoder*      m_enc;
+    uint32_t                  m_default_tg;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);

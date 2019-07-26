@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ReflectorMsg.h"
+#include "ProtoVer.h"
 
 
 /****************************************************************************
@@ -234,43 +235,13 @@ class ReflectorClient
      */
     ConState conState(void) const { return m_con_state; }
 
+    /**
+     * @brief   Get the protocol version of the client
+     * @return  Returns the protocol version of the client
+     */
+    const ProtoVer& protoVer(void) const { return m_client_proto_ver; }
+
   private:
-    struct ProtoVer
-    {
-      uint16_t major_ver;
-      uint16_t minor_ver;
-
-      ProtoVer(void) : major_ver(0), minor_ver(0) {}
-      ProtoVer(uint16_t major_ver, uint16_t minor_ver)
-        : major_ver(major_ver), minor_ver(minor_ver) {}
-      bool operator ==(const ProtoVer& rhs) const
-      {
-        return (major_ver == rhs.major_ver) && (minor_ver == rhs.minor_ver);
-      }
-      bool operator !=(const ProtoVer& rhs) const
-      {
-        return !(major_ver == rhs.major_ver);
-      }
-      bool operator <(const ProtoVer& rhs) const
-      {
-        return (major_ver < rhs.major_ver) ||
-               ((major_ver == rhs.major_ver) && (minor_ver < rhs.minor_ver));
-      }
-      bool operator >(const ProtoVer& rhs) const
-      {
-        return (major_ver > rhs.major_ver) ||
-               ((major_ver == rhs.major_ver) && (minor_ver > rhs.minor_ver));
-      }
-      bool operator <=(const ProtoVer& rhs) const
-      {
-        return (*this == rhs) || (*this < rhs);
-      }
-      bool operator >=(const ProtoVer& rhs) const
-      {
-        return (*this == rhs) || (*this > rhs);
-      }
-    };
-
     static const uint16_t MIN_MAJOR_VER = 0;
     static const uint16_t MIN_MINOR_VER = 6;
     static uint32_t next_client_id;
@@ -301,6 +272,7 @@ class ReflectorClient
     unsigned                  m_remaining_blocktime;
     ProtoVer                  m_client_proto_ver;
     std::vector<std::string>  m_supported_codecs;
+    uint32_t                  m_current_tg;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -308,6 +280,7 @@ class ReflectorClient
                          std::vector<uint8_t>& data);
     void handleMsgProtoVer(std::istream& is);
     void handleMsgAuthResponse(std::istream& is);
+    void handleSwitchTG(std::istream& is);
     void handleMsgError(std::istream& is);
     void sendError(const std::string& msg);
     void onDiscTimeout(Async::Timer *t);

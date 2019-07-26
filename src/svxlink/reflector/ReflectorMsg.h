@@ -236,7 +236,7 @@ protocol version that the server does not support, the client is denied access.
 class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
-    static const uint16_t MAJOR = 1;
+    static const uint16_t MAJOR = 2;
     static const uint16_t MINOR = 0;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
@@ -572,6 +572,27 @@ class MsgTalkerStop : public ReflectorMsgBase<105>
 }; /* MsgTalkerStop */
 
 
+/**
+@brief	 Choose talk group TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2019-07-25
+
+This message is sent by the client to choose which talk group to use for
+communication.
+*/
+class MsgSwitchTG : public ReflectorMsgBase<106>
+{
+  public:
+    MsgSwitchTG(void) : m_tg(0) {}
+    MsgSwitchTG(uint32_t tg) : m_tg(tg) {}
+
+    uint32_t tg(void) const { return m_tg; }
+
+    ASYNC_MSG_MEMBERS(m_tg);
+
+  private:
+    uint32_t m_tg;
+}; /* MsgSwitchTG */
 
 
 
@@ -594,7 +615,7 @@ class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
 
 
 /**
-@brief	 Audio UDP network message
+@brief	 Audio UDP network message V1
 @author  Tobias Blomberg / SM0SVX
 @date    2017-02-12
 
@@ -604,6 +625,8 @@ class MsgUdpAudio : public ReflectorUdpMsgBase<101>
 {
   public:
     MsgUdpAudio(void) {}
+    MsgUdpAudio(const std::vector<uint8_t>& audio_data)
+      : m_audio_data(audio_data) {}
     MsgUdpAudio(const void *buf, int count)
     {
       if (count > 0)
@@ -613,6 +636,7 @@ class MsgUdpAudio : public ReflectorUdpMsgBase<101>
       }
     }
     std::vector<uint8_t>& audioData(void) { return m_audio_data; }
+    const std::vector<uint8_t>& audioData(void) const { return m_audio_data; }
 
     ASYNC_MSG_MEMBERS(m_audio_data)
 
@@ -648,6 +672,39 @@ class MsgUdpAllSamplesFlushed : public ReflectorUdpMsgBase<103>
   public:
     ASYNC_MSG_NO_MEMBERS
 }; /* MsgUdpAllSamplesFlushed */
+
+
+/**
+@brief	 Audio UDP network message V2
+@author  Tobias Blomberg / SM0SVX
+@date    2019-07-25
+
+This is the message used to transmit audio to the other side.
+*/
+//class MsgUdpAudio : public ReflectorUdpMsgBase<104>
+//{
+//  public:
+//    MsgUdpAudio(void) : m_tg(0) {}
+//    MsgUdpAudio(const MsgUdpAudioV1& msg_v1)
+//      : m_tg(0), m_audio_data(msg_v1.audioData()) {}
+//    MsgUdpAudio(uint32_t tg, const void *buf, int count)
+//      : m_tg(tg)
+//    {
+//      if (count > 0)
+//      {
+//        const uint8_t *bbuf = reinterpret_cast<const uint8_t*>(buf);
+//        m_audio_data.assign(bbuf, bbuf+count);
+//      }
+//    }
+//    uint32_t tg(void) { return m_tg; }
+//    std::vector<uint8_t>& audioData(void) { return m_audio_data; }
+//
+//    ASYNC_MSG_MEMBERS(m_tg, m_audio_data)
+//
+//  private:
+//    uint32_t              m_tg;
+//    std::vector<uint8_t>  m_audio_data;
+//}; /* MsgUdpAudio */
 
 
 #endif /* REFLECTOR_MSG_INCLUDED */

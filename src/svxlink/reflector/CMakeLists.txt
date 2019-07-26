@@ -19,7 +19,7 @@ add_version_target(SVXREFLECTOR VERSION_DEPENDS)
 
 # Build the executable
 add_executable(svxreflector
-  svxreflector.cpp Reflector.cpp ReflectorClient.cpp
+  svxreflector.cpp Reflector.cpp ReflectorClient.cpp TGHandler.cpp
   ${VERSION_DEPENDS}
 )
 target_link_libraries(svxreflector ${LIBS})

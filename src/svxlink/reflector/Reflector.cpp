@@ -53,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Reflector.h"
 #include "ReflectorClient.h"
-
+#include "TGHandler.h"
 
 
 /****************************************************************************
@@ -118,13 +118,10 @@ void delete_client(ReflectorClient *client);
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : m_srv(0), m_udp_sock(0), m_talker(0),
-    m_talker_timeout_timer(1000, Timer::TYPE_PERIODIC),
-    m_sql_timeout(0), m_sql_timeout_cnt(0), m_sql_timeout_blocktime(60)
+  : m_srv(0), m_udp_sock(0)
 {
-  timerclear(&m_last_talker_timestamp);
-  m_talker_timeout_timer.expired.connect(
-      mem_fun(*this, &Reflector::checkTalkerTimeout));
+  TGHandler::instance()->talkerUpdated.connect(
+      mem_fun(*this, &Reflector::onTalkerUpdated));
 } /* Reflector::Reflector */
 
 
@@ -138,6 +135,8 @@ Reflector::~Reflector(void)
   {
     delete (*it).second;
   }
+
+  delete TGHandler::instance();
 } /* Reflector::~Reflector */
 
 
@@ -186,9 +185,13 @@ bool Reflector::initialize(Async::Config &cfg)
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &Reflector::udpDatagramReceived));
 
-  cfg.getValue("GLOBAL", "SQL_TIMEOUT", m_sql_timeout);
-  cfg.getValue("GLOBAL", "SQL_TIMEOUT_BLOCKTIME", m_sql_timeout_blocktime);
-  m_sql_timeout_blocktime = max(m_sql_timeout_blocktime, 1U);
+  unsigned sql_timeout = 0;
+  cfg.getValue("GLOBAL", "SQL_TIMEOUT", sql_timeout);
+  TGHandler::instance()->setSqlTimeout(sql_timeout);
+
+  unsigned sql_timeout_blocktime = 60;
+  cfg.getValue("GLOBAL", "SQL_TIMEOUT_BLOCKTIME", sql_timeout_blocktime);
+  TGHandler::instance()->setSqlTimeoutBlocktime(sql_timeout_blocktime);
 
   return true;
 } /* Reflector::initialize */
@@ -264,6 +267,8 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
   assert(it != m_client_con_map.end());
   ReflectorClient *client = (*it).second;
 
+  TGHandler::instance()->removeClient(client);
+
   if (!client->callsign().empty())
   {
     cout << client->callsign() << ": ";
@@ -277,11 +282,6 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
 
   m_client_map.erase(client->clientId());
   m_client_con_map.erase(it);
-
-  if (client == m_talker)
-  {
-    setTalker(0);
-  }
 
   if (!client->callsign().empty())
   {
@@ -362,32 +362,70 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         if (!msg.unpack(ss))
         {
           cerr << "*** WARNING[" << client->callsign()
-               << "]: Could not unpack incoming MsgUdpAudio message" << endl;
+               << "]: Could not unpack incoming MsgUdpAudioV1 message" << endl;
           return;
         }
-        if (!msg.audioData().empty())
+        uint32_t tg = TGHandler::instance()->TGForClient(client);
+        if (!msg.audioData().empty() && (tg > 0))
         {
-          if (m_talker == 0)
+          TGHandler::instance()->setTalkerForTG(tg, client);
+          ReflectorClient* talker = TGHandler::instance()->talkerForTG(tg);
+          if (talker == client)
           {
-            setTalker(client);
-            cout << m_talker->callsign() << ": Talker start" << endl;
-          }
-          if (m_talker == client)
-          {
-            gettimeofday(&m_last_talker_timestamp, NULL);
-            broadcastUdpMsgExcept(client, msg);
+            broadcastUdpMsgExcept(tg, client, msg);
+            //broadcastUdpMsgExcept(tg, client, msg,
+            //    ProtoVerRange(ProtoVer(0, 6),
+            //                  ProtoVer(1, ProtoVer::max().minor())));
+            //MsgUdpAudio msg_v2(msg);
+            //broadcastUdpMsgExcept(tg, client, msg_v2,
+            //    ProtoVerRange(ProtoVer(2, 0), ProtoVer::max()));
           }
         }
       }
       break;
     }
 
+    //case MsgUdpAudio::TYPE:
+    //{
+    //  if (!client->isBlocked())
+    //  {
+    //    MsgUdpAudio msg;
+    //    if (!msg.unpack(ss))
+    //    {
+    //      cerr << "*** WARNING[" << client->callsign()
+    //           << "]: Could not unpack incoming MsgUdpAudio message" << endl;
+    //      return;
+    //    }
+    //    if (!msg.audioData().empty())
+    //    {
+    //      if (m_talker == 0)
+    //      {
+    //        setTalker(client);
+    //        cout << m_talker->callsign() << ": Talker start on TG #"
+    //             << msg.tg() << endl;
+    //      }
+    //      if (m_talker == client)
+    //      {
+    //        gettimeofday(&m_last_talker_timestamp, NULL);
+    //        broadcastUdpMsgExcept(tg, client, msg,
+    //            ProtoVerRange(ProtoVer(2, 0), ProtoVer::max()));
+    //        MsgUdpAudioV1 msg_v1(msg.audioData());
+    //        broadcastUdpMsgExcept(tg, client, msg_v1,
+    //            ProtoVerRange(ProtoVer(0, 6),
+    //                          ProtoVer(1, ProtoVer::max().minor())));
+    //      }
+    //    }
+    //  }
+    //  break;
+    //}
+
     case MsgUdpFlushSamples::TYPE:
     {
-      if (client == m_talker)
+      uint32_t tg = TGHandler::instance()->TGForClient(client);
+      ReflectorClient* talker = TGHandler::instance()->talkerForTG(tg);
+      if ((tg > 0) && (client == talker))
       {
-        cout << m_talker->callsign() << ": Talker stop" << endl;
-        setTalker(0);
+        TGHandler::instance()->setTalkerForTG(tg, 0);
       }
         // To be 100% correct the reflector should wait for all connected
         // clients to send a MsgUdpAllSamplesFlushed message but that will
@@ -415,13 +453,15 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
 
 void Reflector::broadcastUdpMsgExcept(const ReflectorClient *except,
-                                      const ReflectorUdpMsg& msg)
+                                      const ReflectorUdpMsg& msg,
+                                      const ProtoVerRange& pv_range)
 {
   for (ReflectorClientMap::iterator it = m_client_map.begin();
        it != m_client_map.end(); ++it)
   {
     ReflectorClient *client = (*it).second;
     if ((client != except) &&
+        (!pv_range.isValid() || pv_range.isWithinRange(client->protoVer())) &&
         (client->conState() == ReflectorClient::STATE_CONNECTED))
     {
       (*it).second->sendUdpMsg(msg);
@@ -430,51 +470,39 @@ void Reflector::broadcastUdpMsgExcept(const ReflectorClient *except,
 } /* Reflector::broadcastUdpMsgExcept */
 
 
-void Reflector::checkTalkerTimeout(Async::Timer *t)
+void Reflector::broadcastUdpMsgExcept(uint32_t tg,
+                                      const ReflectorClient *except,
+                                      const ReflectorUdpMsg& msg,
+                                      const ProtoVerRange& pv_range)
 {
-  if (m_talker != 0)
+  const TGHandler::ClientSet& clients = TGHandler::instance()->clientsForTG(tg);
+  for (TGHandler::ClientSet::iterator it = clients.begin();
+       it != clients.end(); ++it)
   {
-    struct timeval now, diff;
-    gettimeofday(&now, NULL);
-    timersub(&now, &m_last_talker_timestamp, &diff);
-    if (diff.tv_sec > TALKER_AUDIO_TIMEOUT)
+    ReflectorClient *client = *it;
+    if ((client != except) &&
+        (!pv_range.isValid() || pv_range.isWithinRange(client->protoVer())) &&
+        (client->conState() == ReflectorClient::STATE_CONNECTED))
     {
-      cout << m_talker->callsign() << ": Talker audio timeout"
-           << endl;
-      setTalker(0);
-    }
-
-    if ((m_sql_timeout_cnt > 0) && (--m_sql_timeout_cnt == 0))
-    {
-      cout << m_talker->callsign() << ": Talker squelch timeout"
-           << endl;
-      m_talker->setBlock(m_sql_timeout_blocktime);
-      setTalker(0);
+      client->sendUdpMsg(msg);
     }
   }
-} /* Reflector::checkTalkerTimeout */
+} /* Reflector::broadcastUdpMsgExcept */
 
 
-void Reflector::setTalker(ReflectorClient *client)
+void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
+                                ReflectorClient *new_talker)
 {
-  if (client == m_talker)
+  if (old_talker != 0)
   {
-    return;
+    cout << old_talker->callsign() << ": Talker stop on TG #" << tg << endl;
+    broadcastMsgExcept(MsgTalkerStop(old_talker->callsign()));
+    broadcastUdpMsgExcept(tg, old_talker, MsgUdpFlushSamples());
   }
-
-  if (client == 0)
+  if (new_talker != 0)
   {
-    broadcastMsgExcept(MsgTalkerStop(m_talker->callsign()));
-    broadcastUdpMsgExcept(m_talker, MsgUdpFlushSamples());
-    m_sql_timeout_cnt = 0;
-    m_talker = 0;
-  }
-  else
-  {
-    assert(m_talker == 0);
-    m_sql_timeout_cnt = m_sql_timeout;
-    m_talker = client;
-    broadcastMsgExcept(MsgTalkerStart(m_talker->callsign()));
+    cout << new_talker->callsign() << ": Talker start on TG #" << tg << endl;
+    broadcastMsgExcept(MsgTalkerStart(new_talker->callsign()));
   }
 } /* Reflector::setTalker */
 

@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "ProtoVer.h"
 
 
 /****************************************************************************
@@ -165,8 +166,6 @@ class Reflector : public sigc::trackable
     bool sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
   private:
-    static const time_t TALKER_AUDIO_TIMEOUT = 3;   // Max three seconds gap
-
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
@@ -175,13 +174,7 @@ class Reflector : public sigc::trackable
     FramedTcpServer*      m_srv;
     Async::UdpSocket*     m_udp_sock;
     ReflectorClientMap    m_client_map;
-    ReflectorClient*      m_talker;
-    Async::Timer          m_talker_timeout_timer;
-    struct timeval        m_last_talker_timestamp;
     ReflectorClientConMap m_client_con_map;
-    unsigned              m_sql_timeout;
-    unsigned              m_sql_timeout_cnt;
-    unsigned              m_sql_timeout_blocktime;
     Async::Config*        m_cfg;
 
     Reflector(const Reflector&);
@@ -192,9 +185,14 @@ class Reflector : public sigc::trackable
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void broadcastUdpMsgExcept(const ReflectorClient *except,
-                               const ReflectorUdpMsg& msg);
-    void checkTalkerTimeout(Async::Timer *t);
-    void setTalker(ReflectorClient *client);
+                               const ReflectorUdpMsg& msg,
+                               const ProtoVerRange& pv_range=ProtoVerRange());
+    void broadcastUdpMsgExcept(uint32_t tg,
+                               const ReflectorClient *except,
+                               const ReflectorUdpMsg& msg,
+                               const ProtoVerRange& pv_range=ProtoVerRange());
+    void onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
+                         ReflectorClient *new_talker);
 
 };  /* class Reflector */
 

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ReflectorClient.h"
 #include "Reflector.h"
-
+#include "TGHandler.h"
 
 
 /****************************************************************************
@@ -173,6 +173,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
 
 ReflectorClient::~ReflectorClient(void)
 {
+  TGHandler::instance()->removeClient(this);
 } /* ReflectorClient::~ReflectorClient */
 
 
@@ -295,6 +296,9 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgAuthResponse::TYPE:
       handleMsgAuthResponse(ss);
       break;
+    case MsgSwitchTG::TYPE:
+      handleSwitchTG(ss);
+      break;
     case MsgError::TYPE:
       handleMsgError(ss);
       break;
@@ -325,10 +329,11 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
     sendError("Illegal MsgProtoVer protocol message received");
     return;
   }
-  m_client_proto_ver.major_ver = msg.majorVer();
-  m_client_proto_ver.minor_ver = msg.minorVer();
-  if (m_client_proto_ver < ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER) ||
-      m_client_proto_ver > ProtoVer(MsgProtoVer::MAJOR, MsgProtoVer::MINOR))
+  m_client_proto_ver.set(msg.majorVer(), msg.minorVer());
+  ProtoVerRange valid_proto_ver_range(
+      ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER),
+      ProtoVer(MsgProtoVer::MAJOR, MsgProtoVer::MINOR));
+  if (!valid_proto_ver_range.isWithinRange(m_client_proto_ver))
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
          << " Incompatible protocol version: "
@@ -381,8 +386,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       sendMsg(MsgAuthOk());
       cout << m_callsign << ": Login OK from "
            << m_con->remoteHost() << ":" << m_con->remotePort()
-           << " with protocol version " << m_client_proto_ver.major_ver
-           << "." << m_client_proto_ver.minor_ver
+           << " with protocol version " << m_client_proto_ver.major()
+           << "." << m_client_proto_ver.minor()
            << endl;
       m_con_state = STATE_CONNECTED;
       MsgServerInfo msg_srv_info(m_client_id, m_supported_codecs);
@@ -392,6 +397,10 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       {
         MsgNodeList msg_node_list(msg_srv_info.nodes());
         sendMsg(msg_node_list);
+      }
+      if (m_client_proto_ver < ProtoVer(2, 0))
+      {
+        TGHandler::instance()->switchTo(this, 1);
       }
       m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
     }
@@ -409,6 +418,22 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     sendError("Access denied");
   }
 } /* ReflectorClient::handleMsgAuthResponse */
+
+
+void ReflectorClient::handleSwitchTG(std::istream& is)
+{
+  MsgSwitchTG msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgSwitchTG" << endl;
+    sendError("Illegal MsgSwitchTG protocol message received");
+    return;
+  }
+  cout << m_callsign << ": Switch to TG #" << msg.tg() << endl;
+  m_current_tg = msg.tg();
+  TGHandler::instance()->switchTo(this, msg.tg());
+} /* ReflectorClient::handleSwitchTG */
 
 
 void ReflectorClient::handleMsgError(std::istream& is)
