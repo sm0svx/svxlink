@@ -10,7 +10,7 @@ the SvxLink core is running. It can also be a DDR (Digital Drop Receiver).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -254,6 +254,7 @@ class LocalRxBase : public Rx
     int                         dtmf_muting_pre;
     HdlcDeframer *              ob_afsk_deframer;
     HdlcDeframer *              ib_afsk_deframer;
+    bool                        audio_dev_keep_open;
 
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);

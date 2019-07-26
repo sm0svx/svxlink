@@ -1,4 +1,4 @@
-.TH SIGLEVDETCAL 1 "APRIL 2008" Linux "User Manuals"
+.TH SIGLEVDETCAL 1 "JULY 2019" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -56,6 +56,12 @@ ASYNC_AUDIO_NOTRIGGER
 Set this environment variable to 1 if you get an error about
 .B ioctl: Broken pipe
 when the remotetrx server starts.
+.TP
+ASYNC_AUDIO_ALSA_ZEROFILL
+Set this environment variable to 1 to make the Alsa audio code write zeros to
+the audio device when there is no audio to write available. This may be needed
+for some audio devices that take a long time to recover from an underflow
+condition.
 .
 .SH AUTHOR
 .

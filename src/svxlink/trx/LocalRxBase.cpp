@@ -10,7 +10,7 @@ the SvxLink core is running. It can also be a DDR (Digital Drop Receiver).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -241,7 +241,7 @@ LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
     tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
     sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0),
-    ob_afsk_deframer(0), ib_afsk_deframer(0)
+    ob_afsk_deframer(0), ib_afsk_deframer(0), audio_dev_keep_open(false)
 {
 } /* LocalRxBase::LocalRxBase */
 
@@ -669,6 +669,8 @@ bool LocalRxBase::initialize(void)
     // the LocalRxBase class
   setHandler(prev_src);
   
+  cfg.getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
+
     // Open the audio device for reading
   if (!audioOpen())
   {
@@ -711,7 +713,10 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
           break;
 
         case MUTE_ALL:  // MUTE_CONTENT -> MUTE_ALL
-          audioClose();
+	  if (!audio_dev_keep_open)
+	  {
+            audioClose();
+	  }
           squelch_det->reset();
           setSquelchState(false);
           break;
