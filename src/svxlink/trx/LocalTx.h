@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -235,6 +235,7 @@ class LocalTx : public Tx
     HdlcFramer              *hdlc_framer_ib;
     AfskModulator           *fsk_mod_ib;
     RefCountingPty          *ctrl_pty;
+    bool                    audio_dev_keep_open;
     
     void txTimeoutOccured(Async::Timer *t);
     bool setPtt(bool tx, bool with_hangtime=false);

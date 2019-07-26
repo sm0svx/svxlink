@@ -28,6 +28,15 @@ variable min_time_between_ident 120;
 variable short_ident_interval 0;
 variable long_ident_interval 0;
 
+variable short_voice_id_enable  1
+variable short_cw_id_enable     0
+variable short_announce_enable  0
+variable short_announce_file    ""
+
+variable long_voice_id_enable   1
+variable long_cw_id_enable      0
+variable long_announce_enable   0
+variable long_announce_file     ""
 
 #
 # The ident_only_after_tx variable indicates if identification is only to
@@ -126,54 +135,111 @@ proc manual_identification {} {
 #
 # Executed when a short identification should be sent
 #   hour    - The hour on which this identification occur
-#   minute  - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
 #
 proc send_short_ident {{hour -1} {minute -1}} {
   global mycall;
   variable CFG_TYPE;
+  variable short_announce_file
+  variable short_announce_enable
+  variable short_voice_id_enable
+  variable short_cw_id_enable
 
-  spellWord $mycall;
-  if {$CFG_TYPE == "Repeater"} {
-    playMsg "Core" "repeater";
+  # Play voice id if enabled
+  if {$short_voice_id_enable} {
+    puts "Playing short voice ID"
+    spellWord $mycall;
+    if {$CFG_TYPE == "Repeater"} {
+      playMsg "Core" "repeater";
+    }
+    playSilence 500;
   }
-  playSilence 500;
+
+  # Play announcement file if enabled
+  if {$short_announce_enable} {
+    puts "Playing short announce"
+    if [file exist "$short_announce_file"] {
+      playFile "$short_announce_file"
+      playSilence 500
+    }
+  }
+
+  # Play CW id if enabled
+  if {$short_cw_id_enable} {
+    puts "Playing short CW ID"
+    if {$CFG_TYPE == "Repeater"} {
+      set call "$mycall/R"
+      CW::play $call
+    } else {
+      CW::play $mycall
+    }
+    playSilence 500;
+  }
 }
 
 
 #
 # Executed when a long identification (e.g. hourly) should be sent
 #   hour    - The hour on which this identification occur
-#   minute  - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
 #
 proc send_long_ident {hour minute} {
   global mycall;
   global loaded_modules;
   global active_module;
   variable CFG_TYPE;
+  variable long_announce_file
+  variable long_announce_enable
+  variable long_voice_id_enable
+  variable long_cw_id_enable
 
-  spellWord $mycall;
-  if {$CFG_TYPE == "Repeater"} {
-    playMsg "Core" "repeater";
-  }
-  playSilence 500;
-
-  playMsg "Core" "the_time_is";
-  playSilence 100;
-  playTime $hour $minute;
-  playSilence 500;
+  # Play the voice ID if enabled
+  if {$long_voice_id_enable} {
+    puts "Playing Long voice ID"
+    spellWord $mycall;
+    if {$CFG_TYPE == "Repeater"} {
+      playMsg "Core" "repeater";
+    }
+    playSilence 500;
+    playMsg "Core" "the_time_is";
+    playSilence 100;
+    playTime $hour $minute;
+    playSilence 500;
 
     # Call the "status_report" function in all modules if no module is active
-  if {$active_module == ""} {
-    foreach module [split $loaded_modules " "] {
-      set func "::";
-      append func $module "::status_report";
-      if {"[info procs $func]" ne ""} {
-        $func;
+    if {$active_module == ""} {
+      foreach module [split $loaded_modules " "] {
+        set func "::";
+        append func $module "::status_report";
+        if {"[info procs $func]" ne ""} {
+          $func;
+        }
       }
+    }
+
+    playSilence 500;
+  }
+
+  # Play announcement file if enabled
+  if {$long_announce_enable} {
+    puts "Playing long announce"
+    if [file exist "$long_announce_file"] {
+      playFile "$long_announce_file"
+      playSilence 500
     }
   }
 
-  playSilence 500;
+  # Play CW id if enabled
+  if {$long_cw_id_enable} {
+    puts "Playing long CW ID"
+    if {$CFG_TYPE == "Repeater"} {
+      set call "$mycall/R"
+      CW::play $call
+    } else {
+      CW::play $mycall
+    }
+    playSilence 100
+  }
 }
 
 
@@ -639,6 +705,37 @@ if [info exists CFG_IDENT_ONLY_AFTER_TX] {
   }
 }
 
+if [info exists CFG_SHORT_ANNOUNCE_ENABLE] {
+  set short_announce_enable $CFG_SHORT_ANNOUNCE_ENABLE
+}
+
+if [info exists CFG_SHORT_ANNOUNCE_FILE] {
+  set short_announce_file $CFG_SHORT_ANNOUNCE_FILE
+}
+
+if [info exists CFG_SHORT_VOICE_ID_ENABLE] {
+  set short_voice_id_enable $CFG_SHORT_VOICE_ID_ENABLE
+}
+
+if [info exists CFG_SHORT_CW_ID_ENABLE] {
+  set short_cw_id_enable $CFG_SHORT_CW_ID_ENABLE
+}
+
+if [info exists CFG_LONG_ANNOUNCE_ENABLE] {
+  set long_announce_enable $CFG_LONG_ANNOUNCE_ENABLE
+}
+
+if [info exists CFG_LONG_ANNOUNCE_FILE] {
+  set long_announce_file $CFG_LONG_ANNOUNCE_FILE
+}
+
+if [info exists CFG_LONG_VOICE_ID_ENABLE] {
+  set long_voice_id_enable $CFG_LONG_VOICE_ID_ENABLE
+}
+
+if [info exists CFG_LONG_CW_ID_ENABLE] {
+  set long_cw_id_enable $CFG_LONG_CW_ID_ENABLE
+}
 
 
 # end of namespace

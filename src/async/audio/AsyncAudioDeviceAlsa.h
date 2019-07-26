@@ -8,7 +8,7 @@ Implements the low level interface to an Alsa audio device.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -196,6 +196,7 @@ class AudioDeviceAlsa : public AudioDevice
     AlsaWatch   *play_watch;
     AlsaWatch   *rec_watch;
     bool        duplex;
+    bool        zerofill_on_underflow;
 
     AudioDeviceAlsa(const AudioDeviceAlsa&);
     AudioDeviceAlsa& operator=(const AudioDeviceAlsa&);
