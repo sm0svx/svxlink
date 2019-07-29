@@ -152,7 +152,7 @@ bool SquelchEvDev::initialize(Async::Config& cfg, const std::string& rx_name)
   if (!cfg.getValue(rx_name, "EVDEV_DEVNAME", devname))
   {
     std::cerr << "*** ERROR: Config variable " << rx_name
-	      << "/EVDEV_NAME not set\n";
+	      << "/EVDEV_DEVNAME not set\n";
     return false;
   }
 
