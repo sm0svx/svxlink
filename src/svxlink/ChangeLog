@@ -136,6 +136,9 @@
   close audio devices as needed. In a local RX and/or TX section set the
   variable AUDIO_DEV_KEEP_OPEN=1.
 
+* Add stop timeout for systemd units after which svxlink will be killed if not
+  exiting within 10 seconds.
+
 
 
  1.6.1 -- 01 Mar 2018
