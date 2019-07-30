@@ -292,7 +292,7 @@ class MsgAudioCodecSelect : public Msg
     {
       memset(m_codec_name, 0, sizeof(m_codec_name));
       memset(m_options, 0, sizeof(m_options));
-      strncpy(m_codec_name, codec_name, sizeof(m_codec_name));
+      strncpy(m_codec_name, codec_name, sizeof(m_codec_name)-1);
       m_codec_name[sizeof(m_codec_name)-1] = 0;
     }
     
