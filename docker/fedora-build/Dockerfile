@@ -27,7 +27,7 @@ MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
 # Install required packages and set up the svxlink user
 RUN dnf -y install git sudo cmake make gcc gcc-c++ libsigc++20-devel \
            alsa-lib-devel speex-devel opus-devel qt-devel rtl-sdr-devel \
-           popt-devel libgcrypt-devel tcl-devel gsm-devel \
+           popt-devel libgcrypt-devel tcl-devel gsm-devel libcurl-devel \
            doxygen alsa-utils wget tar bzip2 \
            vim-enhanced && \
     dnf clean all
