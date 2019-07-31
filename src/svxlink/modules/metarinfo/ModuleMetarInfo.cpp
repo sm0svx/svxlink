@@ -182,6 +182,11 @@ class ModuleMetarInfo::Http : public sigc::trackable
    {
      if (pending_curl)
        curl_easy_cleanup(pending_curl);
+     while (!url_queue.empty())
+     {
+       curl_easy_cleanup(url_queue.front());
+       url_queue.pop();
+     }
      ClearWatchMap();
      curl_multi_cleanup(multi_handle);
    } /* ~Http */
