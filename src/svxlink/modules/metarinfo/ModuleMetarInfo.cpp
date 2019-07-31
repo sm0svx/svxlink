@@ -152,7 +152,7 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
-class Http : public sigc::trackable
+class ModuleMetarInfo::Http : public sigc::trackable
 {
    CURLM* multi_handle; 
    Async::Timer update_timer;
@@ -379,7 +379,7 @@ extern "C" {
 
 ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
                                  const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false)
+  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), http(0)
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
@@ -615,6 +615,7 @@ void ModuleMetarInfo::activateInit(void)
  */
 void ModuleMetarInfo::deactivateCleanup(void)
 {
+  closeConnection();
 } /* deactivateCleanup */
 
 
@@ -821,10 +822,11 @@ void ModuleMetarInfo::allMsgsWritten(void)
 * establish a https-connection to the METAR-Server
 * using curl library
 */
-void ModuleMetarInfo::openConnection()
+void ModuleMetarInfo::openConnection(void)
 {
+  closeConnection();
 
-  Http *http = new Http();
+  http = new Http();
 
   html = "";
   std::string path = server;
@@ -837,6 +839,13 @@ void ModuleMetarInfo::openConnection()
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
 
 } /* openConnection */
+
+
+void ModuleMetarInfo::closeConnection(void)
+{
+  delete http;
+  http = 0;
+} /* ModuleMetarInfo::closeConnection */
 
 
 void ModuleMetarInfo::onTimeout(void)
