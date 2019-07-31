@@ -130,8 +130,7 @@ namespace {
         this->taps = taps;
 
         delete [] p_Z;
-        p_Z = new T[taps];
-        memset(p_Z, 0, taps * sizeof(*p_Z));
+        p_Z = new T[taps]();
       }
 
       void setGain(double gain_adjust)
