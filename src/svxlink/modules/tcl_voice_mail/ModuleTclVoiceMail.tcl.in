@@ -45,6 +45,11 @@ set state "idle";
 set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 
 #
+# The default mail server
+#
+set mail_smtp_url "smtp://127.0.0.1:25";
+
+#
 # Configuration file names
 #
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
@@ -225,6 +230,7 @@ proc squelchOpen {is_open} {
   variable rec_rcpt;
   variable rec_timestamp;
   variable userid;
+  variable mail_smtp_url;
   variable mail_from_addr;
   variable mail_from_name;
   variable mail_subj;
@@ -267,6 +273,7 @@ proc squelchOpen {is_open} {
       	exec mutt -s "$mail_subj" $email \
 		-e "set from=\"$mail_from_addr\"" \
 		-e "set realname=\"$mail_from_name\"" \
+                -e "set smtp_url=\"$mail_smtp_url\"" \
 		<< "$msg" &;
       }
       set rec_rcpt "";

@@ -139,6 +139,8 @@
 * Add stop timeout for systemd units after which svxlink will be killed if not
   exiting within 10 seconds.
 
+* Now possible to specify which mail server to use in the voice mail module.
+
 
 
  1.6.1 -- 01 Mar 2018
