@@ -141,6 +141,9 @@
 
 * Now possible to specify which mail server to use in the voice mail module.
 
+* ModuleDtmfRepeater: Logic and timings were a bit strange and buggy so the
+  implementation was changed a bit.
+
 
 
  1.6.1 -- 01 Mar 2018
