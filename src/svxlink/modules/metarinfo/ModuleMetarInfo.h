@@ -184,7 +184,7 @@ class ModuleMetarInfo : public Module
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string utctoken);
     int checkToken(std::string token);
-    bool rmatch(std::string tok, std::string token, regex_t *re);
+    bool rmatch(std::string tok, std::string token);
     bool checkDirection(std::string &retval, std::string token);
     bool getRmkVisibility(std::string &retval, std::string token);
     void isTime(std::string &retval, std::string token);

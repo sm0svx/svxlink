@@ -925,16 +925,14 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     std::string metartime = values.back();  // and the time at UTC
 
      // check of valid metar file format
-    regex_t re;
     std::string reg = "^[0-9]{4}/[0-9]{2}/[0-9]{2}";
-    if (!rmatch(metartime, reg, &re))
+    if (!rmatch(metartime, reg))
     {
       cout << "ERROR: wrong Metarfile format, first line should have the date + UTC and "
            << "must have 16 digits, e.g.:\n"
            << "2019/04/07 13:20" << endl;
       return;
     }
-    regfree(&re);
 
     if ((metar.find(icao)) == string::npos)
     {
@@ -1358,7 +1356,6 @@ int ModuleMetarInfo::handleMetar(std::string input)
 // function, it returns the type (temperature, dewpoint, clouds, ...)
 int ModuleMetarInfo::checkToken(std::string token)
 {
-    regex_t re;
     int retvalue = INVALID;
     typedef std::map<std::string, int> Mregex;
     Mregex mre;
@@ -1418,13 +1415,12 @@ int ModuleMetarInfo::checkToken(std::string token)
 
     for (rt = mre.begin(); rt != mre.end(); rt++)
     {
-       if (rmatch(token, rt->first, &re))
+       if (rmatch(token, rt->first))
        {
            retvalue = rt->second;
            break;
        }
     }
-    regfree(&re);
 
     return retvalue;
 } /* checkToken */
@@ -1831,17 +1827,17 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 
 
 // needed by regex
-bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
+bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern)
 {
-  int status;
-
-  if (( status = regcomp(re, pattern.c_str(), REG_EXTENDED)) != 0 )
+  regex_t re;
+  int status = regcomp(&re, pattern.c_str(), REG_EXTENDED);
+  if (status != 0)
   {
     return false;
   }
 
-  bool success = (regexec(re, tok.c_str(), 0, NULL, 0) == 0);
-  regfree(re);
+  bool success = (regexec(&re, tok.c_str(), 0, NULL, 0) == 0);
+  regfree(&re);
   return success;
 
 } /* rmatch */
