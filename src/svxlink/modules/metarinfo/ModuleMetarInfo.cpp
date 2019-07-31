@@ -154,9 +154,15 @@ using namespace SvxLink;
 
 class ModuleMetarInfo::Http : public sigc::trackable
 {
+   struct WatchSet
+   {
+     Async::FdWatch rd;
+     Async::FdWatch wr;
+   };
+   typedef std::map<int, WatchSet> WatchMap;
    CURLM* multi_handle; 
    Async::Timer update_timer;
-   std::map<int, Async::FdWatch*> watch_map;
+   WatchMap watch_map;
    std::queue<CURL*> url_queue;
    CURL* pending_curl;
 
@@ -285,30 +291,42 @@ class ModuleMetarInfo::Http : public sigc::trackable
 
      for (int fd = 0; fd <= maxfd; fd++) 
      {
-       if (watch_map.find(fd) != watch_map.end())
-         continue;
-       if (FD_ISSET(fd, &fdread))
+       bool read_isset = FD_ISSET(fd, &fdread);
+       bool write_isset = FD_ISSET(fd, &fdwrite);
+       WatchSet *ws = 0;
+       WatchMap::iterator it = watch_map.find(fd);
+       if (it != watch_map.end())
        {
-         Async::FdWatch *watch = new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_RD);
-         watch->activity.connect(mem_fun(*this, &Http::onActivity));
-         watch_map[fd] = watch;
+         ws = &(it->second);
        }
-       if (FD_ISSET(fd, &fdwrite)) 
+       else
        {
-         Async::FdWatch *watch = new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_WR);
-         watch->activity.connect(mem_fun(*this, &Http::onActivity));
-         watch_map[fd] = watch;
+         if (!(read_isset || write_isset))
+         {
+           continue;
+         }
+         ws = &(watch_map[fd]);
+       }
+       if (read_isset && !ws->rd.isEnabled())
+       {
+         ws->rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
+         ws->rd.activity.connect(mem_fun(*this, &Http::onActivity));
+       }
+       if (write_isset && !ws->wr.isEnabled())
+       {
+         ws->wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
+         ws->wr.activity.connect(mem_fun(*this, &Http::onActivity));
        }
      }
    } /* UpdateWatchMap */
 
-   void ClearWatchMap() {
-     for (std::map<int, Async::FdWatch*>::iterator it = watch_map.begin();
-          it != watch_map.end(); ++it)
+   void ClearWatchMap()
+   {
+     WatchMap::iterator it;
+     while ((it = watch_map.begin()) != watch_map.end())
      {
-       delete it->second;
+       watch_map.erase(it);
      }
-     watch_map.clear();
    } /* ClearWatchMap */
 };
 

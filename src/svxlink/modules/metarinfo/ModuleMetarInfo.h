@@ -126,7 +126,7 @@ class ModuleMetarInfo : public Module
 {
   public:
     ModuleMetarInfo(void *dl_handle, Logic *logic, const std::string& cfg_name);
-    ~ModuleMetarInfo(void);
+    virtual ~ModuleMetarInfo(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   protected:
