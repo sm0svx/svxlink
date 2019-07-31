@@ -1866,6 +1866,9 @@ bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
    mtime.tm_mday = atoi(utctoken.substr(8,2).c_str());
    mtime.tm_mon  = atoi(utctoken.substr(5,2).c_str()) - 1;
    mtime.tm_year = atoi(utctoken.substr(0,4).c_str()) - 1900;
+   mtime.tm_wday = -1;
+   mtime.tm_yday = -1;
+   mtime.tm_isdst = -1;
 
    diff = difftime(mktime(utc),mktime(&mtime));
 
