@@ -1,4 +1,4 @@
-.TH MODULEDTMFREPEATER.CONF 5 "MAY 2014" Linux "File Formats"
+.TH MODULEDTMFREPEATER.CONF 5 "JULY 2019" Linux "File Formats"
 .
 .SH NAME
 .
@@ -36,8 +36,12 @@ variables that the SvxLink DtmfRepeater module understands.
 .TP
 .B REPEAT_DELAY
 Specify a time, in milliseconds, that the DTMF Repeater module will wait after
-squelch close before retransmitting received DTMF digits. If zero or not
-specified, SvxLink will try to send the digits as soon as they are received.
+digit reception and squelch close before retransmitting received DTMF digits.
+If zero or not specified, SvxLink will try to send the digits as soon as they
+are received. 
+
+This variable does not apply when DTMF digits are sent in non-activated mode.
+Digits will then be retransmitted as soon as possible.
 .
 .SH FILES
 .
