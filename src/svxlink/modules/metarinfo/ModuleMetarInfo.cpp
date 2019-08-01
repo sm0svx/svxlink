@@ -156,6 +156,11 @@ class ModuleMetarInfo::Http : public sigc::trackable
 {
    struct WatchSet
    {
+     ~WatchSet(void)
+     {
+       rd.activity.clear();
+       wr.activity.clear();
+     }
      Async::FdWatch rd;
      Async::FdWatch wr;
    };
@@ -316,11 +321,13 @@ class ModuleMetarInfo::Http : public sigc::trackable
        {
          ws->rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
          ws->rd.activity.connect(mem_fun(*this, &Http::onActivity));
+         ws->rd.setEnabled(true);
        }
        if (write_isset && !ws->wr.isEnabled())
        {
          ws->wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
          ws->wr.activity.connect(mem_fun(*this, &Http::onActivity));
+         ws->wr.setEnabled(true);
        }
      }
    } /* UpdateWatchMap */
