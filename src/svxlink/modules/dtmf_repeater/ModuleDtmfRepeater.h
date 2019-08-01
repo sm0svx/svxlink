@@ -7,7 +7,7 @@
 \verbatim
 A module (plugin) for the svxlink server, a multi purpose tranciever
 frontend system.
-Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -129,7 +129,6 @@ class ModuleDtmfRepeater : public Module
   private:
     std::string   received_digits;
     Async::Timer  repeat_delay_timer;
-    bool      	  sql_is_open;
     bool          deactivate_on_sql_close;
     
     bool initialize(void);
@@ -140,8 +139,8 @@ class ModuleDtmfRepeater : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
 
-    void onRepeatDelayExpired(void);
     void setupRepeatDelay(void);
+    void onRepeatDelayExpired(void);
     void sendStoredDigits(void);
 
 };  /* class ModuleDtmfRepeater */

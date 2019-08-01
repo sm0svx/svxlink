@@ -152,11 +152,22 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
-class Http : public sigc::trackable
+class ModuleMetarInfo::Http : public sigc::trackable
 {
+   struct WatchSet
+   {
+     ~WatchSet(void)
+     {
+       rd.activity.clear();
+       wr.activity.clear();
+     }
+     Async::FdWatch rd;
+     Async::FdWatch wr;
+   };
+   typedef std::map<int, WatchSet> WatchMap;
    CURLM* multi_handle; 
    Async::Timer update_timer;
-   std::map<int, Async::FdWatch*> watch_map;
+   WatchMap watch_map;
    std::queue<CURL*> url_queue;
    CURL* pending_curl;
 
@@ -176,6 +187,11 @@ class Http : public sigc::trackable
    {
      if (pending_curl)
        curl_easy_cleanup(pending_curl);
+     while (!url_queue.empty())
+     {
+       curl_easy_cleanup(url_queue.front());
+       url_queue.pop();
+     }
      ClearWatchMap();
      curl_multi_cleanup(multi_handle);
    } /* ~Http */
@@ -285,30 +301,44 @@ class Http : public sigc::trackable
 
      for (int fd = 0; fd <= maxfd; fd++) 
      {
-       if (watch_map.find(fd) != watch_map.end())
-         continue;
-       if (FD_ISSET(fd, &fdread))
+       bool read_isset = FD_ISSET(fd, &fdread);
+       bool write_isset = FD_ISSET(fd, &fdwrite);
+       WatchSet *ws = 0;
+       WatchMap::iterator it = watch_map.find(fd);
+       if (it != watch_map.end())
        {
-         Async::FdWatch *watch = new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_RD);
-         watch->activity.connect(mem_fun(*this, &Http::onActivity));
-         watch_map[fd] = watch;
+         ws = &(it->second);
        }
-       if (FD_ISSET(fd, &fdwrite)) 
+       else
        {
-         Async::FdWatch *watch = new Async::FdWatch(fd,Async::FdWatch::FD_WATCH_WR);
-         watch->activity.connect(mem_fun(*this, &Http::onActivity));
-         watch_map[fd] = watch;
+         if (!(read_isset || write_isset))
+         {
+           continue;
+         }
+         ws = &(watch_map[fd]);
+       }
+       if (read_isset && !ws->rd.isEnabled())
+       {
+         ws->rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
+         ws->rd.activity.connect(mem_fun(*this, &Http::onActivity));
+         ws->rd.setEnabled(true);
+       }
+       if (write_isset && !ws->wr.isEnabled())
+       {
+         ws->wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
+         ws->wr.activity.connect(mem_fun(*this, &Http::onActivity));
+         ws->wr.setEnabled(true);
        }
      }
    } /* UpdateWatchMap */
 
-   void ClearWatchMap() {
-     for (std::map<int, Async::FdWatch*>::iterator it = watch_map.begin();
-          it != watch_map.end(); ++it)
+   void ClearWatchMap()
+   {
+     WatchMap::iterator it;
+     while ((it = watch_map.begin()) != watch_map.end())
      {
-       delete it->second;
+       watch_map.erase(it);
      }
-     watch_map.clear();
    } /* ClearWatchMap */
 };
 
@@ -379,7 +409,7 @@ extern "C" {
 
 ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
                                  const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false)
+  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), http(0)
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
@@ -615,6 +645,7 @@ void ModuleMetarInfo::activateInit(void)
  */
 void ModuleMetarInfo::deactivateCleanup(void)
 {
+  closeConnection();
 } /* deactivateCleanup */
 
 
@@ -821,10 +852,11 @@ void ModuleMetarInfo::allMsgsWritten(void)
 * establish a https-connection to the METAR-Server
 * using curl library
 */
-void ModuleMetarInfo::openConnection()
+void ModuleMetarInfo::openConnection(void)
 {
+  closeConnection();
 
-  Http *http = new Http();
+  http = new Http();
 
   html = "";
   std::string path = server;
@@ -837,6 +869,13 @@ void ModuleMetarInfo::openConnection()
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
 
 } /* openConnection */
+
+
+void ModuleMetarInfo::closeConnection(void)
+{
+  delete http;
+  http = 0;
+} /* ModuleMetarInfo::closeConnection */
 
 
 void ModuleMetarInfo::onTimeout(void)
@@ -925,16 +964,14 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     std::string metartime = values.back();  // and the time at UTC
 
      // check of valid metar file format
-    regex_t re;
     std::string reg = "^[0-9]{4}/[0-9]{2}/[0-9]{2}";
-    if (!rmatch(metartime, reg, &re))
+    if (!rmatch(metartime, reg))
     {
       cout << "ERROR: wrong Metarfile format, first line should have the date + UTC and "
            << "must have 16 digits, e.g.:\n"
            << "2019/04/07 13:20" << endl;
       return;
     }
-    regfree(&re);
 
     if ((metar.find(icao)) == string::npos)
     {
@@ -1358,7 +1395,6 @@ int ModuleMetarInfo::handleMetar(std::string input)
 // function, it returns the type (temperature, dewpoint, clouds, ...)
 int ModuleMetarInfo::checkToken(std::string token)
 {
-    regex_t re;
     int retvalue = INVALID;
     typedef std::map<std::string, int> Mregex;
     Mregex mre;
@@ -1418,13 +1454,12 @@ int ModuleMetarInfo::checkToken(std::string token)
 
     for (rt = mre.begin(); rt != mre.end(); rt++)
     {
-       if (rmatch(token, rt->first, &re))
+       if (rmatch(token, rt->first))
        {
            retvalue = rt->second;
            break;
        }
     }
-    regfree(&re);
 
     return retvalue;
 } /* checkToken */
@@ -1831,17 +1866,17 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 
 
 // needed by regex
-bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
+bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern)
 {
-  int status;
-
-  if (( status = regcomp(re, pattern.c_str(), REG_EXTENDED)) != 0 )
+  regex_t re;
+  int status = regcomp(&re, pattern.c_str(), REG_EXTENDED);
+  if (status != 0)
   {
     return false;
   }
 
-  bool success = (regexec(re, tok.c_str(), 0, NULL, 0) == 0);
-  regfree(re);
+  bool success = (regexec(&re, tok.c_str(), 0, NULL, 0) == 0);
+  regfree(&re);
   return success;
 
 } /* rmatch */
@@ -1870,6 +1905,9 @@ bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
    mtime.tm_mday = atoi(utctoken.substr(8,2).c_str());
    mtime.tm_mon  = atoi(utctoken.substr(5,2).c_str()) - 1;
    mtime.tm_year = atoi(utctoken.substr(0,4).c_str()) - 1900;
+   mtime.tm_wday = -1;
+   mtime.tm_yday = -1;
+   mtime.tm_isdst = -1;
 
    diff = difftime(mktime(utc),mktime(&mtime));
 
