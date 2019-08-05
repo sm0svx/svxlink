@@ -198,6 +198,7 @@ class SipLogic : public LogicBase
     EventHandler              *event_handler;
     bool                      report_events_as_idle;
     bool                      startup_finished;
+    Async::AudioSelector      *selector;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);

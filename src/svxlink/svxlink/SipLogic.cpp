@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncPty.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioReader.h>
+#include <AsyncAudioSelector.h>
 
 
 /****************************************************************************
@@ -270,7 +271,7 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     squelch_det(0), accept_incoming_regex(0), reject_incoming_regex(0),
     accept_outgoing_regex(0), reject_outgoing_regex(0),
     msg_handler(0), event_handler(0), report_events_as_idle(false),
-    startup_finished(false)
+    startup_finished(false), selector(0)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -613,11 +614,6 @@ bool SipLogic::initialize(void)
   prev_src->registerSink(m_infrom_sip, true);
   prev_src = m_infrom_sip;
 
-    // Create the message handler for announcements
-  msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
-  msg_handler->allMsgsWritten.connect(mem_fun(*this, &SipLogic::allMsgsWritten));
-  prev_src = msg_handler;
-
   unsigned sql_hangtime = 1200;
 
   if (!m_semiduplex)
@@ -646,6 +642,20 @@ bool SipLogic::initialize(void)
          << " -> use SEMI_DUPLEX=0" << endl;
     return false;
   }
+
+   // Create the AudioSelector for Sip and message audio streams
+  selector = new Async::AudioSelector;
+  selector->addSource(prev_src);
+  selector->enableAutoSelect(prev_src,0);
+  prev_src = selector;
+
+    // Create the message handler for announcements
+  msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
+  msg_handler->allMsgsWritten.connect(mem_fun(*this, &SipLogic::allMsgsWritten));
+
+  selector->addSource(msg_handler);
+  selector->enableAutoSelect(msg_handler,10);
+  selector->setFlushWait(msg_handler,false);
 
   m_logic_con_out = prev_src;
 
