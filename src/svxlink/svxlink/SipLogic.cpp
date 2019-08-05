@@ -649,7 +649,6 @@ bool SipLogic::initialize(void)
   selector = new Async::AudioSelector;
   selector->addSource(prev_src);
   selector->enableAutoSelect(prev_src,0);
-  prev_src = selector;
 
     // Create the message handler for announcements
   msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
@@ -659,7 +658,7 @@ bool SipLogic::initialize(void)
   selector->enableAutoSelect(msg_handler,10);
   selector->setFlushWait(msg_handler,false);
 
-  m_logic_con_out = prev_src;
+  m_logic_con_out = selector;
 
   /*************** outgoing to sip ********************/
 
