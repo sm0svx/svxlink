@@ -296,6 +296,8 @@ SipLogic::~SipLogic(void)
   event_handler = 0;
   delete msg_handler;
   msg_handler = 0;
+  delete selector;
+  selector = 0;
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
   {
