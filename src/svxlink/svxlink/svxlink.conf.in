@@ -90,6 +90,7 @@ AUTH_KEY="Change this key now!"
 
 [SipLogic]
 TYPE=Sip
+DEFAULT_LANG=en_US
 SIPSERVER=reflector.example.com
 #SIPREGISTRAR=proxy.mysipnetwork.com
 SIPPORT=5060
