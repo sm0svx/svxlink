@@ -231,8 +231,8 @@ proc call_timeout {} {
 #
 proc hangup_call {uri duration} {
   puts "Hangup call $uri ($duration seconds)";
-  playMsg "SipLogic" "hangup_call";
-  playMsg 200;
+  playMsg "SipLogic" "call_terminated";
+  playSilence 200;
 }
 
 

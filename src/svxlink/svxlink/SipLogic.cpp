@@ -930,6 +930,10 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
           //m_infrom_sip->setOpen(false);
           onSquelchOpen(false);
         }
+        ss << "hangup_call " << getCallerNumber(ci.remoteContact) << " "
+           << (*it)->getInfo().totalDuration.sec << "."
+           << (*it)->getInfo().totalDuration.msec;
+        processEvent(ss.str());
       }
 
        // incoming call
@@ -1005,11 +1009,6 @@ void SipLogic::hangupCall(sip::_Call *call)
   {
     if (*it == call)
     {
-      stringstream ss;
-      ss << "hangup_call \"" << (*it)->getInfo().remoteUri << "\" "
-         << (*it)->getInfo().totalDuration.sec;
-      processEvent(ss.str());
-
       (*it)->hangup(prm);
       calls.erase(it);
       break;
