@@ -42,7 +42,7 @@ proc unknown_command {cmd} {
 #
 proc drop_outgoing_call {caller} {
   puts "Dropping outgoing call to $caller due to configuration.";
-  playMsg "Sip" "call_not_allowed";
+  playMsg "SipLogic" "call_not_allowed";
   playSilence 200;
 }
 
@@ -52,7 +52,7 @@ proc drop_outgoing_call {caller} {
 #
 proc reject_incoming_call {caller} {
   puts "Rejecting incoming call from $caller due to configuration.";
-  playMsg "Sip" "reject_incoming_call";
+  playMsg "SipLogic" "reject_incoming_call";
   playSilence 200;
 }
 
@@ -136,7 +136,7 @@ proc checkPeriodicIdentify {} {
 proc pickup_call {caller} {
   puts "pickup call from: $caller";
   playSilence 500;
-  playMsg "Sip" "announce_party";
+  playMsg "SipLogic" "incoming_phonecall";
   playSilence 100;
   spellNumber [getCallerNumber $caller];
   playSilence 500;
@@ -148,7 +148,7 @@ proc pickup_call {caller} {
 #
 proc calling {caller} {
   playSilence 500;
-  playMsg "Sip" "calling";
+  playMsg "SipLogic" "calling";
   playSilence 100;
   spellNumber [getCallerNumber $caller];
 }
@@ -167,7 +167,7 @@ proc outgoing_call {caller} {
 #
 proc ringing {caller} {
   puts "$caller ringing";
-  playMsg "Sip" "ringtone";
+  playMsg "SipLogic" "ringtone";
 }
 
 
@@ -176,7 +176,7 @@ proc ringing {caller} {
 #
 proc incoming_call {caller} {
   playSilence 500;
-  playMsg "Sip" "incoming_phonecall";
+  playMsg "SipLogic" "incoming_phonecall";
   playSilence 100;
   playNumber [getCallerNumber $caller];
   playSilence 200;
@@ -221,7 +221,7 @@ proc logic_online {online} {
 #
 proc call_timeout {} {
   puts "Called party is not at home";
-  playMsg "Sip" "person_not_available";
+  playMsg "SipLogic" "person_not_available";
   playSilence 200;
 }
 
@@ -231,7 +231,7 @@ proc call_timeout {} {
 #
 proc hangup_call {uri duration} {
   puts "Hangup call $uri ($duration seconds)";
-  playMsg "Sip" "hangup_call";
+  playMsg "SipLogic" "hangup_call";
   playMsg 200;
 }
 
