@@ -32,6 +32,7 @@ ExecStart=@BIN_INSTALL_DIR@/svxlink --logfile=${LOGFILE} --config=${CFGFILE} --p
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
+TimeoutStopSec=10
 #WatchdogSec=@SVX_WatchdogSec@
 #NotifyAccess=main
 LimitCORE=infinity

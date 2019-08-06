@@ -30,6 +30,7 @@ ExecStart=@BIN_INSTALL_DIR@/svxreflector --logfile=${LOGFILE} --config=${CFGFILE
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 TimeoutStartSec=60
+TimeoutStopSec=10
 LimitCORE=infinity
 WorkingDirectory=@SVX_SYSCONF_INSTALL_DIR@
 

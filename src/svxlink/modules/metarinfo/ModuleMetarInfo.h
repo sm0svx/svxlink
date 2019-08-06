@@ -119,14 +119,14 @@ namespace Async {
 
 /**
 @brief	A_brief_description_of_this_class
-@author Tobias Blomberg
+@author Adi Bier
 @date   2005-08-28
 */
 class ModuleMetarInfo : public Module
 {
   public:
     ModuleMetarInfo(void *dl_handle, Logic *logic, const std::string& cfg_name);
-    ~ModuleMetarInfo(void);
+    virtual ~ModuleMetarInfo(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   protected:
@@ -136,6 +136,8 @@ class ModuleMetarInfo : public Module
     virtual void flushSamples(void);
 
   private:
+    class Http;
+
     std::string icao;
     std::string icao_default;
     std::string longmsg;
@@ -156,8 +158,7 @@ class ModuleMetarInfo : public Module
     std::string type;
     std::string server;
     std::string link;
-    CURL *http_handle; 
-    CURLM *multi_handle;
+    Http* http;
 
     bool initialize(void);
     void activateInit(void);
@@ -168,6 +169,7 @@ class ModuleMetarInfo : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
     void openConnection(void);
+    void closeConnection(void);
     void onTimeout(void);
     std::string getSlp(std::string token);
     std::string getTempTime(std::string token);
@@ -184,7 +186,7 @@ class ModuleMetarInfo : public Module
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string utctoken);
     int checkToken(std::string token);
-    bool rmatch(std::string tok, std::string token, regex_t *re);
+    bool rmatch(std::string tok, std::string token);
     bool checkDirection(std::string &retval, std::string token);
     bool getRmkVisibility(std::string &retval, std::string token);
     void isTime(std::string &retval, std::string token);

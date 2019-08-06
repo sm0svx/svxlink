@@ -86,8 +86,9 @@
 {
    TclpAlloc
    Memcheck:Leak
-   match-leak-kinds: possible
+   match-leak-kinds: reachable,possible
    fun:malloc
+   ...
    fun:TclpAlloc
    ...
 }
@@ -98,5 +99,14 @@
    fun:malloc
    ...
    fun:Tcl_NewObj
+   ...
+}
+{
+   Tcl_NewStringObj
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   fun:malloc
+   ...
+   fun:Tcl_NewStringObj
    ...
 }

@@ -7,7 +7,7 @@
 \verbatim
 A module (plugin) for the svxlink server, a multi purpose tranciever
 frontend system.
-Copyright (C) 2004-2010 Tobias Blomberg
+Copyright (C) 2004-2019 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -138,8 +139,9 @@ extern "C" {
 
 ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       	      	      	      	       const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), repeat_delay_timer(-1),
-    sql_is_open(false), deactivate_on_sql_close(false)
+  : Module(dl_handle, logic, cfg_name),
+    repeat_delay_timer(0, Async::Timer::TYPE_ONESHOT, false),
+    deactivate_on_sql_close(false)
 {
   cout << "\tModule DTMF Repeater v" MODULE_DTMF_REPEATER_VERSION
       	  " starting...\n";
@@ -212,10 +214,10 @@ bool ModuleDtmfRepeater::initialize(void)
     return false;
   }
   
-  int repeat_delay = -1;
+  int repeat_delay = 0;
   if (cfg().getValue(cfgName(), "REPEAT_DELAY", repeat_delay))
   {
-    repeat_delay_timer.setTimeout(repeat_delay);
+    repeat_delay_timer.setTimeout(std::max(0, repeat_delay));
   }
   
   return true;
@@ -238,7 +240,6 @@ bool ModuleDtmfRepeater::initialize(void)
 void ModuleDtmfRepeater::activateInit(void)
 {
   received_digits.clear();
-  sql_is_open = squelchIsOpen();
   deactivate_on_sql_close = false;
 } /* activateInit */
 
@@ -258,8 +259,8 @@ void ModuleDtmfRepeater::activateInit(void)
  */
 void ModuleDtmfRepeater::deactivateCleanup(void)
 {
+  received_digits.clear();
   repeat_delay_timer.setEnable(false);
-  sql_is_open = false;
   deactivate_on_sql_close = false;
 } /* deactivateCleanup */
 
@@ -301,9 +302,9 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   
   if (repeat_delay_timer.timeout() <= 0)
   {
-    onRepeatDelayExpired();
+    sendStoredDigits();
   }
-  else if (!sql_is_open)
+  else
   {
     setupRepeatDelay();
   }
@@ -316,15 +317,7 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
 void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   received_digits += cmd;
-  
-  if (repeat_delay_timer.timeout() <= 0)
-  {
-    onRepeatDelayExpired();
-  }
-  else if (!sql_is_open)
-  {
-    setupRepeatDelay();
-  }
+  sendStoredDigits();
 } /* dtmfCmdReceivedWhenIdle */
 
 
@@ -343,7 +336,6 @@ void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  */
 void ModuleDtmfRepeater::squelchOpen(bool is_open)
 {
-  sql_is_open = is_open;
   setupRepeatDelay();
 
   if (!is_open && deactivate_on_sql_close)
@@ -355,11 +347,22 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
 
 void ModuleDtmfRepeater::allMsgsWritten(void)
 {
-  if (!received_digits.empty() && (repeat_delay_timer.timeout() <= 0))
+  if (!received_digits.empty() && !repeat_delay_timer.isEnabled())
   {
     sendStoredDigits();
   }
 } /* ModuleDtmfRepeater::allMsgsWritten */
+
+
+void ModuleDtmfRepeater::setupRepeatDelay(void)
+{
+  repeat_delay_timer.setEnable(false);
+
+  if (!squelchIsOpen() && !received_digits.empty())
+  {
+    repeat_delay_timer.setEnable(true);
+  }
+} /* ModuleDtmfRepeater::setupRepeatDelay */
 
 
 void ModuleDtmfRepeater::onRepeatDelayExpired(void)
@@ -371,18 +374,6 @@ void ModuleDtmfRepeater::onRepeatDelayExpired(void)
     sendStoredDigits();
   }
 } /* ModuleDtmfRepeater::onRepeatDelayExpired */
-
-
-void ModuleDtmfRepeater::setupRepeatDelay(void)
-{
-  repeat_delay_timer.setEnable(false);
-
-  if (!sql_is_open && (repeat_delay_timer.timeout() > 0) &&
-      !received_digits.empty())
-  {
-    repeat_delay_timer.setEnable(true);
-  }
-} /* ModuleDtmfRepeater::setupRepeatDelay */
 
 
 void ModuleDtmfRepeater::sendStoredDigits(void)
