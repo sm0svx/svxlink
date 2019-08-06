@@ -237,6 +237,18 @@ bool ReflectorLogic::initialize(void)
 } /* ReflectorLogic::initialize */
 
 
+void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
+                                       const std::string& cmd)
+{
+  cout << "### src_logic=" << src_logic->name() << "  cmd=" << cmd << endl;
+  istringstream is(cmd);
+  uint32_t tg;
+  if (is >> tg)
+  {
+    sendMsg(MsgSwitchTG(tg));
+  }
+} /* ReflectorLogic::remoteCmdReceived */
+
 
 /****************************************************************************
  *

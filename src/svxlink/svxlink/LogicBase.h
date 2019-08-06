@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2017  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -117,7 +117,7 @@ namespace Async
 @author Tobias Blomberg
 @date   2017-02-10
 
-That LogicBase class only have the most basic functionality
+The LogicBase class only have the most basic functionality
 for a logic. The only thing it can do is work with the link manager to
 connect to other logic cores and stream audio into and out of the logic.
 The LogicBase class can be used to implement all sorts of audio sources
@@ -183,6 +183,16 @@ class LogicBase : public sigc::trackable
      * @return	Returns an audio pipe sink object
      */
     virtual Async::AudioSource *logicConOut(void) = 0;
+
+    /**
+     * @brief   A command has been received from another logic
+     * @param   cmd The received command
+     *
+     * This function is typically called when a link activation command is
+     * issued to connect two or more logics together.
+     */
+    virtual void remoteCmdReceived(LogicBase* src_logic,
+                                   const std::string& cmd) {}
 
     /**
      * @brief   A signal that is emitted when the idle state change

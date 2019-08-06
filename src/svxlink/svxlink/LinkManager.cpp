@@ -452,23 +452,28 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
     }
     ss << logic_props.announcement_name << "\"";
   }
-  else if (subcmd == "1") // Connecting Logic1 <---> Logic2 (two ways)
+  else //if (subcmd == "1") // Connecting Logic1 <---> Logic2 (two ways)
   {
     if (!link.is_activated)
     {
       activateLink(link);
       ss << "activating_link \"";
+      ss << logic_props.announcement_name + "\"";
     }
-    else
+    //else
+    //{
+    //  ss << "link_already_active \"";
+    //}
+    //ss << logic_props.announcement_name + "\"";
+    if (logic != src_logic)
     {
-      ss << "link_already_active \"";
+      sendCmdToLogics(link, logic, subcmd);
     }
-    ss << logic_props.announcement_name + "\"";
   }
-  else
-  {
-    ss << "unknown_command " << logic_props.cmd << subcmd;
-  }
+  //else
+  //{
+  //  ss << "unknown_command " << logic_props.cmd << subcmd;
+  //}
   return ss.str();
 } /* LinkManager::cmdReceived */
 
@@ -683,6 +688,21 @@ void LinkManager::deactivateLink(Link &link)
   checkTimeoutTimer(link);
 
 } /* LinkManager::deactivateLink */
+
+
+void LinkManager::sendCmdToLogics(Link& link, LogicBase* src_logic,
+                                  const std::string& cmd)
+{
+  for (LogicPropMap::iterator it = link.logic_props.begin();
+       it != link.logic_props.end(); ++it)
+  {
+    const string &logic_name = (*it).first;
+    LogicMap::iterator lmit = logic_map.find(logic_name);
+    assert(lmit != logic_map.end());
+    LogicBase *logic = (*lmit).second.logic;
+    logic->remoteCmdReceived(src_logic, cmd);
+  }
+} /* LinkManager::sendCmdToLogics */
 
 
 #if 0

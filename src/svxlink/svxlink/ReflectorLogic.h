@@ -145,6 +145,16 @@ class ReflectorLogic : public LogicBase
      */
     virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
 
+    /**
+     * @brief   A command has been received from another logic
+     * @param   cmd The received command
+     *
+     * This function is typically called when a link activation command is
+     * issued to connect two or more logics together.
+     */
+    virtual void remoteCmdReceived(LogicBase* src_logic,
+                                   const std::string& cmd);
+
   protected:
 
   private:

@@ -292,6 +292,8 @@ class LinkManager : public sigc::trackable
     void wantedConnections(LogicConSet &want);
     void activateLink(Link &link);
     void deactivateLink(Link &link);
+    void sendCmdToLogics(Link &link, LogicBase *src_logic,
+                         const std::string& cmd);
     /*
     bool isConnected(const std::string& source_name,
                      const std::string& sink_name);
