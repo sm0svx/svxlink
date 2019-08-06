@@ -115,6 +115,75 @@ class ReflectorClient
       STATE_CONNECTED, STATE_EXPECT_DISCONNECT
     } ConState;
 
+    class Filter
+    {
+      public:
+        virtual ~Filter(void) {}
+        virtual bool operator ()(ReflectorClient *client) const = 0;
+    };
+
+    class NoFilter : public Filter
+    {
+      public:
+        virtual bool operator ()(ReflectorClient *) const { return true; }
+    };
+
+    class ExceptFilter : public Filter
+    {
+      public:
+        ExceptFilter(const ReflectorClient* except) : m_except(except) {}
+        virtual bool operator ()(ReflectorClient *client) const
+        {
+          return client != m_except;
+        }
+      private:
+        const ReflectorClient* m_except;
+    };
+
+    class ProtoVerRangeFilter : public Filter
+    {
+      public:
+        ProtoVerRangeFilter(const ProtoVerRange& pvr) : m_pv_range(pvr) {}
+        ProtoVerRangeFilter(const ProtoVer& min, const ProtoVer& max)
+          : m_pv_range(min, max) {}
+        virtual bool operator ()(ReflectorClient *client) const
+        {
+          return (!m_pv_range.isValid() ||
+                 m_pv_range.isWithinRange(client->protoVer()));
+        }
+      private:
+        ProtoVerRange m_pv_range;
+    };
+
+    class TgFilter : public Filter
+    {
+      public:
+        TgFilter(uint32_t tg) : m_tg(tg) {}
+        virtual bool operator ()(ReflectorClient *client) const;
+      private:
+        uint32_t m_tg;
+    };
+
+    template <class F1, class F2>
+    class AndFilter : public Filter
+    {
+      public:
+        AndFilter(const F1& f1, const F2& f2) : m_f1(f1), m_f2(f2) {}
+        virtual bool operator ()(ReflectorClient *client) const
+        {
+          return m_f1(client) && m_f2(client);
+        }
+      private:
+        F1 m_f1;
+        F2 m_f2;
+    };
+
+    template <class F1, class F2>
+    static AndFilter<F1, F2> mkAndFilter(const F1& f1, const F2& f2)
+    {
+      return AndFilter<F1, F2>(f1, f2);
+    }
+
     /**
      * @brief 	Constructor
      * @param   ref The associated Reflector object

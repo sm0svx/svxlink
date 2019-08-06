@@ -558,7 +558,8 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Talker start: " << msg.callsign() << endl;
+  cout << name() << ": Talker start on TG #" << msg.tg() << ": "
+       << msg.callsign() << endl;
 } /* ReflectorLogic::handleMsgTalkerStart */
 
 
@@ -571,7 +572,8 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Talker stop: " << msg.callsign() << endl;
+  cout << name() << ": Talker stop on TG #" << msg.tg() << ": "
+       << msg.callsign() << endl;
 } /* ReflectorLogic::handleMsgTalkerStop */
 
 

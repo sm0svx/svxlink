@@ -109,6 +109,12 @@ void delete_client(ReflectorClient *client);
  *
  ****************************************************************************/
 
+namespace {
+  ReflectorClient::ProtoVerRangeFilter v1_client_filter(
+      ProtoVer(1, 0), ProtoVer(1, 999));
+  ReflectorClient::ProtoVerRangeFilter v2_client_filter(
+      ProtoVer(2, 0), ProtoVer(2, 999));
+};
 
 
 /****************************************************************************
@@ -118,7 +124,7 @@ void delete_client(ReflectorClient *client);
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : m_srv(0), m_udp_sock(0)
+  : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -193,6 +199,8 @@ bool Reflector::initialize(Async::Config &cfg)
   cfg.getValue("GLOBAL", "SQL_TIMEOUT_BLOCKTIME", sql_timeout_blocktime);
   TGHandler::instance()->setSqlTimeoutBlocktime(sql_timeout_blocktime);
 
+  m_cfg->getValue("GLOBAL", "TG_FOR_V1_CLIENTS", m_tg_for_v1_clients);
+
   return true;
 } /* Reflector::initialize */
 
@@ -212,20 +220,20 @@ void Reflector::nodeList(std::vector<std::string>& nodes) const
 } /* Reflector::nodeList */
 
 
-void Reflector::broadcastMsgExcept(const ReflectorMsg& msg,
-                                   ReflectorClient *except)
+void Reflector::broadcastMsg(const ReflectorMsg& msg,
+                             const ReflectorClient::Filter& filter)
 {
   ReflectorClientMap::const_iterator it = m_client_map.begin();
   for (; it != m_client_map.end(); ++it)
   {
     ReflectorClient *client = (*it).second;
-    if ((client != except) &&
+    if (filter(client) &&
         (client->conState() == ReflectorClient::STATE_CONNECTED))
     {
       (*it).second->sendMsg(msg);
     }
   }
-} /* Reflector::broadcastMsgExcept */
+} /* Reflector::broadcastMsg */
 
 
 bool Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
@@ -285,7 +293,8 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
 
   if (!client->callsign().empty())
   {
-    broadcastMsgExcept(MsgNodeLeft(client->callsign()), client);
+    broadcastMsg(MsgNodeLeft(client->callsign()),
+        ReflectorClient::ExceptFilter(client));
   }
   Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_client), client));
 } /* Reflector::clientDisconnected */
@@ -372,7 +381,10 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
           ReflectorClient* talker = TGHandler::instance()->talkerForTG(tg);
           if (talker == client)
           {
-            broadcastUdpMsgExcept(tg, client, msg);
+            broadcastUdpMsg(msg,
+                ReflectorClient::mkAndFilter(
+                  ReflectorClient::ExceptFilter(client),
+                  ReflectorClient::TgFilter(tg)));
             //broadcastUdpMsgExcept(tg, client, msg,
             //    ProtoVerRange(ProtoVer(0, 6),
             //                  ProtoVer(1, ProtoVer::max().minor())));
@@ -452,42 +464,20 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 } /* Reflector::udpDatagramReceived */
 
 
-void Reflector::broadcastUdpMsgExcept(const ReflectorClient *except,
-                                      const ReflectorUdpMsg& msg,
-                                      const ProtoVerRange& pv_range)
+void Reflector::broadcastUdpMsg(const ReflectorUdpMsg& msg,
+                                const ReflectorClient::Filter& filter)
 {
   for (ReflectorClientMap::iterator it = m_client_map.begin();
        it != m_client_map.end(); ++it)
   {
     ReflectorClient *client = (*it).second;
-    if ((client != except) &&
-        (!pv_range.isValid() || pv_range.isWithinRange(client->protoVer())) &&
-        (client->conState() == ReflectorClient::STATE_CONNECTED))
-    {
-      (*it).second->sendUdpMsg(msg);
-    }
-  }
-} /* Reflector::broadcastUdpMsgExcept */
-
-
-void Reflector::broadcastUdpMsgExcept(uint32_t tg,
-                                      const ReflectorClient *except,
-                                      const ReflectorUdpMsg& msg,
-                                      const ProtoVerRange& pv_range)
-{
-  const TGHandler::ClientSet& clients = TGHandler::instance()->clientsForTG(tg);
-  for (TGHandler::ClientSet::iterator it = clients.begin();
-       it != clients.end(); ++it)
-  {
-    ReflectorClient *client = *it;
-    if ((client != except) &&
-        (!pv_range.isValid() || pv_range.isWithinRange(client->protoVer())) &&
+    if (filter(client) &&
         (client->conState() == ReflectorClient::STATE_CONNECTED))
     {
       client->sendUdpMsg(msg);
     }
   }
-} /* Reflector::broadcastUdpMsgExcept */
+} /* Reflector::broadcastUdpMsg */
 
 
 void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
@@ -496,13 +486,24 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
   if (old_talker != 0)
   {
     cout << old_talker->callsign() << ": Talker stop on TG #" << tg << endl;
-    broadcastMsgExcept(MsgTalkerStop(old_talker->callsign()));
-    broadcastUdpMsgExcept(tg, old_talker, MsgUdpFlushSamples());
+    broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()), v2_client_filter);
+    if (tg == tgForV1Clients())
+    {
+      broadcastMsg(MsgTalkerStopV1(old_talker->callsign()), v1_client_filter);
+    }
+    broadcastUdpMsg(MsgUdpFlushSamples(),
+          ReflectorClient::mkAndFilter(
+            ReflectorClient::TgFilter(tg),
+            ReflectorClient::ExceptFilter(old_talker)));
   }
   if (new_talker != 0)
   {
     cout << new_talker->callsign() << ": Talker start on TG #" << tg << endl;
-    broadcastMsgExcept(MsgTalkerStart(new_talker->callsign()));
+    broadcastMsg(MsgTalkerStart(tg, new_talker->callsign()), v2_client_filter);
+    if (tg == tgForV1Clients())
+    {
+      broadcastMsg(MsgTalkerStartV1(new_talker->callsign()), v1_client_filter);
+    }
   }
 } /* Reflector::setTalker */
 

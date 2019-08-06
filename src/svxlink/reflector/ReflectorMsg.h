@@ -537,7 +537,34 @@ been received. This message is meant to be informational only.
 class MsgTalkerStart : public ReflectorMsgBase<104>
 {
   public:
-    MsgTalkerStart(const std::string& callsign="") : m_callsign(callsign) {}
+    MsgTalkerStart(uint32_t tg=0, const std::string& callsign="")
+      : m_tg(tg), m_callsign(callsign) {}
+
+    uint32_t tg(void) const { return m_tg; }
+    const std::string& callsign(void) const { return m_callsign; }
+
+    ASYNC_MSG_MEMBERS(m_tg, m_callsign);
+
+  private:
+    uint32_t    m_tg;
+    std::string m_callsign;
+}; /* MsgTalkerStart */
+
+
+/**
+@brief	 Talker start TCP network message V1
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the clients to inform about that the
+specified node is now the talker. Other nodes starting to send audio will be
+ignored. Note that UDP audio messages may be received before this message has
+been received. This message is meant to be informational only.
+*/
+class MsgTalkerStartV1 : public ReflectorMsgBase<104>
+{
+  public:
+    MsgTalkerStartV1(const std::string& callsign="") : m_callsign(callsign) {}
 
     const std::string& callsign(void) const { return m_callsign; }
 
@@ -545,7 +572,7 @@ class MsgTalkerStart : public ReflectorMsgBase<104>
 
   private:
     std::string m_callsign;
-}; /* MsgTalkerStart */
+}; /* MsgTalkerStartV1 */
 
 
 /**
@@ -561,7 +588,34 @@ purposes only.
 class MsgTalkerStop : public ReflectorMsgBase<105>
 {
   public:
-    MsgTalkerStop(const std::string& callsign="") : m_callsign(callsign) {}
+    MsgTalkerStop(uint32_t tg=0, const std::string& callsign="")
+      : m_tg(tg), m_callsign(callsign) {}
+
+    uint32_t tg(void) const { return m_tg; }
+    const std::string& callsign(void) const { return m_callsign; }
+
+    ASYNC_MSG_MEMBERS(m_tg, m_callsign);
+
+  private:
+    uint32_t    m_tg;
+    std::string m_callsign;
+}; /* MsgTalkerStop */
+
+
+/**
+@brief	 Talker stop TCP network message V1
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This message is sent by the server to the clients to inform about that the
+specified node has stopped talking. Note that audio packets may be received
+even after this message has been received. It should be used for informational
+purposes only.
+*/
+class MsgTalkerStopV1 : public ReflectorMsgBase<105>
+{
+  public:
+    MsgTalkerStopV1(const std::string& callsign="") : m_callsign(callsign) {}
 
     const std::string& callsign(void) const { return m_callsign; }
 
@@ -569,7 +623,7 @@ class MsgTalkerStop : public ReflectorMsgBase<105>
 
   private:
     std::string m_callsign;
-}; /* MsgTalkerStop */
+}; /* MsgTalkerStopV1 */
 
 
 /**
@@ -593,7 +647,6 @@ class MsgSwitchTG : public ReflectorMsgBase<106>
   private:
     uint32_t m_tg;
 }; /* MsgSwitchTG */
-
 
 
 /***************************** UDP Messages *****************************/

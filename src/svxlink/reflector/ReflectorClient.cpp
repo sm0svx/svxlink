@@ -119,6 +119,14 @@ uint32_t ReflectorClient::next_client_id = 0;
  *
  ****************************************************************************/
 
+bool ReflectorClient::TgFilter::operator()(ReflectorClient* client) const
+{
+  //cout << "m_tg=" << m_tg << "  client_tg="
+  //     << TGHandler::instance()->TGForClient(client) << endl;
+  return m_tg == TGHandler::instance()->TGForClient(client);
+}
+
+
 ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
                                  Async::Config *cfg)
   : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
@@ -400,9 +408,9 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       }
       if (m_client_proto_ver < ProtoVer(2, 0))
       {
-        TGHandler::instance()->switchTo(this, 1);
+        TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients());
       }
-      m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
+      m_reflector->broadcastMsg(MsgNodeJoined(m_callsign), ExceptFilter(this));
     }
     else
     {

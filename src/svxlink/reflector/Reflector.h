@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ProtoVer.h"
+#include "ReflectorClient.h"
 
 
 /****************************************************************************
@@ -72,7 +73,6 @@ namespace Async
   class Config;
 };
 
-class ReflectorClient;
 class ReflectorMsg;
 class ReflectorUdpMsg;
 
@@ -145,16 +145,16 @@ class Reflector : public sigc::trackable
     void nodeList(std::vector<std::string>& nodes) const;
 
     /**
-     * @brief   Broadcast a TCP message to all connected clients except one
+     * @brief   Broadcast a TCP message to connected clients
      * @param   msg The message to broadcast
-     * @param   client The client to exclude from the broadcast
+     * @param   filter The client filter to apply
      *
      * This function is used to broadcast a message to all connected clients,
-     * possibly excluding one client. The excluded client is most often the one
-     * where the message originate from. The message is not really a IP
+     * possibly applying a client filter.  The message is not really a IP
      * broadcast but rather unicast to all connected clients.
      */
-    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *except=0);
+    void broadcastMsg(const ReflectorMsg& msg,
+        const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
 
     /**
      * @brief   Send a UDP datagram to the specificed ReflectorClient
@@ -164,6 +164,12 @@ class Reflector : public sigc::trackable
      * @return  Returns \em true on success or else \em false
      */
     bool sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
+
+    /**
+     * @brief   Get the TG for protocol V1 clients
+     * @return  Returns the TG used for protocol V1 clients
+     */
+    uint32_t tgForV1Clients(void) { return m_tg_for_v1_clients; }
 
   private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
@@ -176,6 +182,7 @@ class Reflector : public sigc::trackable
     ReflectorClientMap    m_client_map;
     ReflectorClientConMap m_client_con_map;
     Async::Config*        m_cfg;
+    uint32_t              m_tg_for_v1_clients;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
@@ -184,13 +191,8 @@ class Reflector : public sigc::trackable
                             Async::FramedTcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void broadcastUdpMsgExcept(const ReflectorClient *except,
-                               const ReflectorUdpMsg& msg,
-                               const ProtoVerRange& pv_range=ProtoVerRange());
-    void broadcastUdpMsgExcept(uint32_t tg,
-                               const ReflectorClient *except,
-                               const ReflectorUdpMsg& msg,
-                               const ProtoVerRange& pv_range=ProtoVerRange());
+    void broadcastUdpMsg(const ReflectorUdpMsg& msg,
+        const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
     void onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
                          ReflectorClient *new_talker);
 
