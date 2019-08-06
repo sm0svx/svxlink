@@ -165,6 +165,9 @@ class Reflector : public sigc::trackable
      */
     bool sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
+    void broadcastUdpMsg(const ReflectorUdpMsg& msg,
+        const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
+
     /**
      * @brief   Get the TG for protocol V1 clients
      * @return  Returns the TG used for protocol V1 clients
@@ -191,8 +194,6 @@ class Reflector : public sigc::trackable
                             Async::FramedTcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void broadcastUdpMsg(const ReflectorUdpMsg& msg,
-        const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
     void onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
                          ReflectorClient *new_talker);
 

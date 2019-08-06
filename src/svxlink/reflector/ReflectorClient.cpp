@@ -438,9 +438,24 @@ void ReflectorClient::handleSwitchTG(std::istream& is)
     sendError("Illegal MsgSwitchTG protocol message received");
     return;
   }
-  cout << m_callsign << ": Switch to TG #" << msg.tg() << endl;
-  m_current_tg = msg.tg();
-  TGHandler::instance()->switchTo(this, msg.tg());
+  if (msg.tg() != m_current_tg)
+  {
+    cout << m_callsign << ": Switch to TG #" << msg.tg() << endl;
+    ReflectorClient *talker = TGHandler::instance()->talkerForTG(m_current_tg);
+    if (talker == this)
+    {
+      m_reflector->broadcastUdpMsg(MsgUdpFlushSamples(),
+          mkAndFilter(
+            TgFilter(m_current_tg),
+            ExceptFilter(this)));
+    }
+    else if (talker != 0)
+    {
+      sendUdpMsg(MsgUdpFlushSamples());
+    }
+    m_current_tg = msg.tg();
+    TGHandler::instance()->switchTo(this, msg.tg());
+  }
 } /* ReflectorClient::handleSwitchTG */
 
 

@@ -244,6 +244,23 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
 } /* Reflector::sendUdpDatagram */
 
 
+void Reflector::broadcastUdpMsg(const ReflectorUdpMsg& msg,
+                                const ReflectorClient::Filter& filter)
+{
+  for (ReflectorClientMap::iterator it = m_client_map.begin();
+       it != m_client_map.end(); ++it)
+  {
+    ReflectorClient *client = (*it).second;
+    if (filter(client) &&
+        (client->conState() == ReflectorClient::STATE_CONNECTED))
+    {
+      client->sendUdpMsg(msg);
+    }
+  }
+} /* Reflector::broadcastUdpMsg */
+
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -467,22 +484,6 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       break;
   }
 } /* Reflector::udpDatagramReceived */
-
-
-void Reflector::broadcastUdpMsg(const ReflectorUdpMsg& msg,
-                                const ReflectorClient::Filter& filter)
-{
-  for (ReflectorClientMap::iterator it = m_client_map.begin();
-       it != m_client_map.end(); ++it)
-  {
-    ReflectorClient *client = (*it).second;
-    if (filter(client) &&
-        (client->conState() == ReflectorClient::STATE_CONNECTED))
-    {
-      client->sendUdpMsg(msg);
-    }
-  }
-} /* Reflector::broadcastUdpMsg */
 
 
 void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
