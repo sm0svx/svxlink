@@ -377,10 +377,15 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         uint32_t tg = TGHandler::instance()->TGForClient(client);
         if (!msg.audioData().empty() && (tg > 0))
         {
-          TGHandler::instance()->setTalkerForTG(tg, client);
           ReflectorClient* talker = TGHandler::instance()->talkerForTG(tg);
+          if (talker == 0)
+          {
+            TGHandler::instance()->setTalkerForTG(tg, client);
+            talker = TGHandler::instance()->talkerForTG(tg);
+          }
           if (talker == client)
           {
+            TGHandler::instance()->setTalkerForTG(tg, client);
             broadcastUdpMsg(msg,
                 ReflectorClient::mkAndFilter(
                   ReflectorClient::ExceptFilter(client),
