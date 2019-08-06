@@ -465,10 +465,7 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
     //  ss << "link_already_active \"";
     //}
     //ss << logic_props.announcement_name + "\"";
-    if (logic != src_logic)
-    {
-      sendCmdToLogics(link, logic, subcmd);
-    }
+    sendCmdToLogics(link, logic, subcmd);
   }
   //else
   //{
@@ -700,7 +697,10 @@ void LinkManager::sendCmdToLogics(Link& link, LogicBase* src_logic,
     LogicMap::iterator lmit = logic_map.find(logic_name);
     assert(lmit != logic_map.end());
     LogicBase *logic = (*lmit).second.logic;
-    logic->remoteCmdReceived(src_logic, cmd);
+    if (logic != src_logic)
+    {
+      logic->remoteCmdReceived(src_logic, cmd);
+    }
   }
 } /* LinkManager::sendCmdToLogics */
 
