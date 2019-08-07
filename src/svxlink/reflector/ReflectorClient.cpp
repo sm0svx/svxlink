@@ -138,7 +138,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET),
     m_udp_heartbeat_tx_cnt(UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
-    m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0)
+    m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0),
+    m_current_tg(0)
 {
   m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
   m_con->frameReceived.connect(
