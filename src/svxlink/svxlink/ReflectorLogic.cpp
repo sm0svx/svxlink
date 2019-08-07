@@ -240,7 +240,7 @@ bool ReflectorLogic::initialize(void)
 void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
                                        const std::string& cmd)
 {
-  cout << "### src_logic=" << src_logic->name() << "  cmd=" << cmd << endl;
+  //cout << "### src_logic=" << src_logic->name() << "  cmd=" << cmd << endl;
   istringstream is(cmd);
   uint32_t tg;
   if (is >> tg)
