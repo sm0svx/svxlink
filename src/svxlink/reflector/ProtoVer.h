@@ -129,8 +129,8 @@ class ProtoVer
       m_major_ver = major_ver;
       m_minor_ver = minor_ver;
     }
-    uint16_t major(void) const { return m_major_ver; }
-    uint16_t minor(void) const { return m_minor_ver; }
+    uint16_t majorVer(void) const { return m_major_ver; }
+    uint16_t minorVer(void) const { return m_minor_ver; }
     bool isValid(void) const { return (m_major_ver > 0) || (m_minor_ver > 0); }
     bool operator ==(const ProtoVer& rhs) const
     {

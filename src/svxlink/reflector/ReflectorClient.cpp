@@ -394,8 +394,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       sendMsg(MsgAuthOk());
       cout << m_callsign << ": Login OK from "
            << m_con->remoteHost() << ":" << m_con->remotePort()
-           << " with protocol version " << m_client_proto_ver.major()
-           << "." << m_client_proto_ver.minor()
+           << " with protocol version " << m_client_proto_ver.majorVer()
+           << "." << m_client_proto_ver.minorVer()
            << endl;
       m_con_state = STATE_CONNECTED;
       MsgServerInfo msg_srv_info(m_client_id, m_supported_codecs);
