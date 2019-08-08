@@ -524,7 +524,10 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   //sendMsg(MsgSelectTG(m_default_tg));
   std::set<uint32_t> tgs;
   cfg().getValue(name(), "MONITOR_TGS", tgs);
-  sendMsg(MsgTgMonitor(tgs));
+  if (!tgs.empty())
+  {
+    sendMsg(MsgTgMonitor(tgs));
+  }
   sendUdpMsg(MsgUdpHeartbeat());
 
 } /* ReflectorLogic::handleMsgAuthChallenge */
