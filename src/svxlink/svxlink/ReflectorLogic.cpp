@@ -989,12 +989,19 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   //     << is_active << "  is_idle=" << is_idle << endl;
   if (!is_idle)
   {
-    if ((m_tg_select_timeout_cnt == 0) && (m_default_tg != 0))
+    if (m_tg_select_timeout_cnt == 0)
     {
-      cout << name() << ": Selecting TG #" << m_default_tg << endl;
-      sendMsg(MsgSelectTG(m_default_tg));
+      if (m_default_tg > 0)
+      {
+        cout << name() << ": Selecting TG #" << m_default_tg << endl;
+        sendMsg(MsgSelectTG(m_default_tg));
+        m_tg_select_timeout_cnt = m_tg_select_timeout;
+      }
     }
-    m_tg_select_timeout_cnt = m_tg_select_timeout;
+    else
+    {
+      m_tg_select_timeout_cnt = m_tg_select_timeout;
+    }
   }
 } /* ReflectorLogic::onLogicConInStreamStateChanged */
 
@@ -1004,7 +1011,7 @@ void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
 {
   //cout << "### ReflectorLogic::onLogicConOutStreamStateChanged: is_active="
   //     << is_active << "  is_idle=" << is_idle << endl;
-  if (!is_idle)
+  if (!is_idle && (m_tg_select_timeout_cnt > 0))
   {
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }

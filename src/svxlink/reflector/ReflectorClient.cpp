@@ -445,7 +445,7 @@ void ReflectorClient::handleSelectTG(std::istream& is)
   }
   if (msg.tg() != m_current_tg)
   {
-    cout << m_callsign << ": Switch to TG #" << msg.tg() << endl;
+    cout << m_callsign << ": Select TG #" << msg.tg() << endl;
     ReflectorClient *talker = TGHandler::instance()->talkerForTG(m_current_tg);
     if (talker == this)
     {
