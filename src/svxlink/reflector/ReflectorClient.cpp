@@ -475,7 +475,7 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
     return;
   }
   const std::set<uint32_t>& tgs = msg.tgs();
-  cout << "### ReflectorClient::handleTgMonitor: [ ";
+  cout << m_callsign << ": Monitor TG#: [ ";
   std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
   cout << "]" << endl;
 
