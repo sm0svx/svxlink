@@ -125,7 +125,10 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
-    m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0)
+    m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
+    m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
+    m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
+    m_tg_select_timeout_cnt(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -134,6 +137,9 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &ReflectorLogic::flushTimeout));
   timerclear(&m_last_talker_timestamp);
+
+  m_tg_select_timer.expired.connect(sigc::hide(
+        sigc::mem_fun(*this, &ReflectorLogic::tgSelectTimerExpired)));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -198,7 +204,9 @@ bool ReflectorLogic::initialize(void)
 #endif
 
     // Create logic connection incoming audio passthrough
-  m_logic_con_in = new Async::AudioPassthrough;
+  m_logic_con_in = new Async::AudioStreamStateDetector;
+  m_logic_con_in->sigStreamStateChanged.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::onLogicConInStreamStateChanged));
 
     // Create dummy audio codec used before setting the real encoder
   if (!setAudioCodec("DUMMY")) { return false; }
@@ -222,9 +230,15 @@ bool ReflectorLogic::initialize(void)
     prev_src->registerSink(passthrough, true);
     prev_src = passthrough;
   }
-  m_logic_con_out = prev_src;
+
+  m_logic_con_out = new Async::AudioStreamStateDetector;
+  m_logic_con_out->sigStreamStateChanged.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::onLogicConOutStreamStateChanged));
+  prev_src->registerSink(m_logic_con_out, true);
+  prev_src = 0;
 
   cfg().getValue(name(), "DEFAULT_TG", m_default_tg);
+  cfg().getValue(name(), "TG_SELECT_TIMEOUT", m_tg_select_timeout);
 
   if (!LogicBase::initialize())
   {
@@ -245,7 +259,9 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   uint32_t tg;
   if (is >> tg)
   {
-    sendMsg(MsgSwitchTG(tg));
+    cout << name() << ": Selecting TG #" << tg << endl;
+    sendMsg(MsgSelectTG(tg));
+    m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 } /* ReflectorLogic::remoteCmdReceived */
 
@@ -505,7 +521,10 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 
   m_con_state = STATE_CONNECTED;
 
-  sendMsg(MsgSwitchTG(m_default_tg));
+  //sendMsg(MsgSelectTG(m_default_tg));
+  std::set<uint32_t> tgs;
+  cfg().getValue(name(), "MONITOR_TGS", tgs);
+  sendMsg(MsgTgMonitor(tgs));
   sendUdpMsg(MsgUdpHeartbeat());
 
 } /* ReflectorLogic::handleMsgAuthChallenge */
@@ -572,6 +591,14 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   }
   cout << name() << ": Talker start on TG #" << msg.tg() << ": "
        << msg.callsign() << endl;
+
+    // Select the incoming TG if idle
+  if (m_tg_select_timeout_cnt == 0)
+  {
+    cout << name() << ": Selecting TG #" << msg.tg() << endl;
+    sendMsg(MsgSelectTG(msg.tg()));
+    m_tg_select_timeout_cnt = 10;
+  }
 } /* ReflectorLogic::handleMsgTalkerStart */
 
 
@@ -950,6 +977,51 @@ bool ReflectorLogic::codecIsAvailable(const std::string &codec_name)
   return AudioEncoder::isAvailable(codec_name) &&
          AudioDecoder::isAvailable(codec_name);
 } /* ReflectorLogic::codecIsAvailable */
+
+
+void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
+                                                    bool is_idle)
+{
+  //cout << "### ReflectorLogic::onLogicConInStreamStateChanged: is_active="
+  //     << is_active << "  is_idle=" << is_idle << endl;
+  if (!is_idle)
+  {
+    if ((m_tg_select_timeout_cnt == 0) && (m_default_tg != 0))
+    {
+      cout << name() << ": Selecting TG #" << m_default_tg << endl;
+      sendMsg(MsgSelectTG(m_default_tg));
+    }
+    m_tg_select_timeout_cnt = m_tg_select_timeout;
+  }
+} /* ReflectorLogic::onLogicConInStreamStateChanged */
+
+
+void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
+                                                     bool is_idle)
+{
+  //cout << "### ReflectorLogic::onLogicConOutStreamStateChanged: is_active="
+  //     << is_active << "  is_idle=" << is_idle << endl;
+  if (!is_idle)
+  {
+    m_tg_select_timeout_cnt = m_tg_select_timeout;
+  }
+} /* ReflectorLogic::onLogicConOutStreamStateChanged */
+
+
+void ReflectorLogic::tgSelectTimerExpired(void)
+{
+  if (!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle())
+  {
+    return;
+  }
+  //cout << "### ReflectorLogic::tgSelectTimerExpired: m_tg_select_timeout_cnt="
+  //     << m_tg_select_timeout_cnt << endl;
+  if ((m_tg_select_timeout_cnt > 0) && (--m_tg_select_timeout_cnt == 0))
+  {
+    cout << name() << ": Selecting TG #0 (timeout)" << endl;
+    sendMsg(MsgSelectTG(0));
+  }
+} /* ReflectorLogic::tgSelectTimerExpired */
 
 
 /*

@@ -634,11 +634,11 @@ class MsgTalkerStopV1 : public ReflectorMsgBase<105>
 This message is sent by the client to choose which talk group to use for
 communication.
 */
-class MsgSwitchTG : public ReflectorMsgBase<106>
+class MsgSelectTG : public ReflectorMsgBase<106>
 {
   public:
-    MsgSwitchTG(void) : m_tg(0) {}
-    MsgSwitchTG(uint32_t tg) : m_tg(tg) {}
+    MsgSelectTG(void) : m_tg(0) {}
+    MsgSelectTG(uint32_t tg) : m_tg(tg) {}
 
     uint32_t tg(void) const { return m_tg; }
 
@@ -646,7 +646,30 @@ class MsgSwitchTG : public ReflectorMsgBase<106>
 
   private:
     uint32_t m_tg;
-}; /* MsgSwitchTG */
+}; /* MsgSelectTG */
+
+
+/**
+@brief	 Choose which talk groups to monitor
+@author  Tobias Blomberg / SM0SVX
+@date    2019-08-08
+
+This message is sent by the client to choose which talk groups to monitor for
+activity when idle.
+*/
+class MsgTgMonitor : public ReflectorMsgBase<107>
+{
+  public:
+    MsgTgMonitor(void) {}
+    MsgTgMonitor(const std::set<uint32_t>& tgs) : m_tgs(tgs) {}
+
+    const std::set<uint32_t>& tgs(void) const { return m_tgs; }
+
+    ASYNC_MSG_MEMBERS(m_tgs);
+
+  private:
+    std::set<uint32_t> m_tgs;
+}; /* MsgTgMonitor */
 
 
 /***************************** UDP Messages *****************************/

@@ -164,6 +164,18 @@ class ReflectorClient
         uint32_t m_tg;
     };
 
+    class TgMonitorFilter : public Filter
+    {
+      public:
+        TgMonitorFilter(uint32_t tg) : m_tg(tg) {}
+        virtual bool operator ()(ReflectorClient *client) const
+        {
+          return client->m_monitored_tgs.count(m_tg) > 0;
+        }
+      private:
+        uint32_t m_tg;
+    };
+
     template <class F1, class F2>
     class AndFilter : public Filter
     {
@@ -342,6 +354,7 @@ class ReflectorClient
     ProtoVer                  m_client_proto_ver;
     std::vector<std::string>  m_supported_codecs;
     uint32_t                  m_current_tg;
+    std::set<uint32_t>        m_monitored_tgs;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -349,7 +362,8 @@ class ReflectorClient
                          std::vector<uint8_t>& data);
     void handleMsgProtoVer(std::istream& is);
     void handleMsgAuthResponse(std::istream& is);
-    void handleSwitchTG(std::istream& is);
+    void handleSelectTG(std::istream& is);
+    void handleTgMonitor(std::istream& is);
     void handleMsgError(std::istream& is);
     void sendError(const std::string& msg);
     void onDiscTimeout(Async::Timer *t);

@@ -492,7 +492,10 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
   if (old_talker != 0)
   {
     cout << old_talker->callsign() << ": Talker stop on TG #" << tg << endl;
-    broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()), v2_client_filter);
+    broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()),
+        ReflectorClient::mkAndFilter(
+          v2_client_filter,
+          ReflectorClient::TgMonitorFilter(tg)));
     if (tg == tgForV1Clients())
     {
       broadcastMsg(MsgTalkerStopV1(old_talker->callsign()), v1_client_filter);
@@ -505,7 +508,10 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
   if (new_talker != 0)
   {
     cout << new_talker->callsign() << ": Talker start on TG #" << tg << endl;
-    broadcastMsg(MsgTalkerStart(tg, new_talker->callsign()), v2_client_filter);
+    broadcastMsg(MsgTalkerStart(tg, new_talker->callsign()),
+        ReflectorClient::mkAndFilter(
+          v2_client_filter,
+          ReflectorClient::TgMonitorFilter(tg)));
     if (tg == tgForV1Clients())
     {
       broadcastMsg(MsgTalkerStartV1(new_talker->callsign()), v1_client_filter);

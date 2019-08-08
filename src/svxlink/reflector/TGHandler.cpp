@@ -147,18 +147,22 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
     removeClientP(tg_info, client);
   }
 
-  IdMap::iterator id_map_it = m_id_map.find(tg);
-  if (id_map_it != m_id_map.end())
+  if (tg > 0)
   {
-    tg_info = id_map_it->second;
+    IdMap::iterator id_map_it = m_id_map.find(tg);
+    if (id_map_it != m_id_map.end())
+    {
+      tg_info = id_map_it->second;
+    }
+    else
+    {
+      tg_info = new TGInfo(tg);
+      m_id_map[tg] = tg_info;
+    }
+    tg_info->clients.insert(client);
+    m_client_map[client] = tg_info;
   }
-  else
-  {
-    tg_info = new TGInfo(tg);
-    m_id_map[tg] = tg_info;
-  }
-  tg_info->clients.insert(client);
-  m_client_map[client] = tg_info;
+
   printTGStatus();
 } /* TGHandler::switchTo */
 

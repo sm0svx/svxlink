@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <algorithm>
 #include <cerrno>
+#include <iterator>
 
 
 /****************************************************************************
@@ -305,8 +306,11 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgAuthResponse::TYPE:
       handleMsgAuthResponse(ss);
       break;
-    case MsgSwitchTG::TYPE:
-      handleSwitchTG(ss);
+    case MsgSelectTG::TYPE:
+      handleSelectTG(ss);
+      break;
+    case MsgTgMonitor::TYPE:
+      handleTgMonitor(ss);
       break;
     case MsgError::TYPE:
       handleMsgError(ss);
@@ -429,14 +433,14 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 } /* ReflectorClient::handleMsgAuthResponse */
 
 
-void ReflectorClient::handleSwitchTG(std::istream& is)
+void ReflectorClient::handleSelectTG(std::istream& is)
 {
-  MsgSwitchTG msg;
+  MsgSelectTG msg;
   if (!msg.unpack(is))
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " ERROR: Could not unpack MsgSwitchTG" << endl;
-    sendError("Illegal MsgSwitchTG protocol message received");
+         << " ERROR: Could not unpack MsgSelectTG" << endl;
+    sendError("Illegal MsgSelectTG protocol message received");
     return;
   }
   if (msg.tg() != m_current_tg)
@@ -457,7 +461,26 @@ void ReflectorClient::handleSwitchTG(std::istream& is)
     m_current_tg = msg.tg();
     TGHandler::instance()->switchTo(this, msg.tg());
   }
-} /* ReflectorClient::handleSwitchTG */
+} /* ReflectorClient::handleSelectTG */
+
+
+void ReflectorClient::handleTgMonitor(std::istream& is)
+{
+  MsgTgMonitor msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgTgMonitor" << endl;
+    sendError("Illegal MsgTgMonitor protocol message received");
+    return;
+  }
+  const std::set<uint32_t>& tgs = msg.tgs();
+  cout << "### ReflectorClient::handleTgMonitor: [ ";
+  std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
+  cout << "]" << endl;
+
+  m_monitored_tgs = tgs;
+} /* ReflectorClient::handleTgMonitor */
 
 
 void ReflectorClient::handleMsgError(std::istream& is)

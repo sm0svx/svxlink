@@ -13,6 +13,11 @@
   be written instead. Enable this behavior by setting the environment variable
   ASYNC_AUDIO_ALSA_ZEROFILL=1.
 
+* Config: Add support for calling getValue on keyed containers, like std::set
+  and std::multiset.
+
+* Msg: Add support for std::set variable in messages.
+
 
 
  1.5.0 -- 30 Dec 2017
