@@ -599,14 +599,17 @@ talk group is currently selected. Default: 0 (no talk group).
 .TP
 .B MONITOR_TGS
 A space separated list of talk groups which the node will monitor for activity
-when no other talk group is selected. Default: no monitoring.
+when no other talk group is selected. Default: no monitoring. Example:
+
+  MONITOR_TGS=240 2403 2403123
+
+will monitor the TGs for Sweden, Sweden district 3 and a specific node ID.
 .TP
 .B TG_SELECT_TIMEOUT
 The number of seconds after which a selected talk group will be unselected. The
 node will return to talk group 0 (no talk group) and start monitoring the
 configured talk groups again. Default: 30 seconds.
-.RE
-
+.P
 It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
