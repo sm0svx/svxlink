@@ -391,6 +391,15 @@ after starting SvxLink. The device works bidirectional, received dtmf characters
 (from Rf) are output via this interface.
 
 Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
+.TP
+.B CTCSS_TO_TG
+Use this variable to specify a space separated list of pairs of tone
+frequencies and talk groups. When one of the tone frequencies is detected, the
+corresponding talk group will be indicated. This can be used for example by
+ReflectorLogic to automatically switch to a talk group when one of the specified
+tone frequencies is received.
+
+Example: CTCSS_TO_TG=127.3:2403 136.5:2405
 .
 .SS Simplex Logic Section
 .
@@ -988,6 +997,9 @@ variable sets the frequency of the tone to use. The tone frequency ranges from
 67.0 to 254.1 Hz. There actually is nothing that will stop you from setting the
 frequency to something outside this range but there is no guarantee that it will
 work.
+
+If desired it is possible to specify a space separated list of tone frequencies
+in which case the squelch will open on all the tone frequencies.
 .TP
 .B CTCSS_OPEN_THRESH
 If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config
