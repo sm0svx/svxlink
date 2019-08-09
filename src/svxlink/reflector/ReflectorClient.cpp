@@ -312,6 +312,11 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgTgMonitor::TYPE:
       handleTgMonitor(ss);
       break;
+#if 0
+    case MsgClientInfo::TYPE:
+      handleClientInfo(ss);
+      break;
+#endif
     case MsgError::TYPE:
       handleMsgError(ss);
       break;
@@ -481,6 +486,88 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
 
   m_monitored_tgs = tgs;
 } /* ReflectorClient::handleTgMonitor */
+
+
+#if 0
+void ReflectorClient::handleClientInfo(std::istream& is)
+{
+  MsgClientInfo msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgClientInfo" << endl;
+    sendError("Illegal MsgClientInfo protocol message received");
+    return;
+  }
+  cout << m_callsign << ": Client info"
+       << "\n--- Software: \"" << msg.swInfo() << "\"";
+  for (size_t i=0; i<msg.rxSites().size(); ++i)
+  {
+    const MsgClientInfo::RxSite& rx_site = msg.rxSites().at(i);
+    cout << "\n--- Receiver \"" << rx_site.rxName() << "\":"
+         << "\n---   QTH Name          : " << rx_site.qthName();
+    if (rx_site.antennaHeightIsValid())
+    {
+      cout << "\n---   Antenna Height    : " << rx_site.antennaHeight()
+           << "m above sea level";
+    }
+    if (rx_site.antennaDirectionIsValid())
+    {
+      cout << "\n---   Antenna Direction : " << rx_site.antennaDirection()
+           << " degrees";
+    }
+    if (rx_site.rfFrequencyIsValid())
+    {
+      cout << "\n---   RF Frequency      : " << rx_site.rfFrequency()
+           << "Hz";
+    }
+    if (rx_site.ctcssFrequenciesIsValid())
+    {
+      cout << "\n---   CTCSS Frequencies : ";
+      std::copy(rx_site.ctcssFrequencies().begin(),
+                rx_site.ctcssFrequencies().end(),
+                std::ostream_iterator<float>(cout, " "));
+    }
+  }
+  for (size_t i=0; i<msg.txSites().size(); ++i)
+  {
+    const MsgClientInfo::TxSite& tx_site = msg.txSites().at(i);
+    cout << "\n--- Transmitter \"" << tx_site.txName() << "\":"
+         << "\n---   QTH Name          : " << tx_site.qthName();
+    if (tx_site.antennaHeightIsValid())
+    {
+      cout << "\n---   Antenna Height    : " << tx_site.antennaHeight()
+           << "m above sea level";
+    }
+    if (tx_site.antennaDirectionIsValid())
+    {
+      cout << "\n---   Antenna Direction : " << tx_site.antennaDirection()
+           << " degrees";
+    }
+    if (tx_site.rfFrequencyIsValid())
+    {
+      cout << "\n---   RF Frequency      : " << tx_site.rfFrequency()
+           << "Hz";
+    }
+    if (tx_site.ctcssFrequenciesIsValid())
+    {
+      cout << "\n---   CTCSS Frequencies : ";
+      std::copy(tx_site.ctcssFrequencies().begin(),
+                tx_site.ctcssFrequencies().end(),
+                std::ostream_iterator<float>(cout, " "));
+    }
+    if (tx_site.txPowerIsValid())
+    {
+      cout << "\n---   TX Power          : " << tx_site.txPower() << "W";
+    }
+  }
+  //if (!msg.qthName().empty())
+  //{
+  //  cout << "\n--- QTH Name=\"" << msg.qthName() << "\"";
+  //}
+  cout << endl;
+} /* ReflectorClient::handleClientInfo */
+#endif
 
 
 void ReflectorClient::handleMsgError(std::istream& is)

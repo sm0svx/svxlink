@@ -364,6 +364,7 @@ class ReflectorClient
     void handleMsgAuthResponse(std::istream& is);
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
+    //void handleClientInfo(std::istream& is);
     void handleMsgError(std::istream& is);
     void sendError(const std::string& msg);
     void onDiscTimeout(Async::Timer *t);

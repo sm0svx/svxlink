@@ -672,6 +672,201 @@ class MsgTgMonitor : public ReflectorMsgBase<107>
 }; /* MsgTgMonitor */
 
 
+#if 0
+/**
+@brief   Send information about the client to the server
+@author  Tobias Blomberg / SM0SVX
+@date    2019-08-08
+
+This is an optional message that can be sent by the client to inform the server
+about client properties. It can be resent at any time to update the client
+information.
+*/
+class MsgClientInfo : public ReflectorMsgBase<108>
+{
+  public:
+    class Site : public Async::Msg
+    {
+      public:
+        Site(void)
+          : m_qth_lat(std::numeric_limits<int16_t>::min()),
+            m_qth_lon(std::numeric_limits<int16_t>::min()),
+            m_antenna_height(std::numeric_limits<int32_t>::min()),
+            m_antenna_dir(-1), m_rf_frequency(0) {}
+
+        Site& setQthName(const std::string& name)
+        {
+          m_qth_name = name;
+          return *this;
+        }
+        const std::string& qthName(void) const { return m_qth_name; }
+        bool qthNameIsValid(void) const { return !m_qth_name.empty(); }
+
+        Site& setQthPos(double lat, double lon)
+        {
+          m_qth_lat = static_cast<int16_t>(1000000.0 * lat);
+          m_qth_lon = static_cast<int16_t>(1000000.0 * lon);
+          return *this;
+        }
+        bool qthPosIsValid(void) const
+        {
+          return (m_qth_lat != std::numeric_limits<int16_t>::min()) &&
+                 (m_qth_lon != std::numeric_limits<int16_t>::min());
+        }
+        double qthLat(void) const { return m_qth_lat / 1000000.0; }
+        double qthLon(void) const { return m_qth_lon / 1000000.0; }
+
+        Site& setAntennaHeight(int32_t height)
+        {
+          m_antenna_height = height;
+          return *this;
+        }
+        bool antennaHeightIsValid(void) const
+        {
+          return m_antenna_height != std::numeric_limits<int32_t>::min();
+        }
+        int32_t antennaHeight(void) const { return m_antenna_height; }
+
+        Site& setAntennaDirection(float dir)
+        {
+          if (dir < 0.0f)
+          {
+            m_antenna_dir = -1;
+          }
+          else
+          {
+            m_antenna_dir = static_cast<int16_t>(10.0f * dir);
+          }
+          return *this;
+        }
+        bool antennaDirectionIsValid(void) const { return m_antenna_dir >= 0; }
+        float antennaDirection(void) const { return m_antenna_dir / 10.0f; }
+
+        Site& setRfFrequency(uint64_t rf_frequency)
+        {
+          m_rf_frequency = rf_frequency;
+          return *this;
+        }
+        bool rfFrequencyIsValid(void) const { return m_rf_frequency > 0; }
+        uint64_t rfFrequency(void) const { return m_rf_frequency; }
+
+        Site& setCtcssFrequencies(std::vector<float> ctcss_frequencies)
+        {
+          m_ctcss_frequencies = ctcss_frequencies;
+          return *this;
+        }
+        bool ctcssFrequenciesIsValid(void) const
+        {
+          return !m_ctcss_frequencies.empty();
+        }
+        const std::vector<float>& ctcssFrequencies(void) const
+        {
+          return m_ctcss_frequencies;
+        }
+
+        ASYNC_MSG_MEMBERS(m_qth_name, m_qth_lat, m_qth_lon,
+                          m_antenna_height, m_antenna_dir, m_rf_frequency,
+                          m_ctcss_frequencies);
+
+      private:
+        std::string         m_qth_name;
+        int32_t             m_qth_lat;
+        int32_t             m_qth_lon;
+        int32_t             m_antenna_height;
+        int16_t             m_antenna_dir;
+        uint64_t            m_rf_frequency;
+        std::vector<float>  m_ctcss_frequencies;
+    };
+
+    class RxSite : public Site
+    {
+      public:
+        RxSite& setRxName(const std::string& name)
+        {
+          m_rx_name = name;
+          return *this;
+        }
+        bool rxNameIsValid(void) const { return !m_rx_name.empty(); }
+        const std::string& rxName(void) const { return m_rx_name; }
+
+        ASYNC_MSG_DERIVED_FROM(Site)
+        ASYNC_MSG_MEMBERS(m_rx_name)
+
+      private:
+        std::string m_rx_name;
+    };
+    typedef std::vector<RxSite> RxSites;
+
+    class TxSite : public Site
+    {
+      public:
+        TxSite(void) : m_tx_power(0) {}
+
+        TxSite& setTxName(const std::string& name)
+        {
+          m_tx_name = name;
+          return *this;
+        }
+        bool txNameIsValid(void) const { return !m_tx_name.empty(); }
+        const std::string& txName(void) const { return m_tx_name; }
+
+        TxSite& setTxPower(float power)
+        {
+          m_tx_power = static_cast<uint16_t>(1000.0f * power);
+          return *this;
+        }
+        bool txPowerIsValid(void) const { return m_tx_power > 0; }
+        float txPower(void) const { return m_tx_power / 1000.0f; }
+
+        ASYNC_MSG_DERIVED_FROM(Site)
+        ASYNC_MSG_MEMBERS(m_tx_name, m_tx_power)
+
+      private:
+        std::string m_tx_name;
+        uint16_t    m_tx_power;
+    };
+    typedef std::vector<TxSite> TxSites;
+
+    MsgClientInfo(void) {}
+    MsgClientInfo(const std::string& sw_info) : m_sw_info(sw_info) {}
+
+    MsgClientInfo& setSwInfo(const std::string& sw_info)
+    {
+      m_sw_info = sw_info;
+      return *this;
+    }
+    const std::string& swInfo(void) const { return m_sw_info; }
+
+    MsgClientInfo& setTxSites(const std::vector<TxSite>& tx_sites)
+    {
+      m_tx_sites = tx_sites;
+      return *this;
+    }
+    const std::vector<TxSite>& txSites(void) const
+    {
+      return m_tx_sites;
+    }
+
+    MsgClientInfo& setRxSites(const std::vector<RxSite>& rx_sites)
+    {
+      m_rx_sites = rx_sites;
+      return *this;
+    }
+    const std::vector<RxSite>& rxSites(void) const
+    {
+      return m_rx_sites;
+    }
+
+    ASYNC_MSG_MEMBERS(m_sw_info, m_rx_sites, m_tx_sites);
+
+  private:
+    std::string m_sw_info;
+    RxSites     m_rx_sites;
+    TxSites     m_tx_sites;
+}; /* MsgClientInfo */
+#endif
+
+
 /***************************** UDP Messages *****************************/
 
 /**

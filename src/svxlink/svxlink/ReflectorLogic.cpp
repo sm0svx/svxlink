@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpClient.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncAudioPassthrough.h>
+//#include <version/SVXLINK.h>
 
 
 /****************************************************************************
@@ -98,7 +99,6 @@ using namespace Async;
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -521,7 +521,52 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 
   m_con_state = STATE_CONNECTED;
 
-  //sendMsg(MsgSelectTG(m_default_tg));
+#if 0
+    // Set up RX and TX sites client information
+  MsgClientInfo::RxSite rx_site;
+  MsgClientInfo::TxSite tx_site;
+  rx_site.setRxName("Rx1");
+  tx_site.setTxName("Tx1");
+  rx_site.setQthName(cfg().getValue("LocationInfo", "QTH_NAME"));
+  tx_site.setQthName(cfg().getValue("LocationInfo", "QTH_NAME"));
+  int32_t antenna_height = 0;
+  if (cfg().getValue("LocationInfo", "ANTENNA_HEIGHT", antenna_height))
+  {
+    rx_site.setAntennaHeight(antenna_height);
+    tx_site.setAntennaHeight(antenna_height);
+  }
+  float antenna_dir = -1.0f;
+  cfg().getValue("LocationInfo", "ANTENNA_DIR", antenna_dir);
+  rx_site.setAntennaDirection(antenna_dir);
+  tx_site.setAntennaDirection(antenna_dir);
+  double rf_frequency = 0;
+  cfg().getValue("LocationInfo", "FREQUENCY", rf_frequency);
+  if (rf_frequency < 0.0f)
+  {
+    rf_frequency = 0.0f;
+  }
+  rx_site.setRfFrequency(static_cast<uint64_t>(1000000.0f * rf_frequency));
+  tx_site.setRfFrequency(static_cast<uint64_t>(1000000.0f * rf_frequency));
+  vector<float> ctcss_frequencies;
+  //ctcss_frequencies.push_back(136.5);
+  //rx_site.setCtcssFrequencies(ctcss_frequencies);
+  //tx_site.setCtcssFrequencies(ctcss_frequencies);
+  float tx_power = 0.0f;
+  cfg().getValue("LocationInfo", "TX_POWER", tx_power);
+  tx_site.setTxPower(tx_power);
+  MsgClientInfo::TxSites tx_sites;
+  tx_sites.push_back(tx_site);
+  MsgClientInfo::RxSites rx_sites;
+  rx_sites.push_back(rx_site);
+
+    // Send client information to the server
+  MsgClientInfo client_info; client_info
+    .setSwInfo("SvxLink v" SVXLINK_VERSION)
+    .setTxSites(tx_sites)
+    .setRxSites(rx_sites);
+  sendMsg(client_info);
+#endif
+
   std::set<uint32_t> tgs;
   cfg().getValue(name(), "MONITOR_TGS", tgs);
   if (!tgs.empty())
