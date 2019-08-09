@@ -7,7 +7,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -336,6 +336,20 @@ void AudioSelector::selectSource(AudioSource *source)
   }
   selectBranch(branch);
 } /* AudioSelector::selectSource */
+
+
+AudioSource *AudioSelector::selectedSource(void) const
+{
+  for (BranchMap::const_iterator it = m_branch_map.begin();
+       it != m_branch_map.end(); ++it)
+  {
+    if (it->second == selectedBranch())
+    {
+      return it->first;
+    }
+  }
+  return 0;
+} /* AudioSelector::selectedSource */
 
 
 void AudioSelector::setFlushWait(AudioSource *source, bool flush_wait)
