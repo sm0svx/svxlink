@@ -128,7 +128,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tg_select_timeout_cnt(0)
+    m_tg_select_timeout_cnt(0), m_selected_tg(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -259,9 +259,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   uint32_t tg;
   if (is >> tg)
   {
-    cout << name() << ": Selecting TG #" << tg << endl;
-    sendMsg(MsgSelectTG(tg));
-    m_tg_select_timeout_cnt = m_tg_select_timeout;
+    selectTg(tg);
   }
 } /* ReflectorLogic::remoteCmdReceived */
 
@@ -567,6 +565,12 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   sendMsg(client_info);
 #endif
 
+  if (m_selected_tg > 0)
+  {
+    cout << name() << ": Selecting TG #" << m_selected_tg << endl;
+    sendMsg(MsgSelectTG(m_selected_tg));
+  }
+
   std::set<uint32_t> tgs;
   cfg().getValue(name(), "MONITOR_TGS", tgs);
   if (!tgs.empty())
@@ -643,9 +647,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     // Select the incoming TG if idle
   if (m_tg_select_timeout_cnt == 0)
   {
-    cout << name() << ": Selecting TG #" << msg.tg() << endl;
-    sendMsg(MsgSelectTG(msg.tg()));
-    m_tg_select_timeout_cnt = 10;
+    selectTg(msg.tg());
   }
 } /* ReflectorLogic::handleMsgTalkerStart */
 
@@ -1038,15 +1040,10 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     {
       if (m_default_tg > 0)
       {
-        cout << name() << ": Selecting TG #" << m_default_tg << endl;
-        sendMsg(MsgSelectTG(m_default_tg));
-        m_tg_select_timeout_cnt = m_tg_select_timeout;
+        selectTg(m_default_tg);
       }
     }
-    else
-    {
-      m_tg_select_timeout_cnt = m_tg_select_timeout;
-    }
+    m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 } /* ReflectorLogic::onLogicConInStreamStateChanged */
 
@@ -1072,11 +1069,10 @@ void ReflectorLogic::tgSelectTimerExpired(void)
     if (m_logic_con_out->isIdle() && m_logic_con_in->isIdle() &&
         (--m_tg_select_timeout_cnt == 0))
     {
-      cout << name() << ": Selecting TG #0 (timeout)" << endl;
-      sendMsg(MsgSelectTG(0));
+      selectTg(0);
     }
   }
-  else if (!m_logic_con_in->isIdle())
+  if (!m_logic_con_in->isIdle() && (m_selected_tg == 0))
   {
     LogicBase *other_logic = LinkManager::instance()->currentTalkerFor(name());
     assert(other_logic != 0);
@@ -1085,12 +1081,22 @@ void ReflectorLogic::tgSelectTimerExpired(void)
     //     << other_logic->name() << " TG #" << tg << endl;
     if (tg > 0)
     {
-      cout << name() << ": Selecting TG #" << tg << endl;
-      sendMsg(MsgSelectTG(tg));
-      m_tg_select_timeout_cnt = m_tg_select_timeout;
+      selectTg(tg);
     }
   }
 } /* ReflectorLogic::tgSelectTimerExpired */
+
+
+void ReflectorLogic::selectTg(uint32_t tg)
+{
+  cout << name() << ": Selecting TG #" << tg << endl;
+  if (tg != m_selected_tg)
+  {
+    sendMsg(MsgSelectTG(tg));
+  }
+  m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
+  m_selected_tg = tg;
+} /* ReflectorLogic::selectTg */
 
 
 /*

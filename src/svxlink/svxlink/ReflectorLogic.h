@@ -199,6 +199,7 @@ class ReflectorLogic : public LogicBase
     unsigned                          m_tg_select_timeout;
     Async::Timer                      m_tg_select_timer;
     unsigned                          m_tg_select_timeout_cnt;
+    uint32_t                          m_selected_tg;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -233,6 +234,7 @@ class ReflectorLogic : public LogicBase
     void tgSelectTimerExpired(void);
     void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
+    void selectTg(uint32_t tg);
 
 };  /* class ReflectorLogic */
 
