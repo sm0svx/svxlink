@@ -662,7 +662,7 @@ bool Logic::initialize(void)
   for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
        it != ctcss_to_tg.end(); ++it)
   {
-    if (rx().addToneDetector(it->first, 4, 10, 500))
+    if (rx().addToneDetector(it->first, 4, 10, 1000))
     {
       m_ctcss_to_tg[it->first] = it->second;
     }
