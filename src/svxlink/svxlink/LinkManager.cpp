@@ -475,6 +475,22 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
 } /* LinkManager::cmdReceived */
 
 
+LogicBase *LinkManager::currentTalkerFor(const std::string& logic_name)
+{
+  AudioSelector *selector = sinks[logic_name].selector;
+  AudioSource *selected = selector->selectedSource();
+  const ConMap& con_map = sinks[logic_name].connectors;
+  for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
+  {
+    if (it->second == selected)
+    {
+      //cout << "### Selected source: " << it->first << endl;
+      return logic_map[it->first].logic;
+    }
+  }
+  return 0;
+} /* LinkManager::currentTalkerFor */
+
 
 /****************************************************************************
  *

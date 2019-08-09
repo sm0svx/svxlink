@@ -170,7 +170,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0)
+    dtmf_ctrl_pty(0),                       m_received_tg(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -656,6 +656,25 @@ bool Logic::initialize(void)
   exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
+  typedef std::vector<SvxLink::SepPair<float, uint32_t> > CtcssToTgVec;
+  CtcssToTgVec ctcss_to_tg;
+  cfg().getValue(name(), "CTCSS_TO_TG", ctcss_to_tg);
+  for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
+       it != ctcss_to_tg.end(); ++it)
+  {
+    if (rx().addToneDetector(it->first, 4, 10, 500))
+    {
+      m_ctcss_to_tg[it->first] = it->second;
+    }
+    else
+    {
+      cerr << "*** WARNING: Could not setup tone detector for CTCSS "
+           << it->first << " to TG #" << it->second << " map in logic "
+           << name() << endl;
+    }
+  }
+  rx().toneDetected.connect(mem_fun(*this, &Logic::detectedTone));
+
   return true;
 
 } /* Logic::initialize */
@@ -960,6 +979,7 @@ void Logic::squelchOpen(bool is_open)
       }
     }
     processCommandQueue();
+    m_received_tg = 0;
   }
   else
   {
@@ -1638,6 +1658,19 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
 } /* Logic::publishStateEvent */
+
+
+void Logic::detectedTone(float fq)
+{
+  //cout << name() << ": " << fq << " Hz tone call detected" << endl;
+  std::map<float, uint32_t>::const_iterator it = m_ctcss_to_tg.find(fq);
+  if (it != m_ctcss_to_tg.end())
+  {
+    uint32_t tg = it->second;
+    //cout << "### Map CTCSS " << fq << " to TG #" << tg << endl;
+    m_received_tg = tg;
+  }
+} /* Logic::detectedTone */
 
 
 /*

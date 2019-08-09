@@ -194,6 +194,8 @@ class LogicBase : public sigc::trackable
     virtual void remoteCmdReceived(LogicBase* src_logic,
                                    const std::string& cmd) {}
 
+    virtual uint32_t receivedTg(void) const { return 0; }
+
     /**
      * @brief   A signal that is emitted when the idle state change
      * @param   is_idle \em True if the logic core is idle or \em false if not

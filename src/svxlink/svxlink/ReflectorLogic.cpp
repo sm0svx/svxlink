@@ -1065,16 +1065,30 @@ void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
 
 void ReflectorLogic::tgSelectTimerExpired(void)
 {
-  if (!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle())
-  {
-    return;
-  }
   //cout << "### ReflectorLogic::tgSelectTimerExpired: m_tg_select_timeout_cnt="
   //     << m_tg_select_timeout_cnt << endl;
-  if ((m_tg_select_timeout_cnt > 0) && (--m_tg_select_timeout_cnt == 0))
+  if (m_tg_select_timeout_cnt > 0)
   {
-    cout << name() << ": Selecting TG #0 (timeout)" << endl;
-    sendMsg(MsgSelectTG(0));
+    if (m_logic_con_out->isIdle() && m_logic_con_in->isIdle() &&
+        (--m_tg_select_timeout_cnt == 0))
+    {
+      cout << name() << ": Selecting TG #0 (timeout)" << endl;
+      sendMsg(MsgSelectTG(0));
+    }
+  }
+  else if (!m_logic_con_in->isIdle())
+  {
+    LogicBase *other_logic = LinkManager::instance()->currentTalkerFor(name());
+    assert(other_logic != 0);
+    uint32_t tg = other_logic->receivedTg();
+    //cout << "### ReflectorLogic::tgSelectTimerExpired: "
+    //     << other_logic->name() << " TG #" << tg << endl;
+    if (tg > 0)
+    {
+      cout << name() << ": Selecting TG #" << tg << endl;
+      sendMsg(MsgSelectTG(tg));
+      m_tg_select_timeout_cnt = m_tg_select_timeout;
+    }
   }
 } /* ReflectorLogic::tgSelectTimerExpired */
 
