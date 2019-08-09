@@ -146,6 +146,12 @@
 
 * SvxReflector now support switching traffic on talk groups.
 
+* ReflectorLogic can now request switching talk groups based on the received
+  CTCSS tone frequency. It is also possible to switch to any talk group using
+  DTMF.
+
+* Now possible to use multiple CTCSS squelch tones in parallell.
+
 
 
  1.6.1 -- 01 Mar 2018
