@@ -530,7 +530,7 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   }
   sendUdpMsg(MsgUdpHeartbeat());
 
-} /* ReflectorLogic::handleMsgAuthChallenge */
+} /* ReflectorLogic::handleMsgServerInfo */
 
 
 void ReflectorLogic::handleMsgNodeList(std::istream& is)

@@ -650,7 +650,7 @@ class MsgSelectTG : public ReflectorMsgBase<106>
 
 
 /**
-@brief	 Choose which talk groups to monitor
+@brief   Choose which talk groups to monitor
 @author  Tobias Blomberg / SM0SVX
 @date    2019-08-08
 
