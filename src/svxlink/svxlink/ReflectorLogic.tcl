@@ -23,6 +23,7 @@ if {$logic_name != [namespace tail [namespace current]]} {
 # Executed when the selected TG should be reported
 #
 proc report_tg {tg} {
+  playSilence 100
   playMsg "Core" "talk_group"
   spellNumber $tg
 }
