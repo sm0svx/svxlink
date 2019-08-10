@@ -1145,19 +1145,20 @@ void ReflectorLogic::tgSelectTimerExpired(void)
 } /* ReflectorLogic::tgSelectTimerExpired */
 
 
-void ReflectorLogic::selectTg(uint32_t tg, bool announce0)
+void ReflectorLogic::selectTg(uint32_t tg, bool report_always)
 {
   cout << name() << ": Selecting TG #" << tg << endl;
-  if (tg != m_selected_tg)
+  bool tg_changed = (tg != m_selected_tg);
+  if (tg_changed)
   {
-    if (announce0 || (tg > 0))
-    {
-      m_report_tg_timer.reset();
-      m_report_tg_timer.setEnable(true);
-    }
     sendMsg(MsgSelectTG(tg));
     m_previous_tg = m_selected_tg;
     m_selected_tg = tg;
+  }
+  if (report_always || (tg_changed && (tg > 0)))
+  {
+    m_report_tg_timer.reset();
+    m_report_tg_timer.setEnable(true);
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
 } /* ReflectorLogic::selectTg */

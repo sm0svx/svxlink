@@ -246,7 +246,7 @@ class ReflectorLogic : public LogicBase
     void tgSelectTimerExpired(void);
     void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
-    void selectTg(uint32_t tg, bool announce0=false);
+    void selectTg(uint32_t tg, bool report_always=false);
     void processEvent(const std::string& event);
     void reportTg(void);
 
