@@ -170,7 +170,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0),                       m_received_tg(0)
+    dtmf_ctrl_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -979,7 +979,7 @@ void Logic::squelchOpen(bool is_open)
       }
     }
     processCommandQueue();
-    m_received_tg = 0;
+    setReceivedTg(0);
   }
   else
   {
@@ -1668,7 +1668,7 @@ void Logic::detectedTone(float fq)
   {
     uint32_t tg = it->second;
     //cout << "### Map CTCSS " << fq << " to TG #" << tg << endl;
-    m_received_tg = tg;
+    setReceivedTg(tg);
   }
 } /* Logic::detectedTone */
 

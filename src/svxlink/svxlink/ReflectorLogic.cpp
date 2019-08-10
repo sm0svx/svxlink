@@ -309,6 +309,17 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
 } /* ReflectorLogic::remoteCmdReceived */
 
 
+void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
+{
+  //cout << "### ReflectorLogic::remoteReceivedTgUpdated: logic="
+  //     << logic->name() << "  tg=" << tg << endl;
+  if ((m_selected_tg == 0) && (tg > 0))
+  {
+    selectTg(tg);
+  }
+} /* ReflectorLogic::remoteReceivedTgUpdated */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -1115,18 +1126,6 @@ void ReflectorLogic::tgSelectTimerExpired(void)
         (--m_tg_select_timeout_cnt == 0))
     {
       selectTg(0);
-    }
-  }
-  if (!m_logic_con_in->isIdle() && (m_selected_tg == 0))
-  {
-    LogicBase *other_logic = LinkManager::instance()->currentTalkerFor(name());
-    assert(other_logic != 0);
-    uint32_t tg = other_logic->receivedTg();
-    //cout << "### ReflectorLogic::tgSelectTimerExpired: "
-    //     << other_logic->name() << " TG #" << tg << endl;
-    if (tg > 0)
-    {
-      selectTg(tg);
     }
   }
 } /* ReflectorLogic::tgSelectTimerExpired */

@@ -333,6 +333,10 @@ void LinkManager::addLogic(LogicBase *logic)
       }
     }
   }
+
+  logic_info.received_tg_update_con = logic->receivedTgUpdated.connect(
+      sigc::bind<0>(
+        sigc::mem_fun(*this, &LinkManager::onReceivedTgUpdated), logic));
 } /* LinkManager::addLogic */
 
 
@@ -349,9 +353,10 @@ void LinkManager::deleteLogic(LogicBase *logic)
   assert(sources.find(logic->name()) != sources.end());
   assert(sinks.find(logic->name()) != sinks.end());
 
-    // Disconnect the idleStateChanged signal that was connected when the
+    // Disconnect the sigc signals that was connected when the
     // logic was first registered.
   logic_info.idle_state_changed_con.disconnect();
+  logic_info.received_tg_update_con.disconnect();
 
     // Delete the logic source splitter and all connections associated with it
   AudioSplitter *splitter = sources[logic->name()].splitter;
@@ -900,6 +905,24 @@ void LinkManager::checkTimeoutTimer(Link &link)
   }
 } /* LinkManager::checkTimeoutTimer */
 
+
+void LinkManager::onReceivedTgUpdated(LogicBase *src_logic, uint32_t tg)
+{
+  //cout << "### LinkManager::onReceivedTgUpdated: logic=" << src_logic->name()
+  //     << "  tg=" << tg << endl;
+  const Async::AudioSelector *selector = sinks[src_logic->name()].selector;
+  const ConMap& con_map = sinks[src_logic->name()].connectors;
+  for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
+  {
+    const std::string& logic_name = it->first;
+    const Async::AudioSource *con = it->second;
+    LogicBase *logic = logic_map[logic_name].logic;
+    if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
+    {
+      logic->remoteReceivedTgUpdated(src_logic, tg);
+    }
+  }
+} /* LinkManager::onReceivedTgUpdated */
 
 
 /*

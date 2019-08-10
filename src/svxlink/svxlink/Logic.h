@@ -206,8 +206,6 @@ class Logic : public LogicBase
 
     CmdParser *cmdParser(void) { return &cmd_parser; }
 
-    virtual uint32_t receivedTg(void) const { return m_received_tg; }
-
   protected:
     virtual void squelchOpen(bool is_open);
     virtual void allMsgsWritten(void);
@@ -285,7 +283,6 @@ class Logic : public LogicBase
     Async::Pty                      *state_pty;
     Async::Pty                      *dtmf_ctrl_pty;
     std::map<float, uint32_t>       m_ctcss_to_tg;
-    uint32_t                        m_received_tg;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

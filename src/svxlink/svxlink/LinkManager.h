@@ -304,6 +304,7 @@ class LinkManager : public sigc::trackable
     {
       LogicBase         *logic;
       sigc::connection  idle_state_changed_con;
+      sigc::connection  received_tg_update_con;
     };
     typedef std::map<std::string, LogicInfo> LogicMap;
 
@@ -333,6 +334,7 @@ class LinkManager : public sigc::trackable
     void linkTimeout(Async::Timer *t, Link *link);
     void logicIdleStateChanged(bool is_idle, const LogicBase *logic);
     void checkTimeoutTimer(Link &link);
+    void onReceivedTgUpdated(LogicBase *src_logic, uint32_t tg);
 
 };  /* class LinkManager */
 

@@ -156,6 +156,13 @@ class ReflectorLogic : public LogicBase
     virtual void remoteCmdReceived(LogicBase* src_logic,
                                    const std::string& cmd);
 
+    /**
+     * @brief   A linked logic has updated its recieved talk group
+     * @param   logic The pointer to the remote logic object
+     * @param   tg    The new received talk group
+     */
+    virtual void remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg);
+
   protected:
 
   private:

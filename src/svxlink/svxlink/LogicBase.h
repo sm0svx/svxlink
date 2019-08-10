@@ -136,7 +136,7 @@ class LogicBase : public sigc::trackable
      * @param   name The name of the logic core
      */
     LogicBase(Async::Config& cfg, const std::string& name)
-      : m_cfg(cfg), m_name(name), m_is_idle(true) {}
+      : m_cfg(cfg), m_name(name), m_is_idle(true), m_received_tg(0) {}
 
     /**
      * @brief 	Destructor
@@ -198,7 +198,8 @@ class LogicBase : public sigc::trackable
      * @brief   Get the talk group associated with current reception
      * @return  Returns the current TG id if provided by the logic
      */
-    virtual uint32_t receivedTg(void) const { return 0; }
+    uint32_t receivedTg(void) const { return m_received_tg; }
+
 
     /**
      * @brief   Play the given file
@@ -221,10 +222,23 @@ class LogicBase : public sigc::trackable
     virtual void playTone(int fq, int amp, int len) {}
 
     /**
+     * @brief   A linked logic has updated its recieved talk group
+     * @param   logic The pointer to the remote logic object
+     * @param   tg    The new received talk group
+     */
+    virtual void remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg) {}
+
+    /**
      * @brief   A signal that is emitted when the idle state change
      * @param   is_idle \em True if the logic core is idle or \em false if not
      */
     sigc::signal<void, bool> idleStateChanged;
+
+    /**
+     * @brief   A signal that is emitted when the received talk group changes
+     * @param   tg The new talk group
+     */
+    sigc::signal<void, uint32_t> receivedTgUpdated;
 
   protected:
     /**
@@ -243,10 +257,17 @@ class LogicBase : public sigc::trackable
       }
     }
 
+    void setReceivedTg(uint32_t tg)
+    {
+      m_received_tg = tg;
+      receivedTgUpdated(tg);
+    }
+
   private:
     Async::Config     	  &m_cfg;
     std::string       	  m_name;
     bool      	      	  m_is_idle;
+    uint32_t              m_received_tg;
 
 };  /* class LogicBase */
 
