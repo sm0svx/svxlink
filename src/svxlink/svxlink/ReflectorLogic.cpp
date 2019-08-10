@@ -130,7 +130,9 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
-    m_event_handler(0)
+    m_event_handler(0),
+    m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false),
+    m_report_tg_when_idle(false)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -142,6 +144,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
 
   m_tg_select_timer.expired.connect(sigc::hide(
         sigc::mem_fun(*this, &ReflectorLogic::tgSelectTimerExpired)));
+  m_report_tg_timer.expired.connect(sigc::hide(
+        sigc::mem_fun(*this, &ReflectorLogic::reportTg)));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -1101,6 +1105,11 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     }
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
+
+  if (m_report_tg_when_idle)
+  {
+    reportTg();
+  }
 } /* ReflectorLogic::onLogicConInStreamStateChanged */
 
 
@@ -1112,6 +1121,11 @@ void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
   if (!is_idle && (m_tg_select_timeout_cnt > 0))
   {
     m_tg_select_timeout_cnt = m_tg_select_timeout;
+  }
+
+  if (m_report_tg_when_idle)
+  {
+    reportTg();
   }
 } /* ReflectorLogic::onLogicConOutStreamStateChanged */
 
@@ -1138,9 +1152,8 @@ void ReflectorLogic::selectTg(uint32_t tg, bool announce0)
   {
     if (announce0 || (tg > 0))
     {
-      ostringstream os;
-      os << "report_tg " << tg;
-      processEvent(os.str());
+      m_report_tg_timer.reset();
+      m_report_tg_timer.setEnable(true);
     }
     sendMsg(MsgSelectTG(tg));
     m_previous_tg = m_selected_tg;
@@ -1156,6 +1169,20 @@ void ReflectorLogic::processEvent(const std::string& event)
   m_event_handler->processEvent(name() + "::" + event);
   //msg_handler->end();
 } /* Logic::processEvent */
+
+
+void ReflectorLogic::reportTg(void)
+{
+  if ((!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle()))
+  {
+    m_report_tg_when_idle = true;
+    return;
+  }
+  m_report_tg_when_idle = false;
+  ostringstream os;
+  os << "report_tg " << m_selected_tg;
+  processEvent(os.str());
+} /* ReflectorLogic::reportTg */
 
 
 /*
