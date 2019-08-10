@@ -316,9 +316,10 @@ void AudioSelector::disableAutoSelect(AudioSource *source)
 } /* AudioSelector::disableAutoSelect */
 
 
-bool AudioSelector::autoSelectEnabled(AudioSource *source) const
+bool AudioSelector::autoSelectEnabled(const AudioSource *source) const
 {
-  BranchMap::const_iterator it = m_branch_map.find(source);
+  BranchMap::const_iterator it = m_branch_map.find(
+      const_cast<AudioSource*>(source));
   assert(it != m_branch_map.end());
   const Branch *branch = (*it).second;
   return branch->autoSelectEnabled();

@@ -21,6 +21,8 @@
 * New member function AudioSelector::selectedSource() used to find out which
   source that are currently selected.
 
+* AudioSelector::autoSelectEnabled() can now be called with a constant source.
+
 
 
  1.5.0 -- 30 Dec 2017

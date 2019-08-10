@@ -162,7 +162,7 @@ class AudioSelector : public AudioSource
      * @return	Returns \em true if auto select is enabled for the given source
      *          or else \em false is returned
      */
-    bool autoSelectEnabled(AudioSource *source) const;
+    bool autoSelectEnabled(const AudioSource *source) const;
 
     /**
      * @brief 	Select one of the previously added audio sources
