@@ -131,8 +131,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
-    m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false),
-    m_report_tg_when_idle(false)
+    m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -145,7 +144,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
   m_tg_select_timer.expired.connect(sigc::hide(
         sigc::mem_fun(*this, &ReflectorLogic::tgSelectTimerExpired)));
   m_report_tg_timer.expired.connect(sigc::hide(
-        sigc::mem_fun(*this, &ReflectorLogic::reportTg)));
+        sigc::mem_fun(*this, &ReflectorLogic::processTgSelectionEvent)));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -286,16 +285,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   //cout << "### src_logic=" << src_logic->name() << "  cmd=" << cmd << endl;
   if (cmd == "*")
   {
-    ostringstream os;
-    if (m_selected_tg > 0)
-    {
-      os << "report_tg " << m_selected_tg;
-    }
-    else
-    {
-      os << "report_previous_tg " << m_previous_tg;
-    }
-    processEvent(os.str());
+    processEvent("report_tg_status");
   }
   else
   {
@@ -303,7 +293,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     uint32_t tg;
     if (is >> tg)
     {
-      selectTg(tg, true);
+      selectTg(tg, "tg_command_activation");
     }
     else
     {
@@ -319,7 +309,7 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
   //     << logic->name() << "  tg=" << tg << endl;
   if ((m_selected_tg == 0) && (tg > 0))
   {
-    selectTg(tg);
+    selectTg(tg, "tg_local_activation");
   }
 } /* ReflectorLogic::remoteReceivedTgUpdated */
 
@@ -707,7 +697,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     // Select the incoming TG if idle
   if (m_tg_select_timeout_cnt == 0)
   {
-    selectTg(msg.tg());
+    selectTg(msg.tg(), "tg_remote_activation");
   }
 } /* ReflectorLogic::handleMsgTalkerStart */
 
@@ -1100,15 +1090,15 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     {
       if (m_default_tg > 0)
       {
-        selectTg(m_default_tg);
+        selectTg(m_default_tg, "tg_default_activation");
       }
     }
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 
-  if (m_report_tg_when_idle)
+  if (!m_tg_selection_event.empty())
   {
-    reportTg();
+    processTgSelectionEvent();
   }
 } /* ReflectorLogic::onLogicConInStreamStateChanged */
 
@@ -1123,9 +1113,9 @@ void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 
-  if (m_report_tg_when_idle)
+  if (!m_tg_selection_event.empty())
   {
-    reportTg();
+    processTgSelectionEvent();
   }
 } /* ReflectorLogic::onLogicConOutStreamStateChanged */
 
@@ -1139,24 +1129,25 @@ void ReflectorLogic::tgSelectTimerExpired(void)
     if (m_logic_con_out->isIdle() && m_logic_con_in->isIdle() &&
         (--m_tg_select_timeout_cnt == 0))
     {
-      selectTg(0);
+      selectTg(0, "tg_selection_timeout");
     }
   }
 } /* ReflectorLogic::tgSelectTimerExpired */
 
 
-void ReflectorLogic::selectTg(uint32_t tg, bool report_always)
+void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
 {
   cout << name() << ": Selecting TG #" << tg << endl;
-  bool tg_changed = (tg != m_selected_tg);
-  if (tg_changed)
+  if (tg != m_selected_tg)
   {
     sendMsg(MsgSelectTG(tg));
     m_previous_tg = m_selected_tg;
     m_selected_tg = tg;
-  }
-  if (report_always || (tg_changed && (tg > 0)))
-  {
+    m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
+    m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
+    ostringstream os;
+    os << event << " " << tg;
+    m_tg_selection_event = os.str();
     m_report_tg_timer.reset();
     m_report_tg_timer.setEnable(true);
   }
@@ -1166,24 +1157,19 @@ void ReflectorLogic::selectTg(uint32_t tg, bool report_always)
 
 void ReflectorLogic::processEvent(const std::string& event)
 {
-  //msg_handler->begin();
   m_event_handler->processEvent(name() + "::" + event);
-  //msg_handler->end();
 } /* Logic::processEvent */
 
 
-void ReflectorLogic::reportTg(void)
+void ReflectorLogic::processTgSelectionEvent(void)
 {
   if ((!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle()))
   {
-    m_report_tg_when_idle = true;
     return;
   }
-  m_report_tg_when_idle = false;
-  ostringstream os;
-  os << "report_tg " << m_selected_tg;
-  processEvent(os.str());
-} /* ReflectorLogic::reportTg */
+  processEvent(m_tg_selection_event);
+  m_tg_selection_event.clear();
+} /* ReflectorLogic::processTgSelectionEvent */
 
 
 /*

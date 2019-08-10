@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <sstream>
 
 
 /****************************************************************************
@@ -134,7 +135,15 @@ class EventHandler : public sigc::trackable
      * @param 	value The value to set the given variable to
      */
     void setVariable(const std::string& name, const std::string& value);
-  
+
+    template <typename T>
+    void setVariable(const std::string& name, const T& value)
+    {
+      std::ostringstream os;
+      os << value;
+      setVariable(name, os.str());
+    } /* EventHandler::setVariable */
+
     /**
      * @brief 	Process the given event
      * @param 	event The event must be a valid TCL function call

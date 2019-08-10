@@ -211,7 +211,7 @@ class ReflectorLogic : public LogicBase
     uint32_t                          m_previous_tg;
     EventHandler*                     m_event_handler;
     Async::Timer                      m_report_tg_timer;
-    bool                              m_report_tg_when_idle;
+    std::string                       m_tg_selection_event;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -246,9 +246,9 @@ class ReflectorLogic : public LogicBase
     void tgSelectTimerExpired(void);
     void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
-    void selectTg(uint32_t tg, bool report_always=false);
+    void selectTg(uint32_t tg, const std::string& event);
     void processEvent(const std::string& event);
-    void reportTg(void);
+    void processTgSelectionEvent(void);
 
 };  /* class ReflectorLogic */
 

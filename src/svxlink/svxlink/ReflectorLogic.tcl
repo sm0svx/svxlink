@@ -11,6 +11,12 @@
 #
 namespace eval ReflectorLogic {
 
+# The currently selected TG. Variable set from application.
+variable selected_tg 0
+
+# The previously selected TG. Variable set from application.
+variable previous_tg 0
+
 #
 # Checking to see if this is the correct logic core
 #
@@ -20,9 +26,30 @@ if {$logic_name != [namespace tail [namespace current]]} {
 
 
 #
-# Executed when the selected TG should be reported
+# Executed when manual TG announcement is triggered
 #
-proc report_tg {tg} {
+proc report_tg_status {} {
+  variable selected_tg
+  variable previous_tg
+  playSilence 100
+  if {$selected_tg > 0} {
+    playMsg "Core" "talk_group"
+    spellNumber $selected_tg
+  } else {
+    playMsg "Core" "previous"
+    playMsg "Core" "talk_group"
+    spellNumber $previous_tg
+  }
+}
+
+
+#
+# Executed when a TG has been selected due to local activity
+#
+#   tg -- The talk group that has been activated
+#
+proc tg_local_activation {tg} {
+  #puts "### tg_local_activation"
   playSilence 100
   playMsg "Core" "talk_group"
   spellNumber $tg
@@ -30,13 +57,51 @@ proc report_tg {tg} {
 
 
 #
-# Executed when the selected TG should be reported
+# Executed when a TG has been selected due to remote activity
 #
-proc report_previous_tg {tg} {
+#   tg -- The talk group that has been activated
+#
+proc tg_remote_activation {tg} {
+  #puts "### tg_remote_activation"
   playSilence 100
-  playMsg "Core" "previous"
   playMsg "Core" "talk_group"
   spellNumber $tg
+}
+
+
+#
+# Executed when a TG has been selected by DTMF command
+#
+#   tg -- The talk group that has been activated
+#
+proc tg_command_activation {tg} {
+  #puts "### tg_command_activation"
+  playSilence 100
+  playMsg "Core" "talk_group"
+  spellNumber $tg
+}
+
+
+#
+# Executed when a TG has been selected due to DEFAULT_TG configuration
+#
+#   tg -- The talk group that has been activated
+#
+proc tg_default_activation {tg} {
+  #puts "### tg_default_activation"
+  #playSilence 100
+  #playMsg "Core" "talk_group"
+  #spellNumber $tg
+}
+
+
+#
+# Executed when a TG selection has timed out
+#
+#   tg -- Always 0
+#
+proc tg_selection_timeout {tg} {
+  #puts "### tg_selection_timeout"
 }
 
 
