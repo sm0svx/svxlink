@@ -201,6 +201,7 @@ class ReflectorLogic : public LogicBase
     Async::Timer                      m_tg_select_timer;
     unsigned                          m_tg_select_timeout_cnt;
     uint32_t                          m_selected_tg;
+    uint32_t                          m_previous_tg;
     EventHandler*                     m_event_handler;
 
     ReflectorLogic(const ReflectorLogic&);

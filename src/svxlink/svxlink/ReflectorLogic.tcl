@@ -30,6 +30,17 @@ proc report_tg {tg} {
 
 
 #
+# Executed when the selected TG should be reported
+#
+proc report_previous_tg {tg} {
+  playSilence 100
+  playMsg "Core" "previous"
+  playMsg "Core" "talk_group"
+  spellNumber $tg
+}
+
+
+#
 # Executed when an entered DTMF command failed
 #
 proc command_failed {cmd} {

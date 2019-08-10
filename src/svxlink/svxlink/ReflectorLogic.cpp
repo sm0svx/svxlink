@@ -129,7 +129,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tg_select_timeout_cnt(0), m_selected_tg(0), m_event_handler(0)
+    m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
+    m_event_handler(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -282,7 +283,14 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   if (cmd == "*")
   {
     ostringstream os;
-    os << "report_tg " << m_selected_tg;
+    if (m_selected_tg > 0)
+    {
+      os << "report_tg " << m_selected_tg;
+    }
+    else
+    {
+      os << "report_previous_tg " << m_previous_tg;
+    }
     processEvent(os.str());
   }
   else
@@ -1136,9 +1144,10 @@ void ReflectorLogic::selectTg(uint32_t tg, bool announce0)
       processEvent(os.str());
     }
     sendMsg(MsgSelectTG(tg));
+    m_previous_tg = m_selected_tg;
+    m_selected_tg = tg;
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
-  m_selected_tg = tg;
 } /* ReflectorLogic::selectTg */
 
 
