@@ -17,6 +17,12 @@ variable selected_tg 0
 # The previously selected TG. Variable set from application.
 variable previous_tg 0
 
+# Timestamp for previous TG announcement
+variable prev_announce_time 0
+
+# The previously announced TG
+variable prev_announce_tg 0
+
 #
 # Checking to see if this is the correct logic core
 #
@@ -31,8 +37,12 @@ if {$logic_name != [namespace tail [namespace current]]} {
 proc report_tg_status {} {
   variable selected_tg
   variable previous_tg
+  variable prev_announce_time
+  variable prev_announce_tg
   playSilence 100
   if {$selected_tg > 0} {
+    set prev_announce_time [clock seconds]
+    set prev_announce_tg $selected_tg
     playMsg "Core" "talk_group"
     spellNumber $selected_tg
   } else {
@@ -49,7 +59,12 @@ proc report_tg_status {} {
 #   tg -- The talk group that has been activated
 #
 proc tg_local_activation {tg} {
+  variable prev_announce_time
+  variable prev_announce_tg
+
   #puts "### tg_local_activation"
+  set prev_announce_time [clock seconds]
+  set prev_announce_tg $tg
   playSilence 100
   playMsg "Core" "talk_group"
   spellNumber $tg
@@ -62,7 +77,17 @@ proc tg_local_activation {tg} {
 #   tg -- The talk group that has been activated
 #
 proc tg_remote_activation {tg} {
+  variable previous_tg
+  variable prev_announce_time
+  variable prev_announce_tg
+
   #puts "### tg_remote_activation"
+  set now [clock seconds];
+  if {($tg == $prev_announce_tg) && ($now - $prev_announce_time < 120)} {
+    return;
+  }
+  set prev_announce_time $now
+  set prev_announce_tg $tg
   playSilence 100
   playMsg "Core" "talk_group"
   spellNumber $tg
@@ -75,7 +100,12 @@ proc tg_remote_activation {tg} {
 #   tg -- The talk group that has been activated
 #
 proc tg_command_activation {tg} {
+  variable prev_announce_time
+  variable prev_announce_tg
+
   #puts "### tg_command_activation"
+  set prev_announce_time [clock seconds]
+  set prev_announce_tg $tg
   playSilence 100
   playMsg "Core" "talk_group"
   spellNumber $tg
@@ -88,7 +118,11 @@ proc tg_command_activation {tg} {
 #   tg -- The talk group that has been activated
 #
 proc tg_default_activation {tg} {
+  #variable prev_announce_time
+  #variable prev_announce_tg
   #puts "### tg_default_activation"
+  #set prev_announce_time [clock seconds]
+  #set prev_announce_tg $tg
   #playSilence 100
   #playMsg "Core" "talk_group"
   #spellNumber $tg
