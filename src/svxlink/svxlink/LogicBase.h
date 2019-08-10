@@ -194,7 +194,31 @@ class LogicBase : public sigc::trackable
     virtual void remoteCmdReceived(LogicBase* src_logic,
                                    const std::string& cmd) {}
 
+    /**
+     * @brief   Get the talk group associated with current reception
+     * @return  Returns the current TG id if provided by the logic
+     */
     virtual uint32_t receivedTg(void) const { return 0; }
+
+    /**
+     * @brief   Play the given file
+     * @param   path The full path to the file to play
+     */
+    virtual void playFile(const std::string& path) {}
+
+    /**
+     * @brief   Play the a length of silence
+     * @param   length The length, in milliseconds, of silence to play
+     */
+    virtual void playSilence(int length) {}
+
+    /**
+     * @brief   Play a tone with the given properties
+     * @param   fq The tone frequency
+     * @param   amp The tone amplitude in "milliunits", 1000=full strength
+     * @param   len The length of the tone in milliseconds
+     */
+    virtual void playTone(int fq, int amp, int len) {}
 
     /**
      * @brief   A signal that is emitted when the idle state change

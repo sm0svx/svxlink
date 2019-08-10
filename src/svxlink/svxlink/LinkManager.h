@@ -228,7 +228,37 @@ class LinkManager : public sigc::trackable
     std::string cmdReceived(LinkRef link, LogicBase *logic,
                             const std::string &subcmd);
 
+    /**
+     * @brief   Get the current talker for the given logic core
+     * @param   logic_name The name of the sink logic
+     *
+     * Get the pointer to the logic core that is currently producing audio to
+     * the given logic core.
+     */
     LogicBase *currentTalkerFor(const std::string& logic_name);
+
+    /**
+     * @brief   Play the given file
+     * @param   src_logic The initiating logic, which will not play the file
+     * @param   path The full path to the file to play
+     */
+    void playFile(LogicBase *src_logic, const std::string& path);
+
+    /**
+     * @brief   Play the a length of silence
+     * @param   src_logic The initiating logic, which will not play the silence
+     * @param   length The length, in milliseconds, of silence to play
+     */
+    void playSilence(LogicBase *src_logic, int length);
+
+    /**
+     * @brief   Play a tone with the given properties
+     * @param   src_logic The initiating logic, which will not play the tone
+     * @param   fq The tone frequency
+     * @param   amp The tone amplitude in "milliunits", 1000=full strength
+     * @param   len The length of the tone in milliseconds
+     */
+    void playTone(LogicBase *src_logic, int fq, int amp, int len);
 
   private:
     struct LogicProperties

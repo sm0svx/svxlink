@@ -492,6 +492,58 @@ LogicBase *LinkManager::currentTalkerFor(const std::string& logic_name)
 } /* LinkManager::currentTalkerFor */
 
 
+void LinkManager::playFile(LogicBase *src_logic, const std::string& path)
+{
+  const Async::AudioSelector *selector = sinks[src_logic->name()].selector;
+  const ConMap& con_map = sinks[src_logic->name()].connectors;
+  for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
+  {
+    const std::string& logic_name = it->first;
+    const Async::AudioSource *con = it->second;
+    LogicBase *logic = logic_map[logic_name].logic;
+    if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
+    {
+      logic->playFile(path);
+    }
+  }
+} /* LinkManager::playFile */
+
+
+void LinkManager::playSilence(LogicBase *src_logic, int length)
+{
+  const Async::AudioSelector *selector = sinks[src_logic->name()].selector;
+  const ConMap& con_map = sinks[src_logic->name()].connectors;
+  for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
+  {
+    const std::string& logic_name = it->first;
+    const Async::AudioSource *con = it->second;
+    LogicBase *logic = logic_map[logic_name].logic;
+    if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
+    {
+      logic->playSilence(length);
+    }
+  }
+} /* LinkManager::playSilence */
+
+
+void LinkManager::playTone(LogicBase *src_logic, int fq, int amp, int len)
+{
+  const Async::AudioSelector *selector = sinks[src_logic->name()].selector;
+  const ConMap& con_map = sinks[src_logic->name()].connectors;
+  for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
+  {
+    const std::string& logic_name = it->first;
+    const Async::AudioSource *con = it->second;
+    LogicBase *logic = logic_map[logic_name].logic;
+    if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
+    {
+      logic->playTone(fq, amp, len);
+    }
+  }
+} /* LinkManager::playTone */
+
+
+
 /****************************************************************************
  *
  * Protected member functions
