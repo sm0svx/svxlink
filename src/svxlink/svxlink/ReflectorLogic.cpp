@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ReflectorLogic.h"
 #include "../reflector/ReflectorMsg.h"
+#include "EventHandler.h"
 
 
 /****************************************************************************
@@ -128,7 +129,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tg_select_timeout_cnt(0), m_selected_tg(0)
+    m_tg_select_timeout_cnt(0), m_selected_tg(0), m_event_handler(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -145,6 +146,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
 
 ReflectorLogic::~ReflectorLogic(void)
 {
+  delete m_event_handler;
+  m_event_handler = 0;
   delete m_udp_sock;
   m_udp_sock = 0;
   delete m_logic_con_in;
@@ -186,6 +189,14 @@ bool ReflectorLogic::initialize(void)
   {
     cerr << "*** ERROR: You must change " << name() << "/AUTH_KEY from the "
             "default value" << endl;
+    return false;
+  }
+
+  string event_handler_str;
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/EVENT_HANDLER not set\n";
     return false;
   }
 
@@ -240,6 +251,19 @@ bool ReflectorLogic::initialize(void)
   cfg().getValue(name(), "DEFAULT_TG", m_default_tg);
   cfg().getValue(name(), "TG_SELECT_TIMEOUT", m_tg_select_timeout);
 
+  m_event_handler = new EventHandler(event_handler_str, name());
+  m_event_handler->playFile.connect(sigc::bind<0>(
+        mem_fun(LinkManager::instance(), &LinkManager::playFile), this));
+  m_event_handler->playSilence.connect(sigc::bind<0>(
+        mem_fun(LinkManager::instance(), &LinkManager::playSilence), this));
+  m_event_handler->playTone.connect(sigc::bind<0>(
+        mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
+  m_event_handler->setVariable("logic_name", name().c_str());
+  if (!m_event_handler->initialize())
+  {
+    return false;
+  }
+
   if (!LogicBase::initialize())
   {
     return false;
@@ -255,11 +279,24 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
                                        const std::string& cmd)
 {
   //cout << "### src_logic=" << src_logic->name() << "  cmd=" << cmd << endl;
-  istringstream is(cmd);
-  uint32_t tg;
-  if (is >> tg)
+  if (cmd == "*")
   {
-    selectTg(tg);
+    ostringstream os;
+    os << "report_tg " << m_selected_tg;
+    processEvent(os.str());
+  }
+  else
+  {
+    istringstream is(cmd);
+    uint32_t tg;
+    if (is >> tg)
+    {
+      selectTg(tg, true);
+    }
+    else
+    {
+      processEvent(std::string("command_failed ") + cmd);
+    }
   }
 } /* ReflectorLogic::remoteCmdReceived */
 
@@ -1087,16 +1124,30 @@ void ReflectorLogic::tgSelectTimerExpired(void)
 } /* ReflectorLogic::tgSelectTimerExpired */
 
 
-void ReflectorLogic::selectTg(uint32_t tg)
+void ReflectorLogic::selectTg(uint32_t tg, bool announce0)
 {
   cout << name() << ": Selecting TG #" << tg << endl;
   if (tg != m_selected_tg)
   {
+    if (announce0 || (tg > 0))
+    {
+      ostringstream os;
+      os << "report_tg " << tg;
+      processEvent(os.str());
+    }
     sendMsg(MsgSelectTG(tg));
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
   m_selected_tg = tg;
 } /* ReflectorLogic::selectTg */
+
+
+void ReflectorLogic::processEvent(const std::string& event)
+{
+  //msg_handler->begin();
+  m_event_handler->processEvent(name() + "::" + event);
+  //msg_handler->end();
+} /* Logic::processEvent */
 
 
 /*

@@ -75,6 +75,7 @@ namespace Async
 
 class ReflectorMsg;
 class ReflectorUdpMsg;
+class EventHandler;
 
 
 /****************************************************************************
@@ -200,6 +201,7 @@ class ReflectorLogic : public LogicBase
     Async::Timer                      m_tg_select_timer;
     unsigned                          m_tg_select_timeout_cnt;
     uint32_t                          m_selected_tg;
+    EventHandler*                     m_event_handler;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -234,7 +236,8 @@ class ReflectorLogic : public LogicBase
     void tgSelectTimerExpired(void);
     void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
-    void selectTg(uint32_t tg);
+    void selectTg(uint32_t tg, bool announce0=false);
+    void processEvent(const std::string& event);
 
 };  /* class ReflectorLogic */
 
