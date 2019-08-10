@@ -439,7 +439,7 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
   LogicPropMap::iterator prop_it = link.logic_props.find(logic->name());
   assert(prop_it != link.logic_props.end());
   LogicProperties &logic_props = prop_it->second;
-  if (subcmd == "0") // Disconnecting Link1 <-X-> Link2
+  if (subcmd == "") // Disconnecting Link1 <-X-> Link2
   {
     if (!link.is_activated)
     {
