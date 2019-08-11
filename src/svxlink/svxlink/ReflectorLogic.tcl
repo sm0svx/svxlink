@@ -56,85 +56,97 @@ proc report_tg_status {} {
 #
 # Executed when a TG has been selected due to local activity
 #
-#   tg -- The talk group that has been activated
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
 #
-proc tg_local_activation {tg} {
+proc tg_local_activation {new_tg old_tg} {
   variable prev_announce_time
   variable prev_announce_tg
+  variable selected_tg
 
   #puts "### tg_local_activation"
-  set prev_announce_time [clock seconds]
-  set prev_announce_tg $tg
-  playSilence 100
-  playMsg "Core" "talk_group"
-  spellNumber $tg
+  if {$new_tg != $old_tg} {
+    set prev_announce_time [clock seconds]
+    set prev_announce_tg $new_tg
+    playSilence 100
+    playMsg "Core" "talk_group"
+    spellNumber $new_tg
+  }
 }
 
 
 #
 # Executed when a TG has been selected due to remote activity
 #
-#   tg -- The talk group that has been activated
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
 #
-proc tg_remote_activation {tg} {
-  variable previous_tg
+proc tg_remote_activation {new_tg old_tg} {
   variable prev_announce_time
   variable prev_announce_tg
 
   #puts "### tg_remote_activation"
   set now [clock seconds];
-  if {($tg == $prev_announce_tg) && ($now - $prev_announce_time < 120)} {
+  if {($new_tg == $prev_announce_tg) && ($now - $prev_announce_time < 120)} {
     return;
   }
-  set prev_announce_time $now
-  set prev_announce_tg $tg
-  playSilence 100
-  playMsg "Core" "talk_group"
-  spellNumber $tg
+  if {$new_tg != $old_tg} {
+    set prev_announce_time $now
+    set prev_announce_tg $new_tg
+    playSilence 100
+    playMsg "Core" "talk_group"
+    spellNumber $new_tg
+  }
 }
 
 
 #
 # Executed when a TG has been selected by DTMF command
 #
-#   tg -- The talk group that has been activated
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
 #
-proc tg_command_activation {tg} {
+proc tg_command_activation {new_tg old_tg} {
   variable prev_announce_time
   variable prev_announce_tg
 
   #puts "### tg_command_activation"
   set prev_announce_time [clock seconds]
-  set prev_announce_tg $tg
+  set prev_announce_tg $new_tg
   playSilence 100
   playMsg "Core" "talk_group"
-  spellNumber $tg
+  spellNumber $new_tg
 }
 
 
 #
 # Executed when a TG has been selected due to DEFAULT_TG configuration
 #
-#   tg -- The talk group that has been activated
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
 #
-proc tg_default_activation {tg} {
+proc tg_default_activation {new_tg old_tg} {
   #variable prev_announce_time
   #variable prev_announce_tg
+  #variable selected_tg
   #puts "### tg_default_activation"
-  #set prev_announce_time [clock seconds]
-  #set prev_announce_tg $tg
-  #playSilence 100
-  #playMsg "Core" "talk_group"
-  #spellNumber $tg
+  #if {$new_tg != $old_tg} {
+  #  set prev_announce_time [clock seconds]
+  #  set prev_announce_tg $new_tg
+  #  playSilence 100
+  #  playMsg "Core" "talk_group"
+  #  spellNumber $new_tg
+  #}
 }
 
 
 #
 # Executed when a TG selection has timed out
 #
-#   tg -- Always 0
+#   new_tg -- Always 0
+#   old_tg -- The talk group that was active
 #
-proc tg_selection_timeout {tg} {
+proc tg_selection_timeout {new_tg old_tg} {
   #puts "### tg_selection_timeout"
 }
 

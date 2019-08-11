@@ -1138,6 +1138,13 @@ void ReflectorLogic::tgSelectTimerExpired(void)
 void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
 {
   cout << name() << ": Selecting TG #" << tg << endl;
+
+  ostringstream os;
+  os << event << " " << tg << " " << m_selected_tg;
+  m_tg_selection_event = os.str();
+  m_report_tg_timer.reset();
+  m_report_tg_timer.setEnable(true);
+
   if (tg != m_selected_tg)
   {
     sendMsg(MsgSelectTG(tg));
@@ -1145,11 +1152,6 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
     m_selected_tg = tg;
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
-    ostringstream os;
-    os << event << " " << tg;
-    m_tg_selection_event = os.str();
-    m_report_tg_timer.reset();
-    m_report_tg_timer.setEnable(true);
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
 } /* ReflectorLogic::selectTg */
