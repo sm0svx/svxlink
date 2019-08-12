@@ -59,3 +59,5 @@ RUN tar cvzf /tmp/svxlink.tar.gz . -C /tmp/svxlink
 # Add an entrypoint to use for debugging and development
 ADD entrypoint /
 ENTRYPOINT ["/entrypoint"]
+
+# vim: set filetype=dockerfile:
