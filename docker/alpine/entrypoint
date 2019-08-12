@@ -1,0 +1,29 @@
+#!/bin/sh
+
+RUNASUSER=${RUNASUSER:-svxlink}
+
+# Create the hostaudio group if GID is specified
+if [ -n "$HOSTAUDIO_GID" ]; then
+  addgroup -g $HOSTAUDIO_GID hostaudio
+  adduser svxlink hostaudio
+fi
+
+if [ -n "$RTLSDR_GID" ]; then
+  addgroup -g $RTLSDR_GID rtlsdr
+  adduser svxlink rtlsdr
+fi
+
+umask 0002
+
+# Copy skeleton if config dir is empty
+if ! ls /etc/svxlink/* &>/dev/null; then
+  cp -r /usr/share/doc/svxlink/skel/* /etc/svxlink/
+  chmod -R g+wX /etc/svxlink/*
+fi
+
+for dir in propagation_monitor qso_recorder voice_mail; do
+  [ -d "/var/spool/svxlink/${dir}" ] || mkdir -p "/var/spool/svxlink/${dir}"
+  chown svxlink "/var/spool/svxlink/${dir}"
+done
+
+exec su - ${RUNASUSER} -c "${*:-/bin/sh}"

@@ -192,7 +192,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
        curl_easy_cleanup(url_queue.front());
        url_queue.pop();
      }
-     ClearWatchMap();
+     disableAllWatches();
      curl_multi_cleanup(multi_handle);
    } /* ~Http */
 
@@ -210,7 +210,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      curl_multi_perform(multi_handle, &handle_count);
      if (handle_count == 0) 
      {
-       ClearWatchMap();
+       disableAllWatches();
        curl_easy_cleanup(pending_curl);
        if (url_queue.empty())
        {
@@ -225,7 +225,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
          update_timer.setEnable(true);
        }
      }
-     UpdateWatchMap();
+     updateWatchMap();
      update_timer.reset();
    } /* Update */
 
@@ -235,7 +235,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      curl_multi_perform(multi_handle, &handle_count);
      if (handle_count == 0)
      {
-       ClearWatchMap();
+       disableAllWatches();
        curl_easy_cleanup(pending_curl);
        if (url_queue.empty())
        {
@@ -247,7 +247,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
          pending_curl = url_queue.front();
          url_queue.pop();
          curl_multi_add_handle(multi_handle, pending_curl);
-         UpdateWatchMap();
+         updateWatchMap();
          update_timer.setEnable(true);
        }
      }
@@ -275,7 +275,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      {
        pending_curl = curl;
        curl_multi_add_handle(multi_handle, pending_curl);
-       UpdateWatchMap();
+       updateWatchMap();
        update_timer.reset();
        update_timer.setEnable(true);
      }
@@ -287,7 +287,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
 
   private:
 
-   void UpdateWatchMap()
+   void updateWatchMap()
    {
      fd_set fdread;
      fd_set fdwrite;
@@ -330,16 +330,17 @@ class ModuleMetarInfo::Http : public sigc::trackable
          ws->wr.setEnabled(true);
        }
      }
-   } /* UpdateWatchMap */
+   } /* updateWatchMap */
 
-   void ClearWatchMap()
+   void disableAllWatches(void)
    {
      WatchMap::iterator it;
-     while ((it = watch_map.begin()) != watch_map.end())
+     for (it = watch_map.begin(); it != watch_map.end(); ++it)
      {
-       watch_map.erase(it);
+       it->second.rd.setEnabled(false);
+       it->second.wr.setEnabled(false);
      }
-   } /* ClearWatchMap */
+   } /* disableAllWatches */
 };
 
 
