@@ -268,6 +268,17 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
+  m_event_handler->processEvent("namespace eval Logic {}");
+  list<string> cfgvars = cfg().listSection(name());
+  list<string>::const_iterator cfgit;
+  for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
+  {
+    string var = "Logic::CFG_" + *cfgit;
+    string value;
+    cfg().getValue(name(), *cfgit, value);
+    m_event_handler->setVariable(var, value);
+  }
+
   if (!LogicBase::initialize())
   {
     return false;
