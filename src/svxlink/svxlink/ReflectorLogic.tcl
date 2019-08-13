@@ -23,6 +23,10 @@ variable prev_announce_time 0
 # The previously announced TG
 variable prev_announce_tg 0
 
+# The minimum time between announcements of the same TG.
+# Change through ANNOUNCE_REMOTE_MIN_INTERVAL config variable.
+variable announce_remote_min_interval 300
+
 #
 # Checking to see if this is the correct logic core
 #
@@ -87,7 +91,8 @@ proc tg_remote_activation {new_tg old_tg} {
 
   #puts "### tg_remote_activation"
   set now [clock seconds];
-  if {($new_tg == $prev_announce_tg) && ($now - $prev_announce_time < 120)} {
+  if {($new_tg == $prev_announce_tg) && \
+      ($now - $prev_announce_time < $announce_remote_min_interval)} {
     return;
   }
   if {$new_tg != $old_tg} {
@@ -156,6 +161,11 @@ proc tg_selection_timeout {new_tg old_tg} {
 #
 proc command_failed {cmd} {
   Logic::command_failed $cmd;
+}
+
+
+if [info exists CFG_ANNOUNCE_REMOTE_MIN_INTERVAL] {
+  set announce_remote_min_interval $CFG_ANNOUNCE_REMOTE_MIN_INTERVAL
 }
 
 

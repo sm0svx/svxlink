@@ -618,6 +618,12 @@ will monitor the TGs for Sweden, Sweden district 3 and a specific node ID.
 The number of seconds after which a selected talk group will be unselected. The
 node will return to talk group 0 (no talk group) and start monitoring the
 configured talk groups again. Default: 30 seconds.
+.TP
+.B ANNOUNCE_REMOTE_MIN_INTERVAL
+The minimum number of seconds between announcements of the same TG for remote
+TG activations. If the same TG is remotely activated repeatedly it will not be
+announced until at least the number of seconds specified in this configuration
+variable have passed.
 .P
 It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
