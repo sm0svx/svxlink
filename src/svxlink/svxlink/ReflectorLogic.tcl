@@ -184,8 +184,9 @@ proc talker_start {tg callsign} {
 #
 proc talker_stop {tg callsign} {
   #variable selected_tg
+  #variable ::Logic::CFG_CALLSIGN
   #puts "### Talker stop on TG #$tg: $callsign"
-  #if {$tg == $selected_tg} {
+  #if {($tg == $selected_tg) && ($callsign != $::Logic::CFG_CALLSIGN)} {
   #  playSilence 100
   #  playTone 440 200 50
   #  playTone 659 200 50
