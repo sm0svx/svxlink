@@ -196,6 +196,26 @@ class ReflectorClient
       return AndFilter<F1, F2>(f1, f2);
     }
 
+    template <class F1, class F2>
+    class OrFilter : public Filter
+    {
+      public:
+        OrFilter(const F1& f1, const F2& f2) : m_f1(f1), m_f2(f2) {}
+        virtual bool operator ()(ReflectorClient *client) const
+        {
+          return m_f1(client) || m_f2(client);
+        }
+      private:
+        F1 m_f1;
+        F2 m_f2;
+    };
+
+    template <class F1, class F2>
+    static OrFilter<F1, F2> mkOrFilter(const F1& f1, const F2& f2)
+    {
+      return OrFilter<F1, F2>(f1, f2);
+    }
+
     /**
      * @brief 	Constructor
      * @param   ref The associated Reflector object

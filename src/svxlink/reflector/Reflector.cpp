@@ -495,7 +495,9 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
     broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()),
         ReflectorClient::mkAndFilter(
           v2_client_filter,
-          ReflectorClient::TgMonitorFilter(tg)));
+          ReflectorClient::mkOrFilter(
+            ReflectorClient::TgFilter(tg),
+            ReflectorClient::TgMonitorFilter(tg))));
     if (tg == tgForV1Clients())
     {
       broadcastMsg(MsgTalkerStopV1(old_talker->callsign()), v1_client_filter);
@@ -511,7 +513,9 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
     broadcastMsg(MsgTalkerStart(tg, new_talker->callsign()),
         ReflectorClient::mkAndFilter(
           v2_client_filter,
-          ReflectorClient::TgMonitorFilter(tg)));
+          ReflectorClient::mkOrFilter(
+            ReflectorClient::TgFilter(tg),
+            ReflectorClient::TgMonitorFilter(tg))));
     if (tg == tgForV1Clients())
     {
       broadcastMsg(MsgTalkerStartV1(new_talker->callsign()), v1_client_filter);
