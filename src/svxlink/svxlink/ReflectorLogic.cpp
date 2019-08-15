@@ -263,10 +263,6 @@ bool ReflectorLogic::initialize(void)
   m_event_handler->playTone.connect(sigc::bind<0>(
         mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
   m_event_handler->setVariable("logic_name", name().c_str());
-  if (!m_event_handler->initialize())
-  {
-    return false;
-  }
 
   m_event_handler->processEvent("namespace eval Logic {}");
   list<string> cfgvars = cfg().listSection(name());
@@ -277,6 +273,11 @@ bool ReflectorLogic::initialize(void)
     string value;
     cfg().getValue(name(), *cfgit, value);
     m_event_handler->setVariable(var, value);
+  }
+
+  if (!m_event_handler->initialize())
+  {
+    return false;
   }
 
   if (!LogicBase::initialize())

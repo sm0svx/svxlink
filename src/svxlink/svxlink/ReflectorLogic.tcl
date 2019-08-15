@@ -25,7 +25,7 @@ variable prev_announce_tg 0
 
 # The minimum time between announcements of the same TG.
 # Change through ANNOUNCE_REMOTE_MIN_INTERVAL config variable.
-variable announce_remote_min_interval 300
+variable announce_remote_min_interval 0
 
 #
 # Checking to see if this is the correct logic core
@@ -88,6 +88,7 @@ proc tg_local_activation {new_tg old_tg} {
 proc tg_remote_activation {new_tg old_tg} {
   variable prev_announce_time
   variable prev_announce_tg
+  variable announce_remote_min_interval
 
   #puts "### tg_remote_activation"
   set now [clock seconds];
@@ -193,8 +194,8 @@ proc talker_stop {tg callsign} {
 }
 
 
-if [info exists CFG_ANNOUNCE_REMOTE_MIN_INTERVAL] {
-  set announce_remote_min_interval $CFG_ANNOUNCE_REMOTE_MIN_INTERVAL
+if [info exists ::Logic::CFG_ANNOUNCE_REMOTE_MIN_INTERVAL] {
+  set announce_remote_min_interval $::Logic::CFG_ANNOUNCE_REMOTE_MIN_INTERVAL
 }
 
 
