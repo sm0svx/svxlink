@@ -164,6 +164,35 @@ proc command_failed {cmd} {
 }
 
 
+#
+# Executed on talker start
+#
+#   tg        -- The talk group
+#   callsign  -- The callsign of the talker node
+#
+proc talker_start {tg callsign} {
+  #puts "### Talker start on TG #$tg: $callsign"
+}
+
+
+#
+# Executed on talker stop
+#
+#   tg        -- The talk group
+#   callsign  -- The callsign of the talker node
+#
+proc talker_stop {tg callsign} {
+  #variable selected_tg
+  #puts "### Talker stop on TG #$tg: $callsign"
+  #if {$tg == $selected_tg} {
+  #  playSilence 100
+  #  playTone 440 200 50
+  #  playTone 659 200 50
+  #  playTone 880 200 50
+  #}
+}
+
+
 if [info exists CFG_ANNOUNCE_REMOTE_MIN_INTERVAL] {
   set announce_remote_min_interval $CFG_ANNOUNCE_REMOTE_MIN_INTERVAL
 }

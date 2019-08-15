@@ -710,6 +710,10 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   {
     selectTg(msg.tg(), "tg_remote_activation");
   }
+
+  std::ostringstream ss;
+  ss << "talker_start " << msg.tg() << " " << msg.callsign();
+  processEvent(ss.str());
 } /* ReflectorLogic::handleMsgTalkerStart */
 
 
@@ -724,6 +728,10 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
   }
   cout << name() << ": Talker stop on TG #" << msg.tg() << ": "
        << msg.callsign() << endl;
+
+  std::ostringstream ss;
+  ss << "talker_stop " << msg.tg() << " " << msg.callsign();
+  processEvent(ss.str());
 } /* ReflectorLogic::handleMsgTalkerStop */
 
 
@@ -1171,7 +1179,7 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
 void ReflectorLogic::processEvent(const std::string& event)
 {
   m_event_handler->processEvent(name() + "::" + event);
-} /* Logic::processEvent */
+} /* ReflectorLogic::processEvent */
 
 
 void ReflectorLogic::processTgSelectionEvent(void)
