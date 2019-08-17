@@ -121,7 +121,7 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void) : splitter(0) {}
+    explicit SquelchCtcss(void) : splitter(0), m_active_det(0) {}
 
     /**
      * @brief 	Destructor
@@ -221,8 +221,20 @@ class SquelchCtcss : public Squelch
         float ctcss_fq = *it;
 
         ToneDetector *det = new ToneDetector(ctcss_fq, 8.0f);
-        det->activated.connect(mem_fun(*this, &SquelchCtcss::setSignalDetected));
-        det->snrUpdated.connect(snrUpdated.make_slot());
+        if (ctcss_fqs.size() == 1)
+        {
+          det->activated.connect(
+              sigc::mem_fun(*this, &SquelchCtcss::setSignalDetected));
+        }
+        else
+        {
+          det->activated.connect(sigc::bind(
+              sigc::mem_fun(*this, &SquelchCtcss::checkSignalDetected), det));
+        }
+        if (it == ctcss_fqs.begin())
+        {
+          det->snrUpdated.connect(snrUpdated.make_slot());
+        }
         Async::AudioSink *sink = det;
 
         dets.push_back(det);
@@ -366,10 +378,30 @@ class SquelchCtcss : public Squelch
 
     DetList                 dets;
     Async::AudioSplitter *  splitter;
+    ToneDetector *          m_active_det;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
 
+    void checkSignalDetected(bool is_detected, ToneDetector *det)
+    {
+      if (is_detected)
+      {
+        if (m_active_det == 0)
+        {
+          m_active_det = det;
+          setSignalDetected(true);
+        }
+      }
+      else
+      {
+        if (m_active_det == det)
+        {
+          m_active_det = 0;
+          setSignalDetected(false);
+        }
+      }
+    }
 };  /* class SquelchCtcss */
 
 
