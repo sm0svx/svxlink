@@ -317,6 +317,9 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
       handleClientInfo(ss);
       break;
 #endif
+    case MsgRequestQsy::TYPE:
+      handleRequestQsy(ss);
+      break;
     case MsgError::TYPE:
       handleMsgError(ss);
       break;
@@ -486,6 +489,20 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
 
   m_monitored_tgs = tgs;
 } /* ReflectorClient::handleTgMonitor */
+
+
+void ReflectorClient::handleRequestQsy(std::istream& is)
+{
+  MsgRequestQsy msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgRequestQsy" << endl;
+    sendError("Illegal MsgRequestQsy protocol message received");
+    return;
+  }
+  m_reflector->requestQsy(this, msg.tg());
+} /* ReflectorClient::handleRequestQsy */
 
 
 #if 0

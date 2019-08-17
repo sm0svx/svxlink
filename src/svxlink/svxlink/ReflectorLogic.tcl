@@ -147,6 +147,25 @@ proc tg_default_activation {new_tg old_tg} {
 
 
 #
+# Executed when a TG QSY request have been acted upon
+#
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
+#
+proc tg_qsy {new_tg old_tg} {
+  variable prev_announce_time
+  variable prev_announce_tg
+
+  #puts "### tg_qsy"
+  set prev_announce_time [clock seconds]
+  set prev_announce_tg $new_tg
+  playSilence 100
+  playMsg "Core" "talk_group"
+  spellNumber $new_tg
+}
+
+
+#
 # Executed when a TG selection has timed out
 #
 #   new_tg -- Always 0

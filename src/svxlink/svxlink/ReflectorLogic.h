@@ -212,6 +212,7 @@ class ReflectorLogic : public LogicBase
     EventHandler*                     m_event_handler;
     Async::Timer                      m_report_tg_timer;
     std::string                       m_tg_selection_event;
+    bool                              m_tg_local_activity;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -227,6 +228,7 @@ class ReflectorLogic : public LogicBase
     void handleMsgNodeLeft(std::istream& is);
     void handleMsgTalkerStart(std::istream& is);
     void handleMsgTalkerStop(std::istream& is);
+    void handleMsgRequestQsy(std::istream& is);
     void handleMsgAuthOk(void);
     void handleMsgServerInfo(std::istream& is);
     void sendMsg(const ReflectorMsg& msg);

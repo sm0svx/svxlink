@@ -174,6 +174,12 @@ class Reflector : public sigc::trackable
      */
     uint32_t tgForV1Clients(void) { return m_tg_for_v1_clients; }
 
+    /**
+     * @brief   Request QSY to another talk group
+     * @param   tg The talk group to QSY to
+     */
+    void requestQsy(ReflectorClient *client, uint32_t tg);
+
   private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
     typedef std::map<Async::FramedTcpConnection*,
@@ -186,6 +192,9 @@ class Reflector : public sigc::trackable
     ReflectorClientConMap m_client_con_map;
     Async::Config*        m_cfg;
     uint32_t              m_tg_for_v1_clients;
+    uint32_t              m_random_qsy_lo;
+    uint32_t              m_random_qsy_hi;
+    uint32_t              m_random_qsy_tg;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);

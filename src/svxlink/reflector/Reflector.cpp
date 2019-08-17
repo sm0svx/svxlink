@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpServer.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncApplication.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -124,7 +125,8 @@ namespace {
  ****************************************************************************/
 
 Reflector::Reflector(void)
-  : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1)
+  : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
+    m_random_qsy_hi(0), m_random_qsy_tg(0)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -201,6 +203,20 @@ bool Reflector::initialize(Async::Config &cfg)
 
   m_cfg->getValue("GLOBAL", "TG_FOR_V1_CLIENTS", m_tg_for_v1_clients);
 
+  SvxLink::SepPair<uint32_t, uint32_t> random_qsy_range;
+  if (m_cfg->getValue("GLOBAL", "RANDOM_QSY_RANGE", random_qsy_range))
+  {
+    m_random_qsy_lo = random_qsy_range.first;
+    m_random_qsy_hi = m_random_qsy_lo + random_qsy_range.second-1;
+    if ((m_random_qsy_lo < 1) || (m_random_qsy_hi < m_random_qsy_lo))
+    {
+      cout << "*** WARNING: Illegal RANDOM_QSY_RANGE specified. Ignored."
+           << endl;
+      m_random_qsy_hi = m_random_qsy_lo = 0;
+    }
+    m_random_qsy_tg = m_random_qsy_hi;
+  }
+
   return true;
 } /* Reflector::initialize */
 
@@ -259,6 +275,46 @@ void Reflector::broadcastUdpMsg(const ReflectorUdpMsg& msg,
   }
 } /* Reflector::broadcastUdpMsg */
 
+
+void Reflector::requestQsy(ReflectorClient *client, uint32_t tg)
+{
+  if (tg == 0)
+  {
+    if (m_random_qsy_tg == 0)
+    {
+      std::cout << client->callsign() << ": QSY request for random TG "
+                << "received but RANDOM_QSY_RANGE is empty" << std::endl;
+      return;
+    }
+    uint32_t range_size = m_random_qsy_hi-m_random_qsy_lo+1;
+    uint32_t i;
+    for (i=0; i<range_size; ++i)
+    {
+      m_random_qsy_tg = (m_random_qsy_tg < m_random_qsy_hi) ?
+        m_random_qsy_tg+1 : m_random_qsy_lo;
+      if (TGHandler::instance()->clientsForTG(m_random_qsy_tg).empty())
+      {
+        tg = m_random_qsy_tg;
+        break;
+      }
+    }
+    if (i == range_size)
+    {
+      std::cout << "*** WARNING: No random TG available for QSY" << std::endl;
+      //client->sendMsg(MsgError("No random TG available for QSY"));
+      return;
+    }
+  }
+
+  uint32_t current_tg = TGHandler::instance()->TGForClient(client);
+  cout << client->callsign() << ": Requesting QSY from TG #"
+       << current_tg << " to TG #" << tg << endl;
+
+  broadcastMsg(MsgRequestQsy(tg),
+      ReflectorClient::mkAndFilter(
+        v2_client_filter,
+        ReflectorClient::TgFilter(current_tg)));
+} /* Reflector::requestQsy */
 
 
 /****************************************************************************

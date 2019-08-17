@@ -131,7 +131,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
-    m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false)
+    m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false),
+    m_tg_local_activity(false)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -299,6 +300,18 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   {
     processEvent("report_tg_status");
   }
+  else if (cmd == "*1")
+  {
+    if (m_selected_tg != 0)
+    {
+      cout << name() << ": Requesting QSY to random TG" << endl;
+      sendMsg(MsgRequestQsy());
+    }
+    else
+    {
+      processEvent(std::string("command_failed ") + cmd);
+    }
+  }
   else
   {
     istringstream is(cmd);
@@ -306,6 +319,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     if (is >> tg)
     {
       selectTg(tg, "tg_command_activation");
+      m_tg_local_activity = true;
     }
     else
     {
@@ -322,6 +336,7 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
   if ((m_selected_tg == 0) && (tg > 0))
   {
     selectTg(tg, "tg_local_activation");
+    m_tg_local_activity = true;
   }
 } /* ReflectorLogic::remoteReceivedTgUpdated */
 
@@ -442,6 +457,9 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
       break;
     case MsgTalkerStop::TYPE:
       handleMsgTalkerStop(ss);
+      break;
+    case MsgRequestQsy::TYPE:
+      handleMsgRequestQsy(ss);
       break;
     default:
       // Better just ignoring unknown messages for easier addition of protocol
@@ -734,6 +752,28 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
   ss << "talker_stop " << msg.tg() << " " << msg.callsign();
   processEvent(ss.str());
 } /* ReflectorLogic::handleMsgTalkerStop */
+
+
+void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
+{
+  MsgRequestQsy msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgRequestQsy\n";
+    disconnect();
+    return;
+  }
+  cout << name() << ": Server QSY request for TG #" << msg.tg() << endl;
+  if (m_tg_local_activity)
+  {
+    selectTg(msg.tg(), "tg_qsy");
+  }
+  else
+  {
+    cout << name()
+         << ": Server QSY request ignored. No local activity." << endl;
+  }
+} /* ReflectorLogic::handleMsgRequestQsy */
 
 
 void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
@@ -1106,13 +1146,14 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   //     << is_active << "  is_idle=" << is_idle << endl;
   if (!is_idle)
   {
-    if (m_tg_select_timeout_cnt == 0)
+    if (m_tg_select_timeout_cnt == 0) // No TG currently selected
     {
       if (m_default_tg > 0)
       {
         selectTg(m_default_tg, "tg_default_activation");
       }
     }
+    m_tg_local_activity = true;
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 
@@ -1170,6 +1211,7 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
     sendMsg(MsgSelectTG(tg));
     m_previous_tg = m_selected_tg;
     m_selected_tg = tg;
+    m_tg_local_activity = false;
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
   }

@@ -185,7 +185,7 @@ void TGHandler::removeClient(ReflectorClient* client)
 
 const TGHandler::ClientSet& TGHandler::clientsForTG(uint32_t tg) const
 {
-  static TGHandler::ClientSet empty_set;
+  static const TGHandler::ClientSet empty_set;
   IdMap::const_iterator id_map_it = m_id_map.find(tg);
   if (id_map_it == m_id_map.end())
   {

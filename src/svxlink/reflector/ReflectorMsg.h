@@ -867,6 +867,35 @@ class MsgClientInfo : public ReflectorMsgBase<108>
 #endif
 
 
+/**
+@brief   Request QSY to a randomly chosen talk group
+@author  Tobias Blomberg / SM0SVX
+@date    2019-08-17
+
+This message is sent by a client to request that all clients on the current
+talk group is QSYed to the given talk group. If the talk group is set to zero,
+the server assigns a randomly chosen talk group. This can be used to easily QSY
+from a call channel once communication is established with the desired
+partners.
+
+The server sends this message to all clients in a talk group to request that
+they QSY to the given talk group. It is up to the client to honor the request
+or not by selecting the talk group.
+*/
+class MsgRequestQsy : public ReflectorMsgBase<109>
+{
+  public:
+    MsgRequestQsy(uint32_t tg=0) : m_tg(tg) {}
+
+    uint32_t tg(void) const { return m_tg; }
+
+    ASYNC_MSG_MEMBERS(m_tg);
+
+  private:
+    uint32_t m_tg;
+}; /* MsgRequestQsy */
+
+
 /***************************** UDP Messages *****************************/
 
 /**
