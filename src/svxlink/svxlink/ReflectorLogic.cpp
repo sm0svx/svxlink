@@ -132,7 +132,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
     m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false),
-    m_tg_local_activity(false)
+    m_tg_local_activity(false), m_last_qsy(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -300,19 +300,49 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   {
     processEvent("report_tg_status");
   }
-  else if (cmd == "*1")
+  else if (cmd.substr(0, 2) == "*1")   // QSY
   {
-    if (m_selected_tg != 0)
+    if ((m_selected_tg != 0) && isLoggedIn())
     {
-      cout << name() << ": Requesting QSY to random TG" << endl;
-      sendMsg(MsgRequestQsy());
+      const std::string subcmd(cmd.substr(2));
+      if (subcmd.empty())
+      {
+        cout << name() << ": Requesting QSY to random TG" << endl;
+        sendMsg(MsgRequestQsy());
+      }
+      else
+      {
+        std::istringstream is(subcmd);
+        uint32_t tg = 0;
+        if (is >> tg)
+        {
+          cout << name() << ": Requesting QSY to TG #" << tg << endl;
+          sendMsg(MsgRequestQsy(tg));
+        }
+        else
+        {
+          processEvent(std::string("command_failed ") + cmd);
+        }
+      }
     }
     else
     {
       processEvent(std::string("command_failed ") + cmd);
     }
   }
-  else
+  else if (cmd == "*2")   // Follow last QSY
+  {
+    if ((m_last_qsy > 0) && (m_last_qsy != m_selected_tg))
+    {
+      selectTg(m_last_qsy, "tg_command_activation");
+      m_tg_local_activity = true;
+    }
+    else
+    {
+      processEvent(std::string("command_failed ") + cmd);
+    }
+  }
+  else  // Choose TG
   {
     istringstream is(cmd);
     uint32_t tg;
@@ -417,7 +447,7 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
     return;
   }
 
-  if ((header.type() > 100) && (m_con_state != STATE_CONNECTED))
+  if ((header.type() > 100) && !isLoggedIn())
   {
     cerr << "*** ERROR[" << name() << "]: Unexpected protocol message received"
          << endl;
@@ -770,6 +800,7 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
   }
   else
   {
+    m_last_qsy = msg.tg();
     cout << name()
          << ": Server QSY request ignored. No local activity." << endl;
   }
@@ -778,7 +809,7 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
 
 void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 {
-  if ((m_con == 0) || !m_con->isConnected())
+  if (!isConnected())
   {
     return;
   }
@@ -803,7 +834,7 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 
 void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 {
-  if ((m_con == 0) || !m_con->isConnected())
+  if (!isLoggedIn())
   {
     return;
   }
@@ -818,7 +849,7 @@ void ReflectorLogic::sendEncodedAudio(const void *buf, int count)
 
 void ReflectorLogic::flushEncodedAudio(void)
 {
-  if ((m_con == 0) || !m_con->isConnected())
+  if (!isLoggedIn())
   {
     flushTimeout();
     return;
@@ -831,7 +862,7 @@ void ReflectorLogic::flushEncodedAudio(void)
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  if ((m_con == 0) || !m_con->isConnected() || (m_con_state != STATE_CONNECTED))
+  if (!isLoggedIn())
   {
     return;
   }
@@ -936,7 +967,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
 void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 {
-  if ((m_con == 0) || !m_con->isConnected() || (m_con_state != STATE_CONNECTED))
+  if (!isLoggedIn())
   {
     return;
   }
@@ -963,7 +994,7 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 
 void ReflectorLogic::connect(void)
 {
-  if ((m_con == 0) || (!m_con->isConnected()))
+  if (!isConnected())
   {
     cout << name() << ": Connecting to " << m_reflector_host << ":"
          << m_reflector_port << endl;
@@ -1002,6 +1033,12 @@ void ReflectorLogic::reconnect(void)
   disconnect();
   connect();
 } /* ReflectorLogic::reconnect */
+
+
+bool ReflectorLogic::isConnected(void) const
+{
+  return (m_con != 0) && m_con->isConnected();
+} /* ReflectorLogic::isConnected */
 
 
 void ReflectorLogic::allEncodedSamplesFlushed(void)

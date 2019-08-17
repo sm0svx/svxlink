@@ -213,6 +213,7 @@ class ReflectorLogic : public LogicBase
     Async::Timer                      m_report_tg_timer;
     std::string                       m_tg_selection_event;
     bool                              m_tg_local_activity;
+    uint32_t                          m_last_qsy;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -240,6 +241,8 @@ class ReflectorLogic : public LogicBase
     void connect(void);
     void disconnect(void);
     void reconnect(void);
+    bool isConnected(void) const;
+    bool isLoggedIn(void) const { return m_con_state == STATE_CONNECTED; }
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
     void handleTimerTick(Async::Timer *t);
