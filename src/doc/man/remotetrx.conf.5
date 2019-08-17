@@ -247,11 +247,11 @@ it. Detection is disabled by default.
 .TP
 .B DETECT_CTCSS
 Set up the receiver(s) specified in the RX configuration variable to detect the
-given CTCSS tone. The detection will be relayed on the uplink transmitter if
-the setup have the capability to do so. Set this configuration variable to
-tone_fq:tone_duration, where tone_fq is the CTCSS tone frequency and
-tone_duration is the number of milliseconds that the CTCSS tone must be present
-before reporting it. Detection is disabled by default.
+given CTCSS tone(s). The detection will be relayed on the uplink transmitter if
+the setup have the capability to do so. Set this configuration variable to a
+space separated list of tone_fq:tone_duration pairs, where tone_fq is the CTCSS
+tone frequency and tone_duration is the number of milliseconds that the CTCSS
+tone must be present before reporting it.
 .
 .SH FILES
 .
