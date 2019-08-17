@@ -108,12 +108,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A CTCSS squelch detector
+@brief  A CTCSS squelch detector
 @author Tobias Blomberg / SM0SVX
 @date   2005-08-02
 
-This squelch detector use a tone detector to detect the presence of a CTCSS
-squelch tone. The actual tone detector is implemented outside of this class.
+This squelch detector use tone detectors to detect the presence of one or more
+CTCSS squelch tones. The actual tone detector is implemented outside of this
+class.
 */
 class SquelchCtcss : public Squelch
 {
@@ -121,14 +122,14 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void) : splitter(0), m_active_det(0) {}
+    explicit SquelchCtcss(void) : m_splitter(0), m_active_det(0) {}
 
     /**
      * @brief 	Destructor
      */
     virtual ~SquelchCtcss(void)
     {
-      delete splitter;
+      delete m_splitter;
     }
 
     /**
@@ -202,18 +203,8 @@ class SquelchCtcss : public Squelch
 		  << bpf_high << ") for receiver " << rx_name << ".\n";
 	return false;
       }
-      
-#if 0
-      std::cout << "### mode=" << ctcss_mode
-		<< " open=" << open_thresh
-		<< " close=" << close_thresh
-		<< " low=" << bpf_low
-		<< " high=" << bpf_high
-		<< std::endl;
-#endif
-		
 
-      splitter = new Async::AudioSplitter;
+      m_splitter = new Async::AudioSplitter;
 
       for (FqList::const_iterator it = ctcss_fqs.begin();
            it != ctcss_fqs.end(); ++it)
@@ -237,7 +228,7 @@ class SquelchCtcss : public Squelch
         }
         Async::AudioSink *sink = det;
 
-        dets.push_back(det);
+        m_dets.push_back(det);
 
         std::stringstream filter_spec;
         filter_spec << "BpBu8/" << bpf_low << "-" << bpf_high;
@@ -306,7 +297,7 @@ class SquelchCtcss : public Squelch
           }
         }
 
-        splitter->addSink(sink, true);
+        m_splitter->addSink(sink, true);
       }
 
       return Squelch::initialize(cfg, rx_name);
@@ -320,10 +311,11 @@ class SquelchCtcss : public Squelch
      */
     virtual void reset(void)
     {
-      for (DetList::iterator it = dets.begin(); it != dets.end(); ++it)
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
       {
         (*it)->reset();
       }
+      m_active_det = 0;
       Squelch::reset();
     }
 
@@ -333,7 +325,7 @@ class SquelchCtcss : public Squelch
      */
     virtual void setHangtime(int hang)
     {
-      for (DetList::iterator it = dets.begin(); it != dets.end(); ++it)
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
       {
         (*it)->setUndetectDelay(hang);
       }
@@ -345,7 +337,7 @@ class SquelchCtcss : public Squelch
       */
     virtual void setDelay(int delay)
     {
-      for (DetList::iterator it = dets.begin(); it != dets.end(); ++it)
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
       {
         (*it)->setDetectDelay(delay);
       }
@@ -370,14 +362,14 @@ class SquelchCtcss : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      return splitter->writeSamples(samples, count);
+      return m_splitter->writeSamples(samples, count);
     }
 
   private:
     typedef std::vector<ToneDetector*> DetList;
 
-    DetList                 dets;
-    Async::AudioSplitter *  splitter;
+    DetList                 m_dets;
+    Async::AudioSplitter *  m_splitter;
     ToneDetector *          m_active_det;
 
     SquelchCtcss(const SquelchCtcss&);
