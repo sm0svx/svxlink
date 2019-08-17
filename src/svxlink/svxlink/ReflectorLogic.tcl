@@ -156,9 +156,10 @@ proc tg_selection_timeout {new_tg old_tg} {
   #puts "### tg_selection_timeout"
   if {$old_tg != 0} {
     playSilence 100
-    playTone 440 200 50
-    playTone 659 200 50
     playTone 880 200 50
+    playTone 659 200 50
+    playTone 440 200 50
+    playSilence 100
   }
 }
 
