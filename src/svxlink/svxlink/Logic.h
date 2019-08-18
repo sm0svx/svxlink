@@ -282,7 +282,7 @@ class Logic : public LogicBase
     DtmfDigitHandler                *dtmf_digit_handler;
     Async::Pty                      *state_pty;
     Async::Pty                      *dtmf_ctrl_pty;
-    std::map<float, uint32_t>       m_ctcss_to_tg;
+    std::map<uint16_t, uint32_t>    m_ctcss_to_tg;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

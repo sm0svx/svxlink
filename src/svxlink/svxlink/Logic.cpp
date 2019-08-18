@@ -674,7 +674,9 @@ bool Logic::initialize(void)
     }
     if (rx().addToneDetector(it->first, bw, 10, 1000))
     {
-      m_ctcss_to_tg[it->first] = it->second;
+      uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*it->first));
+      uint32_t tg = it->second;
+      m_ctcss_to_tg[uint_fq] = tg;
     }
     else
     {
@@ -1673,7 +1675,8 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
 void Logic::detectedTone(float fq)
 {
   //cout << name() << ": " << fq << " Hz tone call detected" << endl;
-  std::map<float, uint32_t>::const_iterator it = m_ctcss_to_tg.find(fq);
+  uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*fq));
+  std::map<uint16_t, uint32_t>::const_iterator it = m_ctcss_to_tg.find(uint_fq);
   if (it != m_ctcss_to_tg.end())
   {
     uint32_t tg = it->second;
