@@ -658,7 +658,12 @@ bool Logic::initialize(void)
 
   typedef std::vector<SvxLink::SepPair<float, uint32_t> > CtcssToTgVec;
   CtcssToTgVec ctcss_to_tg;
-  cfg().getValue(name(), "CTCSS_TO_TG", ctcss_to_tg);
+  if (!cfg().getValue(name(), "CTCSS_TO_TG", ctcss_to_tg, true))
+  {
+    cerr << "*** ERROR: Illegal value for configuration variable "
+         << name() << "/CTCSS_TO_TG" << endl;
+    return false;
+  }
   for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
        it != ctcss_to_tg.end(); ++it)
   {
