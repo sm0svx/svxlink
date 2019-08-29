@@ -608,11 +608,21 @@ talk group is currently selected. Default: 0 (no talk group).
 .TP
 .B MONITOR_TGS
 A space separated list of talk groups which the node will monitor for activity
-when no other talk group is selected. Default: no monitoring. Example:
+when no other talk group is selected.
 
-  MONITOR_TGS=240 2403 2403123
+It is also possible to mark talk groups as more prioritized than others by
+adding one or more plus signs after the talk group number. More plus signs mean
+higher priority. While a talk group is selected, and there are activity on a
+talk group with higher priority, the higher prio talk group will be selected
+unless there have been local activity on the node.
 
-will monitor the TGs for Sweden, Sweden district 3 and a specific node ID.
+Example:
+
+  MONITOR_TGS=112++ 240 2403+ 2403123
+
+will monitor the TGs for Sweden, Sweden district 3 and a specific TG #2403123.
+Traffic on talk group 2403 will be prioritized and 112 will have the highest
+priority.
 .TP
 .B TG_SELECT_TIMEOUT
 The number of seconds after which a selected talk group will be unselected. The

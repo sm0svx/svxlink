@@ -166,6 +166,16 @@ class ReflectorLogic : public LogicBase
   protected:
 
   private:
+    struct MonitorTgEntry
+    {
+      uint32_t  tg;
+      uint8_t   prio;
+      MonitorTgEntry(uint32_t tg=0) : tg(tg), prio(0) {}
+      bool operator<(const MonitorTgEntry& mte) const { return tg < mte.tg; }
+      bool operator==(const MonitorTgEntry& mte) const { return tg == mte.tg; }
+      operator uint32_t(void) const { return tg; }
+    };
+
     typedef enum
     {
       STATE_DISCONNECTED, STATE_EXPECT_AUTH_CHALLENGE, STATE_EXPECT_AUTH_OK,
@@ -173,6 +183,7 @@ class ReflectorLogic : public LogicBase
     } ConState;
 
     typedef Async::TcpClient<Async::FramedTcpConnection> FramedTcpClient;
+    typedef std::set<MonitorTgEntry> MonitorTgsSet;
 
     static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 15;
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET = 60;
@@ -214,6 +225,7 @@ class ReflectorLogic : public LogicBase
     std::string                       m_tg_selection_event;
     bool                              m_tg_local_activity;
     uint32_t                          m_last_qsy;
+    MonitorTgsSet                     m_monitor_tgs;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);

@@ -107,6 +107,18 @@ proc tg_remote_activation {new_tg old_tg} {
 
 
 #
+# Executed when a TG has been selected due to remote activity on a prioritized
+# monitored talk group while a lower prio talk group is selected
+#
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
+#
+proc tg_remote_prio_activation {new_tg old_tg} {
+  tg_remote_activation $new_tg $old_tg
+}
+
+
+#
 # Executed when a TG has been selected by DTMF command
 #
 #   new_tg -- The talk group that has been activated

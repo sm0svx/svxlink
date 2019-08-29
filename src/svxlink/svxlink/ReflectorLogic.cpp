@@ -205,6 +205,31 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
+  std::vector<std::string> monitor_tgs;
+  cfg().getValue(name(), "MONITOR_TGS", monitor_tgs);
+  for (std::vector<std::string>::iterator it=monitor_tgs.begin();
+       it!=monitor_tgs.end(); ++it)
+  {
+    std::istringstream is(*it);
+    MonitorTgEntry mte;
+    is >> mte.tg;
+    char modifier;
+    while (is >> modifier)
+    {
+      if (modifier == '+')
+      {
+        mte.prio += 1;
+      }
+      else
+      {
+        cerr << "*** ERROR: Illegal format for config variable MONITOR_TGS "
+             << "entry \"" << *it << "\"" << endl;
+        return false;
+      }
+    }
+    m_monitor_tgs.insert(mte);
+  }
+
 #if 0
   string audio_codec("GSM");
   if (AudioDecoder::isAvailable("OPUS") && AudioEncoder::isAvailable("OPUS"))
@@ -681,11 +706,10 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
     sendMsg(MsgSelectTG(m_selected_tg));
   }
 
-  std::set<uint32_t> tgs;
-  cfg().getValue(name(), "MONITOR_TGS", tgs);
-  if (!tgs.empty())
+  if (!m_monitor_tgs.empty())
   {
-    sendMsg(MsgTgMonitor(tgs));
+    sendMsg(MsgTgMonitor(
+          std::set<uint32_t>(m_monitor_tgs.begin(), m_monitor_tgs.end())));
   }
   sendUdpMsg(MsgUdpHeartbeat());
 
@@ -758,6 +782,26 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   if (m_tg_select_timeout_cnt == 0)
   {
     selectTg(msg.tg(), "tg_remote_activation");
+  }
+  else
+  {
+    uint32_t selected_tg_prio = 0;
+    MonitorTgsSet::const_iterator selected_tg_it =
+      m_monitor_tgs.find(MonitorTgEntry(m_selected_tg));
+    if (selected_tg_it != m_monitor_tgs.end())
+    {
+      selected_tg_prio = selected_tg_it->prio;
+    }
+    MonitorTgsSet::const_iterator talker_tg_it =
+      m_monitor_tgs.find(MonitorTgEntry(msg.tg()));
+    if ((talker_tg_it != m_monitor_tgs.end()) &&
+        (talker_tg_it->prio > selected_tg_prio) &&
+        !m_tg_local_activity)
+    {
+      std::cout << name() << ": Activity on prioritized TG #"
+                << msg.tg() << ". Switching!" << std::endl;
+      selectTg(msg.tg(), "tg_remote_prio_activation");
+    }
   }
 
   std::ostringstream ss;
