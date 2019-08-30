@@ -253,23 +253,15 @@ bool ReflectorLogic::initialize(void)
   if (!setAudioCodec("DUMMY")) { return false; }
   AudioSource *prev_src = m_dec;
 
-    // Create jitter FIFO if jitter buffer delay > 0
+    // Create jitter buffer
+  AudioFifo *fifo = new Async::AudioFifo(2*INTERNAL_SAMPLE_RATE);
+  prev_src->registerSink(fifo, true);
+  prev_src = fifo;
   unsigned jitter_buffer_delay = 0;
   cfg().getValue(name(), "JITTER_BUFFER_DELAY", jitter_buffer_delay);
   if (jitter_buffer_delay > 0)
   {
-    AudioFifo *fifo = new Async::AudioFifo(
-        2 * jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
-        //new Async::AudioJitterFifo(100 * INTERNAL_SAMPLE_RATE / 1000);
     fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
-    prev_src->registerSink(fifo, true);
-    prev_src = fifo;
-  }
-  else
-  {
-    AudioPassthrough *passthrough = new AudioPassthrough;
-    prev_src->registerSink(passthrough, true);
-    prev_src = passthrough;
   }
 
   m_logic_con_out = new Async::AudioStreamStateDetector;
