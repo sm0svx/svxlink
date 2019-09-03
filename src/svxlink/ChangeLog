@@ -1,4 +1,4 @@
- 1.7.0 -- ?? ??? 2019
+ 1.7.0 -- 01 Sep 2019
 ----------------------
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
   switched to https only. Read documentation and/or README in directory 
@@ -45,9 +45,6 @@
   RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay will now
   be 100+350=450ms for the fast receivers and 300+350-200=450ms for the slow
   receiver. That is, all receivers are now equally fast.
-
-* Support was added to control the frequency and modulation of receivers and
-  transmitters connected to the SvxLink node.
 
 * New configuration variable CTRL_PTY that can be used in RX and TX
   configuration setions. It will set a PTY than can be used to control the

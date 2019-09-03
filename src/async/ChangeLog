@@ -1,4 +1,4 @@
- 1.6.0 -- ?? ??? 2019
+ 1.6.0 -- 01 Sep 2019
 ----------------------
 
 * New class Async::AudioFsf, an implementation of a frequency sampling filter.

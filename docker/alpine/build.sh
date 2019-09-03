@@ -31,6 +31,7 @@ docker build \
     ${RTLSDR_REPO:+--build-arg RTLSDR_REPO=$RTLSDR_REPO} \
     ${GIT_REPO:+--build-arg GIT_REPO=$GIT_REPO} \
     ${GIT_REF:+--build-arg GIT_REF=$GIT_REF} \
+    ${GIT_SSL_NOVERIFY:+--build-arg GIT_SSL_NOVERIFY=$GIT_SSL_NOVERIFY} \
     -t ${IMG_NAME}:build . -f Dockerfile.build
 
 echo
