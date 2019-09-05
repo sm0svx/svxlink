@@ -82,7 +82,7 @@ PttCtrl::PttCtrl(int tx_delay)
   : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), tx_delay_timer(0),
     tx_delay(tx_delay), fifo(0)
 {
-  valve.setBlockWhenClosed(true);
+  valve.setBlockWhenClosed(false);
   valve.setOpen(false);
       
   if (tx_delay > 0)
@@ -192,7 +192,7 @@ void PttCtrl::transmit(bool do_transmit)
     if (tx_delay > 0)
     {
       fifo->enableBuffering(true);
-      //valve.setBlockWhenClosed(true);
+      valve.setBlockWhenClosed(true);
       tx_delay_timer = new Timer(tx_delay);
       tx_delay_timer->expired.connect(
           mem_fun(*this, &PttCtrl::txDelayExpired));
@@ -209,7 +209,7 @@ void PttCtrl::transmit(bool do_transmit)
       delete tx_delay_timer;
       tx_delay_timer = 0;
     }
-    //valve.setBlockWhenClosed(false);
+    valve.setBlockWhenClosed(false);
     valve.setOpen(false);
   }
 }
@@ -221,7 +221,7 @@ void PttCtrl::txDelayExpired(Timer *t)
   tx_delay_timer = 0;
   fifo->enableBuffering(false);
   valve.setOpen(true);
-  //valve.setBlockWhenClosed(false);
+  valve.setBlockWhenClosed(false);
 }
 
 

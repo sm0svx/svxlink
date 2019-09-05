@@ -131,7 +131,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
-    m_report_tg_timer(100, Async::Timer::TYPE_ONESHOT, false),
+    m_report_tg_timer(500, Async::Timer::TYPE_ONESHOT, false),
     m_tg_local_activity(false), m_last_qsy(0)
 {
   m_reconnect_timer.expired.connect(
@@ -1232,7 +1232,9 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
 
   if (!m_tg_selection_event.empty())
   {
-    processTgSelectionEvent();
+    //processTgSelectionEvent();
+    m_report_tg_timer.reset();
+    m_report_tg_timer.setEnable(true);
   }
 } /* ReflectorLogic::onLogicConInStreamStateChanged */
 
@@ -1249,7 +1251,9 @@ void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
 
   if (!m_tg_selection_event.empty())
   {
-    processTgSelectionEvent();
+    //processTgSelectionEvent();
+    m_report_tg_timer.reset();
+    m_report_tg_timer.setEnable(true);
   }
 } /* ReflectorLogic::onLogicConOutStreamStateChanged */
 
@@ -1300,7 +1304,7 @@ void ReflectorLogic::processEvent(const std::string& event)
 
 void ReflectorLogic::processTgSelectionEvent(void)
 {
-  if ((!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle()))
+  if (!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle())
   {
     return;
   }
