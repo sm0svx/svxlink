@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/MODULE_METARINFO.h"
+#include "version/MODULE_METAR_INFO.h"
 #include "ModuleMetarInfo.h"
 #include "common.h"
 
@@ -412,7 +412,7 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
                                  const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), http(0)
 {
-  cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
+  cout << "\tModule MetarInfo v" MODULE_METAR_INFO_VERSION " starting...\n";
 
 } /* ModuleMetarInfo */
 

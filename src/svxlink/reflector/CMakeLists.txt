@@ -13,19 +13,15 @@ add_definitions(${GCRYPT_DEFINITIONS})
 # Add project libraries
 set(LIBS ${LIBS} asynccpp asyncaudio asynccore svxmisc)
 
-# Add targets for version files
-set(VERSION_DEPENDS)
-add_version_target(SVXREFLECTOR VERSION_DEPENDS)
-
 # Build the executable
 add_executable(svxreflector
   svxreflector.cpp Reflector.cpp ReflectorClient.cpp
-  ${VERSION_DEPENDS}
 )
 target_link_libraries(svxreflector ${LIBS})
 set_target_properties(svxreflector PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
+add_dependencies(svxreflector version-svxreflector)
 
 # Install targets
 install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})

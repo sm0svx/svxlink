@@ -184,55 +184,6 @@ function(expinc filename)
     )
 endfunction(expinc)
 
-# Add a target for building a version/xyz.h file
-#
-#   add_version_target(name [depends_var])
-#
-# The name of the version variable should be VER_name and the versions file
-# will be named versions/name.h.
-# If depends_var is given it will be set to a list of dependencies that the
-# target using the versions file should add to its dependency list.
-function(add_version_target name)
-  set(depends_var ${ARGV1})
-  if(DEFINED depends_var)
-    set(${depends_var} ${${depends_var}}
-      "${PROJECT_INCLUDE_DIR}/version/${name}.h"
-      PARENT_SCOPE
-      )
-  endif(DEFINED depends_var)
-
-  if(VER_${name})
-    set(VERSION ${VER_${name}})
-  else(VER_${name})
-    set(VERSION "?.?.?")
-  endif(VER_${name})
-
-  add_custom_command(
-    OUTPUT ${PROJECT_INCLUDE_DIR}/version/${name}.h
-    WORKING_DIRECTORY ${PROJECT_INCLUDE_DIR}
-    COMMAND ${CMAKE_COMMAND} -DVER_NAME=${name} -DVER_VALUE=${VERSION} 
-                     -P ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
-    DEPENDS ${CMAKE_SOURCE_DIR}/versions
-            ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
-  )
-endfunction(add_version_target)
-
-# Read a versions file and set up CMake variables for each entry
-function(read_versions_file filename)
-  message(STATUS "Reading versions file...")
-  file(STRINGS ${filename} versions REGEX .*=.*)
-  foreach(version ${versions})
-    string(REGEX REPLACE \(.*\)=\(.*\) "VER_\\1;\\2" version ${version})
-    set(${version} PARENT_SCOPE)
-    if(version MATCHES ^VER_LIB)
-      list(GET version 0 varname)
-      list(GET version 1 varvalue)
-      string(REGEX MATCH [0-9]+\\.[0-9]+ ${varname}_SOVERSION ${varvalue})
-      set(${varname}_SOVERSION ${${varname}_SOVERSION} PARENT_SCOPE)
-    endif(version MATCHES ^VER_LIB)
-  endforeach(version)
-endfunction(read_versions_file)
-
 # Create a post install target to change the owner of an installed file.
 # If DO_INSTALL_CHOWN is set to YES, the owner will be changed during
 # installation.
@@ -315,9 +266,6 @@ endfunction(install_if_not_exists)
 # Main execution starts here
 ##############################################################################
 
-# Load the versions file and define version variables
-read_versions_file(${PROJECT_SOURCE_DIR}/versions)
-
 configure_file(${CMAKE_SOURCE_DIR}/config.h.in
   ${CMAKE_BINARY_DIR}/config.h
   @ONLY
@@ -339,6 +287,7 @@ message(STATUS "SvxLink user = ${SVXLINK_USER}")
 message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
 # Add directories to build
+add_subdirectory(include)
 add_subdirectory(async)
 add_subdirectory(misc)
 add_subdirectory(echolib)
