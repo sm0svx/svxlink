@@ -1304,7 +1304,8 @@ void ReflectorLogic::processEvent(const std::string& event)
 
 void ReflectorLogic::processTgSelectionEvent(void)
 {
-  if (!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle())
+  if (!m_logic_con_out->isIdle() || !m_logic_con_in->isIdle() ||
+      m_tg_selection_event.empty())
   {
     return;
   }
