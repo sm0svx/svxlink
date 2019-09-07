@@ -1,7 +1,6 @@
 *.o
 /.config
 /bin
-/include
 /lib
 /build
 /*-build
