@@ -280,6 +280,8 @@ bool ReflectorLogic::initialize(void)
         mem_fun(LinkManager::instance(), &LinkManager::playSilence), this));
   m_event_handler->playTone.connect(sigc::bind<0>(
         mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
+  m_event_handler->playDtmf.connect(sigc::bind<0>(
+        mem_fun(LinkManager::instance(), &LinkManager::playDtmf), this));
   m_event_handler->setVariable("logic_name", name().c_str());
 
   m_event_handler->processEvent("namespace eval Logic {}");

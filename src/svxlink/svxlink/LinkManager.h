@@ -260,6 +260,15 @@ class LinkManager : public sigc::trackable
      */
     void playTone(LogicBase *src_logic, int fq, int amp, int len);
 
+    /**
+     * @brief   Play DTMF digits
+     * @param   src_logic The initiating logic, which will not play the digit
+     * @param   digits The DTMF digits to play
+     * @param   amp The amplitude of the individual DTMF tones (0-1000)
+     * @param   len The length in milliseconds of the digit
+     */
+    void playDtmf(LogicBase *src_logic, const std::string& digits, int amp, int len);
+
   private:
     struct LogicProperties
     {

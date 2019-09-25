@@ -222,6 +222,14 @@ class LogicBase : public sigc::trackable
     virtual void playTone(int fq, int amp, int len) {}
 
     /**
+     * @brief   Play DTMF digits
+     * @param   digits The DTMF digits to play
+     * @param   amp The amplitude of the individual DTMF tones (0-1000)
+     * @param   len The length in milliseconds of the digit
+     */
+    virtual void playDtmf(const std::string& digits, int amp, int len) {}
+
+    /**
      * @brief   A linked logic has updated its recieved talk group
      * @param   logic The pointer to the remote logic object
      * @param   tg    The new received talk group

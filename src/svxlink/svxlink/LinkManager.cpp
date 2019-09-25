@@ -548,6 +548,23 @@ void LinkManager::playTone(LogicBase *src_logic, int fq, int amp, int len)
 } /* LinkManager::playTone */
 
 
+void LinkManager::playDtmf(LogicBase *src_logic, const std::string& digits, int amp, int len)
+{
+  const Async::AudioSelector *selector = sinks[src_logic->name()].selector;
+  const ConMap& con_map = sinks[src_logic->name()].connectors;
+  for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
+  {
+    const std::string& logic_name = it->first;
+    const Async::AudioSource *con = it->second;
+    LogicBase *logic = logic_map[logic_name].logic;
+    if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
+    {
+      logic->playDtmf(digits, amp, len);
+    }
+  }
+} /* LinkManager::playTone */
+
+
 
 /****************************************************************************
  *
