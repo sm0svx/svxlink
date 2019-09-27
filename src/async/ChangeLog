@@ -3,6 +3,9 @@
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
 
+* Async::Config::getValue() for vectors now tokenize on comma in addition to
+  whitespace.
+
 
 
  1.6.0 -- 01 Sep 2019
