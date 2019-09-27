@@ -393,13 +393,13 @@ after starting SvxLink. The device works bidirectional, received dtmf characters
 Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .TP
 .B CTCSS_TO_TG
-Use this variable to specify a space separated list of pairs of tone
+Use this variable to specify a comma separated list of pairs of tone
 frequencies and talk groups. When one of the tone frequencies is detected, the
 corresponding talk group will be indicated. This can be used for example by
 ReflectorLogic to automatically switch to a talk group when one of the specified
 tone frequencies is received.
 
-Example: CTCSS_TO_TG=127.3:2403 136.5:2405
+Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .
 .SS Simplex Logic Section
 .
@@ -607,7 +607,7 @@ The node will select this talk group on local incoming traffic if no other
 talk group is currently selected. Default: 0 (no talk group).
 .TP
 .B MONITOR_TGS
-A space separated list of talk groups which the node will monitor for activity
+A comma separated list of talk groups which the node will monitor for activity
 when no other talk group is selected.
 
 It is also possible to mark talk groups as more prioritized than others by
@@ -618,7 +618,7 @@ unless there have been local activity on the node.
 
 Example:
 
-  MONITOR_TGS=112++ 240 2403+ 2403123
+  MONITOR_TGS=112++,240,2403+,2403123
 
 will monitor the TGs for Sweden, Sweden district 3 and a specific TG #2403123.
 Traffic on talk group 2403 will be prioritized and 112 will have the highest
@@ -1014,7 +1014,7 @@ variable sets the frequency of the tone to use. The tone frequency ranges from
 frequency to something outside this range but there is no guarantee that it will
 work.
 
-If desired it is possible to specify a space separated list of tone frequencies
+If desired it is possible to specify a comma separated list of tone frequencies
 in which case the squelch will open on all the tone frequencies.
 .TP
 .B CTCSS_OPEN_THRESH

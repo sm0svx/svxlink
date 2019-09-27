@@ -52,6 +52,8 @@ An example of how to use the Config class
 #include <list>
 #include <memory>
 #include <sstream>
+#include <locale>
+#include <vector>
 
 
 /****************************************************************************
@@ -266,6 +268,7 @@ class Config
         return true;
       }
       std::stringstream ssval(str_val);
+      ssval.imbue(std::locale(ssval.getloc(), new csv_whitespace));
       while (!ssval.eof())
       {
         Value tmp;
@@ -417,7 +420,18 @@ class Config
   private:
     typedef std::map<std::string, std::string>	Values;
     typedef std::map<std::string, Values>   	Sections;
-    
+    struct csv_whitespace : std::ctype<char>
+    {
+      static const mask* make_table(void)
+      {
+          // Make a copy of the "C" locale table
+        static std::vector<mask> v(classic_table(), classic_table() + table_size);
+        v[','] |=  space;  // comma will be classified as whitespace
+        return &v[0];
+      }
+      csv_whitespace(std::size_t refs=0) : ctype(make_table(), false, refs) {}
+    };
+
     FILE      *file;
     Sections  sections;
     
