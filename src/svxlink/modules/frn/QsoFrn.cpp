@@ -373,6 +373,13 @@ std::string QsoFrn::stateToString(State state)
 int QsoFrn::writeSamples(const float *samples, int count)
 {
   //cout << __FUNCTION__ << " " << count << endl;
+
+  if (state == STATE_IDLE)
+  {
+    sendRequest(RQ_TX0);
+    setState(STATE_TX_AUDIO_WAITING);
+  }
+
   int samples_read = 0;
   con_timeout_timer->reset();
 
@@ -438,8 +445,8 @@ void QsoFrn::squelchOpen(bool is_open)
 {
   if (is_open && state == STATE_IDLE)
   {
-    sendRequest(RQ_TX0);
-    setState(STATE_TX_AUDIO_WAITING);
+//    sendRequest(RQ_TX0);
+//    setState(STATE_TX_AUDIO_WAITING);
   }
 }
 
