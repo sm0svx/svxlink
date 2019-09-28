@@ -319,11 +319,38 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   {
     processEvent("report_tg_status");
   }
-  else if (cmd.substr(0, 2) == "*1")   // QSY
+  //else if (cmd[0] == '0') // Help
+  //{
+
+  //}
+  else if (cmd[0] == '1') // Select TG
+  {
+    const std::string subcmd(cmd.substr(1));
+    if (!subcmd.empty()) // Select specified TG
+    {
+      istringstream is(subcmd);
+      uint32_t tg;
+      if (is >> tg)
+      {
+        selectTg(tg, "tg_command_activation");
+        m_tg_local_activity = true;
+      }
+      else
+      {
+        processEvent(std::string("command_failed ") + cmd);
+      }
+    }
+    else // Select previous TG
+    {
+      selectTg(m_previous_tg, "tg_command_activation");
+      m_tg_local_activity = true;
+    }
+  }
+  else if (cmd[0] == '2')   // QSY
   {
     if ((m_selected_tg != 0) && isLoggedIn())
     {
-      const std::string subcmd(cmd.substr(2));
+      const std::string subcmd(cmd.substr(1));
       if (subcmd.empty())
       {
         cout << name() << ": Requesting QSY to random TG" << endl;
@@ -349,7 +376,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       processEvent(std::string("command_failed ") + cmd);
     }
   }
-  else if (cmd == "*2")   // Follow last QSY
+  else if (cmd == "3")   // Follow last QSY
   {
     if ((m_last_qsy > 0) && (m_last_qsy != m_selected_tg))
     {
@@ -361,19 +388,9 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       processEvent(std::string("command_failed ") + cmd);
     }
   }
-  else  // Choose TG
+  else
   {
-    istringstream is(cmd);
-    uint32_t tg;
-    if (is >> tg)
-    {
-      selectTg(tg, "tg_command_activation");
-      m_tg_local_activity = true;
-    }
-    else
-    {
-      processEvent(std::string("command_failed ") + cmd);
-    }
+    processEvent(std::string("unknown_command ") + cmd);
   }
 } /* ReflectorLogic::remoteCmdReceived */
 

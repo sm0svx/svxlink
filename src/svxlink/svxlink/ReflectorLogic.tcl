@@ -36,6 +36,23 @@ if {$logic_name != [namespace tail [namespace current]]} {
 
 
 #
+# Executed when an unknown command is received
+#   cmd - The command string
+#
+proc unknown_command {cmd} {
+  Logic::unknown_command $cmd;
+}
+
+
+#
+# Executed when a received command fails
+#
+proc command_failed {cmd} {
+  Logic::command_failed $cmd;
+}
+
+
+#
 # Executed when manual TG announcement is triggered
 #
 proc report_tg_status {} {
@@ -192,14 +209,6 @@ proc tg_selection_timeout {new_tg old_tg} {
     playTone 440 200 50
     playSilence 100
   }
-}
-
-
-#
-# Executed when an entered DTMF command failed
-#
-proc command_failed {cmd} {
-  Logic::command_failed $cmd;
 }
 
 
