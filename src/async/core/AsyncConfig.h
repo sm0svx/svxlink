@@ -425,11 +425,13 @@ class Config
       static const mask* make_table(void)
       {
           // Make a copy of the "C" locale table
-        static std::vector<mask> v(classic_table(), classic_table() + table_size);
+        static std::vector<mask> v(classic_table(),
+                                   classic_table() + table_size);
         v[','] |=  space;  // comma will be classified as whitespace
         return &v[0];
       }
-      csv_whitespace(std::size_t refs=0) : ctype(make_table(), false, refs) {}
+      csv_whitespace(std::size_t refs=0)
+        : std::ctype<char>(make_table(), false, refs) {}
     };
 
     FILE      *file;
