@@ -16,5 +16,5 @@ LOGFILE=@LOCAL_STATE_DIR@/log/svxlink
 # Where to place the PID file
 PIDFILE=/run/svxlink.pid
 
-# Enable Alsa zerofill if set to 1 (see manual page)
-ASYNC_AUDIO_ALSA_ZEROFILL=0
+# Disable Alsa zerofill if set to 0 (see manual page)
+#ASYNC_AUDIO_ALSA_ZEROFILL=1
