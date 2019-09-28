@@ -6,6 +6,8 @@
 * Async::Config::getValue() for vectors now tokenize on comma in addition to
   whitespace.
 
+* Improved implementation for SvxLink::SepPair to work better with streaming.
+
 
 
  1.6.0 -- 01 Sep 2019
