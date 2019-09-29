@@ -163,7 +163,7 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
     m_client_map[client] = tg_info;
   }
 
-  printTGStatus();
+  //printTGStatus();
 } /* TGHandler::switchTo */
 
 
@@ -178,7 +178,7 @@ void TGHandler::removeClient(ReflectorClient* client)
       setTalkerForTG(tg_info->id, 0);
     }
     removeClientP(tg_info, client);
-    printTGStatus();
+    //printTGStatus();
   }
 } /* TGHandler::removeClient */
 
@@ -212,7 +212,7 @@ void TGHandler::setTalkerForTG(uint32_t tg, ReflectorClient* new_talker)
   tg_info->sql_timeout_cnt = (new_talker != 0) ? m_sql_timeout : 0;
   id_map_it->second->talker = new_talker;
   talkerUpdated(tg, old_talker, new_talker);
-  printTGStatus();
+  //printTGStatus();
 } /* TGHandler::setTalkerForTG */
 
 
