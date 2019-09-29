@@ -637,6 +637,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     ReflectorClient* client = client_it->second;
     os << "\"" << client->callsign() << "\":{";
     os << "\"addr\":\"" << client->remoteHost() << "\",";
+    os << "\"protoVer\":{\"majorVer\":" << client->protoVer().majorVer() << ",\"minorVer\":" << client->protoVer().minorVer() << "},";
     os << "\"tg\":\"" << client->currentTG() << "\",";
     os << "\"monitoredTGs\":[";
     const std::set<uint32_t>& monitored_tgs = client->monitoredTGs();
