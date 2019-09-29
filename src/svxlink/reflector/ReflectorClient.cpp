@@ -422,6 +422,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       if (m_client_proto_ver < ProtoVer(2, 0))
       {
         TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients());
+        m_current_tg = m_reflector->tgForV1Clients();
       }
       m_reflector->broadcastMsg(MsgNodeJoined(m_callsign), ExceptFilter(this));
     }
