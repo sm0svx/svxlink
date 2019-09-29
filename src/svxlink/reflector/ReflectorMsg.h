@@ -915,7 +915,7 @@ class MsgUdpHeartbeat : public ReflectorUdpMsgBase<1>
 
 
 /**
-@brief	 Audio UDP network message V1
+@brief   Audio UDP network message
 @author  Tobias Blomberg / SM0SVX
 @date    2017-02-12
 

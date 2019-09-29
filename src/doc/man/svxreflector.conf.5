@@ -111,6 +111,22 @@ second.
 A comma separated list of allowed codecs. For the moment only one codec can be
 specified. Choose from the following codecs: OPUS, SPEEX, GSM, S16
 (uncompressed signed 16 bit), RAW (uncompressed 32 bit floats).
+.TP
+.B TG_FOR_V1_CLIENTS
+Set which talk group to place protocol version 1 clients in. Without this
+configuration version 1 clients will not be able to use the reflector since
+they cannot select a talk group by themselves. Talk groups should normally be
+configured to start with the ITU-T E.212 Mobile Country Code (MCC) for your
+country, e.g. 240 for Sweden.
+.TP
+.B RANDOM_QSY_RANGE
+Specify in which talk group range the reflector server should select random
+talk groups used when using the QSY functionality. The range is specified using
+two colon separated values. The first one is the lower limit and the second
+value is the number of talk groups in the range. As an example, if set to
+1239900:100 QSY talk groups will be selected from the range 1239900 to 1239999.
+The recommended lower range to use is <MCC>9900 where MCC is the ITU-T E.212
+Mobile Country Code for your country, e.g. 2409900 for Sweden.
 .
 .SS USERS and PASSWORDS sections
 .

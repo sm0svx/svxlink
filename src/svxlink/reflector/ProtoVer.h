@@ -106,7 +106,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @author Tobias Blomberg / SM0SVX
 @date   2019-07-25
 
-A_detailed_class_description
+This class is used to represent a protocol version and to compare one version
+to another.
 */
 class ProtoVer
 {
@@ -180,7 +181,8 @@ class ProtoVer
 @author Tobias Blomberg / SM0SVX
 @date   2019-07-25
 
-A_detailed_class_description
+This class is used to represent a protocol version range and to check if a
+version is within that range.
 */
 class ProtoVerRange
 {

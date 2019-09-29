@@ -3,10 +3,20 @@
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
 
-* Async::Config::getValue() for vectors now tokenize on comma in addition to
+* Config::getValue() for vectors now tokenize on comma in addition to
   whitespace.
 
 * Improved implementation for SvxLink::SepPair to work better with streaming.
+
+* Config: Add support for calling getValue on keyed containers, like std::set
+  and std::multiset.
+
+* Msg: Add support for std::set variable in messages.
+
+* New member function AudioSelector::selectedSource() used to find out which
+  source that are currently selected.
+
+* AudioSelector::autoSelectEnabled() can now be called with a constant source.
 
 
 
@@ -24,16 +34,6 @@
   is, when the audio device is open but there is no audio to write zeros will
   be written instead. Enable this behavior by setting the environment variable
   ASYNC_AUDIO_ALSA_ZEROFILL=1.
-
-* Config: Add support for calling getValue on keyed containers, like std::set
-  and std::multiset.
-
-* Msg: Add support for std::set variable in messages.
-
-* New member function AudioSelector::selectedSource() used to find out which
-  source that are currently selected.
-
-* AudioSelector::autoSelectEnabled() can now be called with a constant source.
 
 
 

@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "AUGUST 2019" Linux "File Formats"
+.TH SVXLINK.CONF 5 "SEPTEMBER 2019" Linux "File Formats"
 .
 .SH NAME
 .
@@ -397,7 +397,8 @@ Use this variable to specify a comma separated list of pairs of tone
 frequencies and talk groups. When one of the tone frequencies is detected, the
 corresponding talk group will be indicated. This can be used for example by
 ReflectorLogic to automatically switch to a talk group when one of the specified
-tone frequencies is received.
+tone frequencies is received. You probably also want to configure CTCSS_FQ for
+all receivers to open the squelch on the same tone frequencies.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .
@@ -568,14 +569,14 @@ using LogicLinking. More than one logic core can be connected.
 SvxReflector also offer traffic separation using talk groups so that multiple
 QSOs can be ongoing through the same reflector server without interfering with
 each other.  The set of talk groups that a node monitors for activity is
-configurable so that a talk group can be automatically activated when it's
+configurable so that a talk group can be automatically selected when it's
 active. After a configurable timeout the node will return to monitor all
-configured talk groups if there are no activity on the currently selected talk
+configured talk groups if there is no activity on the currently selected talk
 group. Which talk group to select for outgoing traffic for a node can be set to
 a default and/or selected using DTMF commands. The DTMF commands are entered
 through the logic linking definition associated with the reflector.  So if a
-command prefix of 99 have been specified for a link, selecting talk group 240
-will be achieved by entering the command 99240#.
+command prefix of 9 have been specified for a link, selecting talk group 888
+will be achieved by entering the command 9888#.
 .TP
 .B TYPE
 The type for a reflector logic core is always
@@ -1015,7 +1016,15 @@ frequency to something outside this range but there is no guarantee that it will
 work.
 
 If desired it is possible to specify a comma separated list of tone frequencies
-in which case the squelch will open on all the tone frequencies.
+in which case the squelch will open on all the tone frequencies. Note that for
+this feature to work well the receivers frequency response in the CTCSS
+frequency range (67.0 to 254.1Hz) need to be reasonable flat. When choosing
+tones, try to select tones that are close to each other. However, selecting
+tones too close may cause both to trigger. Also do not select tones that are a
+multiple of another tone since overtones may trigger the wrong one.
+
+If multiple tones are configured when running siglevdetcal, the first one will
+be used for the calibration.
 .TP
 .B CTCSS_OPEN_THRESH
 If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config

@@ -12,11 +12,12 @@ svxreflector \- The SvxLink conference server audio reflector
 .
 The
 .B SvxReflector
-server is used to interconnect multiple SvxLink nodes into one network. All
-audio sent to the reflector from one node is retransmitted on all other
-connected nodes. Only one talker is allowed at a time so if another node starts
-sending audio when another one is already active, the second node will not
-interrupt the first talker.
+server is used to interconnect multiple SvxLink nodes into one network. Traffic
+is switched using talk groups in the SvxReflector server so that all audio sent
+to the reflector from one node is retransmitted on all other nodes that have
+selected the same talk group. Only one talker is allowed at a time on each talk
+group so if another node starts sending audio when another one is already
+active, the second node will not interrupt the first talker.
 .P
 A TCP/IP connection is used for the control messages and the audio is
 transported via UDP. Make sure to open up the configured TCP and UDP ports in
@@ -33,9 +34,11 @@ more about how to set up a SvxLink node for use with the SvxReflector in the
 .BR svxlink.conf (5)
 manual page.
 .P
-SvxReflector also offer the possibility to separate traffic using talk groups.
-It is then possible to have multiple QSOs going on in parallel without them
-interfering with each other.
+The SvxReflector offer a QSY functionality which is used to switch all active
+nodes to another talk group. This can be used to make a call on a broad talk
+group, like a large region or the entire country, and when the called party
+answers a QSY can be performed to a talk group where only the active nodes are
+included.
 .
 .SH OPTIONS
 .
