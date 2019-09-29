@@ -342,6 +342,18 @@ class ReflectorClient
      */
     const ProtoVer& protoVer(void) const { return m_client_proto_ver; }
 
+    /**
+     * @brief   Get the current talk group
+     * @return  Returns the currently selected talk group
+     */
+    uint32_t currentTG(void) const { return m_current_tg; }
+
+    /**
+     * @brief   Get the monitored talk groups
+     * @return  Returns the monitored talk groups
+     */
+    const std::set<uint32_t>& monitoredTGs(void) const { return m_monitored_tgs; }
+
   private:
     static const uint16_t MIN_MAJOR_VER = 0;
     static const uint16_t MIN_MINOR_VER = 6;

@@ -126,7 +126,7 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0)
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server("8080")
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -216,6 +216,11 @@ bool Reflector::initialize(Async::Config &cfg)
     }
     m_random_qsy_tg = m_random_qsy_hi;
   }
+
+  m_http_server.clientConnected.connect(
+      sigc::mem_fun(*this, &Reflector::httpClientConnected));
+  m_http_server.clientDisconnected.connect(
+      sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
 
   return true;
 } /* Reflector::initialize */
@@ -578,6 +583,106 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
     }
   }
 } /* Reflector::setTalker */
+
+
+void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
+                                    Async::HttpServerConnection::Request& req)
+{
+  //std::cout << "### " << req.method << " " << req.uri << std::endl;
+
+  Async::HttpServerConnection::Response res;
+  if ((req.method != "GET") && (req.method != "HEAD"))
+  {
+    res.setCode(501);
+    res.setContent("application/json",
+        "{\"msg\":\"" + req.method + ": Method not implemented\"}");
+    con->write(res);
+    return;
+  }
+
+  if (req.uri != "/status")
+  {
+    res.setCode(404);
+    res.setContent("application/json",
+        "{\"msg\":\"Object not found!\"}");
+    con->write(res);
+    return;
+  }
+
+  std::ostringstream os;
+  os << "{"
+     //<< "\"method\":\"" << req.method << "\","
+     //<< "\"uri\":\"" << req.uri << "\","
+     //<< "\"headers\":{"
+     ;
+  //Async::HttpServerConnection::Headers::const_iterator it;
+  //for (it=req.headers.begin(); it!=req.headers.end(); ++it)
+  //{
+  //  std::cout << (*it).first << ": " << (*it).second << std::endl;
+  //  if (it != req.headers.begin())
+  //  {
+  //    os << ",";
+  //  }
+  //  os << "\"" << (*it).first << "\":\"" << (*it).second << "\"";
+  //}
+  //os << "},";
+  ReflectorClientMap::const_iterator client_it;
+  os << "\"nodes\":{";
+  for (client_it = m_client_map.begin(); client_it != m_client_map.end(); ++client_it)
+  {
+    if (client_it != m_client_map.begin())
+    {
+      os << ",";
+    }
+    ReflectorClient* client = client_it->second;
+    os << "\"" << client->callsign() << "\":{";
+    os << "\"addr\":\"" << client->remoteHost() << "\",";
+    os << "\"tg\":\"" << client->currentTG() << "\",";
+    os << "\"monitoredTGs\":[";
+    const std::set<uint32_t>& monitored_tgs = client->monitoredTGs();
+    for (std::set<uint32_t>::const_iterator mtg_it=monitored_tgs.begin();
+         mtg_it!=monitored_tgs.end(); ++mtg_it)
+    {
+      if (mtg_it != monitored_tgs.begin())
+      {
+        os << ",";
+      }
+      os << *mtg_it;
+    }
+    os << "],";
+    bool is_talker =
+      TGHandler::instance()->talkerForTG(client->currentTG()) == client;
+    os << "\"isTalker\":" << (is_talker ? "true" : "false");
+    os << "}";
+  }
+  os << "}";
+  os << "}";
+  res.setContent("application/json", os.str());
+  if (req.method == "HEAD")
+  {
+    res.setSendContent(false);
+  }
+  res.setCode(200);
+  con->write(res);
+} /* Reflector::requestReceived */
+
+
+void Reflector::httpClientConnected(Async::HttpServerConnection *con)
+{
+  //std::cout << "### HTTP Client connected: "
+  //          << con->remoteHost() << ":" << con->remotePort() << std::endl;
+  con->requestReceived.connect(sigc::mem_fun(*this, &Reflector::httpRequestReceived));
+} /* Reflector::httpClientConnected */
+
+
+void Reflector::httpClientDisconnected(Async::HttpServerConnection *con,
+    Async::HttpServerConnection::DisconnectReason reason)
+{
+  //std::cout << "### HTTP Client disconnected: "
+  //          << con->remoteHost() << ":" << con->remotePort()
+  //          << ": " << Async::HttpServerConnection::disconnectReasonStr(reason)
+  //          << std::endl;
+} /* Reflector::httpClientDisconnected */
 
 
 namespace {
