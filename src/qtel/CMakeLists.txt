@@ -56,11 +56,6 @@ endif()
 # to find automatically generated h-files.
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# Add targets for version files
-set(VERSION_DEPENDS)
-string(TOUPPER ${PROG} PROG_VERNAME)
-add_version_target(${PROG_VERNAME} VERSION_DEPENDS)
-
 # Compile the application
 add_executable(${PROG} ${PRGSRC} ${QTHEADERS_MOC} ${FORMS_HEADERS}
   ${RESOURCES_RCC} ${VERSION_DEPENDS}
@@ -69,6 +64,7 @@ target_link_libraries(${PROG} ${LIBS})
 set_target_properties(${PROG} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}  
   )
+add_dependencies(${PROG} version-${PROG})
 
 # Install targets
 install(TARGETS ${PROG} DESTINATION ${BIN_INSTALL_DIR})

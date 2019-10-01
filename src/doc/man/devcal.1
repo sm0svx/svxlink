@@ -1,4 +1,4 @@
-.TH DEVCAL 1 "APRIL 2019" Linux "User Manuals"
+.TH DEVCAL 1 "SEPTEMBER 2019" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -243,10 +243,8 @@ Set this environment variable to 1 if you get an error about
 during devcal startup when using OSS audio.
 .TP
 ASYNC_AUDIO_ALSA_ZEROFILL
-Set this environment variable to 1 to make the Alsa audio code write zeros to
-the audio device when there is no audio to write available. This may be needed
-for some audio devices that take a long time to recover from an underflow
-condition.
+Set this environment variable to 0 to stop the Alsa audio code from writing
+zeros to the audio device when there is no audio to write available.
 .
 .SH AUTHOR
 .

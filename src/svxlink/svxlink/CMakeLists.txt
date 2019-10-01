@@ -58,10 +58,6 @@ endif(CURL_FOUND)
 # Add project libraries
 set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
 
-# Add targets for version files
-set(VERSION_DEPENDS)
-add_version_target(SVXLINK VERSION_DEPENDS)
-
 # Build the executable
 add_executable(svxlink
   MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
@@ -73,6 +69,7 @@ target_link_libraries(svxlink ${LIBS} ${PJSIP_LIBRARIES})
 set_target_properties(svxlink PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
+add_dependencies(svxlink version-svxlink)
 
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
