@@ -187,16 +187,16 @@ class Reflector : public sigc::trackable
                      ReflectorClient*> ReflectorClientConMap;
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
 
-    FramedTcpServer*                              m_srv;
-    Async::UdpSocket*                             m_udp_sock;
-    ReflectorClientMap                            m_client_map;
-    ReflectorClientConMap                         m_client_con_map;
-    Async::Config*                                m_cfg;
-    uint32_t                                      m_tg_for_v1_clients;
-    uint32_t                                      m_random_qsy_lo;
-    uint32_t                                      m_random_qsy_hi;
-    uint32_t                                      m_random_qsy_tg;
-    Async::TcpServer<Async::HttpServerConnection> m_http_server;
+    FramedTcpServer*                                m_srv;
+    Async::UdpSocket*                               m_udp_sock;
+    ReflectorClientMap                              m_client_map;
+    ReflectorClientConMap                           m_client_con_map;
+    Async::Config*                                  m_cfg;
+    uint32_t                                        m_tg_for_v1_clients;
+    uint32_t                                        m_random_qsy_lo;
+    uint32_t                                        m_random_qsy_hi;
+    uint32_t                                        m_random_qsy_tg;
+    Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);

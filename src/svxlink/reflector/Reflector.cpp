@@ -126,7 +126,7 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server("8080")
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -135,14 +135,19 @@ Reflector::Reflector(void)
 
 Reflector::~Reflector(void)
 {
+  delete m_http_server;
+  m_http_server = 0;
   delete m_udp_sock;
+  m_udp_sock = 0;
   delete m_srv;
+  m_srv = 0;
 
   for (ReflectorClientMap::iterator it = m_client_map.begin();
        it != m_client_map.end(); ++it)
   {
     delete (*it).second;
   }
+  m_client_map.clear();
 
   delete TGHandler::instance();
 } /* Reflector::~Reflector */
@@ -217,10 +222,15 @@ bool Reflector::initialize(Async::Config &cfg)
     m_random_qsy_tg = m_random_qsy_hi;
   }
 
-  m_http_server.clientConnected.connect(
-      sigc::mem_fun(*this, &Reflector::httpClientConnected));
-  m_http_server.clientDisconnected.connect(
-      sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
+  std::string http_srv_port;
+  if (m_cfg->getValue("GLOBAL", "HTTP_SRV_PORT", http_srv_port))
+  {
+    m_http_server = new Async::TcpServer<Async::HttpServerConnection>(http_srv_port);
+    m_http_server->clientConnected.connect(
+        sigc::mem_fun(*this, &Reflector::httpClientConnected));
+    m_http_server->clientDisconnected.connect(
+        sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
+  }
 
   return true;
 } /* Reflector::initialize */
@@ -604,7 +614,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   {
     res.setCode(404);
     res.setContent("application/json",
-        "{\"msg\":\"Object not found!\"}");
+        "{\"msg\":\"Not found!\"}");
     con->write(res);
     return;
   }
