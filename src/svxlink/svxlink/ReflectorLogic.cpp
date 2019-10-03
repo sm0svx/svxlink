@@ -445,6 +445,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
   cout << name() << ": Disconnected from " << m_con->remoteHost() << ":"
        << m_con->remotePort() << ": "
        << TcpConnection::disconnectReasonStr(reason) << endl;
+  m_reconnect_timer.setTimeout(1000 + 5000 * std::rand() / RAND_MAX);
   m_reconnect_timer.setEnable(true);
   delete m_udp_sock;
   m_udp_sock = 0;
