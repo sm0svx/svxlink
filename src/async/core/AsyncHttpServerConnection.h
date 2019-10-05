@@ -131,9 +131,9 @@ class HttpServerConnection : public TcpConnection
     struct Request
     {
       std::string method;
-      std::string uri;
-      unsigned proto_major;
-      unsigned proto_minor;
+      std::string target;
+      unsigned ver_major;
+      unsigned ver_minor;
       Headers headers;
 
       Request(void)
@@ -144,10 +144,10 @@ class HttpServerConnection : public TcpConnection
       void clear(void)
       {
         method.clear();
-        uri.clear();
+        target.clear();
         headers.clear();
-        proto_major = 0;
-        proto_minor = 0;
+        ver_major = 0;
+        ver_minor = 0;
       }
     };
 
@@ -299,7 +299,7 @@ class HttpServerConnection : public TcpConnection
 
   private:
     enum State {
-      STATE_DISCONNECTED, STATE_EXPECT_METHOD, STATE_EXPECT_HEADER,
+      STATE_DISCONNECTED, STATE_EXPECT_START_LINE, STATE_EXPECT_HEADER,
       STATE_EXPECT_PAYLOAD, STATE_REQ_COMPLETE
     };
     //static const uint32_t DEFAULT_MAX_FRAME_SIZE = 1024 * 1024; // 1MB
@@ -336,7 +336,7 @@ class HttpServerConnection : public TcpConnection
 
     HttpServerConnection(const HttpServerConnection&);
     HttpServerConnection& operator=(const HttpServerConnection&);
-    void handleMethod(void);
+    void handleStartLine(void);
     void handleHeader(void);
     void onSendBufferFull(bool is_full);
     void disconnectCleanup(void);

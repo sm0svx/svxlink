@@ -125,7 +125,7 @@ HttpServerConnection::HttpServerConnection(
     int sock, const IpAddress& remote_addr, uint16_t remote_port,
     size_t recv_buf_len)
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
-    m_state(STATE_EXPECT_METHOD)
+    m_state(STATE_EXPECT_START_LINE)
 {
 } /* HttpServerConnection::HttpServerConnection */
 
@@ -230,7 +230,7 @@ int HttpServerConnection::onDataReceived(void *buf, int count)
 
   while (data.size() > data_pos)
   {
-    if (m_state == STATE_EXPECT_METHOD)
+    if (m_state == STATE_EXPECT_START_LINE)
     {
       size_t eol = data.find("\r\n", data_pos);
       size_t len = eol;
@@ -243,7 +243,7 @@ int HttpServerConnection::onDataReceived(void *buf, int count)
       if (eol != std::string::npos)
       {
         data_pos += 2;
-        handleMethod();
+        handleStartLine();
         m_row.clear();
       }
     }
@@ -275,7 +275,7 @@ int HttpServerConnection::onDataReceived(void *buf, int count)
   {
     requestReceived(this, m_req);
     m_req.clear();
-    m_state = STATE_EXPECT_METHOD;
+    m_state = STATE_EXPECT_START_LINE;
   }
 
   return count;
@@ -288,11 +288,11 @@ int HttpServerConnection::onDataReceived(void *buf, int count)
  *
  ****************************************************************************/
 
-void HttpServerConnection::handleMethod(void)
+void HttpServerConnection::handleStartLine(void)
 {
   std::istringstream is(m_row);
   std::string protocol;
-  if (!(is >> m_req.method >> m_req.uri >> protocol >> std::ws))
+  if (!(is >> m_req.method >> m_req.target >> protocol >> std::ws))
   {
     std::cerr << "*** ERROR: Could not parse HTTP header" << std::endl;
     disconnect();
@@ -310,7 +310,7 @@ void HttpServerConnection::handleMethod(void)
   is.clear();
   is.str(protocol.substr(5));
   char dot;
-  if (!(is >> m_req.proto_major >> dot >> m_req.proto_minor >> std::ws) ||
+  if (!(is >> m_req.ver_major >> dot >> m_req.ver_minor >> std::ws) ||
       (dot != '.'))
   {
     std::cerr << "*** ERROR: Illegal protocol version specification \""
@@ -319,13 +319,13 @@ void HttpServerConnection::handleMethod(void)
     return;
   }
 
-  //std::cout << "### HttpServerConnection::handleMethod: method="
-  //          << m_req.method << " uri=" << m_req.uri
-  //          << " version=" << m_req.proto_major << "."
-  //          << m_req.proto_minor
+  //std::cout << "### HttpServerConnection::handleStartLine: method="
+  //          << m_req.method << " target=" << m_req.target
+  //          << " version=" << m_req.ver_major << "."
+  //          << m_req.ver_minor
   //          << std::endl;
   m_state = STATE_EXPECT_HEADER;
-} /* HttpServerConnection::handleMethod */
+} /* HttpServerConnection::handleStartLine */
 
 
 void HttpServerConnection::handleHeader(void)
@@ -357,7 +357,7 @@ void HttpServerConnection::handleHeader(void)
   }
   std::string value(m_row.substr(value_begin, value_end-value_begin+1));
 
-  //std::cout << "### HttpServerConnection::handleMethod: key="
+  //std::cout << "### HttpServerConnection::handleStartLine: key="
   //          << key << " value=" << value << std::endl;
 
   m_req.headers[key] = value;

@@ -6,7 +6,7 @@
 void requestReceived(Async::HttpServerConnection *con,
                      Async::HttpServerConnection::Request& req)
 {
-  std::cout << "--- " << req.method << " " << req.uri << std::endl;
+  std::cout << "--- " << req.method << " " << req.target << std::endl;
 
   Async::HttpServerConnection::Response res;
   if ((req.method != "GET") && (req.method != "HEAD"))
@@ -20,9 +20,9 @@ void requestReceived(Async::HttpServerConnection *con,
   std::ostringstream os;
   os << "{"
      << "\"method\":\"" << req.method << "\","
-     << "\"uri\":\"" << req.uri << "\","
-     << "\"client-proto-major\":" << req.proto_major << ","
-     << "\"client-proto-minor\":" << req.proto_minor << ","
+     << "\"target\":\"" << req.target << "\","
+     << "\"client-proto-major\":" << req.ver_major << ","
+     << "\"client-proto-minor\":" << req.ver_minor << ","
      << "\"headers\":{";
   Async::HttpServerConnection::Headers::const_iterator it;
   for (it=req.headers.begin(); it!=req.headers.end(); ++it)

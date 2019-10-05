@@ -598,7 +598,7 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
 void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
                                     Async::HttpServerConnection::Request& req)
 {
-  //std::cout << "### " << req.method << " " << req.uri << std::endl;
+  //std::cout << "### " << req.method << " " << req.target << std::endl;
 
   Async::HttpServerConnection::Response res;
   if ((req.method != "GET") && (req.method != "HEAD"))
@@ -610,7 +610,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     return;
   }
 
-  if (req.uri != "/status")
+  if (req.target != "/status")
   {
     res.setCode(404);
     res.setContent("application/json",
@@ -622,7 +622,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   std::ostringstream os;
   os << "{"
      //<< "\"method\":\"" << req.method << "\","
-     //<< "\"uri\":\"" << req.uri << "\","
+     //<< "\"target\":\"" << req.target << "\","
      //<< "\"headers\":{"
      ;
   //Async::HttpServerConnection::Headers::const_iterator it;
