@@ -1,12 +1,12 @@
 /**
 @file	 AsyncHttpServerConnection.cpp
-@brief   A TCP connection with framed instead of streamed content
+@brief   A simple HTTP Server connection class
 @author  Tobias Blomberg / SM0SVX
-@date	 2017-03-30
+@date	 2019-08-26
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

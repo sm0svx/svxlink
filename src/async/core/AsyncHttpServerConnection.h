@@ -1,12 +1,12 @@
 /**
 @file	 AsyncHttpServerConnection.h
-@brief   A TCP connection with framed instead of streamed content
+@brief   A simple HTTP Server connection class
 @author  Tobias Blomberg / SM0SVX
-@date	 2017-03-30
+@date	 2019-08-26
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -113,14 +113,16 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A TCP connection with framed instead of streamed content
+@brief  A class representing a HTTP server side connection
 @author Tobias Blomberg / SM0SVX
-@date   2017-03-30
+@date   2019-08-26
 
-This class implements a framed TCP connection. It will make sure that the data
-given to one call to the write function will arrive at the other end in one
-piece or not at all. This makes it easier to implement message based protocols
-that only want to see completely transfered messages at the other end.
+This class implement a VERY simple HTTP server side connection. It can be used
+together with the Async::TcpServer class to build a HTTP server.
+
+WARNING: This implementation is not suitable to be exposed to the public
+Internet. It contains a number of security flaws and probably also
+incompatibilities. Only use this class with known clients.
 
 \include AsyncHttpServer_demo.cpp
 */
@@ -197,39 +199,29 @@ class HttpServerConnection : public TcpConnection
     };
 
     /**
-     * @brief 	Constructor
-     * @param 	recv_buf_len  The length of the receiver buffer to use
+     * @brief   Constructor
+     * @param   recv_buf_len  The length of the receiver buffer to use
      */
     explicit HttpServerConnection(size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
 
     /**
-     * @brief 	Constructor
-     * @param 	sock  	      The socket for the connection to handle
-     * @param 	remote_addr   The remote IP-address of the connection
-     * @param 	remote_port   The remote TCP-port of the connection
-     * @param 	recv_buf_len  The length of the receiver buffer to use
+     * @brief   Constructor
+     * @param   sock          The socket for the connection to handle
+     * @param   remote_addr   The remote IP-address of the connection
+     * @param   remote_port   The remote TCP-port of the connection
+     * @param   recv_buf_len  The length of the receiver buffer to use
      */
     HttpServerConnection(int sock, const IpAddress& remote_addr,
                         uint16_t remote_port,
                         size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
 
     /**
-     * @brief 	Destructor
+     * @brief   Destructor
      */
     virtual ~HttpServerConnection(void);
 
     /**
-     * @brief   Set the maximum frame size
-     * @param   frame_size The maximum frame size in bytes
-     *
-     * Use this function to set the maximum allowed frame size. If a frame size
-     * number larger than this is received a disconnection is immediately
-     * issued. The default maximum frame size is DEFAULT_MAX_FRAME_SIZE.
-     */
-    //void setMaxFrameSize(uint32_t frame_size) { m_max_frame_size = frame_size; }
-
-    /**
-     * @brief 	Disconnect from the remote host
+     * @brief   Disconnect from the remote host
      *
      * Call this function to disconnect from the remote host. If already
      * disconnected, nothing will be done. The disconnected signal is not
@@ -238,34 +230,26 @@ class HttpServerConnection : public TcpConnection
     virtual void disconnect(void);
 
     /**
-     * @brief 	Send a frame on the TCP connection
-     * @param 	buf The buffer containing the frame to send
-     * @param 	count The number of bytes in the frame
-     * @return	Return bytes written or -1 on failure
-     *
-     * This function will send a frame of data on the TCP connection. The
-     * frame will either be completely transmitted or discarded on error.
-     * There is no inbetween so this function will always return either the
-     * given count or -1 on error.
+     * @brief   Send a HTTP response
+     * @param   res The response (@see Response)
+     * @return  Return \em true on success or else \em false
      */
-    //virtual int write(const void *buf, int count);
-
     virtual bool write(const Response& res);
 
     /**
-     * @brief 	A signal that is emitted when a connection has been terminated
-     * @param 	con   	The connection object
-     * @param 	reason  The reason for the disconnect
+     * @brief   A signal that is emitted when a connection has been terminated
+     * @param   con     The connection object
+     * @param   reason  The reason for the disconnect
      */
     sigc::signal<void, HttpServerConnection *, DisconnectReason> disconnected;
 
     /**
-     * @brief 	A signal that is emitted when a frame has been received on the
-     *	      	connection
-     * @param 	buf   A buffer containg the read data
-     * @param 	count The number of bytes in the buffer
+     * @brief   A signal that is emitted when a HTTP request has been received
+     *          on the connection
+     * @param 	req The request object (@see Request)
      *
-     * This signal is emitted when a frame has been received on this connection.
+     * This signal is emitted when a HTTP request has been received on this
+     * connection.
      */
     sigc::signal<void, HttpServerConnection *, Request&> requestReceived;
 
@@ -273,19 +257,18 @@ class HttpServerConnection : public TcpConnection
     sigc::signal<void, bool> sendBufferFull;
 
     /**
-     * @brief 	Called when a connection has been terminated
-     * @param 	reason  The reason for the disconnect
+     * @brief   Called when a connection has been terminated
+     * @param   reason  The reason for the disconnect
      *
      * This function will be called when the connection has been terminated.
-     * The default action for this function is to emit the disconnected signal.
      */
     virtual void onDisconnected(DisconnectReason reason);
 
     /**
-     * @brief 	Called when data has been received on the connection
-     * @param 	buf   A buffer containg the read data
-     * @param 	count The number of bytes in the buffer
-     * @return	Return the number of processed bytes
+     * @brief   Called when data has been received on the connection
+     * @param   buf   A buffer containg the read data
+     * @param   count The number of bytes in the buffer
+     * @return  Return the number of processed bytes
      *
      * This function is called when data has been received on this connection.
      * The buffer will contain the bytes read from the operating system.
@@ -293,7 +276,6 @@ class HttpServerConnection : public TcpConnection
      * bytes not processed will be stored in the receive buffer for this class
      * and presented again to the slot when more data arrives. The new data
      * will be appended to the old data.
-     * The default action for this function is to emit the dataReceived signal.
      */
     virtual int onDataReceived(void *buf, int count);
 
@@ -302,8 +284,6 @@ class HttpServerConnection : public TcpConnection
       STATE_DISCONNECTED, STATE_EXPECT_START_LINE, STATE_EXPECT_HEADER,
       STATE_EXPECT_PAYLOAD, STATE_REQ_COMPLETE
     };
-    //static const uint32_t DEFAULT_MAX_FRAME_SIZE = 1024 * 1024; // 1MB
-
     //struct QueueItem
     //{
     //  char* m_buf;
@@ -325,10 +305,6 @@ class HttpServerConnection : public TcpConnection
     //};
     //typedef std::deque<QueueItem*> TxQueue;
 
-    //uint32_t              m_max_frame_size;
-    //bool                  m_size_received;
-    //uint32_t              m_frame_size;
-    //std::vector<uint8_t>  m_frame;
     //TxQueue               m_txq;
     State                   m_state;
     std::string             m_row;
