@@ -132,9 +132,23 @@ class HttpServerConnection : public TcpConnection
     {
       std::string method;
       std::string uri;
+      unsigned proto_major;
+      unsigned proto_minor;
       Headers headers;
 
-      void clear(void) { method.clear(); uri.clear(); headers.clear(); }
+      Request(void)
+      {
+        clear();
+      }
+
+      void clear(void)
+      {
+        method.clear();
+        uri.clear();
+        headers.clear();
+        proto_major = 0;
+        proto_minor = 0;
+      }
     };
 
     class Response

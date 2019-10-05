@@ -21,6 +21,8 @@ void requestReceived(Async::HttpServerConnection *con,
   os << "{"
      << "\"method\":\"" << req.method << "\","
      << "\"uri\":\"" << req.uri << "\","
+     << "\"client-proto-major\":" << req.proto_major << ","
+     << "\"client-proto-minor\":" << req.proto_minor << ","
      << "\"headers\":{";
   Async::HttpServerConnection::Headers::const_iterator it;
   for (it=req.headers.begin(); it!=req.headers.end(); ++it)

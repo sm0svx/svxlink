@@ -299,16 +299,31 @@ void HttpServerConnection::handleMethod(void)
     return;
   }
 
-  if (protocol != "HTTP/1.1")
+  if (protocol.substr(0, 5) != "HTTP/")
   {
-    std::cerr << "*** ERROR: Unsupported protocol \""
+    std::cerr << "*** ERROR: Illegal protocol specification string \""
+              << protocol << "\"" << std::endl;
+    disconnect();
+    return;
+  }
+
+  is.clear();
+  is.str(protocol.substr(5));
+  char dot;
+  if (!(is >> m_req.proto_major >> dot >> m_req.proto_minor >> std::ws) ||
+      (dot != '.'))
+  {
+    std::cerr << "*** ERROR: Illegal protocol version specification \""
               << protocol << "\"" << std::endl;
     disconnect();
     return;
   }
 
   //std::cout << "### HttpServerConnection::handleMethod: method="
-  //          << m_req.method << " uri=" << m_req.uri << std::endl;
+  //          << m_req.method << " uri=" << m_req.uri
+  //          << " version=" << m_req.proto_major << "."
+  //          << m_req.proto_minor
+  //          << std::endl;
   m_state = STATE_EXPECT_HEADER;
 } /* HttpServerConnection::handleMethod */
 
