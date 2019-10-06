@@ -689,29 +689,33 @@ void Voter::printSquelchState(void)
   stringstream os;
   os << setfill('0') << std::internal;
 
+  os << "[";
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    float siglev = (*it)->signalStrength();
-    bool sql_is_open = (*it)->squelchIsOpen();
-    bool is_enabled = (*it)->isEnabled();
+    SatRx *rx = *it;
+    float siglev = rx->signalStrength();
+    bool sql_is_open = rx->squelchIsOpen();
+    bool is_enabled = rx->isEnabled();
+    bool is_active = sql_is_open && ((*it) == sm->activeSrx());
 
-    os << (*it)->name();
-    if (!is_enabled)
+    if (it != rxs.begin())
     {
-      os << "#";
+      os << ",";
     }
-    else if (sql_is_open)
+    os << "{";
+    os << "\"name\":\"" << rx->name() << "\"";
+    os << ",\"id\":\"" << rx->id() << "\"";
+    os << ",\"enabled\":" << (is_enabled ? "true" : "false");
+    if (is_enabled)
     {
-      os << ((*it) == sm->activeSrx() ? "*" : ":");
+      os << ",\"sql_open\":" << (sql_is_open ? "true" : "false");
+      os << ",\"active\":" << (is_active ? "true" : "false");
+      os << ",\"siglev\":" << static_cast<int>(siglev);
     }
-    else
-    {
-      os << "_";
-    }
-    os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
-    os << " ";
+    os << "}";
   }
+  os << "]";
   publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
 

@@ -2534,23 +2534,54 @@ event data = Event specific data
 The following specific events exist.
 .TP
 .B Voter:sql_state
-Report the state of all squelches for all receivers. The format of the event
-specific data is:
+Report the state of all squelches and signal levels for all receivers. The
+event specific data is a JSON array containing an object for each receiver. The
+JSON data must all be on one line but is shown pretty printed below for easy
+reading. Example:
 .PP
-.RS 11
-<rx name><state><siglev> [<rx_name><state><siglev> ...]
+.RS 9
+  [
+    {
+      "name": "Rx1",
+      "id": "E",
+      "enabled": true,
+      "sql_open": true,
+      "active": true,
+      "siglev": 59
+    },
+    {
+      "name": "Rx2",
+      "id": "R",
+      "enabled": true,
+      "sql_open": true,
+      "active": false,
+      "siglev": 33
+    },
+    {
+      "name": "Rx3",
+      "id": "D",
+      "enabled": false
+    }
+  ]
 
-.RS -4
-where the different parts mean:
+.RS -2
+where the different fields mean:
 .PP
 .RS 4
-rx_name = Configuration file section name for receiver
+name = Configuration file section name for receiver
 .RS 0
-state = _ (sql closed), : (sql open), * (sql open and rx selected)
+id = The receiver ID from configuration
+.RS 0
+enabled = Set to true if the receiver is enabled
+.RS 0
+sql_open = Set to true if the squelch is open
+.RS 0
+active = Set to true if the receiver is the active one, selected by the voter
 .RS 0
 siglev = The measured signal level
 
 .RS -4
+The fields sql_open, active and siglev will be left out if enabled=false.
 .
 .SH FILES
 .
