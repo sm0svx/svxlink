@@ -115,6 +115,17 @@ class ReflectorClient
       STATE_CONNECTED, STATE_EXPECT_DISCONNECT
     } ConState;
 
+    struct Rx
+    {
+      std::string name;
+      //char        id;
+      uint8_t     siglev;
+      bool        enabled;
+      bool        sql_open;
+      bool        active;
+    };
+    typedef std::map<char, Rx> RxMap;
+
     class Filter
     {
       public:
@@ -352,7 +363,32 @@ class ReflectorClient
      * @brief   Get the monitored talk groups
      * @return  Returns the monitored talk groups
      */
-    const std::set<uint32_t>& monitoredTGs(void) const { return m_monitored_tgs; }
+    const std::set<uint32_t>& monitoredTGs(void) const
+    {
+      return m_monitored_tgs;
+    }
+
+    std::vector<char> rxIdList(void) const
+    {
+      std::vector<char> ids;
+      ids.reserve(m_rx_map.size());
+      for (RxMap::const_iterator it=m_rx_map.begin(); it!=m_rx_map.end(); ++it)
+      {
+        ids.push_back(it->first);
+      }
+      return ids;
+    }
+    const std::string& rxName(char id) { return m_rx_map[id].name; }
+    void setRxSiglev(char id, uint8_t siglev) { m_rx_map[id].siglev = siglev; }
+    uint8_t rxSiglev(char id) { return m_rx_map[id].siglev; }
+    void setRxEnabled(char id, bool enab) { m_rx_map[id].enabled = enab; }
+    bool rxEnabled(char id) { return m_rx_map[id].enabled; }
+    void setRxSqlOpen(char id, bool open) { m_rx_map[id].sql_open = open; }
+    bool rxSqlOpen(char id) { return m_rx_map[id].sql_open; }
+    void setRxActive(char id, bool active) { m_rx_map[id].active = active; }
+    bool rxActive(char id) { return m_rx_map[id].active; }
+    //RxMap& rxMap(void) { return m_rx_map; }
+    //const RxMap& rxMap(void) const { return m_rx_map; }
 
   private:
     static const uint16_t MIN_MAJOR_VER = 0;
@@ -365,28 +401,28 @@ class ReflectorClient
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 120;
 
     Async::FramedTcpConnection* m_con;
-    unsigned                  m_msg_type;
-    unsigned char             m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
-    ConState                  m_con_state;
-    Async::Timer              m_disc_timer;
-    std::string               m_callsign;
-    uint32_t                  m_client_id;
-    uint16_t                  m_remote_udp_port;
-    Async::Config*            m_cfg;
-    uint16_t                  m_next_udp_tx_seq;
-    uint16_t                  m_next_udp_rx_seq;
-    Async::Timer              m_heartbeat_timer;
-    unsigned                  m_heartbeat_tx_cnt;
-    unsigned                  m_heartbeat_rx_cnt;
-    unsigned                  m_udp_heartbeat_tx_cnt;
-    unsigned                  m_udp_heartbeat_rx_cnt;
-    Reflector*                m_reflector;
-    unsigned                  m_blocktime;
-    unsigned                  m_remaining_blocktime;
-    ProtoVer                  m_client_proto_ver;
-    std::vector<std::string>  m_supported_codecs;
-    uint32_t                  m_current_tg;
-    std::set<uint32_t>        m_monitored_tgs;
+    unsigned char               m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
+    ConState                    m_con_state;
+    Async::Timer                m_disc_timer;
+    std::string                 m_callsign;
+    uint32_t                    m_client_id;
+    uint16_t                    m_remote_udp_port;
+    Async::Config*              m_cfg;
+    uint16_t                    m_next_udp_tx_seq;
+    uint16_t                    m_next_udp_rx_seq;
+    Async::Timer                m_heartbeat_timer;
+    unsigned                    m_heartbeat_tx_cnt;
+    unsigned                    m_heartbeat_rx_cnt;
+    unsigned                    m_udp_heartbeat_tx_cnt;
+    unsigned                    m_udp_heartbeat_rx_cnt;
+    Reflector*                  m_reflector;
+    unsigned                    m_blocktime;
+    unsigned                    m_remaining_blocktime;
+    ProtoVer                    m_client_proto_ver;
+    std::vector<std::string>    m_supported_codecs;
+    uint32_t                    m_current_tg;
+    std::set<uint32_t>          m_monitored_tgs;
+    RxMap                       m_rx_map;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -396,8 +432,10 @@ class ReflectorClient
     void handleMsgAuthResponse(std::istream& is);
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
+    void handleClientInfoJson(std::istream& is);
     //void handleClientInfo(std::istream& is);
     void handleRequestQsy(std::istream& is);
+    void handleStateEvent(std::istream& is);
     void handleMsgError(std::istream& is);
     void sendError(const std::string& msg);
     void onDiscTimeout(Async::Timer *t);

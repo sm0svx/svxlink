@@ -130,7 +130,7 @@ bool ReflectorClient::TgFilter::operator()(ReflectorClient* client) const
 
 ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
                                  Async::Config *cfg)
-  : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
+  : m_con(con), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
     m_client_id(next_client_id++), m_remote_udp_port(0), m_cfg(cfg),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
@@ -312,6 +312,9 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgTgMonitor::TYPE:
       handleTgMonitor(ss);
       break;
+    case MsgClientInfoJson::TYPE:
+      handleClientInfoJson(ss);
+      break;
 #if 0
     case MsgClientInfo::TYPE:
       handleClientInfo(ss);
@@ -319,6 +322,9 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
 #endif
     case MsgRequestQsy::TYPE:
       handleRequestQsy(ss);
+      break;
+    case MsgStateEvent::TYPE:
+      handleStateEvent(ss);
       break;
     case MsgError::TYPE:
       handleMsgError(ss);
@@ -492,6 +498,20 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
 } /* ReflectorClient::handleTgMonitor */
 
 
+void ReflectorClient::handleClientInfoJson(std::istream& is)
+{
+  MsgClientInfoJson msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgClientInfoJson" << endl;
+    sendError("Illegal MsgClientInfoJson protocol message received");
+    return;
+  }
+  std::cout << "### handleClientInfoJson: " << msg.json() << std::endl;
+} /* ReflectorClient::handleClientInfoJson */
+
+
 void ReflectorClient::handleRequestQsy(std::istream& is)
 {
   MsgRequestQsy msg;
@@ -504,6 +524,24 @@ void ReflectorClient::handleRequestQsy(std::istream& is)
   }
   m_reflector->requestQsy(this, msg.tg());
 } /* ReflectorClient::handleRequestQsy */
+
+
+void ReflectorClient::handleStateEvent(std::istream& is)
+{
+  MsgStateEvent msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgStateEvent" << endl;
+    sendError("Illegal MsgStateEvent protocol message received");
+    return;
+  }
+  cout << "### ReflectorClient::handleStateEvent:"
+       << " src=" << msg.src()
+       << " name=" << msg.name()
+       << " msg=" << msg.msg()
+       << std::endl;
+} /* ReflectorClient::handleStateEvent */
 
 
 #if 0

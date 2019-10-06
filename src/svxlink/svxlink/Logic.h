@@ -302,8 +302,8 @@ class Logic : public LogicBase
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    void publishStateEvent(const std::string &event_name,
-                           const std::string &msg);
+    void onPublishStateEvent(const std::string &event_name,
+                             const std::string &msg);
     void detectedTone(float fq);
 
 };  /* class Logic */

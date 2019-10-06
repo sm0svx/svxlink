@@ -163,6 +163,22 @@ class ReflectorLogic : public LogicBase
      */
     virtual void remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg);
 
+    /**
+     * @brief   A linked logic has published a state event
+     * @param   logic       The pointer to the remote logic object
+     * @param   event_name  The name of the event
+     * @param   data The state update data
+     *
+     * This function is called when a linked logic has published a state update
+     * event message. A state update message is a free text message that can be
+     * used by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    virtual void remoteReceivedPublishStateEvent(
+        LogicBase *logic, const std::string& event_name,
+        const std::string& data);
+
   protected:
 
   private:

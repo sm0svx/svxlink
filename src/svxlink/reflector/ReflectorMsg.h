@@ -896,6 +896,58 @@ class MsgRequestQsy : public ReflectorMsgBase<109>
 }; /* MsgRequestQsy */
 
 
+/**
+@brief   Publish state event
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-04
+
+This message is sent by a client to inform the reflector server about a
+published state event.
+*/
+class MsgStateEvent : public ReflectorMsgBase<110>
+{
+  public:
+    MsgStateEvent(const std::string& src="", const std::string& name="",
+                  const std::string msg="")
+      : m_src(src), m_name(name), m_msg(msg) {}
+
+    const std::string& src(void) const { return m_src; }
+    const std::string& name(void) const { return m_name; }
+    const std::string& msg(void) const { return m_msg; }
+
+    ASYNC_MSG_MEMBERS(m_src, m_name, m_msg);
+
+  private:
+    std::string m_src;
+    std::string m_name;
+    std::string m_msg;
+}; /* MsgStateEvent */
+
+
+/**
+@brief   Client information
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-06
+
+This message is sent by a client to inform the reflector server about various
+facts about the client. JSON is used so that information can be added without
+redefining the message type.
+*/
+class MsgClientInfoJson : public ReflectorMsgBase<111>
+{
+  public:
+    MsgClientInfoJson(const std::string& json="")
+      : m_json(json) {}
+
+    const std::string& json(void) const { return m_json; }
+
+    ASYNC_MSG_MEMBERS(m_json);
+
+  private:
+    std::string m_json;
+}; /* MsgClientInfoJson */
+
+
 /***************************** UDP Messages *****************************/
 
 /**
@@ -975,13 +1027,72 @@ class MsgUdpAllSamplesFlushed : public ReflectorUdpMsgBase<103>
 
 
 /**
+@brief   Signal strength values
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-06
+
+This message is used by a client to send signal strength values to the
+reflector.
+*/
+class MsgUdpSignalStrengthValues : public ReflectorUdpMsgBase<104>
+{
+  public:
+    class Rx : public Async::Msg
+    {
+      public:
+        Rx(void) : m_id('?'), m_siglev(-1), m_flags(0) {}
+        Rx(char id, int16_t siglev) : m_id(id), m_siglev(siglev) {}
+        void setEnabled(bool is_enabled) { setBit(BIT_ENABLED, is_enabled); }
+        bool enabled(void) const { return getBit(BIT_ENABLED); }
+        void setSqlOpen(bool is_open) { setBit(BIT_SQL_OPEN, is_open); }
+        bool sqlOpen(void) const { return getBit(BIT_SQL_OPEN); }
+        void setActive(bool is_active) { setBit(BIT_ACTIVE, is_active); }
+        bool active(void) const { return getBit(BIT_ACTIVE); }
+        char id(void) const { return m_id; }
+        int16_t siglev(void) const { return m_siglev; }
+
+        ASYNC_MSG_MEMBERS(m_id, m_siglev, m_flags)
+
+      private:
+        typedef enum {BIT_ENABLED=0, BIT_SQL_OPEN, BIT_ACTIVE} Bit;
+
+        char              m_id;
+        uint8_t           m_siglev;
+        uint8_t           m_flags;
+
+        bool getBit(Bit bitno) const
+        {
+          uint8_t bit = 1 << static_cast<size_t>(bitno);
+          return (m_flags & bit) != 0;
+        }
+        void setBit(Bit bitno, bool is_enabled)
+        {
+          uint8_t bit = 1 << static_cast<size_t>(bitno);
+          m_flags = (m_flags & ~bit) | (is_enabled ? bit : 0);
+        }
+    };
+    typedef std::vector<Rx> Rxs;
+
+    MsgUdpSignalStrengthValues(void) {}
+    MsgUdpSignalStrengthValues(const Rxs& rxs) : m_rxs(rxs) {}
+    Rxs& rxs(void) { return m_rxs; }
+    void pushBack(const Rx& rx) { m_rxs.push_back(rx); }
+
+    ASYNC_MSG_MEMBERS(m_rxs)
+
+  private:
+    Rxs m_rxs;
+}; /* MsgUdpSignalStrengthValues */
+
+
+/**
 @brief	 Audio UDP network message V2
 @author  Tobias Blomberg / SM0SVX
 @date    2019-07-25
 
 This is the message used to transmit audio to the other side.
 */
-//class MsgUdpAudio : public ReflectorUdpMsgBase<104>
+//class MsgUdpAudio : public ReflectorUdpMsgBase<101>
 //{
 //  public:
 //    MsgUdpAudio(void) : m_tg(0) {}

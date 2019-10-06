@@ -237,6 +237,22 @@ class LogicBase : public sigc::trackable
     virtual void remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg) {}
 
     /**
+     * @brief   A linked logic has published a state event
+     * @param   logic       The pointer to the remote logic object
+     * @param   event_name  The name of the event
+     * @param   msg The state update message
+     *
+     * This function is called when a linked logic has published a state update
+     * event message. A state update message is a free text message that can be
+     * used by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    virtual void remoteReceivedPublishStateEvent(
+        LogicBase *logic, const std::string& event_name,
+        const std::string& msg) {}
+
+    /**
      * @brief   A signal that is emitted when the idle state change
      * @param   is_idle \em True if the logic core is idle or \em false if not
      */
@@ -247,6 +263,20 @@ class LogicBase : public sigc::trackable
      * @param   tg The new talk group
      */
     sigc::signal<void, uint32_t> receivedTgUpdated;
+
+    /**
+     * @brief   A signal that is emitted to publish a state update event
+     * @param   event_name  The name of the event
+     * @param   msg         The state update message
+     *
+     * This signal is emitted when this logic wish to publish a state update
+     * message. A state update message is a free text message that can be used
+     * by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
 
   protected:
     /**

@@ -10,8 +10,14 @@ set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
 include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
 
+# Find jsoncpp library
+find_package(jsoncpp REQUIRED)
+get_target_property(JSONCPP_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+include_directories(${JSONCPP_INC_PATH})
+set(LIBS ${LIBS} jsoncpp_lib)
+
 # Add project libraries
-set(LIBS ${LIBS} asynccpp asyncaudio asynccore svxmisc)
+set(LIBS asynccpp asyncaudio asynccore svxmisc ${LIBS})
 
 # Build the executable
 add_executable(svxreflector

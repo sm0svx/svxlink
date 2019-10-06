@@ -48,8 +48,14 @@ if(CURL_FOUND)
    message(FATAL_ERROR "Could not find the CURL library and development files.")
 endif(CURL_FOUND)
 
+# Find jsoncpp library
+find_package(jsoncpp REQUIRED)
+get_target_property(JSONCPP_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+include_directories(${JSONCPP_INC_PATH})
+set(LIBS ${LIBS} jsoncpp_lib)
+
 # Add project libraries
-set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
+set(LIBS trx locationinfo asynccpp asyncaudio asynccore svxmisc ${LIBS})
 
 # Build the executable
 add_executable(svxlink

@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <algorithm>
 #include <iterator>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -407,6 +408,54 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
 } /* ReflectorLogic::remoteReceivedTgUpdated */
 
 
+void ReflectorLogic::remoteReceivedPublishStateEvent(
+    LogicBase *logic, const std::string& event_name, const std::string& data)
+{
+  //cout << "### ReflectorLogic::remoteReceivedPublishStateEvent:"
+  //     << " logic=" << logic->name()
+  //     << " event_name=" << event_name
+  //     << " data=" << data
+  //     << endl;
+  //sendMsg(MsgStateEvent(logic->name(), event_name, msg));
+
+  if (event_name == "Voter:sql_state")
+  {
+    MsgUdpSignalStrengthValues msg;
+    std::istringstream is(data);
+    Json::Value rx_arr;
+    is >> rx_arr;
+    for (Json::Value::ArrayIndex i = 0; i != rx_arr.size(); i++)
+    {
+      Json::Value& rx_data = rx_arr[i];
+      std::string name = rx_data.get("name", "").asString();
+      std::string id_str = rx_data.get("id", "?").asString();
+      if (id_str.size() != 1)
+      {
+        return;
+      }
+      char id = id_str[0];
+      int siglev = rx_data.get("siglev", 0).asInt();
+      siglev = std::min(std::max(siglev, 0), 100);
+      bool is_enabled = rx_data.get("enabled", false).asBool();
+      bool sql_open = rx_data.get("sql_open", false).asBool();
+      bool is_active = rx_data.get("active", false).asBool();
+      //cout << "name: " << name << endl;
+      //cout << "id: " << id << endl;
+      //cout << "enabled: " << is_enabled << endl;
+      //cout << "sql_open: " << sql_open << endl;
+      //cout << "active: " << is_active << endl;
+      MsgUdpSignalStrengthValues::Rx rx(id, siglev);
+      rx.setEnabled(is_enabled);
+      rx.setSqlOpen(sql_open);
+      rx.setActive(is_active);
+      msg.pushBack(rx);
+    }
+    sendUdpMsg(msg);
+    //std::cout << "msg.packedSize()=" << msg.packedSize() << std::endl;
+  }
+} /* ReflectorLogic::remoteReceivedPublishStateEvent */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -665,6 +714,19 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
   m_con_state = STATE_CONNECTED;
+
+  Json::Value client_info;
+  client_info["rx"] = Json::Value(Json::objectValue);
+  std::ostringstream client_info_os;
+  //client_info_os << client_info;
+
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+  writer->write(client_info, &client_info_os);
+  MsgClientInfoJson client_info_msg(client_info_os.str());
+  sendMsg(client_info_msg);
 
 #if 0
     // Set up RX and TX sites client information

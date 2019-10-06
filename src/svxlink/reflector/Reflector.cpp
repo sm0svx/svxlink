@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncUdpSocket.h>
 #include <AsyncApplication.h>
 #include <common.h>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -545,6 +546,38 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       // Ignore
       break;
 
+    case MsgUdpSignalStrengthValues::TYPE:
+    {
+      if (!client->isBlocked())
+      {
+        MsgUdpSignalStrengthValues msg;
+        if (!msg.unpack(ss))
+        {
+          cerr << "*** WARNING[" << client->callsign()
+               << "]: Could not unpack incoming "
+                  "MsgUdpSignalStrengthValues message" << endl;
+          return;
+        }
+        typedef MsgUdpSignalStrengthValues::Rxs::const_iterator RxsIter;
+        for (RxsIter it = msg.rxs().begin(); it != msg.rxs().end(); ++it)
+        {
+          const MsgUdpSignalStrengthValues::Rx& rx = *it;
+          //std::cout << "### MsgUdpSignalStrengthValues:"
+          //  << " id=" << rx.id()
+          //  << " siglev=" << rx.siglev()
+          //  << " enabled=" << rx.enabled()
+          //  << " sql_open=" << rx.sqlOpen()
+          //  << " active=" << rx.active()
+          //  << std::endl;
+          client->setRxSiglev(rx.id(), rx.siglev());
+          client->setRxEnabled(rx.id(), rx.enabled());
+          client->setRxSqlOpen(rx.id(), rx.sqlOpen());
+          client->setRxActive(rx.id(), rx.active());
+        }
+      }
+      break;
+    }
+
     default:
       // Better ignoring unknown messages to make it easier to add messages to
       // the protocol but still be backwards compatible
@@ -619,55 +652,46 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     return;
   }
 
-  std::ostringstream os;
-  os << "{"
-     //<< "\"method\":\"" << req.method << "\","
-     //<< "\"target\":\"" << req.target << "\","
-     //<< "\"headers\":{"
-     ;
-  //Async::HttpServerConnection::Headers::const_iterator it;
-  //for (it=req.headers.begin(); it!=req.headers.end(); ++it)
-  //{
-  //  std::cout << (*it).first << ": " << (*it).second << std::endl;
-  //  if (it != req.headers.begin())
-  //  {
-  //    os << ",";
-  //  }
-  //  os << "\"" << (*it).first << "\":\"" << (*it).second << "\"";
-  //}
-  //os << "},";
+  Json::Value status;
+  status["nodes"] = Json::Value(Json::objectValue);
   ReflectorClientMap::const_iterator client_it;
-  os << "\"nodes\":{";
   for (client_it = m_client_map.begin(); client_it != m_client_map.end(); ++client_it)
   {
-    if (client_it != m_client_map.begin())
-    {
-      os << ",";
-    }
     ReflectorClient* client = client_it->second;
-    os << "\"" << client->callsign() << "\":{";
-    os << "\"addr\":\"" << client->remoteHost() << "\",";
-    os << "\"protoVer\":{\"majorVer\":" << client->protoVer().majorVer() << ",\"minorVer\":" << client->protoVer().minorVer() << "},";
-    os << "\"tg\":\"" << client->currentTG() << "\",";
-    os << "\"monitoredTGs\":[";
+    Json::Value node(Json::objectValue);
+    node["addr"] = client->remoteHost().toString();
+    node["protoVer"]["majorVer"] = client->protoVer().majorVer();
+    node["protoVer"]["minorVer"] = client->protoVer().minorVer();
+    node["tg"] = client->currentTG();
+    Json::Value tgs = Json::Value(Json::arrayValue);
     const std::set<uint32_t>& monitored_tgs = client->monitoredTGs();
     for (std::set<uint32_t>::const_iterator mtg_it=monitored_tgs.begin();
          mtg_it!=monitored_tgs.end(); ++mtg_it)
     {
-      if (mtg_it != monitored_tgs.begin())
-      {
-        os << ",";
-      }
-      os << *mtg_it;
+      tgs.append(*mtg_it);
     }
-    os << "],";
+    node["monitoredTGs"] = tgs;
     bool is_talker =
       TGHandler::instance()->talkerForTG(client->currentTG()) == client;
-    os << "\"isTalker\":" << (is_talker ? "true" : "false");
-    os << "}";
+    node["isTalker"] = is_talker;
+
+    std::vector<char> rx_ids = client->rxIdList();
+    for (std::vector<char>::const_iterator it=rx_ids.begin();
+         it!=rx_ids.end(); ++it)
+    {
+      Json::Value rx(Json::objectValue);
+      std::string id_str(&(*it), &(*it)+1);
+      rx["id"] = id_str;
+      rx["siglev"] = client->rxSiglev(*it);
+      rx["enabled"] = client->rxEnabled(*it);
+      rx["sql_open"] = client->rxSqlOpen(*it);
+      rx["active"] = client->rxActive(*it);
+      node["rx"][id_str] = rx;
+    }
+    status["nodes"][client->callsign()] = node;
   }
-  os << "}";
-  os << "}";
+  std::ostringstream os;
+  os << status;
   res.setContent("application/json", os.str());
   if (req.method == "HEAD")
   {
