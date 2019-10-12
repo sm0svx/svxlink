@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sys/time.h>
 #include <string>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -242,6 +243,7 @@ class ReflectorLogic : public LogicBase
     bool                              m_tg_local_activity;
     uint32_t                          m_last_qsy;
     MonitorTgsSet                     m_monitor_tgs;
+    Json::Value                       m_client_info;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);

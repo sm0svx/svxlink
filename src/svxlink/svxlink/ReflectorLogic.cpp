@@ -32,10 +32,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <algorithm>
 #include <iterator>
-#include <json/json.h>
 
 
 /****************************************************************************
@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpClient.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncAudioPassthrough.h>
-//#include <version/SVXLINK.h>
+#include <version/SVXLINK.h>
 
 
 /****************************************************************************
@@ -300,6 +300,42 @@ bool ReflectorLogic::initialize(void)
   {
     return false;
   }
+
+  std::string client_info_file;
+  if (cfg().getValue(name(), "CLIENT_INFO_FILE", client_info_file))
+  {
+    std::ifstream client_info_is(client_info_file, std::ios::in);
+    if (client_info_is.good())
+    {
+      try
+      {
+        if (!(client_info_is >> m_client_info))
+        {
+          std::cerr << "*** ERROR: Failure while reading client information file "
+                       "\"" << client_info_file << "\""
+                    << std::endl;
+          return false;
+        }
+      }
+      catch (const Json::Exception& e)
+      {
+        std::cerr << "*** ERROR: Failure while reading client information "
+                     "file \"" << client_info_file << "\": "
+                  << e.what()
+                  << std::endl;
+        return false;
+      }
+    }
+    else
+    {
+      std::cerr << "*** ERROR: Could not open client information file "
+                   "\"" << client_info_file << "\""
+                << std::endl;
+      return false;
+    }
+  }
+  m_client_info["sw"] = "SvxLink";
+  m_client_info["swVer"] = SVXLINK_VERSION;
 
   if (!LogicBase::initialize())
   {
@@ -715,17 +751,13 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 
   m_con_state = STATE_CONNECTED;
 
-  Json::Value client_info;
-  client_info["rx"] = Json::Value(Json::objectValue);
   std::ostringstream client_info_os;
-  //client_info_os << client_info;
-
   Json::StreamWriterBuilder builder;
   builder["commentStyle"] = "None";
   builder["indentation"] = ""; //The JSON document is written on a single line
   std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-  writer->write(client_info, &client_info_os);
-  MsgClientInfoJson client_info_msg(client_info_os.str());
+  writer->write(m_client_info, &client_info_os);
+  MsgClientInfo client_info_msg(client_info_os.str());
   sendMsg(client_info_msg);
 
 #if 0

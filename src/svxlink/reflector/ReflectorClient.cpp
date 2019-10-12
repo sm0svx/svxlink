@@ -312,8 +312,8 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgTgMonitor::TYPE:
       handleTgMonitor(ss);
       break;
-    case MsgClientInfoJson::TYPE:
-      handleClientInfoJson(ss);
+    case MsgClientInfo::TYPE:
+      handleClientInfo(ss);
       break;
 #if 0
     case MsgClientInfo::TYPE:
@@ -498,18 +498,29 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
 } /* ReflectorClient::handleTgMonitor */
 
 
-void ReflectorClient::handleClientInfoJson(std::istream& is)
+void ReflectorClient::handleClientInfo(std::istream& is)
 {
-  MsgClientInfoJson msg;
+  MsgClientInfo msg;
   if (!msg.unpack(is))
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " ERROR: Could not unpack MsgClientInfoJson" << endl;
-    sendError("Illegal MsgClientInfoJson protocol message received");
+         << " ERROR: Could not unpack MsgClientInfo" << endl;
+    sendError("Illegal MsgClientInfo protocol message received");
     return;
   }
-  std::cout << "### handleClientInfoJson: " << msg.json() << std::endl;
-} /* ReflectorClient::handleClientInfoJson */
+  //std::cout << "### handleClientInfo: " << msg.json() << std::endl;
+  try
+  {
+    std::istringstream is(msg.json());
+    is >> m_client_info;
+  }
+  catch (const Json::Exception& e)
+  {
+    std::cerr << "*** WARNING[" << m_callsign
+              << "]: Failed to parse MsgClientInfo JSON object: "
+              << e.what() << std::endl;
+  }
+} /* ReflectorClient::handleClientInfo */
 
 
 void ReflectorClient::handleRequestQsy(std::istream& is)

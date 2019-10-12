@@ -933,10 +933,10 @@ This message is sent by a client to inform the reflector server about various
 facts about the client. JSON is used so that information can be added without
 redefining the message type.
 */
-class MsgClientInfoJson : public ReflectorMsgBase<111>
+class MsgClientInfo : public ReflectorMsgBase<111>
 {
   public:
-    MsgClientInfoJson(const std::string& json="")
+    MsgClientInfo(const std::string& json="")
       : m_json(json) {}
 
     const std::string& json(void) const { return m_json; }
@@ -945,7 +945,7 @@ class MsgClientInfoJson : public ReflectorMsgBase<111>
 
   private:
     std::string m_json;
-}; /* MsgClientInfoJson */
+}; /* MsgClientInfo */
 
 
 /***************************** UDP Messages *****************************/

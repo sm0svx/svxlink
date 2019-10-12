@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -378,6 +379,10 @@ class ReflectorClient
       }
       return ids;
     }
+    bool rxExist(char rx_id) const
+    {
+      return m_rx_map.find(rx_id) != m_rx_map.end();
+    }
     const std::string& rxName(char id) { return m_rx_map[id].name; }
     void setRxSiglev(char id, uint8_t siglev) { m_rx_map[id].siglev = siglev; }
     uint8_t rxSiglev(char id) { return m_rx_map[id].siglev; }
@@ -389,6 +394,7 @@ class ReflectorClient
     bool rxActive(char id) { return m_rx_map[id].active; }
     //RxMap& rxMap(void) { return m_rx_map; }
     //const RxMap& rxMap(void) const { return m_rx_map; }
+    const Json::Value& clientInfo(void) const { return m_client_info; }
 
   private:
     static const uint16_t MIN_MAJOR_VER = 0;
@@ -423,6 +429,7 @@ class ReflectorClient
     uint32_t                    m_current_tg;
     std::set<uint32_t>          m_monitored_tgs;
     RxMap                       m_rx_map;
+    Json::Value                 m_client_info;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -432,8 +439,7 @@ class ReflectorClient
     void handleMsgAuthResponse(std::istream& is);
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
-    void handleClientInfoJson(std::istream& is);
-    //void handleClientInfo(std::istream& is);
+    void handleClientInfo(std::istream& is);
     void handleRequestQsy(std::istream& is);
     void handleStateEvent(std::istream& is);
     void handleMsgError(std::istream& is);

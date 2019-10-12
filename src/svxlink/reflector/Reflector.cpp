@@ -658,7 +658,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   for (client_it = m_client_map.begin(); client_it != m_client_map.end(); ++client_it)
   {
     ReflectorClient* client = client_it->second;
-    Json::Value node(Json::objectValue);
+    Json::Value node(client->clientInfo());
     node["addr"] = client->remoteHost().toString();
     node["protoVer"]["majorVer"] = client->protoVer().majorVer();
     node["protoVer"]["minorVer"] = client->protoVer().minorVer();
@@ -675,19 +675,52 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
       TGHandler::instance()->talkerForTG(client->currentTG()) == client;
     node["isTalker"] = is_talker;
 
-    std::vector<char> rx_ids = client->rxIdList();
-    for (std::vector<char>::const_iterator it=rx_ids.begin();
-         it!=rx_ids.end(); ++it)
+    if (node.isMember("qth") && node["qth"].isArray())
     {
-      Json::Value rx(Json::objectValue);
-      std::string id_str(&(*it), &(*it)+1);
-      rx["id"] = id_str;
-      rx["siglev"] = client->rxSiglev(*it);
-      rx["enabled"] = client->rxEnabled(*it);
-      rx["sql_open"] = client->rxSqlOpen(*it);
-      rx["active"] = client->rxActive(*it);
-      node["rx"][id_str] = rx;
+      //std::cout << "### Found qth" << std::endl;
+      Json::Value& qths(node["qth"]);
+      for (Json::Value::ArrayIndex i=0; i<qths.size(); ++i)
+      {
+        Json::Value& qth(qths[i]);
+        if (qth.isMember("rx") && qth["rx"].isObject())
+        {
+          //std::cout << "### Found rx" << std::endl;
+          Json::Value::Members rxs(qth["rx"].getMemberNames());
+          for (Json::Value::Members::const_iterator it=rxs.begin(); it!=rxs.end(); ++it)
+          {
+            //std::cout << "### member=" << *it << std::endl;
+            const std::string& rx_id_str(*it);
+            if (rx_id_str.size() == 1)
+            {
+              char rx_id(rx_id_str[0]);
+              Json::Value& rx(qth["rx"][rx_id_str]);
+              //rx_id_map[rx_id_str[0]] = &rx;
+              if (client->rxExist(rx_id))
+              {
+                rx["siglev"] = client->rxSiglev(rx_id);
+                rx["enabled"] = client->rxEnabled(rx_id);
+                rx["sql_open"] = client->rxSqlOpen(rx_id);
+                rx["active"] = client->rxActive(rx_id);
+              }
+            }
+          }
+        }
+      }
     }
+
+    //std::vector<char> rx_ids = client->rxIdList();
+    //for (std::vector<char>::const_iterator it=rx_ids.begin();
+    //     it!=rx_ids.end(); ++it)
+    //{
+    //  Json::Value rx(Json::objectValue);
+    //  std::string id_str(&(*it), &(*it)+1);
+    //  rx["id"] = id_str;
+    //  rx["siglev"] = client->rxSiglev(*it);
+    //  rx["enabled"] = client->rxEnabled(*it);
+    //  rx["sql_open"] = client->rxSqlOpen(*it);
+    //  rx["active"] = client->rxActive(*it);
+    //  node["rxStatus"][id_str] = rx;
+    //}
     status["nodes"][client->callsign()] = node;
   }
   std::ostringstream os;
