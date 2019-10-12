@@ -54,7 +54,7 @@ endif(CURL_FOUND)
 #include_directories(${JSONCPP_INC_PATH})
 #set(LIBS ${LIBS} jsoncpp_lib)
 pkg_check_modules (JSONCPP REQUIRED jsoncpp)
-include_directories(${JSONCPP_INCLUDES})
+include_directories(${JSONCPP_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 
 # Add project libraries
