@@ -304,7 +304,7 @@ bool ReflectorLogic::initialize(void)
   std::string client_info_file;
   if (cfg().getValue(name(), "CLIENT_INFO_FILE", client_info_file))
   {
-    std::ifstream client_info_is(client_info_file, std::ios::in);
+    std::ifstream client_info_is(client_info_file.c_str(), std::ios::in);
     if (client_info_is.good())
     {
       try
@@ -755,8 +755,9 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   Json::StreamWriterBuilder builder;
   builder["commentStyle"] = "None";
   builder["indentation"] = ""; //The JSON document is written on a single line
-  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+  Json::StreamWriter* writer = builder.newStreamWriter();
   writer->write(m_client_info, &client_info_os);
+  delete writer;
   MsgClientInfo client_info_msg(client_info_os.str());
   sendMsg(client_info_msg);
 

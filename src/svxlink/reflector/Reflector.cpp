@@ -694,7 +694,6 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
             {
               char rx_id(rx_id_str[0]);
               Json::Value& rx(qth["rx"][rx_id_str]);
-              //rx_id_map[rx_id_str[0]] = &rx;
               if (client->rxExist(rx_id))
               {
                 rx["siglev"] = client->rxSiglev(rx_id);
@@ -707,24 +706,15 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
         }
       }
     }
-
-    //std::vector<char> rx_ids = client->rxIdList();
-    //for (std::vector<char>::const_iterator it=rx_ids.begin();
-    //     it!=rx_ids.end(); ++it)
-    //{
-    //  Json::Value rx(Json::objectValue);
-    //  std::string id_str(&(*it), &(*it)+1);
-    //  rx["id"] = id_str;
-    //  rx["siglev"] = client->rxSiglev(*it);
-    //  rx["enabled"] = client->rxEnabled(*it);
-    //  rx["sql_open"] = client->rxSqlOpen(*it);
-    //  rx["active"] = client->rxActive(*it);
-    //  node["rxStatus"][id_str] = rx;
-    //}
     status["nodes"][client->callsign()] = node;
   }
   std::ostringstream os;
-  os << status;
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  writer->write(status, &os);
+  delete writer;
   res.setContent("application/json", os.str());
   if (req.method == "HEAD")
   {
