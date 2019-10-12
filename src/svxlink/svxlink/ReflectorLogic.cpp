@@ -475,11 +475,6 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
       bool is_enabled = rx_data.get("enabled", false).asBool();
       bool sql_open = rx_data.get("sql_open", false).asBool();
       bool is_active = rx_data.get("active", false).asBool();
-      //cout << "name: " << name << endl;
-      //cout << "id: " << id << endl;
-      //cout << "enabled: " << is_enabled << endl;
-      //cout << "sql_open: " << sql_open << endl;
-      //cout << "active: " << is_active << endl;
       MsgUdpSignalStrengthValues::Rx rx(id, siglev);
       rx.setEnabled(is_enabled);
       rx.setSqlOpen(sql_open);
@@ -487,7 +482,29 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
       msg.pushBack(rx);
     }
     sendUdpMsg(msg);
-    //std::cout << "msg.packedSize()=" << msg.packedSize() << std::endl;
+  }
+  else if (event_name == "LocalRx:sql_state")
+  {
+    MsgUdpSignalStrengthValues msg;
+    std::istringstream is(data);
+    Json::Value rx_data;
+    is >> rx_data;
+    std::string name = rx_data.get("name", "").asString();
+    std::string id_str = rx_data.get("id", "?").asString();
+    if (id_str.size() != 1)
+    {
+      return;
+    }
+    char id = id_str[0];
+    int siglev = rx_data.get("siglev", 0).asInt();
+    siglev = std::min(std::max(siglev, 0), 100);
+    bool sql_open = rx_data.get("sql_open", false).asBool();
+    MsgUdpSignalStrengthValues::Rx rx(id, siglev);
+    rx.setEnabled(true);
+    rx.setSqlOpen(sql_open);
+    rx.setActive(true);
+    msg.pushBack(rx);
+    sendUdpMsg(msg);
   }
 } /* ReflectorLogic::remoteReceivedPublishStateEvent */
 
