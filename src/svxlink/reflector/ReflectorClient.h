@@ -440,6 +440,7 @@ class ReflectorClient
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
     void handleNodeInfo(std::istream& is);
+    void handleMsgSignalStrengthValues(std::istream& is);
     void handleRequestQsy(std::istream& is);
     void handleStateEvent(std::istream& is);
     void handleMsgError(std::istream& is);

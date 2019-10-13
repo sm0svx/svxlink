@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -948,6 +948,80 @@ class MsgNodeInfo : public ReflectorMsgBase<111>
 }; /* MsgNodeInfo */
 
 
+/**
+@brief   Signal strength values base
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-13
+
+This is the base class used by the client for sending signal strength values to
+the reflector. This class defines the actual message contents. It should not be
+used directly but instead either the TCP- or UDP-version should be used.
+*/
+class MsgSignalStrengthValuesBase
+{
+  public:
+    class Rx : public Async::Msg
+    {
+      public:
+        Rx(void) : m_id('?'), m_siglev(-1), m_flags(0) {}
+        Rx(char id, int16_t siglev) : m_id(id), m_siglev(siglev) {}
+        void setEnabled(bool is_enabled) { setBit(BIT_ENABLED, is_enabled); }
+        bool enabled(void) const { return getBit(BIT_ENABLED); }
+        void setSqlOpen(bool is_open) { setBit(BIT_SQL_OPEN, is_open); }
+        bool sqlOpen(void) const { return getBit(BIT_SQL_OPEN); }
+        void setActive(bool is_active) { setBit(BIT_ACTIVE, is_active); }
+        bool active(void) const { return getBit(BIT_ACTIVE); }
+        char id(void) const { return m_id; }
+        int16_t siglev(void) const { return m_siglev; }
+
+        ASYNC_MSG_MEMBERS(m_id, m_siglev, m_flags)
+
+      private:
+        typedef enum {BIT_ENABLED=0, BIT_SQL_OPEN, BIT_ACTIVE} Bit;
+
+        char              m_id;
+        uint8_t           m_siglev;
+        uint8_t           m_flags;
+
+        bool getBit(Bit bitno) const
+        {
+          uint8_t bit = 1 << static_cast<size_t>(bitno);
+          return (m_flags & bit) != 0;
+        }
+        void setBit(Bit bitno, bool is_enabled)
+        {
+          uint8_t bit = 1 << static_cast<size_t>(bitno);
+          m_flags = (m_flags & ~bit) | (is_enabled ? bit : 0);
+        }
+    };
+    typedef std::vector<Rx> Rxs;
+
+    MsgSignalStrengthValuesBase(void) {}
+    MsgSignalStrengthValuesBase(const Rxs& rxs) : m_rxs(rxs) {}
+    Rxs& rxs(void) { return m_rxs; }
+    void pushBack(const Rx& rx) { m_rxs.push_back(rx); }
+
+  protected:
+    Rxs m_rxs;
+}; /* MsgSignalStrengthValuesBase */
+
+
+/**
+@brief   Signal strength values
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-13
+
+This message is used by a client to send signal strength values to the
+reflector.
+*/
+struct MsgSignalStrengthValues
+  : public MsgSignalStrengthValuesBase, public ReflectorMsgBase<112>
+{
+  ASYNC_MSG_MEMBERS(m_rxs)
+}; /* MsgSignalStrengthValues */
+
+
+
 /***************************** UDP Messages *****************************/
 
 /**
@@ -1034,57 +1108,14 @@ class MsgUdpAllSamplesFlushed : public ReflectorUdpMsgBase<103>
 This message is used by a client to send signal strength values to the
 reflector.
 */
-class MsgUdpSignalStrengthValues : public ReflectorUdpMsgBase<104>
+struct MsgUdpSignalStrengthValues
+  : public MsgSignalStrengthValuesBase, public ReflectorUdpMsgBase<104>
 {
-  public:
-    class Rx : public Async::Msg
-    {
-      public:
-        Rx(void) : m_id('?'), m_siglev(-1), m_flags(0) {}
-        Rx(char id, int16_t siglev) : m_id(id), m_siglev(siglev) {}
-        void setEnabled(bool is_enabled) { setBit(BIT_ENABLED, is_enabled); }
-        bool enabled(void) const { return getBit(BIT_ENABLED); }
-        void setSqlOpen(bool is_open) { setBit(BIT_SQL_OPEN, is_open); }
-        bool sqlOpen(void) const { return getBit(BIT_SQL_OPEN); }
-        void setActive(bool is_active) { setBit(BIT_ACTIVE, is_active); }
-        bool active(void) const { return getBit(BIT_ACTIVE); }
-        char id(void) const { return m_id; }
-        int16_t siglev(void) const { return m_siglev; }
-
-        ASYNC_MSG_MEMBERS(m_id, m_siglev, m_flags)
-
-      private:
-        typedef enum {BIT_ENABLED=0, BIT_SQL_OPEN, BIT_ACTIVE} Bit;
-
-        char              m_id;
-        uint8_t           m_siglev;
-        uint8_t           m_flags;
-
-        bool getBit(Bit bitno) const
-        {
-          uint8_t bit = 1 << static_cast<size_t>(bitno);
-          return (m_flags & bit) != 0;
-        }
-        void setBit(Bit bitno, bool is_enabled)
-        {
-          uint8_t bit = 1 << static_cast<size_t>(bitno);
-          m_flags = (m_flags & ~bit) | (is_enabled ? bit : 0);
-        }
-    };
-    typedef std::vector<Rx> Rxs;
-
-    MsgUdpSignalStrengthValues(void) {}
-    MsgUdpSignalStrengthValues(const Rxs& rxs) : m_rxs(rxs) {}
-    Rxs& rxs(void) { return m_rxs; }
-    void pushBack(const Rx& rx) { m_rxs.push_back(rx); }
-
-    ASYNC_MSG_MEMBERS(m_rxs)
-
-  private:
-    Rxs m_rxs;
+  ASYNC_MSG_MEMBERS(m_rxs)
 }; /* MsgUdpSignalStrengthValues */
 
 
+#if 0
 /**
 @brief	 Audio UDP network message V2
 @author  Tobias Blomberg / SM0SVX
@@ -1092,30 +1123,31 @@ class MsgUdpSignalStrengthValues : public ReflectorUdpMsgBase<104>
 
 This is the message used to transmit audio to the other side.
 */
-//class MsgUdpAudio : public ReflectorUdpMsgBase<101>
-//{
-//  public:
-//    MsgUdpAudio(void) : m_tg(0) {}
-//    MsgUdpAudio(const MsgUdpAudioV1& msg_v1)
-//      : m_tg(0), m_audio_data(msg_v1.audioData()) {}
-//    MsgUdpAudio(uint32_t tg, const void *buf, int count)
-//      : m_tg(tg)
-//    {
-//      if (count > 0)
-//      {
-//        const uint8_t *bbuf = reinterpret_cast<const uint8_t*>(buf);
-//        m_audio_data.assign(bbuf, bbuf+count);
-//      }
-//    }
-//    uint32_t tg(void) { return m_tg; }
-//    std::vector<uint8_t>& audioData(void) { return m_audio_data; }
-//
-//    ASYNC_MSG_MEMBERS(m_tg, m_audio_data)
-//
-//  private:
-//    uint32_t              m_tg;
-//    std::vector<uint8_t>  m_audio_data;
-//}; /* MsgUdpAudio */
+class MsgUdpAudio : public ReflectorUdpMsgBase<101>
+{
+  public:
+    MsgUdpAudio(void) : m_tg(0) {}
+    MsgUdpAudio(const MsgUdpAudioV1& msg_v1)
+      : m_tg(0), m_audio_data(msg_v1.audioData()) {}
+    MsgUdpAudio(uint32_t tg, const void *buf, int count)
+      : m_tg(tg)
+    {
+      if (count > 0)
+      {
+        const uint8_t *bbuf = reinterpret_cast<const uint8_t*>(buf);
+        m_audio_data.assign(bbuf, bbuf+count);
+      }
+    }
+    uint32_t tg(void) { return m_tg; }
+    std::vector<uint8_t>& audioData(void) { return m_audio_data; }
+
+    ASYNC_MSG_MEMBERS(m_tg, m_audio_data)
+
+  private:
+    uint32_t              m_tg;
+    std::vector<uint8_t>  m_audio_data;
+}; /* MsgUdpAudio */
+#endif
 
 
 #endif /* REFLECTOR_MSG_INCLUDED */

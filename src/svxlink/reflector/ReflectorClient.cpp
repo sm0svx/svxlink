@@ -315,6 +315,9 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgNodeInfo::TYPE:
       handleNodeInfo(ss);
       break;
+    case MsgSignalStrengthValues::TYPE:
+      handleMsgSignalStrengthValues(ss);
+      break;
 #if 0
     case MsgNodeInfo::TYPE:
       handleNodeInfo(ss);
@@ -521,6 +524,35 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
               << e.what() << std::endl;
   }
 } /* ReflectorClient::handleNodeInfo */
+
+
+void ReflectorClient::handleMsgSignalStrengthValues(std::istream& is)
+{
+  MsgSignalStrengthValues msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** WARNING[" << callsign()
+         << "]: Could not unpack incoming "
+            "MsgSignalStrengthValues message" << endl;
+    return;
+  }
+  typedef MsgSignalStrengthValues::Rxs::const_iterator RxsIter;
+  for (RxsIter it = msg.rxs().begin(); it != msg.rxs().end(); ++it)
+  {
+    const MsgSignalStrengthValues::Rx& rx = *it;
+    //std::cout << "### MsgSignalStrengthValues:"
+    //  << " id=" << rx.id()
+    //  << " siglev=" << rx.siglev()
+    //  << " enabled=" << rx.enabled()
+    //  << " sql_open=" << rx.sqlOpen()
+    //  << " active=" << rx.active()
+    //  << std::endl;
+    setRxSiglev(rx.id(), rx.siglev());
+    setRxEnabled(rx.id(), rx.enabled());
+    setRxSqlOpen(rx.id(), rx.sqlOpen());
+    setRxActive(rx.id(), rx.active());
+  }
+} /* ReflectorClient::handleMsgSignalStrengthValues */
 
 
 void ReflectorClient::handleRequestQsy(std::istream& is)
