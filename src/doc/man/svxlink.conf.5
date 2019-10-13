@@ -636,13 +636,13 @@ TG activations. If the same TG is remotely activated repeatedly it will not be
 announced until at least the number of seconds specified in this configuration
 variable have passed.
 .TP
-.B CLIENT_INFO_FILE
+.B NODE_INFO_FILE
 The configuration file to use for sending information regarding this client to
 the reflector server. This is not a required configuration. It is mostly
 free-form JSON but the general structure should be kept so that SvxLink and
 the reflector server can fill in dynamic information about the node like signal
-strengths for receivers. Use the default client_info.json as a template. You
-can add information rather freely but don't change the structure.
+strengths for receivers. Use the default node_info.json as a template. You
+can add more information rather freely but don't change the overall structure.
 .P
 It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,

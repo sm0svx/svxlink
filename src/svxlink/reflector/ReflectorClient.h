@@ -394,7 +394,7 @@ class ReflectorClient
     bool rxActive(char id) { return m_rx_map[id].active; }
     //RxMap& rxMap(void) { return m_rx_map; }
     //const RxMap& rxMap(void) const { return m_rx_map; }
-    const Json::Value& clientInfo(void) const { return m_client_info; }
+    const Json::Value& nodeInfo(void) const { return m_node_info; }
 
   private:
     static const uint16_t MIN_MAJOR_VER = 0;
@@ -429,7 +429,7 @@ class ReflectorClient
     uint32_t                    m_current_tg;
     std::set<uint32_t>          m_monitored_tgs;
     RxMap                       m_rx_map;
-    Json::Value                 m_client_info;
+    Json::Value                 m_node_info;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -439,7 +439,7 @@ class ReflectorClient
     void handleMsgAuthResponse(std::istream& is);
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
-    void handleClientInfo(std::istream& is);
+    void handleNodeInfo(std::istream& is);
     void handleRequestQsy(std::istream& is);
     void handleStateEvent(std::istream& is);
     void handleMsgError(std::istream& is);

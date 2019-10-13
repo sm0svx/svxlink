@@ -243,7 +243,7 @@ class ReflectorLogic : public LogicBase
     bool                              m_tg_local_activity;
     uint32_t                          m_last_qsy;
     MonitorTgsSet                     m_monitor_tgs;
-    Json::Value                       m_client_info;
+    Json::Value                       m_node_info;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);

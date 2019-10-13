@@ -301,26 +301,26 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
-  std::string client_info_file;
-  if (cfg().getValue(name(), "CLIENT_INFO_FILE", client_info_file))
+  std::string node_info_file;
+  if (cfg().getValue(name(), "NODE_INFO_FILE", node_info_file))
   {
-    std::ifstream client_info_is(client_info_file.c_str(), std::ios::in);
-    if (client_info_is.good())
+    std::ifstream node_info_is(node_info_file.c_str(), std::ios::in);
+    if (node_info_is.good())
     {
       try
       {
-        if (!(client_info_is >> m_client_info))
+        if (!(node_info_is >> m_node_info))
         {
-          std::cerr << "*** ERROR: Failure while reading client information file "
-                       "\"" << client_info_file << "\""
+          std::cerr << "*** ERROR: Failure while reading node information file "
+                       "\"" << node_info_file << "\""
                     << std::endl;
           return false;
         }
       }
       catch (const Json::Exception& e)
       {
-        std::cerr << "*** ERROR: Failure while reading client information "
-                     "file \"" << client_info_file << "\": "
+        std::cerr << "*** ERROR: Failure while reading node information "
+                     "file \"" << node_info_file << "\": "
                   << e.what()
                   << std::endl;
         return false;
@@ -328,14 +328,14 @@ bool ReflectorLogic::initialize(void)
     }
     else
     {
-      std::cerr << "*** ERROR: Could not open client information file "
-                   "\"" << client_info_file << "\""
+      std::cerr << "*** ERROR: Could not open node information file "
+                   "\"" << node_info_file << "\""
                 << std::endl;
       return false;
     }
   }
-  m_client_info["sw"] = "SvxLink";
-  m_client_info["swVer"] = SVXLINK_VERSION;
+  m_node_info["sw"] = "SvxLink";
+  m_node_info["swVer"] = SVXLINK_VERSION;
 
   if (!LogicBase::initialize())
   {
@@ -768,20 +768,20 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 
   m_con_state = STATE_CONNECTED;
 
-  std::ostringstream client_info_os;
+  std::ostringstream node_info_os;
   Json::StreamWriterBuilder builder;
   builder["commentStyle"] = "None";
   builder["indentation"] = ""; //The JSON document is written on a single line
   Json::StreamWriter* writer = builder.newStreamWriter();
-  writer->write(m_client_info, &client_info_os);
+  writer->write(m_node_info, &node_info_os);
   delete writer;
-  MsgClientInfo client_info_msg(client_info_os.str());
-  sendMsg(client_info_msg);
+  MsgNodeInfo node_info_msg(node_info_os.str());
+  sendMsg(node_info_msg);
 
 #if 0
-    // Set up RX and TX sites client information
-  MsgClientInfo::RxSite rx_site;
-  MsgClientInfo::TxSite tx_site;
+    // Set up RX and TX sites node information
+  MsgNodeInfo::RxSite rx_site;
+  MsgNodeInfo::TxSite tx_site;
   rx_site.setRxName("Rx1");
   tx_site.setTxName("Tx1");
   rx_site.setQthName(cfg().getValue("LocationInfo", "QTH_NAME"));
@@ -811,17 +811,17 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   float tx_power = 0.0f;
   cfg().getValue("LocationInfo", "TX_POWER", tx_power);
   tx_site.setTxPower(tx_power);
-  MsgClientInfo::TxSites tx_sites;
+  MsgNodeInfo::TxSites tx_sites;
   tx_sites.push_back(tx_site);
-  MsgClientInfo::RxSites rx_sites;
+  MsgNodeInfo::RxSites rx_sites;
   rx_sites.push_back(rx_site);
 
-    // Send client information to the server
-  MsgClientInfo client_info; client_info
+    // Send node information to the server
+  MsgNodeInfo node_info; node_info
     .setSwInfo("SvxLink v" SVXLINK_VERSION)
     .setTxSites(tx_sites)
     .setRxSites(rx_sites);
-  sendMsg(client_info);
+  sendMsg(node_info);
 #endif
 
   if (m_selected_tg > 0)

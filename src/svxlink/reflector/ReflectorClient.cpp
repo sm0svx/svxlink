@@ -312,12 +312,12 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgTgMonitor::TYPE:
       handleTgMonitor(ss);
       break;
-    case MsgClientInfo::TYPE:
-      handleClientInfo(ss);
+    case MsgNodeInfo::TYPE:
+      handleNodeInfo(ss);
       break;
 #if 0
-    case MsgClientInfo::TYPE:
-      handleClientInfo(ss);
+    case MsgNodeInfo::TYPE:
+      handleNodeInfo(ss);
       break;
 #endif
     case MsgRequestQsy::TYPE:
@@ -498,29 +498,29 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
 } /* ReflectorClient::handleTgMonitor */
 
 
-void ReflectorClient::handleClientInfo(std::istream& is)
+void ReflectorClient::handleNodeInfo(std::istream& is)
 {
-  MsgClientInfo msg;
+  MsgNodeInfo msg;
   if (!msg.unpack(is))
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " ERROR: Could not unpack MsgClientInfo" << endl;
-    sendError("Illegal MsgClientInfo protocol message received");
+         << " ERROR: Could not unpack MsgNodeInfo" << endl;
+    sendError("Illegal MsgNodeInfo protocol message received");
     return;
   }
-  //std::cout << "### handleClientInfo: " << msg.json() << std::endl;
+  //std::cout << "### handleNodeInfo: " << msg.json() << std::endl;
   try
   {
     std::istringstream is(msg.json());
-    is >> m_client_info;
+    is >> m_node_info;
   }
   catch (const Json::Exception& e)
   {
     std::cerr << "*** WARNING[" << m_callsign
-              << "]: Failed to parse MsgClientInfo JSON object: "
+              << "]: Failed to parse MsgNodeInfo JSON object: "
               << e.what() << std::endl;
   }
-} /* ReflectorClient::handleClientInfo */
+} /* ReflectorClient::handleNodeInfo */
 
 
 void ReflectorClient::handleRequestQsy(std::istream& is)
@@ -556,21 +556,21 @@ void ReflectorClient::handleStateEvent(std::istream& is)
 
 
 #if 0
-void ReflectorClient::handleClientInfo(std::istream& is)
+void ReflectorClient::handleNodeInfo(std::istream& is)
 {
-  MsgClientInfo msg;
+  MsgNodeInfo msg;
   if (!msg.unpack(is))
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " ERROR: Could not unpack MsgClientInfo" << endl;
-    sendError("Illegal MsgClientInfo protocol message received");
+         << " ERROR: Could not unpack MsgNodeInfo" << endl;
+    sendError("Illegal MsgNodeInfo protocol message received");
     return;
   }
   cout << m_callsign << ": Client info"
        << "\n--- Software: \"" << msg.swInfo() << "\"";
   for (size_t i=0; i<msg.rxSites().size(); ++i)
   {
-    const MsgClientInfo::RxSite& rx_site = msg.rxSites().at(i);
+    const MsgNodeInfo::RxSite& rx_site = msg.rxSites().at(i);
     cout << "\n--- Receiver \"" << rx_site.rxName() << "\":"
          << "\n---   QTH Name          : " << rx_site.qthName();
     if (rx_site.antennaHeightIsValid())
@@ -598,7 +598,7 @@ void ReflectorClient::handleClientInfo(std::istream& is)
   }
   for (size_t i=0; i<msg.txSites().size(); ++i)
   {
-    const MsgClientInfo::TxSite& tx_site = msg.txSites().at(i);
+    const MsgNodeInfo::TxSite& tx_site = msg.txSites().at(i);
     cout << "\n--- Transmitter \"" << tx_site.txName() << "\":"
          << "\n---   QTH Name          : " << tx_site.qthName();
     if (tx_site.antennaHeightIsValid())
@@ -633,7 +633,7 @@ void ReflectorClient::handleClientInfo(std::istream& is)
   //  cout << "\n--- QTH Name=\"" << msg.qthName() << "\"";
   //}
   cout << endl;
-} /* ReflectorClient::handleClientInfo */
+} /* ReflectorClient::handleNodeInfo */
 #endif
 
 

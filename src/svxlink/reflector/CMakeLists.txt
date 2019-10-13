@@ -35,4 +35,4 @@ add_dependencies(svxreflector version-svxreflector)
 # Install targets
 install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})
 install_if_not_exists(svxreflector.conf ${SVX_SYSCONF_INSTALL_DIR})
-install_if_not_exists(client_info.json ${SVX_SYSCONF_INSTALL_DIR})
+install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})

@@ -682,7 +682,7 @@ This is an optional message that can be sent by the client to inform the server
 about client properties. It can be resent at any time to update the client
 information.
 */
-class MsgClientInfo : public ReflectorMsgBase<108>
+class MsgNodeInfo : public ReflectorMsgBase<108>
 {
   public:
     class Site : public Async::Msg
@@ -827,17 +827,17 @@ class MsgClientInfo : public ReflectorMsgBase<108>
     };
     typedef std::vector<TxSite> TxSites;
 
-    MsgClientInfo(void) {}
-    MsgClientInfo(const std::string& sw_info) : m_sw_info(sw_info) {}
+    MsgNodeInfo(void) {}
+    MsgNodeInfo(const std::string& sw_info) : m_sw_info(sw_info) {}
 
-    MsgClientInfo& setSwInfo(const std::string& sw_info)
+    MsgNodeInfo& setSwInfo(const std::string& sw_info)
     {
       m_sw_info = sw_info;
       return *this;
     }
     const std::string& swInfo(void) const { return m_sw_info; }
 
-    MsgClientInfo& setTxSites(const std::vector<TxSite>& tx_sites)
+    MsgNodeInfo& setTxSites(const std::vector<TxSite>& tx_sites)
     {
       m_tx_sites = tx_sites;
       return *this;
@@ -847,7 +847,7 @@ class MsgClientInfo : public ReflectorMsgBase<108>
       return m_tx_sites;
     }
 
-    MsgClientInfo& setRxSites(const std::vector<RxSite>& rx_sites)
+    MsgNodeInfo& setRxSites(const std::vector<RxSite>& rx_sites)
     {
       m_rx_sites = rx_sites;
       return *this;
@@ -863,7 +863,7 @@ class MsgClientInfo : public ReflectorMsgBase<108>
     std::string m_sw_info;
     RxSites     m_rx_sites;
     TxSites     m_tx_sites;
-}; /* MsgClientInfo */
+}; /* MsgNodeInfo */
 #endif
 
 
@@ -933,10 +933,10 @@ This message is sent by a client to inform the reflector server about various
 facts about the client. JSON is used so that information can be added without
 redefining the message type.
 */
-class MsgClientInfo : public ReflectorMsgBase<111>
+class MsgNodeInfo : public ReflectorMsgBase<111>
 {
   public:
-    MsgClientInfo(const std::string& json="")
+    MsgNodeInfo(const std::string& json="")
       : m_json(json) {}
 
     const std::string& json(void) const { return m_json; }
@@ -945,7 +945,7 @@ class MsgClientInfo : public ReflectorMsgBase<111>
 
   private:
     std::string m_json;
-}; /* MsgClientInfo */
+}; /* MsgNodeInfo */
 
 
 /***************************** UDP Messages *****************************/

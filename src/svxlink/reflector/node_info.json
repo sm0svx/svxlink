@@ -29,6 +29,7 @@
         "B": {
           "name": "Rx2",
           "freq": 145.500,
+          "sqlType": "COS",
           "ant": [
             {
               "comment": "Diamond X310 Omni",
