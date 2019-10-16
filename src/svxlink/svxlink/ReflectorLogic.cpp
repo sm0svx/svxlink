@@ -507,7 +507,7 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
     MsgSignalStrengthValues::Rx rx(id, siglev);
     rx.setEnabled(true);
     rx.setSqlOpen(sql_open);
-    rx.setActive(true);
+    rx.setActive(sql_open);
     msg.pushBack(rx);
     //sendUdpMsg(msg);
     sendMsg(msg);
