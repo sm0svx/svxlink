@@ -964,7 +964,7 @@ class MsgSignalStrengthValuesBase
     {
       public:
         Rx(void) : m_id('?'), m_siglev(-1), m_flags(0) {}
-        Rx(char id, int16_t siglev) : m_id(id), m_siglev(siglev) {}
+        Rx(char id, int16_t siglev) : m_id(id), m_siglev(siglev), m_flags(0) {}
         void setEnabled(bool is_enabled) { setBit(BIT_ENABLED, is_enabled); }
         bool enabled(void) const { return getBit(BIT_ENABLED); }
         void setSqlOpen(bool is_open) { setBit(BIT_SQL_OPEN, is_open); }
