@@ -318,6 +318,9 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgSignalStrengthValues::TYPE:
       handleMsgSignalStrengthValues(ss);
       break;
+    case MsgTxStatus::TYPE:
+      handleMsgTxStatus(ss);
+      break;
 #if 0
     case MsgNodeInfo::TYPE:
       handleNodeInfo(ss);
@@ -553,6 +556,28 @@ void ReflectorClient::handleMsgSignalStrengthValues(std::istream& is)
     setRxActive(rx.id(), rx.active());
   }
 } /* ReflectorClient::handleMsgSignalStrengthValues */
+
+
+void ReflectorClient::handleMsgTxStatus(std::istream& is)
+{
+  MsgTxStatus msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** WARNING[" << callsign()
+         << "]: Could not unpack incoming MsgTxStatus message" << endl;
+    return;
+  }
+  typedef MsgTxStatus::Txs::const_iterator TxsIter;
+  for (TxsIter it = msg.txs().begin(); it != msg.txs().end(); ++it)
+  {
+    const MsgTxStatus::Tx& tx = *it;
+    std::cout << "### MsgTxStatus:"
+      << " id=" << tx.id()
+      << " transmit=" << tx.transmit()
+      << std::endl;
+    setTxTransmit(tx.id(), tx.transmit());
+  }
+} /* ReflectorClient::handleMsgTxStatus */
 
 
 void ReflectorClient::handleRequestQsy(std::istream& is)

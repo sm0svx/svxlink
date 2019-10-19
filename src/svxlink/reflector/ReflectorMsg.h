@@ -1021,6 +1021,57 @@ struct MsgSignalStrengthValues
 }; /* MsgSignalStrengthValues */
 
 
+/**
+@brief  Tx status message
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-19
+
+This message is used by a client to send tx status to the reflector server.
+*/
+class MsgTxStatus : public ReflectorMsgBase<113>
+{
+  public:
+    class Tx : public Async::Msg
+    {
+      public:
+        Tx(void) : m_id('?'), m_flags(0) {}
+        Tx(char id) : m_id(id), m_flags(0) {}
+        void setTransmit(bool transmit) { setBit(BIT_TRANSMIT, transmit); }
+        bool transmit(void) const { return getBit(BIT_TRANSMIT); }
+        char id(void) const { return m_id; }
+
+        ASYNC_MSG_MEMBERS(m_id, m_flags)
+
+      private:
+        typedef enum {BIT_TRANSMIT=0} Bit;
+
+        char              m_id;
+        uint8_t           m_flags;
+
+        bool getBit(Bit bitno) const
+        {
+          uint8_t bit = 1 << static_cast<size_t>(bitno);
+          return (m_flags & bit) != 0;
+        }
+        void setBit(Bit bitno, bool is_enabled)
+        {
+          uint8_t bit = 1 << static_cast<size_t>(bitno);
+          m_flags = (m_flags & ~bit) | (is_enabled ? bit : 0);
+        }
+    };
+    typedef std::vector<Tx> Txs;
+
+    MsgTxStatus(void) {}
+    MsgTxStatus(const Txs& txs) : m_txs(txs) {}
+    Txs& txs(void) { return m_txs; }
+    void pushBack(const Tx& tx) { m_txs.push_back(tx); }
+
+    ASYNC_MSG_MEMBERS(m_txs)
+
+  private:
+    Txs m_txs;
+}; /* class MsgTxStatus */
+
 
 /***************************** UDP Messages *****************************/
 

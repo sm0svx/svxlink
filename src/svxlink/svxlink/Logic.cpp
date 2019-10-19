@@ -557,6 +557,7 @@ bool Logic::initialize(void)
   }
   tx().transmitterStateChange.connect(
       mem_fun(*this, &Logic::transmitterStateChange));
+  tx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
   prev_tx_src->registerSink(m_tx);
   prev_tx_src = 0;
 

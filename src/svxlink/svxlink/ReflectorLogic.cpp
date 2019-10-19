@@ -512,6 +512,54 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
     //sendUdpMsg(msg);
     sendMsg(msg);
   }
+  else if (event_name == "Tx:state")
+  {
+    MsgTxStatus msg;
+    std::istringstream is(data);
+    Json::Value tx_data;
+    is >> tx_data;
+    std::string name = tx_data.get("name", "").asString();
+    std::string id_str = tx_data.get("id", "?").asString();
+    if (id_str.size() != 1)
+    {
+      return;
+    }
+    char id = id_str[0];
+    if (id != '\0')
+    {
+      bool transmit = tx_data.get("transmit", false).asBool();
+      MsgTxStatus::Tx tx(id);
+      tx.setTransmit(transmit);
+      msg.pushBack(tx);
+      sendMsg(msg);
+    }
+  }
+  else if (event_name == "MultiTx:state")
+  {
+    MsgTxStatus msg;
+    std::istringstream is(data);
+    Json::Value tx_arr;
+    is >> tx_arr;
+    for (Json::Value::ArrayIndex i = 0; i != tx_arr.size(); i++)
+    {
+      Json::Value& tx_data = tx_arr[i];
+      std::string name = tx_data.get("name", "").asString();
+      std::string id_str = tx_data.get("id", "").asString();
+      if (id_str.size() != 1)
+      {
+        return;
+      }
+      char id = id_str[0];
+      if (id != '\0')
+      {
+        bool transmit = tx_data.get("transmit", false).asBool();
+        MsgTxStatus::Tx tx(id);
+        tx.setTransmit(transmit);
+        msg.pushBack(tx);
+      }
+    }
+    sendMsg(msg);
+  }
 } /* ReflectorLogic::remoteReceivedPublishStateEvent */
 
 

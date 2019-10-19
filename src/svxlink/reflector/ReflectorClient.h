@@ -127,6 +127,13 @@ class ReflectorClient
     };
     typedef std::map<char, Rx> RxMap;
 
+    struct Tx
+    {
+      std::string name;
+      bool        transmit;
+    };
+    typedef std::map<char, Tx> TxMap;
+
     class Filter
     {
       public:
@@ -394,6 +401,14 @@ class ReflectorClient
     bool rxActive(char id) { return m_rx_map[id].active; }
     //RxMap& rxMap(void) { return m_rx_map; }
     //const RxMap& rxMap(void) const { return m_rx_map; }
+
+    bool txExist(char tx_id) const
+    {
+      return m_tx_map.find(tx_id) != m_tx_map.end();
+    }
+    void setTxTransmit(char id, bool transmit) { m_tx_map[id].transmit = transmit; }
+    bool txTransmit(char id) { return m_tx_map[id].transmit; }
+
     const Json::Value& nodeInfo(void) const { return m_node_info; }
 
   private:
@@ -429,6 +444,7 @@ class ReflectorClient
     uint32_t                    m_current_tg;
     std::set<uint32_t>          m_monitored_tgs;
     RxMap                       m_rx_map;
+    TxMap                       m_tx_map;
     Json::Value                 m_node_info;
 
     ReflectorClient(const ReflectorClient&);
@@ -441,6 +457,7 @@ class ReflectorClient
     void handleTgMonitor(std::istream& is);
     void handleNodeInfo(std::istream& is);
     void handleMsgSignalStrengthValues(std::istream& is);
+    void handleMsgTxStatus(std::istream& is);
     void handleRequestQsy(std::istream& is);
     void handleStateEvent(std::istream& is);
     void handleMsgError(std::istream& is);

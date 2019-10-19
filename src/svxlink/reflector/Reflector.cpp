@@ -704,6 +704,25 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
             }
           }
         }
+        if (qth.isMember("tx") && qth["tx"].isObject())
+        {
+          //std::cout << "### Found tx" << std::endl;
+          Json::Value::Members txs(qth["tx"].getMemberNames());
+          for (Json::Value::Members::const_iterator it=txs.begin(); it!=txs.end(); ++it)
+          {
+            //std::cout << "### member=" << *it << std::endl;
+            const std::string& tx_id_str(*it);
+            if (tx_id_str.size() == 1)
+            {
+              char tx_id(tx_id_str[0]);
+              Json::Value& tx(qth["tx"][tx_id_str]);
+              if (client->txExist(tx_id))
+              {
+                tx["transmit"] = client->txTransmit(tx_id);
+              }
+            }
+          }
+        }
       }
     }
     status["nodes"][client->callsign()] = node;
