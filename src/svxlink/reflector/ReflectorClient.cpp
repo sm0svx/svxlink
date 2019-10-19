@@ -571,10 +571,10 @@ void ReflectorClient::handleMsgTxStatus(std::istream& is)
   for (TxsIter it = msg.txs().begin(); it != msg.txs().end(); ++it)
   {
     const MsgTxStatus::Tx& tx = *it;
-    std::cout << "### MsgTxStatus:"
-      << " id=" << tx.id()
-      << " transmit=" << tx.transmit()
-      << std::endl;
+    //std::cout << "### MsgTxStatus:"
+    //  << " id=" << tx.id()
+    //  << " transmit=" << tx.transmit()
+    //  << std::endl;
     setTxTransmit(tx.id(), tx.transmit());
   }
 } /* ReflectorClient::handleMsgTxStatus */
