@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "SEPTEMBER 2019" Linux "File Formats"
+.TH SVXLINK.CONF 5 "OCTOBER 2019" Linux "File Formats"
 .
 .SH NAME
 .
@@ -854,8 +854,8 @@ configuration variables are described below.
 Always "Local" for a local receiver.
 .TP
 .B RX_ID
-A single char uniquely identifying this receiver. The RX identity can for
-example be used in the TCL event scripts to get different rogers sounds for
+A single character uniquely identifying this receiver. The RX identity can for
+example be used in the TCL event scripts to get different roger sounds for
 different receivers when using a receiver voter.
 .TP
 .B AUDIO_DEV
@@ -1874,6 +1874,11 @@ configuration variables are described below.
 .TP
 .B TYPE
 Always "Local" for a local transmitter.
+.TP
+.B TX_ID
+A single character ident for this transmitter. It is for example used in state
+events published by transmitters through a STATE_PTY or other state event
+consumers within SvxLink.
 .TP
 .B AUDIO_DEV
 Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
