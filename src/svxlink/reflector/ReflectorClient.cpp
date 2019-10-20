@@ -357,24 +357,35 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
   MsgProtoVer msg;
   if (!msg.unpack(is))
   {
-    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " ERROR: Could not unpack MsgProtoVer\n";
+    std::cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+              << " ERROR: Could not unpack MsgProtoVer\n";
     sendError("Illegal MsgProtoVer protocol message received");
     return;
   }
   m_client_proto_ver.set(msg.majorVer(), msg.minorVer());
-  ProtoVerRange valid_proto_ver_range(
-      ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER),
-      ProtoVer(MsgProtoVer::MAJOR, MsgProtoVer::MINOR));
-  if (!valid_proto_ver_range.isWithinRange(m_client_proto_ver))
+  ProtoVer max_proto_ver(MsgProtoVer::MAJOR, MsgProtoVer::MINOR);
+  if (m_client_proto_ver > max_proto_ver)
   {
-    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " Incompatible protocol version: "
-         << msg.majorVer() << "." << msg.minorVer() << ". Should be "
-         << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR << "." << endl;
-    stringstream ss;
+    std::cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+              << " use protocol version "
+              << msg.majorVer() << "." << msg.minorVer()
+              << " which is newer than we can handle. Asking for downgrade to "
+              << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR << "."
+              << std::endl;
+    sendMsg(MsgProtoVerDowngrade());
+    return;
+  }
+  else if (m_client_proto_ver < ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER))
+  {
+    std::cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+              << " is using protocol version "
+              << msg.majorVer() << "." << msg.minorVer()
+              << " which is too old. Must at least be version "
+              << MIN_MAJOR_VER << "." << MIN_MINOR_VER << "." << std::endl;
+    std::ostringstream ss;
     ss << "Unsupported protocol version " << msg.majorVer() << "."
-       << msg.minorVer();
+       << msg.minorVer() << ". Must be at least "
+       << MIN_MAJOR_VER << "." << MIN_MINOR_VER << ".";
     sendError(ss.str());
     return;
   }

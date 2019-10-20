@@ -657,6 +657,9 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
     case MsgError::TYPE:
       handleMsgError(ss);
       break;
+    case MsgProtoVerDowngrade::TYPE:
+      handleMsgProtoVerDowngrade(ss);
+      break;
     case MsgAuthChallenge::TYPE:
       handleMsgAuthChallenge(ss);
       break;
@@ -709,6 +712,23 @@ void ReflectorLogic::handleMsgError(std::istream& is)
        << endl;
   disconnect();
 } /* ReflectorLogic::handleMsgError */
+
+
+void ReflectorLogic::handleMsgProtoVerDowngrade(std::istream& is)
+{
+  MsgProtoVerDowngrade msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgProtoVerDowngrade" << endl;
+    disconnect();
+    return;
+  }
+  cout << name() << ": Server too old and we cannot downgrade to protocol version "
+       << msg.majorVer() << "." << msg.minorVer() << " from "
+       << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR
+       << endl;
+  disconnect();
+} /* ReflectorLogic::handleMsgProtoVerDowngrade */
 
 
 void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)

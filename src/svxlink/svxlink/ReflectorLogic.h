@@ -253,6 +253,7 @@ class ReflectorLogic : public LogicBase
     void onFrameReceived(Async::FramedTcpConnection *con,
                          std::vector<uint8_t>& data);
     void handleMsgError(std::istream& is);
+    void handleMsgProtoVerDowngrade(std::istream& is);
     void handleMsgAuthChallenge(std::istream& is);
     void handleMsgNodeList(std::istream& is);
     void handleMsgNodeJoined(std::istream& is);

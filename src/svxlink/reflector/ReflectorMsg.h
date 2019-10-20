@@ -225,32 +225,6 @@ class ReflectorUdpMsgBase : public ReflectorUdpMsg
 /************************** Administrative Messages **************************/
 
 /**
-@brief	 Protocol version TCP network message
-@author  Tobias Blomberg / SM0SVX
-@date    2017-02-12
-
-This is the first message exchanged between the client and the server. It tells
-the server what protocol version that the client supports. If the client use a
-protocol version that the server does not support, the client is denied access.
-*/
-class MsgProtoVer : public ReflectorMsgBase<5>
-{
-  public:
-    static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 0;
-    MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
-    uint16_t majorVer(void) const { return m_major; }
-    uint16_t minorVer(void) const { return m_minor; }
-
-    ASYNC_MSG_MEMBERS(m_major, m_minor);
-
-  private:
-    uint16_t m_major;
-    uint16_t m_minor;
-}; /* MsgProtoVer */
-
-
-/**
 @brief	 Heartbeat TCP network message
 @author  Tobias Blomberg / SM0SVX
 @date    2017-02-12
@@ -263,6 +237,65 @@ class MsgHeartbeat : public ReflectorMsgBase<1>
   public:
     ASYNC_MSG_NO_MEMBERS
 };  /* MsgHeartbeat */
+
+
+/**
+@brief	 Protocol version TCP network message
+@author  Tobias Blomberg / SM0SVX
+@date    2017-02-12
+
+This is the first message exchanged between the client and the server. It is
+sent by the client to tell the server what protocol version that the client
+supports. If the client use a protocol version that the server does not
+support, the client is denied access. Alternatively, if the client protocol
+version is larger than what the server supports, the server may send a
+MsgProtoVerDowngrade message to ask the client to use an older version of the
+protocol.
+*/
+class MsgProtoVer : public ReflectorMsgBase<5>
+{
+  public:
+    static const uint16_t MAJOR = 2;
+    static const uint16_t MINOR = 0;
+    MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
+    MsgProtoVer(uint16_t major, uint16_t minor)
+      : m_major(major), m_minor(minor) {}
+    uint16_t majorVer(void) const { return m_major; }
+    uint16_t minorVer(void) const { return m_minor; }
+
+    ASYNC_MSG_MEMBERS(m_major, m_minor);
+
+  private:
+    uint16_t m_major;
+    uint16_t m_minor;
+}; /* MsgProtoVer */
+
+
+/**
+@brief   Protocol version downgrade request
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-19
+
+This message is sent by the reflector server to a client that announces a newer
+protocol version than the server is able to support. The client should resend
+the MsgProtoVer message set to a version number no larger than what the server
+indicates in this message. The client must then use only protocol messages
+compatible with the lower protocol version.
+*/
+class MsgProtoVerDowngrade : public ReflectorMsgBase<6>
+{
+  public:
+    MsgProtoVerDowngrade(void)
+      : m_major(MsgProtoVer::MAJOR), m_minor(MsgProtoVer::MINOR) {}
+    uint16_t majorVer(void) const { return m_major; }
+    uint16_t minorVer(void) const { return m_minor; }
+
+    ASYNC_MSG_MEMBERS(m_major, m_minor);
+
+  private:
+    uint16_t m_major;
+    uint16_t m_minor;
+}; /* MsgProtoVerDowngrade */
 
 
 /**
