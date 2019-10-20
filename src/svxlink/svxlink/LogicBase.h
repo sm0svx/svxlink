@@ -295,6 +295,13 @@ class LogicBase : public sigc::trackable
       }
     }
 
+    /**
+     * @brief   Used by a logic to indicate received talk group
+     * @param   tg The received talk group
+     *
+     * This function is used by a logic implementation to set which talk group
+     * that local traffic is received on.
+     */
     void setReceivedTg(uint32_t tg)
     {
       m_received_tg = tg;
