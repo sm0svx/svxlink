@@ -648,6 +648,17 @@ It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
+.TP
+.B MUTE_FIRST_TX
+Mute the first transmission after selecting a talk group. This feature is good
+to have enabled for a number of reasons. One reason is to suppress short
+openings of a talk group when someone just make a single transmission to test
+the local node. Another reason is for to allow someone to submit DTMF commands
+to the node without disturbing the reflector network. For example, if the local
+node have opened up due to activity on a monitored talk group but a local user
+wish to switch to another talk group, that local user can do that without
+transmitting into the currently active talk group. This feature is enabled by
+default.
 .
 .SS QSO Recorder Section
 .

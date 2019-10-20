@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpClient.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncAudioPassthrough.h>
+#include <AsyncAudioValve.h>
 #include <version/SVXLINK.h>
 
 
@@ -133,7 +134,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
     m_report_tg_timer(500, Async::Timer::TYPE_ONESHOT, false),
-    m_tg_local_activity(false), m_last_qsy(0)
+    m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -249,10 +250,24 @@ bool ReflectorLogic::initialize(void)
   m_logic_con_in = new Async::AudioStreamStateDetector;
   m_logic_con_in->sigStreamStateChanged.connect(
       sigc::mem_fun(*this, &ReflectorLogic::onLogicConInStreamStateChanged));
+  AudioSource *prev_src = m_logic_con_in;
+
+  bool mute_first_tx = true;
+  cfg().getValue(name(), "MUTE_FIRST_TX", mute_first_tx);
+  if (mute_first_tx)
+  {
+    m_logic_con_in_valve = new Async::AudioValve;
+    m_logic_con_in_valve->setOpen(false);
+    prev_src->registerSink(m_logic_con_in_valve);
+    prev_src = m_logic_con_in_valve;
+  }
+
+  m_enc_endpoint = prev_src;
+  prev_src = 0;
 
     // Create dummy audio codec used before setting the real encoder
   if (!setAudioCodec("DUMMY")) { return false; }
-  AudioSource *prev_src = m_dec;
+  prev_src = m_dec;
 
     // Create jitter buffer
   AudioFifo *fifo = new Async::AudioFifo(2*INTERNAL_SAMPLE_RATE);
@@ -1352,7 +1367,7 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
       mem_fun(*this, &ReflectorLogic::sendEncodedAudio));
   m_enc->flushEncodedSamples.connect(
       mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
-  m_logic_con_in->registerSink(m_enc, false);
+  m_enc_endpoint->registerSink(m_enc, false);
 
   string opt_prefix(m_enc->name());
   opt_prefix += "_ENC_";
@@ -1423,7 +1438,14 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
 {
   //cout << "### ReflectorLogic::onLogicConInStreamStateChanged: is_active="
   //     << is_active << "  is_idle=" << is_idle << endl;
-  if (!is_idle)
+  if (is_idle)
+  {
+    if ((m_logic_con_in_valve != 0) && (m_selected_tg > 0))
+    {
+      m_logic_con_in_valve->setOpen(true);
+    }
+  }
+  else
   {
     if (m_tg_select_timeout_cnt == 0) // No TG currently selected
     {
@@ -1497,6 +1519,10 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
     m_tg_local_activity = false;
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
+    if ((m_logic_con_in_valve != 0 ) && (tg == 0))
+    {
+      m_logic_con_in_valve->setOpen(false);
+    }
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
 } /* ReflectorLogic::selectTg */

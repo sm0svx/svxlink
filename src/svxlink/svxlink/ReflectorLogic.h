@@ -72,6 +72,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class UdpSocket;
+  class AudioValve;
 };
 
 class ReflectorMsg;
@@ -244,6 +245,8 @@ class ReflectorLogic : public LogicBase
     uint32_t                          m_last_qsy;
     MonitorTgsSet                     m_monitor_tgs;
     Json::Value                       m_node_info;
+    Async::AudioSource*               m_enc_endpoint;
+    Async::AudioValve*                m_logic_con_in_valve;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
