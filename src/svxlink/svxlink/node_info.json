@@ -1,5 +1,6 @@
 {
   "nodeLocation": "MyTownOrArea",
+  "hidden": false,
   "qth": [
     {
       "name": "My QTH Name",
