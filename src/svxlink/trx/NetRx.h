@@ -215,11 +215,12 @@ class NetRx : public Rx
     Async::AudioDecoder *audio_dec;
     unsigned            fq;
     Modulation::Type    modulation;
-    
+
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);
     void sendMsg(NetTrxMsg::Msg *msg);
     void allEncodedSamplesFlushed(void);
+    void publishSquelchState(void);
 
 };  /* class NetRx */
 

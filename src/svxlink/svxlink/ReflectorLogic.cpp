@@ -501,7 +501,7 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
     //sendUdpMsg(msg);
     sendMsg(msg);
   }
-  else if (event_name == "LocalRx:sql_state")
+  else if (event_name == "Rx:sql_state")
   {
     //MsgUdpSignalStrengthValues msg;
     MsgSignalStrengthValues msg;

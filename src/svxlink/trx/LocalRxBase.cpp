@@ -995,7 +995,7 @@ void LocalRxBase::publishSquelchState(void)
   stringstream os;
   writer->write(rx, &os);
   delete writer;
-  publishStateEvent("LocalRx:sql_state", os.str());
+  publishStateEvent("Rx:sql_state", os.str());
 } /* LocalRxBase::publishSquelchState */
 
 
