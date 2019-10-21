@@ -2139,6 +2139,12 @@ manual page.
 .B TYPE
 Always "Net" for a networked transmitter.
 .TP
+.B TX_ID
+A single character ident for this transmitter. It is for example used in state
+events published by transmitters through a STATE_PTY or other state event
+consumers within SvxLink. SvxLink cannot at this moment get the TX ident from
+the remote transmitter so it must be specified here.
+.TP
 .B HOST
 The hostname or IP address of the remote transmitter host.
 .TP
