@@ -12,7 +12,7 @@ is shown below.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,6 +52,8 @@ An example of how to use the Config class
 #include <list>
 #include <memory>
 #include <sstream>
+#include <locale>
+#include <vector>
 
 
 /****************************************************************************
@@ -266,6 +268,7 @@ class Config
         return true;
       }
       std::stringstream ssval(str_val);
+      ssval.imbue(std::locale(ssval.getloc(), new csv_whitespace));
       while (!ssval.eof())
       {
         Value tmp;
@@ -279,6 +282,61 @@ class Config
           return false;
         }
         c.push_back(tmp);
+      }
+      return true;
+    } /* Config::getValue */
+
+    /**
+     * @brief 	Get the value of the given config variable into keyed container
+     * @param 	section    The name of the section where the configuration
+     *	      	      	   variable is located
+     * @param 	tag   	   The name of the configuration variable to get
+     * @param 	c 	   The value is returned in this argument.
+     *	      	      	   Successful completion overwrites previous contents
+     * @param	missing_ok If set to \em true, return \em true if the
+     *                     configuration variable is missing
+     * @return	Returns \em true on success or else \em false on failure.
+     *
+     * This function is used to get the value of a configuraiton variable.
+     * The config variable is read into a keyed container (e.g. set, multiset
+     * etc).
+     * It's a template function meaning that it can take any key type
+     * that supports the operator>> function.
+     * Normally a missing configuration variable is seen as an error and the
+     * function returns \em false. If the missing_ok parameter is set to
+     * \em true, this function returns \em true for a missing variable but
+     * still returns \em false if an illegal value is specified.
+     */
+    template <template <typename, typename, typename> class Container,
+              typename Key>
+    bool getValue(const std::string& section, const std::string& tag,
+                  Container<Key, std::less<Key>, std::allocator<Key> > &c,
+                  bool missing_ok = false) const
+    {
+      std::string str_val;
+      if (!getValue(section, tag, str_val))
+      {
+        return missing_ok;
+      }
+      if (str_val.empty())
+      {
+        c.clear();
+        return true;
+      }
+      std::stringstream ssval(str_val);
+      while (!ssval.eof())
+      {
+        Key tmp;
+        ssval >> tmp;
+        if(!ssval.eof())
+        {
+          ssval >> std::ws;
+        }
+        if (ssval.fail())
+        {
+          return false;
+        }
+        c.insert(tmp);
       }
       return true;
     } /* Config::getValue */
@@ -362,7 +420,20 @@ class Config
   private:
     typedef std::map<std::string, std::string>	Values;
     typedef std::map<std::string, Values>   	Sections;
-    
+    struct csv_whitespace : std::ctype<char>
+    {
+      static const mask* make_table(void)
+      {
+          // Make a copy of the "C" locale table
+        static std::vector<mask> v(classic_table(),
+                                   classic_table() + table_size);
+        v[','] |=  space;  // comma will be classified as whitespace
+        return &v[0];
+      }
+      csv_whitespace(std::size_t refs=0)
+        : std::ctype<char>(make_table(), false, refs) {}
+    };
+
     FILE      *file;
     Sections  sections;
     

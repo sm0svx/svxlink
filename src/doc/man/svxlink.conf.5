@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JANUARI 2018" Linux "File Formats"
+.TH SVXLINK.CONF 5 "OCTOBER 2019" Linux "File Formats"
 .
 .SH NAME
 .
@@ -391,6 +391,16 @@ after starting SvxLink. The device works bidirectional, received dtmf characters
 (from Rf) are output via this interface.
 
 Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
+.TP
+.B CTCSS_TO_TG
+Use this variable to specify a comma separated list of pairs of tone
+frequencies and talk groups. When one of the tone frequencies is detected, the
+corresponding talk group will be indicated. This can be used for example by
+ReflectorLogic to automatically switch to a talk group when one of the specified
+tone frequencies is received. You probably also want to configure CTCSS_FQ for
+all receivers to open the squelch on the same tone frequencies.
+
+Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .
 .SS Simplex Logic Section
 .
@@ -555,6 +565,18 @@ The ReflectorLogic is used to connect to an SvxReflector server. The
 SvxReflector will distribute all audio to all connected nodes. To actually send
 audio to the reflector from a logic core, set up a link between the two logics
 using LogicLinking. More than one logic core can be connected.
+.P
+SvxReflector also offer traffic separation using talk groups so that multiple
+QSOs can be ongoing through the same reflector server without interfering with
+each other.  The set of talk groups that a node monitors for activity is
+configurable so that a talk group can be automatically selected when it's
+active. After a configurable timeout the node will return to monitor all
+configured talk groups if there is no activity on the currently selected talk
+group. Which talk group to select for outgoing traffic for a node can be set to
+a default and/or selected using DTMF commands. The DTMF commands are entered
+through the logic linking definition associated with the reflector.  So if a
+command prefix of 9 have been specified for a link, selecting talk group 888
+will be achieved by entering the command 91888#.
 .TP
 .B TYPE
 The type for a reflector logic core is always
@@ -580,12 +602,80 @@ A jitter buffer is used to prevent gaps in the audio when the network
 connection do not provide a steady flow of data. Set this configuration
 variable to the number of milliseconds to buffer before starting to process the
 audio. Default: 0.
-.RE
+.TP
+.B DEFAULT_TG
+The node will select this talk group on local incoming traffic if no other
+talk group is currently selected. Default: 0 (no talk group).
+.TP
+.B MONITOR_TGS
+A comma separated list of talk groups which the node will monitor for activity
+when no other talk group is selected.
 
+It is also possible to mark talk groups as more prioritized than others by
+adding one or more plus signs after the talk group number. More plus signs mean
+higher priority. While a talk group is selected, and there are activity on a
+talk group with higher priority, the higher prio talk group will be selected
+unless there have been local activity on the node.
+
+Example:
+
+  MONITOR_TGS=112++,240,2403+,2403123
+
+will monitor the TGs for Sweden, Sweden district 3 and a specific TG #2403123.
+Traffic on talk group 2403 will be prioritized and 112 will have the highest
+priority.
+.TP
+.B TG_SELECT_TIMEOUT
+The number of seconds after which a selected talk group will be unselected. The
+node will return to talk group 0 (no talk group) and start monitoring the
+configured talk groups again. Default: 30 seconds.
+.TP
+.B ANNOUNCE_REMOTE_MIN_INTERVAL
+The minimum number of seconds between announcements of the same TG for remote
+TG activations. If the same TG is remotely activated repeatedly it will not be
+announced until at least the number of seconds specified in this configuration
+variable have passed.
+.TP
+.B NODE_INFO_FILE
+The configuration file to use for sending information regarding this client to
+the reflector server. This is not a required configuration. It is mostly
+free-form JSON but the general structure should be kept so that SvxLink and
+the reflector server can fill in dynamic information about the node like signal
+strengths for receivers. Use the default node_info.json as a template. You
+can add more information rather freely but don't change the overall structure.
+.P
 It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
+.TP
+.B MUTE_FIRST_TX_LOC
+Mute the first transmission after selecting a talk group due to local activity.
+This feature is good to have enabled for a number of reasons. One reason is to
+suppress short openings of a talk group when someone just make a single
+transmission to test the local node. Another reason is for to allow someone to
+submit DTMF commands to the node without disturbing the reflector network. An
+example is that someone activates a talk group using CTCSS but then immediately
+select another talk group using DTMF. In that case no transmission will be made
+on the first talk group. This feature is enabled by default.
+.TP
+.B MUTE_FIRST_TX_REM
+Mute the first transmission after selecting a talk group due to remote
+activity. This feature can be enabled to let local node users enter DTMF
+commands without disturbing an active talk group. As an example, the local node
+monitors a talk group that is active. However, no one on the local node
+participates in the QSO and a local user want to select another talk group.
+With this feature enabled it is possible to do that without transmitting into
+the reflector network while entering DTMF commands.
+
+This feature is not enabled by default since it is a bit unintuitive. If a
+local user hear a call and want to answer that call, he must first make a short
+transmission to "open up" the local node. This is easy to forget.
+.TP
+.B TMP_MONITOR_TIMEOUT
+This configuration variable determines after how many seconds a manually added
+temporary talk group monitor will time out. Set to 0 to disable this feature.
+Default is 3600, one hour.
 .
 .SS QSO Recorder Section
 .
@@ -781,8 +871,8 @@ configuration variables are described below.
 Always "Local" for a local receiver.
 .TP
 .B RX_ID
-A single char uniquely identifying this receiver. The RX identity can for
-example be used in the TCL event scripts to get different rogers sounds for
+A single character uniquely identifying this receiver. The RX identity can for
+example be used in the TCL event scripts to get different roger sounds for
 different receivers when using a receiver voter.
 .TP
 .B AUDIO_DEV
@@ -960,6 +1050,17 @@ variable sets the frequency of the tone to use. The tone frequency ranges from
 67.0 to 254.1 Hz. There actually is nothing that will stop you from setting the
 frequency to something outside this range but there is no guarantee that it will
 work.
+
+If desired it is possible to specify a comma separated list of tone frequencies
+in which case the squelch will open on all the tone frequencies. Note that for
+this feature to work well the receivers frequency response in the CTCSS
+frequency range (67.0 to 254.1Hz) need to be reasonable flat. When choosing
+tones, try to select tones that are close to each other. However, selecting
+tones too close may cause both to trigger. Also do not select tones that are a
+multiple of another tone since overtones may trigger the wrong one.
+
+If multiple tones are configured when running siglevdetcal, the first one will
+be used for the calibration.
 .TP
 .B CTCSS_OPEN_THRESH
 If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config
@@ -1791,6 +1892,11 @@ configuration variables are described below.
 .B TYPE
 Always "Local" for a local transmitter.
 .TP
+.B TX_ID
+A single character ident for this transmitter. It is for example used in state
+events published by transmitters through a STATE_PTY or other state event
+consumers within SvxLink.
+.TP
 .B AUDIO_DEV
 Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
 AUDIO DEVICE SPECIFICATIONS chapter for more information.
@@ -2049,6 +2155,12 @@ manual page.
 .TP
 .B TYPE
 Always "Net" for a networked transmitter.
+.TP
+.B TX_ID
+A single character ident for this transmitter. It is for example used in state
+events published by transmitters through a STATE_PTY or other state event
+consumers within SvxLink. SvxLink cannot at this moment get the TX ident from
+the remote transmitter so it must be specified here.
 .TP
 .B HOST
 The hostname or IP address of the remote transmitter host.
@@ -2469,23 +2581,54 @@ event data = Event specific data
 The following specific events exist.
 .TP
 .B Voter:sql_state
-Report the state of all squelches for all receivers. The format of the event
-specific data is:
+Report the state of all squelches and signal levels for all receivers. The
+event specific data is a JSON array containing an object for each receiver. The
+JSON data must all be on one line but is shown pretty printed below for easy
+reading. Example:
 .PP
-.RS 11
-<rx name><state><siglev> [<rx_name><state><siglev> ...]
+.RS 9
+  [
+    {
+      "name": "Rx1",
+      "id": "E",
+      "enabled": true,
+      "sql_open": true,
+      "active": true,
+      "siglev": 59
+    },
+    {
+      "name": "Rx2",
+      "id": "R",
+      "enabled": true,
+      "sql_open": true,
+      "active": false,
+      "siglev": 33
+    },
+    {
+      "name": "Rx3",
+      "id": "D",
+      "enabled": false
+    }
+  ]
 
-.RS -4
-where the different parts mean:
+.RS -2
+where the different fields mean:
 .PP
 .RS 4
-rx_name = Configuration file section name for receiver
+name = Configuration file section name for receiver
 .RS 0
-state = _ (sql closed), : (sql open), * (sql open and rx selected)
+id = The receiver ID from configuration
+.RS 0
+enabled = Set to true if the receiver is enabled
+.RS 0
+sql_open = Set to true if the squelch is open
+.RS 0
+active = Set to true if the receiver is the active one, selected by the voter
 .RS 0
 siglev = The measured signal level
 
 .RS -4
+The fields sql_open, active and siglev will be left out if enabled=false.
 .
 .SH FILES
 .

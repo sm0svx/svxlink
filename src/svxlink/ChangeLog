@@ -1,3 +1,28 @@
+ 1.8.0 -- ?? ??? ????
+----------------------
+* SvxReflector now support switching traffic on talk groups.
+
+* ReflectorLogic can now request switching talk groups based on the received
+  CTCSS tone frequency. It is also possible to switch to any talk group using
+  DTMF.
+
+* Now possible to use multiple CTCSS squelch tones in parallell.
+
+* SvxReflector now have a QSY functionality used to switch all active nodes on
+  a talk group to another talk group.
+
+* A logic link is now disconnected using <prefix># instead of <prefix>0#. If
+  any digits are specified after the prefix the link will be activated and the
+  digits will be given to the remote logic(s) for processing. Right now only
+  the ReflectorLogic care about these extra digits, also called the
+  subcommand.
+
+* A logic core connected to a logic link can now play announcements on all
+  other connected logics. This is used in the ReflectorLogic to announce talk
+  group selections and command feedback.
+
+
+
  1.7.0 -- 01 Sep 2019
 ----------------------
 * MetarInfo now supports secure http (https) since aviationweather.gov has 

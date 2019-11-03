@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -224,9 +225,12 @@ bool NetRx::initialize(void)
   tcp_con->isReady.connect(mem_fun(*this, &NetRx::connectionReady));
   tcp_con->msgReceived.connect(mem_fun(*this, &NetRx::handleMsg));
   tcp_con->connect();
-  
+
+  squelchOpen.connect(
+      sigc::hide(sigc::mem_fun(*this, &NetRx::publishSquelchState)));
+
   return true;
-  
+
 } /* NetRx:initialize */
 
 
@@ -467,6 +471,7 @@ void NetRx::handleMsg(Msg *msg)
         last_signal_strength = sql_msg->signalStrength();
         last_sql_rx_id = sql_msg->sqlRxId();
         signalLevelUpdated(last_signal_strength);
+        publishSquelchState();
       }
       break;
     }
@@ -537,6 +542,27 @@ void NetRx::allEncodedSamplesFlushed(void)
     setSquelchState(false);
   }
 } /* NetRx::allEncodedSamplesFlushed */
+
+
+void NetRx::publishSquelchState(void)
+{
+  //std::cout << "### NetRx::publishSquelchState: " << std::endl;
+  float siglev = signalStrength();
+  Json::Value rx(Json::objectValue);
+  rx["name"] = name();
+  char rx_id = sqlRxId();
+  rx["id"] = std::string(&rx_id, &rx_id+1);
+  rx["sql_open"] = squelchIsOpen();
+  rx["siglev"] = static_cast<int>(siglev);
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  stringstream os;
+  writer->write(rx, &os);
+  delete writer;
+  publishStateEvent("Rx:sql_state", os.str());
+} /* NetRx::publishSquelchState */
 
 
 

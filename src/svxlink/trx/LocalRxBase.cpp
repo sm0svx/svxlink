@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -477,9 +478,12 @@ bool LocalRxBase::initialize(void)
   cfg.getValue(name(), "SQL_EXTENDED_HANGTIME", sql_extended_hangtime);
   cfg.getValue(name(), "SQL_EXTENDED_HANGTIME_THRESH",
       sql_extended_hangtime_thresh);
-  
+
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRxBase::onSquelchOpen));
   fullband_splitter->addSink(squelch_det, true);
+
+  squelchOpen.connect(
+      sigc::hide(sigc::mem_fun(*this, &LocalRxBase::publishSquelchState)));
 
     // Set up out of band AFSK demodulator if configured
   float voice_gain = 0.0f;
@@ -942,6 +946,7 @@ void LocalRxBase::onSignalLevelUpdated(float siglev)
 {
   setSqlHangtimeFromSiglev(siglev);
   signalLevelUpdated(siglev);
+  publishSquelchState();
 } /* LocalRxBase::onSignalLevelUpdated */
 
 
@@ -971,6 +976,27 @@ void LocalRxBase::rxReadyStateChanged(void)
     squelch_det->squelchOpen(false);
   }
 } /* LocalRxBase::rxReadyStateChanged */
+
+
+void LocalRxBase::publishSquelchState(void)
+{
+  //std::cout << "### LocalRxBase::publishSquelchState: " << std::endl;
+  float siglev = signalStrength();
+  Json::Value rx(Json::objectValue);
+  rx["name"] = name();
+  char rx_id = sqlRxId();
+  rx["id"] = std::string(&rx_id, &rx_id+1);
+  rx["sql_open"] = squelchIsOpen();
+  rx["siglev"] = static_cast<int>(siglev);
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  stringstream os;
+  writer->write(rx, &os);
+  delete writer;
+  publishStateEvent("Rx:sql_state", os.str());
+} /* LocalRxBase::publishSquelchState */
 
 
 

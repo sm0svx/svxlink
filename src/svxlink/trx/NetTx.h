@@ -154,13 +154,7 @@ class NetTx : public Tx
      * transmitter on when there is audio to transmit.
      */
     virtual void setTxCtrlMode(TxCtrlMode mode);
-    
-    /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
-     */
-    virtual bool isTransmitting(void) const;
-    
+
     /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
@@ -212,7 +206,6 @@ class NetTx : public Tx
     NetTrxTcpClient   	  *tcp_con;
     bool                  log_disconnects_once;
     bool                  log_disconnect;
-    bool      	      	  is_transmitting;
     Tx::TxCtrlMode    	  mode;
     bool      	      	  ctcss_enable;
     Async::AudioPacer 	  *pacer;
@@ -228,7 +221,6 @@ class NetTx : public Tx
     void sendMsg(NetTrxMsg::Msg *msg);
     void writeEncodedSamples(const void *buf, int size);
     void flushEncodedSamples(void);
-    void setIsTransmitting(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
 
 

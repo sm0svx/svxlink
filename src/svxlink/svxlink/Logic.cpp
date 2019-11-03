@@ -399,7 +399,7 @@ bool Logic::initialize(void)
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
-  rx().publishStateEvent.connect(mem_fun(*this, &Logic::publishStateEvent));
+  rx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -557,6 +557,7 @@ bool Logic::initialize(void)
   }
   tx().transmitterStateChange.connect(
       mem_fun(*this, &Logic::transmitterStateChange));
+  tx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
   prev_tx_src->registerSink(m_tx);
   prev_tx_src = 0;
 
@@ -588,7 +589,7 @@ bool Logic::initialize(void)
   event_handler->deactivateModule.connect(
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->publishStateEvent.connect(
-          mem_fun(*this, &Logic::publishStateEvent));
+          mem_fun(*this, &Logic::onPublishStateEvent));
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setVariable("mycall", m_callsign);
@@ -655,6 +656,37 @@ bool Logic::initialize(void)
       mem_fun(*this, &Logic::putCmdOnQueue));
   exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
+
+  typedef std::vector<SvxLink::SepPair<float, uint32_t> > CtcssToTgVec;
+  CtcssToTgVec ctcss_to_tg;
+  if (!cfg().getValue(name(), "CTCSS_TO_TG", ctcss_to_tg, true))
+  {
+    cerr << "*** ERROR: Illegal value for configuration variable "
+         << name() << "/CTCSS_TO_TG" << endl;
+    return false;
+  }
+  for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
+       it != ctcss_to_tg.end(); ++it)
+  {
+    int bw = 4;
+    if (it->first > 300)
+    {
+      bw = 50;
+    }
+    if (rx().addToneDetector(it->first, bw, 10, 1000))
+    {
+      uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*it->first));
+      uint32_t tg = it->second;
+      m_ctcss_to_tg[uint_fq] = tg;
+    }
+    else
+    {
+      cerr << "*** WARNING: Could not setup tone detector for CTCSS "
+           << it->first << " to TG #" << it->second << " map in logic "
+           << name() << endl;
+    }
+  }
+  rx().toneDetected.connect(mem_fun(*this, &Logic::detectedTone));
 
   return true;
 
@@ -960,6 +992,7 @@ void Logic::squelchOpen(bool is_open)
       }
     }
     processCommandQueue();
+    setReceivedTg(0);
   }
   else
   {
@@ -1623,8 +1656,10 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 } /* Logic::audioFromModuleStreamStateChanged */
 
 
-void Logic::publishStateEvent(const string &event_name, const string &msg)
+void Logic::onPublishStateEvent(const string &event_name, const string &msg)
 {
+  publishStateEvent(event_name, msg);
+
   if (state_pty == 0)
   {
     return;
@@ -1637,7 +1672,21 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   os << event_name << " " << msg;
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
-} /* Logic::publishStateEvent */
+} /* Logic::onPublishStateEvent */
+
+
+void Logic::detectedTone(float fq)
+{
+  //cout << name() << ": " << fq << " Hz tone call detected" << endl;
+  uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*fq));
+  std::map<uint16_t, uint32_t>::const_iterator it = m_ctcss_to_tg.find(uint_fq);
+  if (it != m_ctcss_to_tg.end())
+  {
+    uint32_t tg = it->second;
+    //cout << "### Map CTCSS " << fq << " to TG #" << tg << endl;
+    setReceivedTg(tg);
+  }
+} /* Logic::detectedTone */
 
 
 /*

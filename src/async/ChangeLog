@@ -3,6 +3,21 @@
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
 
+* Config::getValue() for vectors now tokenize on comma in addition to
+  whitespace.
+
+* Improved implementation for SvxLink::SepPair to work better with streaming.
+
+* Config: Add support for calling getValue on keyed containers, like std::set
+  and std::multiset.
+
+* Msg: Add support for std::set variable in messages.
+
+* New member function AudioSelector::selectedSource() used to find out which
+  source that are currently selected.
+
+* AudioSelector::autoSelectEnabled() can now be called with a constant source.
+
 
 
  1.6.0 -- 01 Sep 2019

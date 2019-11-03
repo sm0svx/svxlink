@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -190,10 +191,12 @@ class MultiTx : public Tx
     Async::Config     	  &cfg;
     std::list<Tx *>   	  txs;
     Async::AudioSplitter  *splitter;
+    Async::Timer          m_tx_state_delay_timer;
     
     MultiTx(const MultiTx&);
     MultiTx& operator=(const MultiTx&);
     void onTransmitterStateChange(void);
+    void txStateDelayExpired(void);
     
 };  /* class MultiTx */
 

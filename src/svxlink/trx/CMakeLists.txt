@@ -60,6 +60,15 @@ else (RTLSDR_FOUND)
   )
 endif (RTLSDR_FOUND)
 
+# Find jsoncpp library
+#find_package(jsoncpp REQUIRED)
+#get_target_property(JSONCPP_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+#include_directories(${JSONCPP_INC_PATH})
+#set(LIBS ${LIBS} jsoncpp_lib)
+pkg_check_modules (JSONCPP REQUIRED jsoncpp)
+include_directories(${JSONCPP_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
+
 # Build only a static library
 add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})
 target_link_libraries(${LIBNAME} ${LIBS})
