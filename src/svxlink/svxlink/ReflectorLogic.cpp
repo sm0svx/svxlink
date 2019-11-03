@@ -135,7 +135,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_event_handler(0),
     m_report_tg_timer(500, Async::Timer::TYPE_ONESHOT, false),
     m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
-    m_mute_first_tx_loc(true), m_mute_first_tx_rem(false)
+    m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
+    m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -149,6 +150,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
         sigc::mem_fun(*this, &ReflectorLogic::tgSelectTimerExpired)));
   m_report_tg_timer.expired.connect(sigc::hide(
         sigc::mem_fun(*this, &ReflectorLogic::processTgSelectionEvent)));
+  m_tmp_monitor_timer.expired.connect(sigc::hide(
+        sigc::mem_fun(*this, &ReflectorLogic::checkTmpMonitorTimeout)));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -435,6 +438,43 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     {
       selectTg(m_last_qsy, "tg_command_activation", true);
       m_tg_local_activity = true;
+    }
+    else
+    {
+      processEvent(std::string("command_failed ") + cmd);
+    }
+  }
+  else if (cmd[0] == '4')   // Temporarily monitor talk group
+  {
+    const std::string subcmd(cmd.substr(1));
+    if (!subcmd.empty())
+    {
+      istringstream is(subcmd);
+      uint32_t tg = 0;
+      if (is >> tg)
+      {
+        const MonitorTgsSet::iterator it = m_monitor_tgs.find(tg);
+        if (it != m_monitor_tgs.end())
+        {
+            // NOTE: (*it).timeout is mutable
+          (*it).timeout = TMP_MONITOR_TIMEOUT;
+        }
+        else
+        {
+          MonitorTgEntry mte(tg);
+          mte.timeout = TMP_MONITOR_TIMEOUT;
+          m_monitor_tgs.insert(mte);
+          sendMsg(MsgTgMonitor(std::set<uint32_t>(
+                  m_monitor_tgs.begin(), m_monitor_tgs.end())));
+        }
+        std::ostringstream os;
+        os << "tmp_monitor_add " << tg;
+        processEvent(os.str());
+      }
+      else
+      {
+        processEvent(std::string("command_failed ") + cmd);
+      }
     }
     else
     {
@@ -1552,6 +1592,37 @@ void ReflectorLogic::processTgSelectionEvent(void)
   processEvent(m_tg_selection_event);
   m_tg_selection_event.clear();
 } /* ReflectorLogic::processTgSelectionEvent */
+
+
+void ReflectorLogic::checkTmpMonitorTimeout(void)
+{
+  bool changed = false;
+  MonitorTgsSet::iterator it = m_monitor_tgs.begin();
+  while (it != m_monitor_tgs.end())
+  {
+    MonitorTgsSet::iterator next=it;
+    ++next;
+    const MonitorTgEntry& mte = *it;
+    if (mte.timeout > 0)
+    {
+        // NOTE: mte.timeout is mutable
+      if (--mte.timeout <= 0)
+      {
+        changed = true;
+        m_monitor_tgs.erase(it);
+        std::ostringstream os;
+        os << "tmp_monitor_remove " << mte.tg;
+        processEvent(os.str());
+      }
+    }
+    it = next;
+  }
+  if (changed)
+  {
+    sendMsg(MsgTgMonitor(std::set<uint32_t>(
+            m_monitor_tgs.begin(), m_monitor_tgs.end())));
+  }
+} /* ReflectorLogic::checkTmpMonitorTimeout */
 
 
 /*

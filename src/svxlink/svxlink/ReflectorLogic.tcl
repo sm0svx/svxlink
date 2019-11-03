@@ -272,6 +272,29 @@ proc talker_stop {tg callsign} {
 }
 
 
+#
+# A talk group was added for temporary monitoring
+#
+#   tg -- The added talk group
+#
+proc tmp_monitor_add {tg} {
+  #puts "### tmp_monitor_add: $tg"
+  playSilence 100
+  playMsg "Core" "monitor"
+  spellNumber $tg
+}
+
+
+#
+# A talk group was removed from temporary monitoring
+#
+#   tg -- The removed talk group
+#
+proc tmp_monitor_remove {tg} {
+  #puts "### tmp_monitor_remove: $tg"
+}
+
+
 if [info exists ::Logic::CFG_ANNOUNCE_REMOTE_MIN_INTERVAL] {
   set announce_remote_min_interval $::Logic::CFG_ANNOUNCE_REMOTE_MIN_INTERVAL
 }

@@ -186,9 +186,10 @@ class ReflectorLogic : public LogicBase
   private:
     struct MonitorTgEntry
     {
-      uint32_t  tg;
-      uint8_t   prio;
-      MonitorTgEntry(uint32_t tg=0) : tg(tg), prio(0) {}
+      uint32_t    tg;
+      uint8_t     prio;
+      mutable int timeout;
+      MonitorTgEntry(uint32_t tg=0) : tg(tg), prio(0), timeout(0) {}
       bool operator<(const MonitorTgEntry& mte) const { return tg < mte.tg; }
       bool operator==(const MonitorTgEntry& mte) const { return tg == mte.tg; }
       operator uint32_t(void) const { return tg; }
@@ -203,11 +204,12 @@ class ReflectorLogic : public LogicBase
     typedef Async::TcpClient<Async::FramedTcpConnection> FramedTcpClient;
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
 
-    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET = 15;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET = 60;
-    static const unsigned TCP_HEARTBEAT_TX_CNT_RESET = 10;
-    static const unsigned TCP_HEARTBEAT_RX_CNT_RESET = 15;
-    static const unsigned DEFAULT_TG_SELECT_TIMEOUT  = 30;
+    static const unsigned UDP_HEARTBEAT_TX_CNT_RESET  = 15;
+    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 60;
+    static const unsigned TCP_HEARTBEAT_TX_CNT_RESET  = 10;
+    static const unsigned TCP_HEARTBEAT_RX_CNT_RESET  = 15;
+    static const unsigned DEFAULT_TG_SELECT_TIMEOUT   = 30;
+    static const int      TMP_MONITOR_TIMEOUT         = 3600;
 
     std::string                       m_reflector_host;
     uint16_t                          m_reflector_port;
@@ -249,6 +251,7 @@ class ReflectorLogic : public LogicBase
     Async::AudioValve*                m_logic_con_in_valve;
     bool                              m_mute_first_tx_loc;
     bool                              m_mute_first_tx_rem;
+    Async::Timer                      m_tmp_monitor_timer;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -290,6 +293,7 @@ class ReflectorLogic : public LogicBase
     void selectTg(uint32_t tg, const std::string& event, bool unmute);
     void processEvent(const std::string& event);
     void processTgSelectionEvent(void);
+    void checkTmpMonitorTimeout(void);
 
 };  /* class ReflectorLogic */
 
