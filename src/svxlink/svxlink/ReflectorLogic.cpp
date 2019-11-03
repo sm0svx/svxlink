@@ -1514,7 +1514,10 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
   if (tg != m_selected_tg)
   {
     sendMsg(MsgSelectTG(tg));
-    m_previous_tg = m_selected_tg;
+    if (m_selected_tg != 0)
+    {
+      m_previous_tg = m_selected_tg;
+    }
     m_selected_tg = tg;
     m_tg_local_activity = false;
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
