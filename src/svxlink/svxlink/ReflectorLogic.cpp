@@ -136,7 +136,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_report_tg_timer(500, Async::Timer::TYPE_ONESHOT, false),
     m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
-    m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC)
+    m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
+    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -320,6 +321,8 @@ bool ReflectorLogic::initialize(void)
     return false;
   }
 
+  cfg().getValue(name(), "TMP_MONITOR_TIMEOUT", m_tmp_monitor_timeout);
+
   std::string node_info_file;
   if (cfg().getValue(name(), "NODE_INFO_FILE", node_info_file))
   {
@@ -447,7 +450,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   else if (cmd[0] == '4')   // Temporarily monitor talk group
   {
     const std::string subcmd(cmd.substr(1));
-    if (!subcmd.empty())
+    if ((m_tmp_monitor_timeout > 0) && !subcmd.empty())
     {
       istringstream is(subcmd);
       uint32_t tg = 0;
@@ -459,14 +462,14 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           std::cout << name() << ": Refresh temporary monitor for TG #"
                     << tg << std::endl;
             // NOTE: (*it).timeout is mutable
-          (*it).timeout = TMP_MONITOR_TIMEOUT;
+          (*it).timeout = m_tmp_monitor_timeout;
         }
         else
         {
           std::cout << name() << ": Add temporary monitor for TG #"
                     << tg << std::endl;
           MonitorTgEntry mte(tg);
-          mte.timeout = TMP_MONITOR_TIMEOUT;
+          mte.timeout = m_tmp_monitor_timeout;
           m_monitor_tgs.insert(mte);
           sendMsg(MsgTgMonitor(std::set<uint32_t>(
                   m_monitor_tgs.begin(), m_monitor_tgs.end())));

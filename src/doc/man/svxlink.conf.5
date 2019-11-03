@@ -671,6 +671,11 @@ the reflector network while entering DTMF commands.
 This feature is not enabled by default since it is a bit unintuitive. If a
 local user hear a call and want to answer that call, he must first make a short
 transmission to "open up" the local node. This is easy to forget.
+.TP
+.B TMP_MONITOR_TIMEOUT
+This configuration variable determines after how many seconds a manually added
+temporary talk group monitor will time out. Set to 0 to disable this feature.
+Default is 3600, one hour.
 .
 .SS QSO Recorder Section
 .
