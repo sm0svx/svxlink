@@ -189,8 +189,38 @@ proc tg_qsy {new_tg old_tg} {
   set prev_announce_time [clock seconds]
   set prev_announce_tg $new_tg
   playSilence 100
-  playMsg "Core" "talk_group"
+  playMsg "Core" "qsy"
+  #playMsg "Core" "talk_group"
   spellNumber $new_tg
+}
+
+
+#
+# Executed when a TG QSY request fails
+#
+# A TG QSY may fail for primarily two reasons, either no talk group is
+# currently active or there is no connection to the reflector server.
+#
+proc tg_qsy_failed {} {
+  #puts "### tg_qsy_idle"
+  playSilence 100
+  playMsg "Core" "qsy"
+  playSilence 200
+  playMsg "Core" "operation_failed"
+}
+
+
+#
+# Executed when a TG QSY request is ignored
+#
+# tg -- The talk group requested in the QSY
+#
+proc tg_qsy_ignored {tg} {
+  #puts "### tg_qsy_ignored"
+  playSilence 100
+  playMsg "Core" "qsy"
+  spellNumber $tg
+  playMsg "Core" "ignored"
 }
 
 

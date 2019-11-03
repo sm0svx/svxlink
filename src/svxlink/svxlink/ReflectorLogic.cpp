@@ -420,13 +420,13 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
         }
         else
         {
-          processEvent(std::string("command_failed ") + cmd);
+          processEvent("tg_qsy_idle");
         }
       }
     }
     else
     {
-      processEvent(std::string("command_failed ") + cmd);
+      processEvent("tg_qsy_idle");
     }
   }
   else if (cmd == "3")   // Follow last QSY
@@ -1061,6 +1061,9 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
     m_last_qsy = msg.tg();
     cout << name()
          << ": Server QSY request ignored. No local activity." << endl;
+    std::ostringstream os;
+    os << "tg_qsy_ignored " << msg.tg();
+    processEvent(os.str());
   }
 } /* ReflectorLogic::handleMsgRequestQsy */
 
