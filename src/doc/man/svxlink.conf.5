@@ -649,16 +649,28 @@ variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
 .TP
-.B MUTE_FIRST_TX
-Mute the first transmission after selecting a talk group. This feature is good
-to have enabled for a number of reasons. One reason is to suppress short
-openings of a talk group when someone just make a single transmission to test
-the local node. Another reason is for to allow someone to submit DTMF commands
-to the node without disturbing the reflector network. For example, if the local
-node have opened up due to activity on a monitored talk group but a local user
-wish to switch to another talk group, that local user can do that without
-transmitting into the currently active talk group. This feature is enabled by
-default.
+.B MUTE_FIRST_TX_LOC
+Mute the first transmission after selecting a talk group due to local activity.
+This feature is good to have enabled for a number of reasons. One reason is to
+suppress short openings of a talk group when someone just make a single
+transmission to test the local node. Another reason is for to allow someone to
+submit DTMF commands to the node without disturbing the reflector network. An
+example is that someone activates a talk group using CTCSS but then immediately
+select another talk group using DTMF. In that case no transmission will be made
+on the first talk group. This feature is enabled by default.
+.TP
+.B MUTE_FIRST_TX_REM
+Mute the first transmission after selecting a talk group due to remote
+activity. This feature can be enabled to let local node users enter DTMF
+commands without disturbing an active talk group. As an example, the local node
+monitors a talk group that is active. However, no one on the local node
+participates in the QSO and a local user want to select another talk group.
+With this feature enabled it is possible to do that without transmitting into
+the reflector network while entering DTMF commands.
+
+This feature is not enabled by default since it is a bit unintuitive. If a
+local user hear a call and want to answer that call, he must first make a short
+transmission to "open up" the local node. This is easy to forget.
 .
 .SS QSO Recorder Section
 .

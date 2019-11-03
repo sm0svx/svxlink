@@ -134,7 +134,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
     m_report_tg_timer(500, Async::Timer::TYPE_ONESHOT, false),
-    m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0)
+    m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
+    m_mute_first_tx_loc(true), m_mute_first_tx_rem(false)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -252,9 +253,9 @@ bool ReflectorLogic::initialize(void)
       sigc::mem_fun(*this, &ReflectorLogic::onLogicConInStreamStateChanged));
   AudioSource *prev_src = m_logic_con_in;
 
-  bool mute_first_tx = true;
-  cfg().getValue(name(), "MUTE_FIRST_TX", mute_first_tx);
-  if (mute_first_tx)
+  cfg().getValue(name(), "MUTE_FIRST_TX_LOC", m_mute_first_tx_loc);
+  cfg().getValue(name(), "MUTE_FIRST_TX_REM", m_mute_first_tx_rem);
+  if (m_mute_first_tx_loc || m_mute_first_tx_rem)
   {
     m_logic_con_in_valve = new Async::AudioValve;
     m_logic_con_in_valve->setOpen(false);
@@ -384,7 +385,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       uint32_t tg;
       if (is >> tg)
       {
-        selectTg(tg, "tg_command_activation");
+        selectTg(tg, "tg_command_activation", true);
         m_tg_local_activity = true;
       }
       else
@@ -394,7 +395,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     }
     else // Select previous TG
     {
-      selectTg(m_previous_tg, "tg_command_activation");
+      selectTg(m_previous_tg, "tg_command_activation", true);
       m_tg_local_activity = true;
     }
   }
@@ -432,7 +433,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   {
     if ((m_last_qsy > 0) && (m_last_qsy != m_selected_tg))
     {
-      selectTg(m_last_qsy, "tg_command_activation");
+      selectTg(m_last_qsy, "tg_command_activation", true);
       m_tg_local_activity = true;
     }
     else
@@ -453,7 +454,7 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
   //     << logic->name() << "  tg=" << tg << endl;
   if ((m_selected_tg == 0) && (tg > 0))
   {
-    selectTg(tg, "tg_local_activation");
+    selectTg(tg, "tg_local_activation", !m_mute_first_tx_loc);
     m_tg_local_activity = true;
   }
 } /* ReflectorLogic::remoteReceivedTgUpdated */
@@ -994,7 +995,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     // Select the incoming TG if idle
   if (m_tg_select_timeout_cnt == 0)
   {
-    selectTg(msg.tg(), "tg_remote_activation");
+    selectTg(msg.tg(), "tg_remote_activation", !m_mute_first_tx_rem);
   }
   else
   {
@@ -1013,7 +1014,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     {
       std::cout << name() << ": Activity on prioritized TG #"
                 << msg.tg() << ". Switching!" << std::endl;
-      selectTg(msg.tg(), "tg_remote_prio_activation");
+      selectTg(msg.tg(), "tg_remote_prio_activation", !m_mute_first_tx_rem);
     }
   }
 
@@ -1053,7 +1054,7 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
   cout << name() << ": Server QSY request for TG #" << msg.tg() << endl;
   if (m_tg_local_activity)
   {
-    selectTg(msg.tg(), "tg_qsy");
+    selectTg(msg.tg(), "tg_qsy", true);
   }
   else
   {
@@ -1451,7 +1452,7 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     {
       if (m_default_tg > 0)
       {
-        selectTg(m_default_tg, "tg_default_activation");
+        selectTg(m_default_tg, "tg_default_activation", !m_mute_first_tx_loc);
       }
     }
     m_tg_local_activity = true;
@@ -1495,13 +1496,13 @@ void ReflectorLogic::tgSelectTimerExpired(void)
     if (m_logic_con_out->isIdle() && m_logic_con_in->isIdle() &&
         (--m_tg_select_timeout_cnt == 0))
     {
-      selectTg(0, "tg_selection_timeout");
+      selectTg(0, "tg_selection_timeout", false);
     }
   }
 } /* ReflectorLogic::tgSelectTimerExpired */
 
 
-void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
+void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute)
 {
   cout << name() << ": Selecting TG #" << tg << endl;
 
@@ -1522,12 +1523,13 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event)
     m_tg_local_activity = false;
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
-    if ((m_logic_con_in_valve != 0 ) && (tg == 0))
-    {
-      m_logic_con_in_valve->setOpen(false);
-    }
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
+
+  if (m_logic_con_in_valve != 0)
+  {
+    m_logic_con_in_valve->setOpen(unmute);
+  }
 } /* ReflectorLogic::selectTg */
 
 

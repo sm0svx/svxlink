@@ -247,6 +247,8 @@ class ReflectorLogic : public LogicBase
     Json::Value                       m_node_info;
     Async::AudioSource*               m_enc_endpoint;
     Async::AudioValve*                m_logic_con_in_valve;
+    bool                              m_mute_first_tx_loc;
+    bool                              m_mute_first_tx_rem;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -285,7 +287,7 @@ class ReflectorLogic : public LogicBase
     void tgSelectTimerExpired(void);
     void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
-    void selectTg(uint32_t tg, const std::string& event);
+    void selectTg(uint32_t tg, const std::string& event, bool unmute);
     void processEvent(const std::string& event);
     void processTgSelectionEvent(void);
 
