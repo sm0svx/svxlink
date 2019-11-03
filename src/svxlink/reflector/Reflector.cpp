@@ -659,7 +659,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   {
     ReflectorClient* client = client_it->second;
     Json::Value node(client->nodeInfo());
-    node["addr"] = client->remoteHost().toString();
+    //node["addr"] = client->remoteHost().toString();
     node["protoVer"]["majorVer"] = client->protoVer().majorVer();
     node["protoVer"]["minorVer"] = client->protoVer().minorVer();
     node["tg"] = client->currentTG();
