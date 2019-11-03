@@ -456,11 +456,15 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
         const MonitorTgsSet::iterator it = m_monitor_tgs.find(tg);
         if (it != m_monitor_tgs.end())
         {
+          std::cout << name() << ": Refresh temporary monitor for TG #"
+                    << tg << std::endl;
             // NOTE: (*it).timeout is mutable
           (*it).timeout = TMP_MONITOR_TIMEOUT;
         }
         else
         {
+          std::cout << name() << ": Add temporary monitor for TG #"
+                    << tg << std::endl;
           MonitorTgEntry mte(tg);
           mte.timeout = TMP_MONITOR_TIMEOUT;
           m_monitor_tgs.insert(mte);
@@ -1608,6 +1612,8 @@ void ReflectorLogic::checkTmpMonitorTimeout(void)
         // NOTE: mte.timeout is mutable
       if (--mte.timeout <= 0)
       {
+        std::cout << name() << ": Temporary monitor timeout for TG #"
+                  << mte.tg << std::endl;
         changed = true;
         m_monitor_tgs.erase(it);
         std::ostringstream os;
