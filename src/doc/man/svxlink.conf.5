@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "OCTOBER 2019" Linux "File Formats"
+.TH SVXLINK.CONF 5 "NOVEMBER 2019" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1164,11 +1164,11 @@ Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. The available choices are:
-"NONE", "NOISE", "TONE", "AFSK" or "SIM". Depending on other configuration
-there may be more choices available. For example, if a Ddr receiver is used
-there will also be a DDR signal level detector available.  The  signal level
-detector is only needed when using multiple receivers in a voter configuration
-or when using the SIGLEV squelch type.
+"NONE", "NOISE", "TONE", "AFSK" or "SIM", "CONST". Depending on other
+configuration there may be more choices available. For example, if a Ddr
+receiver is used there will also be a DDR signal level detector available.  The
+signal level detector is only needed when using multiple receivers in a voter
+configuration or when using the SIGLEV squelch type.
 
 Type NONE disable the signal level detector. This may be used if no signal
 level detector is needed.
@@ -1203,6 +1203,12 @@ Type SIM is a simulated signal level detector that can be used to debug
 problems in the SvxLink software. Use the SIGLEV_MIN, SIGLEV_MAX,
 SIGLEV_DEFAULT, SIGLEV_TOGGLE_INTERVAL and SIGLEV_RAND_INTERVAL configuration
 variables to configure the simulator.
+
+Type CONST is not a detector at all. Instead it is possible to set a constant
+signal level. This can be used for audio sources that does not have the concept
+of a signal level. If configured in a receiver managed by a Voter it can be
+used to determine priority in comparison to other receivers and audio sources.
+Use the SIGLEV_CONST configuration variable to set the signal level.
 .TP
 .B HID_DEVICE
 This parameter defines the device your hidraw adapter is connected to. This 
