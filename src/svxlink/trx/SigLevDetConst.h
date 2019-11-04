@@ -122,7 +122,9 @@ class SigLevDetConst : public SigLevDet
     /**
      * @brief   Default constuctor
      */
-    SigLevDetConst(void) : m_sample_rate(0), m_samp_cnt(0), m_siglev(0.0f) {}
+    SigLevDetConst(void)
+      : m_sample_rate(0), m_update_cnt(0),
+        m_update_cnt_reset(0), m_siglev(0.0f) {}
 
     /**
      * @brief   Destructor
@@ -144,7 +146,7 @@ class SigLevDetConst : public SigLevDet
       {
         return false;
       }
-      return true;
+      return SigLevDet::initialize(cfg, name, sample_rate);
     }
 
     /**
@@ -154,7 +156,12 @@ class SigLevDetConst : public SigLevDet
      * This function will set up how often the signal level detector will
      * report the signal strength.
      */
-    virtual void setContinuousUpdateInterval(int interval_ms) {}
+    virtual void setContinuousUpdateInterval(int interval_ms)
+    {
+      m_update_cnt_reset = interval_ms * m_sample_rate / 1000;
+      m_update_cnt = m_update_cnt_reset;
+      m_update_cnt = 0;
+    }
 
     /**
      * @brief   Set the integration time to use
@@ -181,7 +188,11 @@ class SigLevDetConst : public SigLevDet
     /**
      * @brief   Reset the signal level detector
      */
-    virtual void reset(void) {}
+    virtual void reset(void)
+    {
+      m_update_cnt_reset = 0;
+      m_update_cnt = 0;
+    }
 
   protected:
     virtual int writeSamples(const float *samples, int count)
@@ -190,11 +201,14 @@ class SigLevDetConst : public SigLevDet
       {
         return 0;
       }
-      m_samp_cnt += count;
-      if (m_samp_cnt >= m_sample_rate)
+      if (m_update_cnt_reset > 0)
       {
-        signalLevelUpdated(m_siglev);
-        m_samp_cnt = 0;
+        m_update_cnt += count;
+        if (m_update_cnt >= m_update_cnt_reset)
+        {
+          signalLevelUpdated(m_siglev);
+          m_update_cnt = m_update_cnt % m_update_cnt_reset;
+        }
       }
       return count;
     }
@@ -202,7 +216,8 @@ class SigLevDetConst : public SigLevDet
 
   private:
     int   m_sample_rate;
-    int   m_samp_cnt;
+    int   m_update_cnt;
+    int   m_update_cnt_reset;
     float m_siglev;
 
     SigLevDetConst(const SigLevDetConst&);
