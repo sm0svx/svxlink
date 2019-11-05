@@ -21,6 +21,8 @@
   other connected logics. This is used in the ReflectorLogic to announce talk
   group selections and command feedback.
 
+* New signal level "detector": CONST
+
 
 
  1.7.0 -- 01 Sep 2019
