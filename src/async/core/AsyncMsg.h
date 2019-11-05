@@ -91,7 +91,7 @@ For a working example, have a look at the demo application,
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -127,6 +127,7 @@ An example of how to use the AsyncMsg class
 #include <istream>
 #include <ostream>
 #include <vector>
+#include <set>
 #include <map>
 #include <limits>
 #include <endian.h>
@@ -488,6 +489,56 @@ class MsgPacker<std::vector<I> >
         I val;
         MsgPacker<I>::unpack(is, val);
         vec.push_back(val);
+      }
+      return true;
+    }
+};
+
+template <typename I>
+class MsgPacker<std::set<I> >
+{
+  public:
+    static bool pack(std::ostream& os, const std::set<I>& s)
+    {
+      //std::cout << "pack<set>(" << s.size() << ")" << std::endl;
+      if (s.size() > std::numeric_limits<uint16_t>::max())
+      {
+        return false;
+      }
+      MsgPacker<uint16_t>::pack(os, s.size());
+      for (typename std::set<I>::const_iterator it = s.begin();
+           it != s.end();
+           ++it)
+      {
+        MsgPacker<I>::pack(os, *it);
+      }
+      return true;
+    }
+    static size_t packedSize(const std::set<I>& s)
+    {
+      size_t size = sizeof(uint16_t);
+      for (typename std::set<I>::const_iterator it = s.begin();
+           it != s.end(); ++it)
+      {
+        size += MsgPacker<I>::packedSize(*it);
+      }
+      return size;
+    }
+    static bool unpack(std::istream& is, std::set<I>& s)
+    {
+      uint16_t set_size;
+      MsgPacker<uint16_t>::unpack(is, set_size);
+      if (set_size > std::numeric_limits<uint16_t>::max())
+      {
+        return false;
+      }
+      //std::cout << "unpack<set>(" << set_size << ")" << std::endl;
+      s.clear();
+      for (int i=0; i<set_size; ++i)
+      {
+        I val;
+        MsgPacker<I>::unpack(is, val);
+        s.insert(val);
       }
       return true;
     }

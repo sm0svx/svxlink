@@ -223,7 +223,10 @@ class LinkCmd : public Command
     {
       std::string event =
           LinkManager::instance()->cmdReceived(link, logic, subcmd);
-      logic->processEvent(event);
+      if (!event.empty())
+      {
+        logic->processEvent(event);
+      }
     }
 
   protected:

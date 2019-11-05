@@ -268,6 +268,7 @@ class LocalRxBase : public Rx
     void onSignalLevelUpdated(float siglev);
     void setSqlHangtimeFromSiglev(float siglev);
     void rxReadyStateChanged(void);
+    void publishSquelchState(void);
 
 };  /* class LocalRxBase */
 

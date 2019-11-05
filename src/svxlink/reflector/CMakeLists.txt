@@ -10,12 +10,21 @@ set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
 include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
 
+# Find jsoncpp library
+#find_package(jsoncpp REQUIRED)
+#get_target_property(JSONCPP_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+#include_directories(${JSONCPP_INC_PATH})
+#set(LIBS ${LIBS} jsoncpp_lib)
+pkg_check_modules (JSONCPP REQUIRED jsoncpp)
+include_directories(${JSONCPP_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
+
 # Add project libraries
-set(LIBS ${LIBS} asynccpp asyncaudio asynccore svxmisc)
+set(LIBS asynccpp asyncaudio asynccore svxmisc ${LIBS})
 
 # Build the executable
 add_executable(svxreflector
-  svxreflector.cpp Reflector.cpp ReflectorClient.cpp
+  svxreflector.cpp Reflector.cpp ReflectorClient.cpp TGHandler.cpp
 )
 target_link_libraries(svxreflector ${LIBS})
 set_target_properties(svxreflector PROPERTIES

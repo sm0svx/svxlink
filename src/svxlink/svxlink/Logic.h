@@ -282,6 +282,7 @@ class Logic : public LogicBase
     DtmfDigitHandler                *dtmf_digit_handler;
     Async::Pty                      *state_pty;
     Async::Pty                      *dtmf_ctrl_pty;
+    std::map<uint16_t, uint32_t>    m_ctcss_to_tg;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
@@ -301,8 +302,9 @@ class Logic : public LogicBase
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    void publishStateEvent(const std::string &event_name,
-                           const std::string &msg);
+    void onPublishStateEvent(const std::string &event_name,
+                             const std::string &msg);
+    void detectedTone(float fq);
 
 };  /* class Logic */
 

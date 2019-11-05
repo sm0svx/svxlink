@@ -55,8 +55,17 @@ if(CURL_FOUND)
    message(FATAL_ERROR "Could not find the CURL library and development files.")
 endif(CURL_FOUND)
 
+# Find jsoncpp library
+#find_package(jsoncpp REQUIRED)
+#get_target_property(JSONCPP_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+#include_directories(${JSONCPP_INC_PATH})
+#set(LIBS ${LIBS} jsoncpp_lib)
+pkg_check_modules (JSONCPP REQUIRED jsoncpp)
+include_directories(${JSONCPP_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
+
 # Add project libraries
-set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore svxmisc)
+set(LIBS trx locationinfo asynccpp asyncaudio asynccore svxmisc ${LIBS})
 
 # Build the executable
 add_executable(svxlink
@@ -95,9 +104,10 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
+install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
-install(FILES RepeaterLogic.tcl SimplexLogic.tcl SipLogic.tcl Module.tcl Logic.tcl CW.tcl
-  SelCall.tcl locale.tcl
+install(FILES RepeaterLogic.tcl SimplexLogic.tcl ReflectorLogic.tcl Module.tcl
+  Logic.tcl CW.tcl SelCall.tcl locale.tcl SipLogic.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
   )
 install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up

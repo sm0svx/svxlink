@@ -136,7 +136,8 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * @param   tx_name   The name of the transmitter
      */
     Tx(std::string tx_name)
-      : m_name(tx_name), m_verbose(true), m_is_transmitting(false)
+      : m_name(tx_name), m_tx_id('\0'), m_verbose(true),
+        m_is_transmitting(false)
     {
     }
   
@@ -156,6 +157,12 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * @return	Return the name of the transmitter
      */
     const std::string& name(void) const { return m_name; }
+
+    /**
+     * @brief   Return the ID of the transmitter
+     * @return  The transmitter ID is returned
+     */
+    char id(void) const { return m_tx_id; }
 
     /*
      * @brief 	Set the verbosity level of the transmitter
@@ -246,11 +253,27 @@ class Tx : public sigc::trackable, public Async::AudioSink
      */
     sigc::signal<void, bool> transmitterStateChange;
 
+    /**
+     * @brief	A signal that is emitted to publish a state update event
+     * @param	event_name The name of the event
+     * @param   msg The state update message
+     *
+     * This signal is emitted when a receiver wish to publish a state update
+     * message. A state update message is a free text message that can be used
+     * by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Tx:tx_state.
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
+
   protected:
+    void setId(char id) { m_tx_id = id; }
     void setIsTransmitting(bool is_transmitting);
 
   private:
     std::string m_name;
+    char        m_tx_id;
     bool        m_verbose;
     bool        m_is_transmitting;
 
