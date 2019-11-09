@@ -337,8 +337,8 @@ if (CPACK_GENERATOR STREQUAL "DEB")
     set(chown_file_commands "${chown_file_commands}${CHOWN_TOOL} ${file}\n")
   endforeach()
   file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/postinst"
-    "getent group ${SVXLINK_GROUP} || groupadd -r ${SVXLINK_GROUP}\n"
-    "getent passwd ${SVXLINK_USER} || useradd -r -g ${SVXLINK_GROUP} ${SVXLINK_USER}\n"
+    "getent group ${SVXLINK_GROUP} >/dev/null || groupadd -r ${SVXLINK_GROUP}\n"
+    "getent passwd ${SVXLINK_USER} >/dev/null || useradd -r -g ${SVXLINK_GROUP} ${SVXLINK_USER}\n"
     "${chown_file_commands}")
   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/conffiles;${CMAKE_CURRENT_BINARY_DIR}/postinst")
 endif(CPACK_GENERATOR STREQUAL "DEB")
