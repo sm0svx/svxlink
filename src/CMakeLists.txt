@@ -173,6 +173,9 @@ if(NOT DEFINED SVX_MODULE_INSTALL_DIR)
   set(SVX_MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/svxlink)
 endif(NOT DEFINED SVX_MODULE_INSTALL_DIR)
 
+# Clear global variables implemented using internal cache
+set(CONFIG_FILES "" CACHE INTERNAL "CONFIG_FILES")
+set(FILE_OWNER "" CACHE INTERNAL "FILE_OWNER")
 
 ##############################################################################
 # Functions
@@ -195,6 +198,8 @@ endfunction(expinc)
 # unset, chown operations are performed.
 function(install_chown filename owner)
   if(owner)
+    set(FILE_OWNER "${FILE_OWNER}${owner} ${filename};"
+	    CACHE INTERNAL "FILE_OWNER")
     set(chown_commands "
       set(CHOWN_TOOL ${CHOWN_TOOL})
       if(NOT CHOWN_TOOL)
@@ -247,6 +252,8 @@ function(install_if_not_exists src dest)
   if (NOT IS_ABSOLUTE "${dest}")
     set(dest "${CMAKE_INSTALL_PREFIX}/${dest}")
   endif()
+  set(CONFIG_FILES "${CONFIG_FILES}${dest}/${src_name} "
+	  CACHE INTERNAL "CONFIG_FILES")
   install(CODE "
     if(NOT EXISTS \"\$ENV{DESTDIR}${dest}/${src_name}\")
       #file(INSTALL \"${src}\" DESTINATION \"${dest}\")
@@ -324,5 +331,18 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/../COPYRIGHT")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/../README.adoc")
 
 #set(CPACK_GENERATOR "DEB")
+if (CPACK_GENERATOR STREQUAL "DEB")
+  #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsigc++-2.0-0v5, libgsm1, libpopt0, tcl, libgcrypt20, libspeex1, libasound2, libopus0, alsa-utils, vorbis-tools, libcurl4, rtl-sdr, libjsoncpp1")
+  string(REPLACE " " "\n" CONFIG_FILES_NL "${CONFIG_FILES}")
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/conffiles" "${CONFIG_FILES_NL}")
+  foreach(file ${FILE_OWNER})
+    set(chown_file_commands "${chown_file_commands}${CHOWN_TOOL} ${file}\n")
+  endforeach()
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/postinst"
+    "getent group ${SVXLINK_GROUP} >/dev/null || groupadd -r ${SVXLINK_GROUP}\n"
+    "getent passwd ${SVXLINK_USER} >/dev/null || useradd -r -g ${SVXLINK_GROUP} ${SVXLINK_USER}\n"
+    "${chown_file_commands}")
+  set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/conffiles;${CMAKE_CURRENT_BINARY_DIR}/postinst")
+endif(CPACK_GENERATOR STREQUAL "DEB")
 
 include(CPack)

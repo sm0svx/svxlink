@@ -9,7 +9,7 @@ EchoLink Qso.
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -552,17 +552,21 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
   {
     idle_timer_cnt = 0;
     return;
-  }  
-  
+  }
+
   if (++idle_timer_cnt == idle_timeout)
   {
-    cout << remoteCallsign() << ": EchoLink connection idle timeout. "
-      	 "Disconnecting...\n";
+    cout << remoteCallsign()
+         << ": EchoLink connection idle timeout. Disconnecting..." << endl;
     module->processEvent("link_inactivity_timeout");
     disc_when_done = true;
     msg_handler->begin();
     event_handler->processEvent(string(module->name()) + "::remote_timeout");
     msg_handler->end();
+    if (!msg_handler->isWritingMessage())
+    {
+      disconnect();
+    }
   }
 } /* idleTimeoutCheck */
 

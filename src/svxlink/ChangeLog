@@ -23,6 +23,9 @@
 
 * New signal level "detector": CONST
 
+* ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work if the
+  remote_timeout TCL function was changed to not play any sound.
+
 
 
  1.7.0 -- 01 Sep 2019

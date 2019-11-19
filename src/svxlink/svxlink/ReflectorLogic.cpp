@@ -295,14 +295,17 @@ bool ReflectorLogic::initialize(void)
   cfg().getValue(name(), "TG_SELECT_TIMEOUT", m_tg_select_timeout);
 
   m_event_handler = new EventHandler(event_handler_str, name());
-  m_event_handler->playFile.connect(sigc::bind<0>(
-        mem_fun(LinkManager::instance(), &LinkManager::playFile), this));
-  m_event_handler->playSilence.connect(sigc::bind<0>(
-        mem_fun(LinkManager::instance(), &LinkManager::playSilence), this));
-  m_event_handler->playTone.connect(sigc::bind<0>(
-        mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
-  m_event_handler->playDtmf.connect(sigc::bind<0>(
-        mem_fun(LinkManager::instance(), &LinkManager::playDtmf), this));
+  if (LinkManager::hasInstance())
+  {
+    m_event_handler->playFile.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playFile), this));
+    m_event_handler->playSilence.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playSilence), this));
+    m_event_handler->playTone.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
+    m_event_handler->playDtmf.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playDtmf), this));
+  }
   m_event_handler->setVariable("logic_name", name().c_str());
 
   m_event_handler->processEvent("namespace eval Logic {}");
