@@ -26,6 +26,10 @@
 * ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work if the
   remote_timeout TCL function was changed to not play any sound.
 
+* ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work with short timeout
+  values where the timeout was shorter than the length of a locally received
+  transmission.
+
 
 
  1.7.0 -- 01 Sep 2019
