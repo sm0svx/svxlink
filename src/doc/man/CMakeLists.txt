@@ -32,7 +32,7 @@ if(GROFF_TOOL AND GZIP_TOOL)
       OPTIONAL
     )
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.html
-      DESTINATION ${DOC_INSTALL_DIR}/man/man${sec}
+      DESTINATION ${DOC_INSTALL_DIR}/man${sec}
       OPTIONAL
     )
     set(TARGETS ${TARGETS} ${man}.gz ${man}.html)

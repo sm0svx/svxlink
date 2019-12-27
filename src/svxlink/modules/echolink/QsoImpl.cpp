@@ -136,7 +136,8 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   : m_qso(station.ip()), module(module), event_handler(0), msg_handler(0),
     output_sel(0), init_ok(false), reject_qso(false), last_message(""),
     last_info_msg(""), idle_timer(0), disc_when_done(false), idle_timer_cnt(0),
-    idle_timeout(0), destroy_timer(0), station(station), sink_handler(0)
+    idle_timeout(0), destroy_timer(0), station(station), sink_handler(0),
+    logic_is_idle(true)
 {
   assert(module != 0);
 
@@ -302,11 +303,8 @@ void QsoImpl::logicIdleStateChanged(bool is_idle)
   printf("QsoImpl::logicIdleStateChanged: is_idle=%s\n",
       is_idle ? "TRUE" : "FALSE");
   */
-  
-  if (!is_idle)
-  {
-    idle_timer_cnt = 0;
-  }
+
+  logic_is_idle = is_idle;
 } /* QsoImpl::logicIdleStateChanged */
 
 
@@ -548,7 +546,7 @@ void QsoImpl::onStateChange(Qso::State state)
 
 void QsoImpl::idleTimeoutCheck(Timer *t)
 {
-  if (receivingAudio())
+  if (receivingAudio() || !logic_is_idle)
   {
     idle_timer_cnt = 0;
     return;

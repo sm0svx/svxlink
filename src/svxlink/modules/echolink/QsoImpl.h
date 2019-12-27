@@ -334,6 +334,7 @@ class QsoImpl
     EchoLink::StationData   station;
     Async::AudioPassthrough *sink_handler;
     std::string             sysop_name;
+    bool                    logic_is_idle;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
