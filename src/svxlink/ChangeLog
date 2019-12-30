@@ -30,6 +30,8 @@
   values where the timeout was shorter than the length of a locally received
   transmission.
 
+* ModuleMetarInfo bugfix: Announcing twice
+
 
 
  1.7.0 -- 01 Sep 2019
