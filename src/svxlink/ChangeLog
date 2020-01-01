@@ -32,6 +32,7 @@
 
 * ModuleMetarInfo bugfix: Announcing twice
 
+* ModuleMetarInfo bugfix: SvxLink crashed on long LocationInfo comments
 
 
  1.7.0 -- 01 Sep 2019
