@@ -210,7 +210,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
 // updates state of a 3rd party
 void AprsTcpClient::update3rdState(const string& call, const string& info)
 {
-   char aprsmsg[200];
+   char aprsmsg[20 + info.length()];
    sprintf(aprsmsg, "%s>%s\n\r", call.c_str(), info.c_str());
    sendMsg(aprsmsg);
 } /* AprsTcpClient::update3rdState */
@@ -268,7 +268,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   sprintf(tone, (loc_cfg.tone < 1000) ? "T%03d" : "%04d", loc_cfg.tone);
 
     // APRS message
-  char aprsmsg[200];
+  char aprsmsg[150 + loc_cfg.comment.length()];
   sprintf(aprsmsg, "%s>%s,%s:;%s%-6.6s*111111z%s%03d.%03dMHz %s R%02d%c %s\r\n",
             el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
             el_prefix.c_str(), el_call.c_str(), pos, loc_cfg.frequency / 1000,
