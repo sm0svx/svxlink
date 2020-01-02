@@ -997,6 +997,8 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
   }
 
   handleMetar(metar);
+
+  html = "";
 } /* onDataReceived */
 
 
