@@ -398,21 +398,24 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   ReflectorUdpMsg header;
   if (!header.unpack(ss))
   {
-    cout << "*** WARNING: Unpacking failed for UDP message header\n";
+    cout << "*** WARNING: Unpacking message header failed for UDP datagram "
+            "from " << addr << ":" << port << endl;
     return;
   }
 
   ReflectorClientMap::iterator it = m_client_map.find(header.clientId());
   if (it == m_client_map.end())
   {
-    cerr << "*** WARNING: Incoming UDP packet has invalid client id" << endl;
+    cerr << "*** WARNING: Incoming UDP datagram from " << addr << ":" << port
+         << " has invalid client id " << header.clientId() << endl;
     return;
   }
   ReflectorClient *client = (*it).second;
   if (addr != client->remoteHost())
   {
     cerr << "*** WARNING[" << client->callsign()
-         << "]: Incoming UDP packet has the wrong source ip" << endl;
+         << "]: Incoming UDP packet has the wrong source ip, "
+         << addr << " instead of " << client->remoteHost() << endl;
     return;
   }
   if (client->remoteUdpPort() == 0)
@@ -424,7 +427,8 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   {
     cerr << "*** WARNING[" << client->callsign()
          << "]: Incoming UDP packet has the wrong source UDP "
-            "port number" << endl;
+            "port number, " << port << " instead of "
+         << client->remoteUdpPort() << endl;
     return;
   }
 
