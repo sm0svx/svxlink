@@ -31,6 +31,11 @@ will not be checked against the EchoLink directory server. A typical use of this
 is if you want to connect to your own svxlink server and both the server and you
 are behind a IP masquerading firewall. 
 .TP
+.B DROP_ALL_INCOMING
+Silently drop all incoming connections.  No message will be sent to the remote
+station notifying about the drop. The connection will just be ignored and there
+will be no notification in the application log.
+.TP
 .B DROP_INCOMING
 Drop all incoming connections where the remote callsign match this regular
 expression. No message will be sent to the remote station notifying about the
