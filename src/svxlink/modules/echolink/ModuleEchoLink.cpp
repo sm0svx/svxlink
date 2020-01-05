@@ -433,8 +433,13 @@ bool ModuleEchoLink::initialize(void)
     moduleCleanup();
     return false;
   }
-  Dispatcher::instance()->incomingConnection.connect(
-      mem_fun(*this, &ModuleEchoLink::onIncomingConnection));
+  bool drop_all_incoming = false;
+  if (!cfg().getValue(cfgName(), "DROP_ALL_INCOMING", drop_all_incoming) ||
+      !drop_all_incoming)
+  {
+    Dispatcher::instance()->incomingConnection.connect(
+        mem_fun(*this, &ModuleEchoLink::onIncomingConnection));
+  }
 
     // Create audio pipe chain for audio transmitted to the remote EchoLink
     // stations: <from core> -> Valve -> Splitter (-> QsoImpl ...)

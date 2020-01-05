@@ -34,6 +34,10 @@
 
 * ModuleMetarInfo bugfix: SvxLink crashed on long LocationInfo comments
 
+* ModuleEchoLink: Now possible to silently ignore all incoming connections
+  using the DROP_ALL_INCOMING configuration variable.
+
+
 
  1.7.0 -- 01 Sep 2019
 ----------------------
