@@ -37,6 +37,10 @@
 * ModuleEchoLink: Now possible to silently ignore all incoming connections
   using the DROP_ALL_INCOMING configuration variable.
 
+* The receiver configuration variables SQL_HANGTIME, SQL_EXTENDED_HANGTIME and
+  SQL_EXTENDED_HANGTIME_THRESH are now settable from within a C++ module for
+  example.
+
 
 
  1.7.0 -- 01 Sep 2019

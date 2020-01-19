@@ -46,6 +46,7 @@ An example of how to use the Config class
  ****************************************************************************/
 
 #include <stdio.h>
+#include <sigc++/sigc++.h>
 
 #include <string>
 #include <map>
@@ -139,7 +140,7 @@ class Config
     /**
      * @brief 	Default constuctor
      */
-    Config(void) : file(NULL) {}
+    Config(void) {}
   
     /**
      * @brief 	Destructor
@@ -413,13 +414,26 @@ class Config
      * is created.
      * Note that this function will not write anything back to the
      * associated configuration file. It will only set the value in memory.
+     *
+     * The valueUpdated signal will be emitted so that subscribers can get
+     * notified when the value of a configuration variable is changed.
      */
     void setValue(const std::string& section, const std::string& tag,
       	      	  const std::string& value);
-    
+
+    /**
+     * @brief   A signal that is emitted when a config value is updated
+     * @param   section The config section of the update
+     * @param   tag     The tag (variable name) of the update
+     *
+     * This signal is emitted whenever a configuration variable is changed
+     * by calling the setValue function.
+     */
+    sigc::signal<void, const std::string&, const std::string&> valueUpdated;
+
   private:
-    typedef std::map<std::string, std::string>	Values;
-    typedef std::map<std::string, Values>   	Sections;
+    typedef std::map<std::string, std::string>  Values;
+    typedef std::map<std::string, Values>       Sections;
     struct csv_whitespace : std::ctype<char>
     {
       static const mask* make_table(void)
@@ -434,10 +448,11 @@ class Config
         : std::ctype<char>(make_table(), false, refs) {}
     };
 
-    FILE      *file;
     Sections  sections;
-    
-    bool parseCfgFile(void);
+
+    //Config(const Config&);
+    //Config& operator=(const Config&);
+    bool parseCfgFile(FILE *file);
     char *trimSpaces(char *line);
     char *parseSection(char *line);
     char *parseDelimitedString(char *str, char begin_tok, char end_tok);

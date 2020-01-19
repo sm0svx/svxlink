@@ -211,7 +211,7 @@ class Sel5Decoder : public sigc::trackable, public Async::AudioSink
     const std::string &name(void) const { return m_name; }
 
   private:
-    Async::Config   m_cfg;
+    Async::Config&  m_cfg;
     std::string     m_name;
 
 };  /* class Sel5Decoder */
