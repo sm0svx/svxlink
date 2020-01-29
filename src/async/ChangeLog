@@ -18,6 +18,9 @@
 
 * AudioSelector::autoSelectEnabled() can now be called with a constant source.
 
+* Add a signal to the Config class so that one can subscribe to changes in the
+  configuration.
+
 
 
  1.6.0 -- 01 Sep 2019
