@@ -1,0 +1,174 @@
+SvxLink release 19.09 -- 01 Sep 2019
+------------------------------------
+This release of SvxLink have no single big feature addition but a lot of
+smaller ones. Some examples are: AFSK metadata transmission for RF linked
+remote receivers, per receiver voter delay adjustment, new module ModuleTrx to
+remote control transceivers using DTMF, more flexible announcement
+configuration and more.
+
+As usual a number of bugs have been fixed. The full list of changes and more
+details can be found below. Information on configuration of new features can be
+found in the manual pages.
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Complete ChangeLog for SvxLink Server version 1.7.0
+---------------------------------------------------
+
+* MetarInfo now supports secure http (https) since aviationweather.gov has 
+  switched to https only. Read documentation and/or README in directory 
+  modules/metarinfo for changes.
+
+* Now possible to set the roger sound to be always on in the SimplexLogic, even
+  when no module is active. Use the RGR_SOUND_ALWAYS configuration variable to
+  enable the feature.
+
+* New feature added called "AFSK-com". This feature make it possible to
+  transport smaller amouts of metadata on an RF link, for example when linking
+  remote receivers in via RF. The metadata can be signal level measurements,
+  DTMF digits or tone detections (e.g. 1750Hz or CTCSS for repeater
+  activation).
+  There are two modes for AFSK-com, in-band and out-of-band. The in-band mode
+  is used to transport data when there is no audio being transported. The
+  out-of-band mode is used when data must be transmitted at the same time as
+  analogue audio, like continuous signal level updates.
+  To configure the AFSK handling use the OB_AFSK_* (for out-of-band) and
+  IB_AFSK_* (for in-band) configuration variables. Also there is a new
+  SIGLEV_DET=AFSK and DTMF_DEC_TYPE=AFSK to support transporting those values
+  using the AFSK-com feature.
+
+* Now possible to specify 1750Hz and CTCSS detectors in a RemoteTrx RfUplink.
+  That is done using the new DETECT_1750 and DETECT_CTCSS configuration
+  variables.
+
+* An RX identity can now be specified for each receiver in a system. That
+  identity can then be used in the TCL event handling scripts to for example
+  send different roger sounds depending on which receiver the signal
+  originated from. The identity is specified using the RX_ID configuration
+  variable and consists of one char.
+
+* New receiver voter feature: Now possible to adjust the voting delay per
+  receiver. This may be good to do if some receivers are much slower to report
+  squelch open/signal level. As an example, let's say we have three receivers
+  where two of the receivers take at most 100ms to report signal level and one
+  receiver requires 300ms. We then need to set the VOTING_DELAY to something
+  like 350ms so as to be sure that all receivers get a chance to report their
+  signal level measurement. If only the slow receiver opens there will be a
+  total delay of 300+350=650ms. This is unnecessarily long since the other two
+  receivers should have reported their signal strength way earlier. It's thus
+  safe to shorten the voting delay for the slow receiver, so we do this:
+  RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay will now
+  be 100+350=450ms for the fast receivers and 300+350-200=450ms for the slow
+  receiver. That is, all receivers are now equally fast.
+
+* New configuration variable CTRL_PTY that can be used in RX and TX
+  configuration setions. It will set a PTY than can be used to control the
+  frequency and modulation of external receivers and transmitters. An external
+  transceiver control script is needed to actually control a transceiver. An
+  example of such a script, trx_pty_ctrl.py, can be found in the SvxLink
+  distribution. That script may be modified to support a specific transceiver.
+
+* Now possible to specify the same PTY for multiple receiver and transmitter
+  functions like squelch, ptt, DTMF, frequency control etc. That make it
+  possible to handle all commands on the one PTY in one script. It is still
+  possible to use separate PTY:s as before if that is desirable.
+
+* New module ModuleTrx, a module to control one or more separate transceivers
+  connected to a SvxLink node. The frequency of the transceiver is set through
+  DTMF commands and then it's possible to transmit and receive on the
+  transceiver through the SvxLink node. Have a look at the manual page for all
+  details.
+
+* The sound clip hz.wav have been moved from the Core directory to the Default
+  directory and renamed to Hz.wav. Language packs need to be updated.
+
+* There is a new function in locale.tcl called playFrequency that shoud read
+  back a frequency as intelligently as possible. Language packs need to be
+  updated if they use their own locale.tcl.
+
+* New Default sound clips: kHz, MHz, GHz, ok. Language packs need to be
+  updated.
+
+* The default group for SvxLink changed from 'daemon' to 'svxlink'.
+
+* ModuleEchoLink: New configuration variable REMOTE_RGR_SOUND that is used to
+  enable the sending of a roger sound to remote Echolink stations when the
+  squelch is closed on the local node. Default is to not send a roger sound.
+
+* Rename TCL function addTimerTickSubscriber to addMinuteTickSubscriber.
+
+* Add new TCL function addSecondTickSubscriber.
+
+* Now possible to not specify an ID for a module. It will then not be possible
+  to activate the module. This is typically useful for modules that have no
+  command interface but rather is just doing something in the background.
+
+* When reading TCL files, print a warning instead of erroring out if a file is
+  not readable.
+
+* The TCL function CW::setAmplitude now take the amplitude value in dB of
+  full scale amplitude rather than thusands of full amplitude.
+  Also it's now possible to give the CW::play function temporary values for CW
+  speed, frequency and amplitude.
+
+* The MultiTx now "mute" the logging printouts from its transmitters so that
+  only one "Turning the transmitter ON/OFF" is displayed instead of one for
+  each transmitter.
+
+* New configuration variable for logic cores, PHONETIC_SPELLING, which if set
+  to 0 will spell words using plain letters instead of the default phonetic
+  spelling. Not all language packs support this feature.
+
+* Now possible to set audio codec parameters for ReflectorLogic.
+
+* Bugfix: Reset squelch RX id after sending roger sound so that the following
+  roger sounds that may be triggered by non-rx events will send the "neutral"
+  roger sound.
+
+* Bugfix: The squelch detection logic for HIDRAW squelch was wrong so it did
+  not work for active low devices.
+
+* Bugfix: The EchoLink module could crash when encountering TCL errors.
+
+* ModuleMetarInfo: Windshear now with runway, error handling for metar txt
+  file, fix some typo
+
+* Adding new Config options related to enabling IDs.
+  Adding several config options to allow user to configure VOICE/CW/Custom
+  announcements during the short and long ID processes.  This allows the
+  settings to be on a channel by channel basis rather than having a single
+  file for all channels.
+  New logic configuration variables: SHORT_VOICE_ID_ENABLE,
+  SHORT_CW_ID_ENABLE, SHORT_ANNOUNCE_ENABLE, SHORT_ANNOUNCE_FILE,
+  LONG_VOICE_ID_ENABLE, LONG_CW_ID_ENABLE, LONG_ANNOUNCE_ENABLE,
+  LONG_ANNOUNCE_FILE. See manual page svxling.conf (5) for more info.
+
+* Now possible to configure SvxLink to keep audio devices open from
+  application start to exit. The normal behavior in SvxLink is to open and
+  close audio devices as needed. In a local RX and/or TX section set the
+  variable AUDIO_DEV_KEEP_OPEN=1.
+
+* Add stop timeout for systemd units after which svxlink will be killed if not
+  exiting within 10 seconds.
+
+* Now possible to specify which mail server to use in the voice mail module.
+
+* ModuleDtmfRepeater: Logic and timings were a bit strange and buggy so the
+  implementation was changed a bit.
+
+
+
+Complete ChangeLog for the Async library version 1.6.0
+------------------------------------------------------
+
+* New class Async::AudioFsf, an implementation of a frequency sampling filter.
+
+* Add method Async::Config::listSections() making it possible to list all
+  configuration sections.
+
+* Small optimization in the Async::CppApplication main loop.
+
+* AudioDeviceAlsa can now write zeros to the audio device on underflow. That
+  is, when the audio device is open but there is no audio to write zeros will
+  be written instead. Enable this behavior by setting the environment variable
+  ASYNC_AUDIO_ALSA_ZEROFILL=1.

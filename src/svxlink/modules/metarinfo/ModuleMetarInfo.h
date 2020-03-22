@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <map>
 #include <iostream>
+#include <curl/curl.h>
 
 
 /****************************************************************************
@@ -52,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
-#include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
 
 
@@ -90,6 +90,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async {
+  class Timer;
+};
 
 
 /****************************************************************************
@@ -116,14 +119,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /**
 @brief	A_brief_description_of_this_class
-@author Tobias Blomberg
+@author Adi Bier
 @date   2005-08-28
 */
 class ModuleMetarInfo : public Module
 {
   public:
     ModuleMetarInfo(void *dl_handle, Logic *logic, const std::string& cfg_name);
-    ~ModuleMetarInfo(void);
+    virtual ~ModuleMetarInfo(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   protected:
@@ -133,6 +136,8 @@ class ModuleMetarInfo : public Module
     virtual void flushSamples(void);
 
   private:
+    class Http;
+
     std::string icao;
     std::string icao_default;
     std::string longmsg;
@@ -149,11 +154,11 @@ class ModuleMetarInfo : public Module
     typedef std::map<std::string, std::string> Repdefs;
     Repdefs repstr;
 
-    Async::TcpClient<> *con;
     std::string html;
     std::string type;
     std::string server;
     std::string link;
+    Http* http;
 
     bool initialize(void);
     void activateInit(void);
@@ -163,10 +168,9 @@ class ModuleMetarInfo : public Module
     void dtmfCmdReceivedWhenIdle(const std::string& cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
-    void onDisconnected(Async::TcpClient<>::TcpConnection *con,
-                        Async::TcpClient<>::DisconnectReason reason);
-    void onConnected(void);
     void openConnection(void);
+    void closeConnection(void);
+    void onTimeout(void);
     std::string getSlp(std::string token);
     std::string getTempTime(std::string token);
     std::string getTempinRmk(std::string token);
@@ -177,13 +181,12 @@ class ModuleMetarInfo : public Module
     std::string getPrecipitation(std::string token);
     std::string getCloudType(std::string token);
     void isRwyState(std::string &retval, std::string token);
-    int  onDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
-              int count);
+    void onData(std::string metarinput, size_t count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string utctoken);
     int checkToken(std::string token);
-    bool rmatch(std::string tok, std::string token, regex_t *re);
+    bool rmatch(std::string tok, std::string token);
     bool checkDirection(std::string &retval, std::string token);
     bool getRmkVisibility(std::string &retval, std::string token);
     void isTime(std::string &retval, std::string token);
@@ -202,7 +205,6 @@ class ModuleMetarInfo : public Module
     void say(std::stringstream &tmp);
     int handleMetar(std::string input);
     std::string getXmlParam(std::string token, std::string input);
-
 };  /* class ModuleMetarInfo */
 
 

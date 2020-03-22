@@ -60,7 +60,7 @@ proc playTwoDigitNumber {number} {
   }
   
   set first [string index $number 0];
-  if {($first == "0") || ($first == "O")} {
+  if {($first == "0") || ($first == "o")} {
     playMsg "Default" $first;
     playMsg "Default" [string index $number 1];
   } elseif {$first == "1"} {
@@ -84,7 +84,7 @@ proc playThreeDigitNumber {number} {
   }
   
   set first [string index $number 0];
-  if {($first == "0") || ($first == "O")} {
+  if {($first == "0") || ($first == "o")} {
     spellNumber $number
   } else {
     append first "00";

@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <sstream>
+#include <json/json.h>
 
 
 
@@ -55,7 +57,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "NetTx.h"
 #include "MultiTx.h"
 #include "DummyRxTx.h"
-
 
 
 /****************************************************************************
@@ -242,6 +243,23 @@ void Tx::setIsTransmitting(bool is_transmitting)
     }
     m_is_transmitting = is_transmitting;
     transmitterStateChange(is_transmitting);
+
+    char tx_id = id();
+    if (tx_id != '\0')
+    {
+      Json::Value tx(Json::objectValue);
+      tx["name"] = name();
+      tx["id"] = std::string(&tx_id, &tx_id+1);
+      tx["transmit"] = is_transmitting;
+      Json::StreamWriterBuilder builder;
+      builder["commentStyle"] = "None";
+      builder["indentation"] = ""; //The JSON document is written on a single line
+      Json::StreamWriter* writer = builder.newStreamWriter();
+      std::stringstream os;
+      writer->write(tx, &os);
+      delete writer;
+      publishStateEvent("Tx:state", os.str());
+    }
   }
 } /* Tx::setIsTransmitting */
 

@@ -70,26 +70,33 @@ sub parse($) {
     $parsed{"time"} = shift @fields;
     $parsed{"event"} = shift @fields;
 
+    $json = JSON::PP->new;
+    my $rx_info = $json->decode(shift @fields);
+
     if ($parsed{"event"} eq "Voter:sql_state") {
-	# parser for voter squelch and siglev information
-	foreach $item (@fields) {
-	    ($rx,$sql,$lvl) = ($item =~ m/^(.*)([_:*])([+-]\d\d\d)$/) or next;
-	    $sql = "closed" if ($sql eq "_");
-	    $sql = "open" if ($sql eq ":");
-	    $sql = "active" if ($sql eq "*");
-	    $parsed{"rx"}{$rx}{"sql"} = $sql;
-	    $parsed{"rx"}{$rx}{"lvl"} = $lvl + 0;
-	}
+        foreach $item (@$rx_info) {
+            $rx = $item->{name};
+            if ($item->{enabled}) {
+                $sql = ($item->{sql_open}) ? "open" : "closed";
+                $sql = "active" if ($item->{active});
+                $lvl = $item->{siglev} + 0;
+            } else {
+                $sql = "disabled";
+                $lvl = 0;
+            }
+            $parsed{"rx"}{$rx}{"sql"} = $sql;
+            $parsed{"rx"}{$rx}{"lvl"} = $lvl;
+        }
     } else {
-	# generic parser for events name=value or name:item1:item2:item3
-	foreach $item (@fields) {
-	    if (scalar(($name,$value) = split /=/,$item,2) == 2) {
-		$parsed{$name} = $value;
-	    } elsif (scalar((@values) = split /:/,$item) >= 2) {
-		$name = shift @values;
-		$parsed{$name} = [ @values ];
-	    }
-	}
+        # generic parser for events name=value or name:item1:item2:item3
+        foreach $item (@fields) {
+            if (scalar(($name,$value) = split /=/,$item,2) == 2) {
+                $parsed{$name} = $value;
+            } elsif (scalar((@values) = split /:/,$item) >= 2) {
+                $name = shift @values;
+                $parsed{$name} = [ @values ];
+            }
+        }
     }
 }
 
@@ -128,6 +135,7 @@ while (1) {
 	logline("failed to open datafile $datafile");
 	exit 1;
     }
+    DATAFILE->autoflush;
 
 SEL:
     for (;;) {

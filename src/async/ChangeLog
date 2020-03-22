@@ -1,12 +1,25 @@
- 1.6.0 -- ?? ??? 2019
+ 1.6.1 -- ?? ??? 2019
 ----------------------
 
-* New class Async::AudioFsf, an implementation of a frequency sampling filter.
+* ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
 
-* Add method Async::Config::listSections() making it possible to list all
-  configuration sections.
+* Config::getValue() for vectors now tokenize on comma in addition to
+  whitespace.
 
-* Small optimization in the Async::CppApplication main loop.
+* Improved implementation for SvxLink::SepPair to work better with streaming.
+
+* Config: Add support for calling getValue on keyed containers, like std::set
+  and std::multiset.
+
+* Msg: Add support for std::set variable in messages.
+
+* New member function AudioSelector::selectedSource() used to find out which
+  source that are currently selected.
+
+* AudioSelector::autoSelectEnabled() can now be called with a constant source.
+
+* Add a signal to the Config class so that one can subscribe to changes in the
+  configuration.
 
 * A C++11 compatible compiler is now required.
 
@@ -21,6 +34,23 @@
 
 * New class Async::ThreadSigCSignal, a threadsafe variant of the sigc::signal
   class.
+
+
+
+ 1.6.0 -- 01 Sep 2019
+----------------------
+
+* New class Async::AudioFsf, an implementation of a frequency sampling filter.
+
+* Add method Async::Config::listSections() making it possible to list all
+  configuration sections.
+
+* Small optimization in the Async::CppApplication main loop.
+
+* AudioDeviceAlsa can now write zeros to the audio device on underflow. That
+  is, when the audio device is open but there is no audio to write zeros will
+  be written instead. Enable this behavior by setting the environment variable
+  ASYNC_AUDIO_ALSA_ZEROFILL=1.
 
 
 

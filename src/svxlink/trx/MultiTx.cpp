@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioSplitter.h>
+#include <json/json.h>
 
 
 
@@ -115,9 +116,11 @@ using namespace Async;
  ****************************************************************************/
 
 MultiTx::MultiTx(Config& cfg, const string& name)
-  : Tx(name), cfg(cfg), splitter(0)
+  : Tx(name), cfg(cfg), splitter(0),
+    m_tx_state_delay_timer(100, Async::Timer::TYPE_ONESHOT, false)
 {
-  
+  m_tx_state_delay_timer.expired.connect(
+      sigc::hide(sigc::mem_fun(*this, &MultiTx::txStateDelayExpired)));
 } /* MultiTx::MultiTx */
 
 
@@ -139,6 +142,12 @@ MultiTx::~MultiTx(void)
 
 bool MultiTx::initialize(void)
 {
+  char tx_id = '\0';
+  if (cfg.getValue(name(), "TX_ID", tx_id))
+  {
+    setId(tx_id);
+  }
+
   string transmitters;
   if (!cfg.getValue(name(), "TRANSMITTERS", transmitters))
   {
@@ -270,18 +279,49 @@ void MultiTx::sendData(const std::vector<uint8_t> &msg)
 
 void MultiTx::onTransmitterStateChange(void)
 {
+  bool is_transmitting = false;
   list<Tx *>::const_iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
     if ((*it)->isTransmitting())
     {
-      setIsTransmitting(true);
-      return;
+      is_transmitting = true;
+      break;
     }
   }
-  setIsTransmitting(false);
+  setIsTransmitting(is_transmitting);
+  m_tx_state_delay_timer.setEnable(true);
+  m_tx_state_delay_timer.reset();
 } /* MultiTx::onTransmitterStateChange */
 
+
+void MultiTx::txStateDelayExpired(void)
+{
+  Json::Value event(Json::arrayValue);
+  list<Tx *>::const_iterator it;
+  for (it=txs.begin(); it!=txs.end(); ++it)
+  {
+    Tx *tx = *it;
+    char tx_id = tx->id();
+    if (tx_id != '\0')
+    {
+      Json::Value tx_state(Json::objectValue);
+      tx_state["name"] = tx->name();
+      tx_state["id"] = std::string(&tx_id, &tx_id+1);
+      tx_state["transmit"] = tx->isTransmitting();
+      event.append(tx_state);
+    }
+  }
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+  //std::cout << "### " << os.str() << std::endl;
+  publishStateEvent("MultiTx:state", os.str());
+} /* MultiTx::txStateDelayExpired */
 
 
 /*

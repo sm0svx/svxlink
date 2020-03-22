@@ -19,12 +19,12 @@ if(GROFF_TOOL AND GZIP_TOOL)
     add_custom_command(OUTPUT ${man}.gz
       DEPENDS ${man}
       COMMAND ${GZIP_TOOL} -c ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.gz
-      COMMENT "Compressing maual page ${man}.gz..."
+      COMMENT "Compressing manual page ${man}.gz..."
     )
     add_custom_command(OUTPUT ${man}.html
       DEPENDS ${man}
       COMMAND ${GROFF_TOOL} -mandoc -Thtml < ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.html
-      COMMENT "Createing HTML maual page ${man}.html..."
+      COMMENT "Createing HTML manual page ${man}.html..."
     )
     string(REGEX REPLACE ^.*\([1-9]\)\$ \\1 sec ${man})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.gz
@@ -32,7 +32,7 @@ if(GROFF_TOOL AND GZIP_TOOL)
       OPTIONAL
     )
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.html
-      DESTINATION ${DOC_INSTALL_DIR}/man/man${sec}
+      DESTINATION ${DOC_INSTALL_DIR}/man${sec}
       OPTIONAL
     )
     set(TARGETS ${TARGETS} ${man}.gz ${man}.html)

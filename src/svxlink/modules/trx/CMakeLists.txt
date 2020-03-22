@@ -7,22 +7,16 @@ set(MODNAME Trx)
 # Project libraries to link to
 #set(LIBS ${LIBS} echolib)
 
-# The version tag name without the VER_ prefix
-set(VERNAME ${MODNAME})
-string(REGEX REPLACE \(.\)\([A-Z]\) \\1_\\2 VERNAME ${VERNAME})
-string(TOUPPER MODULE_${VERNAME} VERNAME)
-
-# Add targets for version files
-set(VERSION_DEPENDS)
-add_version_target(${VERNAME} VERSION_DEPENDS)
-add_version_target(SVXLINK VERSION_DEPENDS)
-
 # Build the plugin
-add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}
-  ${VERSION_DEPENDS}
-)
+add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC})
 set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
 target_link_libraries(Module${MODNAME} ${LIBS})
+
+# Deduce the version h-file target name from the module name and make the
+# module depend on that target
+string(REGEX REPLACE \(.\)\([A-Z]\) \\1-\\2 VERSION_TARGET_NAME ${MODNAME})
+string(TOLOWER version-module-${VERSION_TARGET_NAME} VERSION_TARGET_NAME)
+add_dependencies(Module${MODNAME} version-svxlink ${VERSION_TARGET_NAME})
 
 # Install targets
 install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})

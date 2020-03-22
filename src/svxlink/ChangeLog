@@ -1,5 +1,59 @@
- 1.7.0 -- ?? ??? 2019
+ 1.8.0 -- ?? ??? ????
 ----------------------
+* SvxReflector now support switching traffic on talk groups.
+
+* ReflectorLogic can now request switching talk groups based on the received
+  CTCSS tone frequency. It is also possible to switch to any talk group using
+  DTMF.
+
+* Now possible to use multiple CTCSS squelch tones in parallell.
+
+* SvxReflector now have a QSY functionality used to switch all active nodes on
+  a talk group to another talk group.
+
+* A logic link is now disconnected using <prefix># instead of <prefix>0#. If
+  any digits are specified after the prefix the link will be activated and the
+  digits will be given to the remote logic(s) for processing. Right now only
+  the ReflectorLogic care about these extra digits, also called the
+  subcommand.
+
+* A logic core connected to a logic link can now play announcements on all
+  other connected logics. This is used in the ReflectorLogic to announce talk
+  group selections and command feedback.
+
+* New signal level "detector": CONST
+
+* ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work if the
+  remote_timeout TCL function was changed to not play any sound.
+
+* ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work with short timeout
+  values where the timeout was shorter than the length of a locally received
+  transmission.
+
+* ModuleMetarInfo bugfix: Announcing twice
+
+* ModuleMetarInfo bugfix: SvxLink crashed on long LocationInfo comments
+
+* ModuleEchoLink: Now possible to silently ignore all incoming connections
+  using the DROP_ALL_INCOMING configuration variable.
+
+* The receiver configuration variables SQL_HANGTIME, SQL_EXTENDED_HANGTIME and
+  SQL_EXTENDED_HANGTIME_THRESH are now settable from within a C++ module for
+  example.
+
+* A C++11 compatible compiler is now required.
+
+* Each DDR (e.g RTL-SDR dongle digital receiver) now run in its own thread
+  which makes it possible to run multiple receivers on a Raspberry Pi for
+  example.
+
+
+
+ 1.7.0 -- 01 Sep 2019
+----------------------
+* MetarInfo now supports secure http (https) since aviationweather.gov has 
+  switched to https only. Read documentation and/or README in directory 
+  modules/metarinfo for changes.
 
 * Now possible to set the roger sound to be always on in the SimplexLogic, even
   when no module is active. Use the RGR_SOUND_ALWAYS configuration variable to
@@ -42,9 +96,6 @@
   RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay will now
   be 100+350=450ms for the fast receivers and 300+350-200=450ms for the slow
   receiver. That is, all receivers are now equally fast.
-
-* Support was added to control the frequency and modulation of receivers and
-  transmitters connected to the SvxLink node.
 
 * New configuration variable CTRL_PTY that can be used in RX and TX
   configuration setions. It will set a PTY than can be used to control the
@@ -110,11 +161,36 @@
   roger sounds that may be triggered by non-rx events will send the "neutral"
   roger sound.
 
-* A C++11 compatible compiler is now required.
+* Bugfix: The squelch detection logic for HIDRAW squelch was wrong so it did
+  not work for active low devices.
 
-* Each DDR (e.g RTL-SDR dongle digital receiver) now run in its own thread
-  which makes it possible to run multiple receivers on a Raspberry Pi for
-  example.
+* Bugfix: The EchoLink module could crash when encountering TCL errors.
+
+* ModuleMetarInfo: Windshear now with runway, error handling for metar txt
+  file, fix some typo
+
+* Adding new Config options related to enabling IDs.
+  Adding several config options to allow user to configure VOICE/CW/Custom
+  announcements during the short and long ID processes.  This allows the
+  settings to be on a channel by channel basis rather than having a single
+  file for all channels.
+  New logic configuration variables: SHORT_VOICE_ID_ENABLE,
+  SHORT_CW_ID_ENABLE, SHORT_ANNOUNCE_ENABLE, SHORT_ANNOUNCE_FILE,
+  LONG_VOICE_ID_ENABLE, LONG_CW_ID_ENABLE, LONG_ANNOUNCE_ENABLE,
+  LONG_ANNOUNCE_FILE. See manual page svxling.conf (5) for more info.
+
+* Now possible to configure SvxLink to keep audio devices open from
+  application start to exit. The normal behavior in SvxLink is to open and
+  close audio devices as needed. In a local RX and/or TX section set the
+  variable AUDIO_DEV_KEEP_OPEN=1.
+
+* Add stop timeout for systemd units after which svxlink will be killed if not
+  exiting within 10 seconds.
+
+* Now possible to specify which mail server to use in the voice mail module.
+
+* ModuleDtmfRepeater: Logic and timings were a bit strange and buggy so the
+  implementation was changed a bit.
 
 
 

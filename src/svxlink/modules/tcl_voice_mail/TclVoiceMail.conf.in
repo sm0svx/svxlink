@@ -31,11 +31,13 @@ set max_mesg_time 120000
 #
 # These settings are used when sending e-mail to users when a new voice mail
 # has been recorded for that user.
+#   mail_smtp_url  - The SMTP server to use
 #   mail_from_addr - The used from-address
 #   mail_from_name - The displayed name of the sender
 #   mai_subj       - The subject of the message
 #   mail_msg       - The message body
 #
+set mail_smtp_url "smtp://127.0.0.1:25";
 set mail_from_addr "mycall@some.domain";
 set mail_from_name "SvxLink Voice Mail";
 set mail_subj "SvxLink: New voice mail received";

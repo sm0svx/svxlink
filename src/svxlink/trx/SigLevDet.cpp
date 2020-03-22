@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SigLevDetDdr.h"
 #include "SigLevDetSim.h"
 #include "SigLevDetAfsk.h"
+#include "SigLevDetConst.h"
 
 
 
@@ -148,7 +149,8 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
   SigLevDetDdr::Factory ddr_siglev_factory;
   SigLevDetSim::Factory sim_siglev_factory;
   SigLevDetAfsk::Factory afsk_siglev_factory;
-  
+  SigLevDetConst::Factory const_siglev_factory;
+
   string det_name;
   if (!cfg.getValue(name, "SIGLEV_DET", det_name) || det_name.empty())
   {

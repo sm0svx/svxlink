@@ -1,4 +1,4 @@
-.TH QTEL "1" "DECEMBER 2017" Linux "User Manuals"
+.TH QTEL "1" "SEPTEMBER 2019" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -52,6 +52,18 @@ For detailed description look at
 or at
 .B
 /usr/share/doc/svxlink/qteluserdoc.pdf
+.
+.SH ENVIRONMENT
+.
+.TP
+ASYNC_AUDIO_NOTRIGGER
+Set this environment variable to 1 if you get an error about
+.B ioctl: Broken pipe
+during qtel startup when using OSS audio.
+.TP
+ASYNC_AUDIO_ALSA_ZEROFILL
+Set this environment variable to 0 to stop the Alsa audio code from writing
+zeros to the audio device when there is no audio to write available.
 .
 .SH AUTHOR
 .

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <sstream>
 
 
 /****************************************************************************
@@ -62,7 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class Logic;
 
 
 /****************************************************************************
@@ -116,8 +116,8 @@ class EventHandler : public sigc::trackable
     /**
      * @brief 	Constuctor
      */
-    EventHandler(const std::string& event_script, Logic *logic);
-  
+    EventHandler(const std::string& event_script, const std::string& logic_name);
+
     /**
      * @brief 	Destructor
      */
@@ -135,7 +135,15 @@ class EventHandler : public sigc::trackable
      * @param 	value The value to set the given variable to
      */
     void setVariable(const std::string& name, const std::string& value);
-  
+
+    template <typename T>
+    void setVariable(const std::string& name, const T& value)
+    {
+      std::ostringstream os;
+      os << value;
+      setVariable(name, os.str());
+    } /* EventHandler::setVariable */
+
     /**
      * @brief 	Process the given event
      * @param 	event The event must be a valid TCL function call
@@ -219,12 +227,12 @@ class EventHandler : public sigc::trackable
     sigc::signal<void, const std::string&, int> injectDtmf;
     
   protected:
-    
+
   private:
-    std::string event_script;
-    Logic	*logic;
-    Tcl_Interp  *interp;
-    
+    std::string   event_script;
+    std::string   logic_name;
+    Tcl_Interp *  interp;
+
     static int playFileHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     static int playSilenceHandler(ClientData cdata, Tcl_Interp *irp,

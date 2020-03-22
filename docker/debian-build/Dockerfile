@@ -27,9 +27,9 @@ MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
 # Install required packages and set up the svxlink user
 RUN apt-get update && \
     apt-get -y install git cmake g++ make libsigc++-2.0-dev libgsm1-dev \
-                       libpopt-dev tcl8.5-dev libgcrypt11-dev libspeex-dev \
+                       libpopt-dev tcl8.6-dev libgcrypt20-dev libspeex-dev \
                        libasound2-dev alsa-utils vorbis-tools libqt4-dev \
-                       libopus-dev librtlsdr-dev curl sudo
+                       libopus-dev librtlsdr-dev libcurl4-openssl-dev curl sudo
 #RUN apt-get -y install groff doxygen
 
 # Install svxlink audio files
