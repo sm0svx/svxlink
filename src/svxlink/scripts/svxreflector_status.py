@@ -41,4 +41,4 @@ for callsign in sorted(data['nodes'].keys()):
     #print unicode(rx['name']).encode('utf8')
     if node['isTalker']:
         color = RED
-    print color + row_fmt % (callsign, tg, rx_name, siglev, monitored_tgs) + NC
+    print (color + row_fmt % (callsign, tg, rx_name, siglev, monitored_tgs) + NC).encode('utf-8')
