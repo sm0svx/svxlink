@@ -1,11 +1,38 @@
 ###############################################################################
-#  SVXlink Site Status Module Coded by Dan Loranger (KG7PAR)
+#  SVXlink Transmitter Fan Module Coded by Dan Loranger (KG7PAR)
 #  
-#  This module enables the user to configure sensors to monitor the health and
-#  wellbeing of a remote site.  The module runs in the background and on a 
-#  regular interval (once per second) checks the inputs and will announce over 
-#  the air, any configured messages as to alert the site manager/monitors 
-#  that an event of interest has occurred.
+#  This module enables the user to configure a fan to cool the Tx radio.  
+#  The module runs in the background and on a regular interval (once per second)
+#  checks the PTT pins for up to 2 Logics, and when activation is detected,
+#  drives a signal that is meant to control a power relay that powers a Fan.
+#
+#  There are 2 existing modes of operation, "FOLLOW_PTT" which will activate 
+#  immediately and deactivate immediately when the PTT signals are deactivated.
+#  "COUNTDOWN" mode will activate immediately upon detecting the PTT signals
+#  and will set a countdown timer that begins to countdown when the last PTT
+#  is deactivated. For COUNTDOWN mode, there is an additional config variable 
+#  of "DELAY" that sets the number of seconds for the countdown to last.  This 
+#  is not dynamic or based on a temperature sensor, so you will want to tune 
+#  this to your specific needs such that a 1 second TX wont run your battery 
+#  down, while  a max length TX wont leave your system overheating.
+#
+#  To properly configure this module, the GPIO signals for PTT will need to be
+#  set in the ModuleTxFan.conf file to match the logics PTT as configured in
+#  svxlink.conf, these are NOT read from the svxlink.conf file. If only 1 logic
+#  is needed, set both PTT gpio to the logic in use.
+#  
+#  The GPIO for the fan needs to be an otherwise unused GPIO where the control
+#  signal is accessable.  This GPIO needs to be added to the normal gpio.conf
+#  file as either and active low or active high output pin.  This module does
+#  not configure this for you.
+#
+#  Note for PI-REPEATER-1x board users, you can use the CTCSS_ENC1 pin which is
+#  currently not supported by svxlink as a feature, but the signal does connect
+#  to a 2A capable transistor (same as PTT driver) that can be used to directly
+#  drive the coil of a relay direcly without additional circuitry.
+#
+#  Note for PI-REPEATER-2x board users, similar to the 1x boards, CTCSS_ENC1
+#  is available, but CTCSS_ENC2 is also available as an option.
 #
 ###############################################################################
 #
@@ -15,6 +42,7 @@
 # changed in both places.
 #
 ###############################################################################
+
 namespace eval TxFan {
 	# Check if this module is loaded in the current logic core
 	#
