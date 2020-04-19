@@ -738,6 +738,19 @@ proc icao_available {} {
 }
 
 
+# announce airport at the beginning of the MEATAR
+proc announce_airport {icao} {
+  global langdir;
+  if [file exists "$langdir/MetarInfo/$icao.wav"] {
+    playMsg $icao;
+  } else {
+    spellWord $icao;
+  }
+  playSilence 100;
+  playMsg "airport";
+}
+
+
 # say preconfigured airports
 proc airports args {
   global langdir;
