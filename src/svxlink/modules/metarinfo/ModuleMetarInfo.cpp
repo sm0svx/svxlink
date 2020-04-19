@@ -165,7 +165,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      Async::FdWatch wr;
    };
    typedef std::map<int, WatchSet> WatchMap;
-   CURLM* multi_handle;
+   CURLM* multi_handle; 
    Async::Timer update_timer;
    WatchMap watch_map;
    std::queue<CURL*> url_queue;
@@ -208,7 +208,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
    {
      int handle_count;
      curl_multi_perform(multi_handle, &handle_count);
-     if (handle_count == 0)
+     if (handle_count == 0) 
      {
        disableAllWatches();
        curl_easy_cleanup(pending_curl);
@@ -299,7 +299,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      FD_ZERO(&fdexcep);
      curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
 
-     for (int fd = 0; fd <= maxfd; fd++)
+     for (int fd = 0; fd <= maxfd; fd++) 
      {
        bool read_isset = FD_ISSET(fd, &fdread);
        bool write_isset = FD_ISSET(fd, &fdwrite);
@@ -572,10 +572,10 @@ bool ModuleMetarInfo::initialize(void)
   {
     debug = true;
   }
-
+  
   if (!cfg().getValue(cfgName(), "TYPE", type))
   {
-    cout << "**** WARNING: Config variable " << cfgName()
+    cout << "**** WARNING: Config variable " << cfgName() 
          << "/TYPE is not set.\n";
     return false;
   }
@@ -589,9 +589,9 @@ bool ModuleMetarInfo::initialize(void)
 
   if (!cfg().getValue(cfgName(), "SERVER", server))
   {
-    cout << "**** WARNING: Config variable " << cfgName()
+    cout << "**** WARNING: Config variable " << cfgName() 
          << "/SERVER: " << server << " is not set.\n";
-    return false;
+    return false;      
   }
 
   cfg().getValue(cfgName(), "LINK", link);
@@ -892,8 +892,8 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
   std::string metar = "";
   html += metarinput;
 
-  // switching between the newer xml-service by aviationweather and the old
-  // noaa.gov version. With the standard TXT format anybody will be able to
+  // switching between the newer xml-service by aviationweather and the old 
+  // noaa.gov version. With the standard TXT format anybody will be able to 
   // create it's own METAR report from it's own weather station
 
   if (type == "XML")
