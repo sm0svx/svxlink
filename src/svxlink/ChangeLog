@@ -48,8 +48,8 @@
 
  1.7.0 -- 01 Sep 2019
 ----------------------
-* MetarInfo now supports secure http (https) since aviationweather.gov has
-  switched to https only. Read documentation and/or README in directory
+* MetarInfo now supports secure http (https) since aviationweather.gov has 
+  switched to https only. Read documentation and/or README in directory 
   modules/metarinfo for changes.
 
 * Now possible to set the roger sound to be always on in the SimplexLogic, even
@@ -856,7 +856,7 @@
 * The help module can now accept commands when not active. It will read
   back help for the given module ID. For example the command 01# will
   play the help message for the parrot module.
-
+  
 * The parrot module can now accept commands when not active. The only
   thing it can do is to read back the entered digits. For example the
   command 1123# will make the parrot module say "one two three".
@@ -1005,7 +1005,7 @@
 
 * Steve also contributed a couple of other improvements, bugfixes
   and workarounds.
-
+  
 * Bugfix in CW.tcl: The CW code for 'L' was incorrectly mapped to '..-.'.
 
 * Two new command line options added to SvxLink Server and RemoteTrx:

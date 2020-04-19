@@ -582,7 +582,7 @@ bool ModuleMetarInfo::initialize(void)
 
   if (type != "TXT" && type != "XML")
   {
-    cout << "**** WARNING: Config variable " << cfgName()
+    cout << "**** WARNING: Config variable " << cfgName() 
          << "/TYPE: " << type << " is not valid.\n";
     return false;
   }
@@ -937,7 +937,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     }
   }
   // the TXT version of METAR
-  else
+  else 
   {
     // This is a METAR-report:
     //
