@@ -12,7 +12,7 @@ CHANGES:
 
 FUNCTION:
 
-Get METAR (weather) information from ICAO locations, usually airports and
+Get METAR (weather) information from ICAO locations, usually airports and 
 gives them out. With V1.2.0.0 you can request a METAR from an
 airport of your interest.
 
@@ -21,7 +21,7 @@ command  function
 01       available preconfigured airports
 1...XX   request METARs from preconfigured airports in order to configuration
 
-You have two search functions for not preconfigured airports to request a METAR
+You have two search functions for not preconfigured airports to request a METAR 
 of an airport of your interest:
 
 1) the svx-like:
