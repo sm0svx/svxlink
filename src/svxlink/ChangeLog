@@ -1,5 +1,8 @@
  1.8.0 -- ?? ??? ????
 ----------------------
+* MetarInformation, more flexible airport announcement at the beginning of a
+  Metar
+
 * SvxReflector now support switching traffic on talk groups.
 
 * ReflectorLogic can now request switching talk groups based on the received
