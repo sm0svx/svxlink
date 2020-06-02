@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "TetraLogic.h"
-
+#include "TetraLib.h"
 
 
 /****************************************************************************
@@ -315,14 +315,12 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
  *
  ****************************************************************************/
 
-
 void TetraLogic::initPei(void)
 {
-  std::string cmd = *(m_cmds.begin());
-  sendPei(cmd);
-
   if (!m_cmds.empty())
   {
+    std::string cmd = *(m_cmds.begin());
+    sendPei(cmd);
     m_cmds.erase(m_cmds.begin());
   }
   else
@@ -407,16 +405,21 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
 /*
 TETRA Incoming Call Notification +CTICN
-+CTICN: <CC instance >, <call status>, <AI service>, [<calling party identity type>], [<calling party identity>],
-[<hook>], [<simplex>], [<end to end encryption>], [<comms type>], [<slots/codec>], [<called party identity type>],
+
++CTICN: <CC instance >, <call status>, <AI service>, 
+[<calling party identity type>], [<calling party identity>],
+[<hook>], [<simplex>], [<end to end encryption>], 
+[<comms type>], [<slots/codec>], [<called party identity type>],
 [<called party identity>], [<priority level>]
-+CTICN: 1,0,0,5,09011638300023404,1,1,0,1,1,5,09011638300000001,0
+
+e.g. +CTICN: 1,0,0,5,09011638300023404,1,1,0,1,1,5,09011638300000001,0
 */
 void TetraLogic::handleGroupcallBegin(std::string message)
 {
 
   if (message.length() < 65)
   {
+    cout << "*** No valid +CTICN response, message to short" << endl;
     return;
   }
 
@@ -424,24 +427,43 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   message.erase(0,8);
   std::string h = message;
 
+  // split the message received from the Pei into single parmeters
+  // for further use, not all of them are interesting
   t_ci.instance = getNextVal(h);
   t_ci.callstatus = getNextVal(h);
   t_ci.aistatus = getNextVal(h);
-  getNextVal(h);
+  t_ci.origin_cpit = getNextVal(h);
 
   std::string t_tei = getNextStr(h);
   t_ci.d_mcc = atoi(t_tei.substr(0,4).c_str());
   t_ci.d_mnc = atoi(t_tei.substr(4,5).c_str());
   t_ci.d_issi = atoi(t_tei.substr(9,8).c_str());
-
-  t_ci.codec = getNextVal(h);
+  
+  t_ci.hook = getNextVal(h);
+  t_ci.simplex = getNextVal(h);
+  t_ci.e2eencryption = getNextVal(h);
   t_ci.commstype = getNextVal(h);
-  t_ci.dest_cpit=getNextVal(h);
+  t_ci.codec = getNextVal(h);
 
-
-  cout << ">>>>" << t_ci.d_issi << endl;
-
+  t_tei = getNextStr(h);
+  t_ci.d_mcc = atoi(t_tei.substr(0,4).c_str());
+  t_ci.d_mcc = atoi(t_tei.substr(4,5).c_str());
+  t_ci.d_mcc = atoi(t_tei.substr(9,8).c_str());
+  
+  t_ci.prio = getNextVal(h);
+  
+  // store call specific data into a Callinfo struct
+  callinfo[t_ci.d_issi] = t_ci;
+  
+  // update last activity of a user
+  struct tm *utc;
+  time_t rawtime;
+  rawtime = time(NULL);
+  utc = gmtime(&rawtime);
+  
+  userdata[t_ci.d_issi].last_activity = utc;
 } /* TetraLogic::handleGroupcallBegin */
+
 
 std::string TetraLogic::getNextStr(std::string& h)
 {

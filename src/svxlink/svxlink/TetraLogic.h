@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 #include <list>
+#include <time.h>
 
 
 /****************************************************************************
@@ -161,24 +162,25 @@ class TetraLogic : public Logic
        [<hook>], [<simplex>], [<end to end encryption>],
        [<comms type>],
        [<slots/codec>], [<called party identity type>],
-       [<called party identity>], [<priority level>] */
+       [<called party identity>], [<priority level>] 
+    */
     struct Callinfo {
        int instance;
        int callstatus;
        int aistatus;
+       int origin_cpit;
        int o_mcc;
        int o_mnc;
        int o_issi;
-       int origin_cpit;
        int hook;
        int simplex;
        int e2eencryption;
        int commstype;
        int codec;
+       int dest_cpit;
        int d_mcc;
        int d_mnc;
        int d_issi;
-       int dest_cpit;
        int prio;
     };
 
@@ -189,6 +191,7 @@ class TetraLogic : public Logic
       float lon;
       int16_t state;
       char aprs_icon[2];
+      struct tm *last_activity;
     };
 
     int    peistate;
@@ -205,24 +208,10 @@ class TetraLogic : public Logic
     Async::Timer peiActivityTimer;
     Call*    call;
 
-    std::map<int32_t, user> userdata;
-    std::map<int32_t, Callinfo> callinfo;
+    std::map<int, user> userdata;
+    std::map<int, Callinfo> callinfo;
 
     StrList m_cmds;
-
-    std::string m_ccinstance;
-    std::string m_callstatus;
-    std::string m_ai_service;
-    std::string m_sender;
-    std::string m_destination;
-    std::string m_calling_party;
-    std::string m_cp_identity;
-    std::string m_hook;
-    std::string m_simplex;
-    std::string m_e2e_enc;
-    std::string m_codec;
-    std::string m_commstype;
-
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
