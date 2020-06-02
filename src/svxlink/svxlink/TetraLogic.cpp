@@ -345,6 +345,18 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
     return;
   }
 
+  /* 
+  The asynchronous handling of incoming PEI commands is not easy due 
+  to the unpredictability of the reception of characters from the serial port.
+  We have to analyze the incoming characters until we find the first 
+  \r\n-combination. Afterwards we are looking for a second occurrence, 
+  if one occurs, then we have an entire PEI command. The rest of the 
+  data is then left untouched.
+  If we find a \r\n-combination after the second one, then it is most 
+  likely a SDS as an unsolicited answer just following the e.g. 
+  +CTSDSR:xxx message.
+  */
+  
   found2 = peistream.find("\r\n", found + 1);
   if (found != string::npos && found2 != string::npos)
   {
