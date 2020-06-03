@@ -243,7 +243,7 @@ class TetraLogic : public Logic
     void sendPei(std::string cmd);
     void handleSdsHeader(std::string sds_head);
     void handleStateSds(std::string m_message);
-    std::string toTEI(std::string issi);
+    std::string getTEI(std::string issi);
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);

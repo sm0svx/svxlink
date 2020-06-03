@@ -581,7 +581,7 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
   m_sds.tos = utc;     // last activity
 
   m_sds.type = getNextVal(sds_head); // type of sds
-  m_sds.o_issi = toTEI(getNextStr(sds_head)); // sender ISSI
+  m_sds.o_issi = getTEI(getNextStr(sds_head)); // sender ISSI
   getNextVal(sds_head);
 
   // destination ISSI
@@ -593,7 +593,7 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
 } /* TetraLogic::getTypeOfService */
 
 
-std::string TetraLogic::toTEI(std::string issi)
+std::string TetraLogic::getTEI(std::string issi)
 {
   stringstream ss;
   char is[9];
