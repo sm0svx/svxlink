@@ -162,7 +162,7 @@ class TetraLogic : public Logic
        [<hook>], [<simplex>], [<end to end encryption>],
        [<comms type>],
        [<slots/codec>], [<called party identity type>],
-       [<called party identity>], [<priority level>] 
+       [<called party identity>], [<priority level>]
     */
     struct Callinfo {
        int instance;
@@ -184,9 +184,22 @@ class TetraLogic : public Logic
        int prio;
     };
 
+    // contain a sds (state and message)
+    struct Sds {
+      std::string o_issi;
+      std::string sds;
+      std::string content;
+      struct tm *tos;
+      int type;
+      bool received;
+    };
+
      // contain user data
-    struct user {
+    struct User {
+      int issi;
+      std::string call;
       std::string name;
+      std::string comment;
       float lat;
       float lon;
       int16_t state;
@@ -199,30 +212,43 @@ class TetraLogic : public Logic
 
     typedef enum
     {
-       IDLE, CHECK_AT, INIT, INIT_COMPLETE, WAIT
+       IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT, WAIT4SDS
     } Peidef;
     Peidef    peirequest;
 
+    // AI Service
+    // This parameter is used to determine the type of service to be used
+    // in air interface call set up signalling. The services are all
+    // defined in EN 300 392-2 [3] or EN 300 396-3 [25].
+    typedef enum
+    {
+      TETRA_SPEECH=0, UNPROTECTED_DATA=1, PACKET_DATA=8, SDS_TYPE1=9,
+      SDS_TYPE2=10, SDS_TYPE3=11, SDS_TYPE4=12, STATUS_SDS=13
+    } TypeOfService;
 
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
 
-    std::map<int, user> userdata;
+    std::map<std::string, User> userdata;
     std::map<int, Callinfo> callinfo;
+    std::map<std::string, std::string> state_sds;
+    std::map<std::string, Sds> pending_sds;
 
     StrList m_cmds;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
+    void handleSdsHeader(std::string sds_head);
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);
     void onPeiActivityTimeout(Async::Timer *timer);
-    int handleMessage(std::string mesg);
-    void handleGroupcallBegin(std::string);
-    void handleGroupcallEnd(std::string);
+    int handleMessage(std::string  m_message);
+    void handleGroupcallBegin(std::string m_message);
+    void handleGroupcallEnd(std::string m_message);
+    void handleCallEnd(std::string m_message);
     bool rmatch(std::string tok, std::string pattern);
 
 };  /* class TetraLogic */

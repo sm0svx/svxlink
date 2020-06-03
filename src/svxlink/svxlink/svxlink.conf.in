@@ -129,8 +129,21 @@ FX_GAIN_LOW=-12
 #MUTE_TX_ON_RX=1
 #STATE_PTY=/var/run/svxlink/state
 #DTMF_CTRL_PTY=/dev/shm/simplex_dtmf_ctrl
-DEFAULT_APRS_ICON=e/
 #CTCSS_TO_TG=77.0:999,123.0:9990,146.2:9992
+TETRA_USERS=Tertra_Users
+STATUS=Tetra_Status
+
+[Tetra_Users]
+# ISSI = Call,Name,comment
+090116383000023401=DM0SVX,DMO-Repeater,\E,Halle/Saale
+090116383000023404=DL1HRC,Adi,\E,SvxLink operator
+090116383000023428=DL1HQN,Martin,\E,Groebers
+
+[Tetra_Status]
+# status=message
+8051=not available
+8052=available
+8053=no further information
 
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD

@@ -60,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "TetraLogic.h"
 #include "TetraLib.h"
+#include "common.h"
 
 
 /****************************************************************************
@@ -70,6 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+using namespace SvxLink;
 
 
 
@@ -86,10 +88,11 @@ using namespace Async;
 #define GROUPCALL_END 4
 #define TXGRANT 5
 #define SDS 6
-#define ERROR35 7
-#define CALL_PERMIT 8
-#define CALL_END 9
-#define GROUPCALL_RELEASED 10
+#define SDS_MESSAGE 7
+#define ERROR35 8
+#define CALL_PERMIT 9
+#define CALL_END 10
+#define GROUPCALL_RELEASED 11
 
 #define INVALID 254
 #define TIMEOUT 255
@@ -214,6 +217,49 @@ bool TetraLogic::initialize(void)
   {
      cout << "Warning: Missing parameter " << name() << "/BAUD, guess "
           << baudrate << endl;
+  }
+
+  // read infos of tetra users configured in svxlink.conf
+  string user_section;
+  string value;
+  if (cfg().getValue(name(), "TETRA_USERS", user_section))
+  {
+    list<string> user_list = cfg().listSection(user_section);
+    list<string>::iterator ulit;
+    User m_user;
+
+    for (ulit=user_list.begin(); ulit!=user_list.end(); ++ulit)
+    {
+      cfg().getValue(user_section, *ulit, value);
+      if ((*ulit).length() != 17)
+      {
+        cout << "*** ERROR: Wrong length of TEI in TETRA_USERS definition,"
+             << " should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. "
+             << "09011638312345678" << endl;
+        isok = false;
+      }
+      else
+      {
+        m_user.call = getNextStr(value);
+        m_user.name = getNextStr(value);
+        getNextStr(value).copy(m_user.aprs_icon, 2);
+        m_user.comment = getNextStr(value);
+        userdata[*ulit] = m_user;
+      }
+    }
+  }
+
+  // read info of tetra state to receive SDS's
+  std::string status_section;
+  if (cfg().getValue(name(), "TETRA_STATUS", status_section))
+  {
+    list<string> state_list = cfg().listSection(status_section);
+    list<string>::iterator slit;
+    for (slit=state_list.begin(); slit!=state_list.end(); ++slit)
+    {
+      cfg().getValue(status_section, *slit, value);
+      state_sds[*slit] = value;
+    }
   }
 
   if (!cfg().getValue(name(), "INIT_PEI", initstr))
@@ -345,18 +391,18 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
     return;
   }
 
-  /* 
-  The asynchronous handling of incoming PEI commands is not easy due 
+  /*
+  The asynchronous handling of incoming PEI commands is not easy due
   to the unpredictability of the reception of characters from the serial port.
-  We have to analyze the incoming characters until we find the first 
-  \r\n-combination. Afterwards we are looking for a second occurrence, 
-  if one occurs, then we have an entire PEI command. The rest of the 
+  We have to analyze the incoming characters until we find the first
+  \r\n-combination. Afterwards we are looking for a second occurrence,
+  if one occurs, then we have an entire PEI command. The rest of the
   data is then left untouched.
-  If we find a \r\n-combination after the second one, then it is most 
-  likely a SDS as an unsolicited answer just following the e.g. 
+  If we find a \r\n-combination after the second one, then it is most
+  likely a SDS as an unsolicited answer just following the e.g.
   +CTSDSR:xxx message.
   */
-  
+
   found2 = peistream.find("\r\n", found + 1);
   if (found != string::npos && found2 != string::npos)
   {
@@ -394,20 +440,29 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
 
     case GROUPCALL_END:
-      Logic::squelchOpen(false);
       handleGroupcallEnd(m_message);
+      break;
+
+    case CALL_END:
+      Logic::squelchOpen(false);
+      handleCallEnd(m_message);
       cout << "Sql is CLOSED\n";
       break;
 
     case SDS:
+      peistate = WAIT4SDS;
+      handleSdsHeader(m_message);
       cout << "SDS empfangen" << endl;
+      break;
+
+    case SDS_MESSAGE:
       break;
 
     default:
       break;
   }
 
-  if (peirequest == INIT && peistate == OK)
+  if (peirequest == INIT && (peistate == OK || peistate == IGNORE_ERRORS))
   {
     initPei();
   }
@@ -418,9 +473,9 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 /*
 TETRA Incoming Call Notification +CTICN
 
-+CTICN: <CC instance >, <call status>, <AI service>, 
++CTICN: <CC instance >, <call status>, <AI service>,
 [<calling party identity type>], [<calling party identity>],
-[<hook>], [<simplex>], [<end to end encryption>], 
+[<hook>], [<simplex>], [<end to end encryption>],
 [<comms type>], [<slots/codec>], [<called party identity type>],
 [<called party identity>], [<priority level>]
 
@@ -450,31 +505,57 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   t_ci.d_mcc = atoi(t_tei.substr(0,4).c_str());
   t_ci.d_mnc = atoi(t_tei.substr(4,5).c_str());
   t_ci.d_issi = atoi(t_tei.substr(9,8).c_str());
-  
+
   t_ci.hook = getNextVal(h);
   t_ci.simplex = getNextVal(h);
   t_ci.e2eencryption = getNextVal(h);
   t_ci.commstype = getNextVal(h);
   t_ci.codec = getNextVal(h);
+  t_ci.dest_cpit = getNextVal(h);
 
   t_tei = getNextStr(h);
   t_ci.d_mcc = atoi(t_tei.substr(0,4).c_str());
-  t_ci.d_mcc = atoi(t_tei.substr(4,5).c_str());
-  t_ci.d_mcc = atoi(t_tei.substr(9,8).c_str());
-  
-  t_ci.prio = getNextVal(h);
-  
+  t_ci.d_mnc = atoi(t_tei.substr(4,5).c_str());
+  t_ci.d_issi = atoi(t_tei.substr(9,8).c_str());
+
+  t_ci.prio = atoi(h.c_str());
+
   // store call specific data into a Callinfo struct
   callinfo[t_ci.d_issi] = t_ci;
-  
+
   // update last activity of a user
   struct tm *utc;
   time_t rawtime;
   rawtime = time(NULL);
   utc = gmtime(&rawtime);
-  
-  userdata[t_ci.d_issi].last_activity = utc;
+  userdata[t_tei].last_activity = utc;
+
 } /* TetraLogic::handleGroupcallBegin */
+
+
+// +CTSDSR: 12,23404,0,23401,0,112
+// 82040801476A61746A616A676A61
+void TetraLogic::handleSdsHeader(std::string sds_head)
+{
+  sds_head.erase(0,9);
+  Sds m_sds;
+
+  struct tm *utc;
+  time_t rawtime;
+  rawtime = time(NULL);
+  utc = gmtime(&rawtime);
+  m_sds.tos = utc;     // last activity
+
+  m_sds.type = getNextVal(sds_head); // type of sds
+  m_sds.o_issi = getNextStr(sds_head); // sender ISSI
+  getNextVal(sds_head);
+
+  // destination ISSI
+  pending_sds[getNextStr(sds_head)] = m_sds;
+
+} /* TetraLogic::getTypeOfService */
+
+
 
 
 std::string TetraLogic::getNextStr(std::string& h)
@@ -495,11 +576,17 @@ int TetraLogic::getNextVal(std::string& h)
 } /* TetraLogic::getNextVal */
 
 
-// +CDTXC: 1,0
 void TetraLogic::handleGroupcallEnd(std::string message)
 {
 
 } /* TetraLogic::handleGroupcallEnd */
+
+
+// +CDTXC: 1,0
+void TetraLogic::handleCallEnd(std::string message)
+{
+
+} /* TetraLogic::handleCallEnd */
 
 
 void TetraLogic::sendPei(std::string cmd)
