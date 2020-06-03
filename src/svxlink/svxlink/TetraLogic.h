@@ -144,9 +144,9 @@ class TetraLogic : public Logic
     bool  mute_rx_on_tx;
     bool  mute_tx_on_rx;
     bool  rgr_sound_always;
-    int_fast16_t   mcc;
-    int_fast16_t   mnc;
-    int_fast16_t   issi;
+    std::string   mcc;
+    std::string   mnc;
+    std::string   issi;
     int_fast16_t   gssi;
     std::string port;
     int32_t baudrate;
@@ -234,6 +234,7 @@ class TetraLogic : public Logic
     std::map<int, Callinfo> callinfo;
     std::map<std::string, std::string> state_sds;
     std::map<std::string, Sds> pending_sds;
+    bool wait4sds;
 
     StrList m_cmds;
 
@@ -241,6 +242,8 @@ class TetraLogic : public Logic
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
     void handleSdsHeader(std::string sds_head);
+    void handleStateSds(std::string m_message);
+    std::string toTEI(std::string issi);
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);

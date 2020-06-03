@@ -93,6 +93,9 @@ using namespace SvxLink;
 #define CALL_PERMIT 9
 #define CALL_END 10
 #define GROUPCALL_RELEASED 11
+#define LIP_SDS 12
+#define REGISTER_TEI 13
+#define STATE_SDS 14
 
 #define INVALID 254
 #define TIMEOUT 255
@@ -157,7 +160,7 @@ class TetraLogic::Call
 
 TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
-    rgr_sound_always(false), mcc(901), mnc(16383), issi(1), gssi(1),
+    rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
     port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
     peiComTimer(1000, Timer::TYPE_ONESHOT, false),
     peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
@@ -190,6 +193,7 @@ bool TetraLogic::initialize(void)
   cfg().getValue(name(), "MUTE_TX_ON_RX", mute_tx_on_rx);
   cfg().getValue(name(), "RGR_SOUND_ALWAYS", rgr_sound_always);
 
+  string value;
   if (!cfg().getValue(name(), "ISSI", issi))
   {
      cerr << "*** ERROR: Missing parameter " << name() << "/ISSI" << endl;
@@ -201,12 +205,35 @@ bool TetraLogic::initialize(void)
      cerr << "*** ERROR: Missing parameter " << name() << "/MCC" << endl;
      isok = false;
   }
+  if (atoi(mcc.c_str()) > 901)
+  {
+     cerr << "*** ERROR: Country code (MCC) must be 901 or less" << endl;
+     isok = false;
+  }
+  if (mcc.length() < 4)
+  {
+    value = "0000";
+    value += mcc;
+    mcc = value.substr(value.length()-4,4);
+  }
 
   if (!cfg().getValue(name(), "MNC", mnc))
   {
      cerr << "*** ERROR: Missing parameter " << name() << "/MNC" << endl;
      isok = false;
   }
+  if (atoi(mnc.c_str()) > 16383)
+  {
+     cerr << "*** ERROR: Network code (MNC) must be 16383 or less" << endl;
+     isok = false;
+  }
+  if (mnc.length() < 5)
+  {
+    value = "00000";
+    value += mcc;
+    mcc = value.substr(value.length()-5,5);
+  }
+
 
   if (!cfg().getValue(name(), "PORT", port))
   {
@@ -221,7 +248,6 @@ bool TetraLogic::initialize(void)
 
   // read infos of tetra users configured in svxlink.conf
   string user_section;
-  string value;
   if (cfg().getValue(name(), "TETRA_USERS", user_section))
   {
     list<string> user_list = cfg().listSection(user_section);
@@ -259,6 +285,7 @@ bool TetraLogic::initialize(void)
     {
       cfg().getValue(status_section, *slit, value);
       state_sds[*slit] = value;
+      cout << *slit << "=" << value << endl;
     }
   }
 
@@ -450,9 +477,15 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
 
     case SDS:
-      peistate = WAIT4SDS;
+      wait4sds = true;
       handleSdsHeader(m_message);
       cout << "SDS empfangen" << endl;
+      break;
+
+    case STATE_SDS:
+      cout << "STATE_SDS " << m_message << endl;
+      handleStateSds(m_message);
+      wait4sds = false;
       break;
 
     case SDS_MESSAGE:
@@ -462,7 +495,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
   }
 
-  if (peirequest == INIT && (peistate == OK || peistate == IGNORE_ERRORS))
+  if (peirequest == INIT)
   {
     initPei();
   }
@@ -547,15 +580,46 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
   m_sds.tos = utc;     // last activity
 
   m_sds.type = getNextVal(sds_head); // type of sds
-  m_sds.o_issi = getNextStr(sds_head); // sender ISSI
+  m_sds.o_issi = toTEI(getNextStr(sds_head)); // sender ISSI
   getNextVal(sds_head);
 
   // destination ISSI
   pending_sds[getNextStr(sds_head)] = m_sds;
 
+  // update last activity of sender
+  userdata[m_sds.o_issi].last_activity = utc;
+
 } /* TetraLogic::getTypeOfService */
 
 
+std::string TetraLogic::toTEI(std::string issi)
+{
+  stringstream ss;
+  char is[9];
+
+  if (issi.length() < 17)
+  {
+    sprintf(is, "%08d", atoi(issi.c_str()));
+    ss << mcc << mnc << is;
+  }
+  cout << "TEI:" << ss.str() << endl;
+  return ss.str();
+} /* TetraLogic::toTEI */
+
+void TetraLogic::handleStateSds(std::string m_message)
+{
+
+  if (state_sds[m_message].empty())
+  {
+    // process macro, if defined
+    injectDtmf(m_message, 10);
+  }
+  else
+  {
+    cout << "sending APRS-Info via LocatioInfo "
+    << m_message << endl;
+  }
+} /* TetraLogic::handleStateSds */
 
 
 std::string TetraLogic::getNextStr(std::string& h)
@@ -630,6 +694,9 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTCC:"]                                = CALL_PERMIT;
   mre["^\\+CDTXC:"]                               = CALL_END;
   mre["^\\+CTCR:"]                                = GROUPCALL_RELEASED;
+  mre["^0A00"]                                    = LIP_SDS;
+  mre["^0A30000000000007FFE810"]                  = REGISTER_TEI;
+  mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {
