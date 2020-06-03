@@ -237,7 +237,8 @@ bool TetraLogic::initialize(void)
 
   if (!cfg().getValue(name(), "PORT", port))
   {
-     cout << "Warning: Missing parameter " << name() << "/PORT, " << port << endl;
+     cout << "Warning: Missing parameter " << name() << "/PORT, "
+          << port << endl;
   }
 
   if (!cfg().getValue(name(), "BAUD", baudrate))
@@ -291,8 +292,8 @@ bool TetraLogic::initialize(void)
 
   if (!cfg().getValue(name(), "INIT_PEI", initstr))
   {
-     cout << "Warning: Missing parameter " << name() << "/INIT_PEI, using defaults"
-          << endl;
+     cout << "Warning: Missing parameter " << name()
+          << "/INIT_PEI, using defaults" << endl;
   }
   SvxLink::splitStr(initcmds, initstr, ";");
 
