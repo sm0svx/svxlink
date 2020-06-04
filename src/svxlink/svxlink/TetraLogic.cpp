@@ -513,7 +513,8 @@ TETRA Incoming Call Notification +CTICN
 [<comms type>], [<slots/codec>], [<called party identity type>],
 [<called party identity>], [<priority level>]
 
-e.g. +CTICN: 1,0,0,5,09011638300023404,1,1,0,1,1,5,09011638300000001,0
+ Example:
+ +CTICN: 1,0,0,5,09011638300023404,1,1,0,1,1,5,09011638300000001,0
 */
 void TetraLogic::handleGroupcallBegin(std::string message)
 {
@@ -567,8 +568,19 @@ void TetraLogic::handleGroupcallBegin(std::string message)
 } /* TetraLogic::handleGroupcallBegin */
 
 
-// +CTSDSR: 12,23404,0,23401,0,112
-// 82040801476A61746A616A676A61
+/*
+ TETRA SDS Receive +CTSDSR
+
+ CTSDSR unsolicited Result Codes
+ +CTSDSR: <AI service>, [<calling party identity>],
+ [<calling party identity type>], <called party identity>,
+ <called party identity type>, <length>,
+ [<end to end encryption>]<CR><LF>user data
+
+ Example:
+ +CTSDSR: 12,23404,0,23401,0,112
+ 82040801476A61746A616A676A61
+*/
 void TetraLogic::handleSdsHeader(std::string sds_head)
 {
   sds_head.erase(0,9);
@@ -603,7 +615,6 @@ std::string TetraLogic::getTEI(std::string issi)
     sprintf(is, "%08d", atoi(issi.c_str()));
     ss << mcc << mnc << is;
   }
-  cout << "TEI:" << ss.str() << endl;
   return ss.str();
 } /* TetraLogic::toTEI */
 
