@@ -114,7 +114,7 @@ std::string dec2nmea_lat(float latitude)
   int second = (minute - int(minute)) * 100;
   sprintf(lat, "%02d%02d.%02d", int(latitude), minute, second);
   return std::string(lat);
-}
+} /* dec2nmea_lat */
 
 std::string dec2nmea_lon(float longitude)
 {
@@ -123,7 +123,7 @@ std::string dec2nmea_lon(float longitude)
   int second = (minute - int(minute)) * 100;
   sprintf(lon, "%03d%02d.%02d", int(longitude), minute, second);
   return std::string(lon);
-}
+} /* dec2nmea_lon */
 
 bool handle_LIP_compact(std::string lip, float & lat, float & lon)
 {
@@ -162,8 +162,8 @@ void handle_LIP_short(std::string in, float &lat, float &lon)
   /* Protocol identifier
      0x03 = simple GPS
      0x0A = LIP
-     0x83 = Complex SDS-TL GPS message transfer */
-
+     0x83 = Complex SDS-TL GPS message transfer
+  */
   if (in.substr(0,2) == "0A")
   {
     tlo = std::stol(in.substr(2,1),nullptr,16) << 25;
@@ -185,9 +185,20 @@ void handle_LIP_short(std::string in, float &lat, float &lon)
     lat = tla*180/33554432;
     lon = tlo*360/33554432;
   }
-} /* get_LIP_latlon */
+} /* handle_LIP_latlon */
 
 
+/*
+  Creates a sds from text, format of a command send to the Pei device must be:
+
+  AT+CTSDS=RxISSI,len<0x0D><0x0A>
+  message<0x1A>
+
+  Where:
+  RxISSI  - the ISSI (not TEI) of the destination MS
+  len     - the length of the following message in byte
+  message - the message as hex characters
+*/
 bool createSDS(std::string & sds, std::string issi, std::string message)
 {
   if (message.length() > 120 || issi.length() > 8) return false;

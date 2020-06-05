@@ -286,7 +286,6 @@ bool TetraLogic::initialize(void)
     {
       cfg().getValue(status_section, *slit, value);
       state_sds[*slit] = value;
-      cout << *slit << "=" << value << endl;
     }
   }
 
@@ -617,6 +616,7 @@ std::string TetraLogic::getTEI(std::string issi)
   }
   return ss.str();
 } /* TetraLogic::toTEI */
+
 
 void TetraLogic::handleStateSds(std::string m_message)
 {
