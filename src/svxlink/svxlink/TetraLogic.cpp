@@ -97,6 +97,7 @@ using namespace SvxLink;
 #define REGISTER_TEI 13
 #define STATE_SDS 14
 
+
 #define INVALID 254
 #define TIMEOUT 255
 
@@ -391,6 +392,7 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
 
 void TetraLogic::initPei(void)
 {
+  stringstream ss;
   if (!m_cmds.empty())
   {
     std::string cmd = *(m_cmds.begin());
@@ -400,7 +402,8 @@ void TetraLogic::initPei(void)
   else
   {
     peirequest = INIT_COMPLETE;
-    cout << "PEI init finished." << endl;
+    ss << "pei_init_finished";
+    processEvent(ss.str());
   }
 } /* TetraLogic::initPei */
 
@@ -449,6 +452,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
   cout << "message >" << m_message << "<" << endl;
 
+  stringstream ss;
   int response = handleMessage(m_message);
 
   switch (response)
@@ -462,7 +466,6 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
 
     case GROUPCALL_BEGIN:
-      cout << "Sql is OPEN\n";
       Logic::squelchOpen(true);
       handleGroupcallBegin(m_message);
       break;
@@ -474,22 +477,21 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
     case CALL_END:
       Logic::squelchOpen(false);
       handleCallEnd(m_message);
-      cout << "Sql is CLOSED\n";
       break;
 
     case SDS:
       wait4sds = true;
       handleSdsHeader(m_message);
-      cout << "SDS empfangen" << endl;
       break;
 
     case STATE_SDS:
-      cout << "STATE_SDS " << m_message << endl;
       handleStateSds(m_message);
       wait4sds = false;
       break;
 
     case SDS_MESSAGE:
+      if (!wait4sds) break;
+      handleSdsMessage(m_message);
       break;
 
     default:
@@ -526,6 +528,7 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   }
 
   Callinfo t_ci;
+  stringstream ss;
   message.erase(0,8);
   std::string h = message;
 
@@ -564,6 +567,11 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   rawtime = time(NULL);
   utc = gmtime(&rawtime);
   userdata[t_tei].last_activity = utc;
+  
+  // callup tcl event
+  ss << "groupcall_begin " << t_ci.d_issi << " " << t_ci.d_issi;
+  processEvent(ss.str());
+  
 
 } /* TetraLogic::handleGroupcallBegin */
 
@@ -583,6 +591,7 @@ void TetraLogic::handleGroupcallBegin(std::string message)
 */
 void TetraLogic::handleSdsHeader(std::string sds_head)
 {
+  stringstream ss;
   sds_head.erase(0,9);
   Sds m_sds;
 
@@ -601,8 +610,19 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
 
   // update last activity of sender
   userdata[m_sds.o_issi].last_activity = utc;
+  
+  ss << "sds_header_received " << m_sds.o_issi << " " << m_sds.type;
+  processEvent(ss.str());
 
 } /* TetraLogic::getTypeOfService */
+
+
+void TetraLogic::handleSdsMessage(std::string sds_message)
+{
+  stringstream ss;  
+  ss << "sds_message " << decodeSDS(sds_message);
+  processEvent(ss.str());
+} /* TetraLogic::handleSdsMessage */
 
 
 std::string TetraLogic::getTEI(std::string issi)
@@ -618,8 +638,10 @@ std::string TetraLogic::getTEI(std::string issi)
   return ss.str();
 } /* TetraLogic::toTEI */
 
+
 void TetraLogic::handleStateSds(std::string m_message)
 {
+  stringstream ss;
 
   if (state_sds[m_message].empty())
   {
@@ -631,6 +653,8 @@ void TetraLogic::handleStateSds(std::string m_message)
     cout << "sending APRS-Info via LocatioInfo "
     << m_message << endl;
   }
+  ss << "state_sds_received";
+  processEvent(ss.str());
 } /* TetraLogic::handleStateSds */
 
 
@@ -654,14 +678,18 @@ int TetraLogic::getNextVal(std::string& h)
 
 void TetraLogic::handleGroupcallEnd(std::string message)
 {
-
+  stringstream ss;
+  ss << "groupcall_end";
+  processEvent(ss.str());
 } /* TetraLogic::handleGroupcallEnd */
 
 
 // +CDTXC: 1,0
 void TetraLogic::handleCallEnd(std::string message)
 {
-
+  stringstream ss;
+  ss << "call_end";
+  processEvent(ss.str());
 } /* TetraLogic::handleCallEnd */
 
 
@@ -678,8 +706,11 @@ void TetraLogic::sendPei(std::string cmd)
 
 void TetraLogic::onComTimeout(Async::Timer *timer)
 {
-  cout << "*** ERROR: No or wrong response on command" << endl;
-  peistate = TIMEOUT;
+  stringstream ss;
+  ss << "peiCom_timeout";
+  processEvent(ss.str());
+
+  peistate = TIMEOUT;  
 } /* TetraLogic::onPeiTimeout */
 
 
@@ -709,6 +740,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^0A00"]                                    = LIP_SDS;
   mre["^0A30000000000007FFE810"]                  = REGISTER_TEI;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
+  mre["^[0-9A-F]{2,}$"]                           = SDS_MESSAGE;
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {

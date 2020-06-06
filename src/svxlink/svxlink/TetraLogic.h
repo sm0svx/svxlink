@@ -242,6 +242,7 @@ class TetraLogic : public Logic
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
     void handleSdsHeader(std::string sds_head);
+    void handleSdsMessage(std::string sds_message);
     void handleStateSds(std::string m_message);
     std::string getTEI(std::string issi);
     int getNextVal(std::string &h);

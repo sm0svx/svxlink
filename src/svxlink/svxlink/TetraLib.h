@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 
 
@@ -114,7 +116,7 @@ std::string dec2nmea_lat(float latitude)
   int second = (minute - int(minute)) * 100;
   sprintf(lat, "%02d%02d.%02d", int(latitude), minute, second);
   return std::string(lat);
-}
+} /* dec2nmea_lat */
 
 std::string dec2nmea_lon(float longitude)
 {
@@ -123,7 +125,7 @@ std::string dec2nmea_lon(float longitude)
   int second = (minute - int(minute)) * 100;
   sprintf(lon, "%03d%02d.%02d", int(longitude), minute, second);
   return std::string(lon);
-}
+} /* dec2nmea_lon */
 
 bool handle_LIP_compact(std::string lip, float & lat, float & lon)
 {
@@ -192,7 +194,6 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
 {
   if (message.length() > 120 || issi.length() > 8) return false;
 
-  char len[4];
   std::stringstream ss;
 
   for (unsigned int a=0; a<message.length(); a++)
@@ -200,17 +201,12 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
     ss << std::hex << (int)message[a];
   }
 
-  sds = "AT+CMGS=";
-  sds += std::to_string(std::stoi(issi));
-  sds += ",";
-
-  sprintf(len, "%03d", (int)ss.str().length() * 4);
-  std::string s(len);
-  sds += s;
-  sds += "\r\n";
-  sds += ss.str();
-  sds += 0x1a;
-
+  char f[2*message.length()+issi.length()+20];
+  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c", 
+             std::to_string(std::stoi(issi)).c_str(),
+             (int)ss.str().length() * 4,
+             ss.str().c_str(), 0x1a);
+  sds = f;          
   return true;
 } /* createSDS */
 
