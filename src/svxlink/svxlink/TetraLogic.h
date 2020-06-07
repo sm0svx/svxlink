@@ -153,6 +153,7 @@ class TetraLogic : public Logic
     std::string initstr;
 
     Async::Serial *pei;
+    Async::Pty    *sds_pty;
 
     typedef std::vector<std::string> StrList;
     StrList initcmds;
@@ -199,11 +200,12 @@ class TetraLogic : public Logic
       std::string o_issi;
       std::string sds;
       std::string content;
+      std::string message;
       struct tm *tos;
       int type;
-      bool received;
+      int direction;  // 1 - incoming, 2 - outgoing
     };
-    std::map<std::string, Sds> pending_sds;
+    std::map<int, Sds> pending_sds;
 
      // contain user data
     struct User {
@@ -262,6 +264,7 @@ class TetraLogic : public Logic
     int handleMessage(std::string  m_message);
     void handleGroupcallBegin(std::string m_message);
     void handleGroupcallEnd(std::string m_message);
+    void sdsPtyReceived(const void *buf, size_t count);
     void handleCallEnd(std::string m_message);
     bool rmatch(std::string tok, std::string pattern);
 

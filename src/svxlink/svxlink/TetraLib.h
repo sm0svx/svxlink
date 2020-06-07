@@ -195,6 +195,7 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   if (message.length() > 120 || issi.length() > 8) return false;
 
   std::stringstream ss;
+  ss << "8204FF01";
 
   for (unsigned int a=0; a<message.length(); a++)
   {
