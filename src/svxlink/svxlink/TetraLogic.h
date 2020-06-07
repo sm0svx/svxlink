@@ -157,12 +157,13 @@ class TetraLogic : public Logic
     typedef std::vector<std::string> StrList;
     StrList initcmds;
 
-    /* <CC instance >, <call status>, <AI service>,
-       [<calling party identity type>], [<calling party identity>],
-       [<hook>], [<simplex>], [<end to end encryption>],
-       [<comms type>],
-       [<slots/codec>], [<called party identity type>],
-       [<called party identity>], [<priority level>]
+    /* 
+     <CC instance >, <call status>, <AI service>,
+     [<calling party identity type>], [<calling party identity>],
+     [<hook>], [<simplex>], [<end to end encryption>],
+     [<comms type>],
+     [<slots/codec>], [<called party identity type>],
+     [<called party identity>], [<priority level>]
     */
     struct Callinfo {
        int instance;
@@ -183,7 +184,16 @@ class TetraLogic : public Logic
        int d_issi;
        int prio;
     };
-
+    std::map<int, Callinfo> callinfo;
+    
+    struct QsoInfo {
+      std::string tei;  
+      struct tm *start;
+      struct tm *stop;
+      std::vector<std::string> mebmers;
+    };
+    QsoInfo Qso;
+    
     // contain a sds (state and message)
     struct Sds {
       std::string o_issi;
@@ -193,6 +203,7 @@ class TetraLogic : public Logic
       int type;
       bool received;
     };
+    std::map<std::string, Sds> pending_sds;
 
      // contain user data
     struct User {
@@ -206,9 +217,12 @@ class TetraLogic : public Logic
       char aprs_icon[2];
       struct tm *last_activity;
     };
+    std::map<std::string, User> userdata;
 
     int    peistate;
     std::string peistream;
+    bool   debug;
+    std::string aprspath;
 
     typedef enum
     {
@@ -229,13 +243,9 @@ class TetraLogic : public Logic
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
-
-    std::map<std::string, User> userdata;
-    std::map<int, Callinfo> callinfo;
+    
     std::map<std::string, std::string> state_sds;
-    std::map<std::string, Sds> pending_sds;
     bool wait4sds;
-
     StrList m_cmds;
 
     void initPei(void);

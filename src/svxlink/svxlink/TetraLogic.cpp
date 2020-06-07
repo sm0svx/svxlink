@@ -163,6 +163,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
     rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
     port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
+    debug(false),
     peiComTimer(1000, Timer::TYPE_ONESHOT, false),
     peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
 
@@ -218,15 +219,21 @@ bool TetraLogic::initialize(void)
     mcc = value.substr(value.length()-4,4);
   }
 
+  if (!cfg().getValue(name(), "APRSPATH", aprspath))
+  {
+    aprspath = ">APRS,qAR";
+    aprspath += callsign();
+    aprspath += "-10:";
+  }
   if (!cfg().getValue(name(), "MNC", mnc))
   {
-     cerr << "*** ERROR: Missing parameter " << name() << "/MNC" << endl;
-     isok = false;
+    cerr << "*** ERROR: Missing parameter " << name() << "/MNC" << endl;
+    isok = false;
   }
   if (atoi(mnc.c_str()) > 16383)
   {
-     cerr << "*** ERROR: Network code (MNC) must be 16383 or less" << endl;
-     isok = false;
+    cerr << "*** ERROR: Network code (MNC) must be 16383 or less" << endl;
+    isok = false;
   }
   if (mnc.length() < 5)
   {
@@ -235,7 +242,8 @@ bool TetraLogic::initialize(void)
     mcc = value.substr(value.length()-5,5);
   }
 
-
+  cfg().getValue(name(), "DEBUG", debug);
+  
   if (!cfg().getValue(name(), "PORT", port))
   {
      cout << "Warning: Missing parameter " << name() << "/PORT, "
@@ -539,10 +547,10 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   t_ci.aistatus = getNextVal(h);
   t_ci.origin_cpit = getNextVal(h);
 
-  std::string t_tei = getNextStr(h);
-  t_ci.d_mcc = atoi(t_tei.substr(0,4).c_str());
-  t_ci.d_mnc = atoi(t_tei.substr(4,5).c_str());
-  t_ci.d_issi = atoi(t_tei.substr(9,8).c_str());
+  std::string o_tei = getNextStr(h);
+  t_ci.o_mcc = atoi(o_tei.substr(0,4).c_str());
+  t_ci.o_mnc = atoi(o_tei.substr(4,5).c_str());
+  t_ci.o_issi = atoi(o_tei.substr(9,8).c_str());
 
   t_ci.hook = getNextVal(h);
   t_ci.simplex = getNextVal(h);
@@ -551,28 +559,40 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   t_ci.codec = getNextVal(h);
   t_ci.dest_cpit = getNextVal(h);
 
-  t_tei = getNextStr(h);
-  t_ci.d_mcc = atoi(t_tei.substr(0,4).c_str());
-  t_ci.d_mnc = atoi(t_tei.substr(4,5).c_str());
-  t_ci.d_issi = atoi(t_tei.substr(9,8).c_str());
-
+  std::string d_tei = getNextStr(h);
+  t_ci.d_mcc = atoi(d_tei.substr(0,4).c_str());
+  t_ci.d_mnc = atoi(d_tei.substr(4,5).c_str());
+  t_ci.d_issi = atoi(d_tei.substr(9,8).c_str());
   t_ci.prio = atoi(h.c_str());
 
   // store call specific data into a Callinfo struct
-  callinfo[t_ci.d_issi] = t_ci;
+  callinfo[t_ci.o_issi] = t_ci;
 
   // update last activity of a user
   struct tm *utc;
-  time_t rawtime;
-  rawtime = time(NULL);
+  time_t rawtime = time(NULL);
   utc = gmtime(&rawtime);
-  userdata[t_tei].last_activity = utc;
+  userdata[o_tei].last_activity = utc;
+  
+  // store info in Qso struct
+  Qso.tei = o_tei;
+  Qso.start = utc;
+  Qso.mebmers.push_back(userdata[o_tei].call);
   
   // callup tcl event
-  ss << "groupcall_begin " << t_ci.d_issi << " " << t_ci.d_issi;
+  ss << "groupcall_begin " << t_ci.o_issi << " " << t_ci.d_issi;
   processEvent(ss.str());
-  
 
+  // send group info to aprs network 
+  if (LocationInfo::has_instance())
+  {
+    ss.clear();
+    ss << userdata[o_tei].call << aprspath << "Groupcall initiated: " 
+       << t_ci.d_issi << " -> " << t_ci.d_issi;
+    std::string  m_aprsmesg = ss.str();
+    LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg);
+  }
+  
 } /* TetraLogic::handleGroupcallBegin */
 
 
@@ -596,8 +616,7 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
   Sds m_sds;
 
   struct tm *utc;
-  time_t rawtime;
-  rawtime = time(NULL);
+  time_t rawtime = time(NULL);
   utc = gmtime(&rawtime);
   m_sds.tos = utc;     // last activity
 
@@ -684,12 +703,28 @@ void TetraLogic::handleGroupcallEnd(std::string message)
 } /* TetraLogic::handleGroupcallEnd */
 
 
+// Down Transmission Ceased +CDTXC
 // +CDTXC: 1,0
 void TetraLogic::handleCallEnd(std::string message)
 {
+  // update Qso information, set time of activity
+  struct tm *utc;
+  time_t rawtime = time(NULL);
+  utc = gmtime(&rawtime);
+  Qso.stop = utc;
+
   stringstream ss;
   ss << "call_end";
   processEvent(ss.str());
+  
+  // send call/qso end to aprs network 
+  if (LocationInfo::has_instance())
+  {
+    std::string  m_aprsmesg = "Qso ended (";
+    for (const auto &it : Qso.mebmers) m_aprsmesg += it;
+    m_aprsmesg += ")";
+    LocationInfo::instance()->update3rdState(userdata[Qso.tei].call, m_aprsmesg);
+  }
 } /* TetraLogic::handleCallEnd */
 
 
@@ -697,7 +732,11 @@ void TetraLogic::sendPei(std::string cmd)
 {
   cmd += "\r";
   pei->write(cmd.c_str(), cmd.length());
-  cout << "sending " << cmd << endl;
+  
+  if (debug)
+  {
+    cout << "sending " << cmd << endl;
+  }
 
   peiComTimer.reset();
   peiComTimer.setEnable(true);
