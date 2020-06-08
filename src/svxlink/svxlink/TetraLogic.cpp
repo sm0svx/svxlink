@@ -86,11 +86,11 @@ using namespace SvxLink;
 #define ERROR3 2
 #define GROUPCALL_BEGIN 3
 #define GROUPCALL_END 4
-#define TXGRANT 5
+
 #define SDS 6
 #define SDS_TEXT_MESSAGE 7
 #define ERROR35 8
-#define CALL_PERMIT 9
+#define CALL_CONNECT 9
 #define CALL_END 10
 #define GROUPCALL_RELEASED 11
 #define LIP_SDS 12
@@ -98,7 +98,9 @@ using namespace SvxLink;
 #define STATE_SDS 14
 #define OP_MODE 15
 #define TX_GRANT 16
-
+#define TX_DEMAND 17
+#define TX_WAIT 18
+#define TX_INTERRUPT 19
 
 #define INVALID 254
 #define TIMEOUT 255
@@ -114,7 +116,7 @@ class TetraLogic::Call
 
   public:
 
-  Call()
+  Call() 
   {
 
   }
@@ -162,15 +164,15 @@ class TetraLogic::Call
 
 TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
-    rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
-    port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
-    debug(false),
-    peiComTimer(1000, Timer::TYPE_ONESHOT, false),
-    peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
+  rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
+  port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
+  debug(false),
+  peiComTimer(1000, Timer::TYPE_ONESHOT, false),
+  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
 
 {
-    peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
-    peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
+  peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
+  peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
 } /* TetraLogic::TetraLogic */
 
 
@@ -189,7 +191,7 @@ bool TetraLogic::initialize(void)
   bool isok = true;
   if (!Logic::initialize())
   {
-    isok = false;;
+    isok = false;
   }
 
   cfg().getValue(name(), "MUTE_RX_ON_TX", mute_rx_on_tx);
@@ -247,8 +249,8 @@ bool TetraLogic::initialize(void)
 
   if (!cfg().getValue(name(), "PORT", port))
   {
-     cout << "Warning: Missing parameter " << name() << "/PORT, "
-          << port << endl;
+     cout << "Warning: Missing parameter " << name() << "/PORT"
+          << endl;
   }
 
   if (!cfg().getValue(name(), "BAUD", baudrate))
@@ -506,7 +508,10 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
     return;
   }
 
-  cout << "message >" << m_message << "<" << endl;
+  if (debug)
+  {
+    cout << "Pei message: >" << m_message << "<" << endl;
+  }
 
   stringstream ss;
   int response = handleMessage(m_message);
@@ -519,7 +524,10 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
     case ERROR:
       peistate = ERROR;
-      cout << getPeiError(atoi(m_message.erase(0,11).c_str())) << endl;
+      if (m_message.length()>11 && debug)
+      {
+        cout << getPeiError(atoi(m_message.erase(0,11).c_str())) << endl;
+      }
       break;
 
     case GROUPCALL_BEGIN:
@@ -550,17 +558,23 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       if (!wait4sds) break;
       handleSdsMessage(m_message);
       break;
+    
+    case TX_DEMAND:
+      break;
 
     case TX_GRANT:
       handleTxGrant(m_message);
       break;
 
+    case CALL_CONNECT:
+      break;
+      
     case OP_MODE:
       getOpMode(m_message);
       break;
 
     case INVALID:
-      cout << "+++ Pei answer not known"
+      cout << "+++ Pei answer not known, ignoring ;)"
            << endl;
 
     default:
@@ -892,10 +906,13 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CME ERROR"]                            = ERROR;
   mre["^\\+CTSDSR:"]                              = SDS;
   mre["^\\+CTICN:"]                               = GROUPCALL_BEGIN;
-  mre["^\\+CTCC:"]                                = CALL_PERMIT;
+  mre["^\\+CTCR:"]                                = GROUPCALL_RELEASED;
+  mre["^\\+CTCC:"]                                = CALL_CONNECT;
   mre["^\\+CDTXC:"]                               = CALL_END;
   mre["^\\+CTXG:"]                                = TX_GRANT;
-  mre["^\\+CTCR:"]                                = GROUPCALL_RELEASED;
+  mre["^\\+CTXD:"]                                = TX_DEMAND;
+  mre["^\\+CTXI:"]                                = TX_INTERRUPT;
+  mre["^\\+CTXW:"]                                = TX_WAIT;
   mre["^0A00"]                                    = LIP_SDS;
   mre["^0A30000000000007FFE810"]                  = REGISTER_TEI;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;

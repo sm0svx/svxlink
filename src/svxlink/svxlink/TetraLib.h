@@ -100,26 +100,125 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-std::string TxGrant[] = { "Transmission granted",
-                          "Transmission not granted",
-                          "Transmission queued",
-                          "Transmission granted to another"};
+std::string TxGrant[] = { 
+   "0 - Transmission granted",
+   "1 - Transmission not granted",
+   "2 - Transmission queued",
+   "3 - Transmission granted to another"
+};
 
-std::string OpMode[] =  {"DMO mode", "TMO mode", "",
-                          "", "", "", "DMO Repeater mode"};
+std::string OpMode[] =  {
+   "0 - V+D (trunked mode operation)", 
+   "1 - DMO", 
+   "2 - V+D with dual watch of DMO",
+   "3 - DMO with dual watch of V+D", 
+   "4 - V+D and DMO (used in conjunction CTSP command)", 
+   "5 - NN", 
+   "6 - DMO Repeater mode"
+};
 
-std::string TxDemandPriority[] = {"Low", "High", "Pre-emptive", "Emergency"};
+std::string TxDemandPriority[] = {
+   "0 - Low", 
+   "1 - High", 
+   "2 - Pre-emptive", 
+   "3 - Emergency"
+};
 
-std::string TransientComType[] = {"V+D","DMO-Direct MS-MS","DMO-Via DM-REP",
-                                "DMO-Via DM-GATE","DMO-Via DM-REP/GATE" };
+std::string TransientComType[] = {
+   "0 - Voice + Data",
+   "1 - DMO-Direct MS-MS",
+   "2 - DMO-Via DM-REP",
+   "3 - DMO-Via DM-GATE",
+   "4 - DMO-Via DM-REP/GATE" 
+};
 
 std::string RegStat[] = {
-     "Registering or searching a network, one or more networks are available",
-     "Registered, home network",
-     "Not registered, no network currently available",
-     "System reject, no other network available",
-     "Unknown",
-     "Registered, visited network"};
+   "0 - Registering or searching a network, one or more networks are available",
+   "1 - Registered, home network",
+   "2 - Not registered, no network currently available",
+   "3 - System reject, no other network available",
+   "4 - Unknown",
+   "5 - Registered, visited network"
+};
+
+std::string AiService[] = {
+   "0 - TETRA speech",
+   "1 - 7,2 kbit/s unprotected data",
+   "2 - Low protection 4,8 kbit/s short interleaving depth = 1",
+   "3 - Low protection 4,8 kbit/s medium interleaving depth = 4",
+   "4 - Low protection 4,8 kbit/s long interleaving depth = 8",
+   "5 - High protection 2,4 kbit/s short interleaving depth = 1",
+   "6 - High protection 2,4 kbit/s medium interleaving depth = 4",
+   "7 - High protection 2,4 kbit/s high interleaving depth = 8",
+   "8 - Packet Data (V+D only)",
+   "9 - SDS type 1 (16 bits)",
+   "10 - SDS type 2 (32 bits)",
+   "11 - SDS type 3 (64 bits)",
+   "12 - SDS type 4 (0 - 2 047 bits)",
+   "13 - Status (16 bits, some values are reserved in EN 300 392-2 [3])"
+};
+
+std::string AiMode[] = {
+   "0 - V+D (trunked mode operation)",
+   "1 - DMO",
+   "2 - V+D with dual watch of DMO",
+   "3 - DMO with dual watch of V+D",
+   "4 - V+D and DMO (used in conjunction CTSP command)"
+};
+
+std::string DisconnectCause[] = {
+   "0 - Not defined or unknown",
+   "1 - User request",
+   "2 - Called party busy",
+   "3 - Called party not reachable",
+   "4 - Called party does not support encryption",
+   "5 - Network congestion",
+   "6 - Not allowed traffic",
+   "7 - Incompatible traffic",
+   "8 - Service not available",
+   "9 - Pre-emption",
+   "10 - Invalid call identifier",
+   "11 - Called party rejection",
+   "12 - No idle CC entity",
+   "13 - Timer expiry",
+   "14 - SwMI disconnect",
+   "15 - No acknowledgement",
+   "16 - Unknown TETRA identity",
+   "17 - Supplementary Service dependent",
+   "18 - Unknown external subscriber number",
+   "19 - Call restoration failed",
+   "20 - Called party requires encryption",
+   "21 - Concurrent set-up not supported",
+   "22 - Called party is under the same DM-GATE as the calling party",
+   "23 - Reserved",
+   "24 - Reserved",
+   "25 - Reserved",
+   "26 - Reserved",
+   "27 - Reserved",
+   "28 - Reserved",
+   "29 - Reserved",
+   "30 - Reserved",
+   "31 - Called party offered unacceptable service",
+   "32 - Pre-emption by late entering gateway",
+   "33 - Link to DM-REP not established or failed",
+   "34 - Link to gateway failed",
+   "35 - Call rejected by gateway",
+   "36 - V+D call set-up failure",
+   "37 - V+D resource lost or call timer expired",
+   "38 - Transmit authorization lost",
+   "39 - Channel has become occupied by other users",
+   "40 - Security parameter mismatch"
+};
+
+std::string DmCommunicationType[] = {
+   "0 - Any, MT decides",
+   "1 - Direct MS-MS",
+   "2 - Via DM-REP",
+   "3 - Via DM-GATE",
+   "4 - Via DM-REP/GATE",
+   "5 - Reserved",
+   "6 - Direct MS-MS, but maintain gateway registration"
+};
 
 
 /****************************************************************************
@@ -273,8 +372,8 @@ std::string error[] = {
 "1 - The MT can not establish a reliable communication with the TE",
 "2 - The PEI link of the MT is being used already",
 "3 - This is a general error report code which indicates that the MT supports \
- the command but not in its current state. This code shall be used when no \
- other code is more appropriate for the specific context",
+the command but not in its current state. This code shall be used when no \
+other code is more appropriate for the specific context",
 "4 - The MT does not support the command",
 "5 - The MT can not process any command until the PIN for the SIM is provided",
 "6 - Reserved",
@@ -286,7 +385,7 @@ std::string error[] = {
 "12 - MMI unblocking of the SIM PIN1 is required",
 "13 - The MT failed to access the SIM",
 "14 - The MT can not currently execute the command due to the SIM not being \
- ready to proceed",
+ready to proceed",
 "15 - The MT does not recognize this SIM",
 "16 - The entered PIN for the SIM is incorrect",
 "17 - The SIM PIN2 is required for the MT to execute the command",
@@ -306,28 +405,29 @@ std::string error[] = {
 "31 - The MT did not receive any Layer 2 acknowledgement from the SwMI",
 "32 - <user data> decoding failed",
 "33 - At least one of the parameters is of the wrong type e.g. string instead \
- of number or vice-versa",
+of number or vice-versa",
 "34 - At least one of the supported parameters in the command is out of range",
 "35 - Syntax error. The syntax of the command is incorrect e.g. mandatory \
- parameters are missing or are exceeding Data received without command",
+parameters are missing or are exceeding Data received without command",
 "36 - The MT received <user data> without AT+CMGS= ...<CR>",
 "37 - AT+CMGS command received, but timeout expired waiting for <userdata>",
 "38 - The TE has already registered the Protocol Identifier with the MT",
 "39 - Registration table in SDS-TL is full. The MT can no longer register \
- a new Protocol Identifier until a registered Protocol identifier is \
- deregistered",
+a new Protocol Identifier until a registered Protocol identifier is \
+deregistered",
 "40 - The MT supports the requested service but not while it is in DMO",
 "41 - The MT is in Transmit inhibit mode and is not able to process the \
- command in this state",
+command in this state",
 "42 - The MT is involved in a signalling activity and is not able to process \
- the available command until the current transaction ends. In V+D, \
- the signalling activity could be e.g. group attachment, group report, SDS \
- processing, processing of DGNA, registration, authentication or any \
- transaction requiring a response from the MS or the SwMI. In DMO, the \
- signalling activity could be e.g. Call or SDS processing.",
+the available command until the current transaction ends. In V+D, \
+the signalling activity could be e.g. group attachment, group report, SDS \
+processing, processing of DGNA, registration, authentication or any \
+transaction requiring a response from the MS or the SwMI. In DMO, the \
+signalling activity could be e.g. Call or SDS processing.",
 "43 - The MT supports the requested service but not while it is in V+D",
 "44 - The MT supports handling of unknown parameters",
-"45 - Reserved" };
+"45 - Reserved" 
+};
 
 return error[errorcode];
 
