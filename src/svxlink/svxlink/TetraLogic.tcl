@@ -284,6 +284,14 @@ proc set_language {lang_code} {
 
 
 #
+# Executed when Pei communication fails
+#
+proc peiCom_timeout {} {
+  puts "*** ERROR: No or wrong response on Pei command";
+}
+
+
+#
 # Executed when the user requests a list of available languages
 #
 proc list_languages {} {
@@ -292,10 +300,62 @@ proc list_languages {} {
 
 
 #
+# Executed when the Pei initializing process has been finished
+#
+proc pei_init_finished {} {
+  puts "PEI init finished";
+}
+
+
+#
 # Executed when the node is being brought online after being offline
 #
 proc logic_online {online} {
   Logic::logic_online $online
+}
+
+
+#
+# Executed when a Sds header has been received
+#
+proc sds_header_received {issi type} {
+}
+
+
+#
+# Executed when a groupcall has been started 
+#
+proc groupcall_begin {issi dissi} {
+  puts "Groupcall from $issi to $dissi";
+}
+
+
+#
+# Executed when a groupcall is ended
+#
+proc groupcall_end {} {
+}
+
+
+#
+# Executed when a call is ended
+#
+proc call_end {} {
+}
+
+
+#
+# Executed when a statee sds has been received
+#
+proc state_sds_received {} {
+}
+
+
+#
+# Executed when a sds has been received
+#
+proc sds_received {message} {
+  puts "SDS received: $message"
 }
 
 

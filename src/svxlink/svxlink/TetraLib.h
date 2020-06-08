@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 
 
@@ -203,25 +205,20 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
 {
   if (message.length() > 120 || issi.length() > 8) return false;
 
-  char len[4];
   std::stringstream ss;
+  ss << "8204FF01";
 
   for (unsigned int a=0; a<message.length(); a++)
   {
     ss << std::hex << (int)message[a];
   }
 
-  sds = "AT+CMGS=";
-  sds += std::to_string(std::stoi(issi));
-  sds += ",";
-
-  sprintf(len, "%03d", (int)ss.str().length() * 4);
-  std::string s(len);
-  sds += s;
-  sds += "\r\n";
-  sds += ss.str();
-  sds += 0x1a;
-
+  char f[2*message.length()+issi.length()+20];
+  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c", 
+             std::to_string(std::stoi(issi)).c_str(),
+             (int)ss.str().length() * 4,
+             ss.str().c_str(), 0x1a);
+  sds = f;          
   return true;
 } /* createSDS */
 

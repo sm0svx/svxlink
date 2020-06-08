@@ -153,16 +153,18 @@ class TetraLogic : public Logic
     std::string initstr;
 
     Async::Serial *pei;
+    Async::Pty    *sds_pty;
 
     typedef std::vector<std::string> StrList;
     StrList initcmds;
 
-    /* <CC instance >, <call status>, <AI service>,
-       [<calling party identity type>], [<calling party identity>],
-       [<hook>], [<simplex>], [<end to end encryption>],
-       [<comms type>],
-       [<slots/codec>], [<called party identity type>],
-       [<called party identity>], [<priority level>]
+    /* 
+     <CC instance >, <call status>, <AI service>,
+     [<calling party identity type>], [<calling party identity>],
+     [<hook>], [<simplex>], [<end to end encryption>],
+     [<comms type>],
+     [<slots/codec>], [<called party identity type>],
+     [<called party identity>], [<priority level>]
     */
     struct Callinfo {
        int instance;
@@ -183,16 +185,27 @@ class TetraLogic : public Logic
        int d_issi;
        int prio;
     };
-
+    std::map<int, Callinfo> callinfo;
+    
+    struct QsoInfo {
+      std::string tei;  
+      struct tm *start;
+      struct tm *stop;
+      std::vector<std::string> mebmers;
+    };
+    QsoInfo Qso;
+    
     // contain a sds (state and message)
     struct Sds {
       std::string o_issi;
       std::string sds;
       std::string content;
+      std::string message;
       struct tm *tos;
       int type;
-      bool received;
+      int direction;  // 1 - incoming, 2 - outgoing
     };
+    std::map<int, Sds> pending_sds;
 
      // contain user data
     struct User {
@@ -206,9 +219,12 @@ class TetraLogic : public Logic
       char aprs_icon[2];
       struct tm *last_activity;
     };
+    std::map<std::string, User> userdata;
 
     int    peistate;
     std::string peistream;
+    bool   debug;
+    std::string aprspath;
 
     typedef enum
     {
@@ -229,19 +245,16 @@ class TetraLogic : public Logic
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
-
-    std::map<std::string, User> userdata;
-    std::map<int, Callinfo> callinfo;
+    
     std::map<std::string, std::string> state_sds;
-    std::map<std::string, Sds> pending_sds;
     bool wait4sds;
-
     StrList m_cmds;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
     void handleSdsHeader(std::string sds_head);
+    void handleSdsMessage(std::string sds_message);
     void handleStateSds(std::string m_message);
     std::string getTEI(std::string issi);
     int getNextVal(std::string &h);
@@ -251,6 +264,7 @@ class TetraLogic : public Logic
     int handleMessage(std::string  m_message);
     void handleGroupcallBegin(std::string m_message);
     void handleGroupcallEnd(std::string m_message);
+    void sdsPtyReceived(const void *buf, size_t count);
     void handleCallEnd(std::string m_message);
     bool rmatch(std::string tok, std::string pattern);
 
