@@ -323,7 +323,15 @@ proc sds_header_received {issi type} {
 
 
 #
-# Executed when a groupcall has been started 
+# Executed when a Sds has been received
+#
+proc sds_message {sds} {
+  puts $sds;
+}
+
+
+#
+# Executed when a groupcall has been started
 #
 proc groupcall_begin {issi dissi} {
   puts "Groupcall from $issi to $dissi";
@@ -345,9 +353,9 @@ proc call_end {} {
 
 
 #
-# Executed when a statee sds has been received
+# Executed when a state sds has been received
 #
-proc state_sds_received {} {
+proc state_sds_received {state} {
 }
 
 

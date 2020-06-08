@@ -100,6 +100,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+std::string TxGrant[] = { "Transmission granted",
+                          "Transmission not granted",
+                          "Transmission queued",
+                          "Transmission granted to another"};
+
+std::string OpMode[] =  {"DMO mode", "TMO mode", "",
+                          "", "", "", "DMO Repeater mode"};
+
+std::string TxDemandPriority[] = {"Low", "High", "Pre-emptive", "Emergency"};
+
+std::string TransientComType[] = {"V+D","DMO-Direct MS-MS","DMO-Via DM-REP",
+                                "DMO-Via DM-GATE","DMO-Via DM-REP/GATE" };
+
+std::string RegStat[] = {
+     "Registering or searching a network, one or more networks are available",
+     "Registered, home network",
+     "Not registered, no network currently available",
+     "System reject, no other network available",
+     "Unknown",
+     "Registered, visited network"};
 
 
 /****************************************************************************
@@ -118,6 +138,7 @@ std::string dec2nmea_lat(float latitude)
   return std::string(lat);
 } /* dec2nmea_lat */
 
+
 std::string dec2nmea_lon(float longitude)
 {
   char lon[10];
@@ -126,6 +147,7 @@ std::string dec2nmea_lon(float longitude)
   sprintf(lon, "%03d%02d.%02d", int(longitude), minute, second);
   return std::string(lon);
 } /* dec2nmea_lon */
+
 
 bool handle_LIP_compact(std::string lip, float & lat, float & lon)
 {
@@ -214,11 +236,11 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   }
 
   char f[2*message.length()+issi.length()+20];
-  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c", 
+  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
              std::to_string(std::stoi(issi)).c_str(),
              (int)ss.str().length() * 4,
              ss.str().c_str(), 0x1a);
-  sds = f;          
+  sds = f;
   return true;
 } /* createSDS */
 
@@ -242,6 +264,74 @@ std::string decodeSDS(std::string hexSDS)
   return sds_text;
 } /* decodeSDS */
 
+
+std::string getPeiError(int errorcode)
+{
+
+std::string error[] = {
+"0 - The MT was unable to send the data over the air (e.g. to the SwMI)",
+"1 - The MT can not establish a reliable communication with the TE",
+"2 - The PEI link of the MT is being used already",
+"3 - This is a general error report code which indicates that the MT supports \
+ the command but not in its current state. This code shall be used when no \
+ other code is more appropriate for the specific context",
+"4 - The MT does not support the command",
+"5 - The MT can not process any command until the PIN for the SIM is provided",
+"6 - Reserved",
+"7 - Reserved",
+"8 - Reserved",
+"9 - Reserved",
+"10 - The MT can not process the command due to the absence of a SIM",
+"11 - The SIM PIN1 is required for the MT to execute the command",
+"12 - MMI unblocking of the SIM PIN1 is required",
+"13 - The MT failed to access the SIM",
+"14 - The MT can not currently execute the command due to the SIM not being \
+ ready to proceed",
+"15 - The MT does not recognize this SIM",
+"16 - The entered PIN for the SIM is incorrect",
+"17 - The SIM PIN2 is required for the MT to execute the command",
+"18 - MMI unblocking of the SIM PIN2 is required",
+"19 - Reserved",
+"20 - The MT message stack is full",
+"21 -The requested message index in the message stack does not exist",
+"22 - The requested message index does not correspond to any message",
+"23 - The MT failed to store or access to its message stack",
+"24 - The text string associated with a status value is too long",
+"25 - The text string associated with a status value contains invalid characters",
+"26 - The <dial string> is longer than 25 digits",
+"27 - The <dial string> contains invalid characters",
+"28 - Reserved",
+"29 - Reserved",
+"30 - The MS is currently out of service and can not process the command",
+"31 - The MT did not receive any Layer 2 acknowledgement from the SwMI",
+"32 - <user data> decoding failed",
+"33 - At least one of the parameters is of the wrong type e.g. string instead \
+ of number or vice-versa",
+"34 - At least one of the supported parameters in the command is out of range",
+"35 - Syntax error. The syntax of the command is incorrect e.g. mandatory \
+ parameters are missing or are exceeding Data received without command",
+"36 - The MT received <user data> without AT+CMGS= ...<CR>",
+"37 - AT+CMGS command received, but timeout expired waiting for <userdata>",
+"38 - The TE has already registered the Protocol Identifier with the MT",
+"39 - Registration table in SDS-TL is full. The MT can no longer register \
+ a new Protocol Identifier until a registered Protocol identifier is \
+ deregistered",
+"40 - The MT supports the requested service but not while it is in DMO",
+"41 - The MT is in Transmit inhibit mode and is not able to process the \
+ command in this state",
+"42 - The MT is involved in a signalling activity and is not able to process \
+ the available command until the current transaction ends. In V+D, \
+ the signalling activity could be e.g. group attachment, group report, SDS \
+ processing, processing of DGNA, registration, authentication or any \
+ transaction requiring a response from the MS or the SwMI. In DMO, the \
+ signalling activity could be e.g. Call or SDS processing.",
+"43 - The MT supports the requested service but not while it is in V+D",
+"44 - The MT supports handling of unknown parameters",
+"45 - Reserved" };
+
+return error[errorcode];
+
+} /* getPeiError */
 
 
 //} /* namespace */

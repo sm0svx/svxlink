@@ -158,7 +158,7 @@ class TetraLogic : public Logic
     typedef std::vector<std::string> StrList;
     StrList initcmds;
 
-    /* 
+    /*
      <CC instance >, <call status>, <AI service>,
      [<calling party identity type>], [<calling party identity>],
      [<hook>], [<simplex>], [<end to end encryption>],
@@ -186,15 +186,15 @@ class TetraLogic : public Logic
        int prio;
     };
     std::map<int, Callinfo> callinfo;
-    
+
     struct QsoInfo {
-      std::string tei;  
+      std::string tei;
       struct tm *start;
       struct tm *stop;
       std::vector<std::string> mebmers;
     };
     QsoInfo Qso;
-    
+
     // contain a sds (state and message)
     struct Sds {
       std::string o_issi;
@@ -242,10 +242,16 @@ class TetraLogic : public Logic
       SDS_TYPE2=10, SDS_TYPE3=11, SDS_TYPE4=12, STATUS_SDS=13
     } TypeOfService;
 
+    // operation mode of the MS
+    typedef enum
+    {
+      TMO=0, DMO=1, DMORTP=6
+    } OperationMode;
+
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
-    
+
     std::map<std::string, std::string> state_sds;
     bool wait4sds;
     StrList m_cmds;
@@ -256,6 +262,7 @@ class TetraLogic : public Logic
     void handleSdsHeader(std::string sds_head);
     void handleSdsMessage(std::string sds_message);
     void handleStateSds(std::string m_message);
+    void handleTxGrant(std::string txgrant);
     std::string getTEI(std::string issi);
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
@@ -266,6 +273,7 @@ class TetraLogic : public Logic
     void handleGroupcallEnd(std::string m_message);
     void sdsPtyReceived(const void *buf, size_t count);
     void handleCallEnd(std::string m_message);
+    void getOpMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
 
 };  /* class TetraLogic */

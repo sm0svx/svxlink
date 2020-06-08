@@ -88,7 +88,7 @@ using namespace SvxLink;
 #define GROUPCALL_END 4
 #define TXGRANT 5
 #define SDS 6
-#define SDS_MESSAGE 7
+#define SDS_TEXT_MESSAGE 7
 #define ERROR35 8
 #define CALL_PERMIT 9
 #define CALL_END 10
@@ -96,6 +96,8 @@ using namespace SvxLink;
 #define LIP_SDS 12
 #define REGISTER_TEI 13
 #define STATE_SDS 14
+#define OP_MODE 15
+#define TX_GRANT 16
 
 
 #define INVALID 254
@@ -140,7 +142,6 @@ class TetraLogic::Call
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -243,7 +244,7 @@ bool TetraLogic::initialize(void)
   }
 
   cfg().getValue(name(), "DEBUG", debug);
-  
+
   if (!cfg().getValue(name(), "PORT", port))
   {
      cout << "Warning: Missing parameter " << name() << "/PORT, "
@@ -272,7 +273,7 @@ bool TetraLogic::initialize(void)
     sds_pty->dataReceived.connect(
         mem_fun(*this, &TetraLogic::sdsPtyReceived));
   }
-  
+
   // read infos of tetra users configured in svxlink.conf
   string user_section;
   if (cfg().getValue(name(), "TETRA_USERS", user_section))
@@ -331,7 +332,7 @@ bool TetraLogic::initialize(void)
 
   if (!pei->open(true))
   {
-    cerr << "*** ERROR: Opening serial port " << name() << "/\"" 
+    cerr << "*** ERROR: Opening serial port " << name() << "/\""
          << port << "\"" << endl;
     isok = false;
   }
@@ -415,20 +416,20 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
  *
  ****************************************************************************/
 
- 
+
  /*
   Initialize the Pei device, here some commends that being used
   to (re)direct the answers to the Pei port. See EN 300 392-5
   V2.2.0 manual, page 62 for further info
-  
+
   TETRA Service Profile +CTSP:
-  +CTSP=<service profile>, <service layer1>, [<service layer2>], 
+  +CTSP=<service profile>, <service layer1>, [<service layer2>],
         [<AI mode>], [<link identifier>]
-  
+
   AT+CTOM=1           set MRT into DMO-MS mode (0-TMO, 6-DMO-Repeater)
-  AT+CTSP=1,3,131     Short Data Service type 4 with Transport Layer (SDS-TL) 
+  AT+CTSP=1,3,131     Short Data Service type 4 with Transport Layer (SDS-TL)
                       service
-                      131 - GPS    
+                      131 - GPS
   AT+CTSP=1,3,130     130 - Text Messaging
   AT+CTSP=1,2,20      Short Data Service (SDS)
                       20 - Status
@@ -438,10 +439,10 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
   AT+CTSP=1,3,3       3 - Simple GPS
   AT+CTSP=1,3,10      10 - Location information protocol
   AT+CTSP=1,1,11      11 - Group Management
-  
+
   TETRA service definition for Circuit Mode services +CTSDC
-  +CTSDC=<AI service>, <called party identity type>, [<area>], [<hook>], 
-         [<simplex>], [<end to end encryption>],[<comms type>], 
+  +CTSDC=<AI service>, <called party identity type>, [<area>], [<hook>],
+         [<simplex>], [<end to end encryption>],[<comms type>],
          [<slots/codec>], [<RqTx>], [<priority>], [<CLIR control>]
   AT+CTSDC=0,0,0,1,1,0,1,1,0,0
  */
@@ -518,6 +519,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
     case ERROR:
       peistate = ERROR;
+      cout << getPeiError(atoi(m_message.erase(0,11).c_str())) << endl;
       break;
 
     case GROUPCALL_BEGIN:
@@ -544,15 +546,23 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       wait4sds = false;
       break;
 
-    case SDS_MESSAGE:
+    case SDS_TEXT_MESSAGE:
       if (!wait4sds) break;
       handleSdsMessage(m_message);
       break;
 
+    case TX_GRANT:
+      handleTxGrant(m_message);
+      break;
+
+    case OP_MODE:
+      getOpMode(m_message);
+      break;
+
     case INVALID:
       cout << "+++ Pei answer not known"
-           << endl; 
-      
+           << endl;
+
     default:
       break;
   }
@@ -588,7 +598,7 @@ void TetraLogic::handleGroupcallBegin(std::string message)
 
   // open the Sql
   TetraLogic::squelchOpen(true);
-  
+
   Callinfo t_ci;
   stringstream ss;
   message.erase(0,8);
@@ -627,26 +637,26 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   time_t rawtime = time(NULL);
   utc = gmtime(&rawtime);
   userdata[o_tei].last_activity = utc;
-  
+
   // store info in Qso struct
   Qso.tei = o_tei;
   Qso.start = utc;
   Qso.mebmers.push_back(userdata[o_tei].call);
-  
+
   // callup tcl event
   ss << "groupcall_begin " << t_ci.o_issi << " " << t_ci.d_issi;
   processEvent(ss.str());
 
-  // send group info to aprs network 
+  // send group info to aprs network
   if (LocationInfo::has_instance())
   {
     ss.clear();
-    ss << userdata[o_tei].call << aprspath << "Groupcall initiated: " 
+    ss << userdata[o_tei].call << aprspath << "Groupcall initiated: "
        << t_ci.d_issi << " -> " << t_ci.d_issi;
     std::string  m_aprsmesg = ss.str();
     LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg);
   }
-  
+
 } /* TetraLogic::handleGroupcallBegin */
 
 
@@ -678,7 +688,7 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
   m_sds.o_issi = getTEI(getNextStr(sds_head)); // sender ISSI
   getNextVal(sds_head);
   m_sds.direction = 1; // 1 = received
-  
+
   // store sds in queue
   int m_sdsid = pending_sds.size();
   getNextStr(sds_head);
@@ -686,7 +696,7 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
 
   // update last activity of sender
   userdata[m_sds.o_issi].last_activity = utc;
-  
+
   ss << "sds_header_received " << m_sds.o_issi << " " << m_sds.type;
   processEvent(ss.str());
 
@@ -695,10 +705,25 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
 
 void TetraLogic::handleSdsMessage(std::string sds_message)
 {
-  stringstream ss;  
-  ss << "sds_message " << decodeSDS(sds_message);
+  stringstream ss;
+  sds_message.erase(0,8);
+  ss << "sds_message \"" << decodeSDS(sds_message) << "\"";
   processEvent(ss.str());
 } /* TetraLogic::handleSdsMessage */
+
+
+/*
+  Transmission Grant +CTXG
+  +CTXG: <CC instance>, <TxGrant>, <TxRqPrmsn>, <end to end encryption>,
+         [<TPI type>], [<TPI>]
+  e.g.:
+  +CTXG: 1,3,0,0,3,09011638300023404
+*/
+void TetraLogic::handleTxGrant(std::string txgrant)
+{
+  stringstream ss;
+
+} /* TetraLogic::handleTxGrant */
 
 
 std::string TetraLogic::getTEI(std::string issi)
@@ -726,11 +751,12 @@ void TetraLogic::handleStateSds(std::string m_message)
   }
   else
   {
-    cout << "sending APRS-Info via LocatioInfo "
-    << m_message << endl;
+    cout << " state=" << state_sds.find(m_message)->second
+         << " (" << m_message << ")" << endl;
+
+    ss << "state_sds_received " << m_message;
+    processEvent(ss.str());
   }
-  ss << "state_sds_received";
-  processEvent(ss.str());
 } /* TetraLogic::handleStateSds */
 
 
@@ -755,7 +781,7 @@ int TetraLogic::getNextVal(std::string& h)
 void TetraLogic::handleGroupcallEnd(std::string message)
 {
   TetraLogic::squelchOpen(false);
-  
+
   stringstream ss;
   ss << "groupcall_end";
   processEvent(ss.str());
@@ -775,8 +801,8 @@ void TetraLogic::handleCallEnd(std::string message)
   stringstream ss;
   ss << "call_end";
   processEvent(ss.str());
-  
-  // send call/qso end to aprs network 
+
+  // send call/qso end to aprs network
   if (LocationInfo::has_instance())
   {
     std::string  m_aprsmesg = "Qso ended (";
@@ -791,7 +817,7 @@ void TetraLogic::sendPei(std::string cmd)
 {
   cmd += "\r";
   pei->write(cmd.c_str(), cmd.length());
-  
+
   if (debug)
   {
     cout << "sending " << cmd << endl;
@@ -808,7 +834,7 @@ void TetraLogic::onComTimeout(Async::Timer *timer)
   ss << "peiCom_timeout";
   processEvent(ss.str());
 
-  peistate = TIMEOUT;  
+  peistate = TIMEOUT;
 } /* TetraLogic::onPeiTimeout */
 
 
@@ -828,28 +854,29 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   std::string injmessage = buffer;
   std::string m_issi = getNextStr(injmessage);
   std::string sds;
-  
+
   if(!createSDS(sds, m_issi, injmessage))
   {
     cout << "*** ERROR: creating Sds" << endl;
     return;
   }
-  
+
   // out the new Sds int a queue...
   Sds m_Sds;
   m_Sds.o_issi = m_issi;
   m_Sds.content = injmessage;
   m_Sds.message = sds;
   m_Sds.type = 1;
-  
-  // update last activity
+
+  // update last activity of Sds
   struct tm *utc;
   time_t rawtime = time(NULL);
   utc = gmtime(&rawtime);
   m_Sds.tos = utc;
-int m_t = 1;
+
+  int m_t = pending_sds.size();
   pending_sds[m_t] = m_Sds;
-  
+
 } /* TetraLogic::sdsPtyReceived */
 
 
@@ -867,11 +894,13 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTICN:"]                               = GROUPCALL_BEGIN;
   mre["^\\+CTCC:"]                                = CALL_PERMIT;
   mre["^\\+CDTXC:"]                               = CALL_END;
+  mre["^\\+CTXG:"]                                = TX_GRANT;
   mre["^\\+CTCR:"]                                = GROUPCALL_RELEASED;
   mre["^0A00"]                                    = LIP_SDS;
   mre["^0A30000000000007FFE810"]                  = REGISTER_TEI;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
-  mre["^[0-9A-F]{2,}$"]                           = SDS_MESSAGE;
+  mre["^8204[0-9A-F]{2,}$"]                       = SDS_TEXT_MESSAGE;
+  mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {
@@ -883,7 +912,15 @@ int TetraLogic::handleMessage(std::string mesg)
   }
 
   return retvalue;
-}
+} /* TetraLogic::handleMessage */
+
+
+void TetraLogic::getOpMode(std::string opmode)
+{
+  int t = getNextVal(opmode);
+  cout << "+++ New mode: " << OpMode[t] << endl;
+
+} /* TetraLogic::getOpMode */
 
 
 bool TetraLogic::rmatch(std::string tok, std::string pattern)
