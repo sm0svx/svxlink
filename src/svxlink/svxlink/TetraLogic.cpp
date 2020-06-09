@@ -224,7 +224,7 @@ bool TetraLogic::initialize(void)
 
   if (!cfg().getValue(name(), "APRSPATH", aprspath))
   {
-    aprspath = ">APRS,qAR";
+    aprspath = ">APRS,qAR,";
     aprspath += callsign();
     aprspath += "-10:";
   }
@@ -397,22 +397,9 @@ void TetraLogic::squelchOpen(bool is_open)
 
   rx().setMuteState(is_open ? Rx::MUTE_NONE : Rx::MUTE_ALL);
   rx().setSql(is_open);
-  //cout << "Rx: " << (is_open ? "X" : "O") << endl;
   Logic::squelchOpen(is_open);
 
 } /* TetraLogic::squelchOpen */
-
-
-/* void TetraLogic::transmitterStateChange(bool is_transmitting)
-{
-  if (mute_rx_on_tx)
-  {
-    rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
-  }
-  Logic::transmitterStateChange(is_transmitting);
-} TetraLogic::transmitterStateChange */
-
-
 
 
 /****************************************************************************
@@ -700,19 +687,19 @@ void TetraLogic::handleSdsHeader(std::string sds_head)
   m_sds.tos = utc;     // last activity
 
   m_sds.type = getNextVal(sds_head); // type of sds
-  m_sds.o_issi = getTEI(getNextStr(sds_head)); // sender ISSI
+  m_sds.tei = getTEI(getNextStr(sds_head)); // sender TEI
   getNextVal(sds_head);
   m_sds.direction = 1; // 1 = received
 
   // store sds in queue
-  int m_sdsid = pending_sds.size();
+  pending_sdsid = pending_sds.size() + 1;
   getNextStr(sds_head);
-  pending_sds[m_sdsid] = m_sds;
+  pending_sds[pending_sdsid] = m_sds;
 
   // update last activity of sender
-  userdata[m_sds.o_issi].last_activity = utc;
+  userdata[m_sds.tei].last_activity = utc;
 
-  ss << "sds_header_received " << m_sds.o_issi << " " << m_sds.type;
+  ss << "sds_header_received " << m_sds.tei << " " << m_sds.type;
   processEvent(ss.str());
 
 } /* TetraLogic::getTypeOfService */
@@ -737,6 +724,8 @@ void TetraLogic::handleSdsMessage(std::string sds_message)
 void TetraLogic::handleTxGrant(std::string txgrant)
 {
   stringstream ss;
+  ss << "tx_grant";
+  processEvent(ss.str());
   squelchOpen(true);
 } /* TetraLogic::handleTxGrant */
 
@@ -766,11 +755,26 @@ void TetraLogic::handleStateSds(std::string m_message)
   }
   else
   {
-    cout << " state=" << state_sds.find(m_message)->second
-         << " (" << m_message << ")" << endl;
+    if (debug)
+    {
+      cout << "state=" << state_sds.find(m_message)->second
+           << " (" << m_message << ")" << endl;        
+    }
 
     ss << "state_sds_received " << m_message;
     processEvent(ss.str());
+    
+    // send state of a user to aprs network
+    if (LocationInfo::has_instance())
+    {
+      string m_call = userdata[pending_sds[pending_sdsid].tei].call;
+      stringstream m_aprsmesg;
+      
+      m_aprsmesg << m_call << aprspath << state_sds.find(m_message)->second
+                 << endl;
+      cout << m_aprsmesg.str();
+      LocationInfo::instance()->update3rdState(m_call, m_aprsmesg.str());
+    }
   }
 } /* TetraLogic::handleStateSds */
 
@@ -848,7 +852,6 @@ void TetraLogic::onComTimeout(Async::Timer *timer)
   stringstream ss;
   ss << "peiCom_timeout";
   processEvent(ss.str());
-
   peistate = TIMEOUT;
 } /* TetraLogic::onPeiTimeout */
 
@@ -862,15 +865,15 @@ void TetraLogic::onPeiActivityTimeout(Async::Timer *timer)
 
 
 // format of inject a Sds into SvxLink/TetraLogic
-// ISSI,Message
+// TEI,Message
 void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 {
   const char *buffer = reinterpret_cast<const char*>(buf);
   std::string injmessage = buffer;
-  std::string m_issi = getNextStr(injmessage);
+  std::string m_tei = getNextStr(injmessage);
   std::string sds;
 
-  if(!createSDS(sds, m_issi, injmessage))
+  if(!createSDS(sds, m_tei, injmessage))
   {
     cout << "*** ERROR: creating Sds" << endl;
     return;
@@ -878,7 +881,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 
   // out the new Sds int a queue...
   Sds m_Sds;
-  m_Sds.o_issi = m_issi;
+  m_Sds.tei = m_tei;
   m_Sds.content = injmessage;
   m_Sds.message = sds;
   m_Sds.type = 1;
@@ -889,7 +892,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   utc = gmtime(&rawtime);
   m_Sds.tos = utc;
 
-  int m_t = pending_sds.size();
+  int m_t = pending_sds.size()+1;
   pending_sds[m_t] = m_Sds;
 
 } /* TetraLogic::sdsPtyReceived */

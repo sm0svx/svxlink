@@ -136,7 +136,6 @@ class TetraLogic : public Logic
 
   protected:
     virtual void squelchOpen(bool is_open);
-  //  virtual void transmitterStateChange(bool is_transmitting);
 
   private:
     class Call;
@@ -197,7 +196,7 @@ class TetraLogic : public Logic
 
     // contain a sds (state and message)
     struct Sds {
-      std::string o_issi;
+      std::string tei;
       std::string sds;
       std::string content;
       std::string message;
@@ -255,6 +254,7 @@ class TetraLogic : public Logic
     std::map<std::string, std::string> state_sds;
     bool wait4sds;
     StrList m_cmds;
+    int pending_sdsid;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);

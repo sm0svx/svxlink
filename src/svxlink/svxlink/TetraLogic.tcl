@@ -339,6 +339,13 @@ proc groupcall_begin {issi dissi} {
 
 
 #
+# Executed when transmission is granted
+#
+proc tx_grant {} {
+}
+
+
+#
 # Executed when a groupcall is ended
 #
 proc groupcall_end {} {
