@@ -116,7 +116,7 @@ class TetraLogic::Call
 
   public:
 
-  Call() 
+  Call()
   {
 
   }
@@ -395,19 +395,22 @@ void TetraLogic::squelchOpen(bool is_open)
     }
   }
 
+  rx().setMuteState(is_open ? Rx::MUTE_NONE : Rx::MUTE_ALL);
+  rx().setSql(is_open);
+  //cout << "Rx: " << (is_open ? "X" : "O") << endl;
   Logic::squelchOpen(is_open);
 
 } /* TetraLogic::squelchOpen */
 
 
-void TetraLogic::transmitterStateChange(bool is_transmitting)
+/* void TetraLogic::transmitterStateChange(bool is_transmitting)
 {
   if (mute_rx_on_tx)
   {
     rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
   }
   Logic::transmitterStateChange(is_transmitting);
-} /* TetraLogic::transmitterStateChange */
+} TetraLogic::transmitterStateChange */
 
 
 
@@ -531,7 +534,6 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
 
     case GROUPCALL_BEGIN:
-      Logic::squelchOpen(true);
       handleGroupcallBegin(m_message);
       break;
 
@@ -540,7 +542,6 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
 
     case CALL_END:
-      Logic::squelchOpen(false);
       handleCallEnd(m_message);
       break;
 
@@ -558,7 +559,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       if (!wait4sds) break;
       handleSdsMessage(m_message);
       break;
-    
+
     case TX_DEMAND:
       break;
 
@@ -568,7 +569,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
     case CALL_CONNECT:
       break;
-      
+
     case OP_MODE:
       getOpMode(m_message);
       break;
@@ -611,7 +612,7 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   }
 
   // open the Sql
-  TetraLogic::squelchOpen(true);
+  squelchOpen(true);
 
   Callinfo t_ci;
   stringstream ss;
@@ -736,7 +737,7 @@ void TetraLogic::handleSdsMessage(std::string sds_message)
 void TetraLogic::handleTxGrant(std::string txgrant)
 {
   stringstream ss;
-
+  squelchOpen(true);
 } /* TetraLogic::handleTxGrant */
 
 
@@ -794,8 +795,6 @@ int TetraLogic::getNextVal(std::string& h)
 
 void TetraLogic::handleGroupcallEnd(std::string message)
 {
-  TetraLogic::squelchOpen(false);
-
   stringstream ss;
   ss << "groupcall_end";
   processEvent(ss.str());
@@ -811,6 +810,8 @@ void TetraLogic::handleCallEnd(std::string message)
   time_t rawtime = time(NULL);
   utc = gmtime(&rawtime);
   Qso.stop = utc;
+
+  squelchOpen(false);
 
   stringstream ss;
   ss << "call_end";
@@ -934,9 +935,8 @@ int TetraLogic::handleMessage(std::string mesg)
 
 void TetraLogic::getOpMode(std::string opmode)
 {
-  int t = getNextVal(opmode);
+  int t = atoi(opmode.erase(0,6).c_str());
   cout << "+++ New mode: " << OpMode[t] << endl;
-
 } /* TetraLogic::getOpMode */
 
 

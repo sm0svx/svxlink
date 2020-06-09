@@ -136,7 +136,7 @@ class TetraLogic : public Logic
 
   protected:
     virtual void squelchOpen(bool is_open);
-    virtual void transmitterStateChange(bool is_transmitting);
+  //  virtual void transmitterStateChange(bool is_transmitting);
 
   private:
     class Call;

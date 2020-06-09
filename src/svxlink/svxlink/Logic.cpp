@@ -971,7 +971,7 @@ void Logic::squelchOpen(bool is_open)
   {
     active_module->squelchOpen(is_open);
   }
-
+  
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());

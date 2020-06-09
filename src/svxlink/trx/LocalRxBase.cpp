@@ -94,6 +94,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifdef HAS_HIDRAW_SUPPORT
 #include "SquelchHidraw.h"
 #endif
+#include "SquelchInternal.h"
 
 
 /****************************************************************************
@@ -456,6 +457,10 @@ bool LocalRxBase::initialize(void)
     squelch_det = new SquelchHidraw;
   }
 #endif
+  else if (sql_det_str == "INTERNAL")
+  {
+    squelch_det = new SquelchInternal;
+  }
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
@@ -763,6 +768,12 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
     }
   }
 } /* LocalRxBase::setMuteState */
+
+
+void LocalRxBase::setSql(bool is_open)
+{
+  squelch_det->squelchOpen(is_open);
+} /* LocalRxBase::setSql */
 
 
 bool LocalRxBase::addToneDetector(float fq, int bw, float thresh,

@@ -327,6 +327,7 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      *	      	\em false
      */
     sigc::signal<void, bool> squelchOpen;
+    
 
   protected:
     /**

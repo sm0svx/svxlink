@@ -297,6 +297,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @brief   A signal that is emitted when the ready state changes
      */
     sigc::signal<void> readyStateChanged;
+    
+    /**
+     * @brief 	Set the Sql state for this receiver
+     * @param 	is_open The Sql state to set for this receiver
+     */
+    virtual void setSql(bool is_open) {};
 
     
   protected:
