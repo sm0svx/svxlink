@@ -231,9 +231,9 @@ std::string DmCommunicationType[] = {
 std::string dec2nmea_lat(float latitude)
 {
   char lat[10];
-  int minute = (latitude - int(latitude)) * 60;
-  int second = (minute - int(minute)) * 100;
-  sprintf(lat, "%02d%02d.%02d", int(latitude), minute, second);
+  float minute = (latitude - int(latitude)) * 60;
+  float second = (minute - int(minute)) * 100;
+  sprintf(lat, "%02d%02.0f.%02.0f", int(latitude), minute, second);
   return std::string(lat);
 } /* dec2nmea_lat */
 
@@ -241,9 +241,9 @@ std::string dec2nmea_lat(float latitude)
 std::string dec2nmea_lon(float longitude)
 {
   char lon[10];
-  int minute = (longitude - int(longitude)) * 60;
-  int second = (minute - int(minute)) * 100;
-  sprintf(lon, "%03d%02d.%02d", int(longitude), minute, second);
+  float minute = (longitude - int(longitude)) * 60;
+  float second = (minute - int(minute)) * 100;
+  sprintf(lon, "%03d%02.0f.%02.0f", int(longitude), minute, second);
   return std::string(lon);
 } /* dec2nmea_lon */
 
@@ -279,8 +279,8 @@ void handle_LIP_short(std::string in, float &lat, float &lon)
 {
   lat = 0;
   lon = 0;
-  long tla;
-  long tlo;
+  double tla;
+  double tlo;
 
   /* Protocol identifier
      0x03 = simple GPS

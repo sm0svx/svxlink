@@ -346,7 +346,9 @@ bool TetraLogic::initialize(void)
   setTxCtrlMode(Tx::TX_AUTO);
 
   processEvent("startup");
-
+  float la, lo;
+  handle_LIP_short("0A008CACAA480A120201D0", la, lo);
+  cout << dec2nmea_lat(la) << ", "<< dec2nmea_lon(lo) << endl;
   return isok;
 
 } /* TetraLogic::initialize */
@@ -546,7 +548,11 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       if (!wait4sds) break;
       handleSdsMessage(m_message);
       break;
-
+      
+    case LIP_SDS:
+      handleLipSds(m_message);
+      break;
+    
     case TX_DEMAND:
       break;
 
@@ -898,6 +904,19 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   pending_sds[m_t] = m_Sds;
 
 } /* TetraLogic::sdsPtyReceived */
+
+
+/*
++CTSDSR: 12,2629143,0,262905,0,84
+0A008CACAA480A120201D0
+DL1xxx-9>APRS,qAR,DB0xxx-10:!5119.89N/01221.83E>
+*/
+void TetraLogic::handleLipSds(std::string mesg)
+{
+  float lat, lon;
+  handle_LIP_short(mesg, lat, lon);
+  
+} /* TetraLogic::handleLipSds */
 
 
 int TetraLogic::handleMessage(std::string mesg)

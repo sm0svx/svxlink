@@ -272,6 +272,7 @@ class TetraLogic : public Logic
     void handleGroupcallBegin(std::string m_message);
     void handleGroupcallEnd(std::string m_message);
     void sdsPtyReceived(const void *buf, size_t count);
+    void handleLipSds(std::string mesg);
     void handleCallEnd(std::string m_message);
     void getOpMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
