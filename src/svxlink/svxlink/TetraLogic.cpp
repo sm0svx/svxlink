@@ -772,7 +772,6 @@ void TetraLogic::handleStateSds(std::string m_message)
       
       m_aprsmesg << m_call << aprspath << state_sds.find(m_message)->second
                  << endl;
-      cout << m_aprsmesg.str();
       LocationInfo::instance()->update3rdState(m_call, m_aprsmesg.str());
     }
   }
@@ -824,9 +823,12 @@ void TetraLogic::handleCallEnd(std::string message)
   // send call/qso end to aprs network
   if (LocationInfo::has_instance())
   {
-    std::string  m_aprsmesg = "Qso ended (";
+    std::string m_aprsmesg = callsign();
+    m_aprsmesg += aprspath;    
+    m_aprsmesg += "Qso ended (";
     for (const auto &it : Qso.mebmers) m_aprsmesg += it;
     m_aprsmesg += ")";
+    cout << m_aprsmesg << endl;
     LocationInfo::instance()->update3rdState(userdata[Qso.tei].call, m_aprsmesg);
   }
 } /* TetraLogic::handleCallEnd */
