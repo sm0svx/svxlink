@@ -190,7 +190,7 @@ class TetraLogic : public Logic
       std::string tei;
       struct tm *start;
       struct tm *stop;
-      std::vector<std::string> mebmers;
+      std::list<std::string> members;
     };
     QsoInfo Qso;
 

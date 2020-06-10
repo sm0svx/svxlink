@@ -603,8 +603,7 @@ void TetraLogic::handleGroupcallBegin(std::string message)
     return;
   }
 
-  // open the Sql
-  squelchOpen(true);
+  squelchOpen(true);  // open the Squelch
 
   Callinfo t_ci;
   stringstream ss;
@@ -648,7 +647,12 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   // store info in Qso struct
   Qso.tei = o_tei;
   Qso.start = utc;
-  Qso.mebmers.push_back(userdata[o_tei].call);
+  std::list<std::string>::iterator it;
+  it = find(Qso.members.begin(), Qso.members.end(), userdata[o_tei].call);
+  if (it == Qso.members.end())
+  {
+    Qso.members.push_back(userdata[o_tei].call);    
+  }
 
   // callup tcl event
   ss << "groupcall_begin " << t_ci.o_issi << " " << t_ci.d_issi;
@@ -657,11 +661,12 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   // send group info to aprs network
   if (LocationInfo::has_instance())
   {
-    ss.clear();
-    ss << userdata[o_tei].call << aprspath << "Groupcall initiated: "
-       << t_ci.d_issi << " -> " << t_ci.d_issi;
-    std::string  m_aprsmesg = ss.str();
-    LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg);
+    stringstream m_aprsmesg;
+    m_aprsmesg << userdata[o_tei].call << aprspath << ">" << 
+                  userdata[o_tei].call << " initiated groupcall: " << 
+                  t_ci.o_issi << " -> " << t_ci.d_issi;
+    cout << m_aprsmesg.str() << endl;
+    LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg.str());
   }
 
 } /* TetraLogic::handleGroupcallBegin */
@@ -755,10 +760,12 @@ void TetraLogic::handleSds(std::string sds)
   if (LocationInfo::has_instance() && m_aprsinfo.str().length() > 0)
   {
     stringstream m_aprsmessage;
-    m_aprsmessage << userdata[m_sds.tei].call 
-        << aprspath 
-        << m_aprsinfo.str() << endl;
-    cout << m_aprsmessage.str();
+    m_aprsmessage << userdata[m_sds.tei].call << aprspath 
+                  << m_aprsinfo.str() << endl;
+    if (debug)
+    {
+      cout << m_aprsmessage.str();
+    }
     LocationInfo::instance()->update3rdState(userdata[m_sds.tei].call, 
                                                m_aprsmessage.str());
   }
@@ -788,9 +795,9 @@ std::string TetraLogic::handleTextSds(std::string m_message)
 void TetraLogic::handleTxGrant(std::string txgrant)
 {
   stringstream ss;
+  squelchOpen(true);  // open Squelch
   ss << "tx_grant";
   processEvent(ss.str());
-  squelchOpen(true);
 } /* TetraLogic::handleTxGrant */
 
 
@@ -851,6 +858,7 @@ void TetraLogic::handleGroupcallEnd(std::string message)
   stringstream ss;
   ss << "groupcall_end";
   processEvent(ss.str());
+  Qso.members.clear();
 } /* TetraLogic::handleGroupcallEnd */
 
 
@@ -864,7 +872,7 @@ void TetraLogic::handleCallEnd(std::string message)
   utc = gmtime(&rawtime);
   Qso.stop = utc;
 
-  squelchOpen(false);
+  squelchOpen(false);  // close Squelch
 
   stringstream ss;
   ss << "call_end";
@@ -876,9 +884,18 @@ void TetraLogic::handleCallEnd(std::string message)
     std::string m_aprsmesg = callsign();
     m_aprsmesg += aprspath;    
     m_aprsmesg += "Qso ended (";
-    for (const auto &it : Qso.mebmers) m_aprsmesg += it;
+    for (const auto &it : Qso.members)
+    {
+      m_aprsmesg += it;
+      m_aprsmesg += ",";
+    }
+    m_aprsmesg.pop_back();
     m_aprsmesg += ")";
-    cout << m_aprsmesg << endl;
+
+    if (debug)
+    {
+      cout << m_aprsmesg << endl;
+    }
     LocationInfo::instance()->update3rdState(userdata[Qso.tei].call, m_aprsmesg);
   }
 } /* TetraLogic::handleCallEnd */
