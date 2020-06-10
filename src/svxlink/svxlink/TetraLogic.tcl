@@ -362,15 +362,36 @@ proc call_end {} {
 #
 # Executed when a state sds has been received
 #
-proc state_sds_received {state} {
+proc state_sds_received {tei state} {
 }
 
 
 #
-# Executed when a sds has been received
+# Executed when a Lip sds has been received
 #
-proc sds_received {message} {
-  puts "SDS received: $message"
+proc lip_sds_received {tei lat lon} {
+}
+
+
+#
+# Executed when a text sds has been received
+#
+proc text_sds_received {tei message} {
+  puts "SDS received from $tei: $message"
+}
+
+
+#
+# Executed when a Tei is registering
+#
+proc register_tei {tei} {
+}
+
+
+#
+# Executed when an unknown Sds is received
+#
+proc unknown_sds_received {} {
 }
 
 

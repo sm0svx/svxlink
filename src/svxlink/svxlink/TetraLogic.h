@@ -214,8 +214,9 @@ class TetraLogic : public Logic
       std::string comment;
       float lat;
       float lon;
-      int16_t state;
-      char aprs_icon[2];
+      std::string state;
+      char aprs_sym[1];
+      char aprs_tab[1];
       struct tm *last_activity;
     };
     std::map<std::string, User> userdata;
@@ -227,7 +228,7 @@ class TetraLogic : public Logic
 
     typedef enum
     {
-       IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT, WAIT4SDS
+       IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT
     } Peidef;
     Peidef    peirequest;
 
@@ -252,15 +253,14 @@ class TetraLogic : public Logic
     Call*    call;
 
     std::map<std::string, std::string> state_sds;
-    bool wait4sds;
     StrList m_cmds;
     int pending_sdsid;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
-    void handleSdsHeader(std::string sds_head);
-    void handleSdsMessage(std::string sds_message);
+    void handleSds(std::string sds_head);
+    std::string handleTextSds(std::string m_message);
     void handleStateSds(std::string m_message);
     void handleTxGrant(std::string txgrant);
     std::string getTEI(std::string issi);
@@ -272,7 +272,7 @@ class TetraLogic : public Logic
     void handleGroupcallBegin(std::string m_message);
     void handleGroupcallEnd(std::string m_message);
     void sdsPtyReceived(const void *buf, size_t count);
-    void handleLipSds(std::string mesg);
+    std::string createAprsLip(std::string mesg);
     void handleCallEnd(std::string m_message);
     void getOpMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
