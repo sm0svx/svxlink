@@ -215,8 +215,8 @@ class TetraLogic : public Logic
       float lat;
       float lon;
       std::string state;
-      char aprs_sym[1];
-      char aprs_tab[1];
+      char aprs_sym;
+      char aprs_tab;
       struct tm *last_activity;
     };
     std::map<std::string, User> userdata;

@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <cstring>
+#include <stdio.h>
 #include <iostream>
 #include <regex.h>
 #include <algorithm>
@@ -171,7 +173,6 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   debug(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
-
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
@@ -226,7 +227,7 @@ bool TetraLogic::initialize(void)
 
   if (!cfg().getValue(name(), "APRSPATH", aprspath))
   {
-    aprspath = ">APRS,qAR,";
+    aprspath = "APRS,qAR,";
     aprspath += callsign();
     aprspath += "-10:";
   }
@@ -284,24 +285,27 @@ bool TetraLogic::initialize(void)
   {
     list<string> user_list = cfg().listSection(user_section);
     list<string>::iterator ulit;
-    User m_user;
+
 
     for (ulit=user_list.begin(); ulit!=user_list.end(); ++ulit)
     {
       cfg().getValue(user_section, *ulit, value);
       if ((*ulit).length() != 17)
       {
-        cout << "*** ERROR: Wrong length of TEI in TETRA_USERS definition,"
-             << " should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. "
+        cout << "*** ERROR: Wrong length of TEI in TETRA_USERS definition, "
+             << "should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. "
              << "09011638312345678" << endl;
         isok = false;
       }
       else
       {
+        User m_user;
         m_user.call = getNextStr(value);
         m_user.name = getNextStr(value);
-        getNextStr(value).copy(m_user.aprs_sym, 1);
-        getNextStr(value).copy(m_user.aprs_tab, 1);
+        std::string m_aprs = getNextStr(value);
+
+        m_user.aprs_sym = m_aprs[0];
+        m_user.aprs_tab = m_aprs[1];
         m_user.comment = getNextStr(value);
         userdata[*ulit] = m_user;
       }
@@ -323,8 +327,8 @@ bool TetraLogic::initialize(void)
 
   if (!cfg().getValue(name(), "INIT_PEI", initstr))
   {
-     cout << "Warning: Missing parameter " << name()
-          << "/INIT_PEI, using defaults" << endl;
+    cout << "Warning: Missing parameter " << name()
+         << "/INIT_PEI, using defaults" << endl;
   }
   SvxLink::splitStr(initcmds, initstr, ";");
 
@@ -662,9 +666,9 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   if (LocationInfo::has_instance())
   {
     stringstream m_aprsmesg;
-    m_aprsmesg << userdata[o_tei].call << aprspath << ">" << 
-                  userdata[o_tei].call << " initiated groupcall: " << 
-                  t_ci.o_issi << " -> " << t_ci.d_issi;
+    m_aprsmesg << aprspath << ">" << userdata[o_tei].call 
+               << " initiated groupcall: " << t_ci.o_issi 
+               << " -> " << t_ci.d_issi;
     cout << m_aprsmesg.str() << endl;
     LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg.str());
   }
@@ -697,7 +701,7 @@ void TetraLogic::handleSds(std::string sds)
   utc = gmtime(&rawtime);
   
   m_sds.tos = utc;       // last activity
-  userdata[m_sds.tei].last_activity = utc;    // update last activity of sender
+  userdata[m_sds.tei].last_activity = utc;  // update last activity of sender
   m_sds.direction = 1;   // 1 = received
   
   m_sds.type = getNextVal(sds); // type of SDS (12)
@@ -719,8 +723,8 @@ void TetraLogic::handleSds(std::string sds)
       handle_LIP_short(sds, lat, lon);
       m_aprsinfo << "!" << dec2nmea_lat(lat) << "N" 
          << userdata[m_sds.tei].aprs_sym << dec2nmea_lon(lon) << "E"
-         << ":" << userdata[m_sds.tei].aprs_tab 
-         << userdata[m_sds.tei].comment;
+         << userdata[m_sds.tei].aprs_tab << userdata[m_sds.tei].name 
+         << ", " << userdata[m_sds.tei].comment;
       ss << "lip_sds_received " << m_sds.tei << " " << lat << " " << lon;
       userdata[m_sds.tei].lat = lat;
       userdata[m_sds.tei].lon = lon;
@@ -760,11 +764,10 @@ void TetraLogic::handleSds(std::string sds)
   if (LocationInfo::has_instance() && m_aprsinfo.str().length() > 0)
   {
     stringstream m_aprsmessage;
-    m_aprsmessage << userdata[m_sds.tei].call << aprspath 
-                  << m_aprsinfo.str() << endl;
+    m_aprsmessage << aprspath << m_aprsinfo.str();
     if (debug)
     {
-      cout << m_aprsmessage.str();
+      cout << m_aprsmessage.str() << endl;
     }
     LocationInfo::instance()->update3rdState(userdata[m_sds.tei].call, 
                                                m_aprsmessage.str());
@@ -881,8 +884,7 @@ void TetraLogic::handleCallEnd(std::string message)
   // send call/qso end to aprs network
   if (LocationInfo::has_instance())
   {
-    std::string m_aprsmesg = callsign();
-    m_aprsmesg += aprspath;    
+    std::string m_aprsmesg = aprspath;    
     m_aprsmesg += "Qso ended (";
     for (const auto &it : Qso.members)
     {

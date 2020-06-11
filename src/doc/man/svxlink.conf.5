@@ -677,6 +677,98 @@ This configuration variable determines after how many seconds a manually added
 temporary talk group monitor will time out. Set to 0 to disable this feature.
 Default is 3600, one hour.
 .
+.SS TetraLogic
+.
+The TetraLogic is used to control a Tetra mobile device via the Pei + sound 
+card. The PEI interface is addressed as a serial device via which AT commands 
+are sent and from which responses within the logic are evaluated.
+Devices from Motorola (MTM5400/5500/800) and Sepura (SRG2200) are 
+recommended. For a full function the active data cable has to be extended by 
+the audio lines (microphone, line-in) and connected to the sound card.
+The reception of SDS messages such as status, lip and text messages is 
+currently supported.
+.TP
+.B TYPE
+The type for a tetra logic core is always
+.BR Tetra .
+.TP
+.B RX
+Specify the configuration section name of the receiver to use. All configuration
+for the receiver is done in the specified configuration section.
+Keep in mind that the only sensible squelch type used in Rx section 
+will be SQL_DET=INTERNAL because the state of Squelch is derived from AT-commands
+received over the PEI interface.
+.TP
+.B TX
+Specify the configuration section name of the transmitter to use. All
+configuration for the transmitter is done in the specified configuration
+section.
+.TP
+.B BAUD
+The baud rate of communication (Tetra radio) for RS232.
+Example:
+BAUD=115200
+.TP
+.B PORT
+The RS232 port where the Tetra radio is connected over the active data cable.
+Example:
+PORT=/dev/ttyUSB0
+.TP
+.B ISSI
+The ISSI (Individual Short Subscriber Identity) of the SvxLink node.
+Example:
+ISSI=23401
+.TP
+.B GSSI
+The GSSI (Group Short Subscriber Identity) of the SvxLink node. This parameter 
+should always be 1.
+Example:
+GSSI=1
+.TP
+.B MNC
+The MNC (Mobile Country Code) of the SvxLink node. This parameter should always 
+be 16383.
+Example:
+MNC=16383
+.TP
+.B MCC
+The MCC (Mobile Country Code) of the SvxLink node. This parameter should 
+alsways be 901.
+Example:
+MCC=901
+.TP
+.B INIT_PEI
+The initialisation commands that are send to the Tetra radio to enable a 
+bi-drectional communication whes SvxLink is starting.
+Example:
+INIT_PEI=AT+CTOM=1;AT+CTSP=1,3,131;AT+CTSP=1,3,130;AT+CTSP=1,2,20
+.TP
+.B TETRA_USERS
+The section name that contain list of user information.
+Example:
+TETRA_USERS=Tetra_Users
+.TP
+.B TETRA_STATUS
+The section name that contain a list of status codes an descriptions.
+Example:
+TETRA_STATUS=Tetra_Status
+.TP
+.B DEFAULT_APRS_ICON=e/
+The default Aprs icon for a station if not defined in section TETRA_USERS.
+Example:
+DEFAULT_APRS_ICON=e/
+.TP
+.B SDS_PTY
+The pseudo tty device for sending commands to this logic.
+Example:
+SDS_PTY=/tmp/tetra_sds
+.TP
+.B DEBUG
+To give out more information for error detection. Valid values are 1 or 0;
+Example:
+DEBUG=1
+.TP
+.
 .SS QSO Recorder Section
 .
 The QSO recorder is used to record all received audio to files on disk. All
