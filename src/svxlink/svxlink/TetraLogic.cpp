@@ -262,6 +262,22 @@ bool TetraLogic::initialize(void)
           << baudrate << endl;
   }
 
+  char t_aprs_sym, t_aprs_tab;
+  if (cfg().getValue(name(), "DEFAULT_APRS_ICON", value))
+  {
+    if (value.length() != 2)
+    {
+      isok = false;
+      cout << "*** ERROR: " << name() << "/DEFAULT_APRS_ICON "
+           << "must have exactly 2 characters, e.g. '/e'" << endl;
+    }
+    else 
+    {
+      t_aprs_sym = value[0];
+      t_aprs_tab = value[1];
+    }
+  }
+    
   // the pty path: inject messages to send by Sds
   string sds_pty_path;
   cfg().getValue(name(), "SDS_PTY", sds_pty_path);
@@ -303,9 +319,18 @@ bool TetraLogic::initialize(void)
         m_user.call = getNextStr(value);
         m_user.name = getNextStr(value);
         std::string m_aprs = getNextStr(value);
-
-        m_user.aprs_sym = m_aprs[0];
-        m_user.aprs_tab = m_aprs[1];
+        if (m_aprs.length() != 2)
+        {
+          cout << "*** ERROR: Check Aprs icon definition for " << m_user.call
+               << " in section " << user_section 
+               << ". It must have exactly 2 characters, e.g.: 'e\'" << endl;
+          isok = false;
+        }
+        else
+        {
+          m_user.aprs_sym = m_aprs[0];
+          m_user.aprs_tab = m_aprs[1];
+        }
         m_user.comment = getNextStr(value);
         userdata[*ulit] = m_user;
       }
@@ -783,7 +808,7 @@ void TetraLogic::handleSds(std::string sds)
 
 std::string TetraLogic::handleTextSds(std::string m_message)
 {
-  m_message.erase(0,8);  // delete 00A3xxxx
+  if (m_message.length() > 8) m_message.erase(0,8);  // delete 00A3xxxx
   return decodeSDS(m_message);
 } /* TetraLogic::handleTextMessage */
 
@@ -842,7 +867,10 @@ std::string TetraLogic::getNextStr(std::string& h)
 {
   size_t f;
   std::string t = h.substr(0, f = h.find(','));
-  h.erase(0, f + 1);
+  if (f != string::npos)
+  {
+    h.erase(0, f + 1);    
+  }
   return t;
 } /* TetraLogic::getNextStr */
 
@@ -851,7 +879,10 @@ int TetraLogic::getNextVal(std::string& h)
 {
   size_t f;
   int t = atoi(h.substr(0, f = h.find(',')).c_str());
-  h.erase(0, f + 1);
+  if (f != string::npos)
+  {
+    h.erase(0, f + 1);
+  }
   return t;
 } /* TetraLogic::getNextVal */
 
