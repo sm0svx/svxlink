@@ -6,7 +6,7 @@
 
 #
 # This is the namespace in which all functions below will exist. The name
-# must match the corresponding section "[SimplexLogic]" in the configuration
+# must match the corresponding section "[TetraLogic]" in the configuration
 # file. The name may be changed but it must be changed in both places.
 #
 namespace eval TetraLogic {
@@ -394,6 +394,28 @@ proc register_tei {tei} {
 proc unknown_sds_received {} {
 }
 
+
+#
+# Executed when an groupcall is initiated
+#
+proc init_group_call {gssi} {
+  puts "Init groupcall to GSSI: $gssi"
+}
+
+
+#
+# Executed when an call is ended
+#
+proc end_call {} {
+  puts "Call ended"
+}
+
+
+#
+# Executed when a station is registered
+#
+proc register_station {tei} {
+}
 
 # end of namespace
 }

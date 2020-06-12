@@ -135,7 +135,10 @@ class TetraLogic : public Logic
     bool initialize(void);
 
   protected:
+    virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual void squelchOpen(bool is_open);
+    virtual void transmitterStateChange(bool is_transmitting);
+    virtual void allMsgsWritten(void);
 
   private:
     class Call;
@@ -225,6 +228,7 @@ class TetraLogic : public Logic
     std::string peistream;
     bool   debug;
     std::string aprspath;
+    bool talkgroup_up;
 
     typedef enum
     {
@@ -250,6 +254,7 @@ class TetraLogic : public Logic
 
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
+    Async::Timer tgUpTimer;
     Call*    call;
 
     std::map<std::string, std::string> state_sds;
@@ -260,6 +265,7 @@ class TetraLogic : public Logic
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
     void handleSds(std::string sds_head);
+    void endCall(void);
     std::string handleTextSds(std::string m_message);
     void handleStateSds(std::string m_message);
     void handleTxGrant(std::string txgrant);
@@ -267,7 +273,10 @@ class TetraLogic : public Logic
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);
+    void tgUpTimeout(Async::Timer *timer);
     void onPeiActivityTimeout(Async::Timer *timer);
+    void initGroupCall(int gssi);
+    void cfmSdsReceived(std::string tei);
     int handleMessage(std::string  m_message);
     void handleGroupcallBegin(std::string m_message);
     void handleGroupcallEnd(std::string m_message);

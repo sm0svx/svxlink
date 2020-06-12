@@ -170,12 +170,15 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
   rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
   port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
-  debug(false),
+  debug(false), talkgroup_up(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
-  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
+  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
+  tgUpTimer(50000, Timer::TYPE_ONESHOT, false)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
+  tgUpTimer.expired.connect(mem_fun(*this, &TetraLogic::tgUpTimeout));
+  
 } /* TetraLogic::TetraLogic */
 
 
@@ -185,6 +188,7 @@ TetraLogic::~TetraLogic(void)
   pei = 0;
   peiComTimer = 0;
   peiActivityTimer = 0;
+  tgUpTimer = 0;
   delete call;
 } /* TetraLogic::~TetraLogic */
 
@@ -393,6 +397,20 @@ bool TetraLogic::initialize(void)
  *
  ****************************************************************************/
 
+ void TetraLogic::audioStreamStateChange(bool is_active, bool is_idle)
+{
+  if (is_active)
+  {
+    tgUpTimer.reset();
+    tgUpTimer.setEnable(false);
+    initGroupCall(1);
+  }
+
+  Logic::audioStreamStateChange(is_active, is_idle);
+  
+} /* TetraLogic::audioStreamStateChange */
+
+ 
 void TetraLogic::squelchOpen(bool is_open)
 {
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
@@ -422,6 +440,7 @@ void TetraLogic::squelchOpen(bool is_open)
   }
   else
   {
+    tgUpTimer.reset();
     enableRgrSoundTimer(false);
     if (mute_tx_on_rx)
     {
@@ -430,10 +449,53 @@ void TetraLogic::squelchOpen(bool is_open)
   }
 
   rx().setMuteState(is_open ? Rx::MUTE_NONE : Rx::MUTE_ALL);
-  rx().setSql(is_open);
+  //rx().setSql(is_open);
+  tgUpTimer.setEnable(!is_open);
   Logic::squelchOpen(is_open);
 
 } /* TetraLogic::squelchOpen */
+
+
+void TetraLogic::transmitterStateChange(bool is_transmitting)
+{
+  std::string cmd;
+  if (is_transmitting) 
+  {
+    if (!talkgroup_up)
+    {
+      initGroupCall(1);
+      talkgroup_up = true;
+    }
+    else 
+    {
+      cmd = "AT+TXI=1,1";
+      sendPei(cmd);
+    }
+  }
+  else
+  {
+    cmd = "AT+TXI=0,1";
+    sendPei(cmd);
+  }
+  
+  if (mute_rx_on_tx)
+  {
+   // rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
+  }
+  tgUpTimer.setEnable(!is_transmitting);
+  Logic::transmitterStateChange(is_transmitting);
+} /* TetraLogic::transmitterStateChange */
+
+
+void TetraLogic::allMsgsWritten(void)
+{
+  Logic::allMsgsWritten();
+  if (!talkgroup_up)
+  {
+    setTxCtrlMode(Tx::TX_AUTO);
+  }
+} /* TetraLogic::allMsgsWritten */
+
 
 
 /****************************************************************************
@@ -609,6 +671,32 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
   }
 
 } /* TetraLogic::onCharactersReceived*/
+
+
+void TetraLogic::initGroupCall(int gc_gssi)
+{
+  std::string icmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0";
+  sendPei(icmd);
+  
+  std::string cmd = "ATD";
+  cmd += to_string(gc_gssi);
+  sendPei(cmd);
+  
+  stringstream ss;
+  ss << "init_group_call " << to_string(gc_gssi);
+  processEvent(ss.str());
+} /* TetraLogic::initGroupCall */
+
+
+void TetraLogic::endCall(void)
+{
+  std::string cmd = "ATH";
+  sendPei(cmd);
+  
+  stringstream ss;
+  ss << "end_call";
+  processEvent(ss.str());
+} /* TetraLogic::endCall */
 
 
 /*
@@ -847,18 +935,15 @@ void TetraLogic::handleStateSds(std::string m_message)
 {
   stringstream ss;
 
+  if (debug)
+  {
+     cout << "State Sds received: " << m_message << endl;        
+  }
+  
   if (state_sds[m_message].empty())
   {
     // process macro, if defined
     injectDtmf(m_message, 10);
-  }
-  else
-  {
-    if (debug)
-    {
-      cout << "state=" << state_sds.find(m_message)->second
-           << " (" << m_message << ")" << endl;        
-    }
   }
 } /* TetraLogic::handleStateSds */
 
@@ -964,6 +1049,35 @@ void TetraLogic::onPeiActivityTimeout(Async::Timer *timer)
   peirequest = CHECK_AT;
   peiActivityTimer.reset();
 } /* TetraLogic::onPeiTimeout */
+
+
+void TetraLogic::tgUpTimeout(Async::Timer *tgUpTimer)
+{
+    
+} /* TetraLogic::tgUpTimeout */
+
+/*
+  Create a confirmation sds and sends them to the Tetra radio
+  that want to register
+*/
+void TetraLogic::cfmSdsReceived(std::string tei)
+{
+   std::string msg("821000FF");
+   std::string sds;
+   
+   bool ret = createSDS(sds, tei, msg);
+   if (ret)
+   {
+     sendPei(sds);
+     stringstream ss;
+     ss << "register_station " << tei;
+     processEvent(ss.str());
+   }
+   else
+   {
+     cout << "*** ERROR: sending confirmation Sds" << endl;
+   }
+} /* TetraLogic::cfmSdsReceived */
 
 
 // format of inject a Sds into SvxLink/TetraLogic
@@ -1078,6 +1192,7 @@ bool TetraLogic::rmatch(std::string tok, std::string pattern)
   regfree(&re);
   return success;
 } /* TetraLogic::rmatch */
+
 
 /*
  * This file has not been truncated
