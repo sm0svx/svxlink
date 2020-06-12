@@ -204,8 +204,8 @@ class TetraLogic : public Logic
       std::string content;
       std::string message;
       struct tm *tos;
-      int type;
-      int direction;  // 1 - incoming, 2 - outgoing
+      int type; //STATE, LIP_SHORT,..
+      int direction;  //INCOMING, OUTGOING
     };
     std::map<int, Sds> pending_sds;
 
@@ -232,7 +232,7 @@ class TetraLogic : public Logic
 
     typedef enum
     {
-       IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT
+      IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT
     } Peidef;
     Peidef    peirequest;
 
@@ -246,11 +246,17 @@ class TetraLogic : public Logic
       SDS_TYPE2=10, SDS_TYPE3=11, SDS_TYPE4=12, STATUS_SDS=13
     } TypeOfService;
 
-    // operation mode of the MS
+    // direction of Sds
     typedef enum
     {
-      TMO=0, DMO=1, DMORTP=6
-    } OperationMode;
+      OUTGOING, INCOMING
+    } SdsDirection;
+    
+     // type of Sds
+    typedef enum
+    {
+      STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL
+    } SdsType;
 
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;

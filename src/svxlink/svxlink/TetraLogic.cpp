@@ -105,6 +105,7 @@ using namespace SvxLink;
 #define TX_INTERRUPT 19
 #define SIMPLE_LIP_SDS 20
 #define COMPLEX_SDS 21
+#define MS_CNUM 22
 
 #define INVALID 254
 #define TIMEOUT 255
@@ -815,7 +816,7 @@ void TetraLogic::handleSds(std::string sds)
   
   m_sds.tos = utc;       // last activity
   userdata[m_sds.tei].last_activity = utc;  // update last activity of sender
-  m_sds.direction = 1;   // 1 = received
+  m_sds.direction = INCOMING;   // 1 = received
   
   m_sds.type = getNextVal(sds); // type of SDS (12)
   m_sds.tei = getTEI(getNextStr(sds)); // sender TEI (23404)
@@ -860,6 +861,7 @@ void TetraLogic::handleSds(std::string sds)
 
     case REGISTER_TEI:
       ss << "register_tei " << m_sds.tei;
+      cfmSdsReceived(m_sds.tei);
       break;
     
     case INVALID:
@@ -1069,9 +1071,6 @@ void TetraLogic::cfmSdsReceived(std::string tei)
    if (ret)
    {
      sendPei(sds);
-     stringstream ss;
-     ss << "register_station " << tei;
-     processEvent(ss.str());
    }
    else
    {
@@ -1100,7 +1099,8 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   m_Sds.tei = m_tei;
   m_Sds.content = injmessage;
   m_Sds.message = sds;
-  m_Sds.type = 1;
+  m_Sds.direction = OUTGOING;
+  m_Sds.type = TEXT;
 
   // update last activity of Sds
   struct tm *utc;
@@ -1151,6 +1151,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTXD:"]                                = TX_DEMAND;
   mre["^\\+CTXI:"]                                = TX_INTERRUPT;
   mre["^\\+CTXW:"]                                = TX_WAIT;
+  mre["^\\+CNUM:"]                                = MS_CNUM;
   mre["^0A00"]                                    = LIP_SDS;
   mre["^0300"]                                    = SIMPLE_LIP_SDS;
   mre["^8300"]                                    = COMPLEX_SDS;
@@ -1174,8 +1175,11 @@ int TetraLogic::handleMessage(std::string mesg)
 
 void TetraLogic::getOpMode(std::string opmode)
 {
-  int t = atoi(opmode.erase(0,6).c_str());
-  cout << "+++ New Tetra mode: " << OpMode[t] << endl;
+  if (opmode.length() > 6)
+  {
+    int t = atoi(opmode.erase(0,6).c_str());
+    cout << "+++ New Tetra mode: " << OpMode[t] << endl;      
+  }
 } /* TetraLogic::getOpMode */
 
 
