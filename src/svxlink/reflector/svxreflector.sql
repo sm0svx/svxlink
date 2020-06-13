@@ -40,7 +40,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user`, `password`, `active`) VALUES
-(2, 'SK2AZ-L', 'sk2at/sm4', 1);
+(2, 'dummy', 'dummy', 1);
 
 --
 -- Indexes for dumped tables
