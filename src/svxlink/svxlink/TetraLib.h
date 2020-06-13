@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <math.h>
 
 
 /****************************************************************************
@@ -254,14 +255,15 @@ std::string NumType[] = {
  *
  ****************************************************************************/
 
-
 std::string dec2nmea_lat(float latitude)
 {
   char lat[10];
   float minute = (latitude - int(latitude)) * 60;
   float second = (minute - int(minute)) * 100;
   sprintf(lat, "%02d%02.0f.%02.0f", int(latitude), minute, second);
-  return std::string(lat);
+  std::string s = std::string(lat);
+  s += (latitude > 0 ? "N": "S");
+  return s;
 } /* dec2nmea_lat */
 
 
@@ -271,7 +273,9 @@ std::string dec2nmea_lon(float longitude)
   float minute = (longitude - int(longitude)) * 60;
   float second = (minute - int(minute)) * 100;
   sprintf(lon, "%03d%02.0f.%02.0f", int(longitude), minute, second);
-  return std::string(lon);
+  std::string s = std::string(lon);
+  s += (longitude > 0 ? "E": "W");
+  return s;
 } /* dec2nmea_lon */
 
 

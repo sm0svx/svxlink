@@ -383,8 +383,11 @@ bool TetraLogic::initialize(void)
   setTxCtrlMode(Tx::TX_AUTO);
 
   processEvent("startup");
-
-  //handleLipSds("0A008CACAA480A120201D0");
+  float lat,lon;
+  handle_LIP_short("0A008CACAA480A120201D0", lat, lon);
+  cout << "Lat=" << lat << ", lon=" << lon << endl;
+  cout << dec2nmea_lat(lat) << " " << dec2nmea_lon(lon) << endl;
+ //  cout << handleLipSds("0A008CACAA480A120201D0") << endl;
 
   return isok;
 
@@ -835,8 +838,8 @@ void TetraLogic::handleSds(std::string sds)
   {
     case LIP_SDS:
       handle_LIP_short(sds, lat, lon);
-      m_aprsinfo << "!" << dec2nmea_lat(lat) << "N" 
-         << userdata[m_sds.tei].aprs_sym << dec2nmea_lon(lon) << "E"
+      m_aprsinfo << "!" << dec2nmea_lat(lat)  
+         << userdata[m_sds.tei].aprs_sym << dec2nmea_lon(lon)
          << userdata[m_sds.tei].aprs_tab << userdata[m_sds.tei].name 
          << ", " << userdata[m_sds.tei].comment;
       ss << "lip_sds_received " << m_sds.tei << " " << lat << " " << lon;
@@ -1058,6 +1061,7 @@ void TetraLogic::tgUpTimeout(Async::Timer *tgUpTimer)
     
 } /* TetraLogic::tgUpTimeout */
 
+
 /*
   Create a confirmation sds and sends them to the Tetra radio
   that want to register
@@ -1067,8 +1071,7 @@ void TetraLogic::cfmSdsReceived(std::string tei)
    std::string msg("821000FF");
    std::string sds;
    
-   bool ret = createSDS(sds, tei, msg);
-   if (ret)
+   if (createSDS(sds, tei, msg))
    {
      sendPei(sds);
    }
@@ -1090,7 +1093,9 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 
   if(!createSDS(sds, m_tei, injmessage))
   {
-    cout << "*** ERROR: creating Sds" << endl;
+    std::string s = "*** ERROR: creating Sds";
+    cout << s << endl;
+    sds_pty->write(s.c_str(), s.size());
     return;
   }
 
