@@ -63,6 +63,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /****************************************************************************
  *
+ * Mysql test
+ *
+ ****************************************************************************/
+
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+
+
+
+/****************************************************************************
+ *
  * Namespaces to use
  *
  ****************************************************************************/
@@ -418,6 +435,9 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   }
 
   string auth_key = lookupUserKey(msg.callsign());
+
+
+
   if (msg.verify(auth_key, m_auth_challenge))
   {
     vector<string> connected_nodes;
@@ -459,7 +479,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   {
     cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
          << " Authentication failed for user \"" << msg.callsign()
-         << "\"" << endl;
+         << "\" "<< auth_key << endl;
     sendError("Access denied");
   }
 } /* ReflectorClient::handleMsgAuthResponse */
@@ -811,23 +831,115 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
 
 std::string ReflectorClient::lookupUserKey(const std::string& callsign)
 {
+
   string auth_group;
-  if (!m_cfg->getValue("USERS", callsign, auth_group) || auth_group.empty())
-  {
-    cout << "*** WARNING: Unknown user \"" << callsign << "\""
-         << endl;
-    return "";
-  }
   string auth_key;
-  if (!m_cfg->getValue("PASSWORDS", auth_group, auth_key) || auth_key.empty())
+   // Check with database
+  auth_key= lookupUserKey_database(callsign);
+  if(auth_key.empty())
   {
-    cout << "*** ERROR: User \"" << callsign << "\" found in SvxReflector "
-         << "configuration but password with groupname \"" << auth_group
-         << "\" not found." << endl;
-    return "";
+
+     if (!m_cfg->getValue("USERS", callsign, auth_group) || auth_group.empty())
+     {
+        cout << "*** WARNING: Unknown user \"" << callsign << "\""
+             << endl;
+        return "";
+      }
+
+
+      if (!m_cfg->getValue("PASSWORDS", auth_group, auth_key) || auth_key.empty())
+      {
+        cout << "*** ERROR: User \"" << callsign << "\" found in SvxReflector "
+             << "configuration but password with groupname \"" << auth_group
+             << "\" not found." << endl;
+
+
+
+        return "";
+
+      }
   }
   return auth_key;
+
 } /* ReflectorClient::lookupUserKey */
+
+
+/*
+*   lookupUserKey_database is a metod to locup
+*   user crededentals for the Reclectot clinets
+*   from an maria DB / MYSQL database.
+*
+*/
+
+std::string ReflectorClient::lookupUserKey_database(const std::string& callsign)
+{
+
+      sql::Driver *driver;
+      sql::Connection *con;
+//    sql::Statement *stmt;
+      sql::ResultSet *res;
+      sql::PreparedStatement *pstmt;
+
+
+      // read from config
+      string SQL_ADRESS;
+      string SQL_PORT;
+      string SQL_USER;
+      string SQL_PASS;
+      string SQL_DB;
+      string auth_key;
+      string SQL_USE;
+
+      m_cfg->getValue("MYSQL", "SQL_ADRESS", SQL_ADRESS);
+      m_cfg->getValue("MYSQL", "SQL_PORT", SQL_PORT);
+      m_cfg->getValue("MYSQL", "SQL_USER", SQL_USER);
+      m_cfg->getValue("MYSQL", "SQL_PASS", SQL_PASS);
+      m_cfg->getValue("MYSQL", "SQL_DB", SQL_DB);
+      m_cfg->getValue("MYSQL", "SQL_USE", SQL_USE);
+    // Config variable to not use mysql users
+
+    if(SQL_USE == "1")
+    {
+        try {
+
+          /* Create a connection */
+          driver = get_driver_instance();
+          con = driver->connect("tcp://"+SQL_ADRESS+":"+SQL_PORT, SQL_USER, SQL_PASS );
+          /* Connect to the MySQL test database */
+          con->setSchema(SQL_DB);
+
+           pstmt = con->prepareStatement("SELECT password FROM `users` WHERE `user` = '"+ callsign +"' AND active = 1 LIMIT 1");
+           res = pstmt->executeQuery();
+
+            //Get the password line from database
+              while (res->next())
+              {
+                auth_key = res->getString("password");
+
+              }
+
+        delete pstmt;
+        delete res;
+        delete con;
+
+        }
+        catch (sql::SQLException &e)
+        {
+
+        }
+
+
+
+
+        if(auth_key.empty())
+        {
+              return "";
+        }
+
+        return  auth_key;
+    }
+    return "";
+}
 
 
 /*

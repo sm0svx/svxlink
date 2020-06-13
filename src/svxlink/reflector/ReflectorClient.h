@@ -466,6 +466,7 @@ class ReflectorClient
     void disconnect(void);
     void handleHeartbeat(Async::Timer *t);
     std::string lookupUserKey(const std::string& callsign);
+    std::string lookupUserKey_database(const std::string& callsign);
 
 };  /* class ReflectorClient */
 
