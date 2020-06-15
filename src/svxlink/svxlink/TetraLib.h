@@ -125,7 +125,7 @@ std::string CalledPartyIdentityType[] = {
   "5 - Extended TSI"
 };
 
-std::string OpMode[] =  {
+std::string OpMode[] = {
    "0 - V+D (trunked mode operation)", 
    "1 - DMO", 
    "2 - V+D with dual watch of DMO",
@@ -359,8 +359,9 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
 
   int t_velo;
   int t_dot;
-
-  if (in.substr(0,2) == "0A")
+  
+  // 
+  if (in.substr(0,2) == "0A") // LIP
   {
     lipinfo.time_elapsed = (std::stoi(in.substr(2,1),nullptr,16) & 0x03);
     tlo =  std::stol(in.substr(3,1),nullptr,16) << 21;
@@ -420,6 +421,12 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     */
     lipinfo.reasonforsending = std::stoi(in.substr(20,1),nullptr, 16);
     
+  }
+  // (NMEA) 0183 over SDS-TL
+  // $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
+  else if (in.substr(0,2) == "03")
+  {
+    // to do
   }
 } /* handleLipSds */
 

@@ -95,7 +95,7 @@ using namespace SvxLink;
 #define CALL_END 10
 #define GROUPCALL_RELEASED 11
 #define LIP_SDS 12
-#define REGISTER_TEI 13
+#define REGISTER_TSI 13
 #define STATE_SDS 14
 #define OP_MODE 15
 #define TX_GRANT 16
@@ -107,6 +107,8 @@ using namespace SvxLink;
 #define MS_CNUM 22
 #define WAP_PROTOCOL 23
 #define SIMPLE_TEXT 24
+#define SDS_ACK 25
+#define SDS_ID 26
 
 #define INVALID 254
 #define TIMEOUT 255
@@ -252,7 +254,13 @@ bool TetraLogic::initialize(void)
     value += mcc;
     mcc = value.substr(value.length()-5,5);
   }
-
+  // Welcome message to new users
+  if (!cfg().getValue(name(), "INFO_SDS", infosds))
+  {
+    infosds = "Welcome Tetrauser@";
+    infosds += callsign(); 
+  }
+  
   cfg().getValue(name(), "DEBUG", debug);
 
   if (!cfg().getValue(name(), "PORT", port))
@@ -305,21 +313,20 @@ bool TetraLogic::initialize(void)
   {
     list<string> user_list = cfg().listSection(user_section);
     list<string>::iterator ulit;
-
+    User m_user;
 
     for (ulit=user_list.begin(); ulit!=user_list.end(); ++ulit)
     {
       cfg().getValue(user_section, *ulit, value);
       if ((*ulit).length() != 17)
       {
-        cout << "*** ERROR: Wrong length of TEI in TETRA_USERS definition, "
+        cout << "*** ERROR: Wrong length of TSI in TETRA_USERS definition, "
              << "should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. "
              << "09011638312345678" << endl;
         isok = false;
       }
       else
       {
-        User m_user;
         m_user.call = getNextStr(value);
         m_user.name = getNextStr(value);
         std::string m_aprs = getNextStr(value);
@@ -383,11 +390,12 @@ bool TetraLogic::initialize(void)
 
   processEvent("startup");
 
-  LipInfo lipinfo;
-  handleLipSds("0A2089E60A45A1C987E080", lipinfo);
+  // LipInfo lipinfo;
+  // handleLipSds("0A2089E60A45A1C987E080", lipinfo);
   // handleLipSds("0A008CACAA480A120201D0", lipinfo);
-  cout <<lipinfo.directionoftravel << endl;
-  cout << ReasonForSending[lipinfo.reasonforsending] << endl;
+  // cout <<lipinfo.directionoftravel << endl;
+  // cout << ReasonForSending[lipinfo.reasonforsending] << endl;
+  
   return isok;
 
 } /* TetraLogic::initialize */
@@ -472,6 +480,7 @@ void TetraLogic::squelchOpen(bool is_open)
     return;
   }
 #endif
+  rx().setSql(is_open);
   Logic::squelchOpen(is_open);
 
 } /* TetraLogic::squelchOpen */
@@ -713,10 +722,10 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   t_ci.aistatus = getNextVal(h);
   t_ci.origin_cpit = getNextVal(h);
 
-  std::string o_tei = getNextStr(h);
-  t_ci.o_mcc = atoi(o_tei.substr(0,4).c_str());
-  t_ci.o_mnc = atoi(o_tei.substr(4,5).c_str());
-  t_ci.o_issi = atoi(o_tei.substr(9,8).c_str());
+  std::string o_tsi = getNextStr(h);
+  t_ci.o_mcc = atoi(o_tsi.substr(0,4).c_str());
+  t_ci.o_mnc = atoi(o_tsi.substr(4,5).c_str());
+  t_ci.o_issi = atoi(o_tsi.substr(9,8).c_str());
 
   t_ci.hook = getNextVal(h);
   t_ci.simplex = getNextVal(h);
@@ -725,10 +734,10 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   t_ci.codec = getNextVal(h);
   t_ci.dest_cpit = getNextVal(h);
 
-  std::string d_tei = getNextStr(h);
-  t_ci.d_mcc = atoi(d_tei.substr(0,4).c_str());
-  t_ci.d_mnc = atoi(d_tei.substr(4,5).c_str());
-  t_ci.d_issi = atoi(d_tei.substr(9,8).c_str());
+  std::string d_tsi = getNextStr(h);
+  t_ci.d_mcc = atoi(d_tsi.substr(0,4).c_str());
+  t_ci.d_mnc = atoi(d_tsi.substr(4,5).c_str());
+  t_ci.d_issi = atoi(d_tsi.substr(9,8).c_str());
   t_ci.prio = atoi(h.c_str());
 
   // store call specific data into a Callinfo struct
@@ -740,26 +749,28 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   utc = gmtime(&rawtime);
   
   // check if the user is stored? no -> default
-  std::map<std::string, User>::iterator iu = userdata.find(o_tei);
+  std::map<std::string, User>::iterator iu = userdata.find(o_tsi);
   if (iu == userdata.end())
   {
-    userdata[o_tei].call = "NoCall";
-    userdata[o_tei].name = "NoName";
-    userdata[o_tei].aprs_sym = t_aprs_sym;
-    userdata[o_tei].aprs_tab = t_aprs_tab;
+    userdata[o_tsi].call = "NoCall";
+    userdata[o_tsi].name = "NoName";
+    userdata[o_tsi].comment = "NN";
+    userdata[o_tsi].aprs_sym = t_aprs_sym;
+    userdata[o_tsi].aprs_tab = t_aprs_tab;
+    return;
   }
   
-  userdata[o_tei].last_activity = utc;
+  userdata[o_tsi].last_activity = utc;
 
   // store info in Qso struct
-  Qso.tei = o_tei;
+  Qso.tsi = o_tsi;
   Qso.start = utc;
   
   std::list<std::string>::iterator it;
-  it = find(Qso.members.begin(), Qso.members.end(), userdata[o_tei].call);
+  it = find(Qso.members.begin(), Qso.members.end(), userdata[o_tsi].call);
   if (it == Qso.members.end())
   {
-    Qso.members.push_back(userdata[o_tei].call);
+    Qso.members.push_back(userdata[o_tsi].call);
   }
 
   // callup tcl event
@@ -770,11 +781,11 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   if (LocationInfo::has_instance())
   {
     stringstream m_aprsmesg;
-    m_aprsmesg << aprspath << ">" << userdata[o_tei].call 
+    m_aprsmesg << aprspath << ">" << iu->second.call
                << " initiated groupcall: " << t_ci.o_issi 
                << " -> " << t_ci.d_issi;
     cout << m_aprsmesg.str() << endl;
-    LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg.str());
+    LocationInfo::instance()->update3rdState(iu->second.call, m_aprsmesg.str());
   }
 } /* TetraLogic::handleGroupcallBegin */
 
@@ -807,24 +818,29 @@ void TetraLogic::handleSds(std::string sds)
   m_sds.direction = INCOMING;   // 1 = received
   
   m_sds.type = getNextVal(sds); // type of SDS (12)
-  m_sds.tei = getTEI(getNextStr(sds)); // sender TEI (23404)
+  m_sds.tsi = getTSI(getNextStr(sds)); // sender Tsi (23404)
   getNextVal(sds); // (0)
   getNextVal(sds); // destination Issi
   getNextVal(sds); // (0)
   getNextVal(sds); // Sds length (112)
   
-  userdata[m_sds.tei].last_activity = utc;  // update last activity of sender
-
+  cout << "tsi:" <<m_sds.tsi << endl;
   // check if the user is stored? no -> default
-  std::map<std::string, User>::iterator iu = userdata.find(m_sds.tei);
+  std::map<std::string, User>::iterator iu = userdata.find(m_sds.tsi);
   if (iu == userdata.end())
   {
-    userdata[m_sds.tei].call = "NoCall";
-    userdata[m_sds.tei].name = "NoName";
-    userdata[m_sds.tei].aprs_sym = t_aprs_sym;
-    userdata[m_sds.tei].aprs_tab = t_aprs_tab;
-  }
+    userdata[m_sds.tsi].call = "NoCall";
+    userdata[m_sds.tsi].name = "NoName";
+    userdata[m_sds.tsi].aprs_sym = t_aprs_sym;
+    userdata[m_sds.tsi].aprs_tab = t_aprs_tab;
+    std::string t_sds;
+    createSDS(t_sds, getISSI(m_sds.tsi), infosds);
+    sendPei(t_sds);
+    cout << t_sds << endl;
+    return;
+  } 
   
+  userdata[m_sds.tsi].last_activity = utc;  // update last activity of sender
   int m_sdstype = handleMessage(sds.erase(0,1));
 
   std::string sds_txt;
@@ -837,37 +853,45 @@ void TetraLogic::handleSds(std::string sds)
     case LIP_SDS:
       handleLipSds(sds, lipinfo);
       m_aprsinfo << "!" << dec2nmea_lat(lipinfo.latitude)  
-         << userdata[m_sds.tei].aprs_sym 
+         << iu->second.aprs_sym 
          << dec2nmea_lon(lipinfo.longitude)
-         << userdata[m_sds.tei].aprs_tab 
-         << userdata[m_sds.tei].name 
-         << ", " 
-         << userdata[m_sds.tei].comment;
-      ss << "lip_sds_received " << m_sds.tei << " " 
+         << iu->second.aprs_tab 
+         << iu->second.name 
+         << ", "
+         << iu->second.comment;
+      ss << "lip_sds_received " << m_sds.tsi << " " 
          << lipinfo.latitude << " " 
          << lipinfo.longitude;
-      userdata[m_sds.tei].lat = lipinfo.latitude;
-      userdata[m_sds.tei].lon = lipinfo.longitude;
+      userdata[m_sds.tsi].lat = lipinfo.latitude;
+      userdata[m_sds.tsi].lon = lipinfo.longitude;
+      cout << m_aprsinfo.str() << endl;
       break;
     
     case STATE_SDS:
       handleStateSds(sds);
-      userdata[m_sds.tei].state = sds;
-      m_aprsinfo << ">" << "State:" << state_sds.find(sds)->second << " (" 
-                 << sds << ")";
-      ss << "state_sds_received " << m_sds.tei << " " << sds;
+      userdata[m_sds.tsi].state = sds;
+      m_aprsinfo << ">" << "State:" << state_sds.find(sds)->second
+                 << " (" << sds << ")";
+      ss << "state_sds_received " << m_sds.tsi << " " << sds;
       break;
       
     case TEXT_SDS:
       sds_txt = handleTextSds(sds);
       m_aprsinfo << ">" << sds_txt;
-      ss << "text_sds_received " << m_sds.tei << " \"" << sds_txt
+      ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt
          << "\"";
       break;
 
-    case REGISTER_TEI:
-      ss << "register_tei " << m_sds.tei;
-      cfmSdsReceived(m_sds.tei);
+    case SDS_ACK:
+      cout << "SDS ACK" << endl;
+      break;
+      
+    case SDS_ID:
+      break;
+      
+    case REGISTER_TSI:
+      ss << "register_tsi " << m_sds.tsi;
+      cfmSdsReceived(m_sds.tsi);
       break;
     
     case INVALID:
@@ -890,7 +914,7 @@ void TetraLogic::handleSds(std::string sds)
     {
       cout << m_aprsmessage.str() << endl;
     }
-    LocationInfo::instance()->update3rdState(userdata[m_sds.tei].call, 
+    LocationInfo::instance()->update3rdState(userdata.find(m_sds.tsi)->second.call, 
                                                m_aprsmessage.str());
   }
       
@@ -925,7 +949,7 @@ void TetraLogic::handleTxGrant(std::string txgrant)
 } /* TetraLogic::handleTxGrant */
 
 
-std::string TetraLogic::getTEI(std::string issi)
+std::string TetraLogic::getTSI(std::string issi)
 {
   stringstream ss;
   char is[9];
@@ -936,7 +960,18 @@ std::string TetraLogic::getTEI(std::string issi)
     ss << mcc << mnc << is;
   }
   return ss.str();
-} /* TetraLogic::toTEI */
+} /* TetraLogic::totsi */
+
+
+std::string TetraLogic::getISSI(std::string tsi)
+{
+  stringstream t_issi;
+  if (tsi.length() == 17)
+  {
+    t_issi << atoi(tsi.substr(9,8).c_str());  
+  }
+  return t_issi.str();
+} /* TetraLogic::getISSI */
 
 
 void TetraLogic::handleStateSds(std::string m_message)
@@ -1022,7 +1057,7 @@ void TetraLogic::handleCallEnd(std::string message)
     {
       cout << m_aprsmesg << endl;
     }
-    LocationInfo::instance()->update3rdState(userdata[Qso.tei].call, m_aprsmesg);
+    LocationInfo::instance()->update3rdState(userdata[Qso.tsi].call, m_aprsmesg);
   }
 } /* TetraLogic::handleCallEnd */
 
@@ -1069,12 +1104,12 @@ void TetraLogic::tgUpTimeout(Async::Timer *tgUpTimer)
   Create a confirmation sds and sends them to the Tetra radio
   that want to register
 */
-void TetraLogic::cfmSdsReceived(std::string tei)
+void TetraLogic::cfmSdsReceived(std::string tsi)
 {
    std::string msg("821000FF");
    std::string sds;
    
-   if (createSDS(sds, tei, msg))
+   if (createSDS(sds, tsi, msg))
    {
      sendPei(sds);
    }
@@ -1086,15 +1121,15 @@ void TetraLogic::cfmSdsReceived(std::string tei)
 
 
 // format of inject a Sds into SvxLink/TetraLogic
-// TEI,Message
+// tsi,Message
 void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 {
   const char *buffer = reinterpret_cast<const char*>(buf);
   std::string injmessage = buffer;
-  std::string m_tei = getNextStr(injmessage);
+  std::string m_tsi = getNextStr(injmessage);
   std::string sds;
 
-  if(!createSDS(sds, m_tei, injmessage))
+  if(!createSDS(sds, m_tsi, injmessage))
   {
     std::string s = "*** ERROR: creating Sds";
     cout << s << endl;
@@ -1104,7 +1139,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 
   // out the new Sds int a queue...
   Sds m_Sds;
-  m_Sds.tei = m_tei;
+  m_Sds.tsi = m_tsi;
   m_Sds.content = injmessage;
   m_Sds.message = sds;
   m_Sds.direction = OUTGOING;
@@ -1165,14 +1200,16 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTXW:"]                                = TX_WAIT;
   mre["^\\+CNUM:"]                                = MS_CNUM;
   mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
+  mre["^\\+CMGS:"]                                = SDS_ID;
   mre["^02"]                                      = SIMPLE_TEXT; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A"]                                      = LIP_SDS;
-  mre["^82"]                                      = TEXT_SDS;
+  mre["^8204"]                                    = TEXT_SDS;
+  mre["^821000FF"]                                = SDS_ACK;
   mre["^83"]                                      = COMPLEX_SDS;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
-  
+  //"821000FF" SDS ACK
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {

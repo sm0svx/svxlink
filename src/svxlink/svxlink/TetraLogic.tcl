@@ -362,29 +362,29 @@ proc call_end {} {
 #
 # Executed when a state sds has been received
 #
-proc state_sds_received {tei state} {
+proc state_sds_received {tsi state} {
 }
 
 
 #
 # Executed when a Lip sds has been received
 #
-proc lip_sds_received {tei lat lon} {
+proc lip_sds_received {tsi lat lon} {
 }
 
 
 #
 # Executed when a text sds has been received
 #
-proc text_sds_received {tei message} {
-  puts "SDS received from $tei: $message"
+proc text_sds_received {tsi message} {
+  puts "SDS received from $tsi: $message"
 }
 
 
 #
-# Executed when a Tei is registering
+# Executed when a tsi is registering
 #
-proc register_tei {tei} {
+proc register_tsi {tsi} {
 }
 
 
@@ -414,7 +414,7 @@ proc end_call {} {
 #
 # Executed when a station is registered
 #
-proc register_station {tei} {
+proc register_station {tsi} {
 }
 
 # end of namespace

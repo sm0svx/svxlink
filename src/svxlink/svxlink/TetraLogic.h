@@ -190,7 +190,7 @@ class TetraLogic : public Logic
     std::map<int, Callinfo> callinfo;
 
     struct QsoInfo {
-      std::string tei;
+      std::string tsi;
       struct tm *start;
       struct tm *stop;
       std::list<std::string> members;
@@ -199,7 +199,7 @@ class TetraLogic : public Logic
     
     // contain a sds (state and message)
     struct Sds {
-      std::string tei;
+      std::string tsi;
       std::string sds;
       std::string content;
       std::string message;
@@ -229,6 +229,7 @@ class TetraLogic : public Logic
     bool   debug;
     std::string aprspath;
     bool talkgroup_up;
+    std::string infosds;
 
     typedef enum
     {
@@ -277,14 +278,15 @@ class TetraLogic : public Logic
     std::string handleTextSds(std::string m_message);
     void handleStateSds(std::string m_message);
     void handleTxGrant(std::string txgrant);
-    std::string getTEI(std::string issi);
+    std::string getTSI(std::string issi);
+    std::string getISSI(std::string tsi);
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);
     void tgUpTimeout(Async::Timer *timer);
     void onPeiActivityTimeout(Async::Timer *timer);
     void initGroupCall(int gssi);
-    void cfmSdsReceived(std::string tei);
+    void cfmSdsReceived(std::string tsi);
     int handleMessage(std::string  m_message);
     void handleGroupcallBegin(std::string m_message);
     void handleGroupcallEnd(std::string m_message);
