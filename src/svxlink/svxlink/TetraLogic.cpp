@@ -85,13 +85,12 @@ using namespace SvxLink;
 
 #define OK 0
 #define ERROR 1
-#define ERROR3 2
 #define GROUPCALL_BEGIN 3
 #define GROUPCALL_END 4
 
 #define SDS 6
 #define TEXT_SDS 7
-#define ERROR35 8
+
 #define CALL_CONNECT 9
 #define CALL_END 10
 #define GROUPCALL_RELEASED 11
@@ -106,6 +105,8 @@ using namespace SvxLink;
 #define SIMPLE_LIP_SDS 20
 #define COMPLEX_SDS 21
 #define MS_CNUM 22
+#define WAP_PROTOCOL 23
+#define SIMPLE_TEXT 24
 
 #define INVALID 254
 #define TIMEOUT 255
@@ -179,7 +180,6 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
   tgUpTimer.expired.connect(mem_fun(*this, &TetraLogic::tgUpTimeout));
-  
 } /* TetraLogic::TetraLogic */
 
 
@@ -229,7 +229,7 @@ bool TetraLogic::initialize(void)
     value += mcc;
     mcc = value.substr(value.length()-4,4);
   }
-
+  
   if (!cfg().getValue(name(), "APRSPATH", aprspath))
   {
     aprspath = "APRS,qAR,";
@@ -267,7 +267,6 @@ bool TetraLogic::initialize(void)
           << baudrate << endl;
   }
 
-  char t_aprs_sym, t_aprs_tab;
   if (cfg().getValue(name(), "DEFAULT_APRS_ICON", value))
   {
     if (value.length() != 2)
@@ -383,12 +382,12 @@ bool TetraLogic::initialize(void)
   setTxCtrlMode(Tx::TX_AUTO);
 
   processEvent("startup");
-  float lat,lon;
-  handle_LIP_short("0A008CACAA480A120201D0", lat, lon);
-  cout << "Lat=" << lat << ", lon=" << lon << endl;
-  cout << dec2nmea_lat(lat) << " " << dec2nmea_lon(lon) << endl;
- //  cout << handleLipSds("0A008CACAA480A120201D0") << endl;
 
+  LipInfo lipinfo;
+  handleLipSds("0A2089E60A45A1C987E080", lipinfo);
+  // handleLipSds("0A008CACAA480A120201D0", lipinfo);
+  cout <<lipinfo.directionoftravel << endl;
+  cout << ReasonForSending[lipinfo.reasonforsending] << endl;
   return isok;
 
 } /* TetraLogic::initialize */
@@ -401,13 +400,26 @@ bool TetraLogic::initialize(void)
  *
  ****************************************************************************/
 
+ void TetraLogic::allMsgsWritten(void)
+{
+  Logic::allMsgsWritten();
+  if (!talkgroup_up)
+  {
+    setTxCtrlMode(Tx::TX_AUTO);
+  }
+} /* TetraLogic::allMsgsWritten */
+
+ 
  void TetraLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
   if (is_active)
   {
     tgUpTimer.reset();
     tgUpTimer.setEnable(false);
-    initGroupCall(1);
+  } 
+  else
+  {
+    tgUpTimer.setEnable(true);
   }
 
   Logic::audioStreamStateChange(is_active, is_idle);
@@ -415,51 +427,6 @@ bool TetraLogic::initialize(void)
 } /* TetraLogic::audioStreamStateChange */
 
  
-void TetraLogic::squelchOpen(bool is_open)
-{
-  //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
-  //     << endl;
-
-    // FIXME: A squelch open should not be possible to receive while
-    // transmitting unless mute_rx_on_tx is false, in which case it
-    // should be allowed. Commenting out the statements below.
-#if 0
-  if (tx().isTransmitting())
-  {
-    return;
-  }
-#endif
-
-  if (!is_open)
-  {
-    if (rgr_sound_always || (activeModule() != 0))
-    {
-      enableRgrSoundTimer(true);
-    }
-
-    if (mute_tx_on_rx)
-    {
-      setTxCtrlMode(Tx::TX_AUTO);
-    }
-  }
-  else
-  {
-    tgUpTimer.reset();
-    enableRgrSoundTimer(false);
-    if (mute_tx_on_rx)
-    {
-      setTxCtrlMode(Tx::TX_OFF);
-    }
-  }
-
-  rx().setMuteState(is_open ? Rx::MUTE_NONE : Rx::MUTE_ALL);
-  //rx().setSql(is_open);
-  tgUpTimer.setEnable(!is_open);
-  Logic::squelchOpen(is_open);
-
-} /* TetraLogic::squelchOpen */
-
-
 void TetraLogic::transmitterStateChange(bool is_transmitting)
 {
   std::string cmd;
@@ -490,16 +457,24 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
   Logic::transmitterStateChange(is_transmitting);
 } /* TetraLogic::transmitterStateChange */
 
-
-void TetraLogic::allMsgsWritten(void)
+ 
+void TetraLogic::squelchOpen(bool is_open)
 {
-  Logic::allMsgsWritten();
-  if (!talkgroup_up)
-  {
-    setTxCtrlMode(Tx::TX_AUTO);
-  }
-} /* TetraLogic::allMsgsWritten */
+  //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
+  //     << endl;
 
+    // FIXME: A squelch open should not be possible to receive while
+    // transmitting unless mute_rx_on_tx is false, in which case it
+    // should be allowed. Commenting out the statements below.
+#if 0
+  if (tx().isTransmitting())
+  {
+    return;
+  }
+#endif
+  Logic::squelchOpen(is_open);
+
+} /* TetraLogic::squelchOpen */
 
 
 /****************************************************************************
@@ -763,16 +738,28 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   struct tm *utc;
   time_t rawtime = time(NULL);
   utc = gmtime(&rawtime);
+  
+  // check if the user is stored? no -> default
+  std::map<std::string, User>::iterator iu = userdata.find(o_tei);
+  if (iu == userdata.end())
+  {
+    userdata[o_tei].call = "NoCall";
+    userdata[o_tei].name = "NoName";
+    userdata[o_tei].aprs_sym = t_aprs_sym;
+    userdata[o_tei].aprs_tab = t_aprs_tab;
+  }
+  
   userdata[o_tei].last_activity = utc;
 
   // store info in Qso struct
   Qso.tei = o_tei;
   Qso.start = utc;
+  
   std::list<std::string>::iterator it;
   it = find(Qso.members.begin(), Qso.members.end(), userdata[o_tei].call);
   if (it == Qso.members.end())
   {
-    Qso.members.push_back(userdata[o_tei].call);    
+    Qso.members.push_back(userdata[o_tei].call);
   }
 
   // callup tcl event
@@ -789,7 +776,6 @@ void TetraLogic::handleGroupcallBegin(std::string message)
     cout << m_aprsmesg.str() << endl;
     LocationInfo::instance()->update3rdState(userdata[o_tei].call, m_aprsmesg.str());
   }
-
 } /* TetraLogic::handleGroupcallBegin */
 
 
@@ -818,7 +804,6 @@ void TetraLogic::handleSds(std::string sds)
   utc = gmtime(&rawtime);
   
   m_sds.tos = utc;       // last activity
-  userdata[m_sds.tei].last_activity = utc;  // update last activity of sender
   m_sds.direction = INCOMING;   // 1 = received
   
   m_sds.type = getNextVal(sds); // type of SDS (12)
@@ -827,24 +812,42 @@ void TetraLogic::handleSds(std::string sds)
   getNextVal(sds); // destination Issi
   getNextVal(sds); // (0)
   getNextVal(sds); // Sds length (112)
+  
+  userdata[m_sds.tei].last_activity = utc;  // update last activity of sender
 
+  // check if the user is stored? no -> default
+  std::map<std::string, User>::iterator iu = userdata.find(m_sds.tei);
+  if (iu == userdata.end())
+  {
+    userdata[m_sds.tei].call = "NoCall";
+    userdata[m_sds.tei].name = "NoName";
+    userdata[m_sds.tei].aprs_sym = t_aprs_sym;
+    userdata[m_sds.tei].aprs_tab = t_aprs_tab;
+  }
+  
   int m_sdstype = handleMessage(sds.erase(0,1));
 
-  float lat, lon;
   std::string sds_txt;
   stringstream m_aprsinfo;
+  
+  LipInfo lipinfo;
     
   switch (m_sdstype)
   {
     case LIP_SDS:
-      handle_LIP_short(sds, lat, lon);
-      m_aprsinfo << "!" << dec2nmea_lat(lat)  
-         << userdata[m_sds.tei].aprs_sym << dec2nmea_lon(lon)
-         << userdata[m_sds.tei].aprs_tab << userdata[m_sds.tei].name 
-         << ", " << userdata[m_sds.tei].comment;
-      ss << "lip_sds_received " << m_sds.tei << " " << lat << " " << lon;
-      userdata[m_sds.tei].lat = lat;
-      userdata[m_sds.tei].lon = lon;
+      handleLipSds(sds, lipinfo);
+      m_aprsinfo << "!" << dec2nmea_lat(lipinfo.latitude)  
+         << userdata[m_sds.tei].aprs_sym 
+         << dec2nmea_lon(lipinfo.longitude)
+         << userdata[m_sds.tei].aprs_tab 
+         << userdata[m_sds.tei].name 
+         << ", " 
+         << userdata[m_sds.tei].comment;
+      ss << "lip_sds_received " << m_sds.tei << " " 
+         << lipinfo.latitude << " " 
+         << lipinfo.longitude;
+      userdata[m_sds.tei].lat = lipinfo.latitude;
+      userdata[m_sds.tei].lon = lipinfo.longitude;
       break;
     
     case STATE_SDS:
@@ -871,7 +874,7 @@ void TetraLogic::handleSds(std::string sds)
       ss << "unknown_sds_received";
       cout << "*** Unknown type of SDS" << endl;
       break;
-    
+      
     default:
       return;
   }
@@ -942,7 +945,7 @@ void TetraLogic::handleStateSds(std::string m_message)
 
   if (debug)
   {
-     cout << "State Sds received: " << m_message << endl;        
+    cout << "State Sds received: " << m_message << endl;        
   }
   
   if (state_sds[m_message].empty())
@@ -1126,11 +1129,15 @@ DL1xxx-9>APRS,qAR,DB0xxx-10:!5119.89N/01221.83E>
 */
 std::string TetraLogic::createAprsLip(std::string mesg)
 {
-  /*
-    # Protocol identifier
-    # 0x03 = simple GPS
-    # 0x0a = LIP
-    # 0x83 = Complex SDS-TL GPS message transfer
+  /* Protocol identifier PDU
+     0x02 = Simple Text Messaging
+     0x03 = Simple location system
+     0x06 = M-DMO (Managed DMO)
+     0x09 = Simple immediate text messaging
+     0x0A = LIP (Location Information Protocol)
+     0x0C = Concatenated SDS message
+     0x82 = Text Messaging
+     0x83 = Complex SDS-TL GPS message transfer
   */
    std::string t;
    return t;
@@ -1157,13 +1164,15 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTXI:"]                                = TX_INTERRUPT;
   mre["^\\+CTXW:"]                                = TX_WAIT;
   mre["^\\+CNUM:"]                                = MS_CNUM;
-  mre["^0A00"]                                    = LIP_SDS;
-  mre["^0300"]                                    = SIMPLE_LIP_SDS;
-  mre["^8300"]                                    = COMPLEX_SDS;
-  mre["^0A30000000000007FFE810"]                  = REGISTER_TEI;
-  mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
-  mre["^8204[0-9A-F]{2,}$"]                       = TEXT_SDS;
   mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
+  mre["^02"]                                      = SIMPLE_TEXT; 
+  mre["^03"]                                      = SIMPLE_LIP_SDS;
+  mre["^04"]                                      = WAP_PROTOCOL;
+  mre["^0A"]                                      = LIP_SDS;
+  mre["^82"]                                      = TEXT_SDS;
+  mre["^83"]                                      = COMPLEX_SDS;
+  mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
+  
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {

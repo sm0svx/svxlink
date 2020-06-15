@@ -196,7 +196,7 @@ class TetraLogic : public Logic
       std::list<std::string> members;
     };
     QsoInfo Qso;
-
+    
     // contain a sds (state and message)
     struct Sds {
       std::string tei;
@@ -266,6 +266,8 @@ class TetraLogic : public Logic
     std::map<std::string, std::string> state_sds;
     StrList m_cmds;
     int pending_sdsid;
+    char t_aprs_sym;
+    char t_aprs_tab;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);

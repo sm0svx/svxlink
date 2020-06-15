@@ -249,6 +249,42 @@ std::string NumType[] = {
    "7 - Group (extended TSI)"
 };
 
+std::string ReasonForSending[] = {
+  "0 - Subscriber unit is powered ON",
+  "1 - Subscriber unit is powered OFF",
+  "2 - Emergency condition is detected",
+  "3 - Push-to-talk condition is detected",
+  "4 - Status",
+  "5 - Transmit inhibit mode ON",
+  "6 - Transmit inhibit mode OFF",
+  "7 - System access (TMO ON)",
+  "8 - DMO ON",
+  "9 - Enter service (after being out of service)",
+  "10 - Service loss",
+  "11 - Cell reselection or change of serving cell",
+  "12 - Low battery",
+  "13 - Subscriber unit is connected to a car kit",
+  "14 - Subscriber unit is disconnected from a car kit",
+  "15 - Subscriber unit asks for transfer initialization configuration",
+  "16 - Arrival at destination",
+  "17 - Arrival at a defined location",
+  "18 - Approaching a defined location",
+  "19 - SDS type-1 entered",
+  "20 - User application initiated",
+  "21 - Reserved"
+};
+
+// contain decoded data of a lip sds
+struct LipInfo {
+  int time_elapsed;
+  float longitude;
+  float latitude;
+  int positionerror;
+  float horizontalvelocity;
+  float directionoftravel;
+  short reasonforsending;
+};
+
 /****************************************************************************
  *
  * Class definitions
@@ -306,40 +342,86 @@ bool handle_LIP_compact(std::string lip, float & lat, float & lon)
 } /* handle_LIP_compact */
 
 
-void handle_LIP_short(std::string in, float &lat, float &lon)
+void handleLipSds(std::string in, LipInfo &lipinfo)
 {
-  lat = 0;
-  lon = 0;
-  double tla;
-  double tlo;
-
   /* Protocol identifier
-     0x03 = simple GPS
-     0x0A = LIP
+     0x02 = Simple Text Messaging
+     0x03 = Simple location system
+     0x06 = M-DMO (Managed DMO)
+     0x09 = Simple immediate text messaging
+     0x0A = LIP (Location Information Protocol)
+     0x0C = Concatenated SDS message
+     0x82 = Text Messaging
      0x83 = Complex SDS-TL GPS message transfer
   */
+  double tla;
+  double tlo; 
+
+  int t_velo;
+  int t_dot;
+
   if (in.substr(0,2) == "0A")
   {
-    tlo = std::stol(in.substr(2,1),nullptr,16) << 25;
-    tlo +=std::stol(in.substr(3,1),nullptr,16) << 21;
-    tlo +=std::stol(in.substr(4,1),nullptr,16) << 17;
-    tlo +=std::stol(in.substr(5,1),nullptr,16) << 13;
-    tlo +=std::stol(in.substr(6,1),nullptr,16) << 9;
-    tlo +=std::stol(in.substr(7,1),nullptr,16) << 5;
-    tlo +=(std::stol(in.substr(8,1),nullptr,16) & 0x08) << 1;
+    lipinfo.time_elapsed = (std::stoi(in.substr(2,1),nullptr,16) & 0x03);
+    tlo =  std::stol(in.substr(3,1),nullptr,16) << 21;
+    tlo += std::stol(in.substr(4,1),nullptr,16) << 17;
+    tlo += std::stol(in.substr(5,1),nullptr,16) << 13;
+    tlo += std::stol(in.substr(6,1),nullptr,16) << 9;
+    tlo += std::stol(in.substr(7,1),nullptr,16) << 5;
+    tlo += std::stol(in.substr(8,1),nullptr,16) << 1;
+    tlo += (std::stol(in.substr(9,1),nullptr,16) & 0x08) >> 3;
+    
+    tla = (std::stol(in.substr(9,1),nullptr,16) & 0x07) << 21;
+    tla += std::stol(in.substr(10,1),nullptr,16) << 17;
+    tla += std::stol(in.substr(11,1),nullptr,16) << 13;
+    tla += std::stol(in.substr(12,1),nullptr,16) << 9;
+    tla += std::stol(in.substr(13,1),nullptr,16) << 5;
+    tla += std::stol(in.substr(14,1),nullptr,16) << 1;
+    tla += (std::stol(in.substr(15,1),nullptr,16) & 0x08) >> 3;
 
-    tla =  (std::stol(in.substr(9,1),nullptr,16) & 0x7) << 22;
-    tla += std::stol(in.substr(10,1),nullptr,16) << 18;
-    tla += std::stol(in.substr(11,1),nullptr,16) << 14;
-    tla += std::stol(in.substr(12,1),nullptr,16) << 10;
-    tla += std::stol(in.substr(13,1),nullptr,16) << 6;
-    tla += std::stol(in.substr(14,1),nullptr,16) << 2;
-    tla += (std::stol(in.substr(15,1),nullptr,16) & 0x0C) >> 2;
-
-    lat = tla*180/33554432;
-    lon = tlo*360/33554432;
+    lipinfo.latitude = tla * 360 / 33554432;
+    lipinfo.longitude = tlo * 360 / 33554432;
+  
+    // position error in meter
+    lipinfo.positionerror = 2*pow(10,(std::stoi(in.substr(15,1),nullptr,16) & 0x03));
+    
+    /*
+      Horizontal velocity shall be encoded for speeds 0 km/h to 28 km/h in 1 km/h 
+      steps and from 28 km/h onwards using equation:
+      v = C × (1 + x)^(K-A) + B where:
+        • C = 16
+        • x = 0,038
+        • A = 13
+        • K = Horizontal velocity information element value
+        • B = 0
+    */
+    t_velo  = std::stoi(in.substr(16,1),nullptr,16) << 3;
+    t_velo += (std::stoi(in.substr(17,1),nullptr,16) & 0x0e) >> 1;
+    if (t_velo < 29)
+    {
+      lipinfo.horizontalvelocity = t_velo;
+    }
+    else
+    {
+      lipinfo.horizontalvelocity =  16 * pow(1.038, (t_velo - 13));
+    }
+     
+    /*
+     definition can be expressed also by equation:
+     Direction of travel value = trunc((direction + 11,25)/22,5), when 
+     direction is given in degrees.
+    */
+    t_dot = (std::stoi(in.substr(17,1),nullptr,16) & 0x01) << 3;
+    t_dot += (std::stoi(in.substr(18,1),nullptr,16) & 0x0e) >> 1;
+    lipinfo.directionoftravel = t_dot * 22.5;
+    
+    /* 
+    reason for sending
+    */
+    lipinfo.reasonforsending = std::stoi(in.substr(20,1),nullptr, 16);
+    
   }
-} /* handle_LIP_latlon */
+} /* handleLipSds */
 
 
 /*
