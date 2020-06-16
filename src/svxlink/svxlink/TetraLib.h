@@ -482,6 +482,17 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   return true;
 } /* createSDS */
 
+bool createCfmSDS(std::string & sds, std::string issi, std::string msg)
+{
+  char f[issi.length()+20 + msg.length()];
+  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
+             std::to_string(std::stoi(issi)).c_str(),
+             (int)msg.length() * 4,
+             msg.c_str(), 0x1a);
+  sds = f;
+  return true;
+} /* */
+
 
 bool createStateSDS(std::string & sds, std::string issi)
 {

@@ -414,7 +414,7 @@ proc end_call {} {
 #
 # Executed when a sds reception has been acknowledged
 #
-proc sds_receiced_ack {} {
+proc sds_receiced_ack {message} {
 
 }
 

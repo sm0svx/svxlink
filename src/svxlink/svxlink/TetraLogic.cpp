@@ -635,6 +635,11 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       handleSds(m_message);
       break;
 
+    case SDS_ID:
+      // +CMGS: <SDS Instance>[, <SDS status> [, <message reference>]]
+      // sds state send be MS
+      break;
+      
     case TX_DEMAND:
       break;
 
@@ -874,7 +879,8 @@ void TetraLogic::handleSds(std::string sds)
       handleStateSds(sds);
       userdata[m_sds.tsi].state = sds;
       cfmSdsReceived(m_sds.tsi);
-      m_aprsinfo << ">" << "State:" << state_sds.find(sds)->second
+      m_aprsinfo << ">" << "State:" 
+                 << state_sds.find(sds)->second
                  << " (" << sds << ")";
       ss << "state_sds_received " << m_sds.tsi << " " << sds;
       break;
@@ -882,25 +888,21 @@ void TetraLogic::handleSds(std::string sds)
     case TEXT_SDS:
       sds_txt = handleTextSds(sds);
       m_aprsinfo << ">" << sds_txt;
-      cfmSdsReceived(m_sds.tsi);
-      ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt
-         << "\"";
+      cfmTxtSdsReceived(sds, m_sds.tsi);
+      ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt << "\"";
       break;
 
     case SIMPLE_TEXT:
       sds_txt = handleSimpleTextSds(sds);
       m_aprsinfo << ">" << sds_txt;
       cfmSdsReceived(m_sds.tsi);
-      ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt
-         << "\"";
+      ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt << "\"";
       break;
       
     case SDS_ACK:
-      ss << "sds_receiced_ack";
-      break;
-      
-    case SDS_ID:
-      // +CMGS: <SDS Instance>[, <SDS status> [, <message reference>]]
+      // +CTSDSR: 12,23404,0,23401,0,32, 82100002
+      // sds msg received by MS from remote
+      ss << "sds_receiced_ack " << sds;
       break;
       
     case REGISTER_TSI:
@@ -1093,12 +1095,18 @@ void TetraLogic::handleCallReleased(std::string message)
 
 void TetraLogic::sendPei(std::string cmd)
 {
-  cmd += "\r";
+
+  // a sdsmsg must end with 0x1a
+  if (cmd.at(cmd.length()-1) != 0x1a)
+  {
+    cmd += "\r";
+  }
+  
   pei->write(cmd.c_str(), cmd.length());
 
   if (debug)
   {
-    cout << "sending " << cmd << endl;
+    cout << "sending --->" << cmd << endl;
   }
 
   peiComTimer.reset();
@@ -1131,14 +1139,35 @@ void TetraLogic::tgUpTimeout(Async::Timer *tgUpTimer)
 
 /*
   Create a confirmation sds and sends them to the Tetra radio
-  that want to register
 */
 void TetraLogic::cfmSdsReceived(std::string tsi)
 {
-   std::string msg("821000FF");  // confirm a sds received
+   std::string msg("OK");  // confirm a sds received
    std::string sds;
-   
+
    if (createSDS(sds, getISSI(tsi), msg))
+   {
+     sendPei(sds);
+   }
+   else
+   {
+     cout << "*** ERROR: sending confirmation Sds" << endl;
+   }
+} /* TetraLogic::cfmSdsReceived */
+
+
+/* +CTSDSR: 12,23404,0,23401,0,96, 82041D014164676A6D707477 */
+void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
+{
+   if (message.length() < 8) return;
+   
+   std::string msg("821000");  // confirm a sds received
+   msg += message.substr(4,2);
+   
+   std::string sds;
+   cout << "cfmTxtSdsReceived "<< tsi << endl;
+   return;
+   if (createCfmSDS(sds, getISSI(tsi), msg))
    {
      sendPei(sds);
    }

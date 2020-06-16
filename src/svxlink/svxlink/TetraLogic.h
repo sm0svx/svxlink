@@ -288,6 +288,7 @@ class TetraLogic : public Logic
     void onPeiActivityTimeout(Async::Timer *timer);
     void initGroupCall(int gssi);
     void cfmSdsReceived(std::string tsi);
+    void cfmTxtSdsReceived(std::string message, std::string tsi);
     int handleMessage(std::string  m_message);
     void handleGroupcallBegin(std::string m_message);
     void handleTransmissionEnd(std::string m_message);
