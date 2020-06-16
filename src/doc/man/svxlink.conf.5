@@ -705,8 +705,7 @@ configuration for the transmitter is done in the specified configuration
 section.
 .TP
 .B BAUD
-The baud rate of communication (Tetra radio) for RS232.
-Example:
+The baud rate of communication (Tetra radio) for RS232. Example:
 BAUD=115200
 .TP
 .B PORT
@@ -715,51 +714,57 @@ Example:
 PORT=/dev/ttyUSB0
 .TP
 .B ISSI
-The ISSI (Individual Short Subscriber Identity) of the SvxLink node.
-Example:
+The ISSI (Individual Short Subscriber Identity) of the SvxLink node. Example:
 ISSI=23401
 .TP
 .B GSSI
 The GSSI (Group Short Subscriber Identity) of the SvxLink node. This parameter 
-should always be 1.
-Example:
+should always be 1. Example:
 GSSI=1
 .TP
 .B MNC
 The MNC (Mobile Country Code) of the SvxLink node. This parameter should always 
-be 16383.
-Example:
+be 16383. Example:
 MNC=16383
 .TP
 .B MCC
 The MCC (Mobile Country Code) of the SvxLink node. This parameter should 
-alsways be 901.
-Example:
+alsways be 901. Example:
 MCC=901
 .TP
 .B APRSPATH
-If unsure comment out this parameter.
-Example:
-APRSPATH=APRS,qAR,DB0HRC-10:
+If unsure comment out this parameter. Example:
+APRSPATH=APRS,qAR
 .TP
 .B INIT_PEI
 The initialisation commands that are send to the Tetra radio to enable a 
-bi-drectional communication whes SvxLink is starting.
-Example:
+bi-drectional communication whes SvxLink is starting. Example:
 INIT_PEI=AT+CTOM=1;AT+CTSP=1,3,131;AT+CTSP=1,3,130;AT+CTSP=1,2,20
 .TP
 .B TETRA_USERS
-The section name that contain list of user information.
-Example:
+The section name that contain list of user information. Example:
 TETRA_USERS=Tetra_Users
+The format is:
+[Tetra_Users]
+09011638300012345=DL1ABC,NoName,/e,Testuser
 .TP
 .B TETRA_STATUS
-The section name that contain a list of status codes an descriptions.
-Example:
+The section name that contain a list of status codes an descriptions. Example:
 TETRA_STATUS=Tetra_Status
+The format is:
+[Tetra_Status]
+8000=at home
+8001=on the road
+.TP
+.B INFO_SDS
+A Message that is send to a user when he register at the repeater the first time.
+Example:
+INFO_SDS=Welcome user at my Tetra repeater
 .TP
 .B DEFAULT_APRS_ICON=e/
-The default Aprs icon for a station if not defined in section TETRA_USERS.
+The default Aprs icon for a station if not defined in section TETRA_USERS. It must
+exactly have two digits, the first for the primary table, the second for the symbol.
+The backslash must encoded like this: DEFAULT_APRS_ICON=\\e
 Example:
 DEFAULT_APRS_ICON=e/
 .TP

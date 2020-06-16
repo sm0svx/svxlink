@@ -276,6 +276,7 @@ class TetraLogic : public Logic
     void handleSds(std::string sds_head);
     void endCall(void);
     std::string handleTextSds(std::string m_message);
+    std::string handleSimpleTextSds(std::string m_message);
     void handleStateSds(std::string m_message);
     void handleTxGrant(std::string txgrant);
     std::string getTSI(std::string issi);
@@ -289,10 +290,10 @@ class TetraLogic : public Logic
     void cfmSdsReceived(std::string tsi);
     int handleMessage(std::string  m_message);
     void handleGroupcallBegin(std::string m_message);
-    void handleGroupcallEnd(std::string m_message);
+    void handleTransmissionEnd(std::string m_message);
     void sdsPtyReceived(const void *buf, size_t count);
     std::string createAprsLip(std::string mesg);
-    void handleCallEnd(std::string m_message);
+    void handleCallReleased(std::string m_message);
     void getOpMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
 

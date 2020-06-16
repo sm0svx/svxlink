@@ -355,7 +355,7 @@ proc groupcall_end {} {
 #
 # Executed when a call is ended
 #
-proc call_end {} {
+proc call_end {reason} {
 }
 
 
@@ -408,6 +408,14 @@ proc init_group_call {gssi} {
 #
 proc end_call {} {
   puts "Call ended"
+}
+
+
+#
+# Executed when a sds reception has been acknowledged
+#
+proc sds_receiced_ack {} {
+
 }
 
 

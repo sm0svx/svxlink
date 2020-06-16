@@ -85,20 +85,20 @@ using namespace SvxLink;
 
 #define OK 0
 #define ERROR 1
-#define GROUPCALL_BEGIN 3
+#define CALL_BEGIN 3
 #define GROUPCALL_END 4
 
 #define SDS 6
 #define TEXT_SDS 7
 
 #define CALL_CONNECT 9
-#define CALL_END 10
-#define GROUPCALL_RELEASED 11
+#define TRANSMISSION_END 10
+#define CALL_RELEASED 11
 #define LIP_SDS 12
 #define REGISTER_TSI 13
 #define STATE_SDS 14
 #define OP_MODE 15
-#define TX_GRANT 16
+#define TRANSMISSION_GRANT 16
 #define TX_DEMAND 17
 #define TX_WAIT 18
 #define TX_INTERRUPT 19
@@ -391,6 +391,9 @@ bool TetraLogic::initialize(void)
   processEvent("startup");
 
   // LipInfo lipinfo;
+  std::string t_t;
+  createSDS(t_t, "23404", "TEST");
+  cout << t_t << endl;
   // handleLipSds("0A2089E60A45A1C987E080", lipinfo);
   // handleLipSds("0A008CACAA480A120201D0", lipinfo);
   // cout <<lipinfo.directionoftravel << endl;
@@ -438,6 +441,7 @@ bool TetraLogic::initialize(void)
 void TetraLogic::transmitterStateChange(bool is_transmitting)
 {
   std::string cmd;
+  cout << "TX=" << (is_transmitting ? "1" : "0") << endl;
   if (is_transmitting) 
   {
     if (!talkgroup_up)
@@ -447,13 +451,13 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
     }
     else 
     {
-      cmd = "AT+TXI=1,1";
+      cmd = "AT+CTXD=1,1";
       sendPei(cmd);
     }
   }
   else
   {
-    cmd = "AT+TXI=0,1";
+    cmd = "AT+CUTXC=1";
     sendPei(cmd);
   }
   
@@ -474,12 +478,12 @@ void TetraLogic::squelchOpen(bool is_open)
     // FIXME: A squelch open should not be possible to receive while
     // transmitting unless mute_rx_on_tx is false, in which case it
     // should be allowed. Commenting out the statements below.
-#if 0
+
   if (tx().isTransmitting())
   {
     return;
   }
-#endif
+
   rx().setSql(is_open);
   Logic::squelchOpen(is_open);
 
@@ -615,16 +619,16 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       }
       break;
 
-    case GROUPCALL_BEGIN:
+    case CALL_BEGIN:
       handleGroupcallBegin(m_message);
       break;
 
-    case GROUPCALL_END:
-      handleGroupcallEnd(m_message);
+    case TRANSMISSION_END:
+      handleTransmissionEnd(m_message);
       break;
 
-    case CALL_END:
-      handleCallEnd(m_message);
+    case CALL_RELEASED:
+      handleCallReleased(m_message);
       break;
 
     case SDS:
@@ -634,7 +638,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
     case TX_DEMAND:
       break;
 
-    case TX_GRANT:
+    case TRANSMISSION_GRANT:
       handleTxGrant(m_message);
       break;
 
@@ -824,7 +828,6 @@ void TetraLogic::handleSds(std::string sds)
   getNextVal(sds); // (0)
   getNextVal(sds); // Sds length (112)
   
-  cout << "tsi:" <<m_sds.tsi << endl;
   // check if the user is stored? no -> default
   std::map<std::string, User>::iterator iu = userdata.find(m_sds.tsi);
   if (iu == userdata.end())
@@ -870,6 +873,7 @@ void TetraLogic::handleSds(std::string sds)
     case STATE_SDS:
       handleStateSds(sds);
       userdata[m_sds.tsi].state = sds;
+      cfmSdsReceived(m_sds.tsi);
       m_aprsinfo << ">" << "State:" << state_sds.find(sds)->second
                  << " (" << sds << ")";
       ss << "state_sds_received " << m_sds.tsi << " " << sds;
@@ -878,15 +882,25 @@ void TetraLogic::handleSds(std::string sds)
     case TEXT_SDS:
       sds_txt = handleTextSds(sds);
       m_aprsinfo << ">" << sds_txt;
+      cfmSdsReceived(m_sds.tsi);
       ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt
          << "\"";
       break;
 
+    case SIMPLE_TEXT:
+      sds_txt = handleSimpleTextSds(sds);
+      m_aprsinfo << ">" << sds_txt;
+      cfmSdsReceived(m_sds.tsi);
+      ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt
+         << "\"";
+      break;
+      
     case SDS_ACK:
-      cout << "SDS ACK" << endl;
+      ss << "sds_receiced_ack";
       break;
       
     case SDS_ID:
+      // +CMGS: <SDS Instance>[, <SDS status> [, <message reference>]]
       break;
       
     case REGISTER_TSI:
@@ -933,6 +947,13 @@ std::string TetraLogic::handleTextSds(std::string m_message)
 } /* TetraLogic::handleTextMessage */
 
 
+std::string TetraLogic::handleSimpleTextSds(std::string m_message)
+{
+  if (m_message.length() > 4) m_message.erase(0,4);  // delete 0201
+  return decodeSDS(m_message);
+} /* TetraLogic::handleSimpleTextMessage */
+
+
 /*
   Transmission Grant +CTXG
   +CTXG: <CC instance>, <TxGrant>, <TxRqPrmsn>, <end to end encryption>,
@@ -969,6 +990,10 @@ std::string TetraLogic::getISSI(std::string tsi)
   if (tsi.length() == 17)
   {
     t_issi << atoi(tsi.substr(9,8).c_str());  
+  }
+  else
+  {
+    t_issi << tsi;  
   }
   return t_issi.str();
 } /* TetraLogic::getISSI */
@@ -1014,19 +1039,21 @@ int TetraLogic::getNextVal(std::string& h)
   return t;
 } /* TetraLogic::getNextVal */
 
-
-void TetraLogic::handleGroupcallEnd(std::string message)
+// Down Transmission Ceased +CDTXC
+// +CDTXC: 1,0
+void TetraLogic::handleTransmissionEnd(std::string message)
 {
+  squelchOpen(false);  // close Squelch
   stringstream ss;
   ss << "groupcall_end";
   processEvent(ss.str());
   Qso.members.clear();
-} /* TetraLogic::handleGroupcallEnd */
+} /* TetraLogic::handleTransmissionEnd */
 
 
-// Down Transmission Ceased +CDTXC
-// +CDTXC: 1,0
-void TetraLogic::handleCallEnd(std::string message)
+// TETRA Call Release +CTCR
+// +CTCR: 1,13
+void TetraLogic::handleCallReleased(std::string message)
 {
   // update Qso information, set time of activity
   struct tm *utc;
@@ -1034,12 +1061,14 @@ void TetraLogic::handleCallEnd(std::string message)
   utc = gmtime(&rawtime);
   Qso.stop = utc;
 
-  squelchOpen(false);  // close Squelch
-
   stringstream ss;
-  ss << "call_end";
+  getNextStr(message);
+
+  ss << "call_end \"" << DisconnectCause[getNextVal(message)] << "\"";
   processEvent(ss.str());
 
+  talkgroup_up = false;
+  
   // send call/qso end to aprs network
   if (LocationInfo::has_instance())
   {
@@ -1059,7 +1088,7 @@ void TetraLogic::handleCallEnd(std::string message)
     }
     LocationInfo::instance()->update3rdState(userdata[Qso.tsi].call, m_aprsmesg);
   }
-} /* TetraLogic::handleCallEnd */
+} /* TetraLogic::handleCallReleased */
 
 
 void TetraLogic::sendPei(std::string cmd)
@@ -1106,10 +1135,10 @@ void TetraLogic::tgUpTimeout(Async::Timer *tgUpTimer)
 */
 void TetraLogic::cfmSdsReceived(std::string tsi)
 {
-   std::string msg("821000FF");
+   std::string msg("821000FF");  // confirm a sds received
    std::string sds;
    
-   if (createSDS(sds, tsi, msg))
+   if (createSDS(sds, getISSI(tsi), msg))
    {
      sendPei(sds);
    }
@@ -1190,11 +1219,11 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^OK"]                                      = OK;
   mre["^\\+CME ERROR"]                            = ERROR;
   mre["^\\+CTSDSR:"]                              = SDS;
-  mre["^\\+CTICN:"]                               = GROUPCALL_BEGIN;
-  mre["^\\+CTCR:"]                                = GROUPCALL_RELEASED;
+  mre["^\\+CTICN:"]                               = CALL_BEGIN;
+  mre["^\\+CTCR:"]                                = CALL_RELEASED;
   mre["^\\+CTCC:"]                                = CALL_CONNECT;
-  mre["^\\+CDTXC:"]                               = CALL_END;
-  mre["^\\+CTXG:"]                                = TX_GRANT;
+  mre["^\\+CDTXC:"]                               = TRANSMISSION_END;
+  mre["^\\+CTXG:"]                                = TRANSMISSION_GRANT;
   mre["^\\+CTXD:"]                                = TX_DEMAND;
   mre["^\\+CTXI:"]                                = TX_INTERRUPT;
   mre["^\\+CTXW:"]                                = TX_WAIT;
@@ -1206,7 +1235,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A"]                                      = LIP_SDS;
   mre["^8204"]                                    = TEXT_SDS;
-  mre["^821000FF"]                                = SDS_ACK;
+  mre["^821000"]                                  = SDS_ACK;
   mre["^83"]                                      = COMPLEX_SDS;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
   //"821000FF" SDS ACK

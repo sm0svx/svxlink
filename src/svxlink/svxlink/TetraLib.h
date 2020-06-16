@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <iomanip> 
 #include <math.h>
 
 
@@ -274,6 +275,14 @@ std::string ReasonForSending[] = {
   "21 - Reserved"
 };
 
+
+std::string sdsStatus[] {
+"0 - Incoming message stored and unread",
+"1 - Incoming message stored and read",
+"2 - Outgoing message stored and unsent",
+"3 - Outgoing message stored and sent"
+} ;
+
 // contain decoded data of a lip sds
 struct LipInfo {
   int time_elapsed;
@@ -284,6 +293,8 @@ struct LipInfo {
   float directionoftravel;
   short reasonforsending;
 };
+
+unsigned short msgcnt;
 
 /****************************************************************************
  *
@@ -431,6 +442,13 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
 } /* handleLipSds */
 
 
+unsigned short getSdsMesgId(void)
+{
+  if (++msgcnt > 255) msgcnt=1;
+  return msgcnt;
+} /* getSdsMesgId */
+
+
 /*
   Creates a sds from text, format of a command send to the Pei device must be:
 
@@ -447,7 +465,8 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   if (message.length() > 120 || issi.length() > 8) return false;
 
   std::stringstream ss;
-  ss << "8204FF01";
+  ss << "8204" << std::setfill('0') << std::setw(sizeof(short)) 
+     << std::hex << getSdsMesgId() << "01";
 
   for (unsigned int a=0; a<message.length(); a++)
   {
@@ -462,6 +481,23 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   sds = f;
   return true;
 } /* createSDS */
+
+
+bool createStateSDS(std::string & sds, std::string issi)
+{
+  if (issi.length() > 8) return false;
+  std::stringstream ss;
+  ss << "821000" << std::setfill('0') << std::setw(sizeof(short)) 
+     << std::hex << getSdsMesgId();
+     
+  char f[issi.length()+20];
+  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
+             std::to_string(std::stoi(issi)).c_str(),
+             (int)ss.str().length() * 4,
+             ss.str().c_str(), 0x1a);
+  sds = f;
+  return true;
+} /* createStateSDS */
 
 
 std::string decodeSDS(std::string hexSDS)
