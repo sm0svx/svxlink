@@ -754,10 +754,10 @@ void TetraLogic::handleGroupcallBegin(std::string message)
   Qso.start = utc;
   
   std::list<std::string>::iterator it;
-  it = find(Qso.members.begin(), Qso.members.end(), userdata[o_tsi].call);
+  it = find(Qso.members.begin(), Qso.members.end(), iu->second.call);
   if (it == Qso.members.end())
   {
-    Qso.members.push_back(userdata[o_tsi].call);
+    Qso.members.push_back(iu->second.call);
   }
 
   // callup tcl event
@@ -1028,7 +1028,6 @@ void TetraLogic::handleTransmissionEnd(std::string message)
   stringstream ss;
   ss << "groupcall_end";
   processEvent(ss.str());
-  Qso.members.clear();
 } /* TetraLogic::handleTransmissionEnd */
 
 
@@ -1047,8 +1046,6 @@ void TetraLogic::handleCallReleased(std::string message)
 
   ss << "call_end \"" << DisconnectCause[getNextVal(message)] << "\"";
   processEvent(ss.str());
-
-  talkgroup_up = false;
   
   // send call/qso end to aprs network
   if (LocationInfo::has_instance())
@@ -1069,6 +1066,10 @@ void TetraLogic::handleCallReleased(std::string message)
     }
     LocationInfo::instance()->update3rdState(userdata[Qso.tsi].call, m_aprsmesg);
   }
+
+  talkgroup_up = false;
+  Qso.members.clear();
+  
 } /* TetraLogic::handleCallReleased */
 
 
