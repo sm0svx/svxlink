@@ -176,12 +176,10 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
   debug(false), talkgroup_up(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
-  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
-  tgUpTimer(50000, Timer::TYPE_ONESHOT, false)
+  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
-  tgUpTimer.expired.connect(mem_fun(*this, &TetraLogic::tgUpTimeout));
 } /* TetraLogic::TetraLogic */
 
 
@@ -191,7 +189,6 @@ TetraLogic::~TetraLogic(void)
   pei = 0;
   peiComTimer = 0;
   peiActivityTimer = 0;
-  tgUpTimer = 0;
   delete call;
 } /* TetraLogic::~TetraLogic */
 
@@ -257,7 +254,7 @@ bool TetraLogic::initialize(void)
   // Welcome message to new users
   if (!cfg().getValue(name(), "INFO_SDS", infosds))
   {
-    infosds = "Welcome Tetrauser@";
+    infosds = "Welcome TETRA-User@";
     infosds += callsign(); 
   }
   
@@ -281,7 +278,9 @@ bool TetraLogic::initialize(void)
     {
       isok = false;
       cout << "*** ERROR: " << name() << "/DEFAULT_APRS_ICON "
-           << "must have exactly 2 characters, e.g. '/e'" << endl;
+           << "must have 2 characters, e.g. '/e' or if the backslash or "
+           << "a comma is used it has to be encodded with an additional " 
+           << "'\', e.g. " << "DEFAULT_APRS_ICON=\\r" << endl;
     }
     else 
     {
@@ -389,15 +388,6 @@ bool TetraLogic::initialize(void)
   setTxCtrlMode(Tx::TX_AUTO);
 
   processEvent("startup");
-
-  // LipInfo lipinfo;
-  std::string t_t;
-  createSDS(t_t, "23404", "TEST");
-  cout << t_t << endl;
-  // handleLipSds("0A2089E60A45A1C987E080", lipinfo);
-  // handleLipSds("0A008CACAA480A120201D0", lipinfo);
-  // cout <<lipinfo.directionoftravel << endl;
-  // cout << ReasonForSending[lipinfo.reasonforsending] << endl;
   
   return isok;
 
@@ -423,25 +413,14 @@ bool TetraLogic::initialize(void)
  
  void TetraLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  if (is_active)
-  {
-    tgUpTimer.reset();
-    tgUpTimer.setEnable(false);
-  } 
-  else
-  {
-    tgUpTimer.setEnable(true);
-  }
-
-  Logic::audioStreamStateChange(is_active, is_idle);
-  
+  Logic::audioStreamStateChange(is_active, is_idle);  
 } /* TetraLogic::audioStreamStateChange */
 
  
 void TetraLogic::transmitterStateChange(bool is_transmitting)
 {
   std::string cmd;
-  cout << "TX=" << (is_transmitting ? "1" : "0") << endl;
+
   if (is_transmitting) 
   {
     if (!talkgroup_up)
@@ -465,7 +444,7 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
   {
    // rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
   }
-  tgUpTimer.setEnable(!is_transmitting);
+
   Logic::transmitterStateChange(is_transmitting);
 } /* TetraLogic::transmitterStateChange */
 
@@ -655,8 +634,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
 
     case INVALID:
-      cout << "+++ Pei answer not known, ignoring ;)"
-           << endl;
+      cout << "+++ Pei answer not known, ignoring ;)" << endl;
 
     default:
       break;
@@ -844,7 +822,7 @@ void TetraLogic::handleSds(std::string sds)
     std::string t_sds;
     createSDS(t_sds, getISSI(m_sds.tsi), infosds);
     sendPei(t_sds);
-    cout << t_sds << endl;
+    if (debug) cout << "+++ sending welcome to " << t_sds << endl;
     return;
   } 
   
@@ -878,7 +856,7 @@ void TetraLogic::handleSds(std::string sds)
     case STATE_SDS:
       handleStateSds(sds);
       userdata[m_sds.tsi].state = sds;
-      cfmSdsReceived(m_sds.tsi);
+      //cfmSdsReceived(m_sds.tsi);
       m_aprsinfo << ">" << "State:" 
                  << state_sds.find(sds)->second
                  << " (" << sds << ")";
@@ -1012,6 +990,7 @@ void TetraLogic::handleStateSds(std::string m_message)
   
   if (state_sds[m_message].empty())
   {
+      m_message +="#";
     // process macro, if defined
     injectDtmf(m_message, 10);
   }
@@ -1131,12 +1110,6 @@ void TetraLogic::onPeiActivityTimeout(Async::Timer *timer)
 } /* TetraLogic::onPeiTimeout */
 
 
-void TetraLogic::tgUpTimeout(Async::Timer *tgUpTimer)
-{
-    
-} /* TetraLogic::tgUpTimeout */
-
-
 /*
   Create a confirmation sds and sends them to the Tetra radio
 */
@@ -1165,8 +1138,11 @@ void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
    msg += message.substr(4,2);
    
    std::string sds;
-   cout << "cfmTxtSdsReceived "<< tsi << endl;
-   return;
+   if (debug)
+   {
+      cout << "sending confirmation Sds to " << tsi << endl;
+   }
+
    if (createCfmSDS(sds, getISSI(tsi), msg))
    {
      sendPei(sds);
@@ -1189,8 +1165,9 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 
   if(!createSDS(sds, m_tsi, injmessage))
   {
-    std::string s = "*** ERROR: creating Sds";
-    cout << s << endl;
+    std::string s = "*** ERROR: creating Sds to ";
+    s += m_tsi;
+    if (debug) cout << s << endl;
     sds_pty->write(s.c_str(), s.size());
     return;
   }
@@ -1267,7 +1244,6 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^821000"]                                  = SDS_ACK;
   mre["^83"]                                      = COMPLEX_SDS;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
-  //"821000FF" SDS ACK
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {

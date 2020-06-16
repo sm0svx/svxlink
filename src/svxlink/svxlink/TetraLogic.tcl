@@ -423,6 +423,7 @@ proc sds_receiced_ack {message} {
 # Executed when a station is registered
 #
 proc register_station {tsi} {
+
 }
 
 # end of namespace

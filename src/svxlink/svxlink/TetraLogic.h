@@ -261,7 +261,6 @@ class TetraLogic : public Logic
 
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
-    Async::Timer tgUpTimer;
     Call*    call;
 
     std::map<std::string, std::string> state_sds;
@@ -284,7 +283,6 @@ class TetraLogic : public Logic
     int getNextVal(std::string &h);
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);
-    void tgUpTimeout(Async::Timer *timer);
     void onPeiActivityTimeout(Async::Timer *timer);
     void initGroupCall(int gssi);
     void cfmSdsReceived(std::string tsi);
