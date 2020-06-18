@@ -239,6 +239,17 @@ std::string DmCommunicationType[] = {
    "6 - Direct MS-MS, but maintain gateway registration"
 };
 
+std::string TetraNumType[] = {
+  "0 - Individual (ISSI or ITSI)",
+  "1 - Group (GSSI or GTSI)",
+  "2 - PSTN Gateway (ISSI or ITSI)",
+  "3 - PABX Gateway (ISSI or ITSI)",
+  "4 - Service Centre (ISSI or ITSI)",
+  "5 - Service Centre (E.164 number)",
+  "6 - Individual (extended TSI)",
+  "7 - Group (extended TSI)"
+};
+
 std::string NumType[] = {
    "0 - Individual (ISSI or ITSI)",
    "1 - Group (GSSI or GTSI)",

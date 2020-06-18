@@ -90,7 +90,7 @@ using namespace SvxLink;
 
 #define SDS 6
 #define TEXT_SDS 7
-
+#define CNUMF 8
 #define CALL_CONNECT 9
 #define TRANSMISSION_END 10
 #define CALL_RELEASED 11
@@ -383,7 +383,7 @@ bool TetraLogic::initialize(void)
 
   peirequest = INIT;
   initPei();
-
+  
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
 
@@ -508,15 +508,20 @@ void TetraLogic::squelchOpen(bool is_open)
 void TetraLogic::initPei(void)
 {
   stringstream ss;
+  std::string cmd;
   if (!m_cmds.empty())
   {
-    std::string cmd = *(m_cmds.begin());
+    cmd = *(m_cmds.begin());
     sendPei(cmd);
     m_cmds.erase(m_cmds.begin());
   }
-  else
+  else if (peirequest == INIT)
   {
-    peirequest = INIT_COMPLETE;
+    cmd = "AT+CNUMF?";
+    sendPei(cmd);
+  }
+  else 
+  {
     ss << "pei_init_finished";
     processEvent(ss.str());
   }
@@ -598,6 +603,10 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       }
       break;
 
+    case CNUMF:
+      handleCnumf(m_message);  
+      break;
+      
     case CALL_BEGIN:
       handleGroupcallBegin(m_message);
       break;
@@ -990,9 +999,9 @@ void TetraLogic::handleStateSds(std::string m_message)
   
   if (state_sds[m_message].empty())
   {
-      m_message +="#";
+    ss << "D" << m_message << "#";  
     // process macro, if defined
-    injectDtmf(m_message, 10);
+    injectDtmf(ss.str(), 10);
   }
 } /* TetraLogic::handleStateSds */
 
@@ -1155,6 +1164,43 @@ void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
 } /* TetraLogic::cfmSdsReceived */
 
 
+void TetraLogic::handleCnumf(std::string m_message)
+{
+
+  if (m_message.length() < 27)
+  {
+    cout << "*** ERROR: Can not determine the values for MCC, MNC and ISSI "
+         << "configured in the MS, Pei-answer string to short: "
+         << m_message << endl;
+    return;
+  }
+  m_message.erase(0,8);
+  // e.g. +CNUMF: 6,09011638300023401
+  
+  short m_numtype = getNextVal(m_message);
+  if (debug) cout << "<num type> is " << m_numtype << " (" 
+               << TetraNumType[m_numtype] << ")" << endl; 
+  if (m_numtype == 6)
+  {
+    if (mcc != m_message.substr(0,4)) 
+    {
+      cout << "*** ERROR: wrong MCC in MS, will not work! " << mcc << "!=" 
+           << m_message.substr(0,4) << endl;
+    }
+    if (mnc != m_message.substr(4,5)) {
+      cout << "*** ERROR: wrong MNC in MS, will not work! " << mnc << "!=" 
+           << m_message.substr(4,5) << endl;
+    }
+    if (atoi(issi.c_str()) != atoi(m_message.substr(9,8).c_str())) {
+      cout << "*** ERROR: wrong ISSI in MS, will not work! " << issi <<"!=" 
+           << m_message.substr(9,8) << endl;
+    }
+  }
+  
+  peirequest = INIT_COMPLETE;
+} /* TetraLogic::handleCnumf */
+
+
 // format of inject a Sds into SvxLink/TetraLogic
 // tsi,Message
 void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
@@ -1237,6 +1283,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CNUM:"]                                = MS_CNUM;
   mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
   mre["^\\+CMGS:"]                                = SDS_ID;
+  mre["^\\+CNUMF:"]                               = CNUMF;
   mre["^02"]                                      = SIMPLE_TEXT; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
