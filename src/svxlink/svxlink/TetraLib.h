@@ -384,7 +384,7 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
   
   // 
   if (in.substr(0,2) == "0A") // LIP
-  {
+  {  //0A0088A27A48745A04E810
     lipinfo.time_elapsed = (std::stoi(in.substr(2,1),nullptr,16) & 0x03);
     tlo =  std::stol(in.substr(3,1),nullptr,16) << 21;
     tlo += std::stol(in.substr(4,1),nullptr,16) << 17;
@@ -440,9 +440,10 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     
     /* 
     reason for sending
+    0A0088A22A487432FFE810
     */
     lipinfo.reasonforsending = std::stoi(in.substr(20,1),nullptr, 16);
-    
+
   }
   // (NMEA) 0183 over SDS-TL
   // $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
@@ -549,8 +550,8 @@ std::string error[] = {
 "0 - The MT was unable to send the data over the air (e.g. to the SwMI)",
 "1 - The MT can not establish a reliable communication with the TE",
 "2 - The PEI link of the MT is being used already",
-"3 - This is a general error report code which indicates that the MT supports \
-the command but not in its current state. This code shall be used when no \
+"3 - This is a general error report code which indicates that the MT supports\n \
+the command but not in its current state. This code shall be used when no\n \
 other code is more appropriate for the specific context",
 "4 - The MT does not support the command",
 "5 - The MT can not process any command until the PIN for the SIM is provided",
@@ -562,7 +563,7 @@ other code is more appropriate for the specific context",
 "11 - The SIM PIN1 is required for the MT to execute the command",
 "12 - MMI unblocking of the SIM PIN1 is required",
 "13 - The MT failed to access the SIM",
-"14 - The MT can not currently execute the command due to the SIM not being \
+"14 - The MT can not currently execute the command due to the SIM not being\n \
 ready to proceed",
 "15 - The MT does not recognize this SIM",
 "16 - The entered PIN for the SIM is incorrect",
@@ -582,25 +583,25 @@ ready to proceed",
 "30 - The MS is currently out of service and can not process the command",
 "31 - The MT did not receive any Layer 2 acknowledgement from the SwMI",
 "32 - <user data> decoding failed",
-"33 - At least one of the parameters is of the wrong type e.g. string instead \
+"33 - At least one of the parameters is of the wrong type e.g. string instead\n \
 of number or vice-versa",
 "34 - At least one of the supported parameters in the command is out of range",
-"35 - Syntax error. The syntax of the command is incorrect e.g. mandatory \
+"35 - Syntax error. The syntax of the command is incorrect e.g. mandatory\n \
 parameters are missing or are exceeding Data received without command",
 "36 - The MT received <user data> without AT+CMGS= ...<CR>",
 "37 - AT+CMGS command received, but timeout expired waiting for <userdata>",
 "38 - The TE has already registered the Protocol Identifier with the MT",
-"39 - Registration table in SDS-TL is full. The MT can no longer register \
-a new Protocol Identifier until a registered Protocol identifier is \
+"39 - Registration table in SDS-TL is full. The MT can no longer register\n \
+a new Protocol Identifier until a registered Protocol identifier is\n \
 deregistered",
 "40 - The MT supports the requested service but not while it is in DMO",
-"41 - The MT is in Transmit inhibit mode and is not able to process the \
+"41 - The MT is in Transmit inhibit mode and is not able to process the\n \
 command in this state",
-"42 - The MT is involved in a signalling activity and is not able to process \
-the available command until the current transaction ends. In V+D, \
-the signalling activity could be e.g. group attachment, group report, SDS \
-processing, processing of DGNA, registration, authentication or any \
-transaction requiring a response from the MS or the SwMI. In DMO, the \
+"42 - The MT is involved in a signalling activity and is not able to process\n \
+the available command until the current transaction ends. In V+D,\n \
+the signalling activity could be e.g. group attachment, group report, SDS\n \
+processing, processing of DGNA, registration, authentication or any\n \
+transaction requiring a response from the MS or the SwMI. In DMO, the\n \
 signalling activity could be e.g. Call or SDS processing.",
 "43 - The MT supports the requested service but not while it is in V+D",
 "44 - The MT supports handling of unknown parameters",

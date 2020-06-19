@@ -368,7 +368,9 @@ proc state_sds_received {tsi state} {
 
 #
 # Executed when a Lip sds has been received
-#
+# TSI - tsi of the sender
+# lat - the latitude of the senderin decimal/float
+# lon - the longitude of the sender in decimal/float
 proc lip_sds_received {tsi lat lon} {
 }
 

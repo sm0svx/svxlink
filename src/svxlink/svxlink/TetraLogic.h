@@ -223,6 +223,8 @@ class TetraLogic : public Logic
       struct tm *last_activity;
     };
     std::map<std::string, User> userdata;
+    
+    std::map<int, std::string> sds_on_activity;
 
     int    peistate;
     std::string peistream;
@@ -259,6 +261,7 @@ class TetraLogic : public Logic
       STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL
     } SdsType;
 
+    std::string msg_to_dmo;
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
@@ -268,7 +271,7 @@ class TetraLogic : public Logic
     int pending_sdsid;
     char t_aprs_sym;
     char t_aprs_tab;
-
+    
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);

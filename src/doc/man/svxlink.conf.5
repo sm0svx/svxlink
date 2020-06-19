@@ -756,6 +756,19 @@ The format is:
 8000=at home
 8001=on the road
 .TP
+.B SDS_ON_USERACTIVITY
+The section name that contain a list of "Reason of Sending"="Sds-Message". If a user
+state has changed and a Sds has been received due to this fact, a Sds is send back
+to the user. Refer to the ETSI (TS 100 392-18-1 V1.3.1. page 70) for further documentation
+of reason of sending etc. Leave out entries for that you do not want any activities. 
+Example:
+SDS_ON_USERACTIVITY=sds_on_useractivity
+The format is:
+[sds_on_useractivity]
+0=Hello User, Subscriber unit is powered ON
+1=Hello User, Subscriber unit is powered OFF
+13=Hello User, you have a car??
+.TP
 .B INFO_SDS
 A Message that is send to a user when he register at the repeater the first time.
 Example:

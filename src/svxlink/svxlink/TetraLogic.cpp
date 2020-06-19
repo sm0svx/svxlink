@@ -174,7 +174,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
   rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
   port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
-  debug(false), talkgroup_up(false),
+  debug(false), talkgroup_up(false), msg_to_dmo(""),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
 {
@@ -347,6 +347,31 @@ bool TetraLogic::initialize(void)
     }
   }
 
+  // define sds messages send to user when received Sds's from him due to
+  // state changes
+  std::string sds_useractivity;
+  if (cfg().getValue(name(), "SDS_ON_USERACTIVITY", sds_useractivity))
+  {
+    list<string> activity_list = cfg().listSection(sds_useractivity); 
+    list<string>::iterator alit;
+    for (alit=activity_list.begin(); alit!=activity_list.end(); ++alit)
+    {
+      cfg().getValue(sds_useractivity, *alit, value);
+      cout << ">>>" << *alit << ", " << value << endl;
+      if (value.length() > 100)
+      {
+        cout << "+++ WARNING: Message to long (>100 digits) at " << name() 
+             << "/" << sds_useractivity << ": " << (*alit) 
+             << ". Cutting message.";
+        sds_on_activity[atoi((*alit).c_str())] = value.substr(0,100);
+      }
+      else 
+      {
+        sds_on_activity[atoi((*alit).c_str())] = value;
+      }
+    }
+  }
+  
   // read info of tetra state to receive SDS's
   std::string status_section;
   if (cfg().getValue(name(), "TETRA_STATUS", status_section))
@@ -360,6 +385,7 @@ bool TetraLogic::initialize(void)
     }
   }
 
+  // init the Pei device
   if (!cfg().getValue(name(), "INIT_PEI", initstr))
   {
     cout << "Warning: Missing parameter " << name()
@@ -370,7 +396,7 @@ bool TetraLogic::initialize(void)
   m_cmds = initcmds;
 
   pei = new Serial(port);
-  pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
+  pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_HW);
   pei->charactersReceived.connect(
       	  mem_fun(*this, &TetraLogic::onCharactersReceived));
 
@@ -517,7 +543,7 @@ void TetraLogic::initPei(void)
   }
   else if (peirequest == INIT)
   {
-    cmd = "AT+CNUMF?";
+    cmd = "AT+CNUMF?"; // get the MCC,MNC,ISSI from MS
     sendPei(cmd);
   }
   else 
@@ -801,9 +827,10 @@ void TetraLogic::handleGroupcallBegin(std::string message)
 void TetraLogic::handleSds(std::string sds)
 {
   stringstream ss;
-  sds.erase(0,9);  // remove "+CTSDSR: "
   Sds m_sds;
-
+  std::string t_sds;
+  
+  sds.erase(0,9);  // remove "+CTSDSR: "
   int m_sdsid = pending_sds.size() + 1;
   
   struct tm *utc;
@@ -828,7 +855,6 @@ void TetraLogic::handleSds(std::string sds)
     userdata[m_sds.tsi].name = "NoName";
     userdata[m_sds.tsi].aprs_sym = t_aprs_sym;
     userdata[m_sds.tsi].aprs_tab = t_aprs_tab;
-    std::string t_sds;
     createSDS(t_sds, getISSI(m_sds.tsi), infosds);
     sendPei(t_sds);
     if (debug) cout << "+++ sending welcome to " << t_sds << endl;
@@ -859,7 +885,18 @@ void TetraLogic::handleSds(std::string sds)
          << lipinfo.longitude;
       userdata[m_sds.tsi].lat = lipinfo.latitude;
       userdata[m_sds.tsi].lon = lipinfo.longitude;
-      cout << m_aprsinfo.str() << endl;
+      if (debug)
+      {
+        cout << m_aprsinfo.str() << endl;
+        cout << m_sds.tsi << ":" << ReasonForSending[lipinfo.reasonforsending] 
+             << endl;
+      }
+      // Power-On -> send sds
+      if (sds_on_activity.find(lipinfo.reasonforsending) != sds_on_activity.end())
+      {
+        createSDS(t_sds, getISSI(m_sds.tsi), sds_on_activity[lipinfo.reasonforsending]);
+        sendPei(t_sds);
+      }
       break;
     
     case STATE_SDS:
@@ -1029,6 +1066,7 @@ int TetraLogic::getNextVal(std::string& h)
   return t;
 } /* TetraLogic::getNextVal */
 
+
 // Down Transmission Ceased +CDTXC
 // +CDTXC: 1,0
 void TetraLogic::handleTransmissionEnd(std::string message)
@@ -1060,14 +1098,22 @@ void TetraLogic::handleCallReleased(std::string message)
   if (LocationInfo::has_instance())
   {
     std::string m_aprsmesg = aprspath;    
-    m_aprsmesg += "Qso ended (";
-    for (const auto &it : Qso.members)
+    
+    if (!Qso.members.empty())
     {
-      m_aprsmesg += it;
-      m_aprsmesg += ",";
+      m_aprsmesg += "Qso ended (";
+      for (const auto &it : Qso.members)
+      {
+        m_aprsmesg += it;
+        m_aprsmesg += ",";
+      }
+      m_aprsmesg.pop_back();
+      m_aprsmesg += ")";
     }
-    m_aprsmesg.pop_back();
-    m_aprsmesg += ")";
+    else
+    {
+      m_aprsmesg += "Transmission ended";  
+    }
 
     if (debug)
     {
@@ -1150,7 +1196,7 @@ void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
    std::string sds;
    if (debug)
    {
-      cout << "sending confirmation Sds to " << tsi << endl;
+     cout << "sending confirmation Sds to " << tsi << endl;
    }
 
    if (createCfmSDS(sds, getISSI(tsi), msg))
