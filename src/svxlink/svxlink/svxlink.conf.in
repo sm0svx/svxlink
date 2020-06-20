@@ -131,6 +131,7 @@ INFO_SDS=Welcome new user
 TETRA_USERS=Tertra_Users
 STATUS=Tetra_Status
 SDS_ON_USERACTIVITY=SdsOnUserActivity
+SDS_TO_OTHERS_ON_ACTIVITY=DMO_ON,DMO_OFF,PROXIMITY
 
 [Tetra_Users]
 # ISSI = Call,Name,comment

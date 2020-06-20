@@ -218,9 +218,11 @@ class TetraLogic : public Logic
       float lat;
       float lon;
       std::string state;
+      short reasonforsending;
       char aprs_sym;
       char aprs_tab;
       struct tm *last_activity;
+      struct tm *sent_last_sds;
     };
     std::map<std::string, User> userdata;
     
@@ -261,7 +263,9 @@ class TetraLogic : public Logic
       STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL
     } SdsType;
 
-    std::string msg_to_dmo;
+    bool sds_when_dmo_on;
+    bool sds_when_dmo_off;
+    bool sds_when_proximity;
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
@@ -276,7 +280,6 @@ class TetraLogic : public Logic
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
     void handleSds(std::string sds_head);
-    void endCall(void);
     void handleCnumf(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);
@@ -292,10 +295,11 @@ class TetraLogic : public Logic
     void cfmSdsReceived(std::string tsi);
     void cfmTxtSdsReceived(std::string message, std::string tsi);
     int handleMessage(std::string  m_message);
-    void handleGroupcallBegin(std::string m_message);
+    void handleCallBegin(std::string m_message);
     void handleTransmissionEnd(std::string m_message);
     void sdsPtyReceived(const void *buf, size_t count);
     std::string createAprsLip(std::string mesg);
+    void sendInfoSds(std::string tsi, short reasonforsending);
     void handleCallReleased(std::string m_message);
     void getOpMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);

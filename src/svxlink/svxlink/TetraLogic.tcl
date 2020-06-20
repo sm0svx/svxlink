@@ -369,7 +369,7 @@ proc state_sds_received {tsi state} {
 #
 # Executed when a Lip sds has been received
 # TSI - tsi of the sender
-# lat - the latitude of the senderin decimal/float
+# lat - the latitude of the sender in decimal/float
 # lon - the longitude of the sender in decimal/float
 proc lip_sds_received {tsi lat lon} {
 }
@@ -402,14 +402,6 @@ proc unknown_sds_received {} {
 #
 proc init_group_call {gssi} {
   puts "Init groupcall to GSSI: $gssi"
-}
-
-
-#
-# Executed when an call is ended
-#
-proc end_call {} {
-  puts "Call ended"
 }
 
 

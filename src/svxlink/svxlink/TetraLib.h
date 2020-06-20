@@ -101,7 +101,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Exported Global Variables
  *
  ****************************************************************************/
-
+ 
 std::string TxGrant[] = { 
    "0 - Transmission granted",
    "1 - Transmission not granted",
@@ -317,8 +317,7 @@ std::string dec2nmea_lat(float latitude)
 {
   char lat[10];
   float minute = (latitude - int(latitude)) * 60;
-  float second = (minute - int(minute)) * 100;
-  sprintf(lat, "%02d%02.0f.%02.0f", int(latitude), minute, second);
+  sprintf(lat, "%02d%05.2f", int(latitude), minute);
   std::string s = std::string(lat);
   s += (latitude > 0 ? "N": "S");
   return s;
@@ -329,8 +328,7 @@ std::string dec2nmea_lon(float longitude)
 {
   char lon[10];
   float minute = (longitude - int(longitude)) * 60;
-  float second = (minute - int(minute)) * 100;
-  sprintf(lon, "%03d%02.0f.%02.0f", int(longitude), minute, second);
+  sprintf(lon, "%03d%05.2f", int(longitude), minute);
   std::string s = std::string(lon);
   s += (longitude > 0 ? "E": "W");
   return s;
@@ -382,9 +380,9 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
   int t_velo;
   int t_dot;
   
-  // 
+  //4
   if (in.substr(0,2) == "0A") // LIP
-  {  //0A0088A27A48745A04E810
+  {
     lipinfo.time_elapsed = (std::stoi(in.substr(2,1),nullptr,16) & 0x03);
     tlo =  std::stol(in.substr(3,1),nullptr,16) << 21;
     tlo += std::stol(in.substr(4,1),nullptr,16) << 17;
@@ -494,6 +492,7 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   return true;
 } /* createSDS */
 
+
 bool createCfmSDS(std::string & sds, std::string issi, std::string msg)
 {
   char f[issi.length()+20 + msg.length()];
@@ -503,7 +502,7 @@ bool createCfmSDS(std::string & sds, std::string issi, std::string msg)
              msg.c_str(), 0x1a);
   sds = f;
   return true;
-} /* */
+} /* createCfmSDS */
 
 
 bool createStateSDS(std::string & sds, std::string issi)
@@ -541,6 +540,20 @@ std::string decodeSDS(std::string hexSDS)
   }
   return sds_text;
 } /* decodeSDS */
+
+
+float calcDistance(float lat1, float lon1, float lat2, float lon2)
+{
+  const double PIx = 3.141592653589793;
+  const double RADIUS = 6378.16;
+
+  double dlon = PIx * (lon2 - lon1) / 180.0;
+  double dlat = PIx * (lat2 - lat1) / 180.0;
+  
+  double a = (sin(dlat / 2) * sin(dlat / 2)) + cos(PIx*lat1/180.0) * cos(PIx*lat2/180) * (sin(dlon / 2) * sin(dlon / 2));
+  double angle = 2 * atan2(sqrt(a), sqrt(1 - a));
+  return angle * RADIUS;
+} /* calcDistance */
 
 
 std::string getPeiError(int errorcode)

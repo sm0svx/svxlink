@@ -110,6 +110,9 @@ using namespace SvxLink;
 #define SDS_ACK 25
 #define SDS_ID 26
 
+#define DMO_OFF 7
+#define DMO_ON 8
+
 #define INVALID 254
 #define TIMEOUT 255
 
@@ -174,7 +177,8 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
   rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
   port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
-  debug(false), talkgroup_up(false), msg_to_dmo(""),
+  debug(false), talkgroup_up(false), sds_when_dmo_on(false),
+  sds_when_dmo_off(false), sds_when_proximity(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
 {
@@ -313,8 +317,18 @@ bool TetraLogic::initialize(void)
     list<string> user_list = cfg().listSection(user_section);
     list<string>::iterator ulit;
     User m_user;
+    
+      // set a default time
+    struct tm t_time;
+    t_time.tm_year = 106;
+    t_time.tm_mon = 1;
+    t_time.tm_mday = 1;
+    t_time.tm_hour = 0;
+    t_time.tm_min = 0;
+    t_time.tm_sec = 0;
+    t_time.tm_isdst = 0;
 
-    for (ulit=user_list.begin(); ulit!=user_list.end(); ++ulit)
+    for (ulit=user_list.begin(); ulit!=user_list.end(); ulit++)
     {
       cfg().getValue(user_section, *ulit, value);
       if ((*ulit).length() != 17)
@@ -342,6 +356,8 @@ bool TetraLogic::initialize(void)
           m_user.aprs_tab = m_aprs[1];
         }
         m_user.comment = getNextStr(value);
+        m_user.last_activity = &t_time;
+        m_user.sent_last_sds = &t_time;
         userdata[*ulit] = m_user;
       }
     }
@@ -354,7 +370,7 @@ bool TetraLogic::initialize(void)
   {
     list<string> activity_list = cfg().listSection(sds_useractivity); 
     list<string>::iterator alit;
-    for (alit=activity_list.begin(); alit!=activity_list.end(); ++alit)
+    for (alit=activity_list.begin(); alit!=activity_list.end(); alit++)
     {
       cfg().getValue(sds_useractivity, *alit, value);
       cout << ">>>" << *alit << ", " << value << endl;
@@ -371,14 +387,49 @@ bool TetraLogic::initialize(void)
       }
     }
   }
-  
+
+  // define if Sds's send to all other users if the state of one user is changed
+  // at the moment only: DMO_ON, DMO_OFF, PROXIMITY
+  std::string sds_othersactivity;
+  if (cfg().getValue(name(), "SDS_TO_OTHERS_ON_ACTIVITY", sds_othersactivity))
+  {
+    string::iterator comma;
+    string::iterator begin = sds_othersactivity.begin();
+    do
+    {
+      comma = find(begin, sds_othersactivity.end(), ',');
+      string item;
+      if (comma == sds_othersactivity.end())
+      {
+        item = string(begin, sds_othersactivity.end());
+      }
+      else
+      {
+        item = string(begin, comma);
+        begin = comma + 1;
+      }
+      if (item == "DMO_ON")
+      {
+        sds_when_dmo_on = true;
+      }
+      else if (item == "DMO_OFF")
+      {
+        sds_when_dmo_off = true;  
+      }
+      else if (item == "PROXIMITY")
+      {
+        sds_when_proximity = true;
+      }
+    } while (comma != sds_othersactivity.end());
+  }
+
   // read info of tetra state to receive SDS's
   std::string status_section;
   if (cfg().getValue(name(), "TETRA_STATUS", status_section))
   {
     list<string> state_list = cfg().listSection(status_section);
     list<string>::iterator slit;
-    for (slit=state_list.begin(); slit!=state_list.end(); ++slit)
+    for (slit=state_list.begin(); slit!=state_list.end(); slit++)
     {
       cfg().getValue(status_section, *slit, value);
       state_sds[*slit] = value;
@@ -634,7 +685,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
       
     case CALL_BEGIN:
-      handleGroupcallBegin(m_message);
+      handleCallBegin(m_message);
       break;
 
     case TRANSMISSION_END:
@@ -685,10 +736,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
 void TetraLogic::initGroupCall(int gc_gssi)
 {
-  std::string icmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0";
-  sendPei(icmd);
-  
-  std::string cmd = "ATD";
+  std::string cmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0;ATD";  
   cmd += to_string(gc_gssi);
   sendPei(cmd);
   
@@ -696,17 +744,6 @@ void TetraLogic::initGroupCall(int gc_gssi)
   ss << "init_group_call " << to_string(gc_gssi);
   processEvent(ss.str());
 } /* TetraLogic::initGroupCall */
-
-
-void TetraLogic::endCall(void)
-{
-  std::string cmd = "ATH";
-  sendPei(cmd);
-  
-  stringstream ss;
-  ss << "end_call";
-  processEvent(ss.str());
-} /* TetraLogic::endCall */
 
 
 /*
@@ -721,7 +758,7 @@ TETRA Incoming Call Notification +CTICN
  Example:        MCC| MNC| ISSI  |             MCC| MNC|  GSSI |
  +CTICN: 1,0,0,5,09011638300023404,1,1,0,1,1,5,09011638300000001,0
 */
-void TetraLogic::handleGroupcallBegin(std::string message)
+void TetraLogic::handleCallBegin(std::string message)
 {
 
   if (message.length() < 65)
@@ -809,7 +846,7 @@ void TetraLogic::handleGroupcallBegin(std::string message)
     cout << m_aprsmesg.str() << endl;
     LocationInfo::instance()->update3rdState(iu->second.call, m_aprsmesg.str());
   }
-} /* TetraLogic::handleGroupcallBegin */
+} /* TetraLogic::handleCallBegin */
 
 
 /*
@@ -874,29 +911,30 @@ void TetraLogic::handleSds(std::string sds)
     case LIP_SDS:
       handleLipSds(sds, lipinfo);
       m_aprsinfo << "!" << dec2nmea_lat(lipinfo.latitude)  
-         << iu->second.aprs_sym 
-         << dec2nmea_lon(lipinfo.longitude)
-         << iu->second.aprs_tab 
-         << iu->second.name 
-         << ", "
+         << iu->second.aprs_sym << dec2nmea_lon(lipinfo.longitude)
+         << iu->second.aprs_tab << iu->second.name << ", "
          << iu->second.comment;
       ss << "lip_sds_received " << m_sds.tsi << " " 
-         << lipinfo.latitude << " " 
-         << lipinfo.longitude;
+         << lipinfo.latitude << " " << lipinfo.longitude;
       userdata[m_sds.tsi].lat = lipinfo.latitude;
       userdata[m_sds.tsi].lon = lipinfo.longitude;
+      userdata[m_sds.tsi].reasonforsending = lipinfo.reasonforsending;
       if (debug)
-      {
+      { 
         cout << m_aprsinfo.str() << endl;
-        cout << m_sds.tsi << ":" << ReasonForSending[lipinfo.reasonforsending] 
+        cout << m_sds.tsi << ":" << ReasonForSending[lipinfo.reasonforsending]
              << endl;
       }
       // Power-On -> send sds
-      if (sds_on_activity.find(lipinfo.reasonforsending) != sds_on_activity.end())
+      if (sds_on_activity.find(lipinfo.reasonforsending) 
+              != sds_on_activity.end())
       {
-        createSDS(t_sds, getISSI(m_sds.tsi), sds_on_activity[lipinfo.reasonforsending]);
+        createSDS(t_sds, getISSI(m_sds.tsi), 
+                           sds_on_activity[lipinfo.reasonforsending]);
         sendPei(t_sds);
       }
+      // proximity, dmo on, dmo off?
+      sendInfoSds(m_sds.tsi, lipinfo.reasonforsending);
       break;
     
     case STATE_SDS:
@@ -1305,6 +1343,67 @@ std::string TetraLogic::createAprsLip(std::string mesg)
    std::string t;
    return t;
 } /* TetraLogic::handleLipSds */
+
+
+void TetraLogic::sendInfoSds(std::string tsi, short reason)
+{
+  double timediff;
+  double sds_diff;
+  float distancediff;
+  
+  std::string t_sds;
+  std::map<std::string, User>::iterator iu = userdata.find(tsi);
+  if (iu == userdata.end()) return;
+  
+  stringstream ss;
+  ss << iu->second.call << " state change: ";
+  
+  // get current time
+  struct tm *utc;
+  time_t rawtime = time(NULL);
+  utc = gmtime(&rawtime);
+  
+  if (sds_when_dmo_on && reason == DMO_ON)
+  {
+    ss << "DMO=on";
+  } 
+  else if (sds_when_dmo_off && reason == DMO_OFF)
+  {
+    ss << "DMO=off";  
+  } 
+  else if (sds_when_proximity)
+  {
+    ss << " new distance ";
+  }
+  else return;
+  
+  for (std::map<std::string, User>::iterator t_iu = userdata.begin();
+        t_iu != userdata.end(); t_iu++)
+  {
+    if (t_iu->first != tsi)
+    {
+      timediff = difftime(mktime(utc), mktime(t_iu->second.last_activity));
+      cout << "timdiff (" << tsi << ", " << t_iu->first << ")=" << timediff << endl;
+      if (timediff < 3600)
+      {
+        sds_diff = difftime(mktime(utc), mktime(t_iu->second.sent_last_sds));
+        distancediff = calcDistance(iu->second.lat, iu->second.lon,
+                              t_iu->second.lat, t_iu->second.lon);
+        if (sds_when_proximity && distancediff < 3.0 && sds_diff > 360)
+        {
+          ss << distancediff << "km";
+        } 
+        else 
+        {
+          continue;
+        }
+        createSDS(t_sds, getISSI(t_iu->first), ss.str());
+        sendPei(t_sds);
+        t_iu->second.sent_last_sds = utc;
+      }
+    }
+  }
+} /* TetraLogic::sendInfoSds */
 
 
 int TetraLogic::handleMessage(std::string mesg)
