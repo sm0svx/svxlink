@@ -191,8 +191,8 @@ class TetraLogic : public Logic
 
     struct QsoInfo {
       std::string tsi;
-      struct tm *start;
-      struct tm *stop;
+      time_t start;
+      time_t stop;
       std::list<std::string> members;
     };
     QsoInfo Qso;
@@ -203,7 +203,7 @@ class TetraLogic : public Logic
       std::string sds;
       std::string content;
       std::string message;
-      struct tm *tos;
+      time_t tos;
       int type; //STATE, LIP_SHORT,..
       int direction;  //INCOMING, OUTGOING
     };
@@ -221,8 +221,8 @@ class TetraLogic : public Logic
       short reasonforsending;
       char aprs_sym;
       char aprs_tab;
-      struct tm *last_activity;
-      struct tm *sent_last_sds;
+      time_t last_activity;
+      time_t sent_last_sds;
     };
     std::map<std::string, User> userdata;
     

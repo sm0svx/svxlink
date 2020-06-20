@@ -318,16 +318,6 @@ bool TetraLogic::initialize(void)
     list<string>::iterator ulit;
     User m_user;
     
-      // set a default time
-    struct tm t_time;
-    t_time.tm_year = 106;
-    t_time.tm_mon = 1;
-    t_time.tm_mday = 1;
-    t_time.tm_hour = 0;
-    t_time.tm_min = 0;
-    t_time.tm_sec = 0;
-    t_time.tm_isdst = 0;
-
     for (ulit=user_list.begin(); ulit!=user_list.end(); ulit++)
     {
       cfg().getValue(user_section, *ulit, value);
@@ -355,9 +345,10 @@ bool TetraLogic::initialize(void)
           m_user.aprs_sym = m_aprs[0];
           m_user.aprs_tab = m_aprs[1];
         }
-        m_user.comment = getNextStr(value);
-        m_user.last_activity = &t_time;
-        m_user.sent_last_sds = &t_time;
+        m_user.comment = getNextStr(value); // comment for each user
+        struct tm mtime = {0}; // set default date/time 31.12.1899
+        m_user.last_activity = mktime(&mtime);
+        m_user.sent_last_sds = mktime(&mtime);
         userdata[*ulit] = m_user;
       }
     }
@@ -801,11 +792,6 @@ void TetraLogic::handleCallBegin(std::string message)
 
   // store call specific data into a Callinfo struct
   callinfo[t_ci.o_issi] = t_ci;
-
-  // update last activity of a user
-  struct tm *utc;
-  time_t rawtime = time(NULL);
-  utc = gmtime(&rawtime);
   
   // check if the user is stored? no -> default
   std::map<std::string, User>::iterator iu = userdata.find(o_tsi);
@@ -819,11 +805,11 @@ void TetraLogic::handleCallBegin(std::string message)
     return;
   }
   
-  userdata[o_tsi].last_activity = utc;
+  userdata[o_tsi].last_activity = time(NULL);
 
   // store info in Qso struct
   Qso.tsi = o_tsi;
-  Qso.start = utc;
+  Qso.start = time(NULL);
   
   std::list<std::string>::iterator it;
   it = find(Qso.members.begin(), Qso.members.end(), iu->second.call);
@@ -869,12 +855,8 @@ void TetraLogic::handleSds(std::string sds)
   
   sds.erase(0,9);  // remove "+CTSDSR: "
   int m_sdsid = pending_sds.size() + 1;
-  
-  struct tm *utc;
-  time_t rawtime = time(NULL);
-  utc = gmtime(&rawtime);
-  
-  m_sds.tos = utc;       // last activity
+    
+  m_sds.tos = time(NULL);       // last activity
   m_sds.direction = INCOMING;   // 1 = received
   
   m_sds.type = getNextVal(sds); // type of SDS (12)
@@ -898,7 +880,7 @@ void TetraLogic::handleSds(std::string sds)
     return;
   } 
   
-  userdata[m_sds.tsi].last_activity = utc;  // update last activity of sender
+  userdata[m_sds.tsi].last_activity = time(NULL);;  // update last activity of sender
   int m_sdstype = handleMessage(sds.erase(0,1));
 
   std::string sds_txt;
@@ -1121,10 +1103,7 @@ void TetraLogic::handleTransmissionEnd(std::string message)
 void TetraLogic::handleCallReleased(std::string message)
 {
   // update Qso information, set time of activity
-  struct tm *utc;
-  time_t rawtime = time(NULL);
-  utc = gmtime(&rawtime);
-  Qso.stop = utc;
+  Qso.stop = time(NULL);
 
   stringstream ss;
   getNextStr(message);
@@ -1312,10 +1291,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   m_Sds.type = TEXT;
 
   // update last activity of Sds
-  struct tm *utc;
-  time_t rawtime = time(NULL);
-  utc = gmtime(&rawtime);
-  m_Sds.tos = utc;
+  m_Sds.tos = time(NULL);
 
   int m_t = pending_sds.size()+1;
   pending_sds[m_t] = m_Sds;
@@ -1358,11 +1334,6 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   stringstream ss;
   ss << iu->second.call << " state change: ";
   
-  // get current time
-  struct tm *utc;
-  time_t rawtime = time(NULL);
-  utc = gmtime(&rawtime);
-  
   if (sds_when_dmo_on && reason == DMO_ON)
   {
     ss << "DMO=on";
@@ -1382,13 +1353,13 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   {
     if (t_iu->first != tsi)
     {
-      timediff = difftime(mktime(utc), mktime(t_iu->second.last_activity));
-      cout << "timdiff (" << tsi << ", " << t_iu->first << ")=" << timediff << endl;
+      timediff = difftime(time(NULL), t_iu->second.last_activity);
       if (timediff < 3600)
       {
-        sds_diff = difftime(mktime(utc), mktime(t_iu->second.sent_last_sds));
+        sds_diff = difftime(time(NULL), t_iu->second.sent_last_sds);
         distancediff = calcDistance(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
+
         if (sds_when_proximity && distancediff < 3.0 && sds_diff > 360)
         {
           ss << distancediff << "km";
@@ -1399,7 +1370,7 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         }
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
         sendPei(t_sds);
-        t_iu->second.sent_last_sds = utc;
+        t_iu->second.sent_last_sds = time(NULL);
       }
     }
   }
