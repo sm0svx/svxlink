@@ -693,11 +693,11 @@ The type for a tetra logic core is always
 .BR Tetra .
 .TP
 .B RX
-Specify the configuration section name of the receiver to use. All configuration
-for the receiver is done in the specified configuration section.
+Specify the configuration section name of the receiver to use. All 
+configuration for the receiver is done in the specified configuration section.
 Keep in mind that the only sensible squelch type used in Rx section 
-will be SQL_DET=INTERNAL because the state of Squelch is derived from AT-commands
-received over the PEI interface.
+will be SQL_DET=INTERNAL because the state of Squelch is derived from 
+AT-commands received over the PEI interface.
 .TP
 .B TX
 Specify the configuration section name of the transmitter to use. All
@@ -709,22 +709,24 @@ The baud rate of communication (Tetra radio) for RS232. Example:
 BAUD=115200
 .TP
 .B PORT
-The RS232 port where the Tetra radio is connected over the active data cable.
+The RS232 port where the Tetra radio is connected over the active 
+data cable.
 Example:
 PORT=/dev/ttyUSB0
 .TP
 .B ISSI
-The ISSI (Individual Short Subscriber Identity) of the SvxLink node. Example:
+The ISSI (Individual Short Subscriber Identity) of the SvxLink node. 
+Example:
 ISSI=23401
 .TP
 .B GSSI
-The GSSI (Group Short Subscriber Identity) of the SvxLink node. This parameter 
-should always be 1. Example:
+The GSSI (Group Short Subscriber Identity) of the SvxLink node. This 
+parameter should always be 1. Example:
 GSSI=1
 .TP
 .B MNC
-The MNC (Mobile Country Code) of the SvxLink node. This parameter should always 
-be 16383. Example:
+The MNC (Mobile Country Code) of the SvxLink node. This parameter should 
+always be 16383. Example:
 MNC=16383
 .TP
 .B MCC
@@ -757,10 +759,11 @@ The format is:
 8001=on the road
 .TP
 .B SDS_ON_USERACTIVITY
-The section name that contain a list of "Reason of Sending"="Sds-Message". If a user
-state has changed and a Sds has been received due to this fact, a Sds is send back
-to the user. Refer to the ETSI (TS 100 392-18-1 V1.3.1. page 70) for further documentation
-of reason of sending etc. Leave out entries for that you do not want any activities. 
+The section name that contain a list of "Reason of Sending"="Sds-Message". If 
+a user state has changed and a Sds has been received due to this fact, a Sds 
+is send back to the user. Refer to the ETSI (TS 100 392-18-1 V1.3.1. page 70) 
+for further documentation of reason of sending etc. Leave out entries for that
+you do not want any activities. 
 Example:
 SDS_ON_USERACTIVITY=sds_on_useractivity
 The format is:
@@ -769,15 +772,31 @@ The format is:
 1=Hello User, Subscriber unit is powered OFF
 13=Hello User, you have a car??
 .TP
+.B SDS_TO_OTHERS_ON_ACTIVITY
+If defined, Sds's will send to all other active stations if the state of one 
+member has been changed. At the moment only three options are supported: 
+DMO_ON, DMO_OFF and PROXIMITY.
+DMO_ON: a sds is send to all active station to inform that a user has changed
+it's state 
+to DMO mode.
+DMO_OFF: a sds is send to all active stations to inform that a user has 
+canceled DMO mode (e.g. switched to TMO).
+PROXIMITY: a Sds is send to all active stations to inform that a user is active
+and in the vicinity (max. 3 km away)
+Only active stations (last activity < 3600 seconds) are considered.
+Example:
+SDS_TO_OTHERS_ON_ACTIVITY=DMO_ON,PROXIMITY
+.TP
 .B INFO_SDS
-A Message that is send to a user when he register at the repeater the first time.
+A Message that is send to a user when he register at the repeater the first 
+time.
 Example:
 INFO_SDS=Welcome user at my Tetra repeater
 .TP
 .B DEFAULT_APRS_ICON=e/
-The default Aprs icon for a station if not defined in section TETRA_USERS. It must
-exactly have two digits, the first for the primary table, the second for the symbol.
-The backslash must encoded like this: DEFAULT_APRS_ICON=\\e
+The default Aprs icon for a station if not defined in section TETRA_USERS. It 
+must exactly have two digits, the first for the primary table, the second for 
+the symbol. The backslash must encoded like this: DEFAULT_APRS_ICON=\\e
 Example:
 DEFAULT_APRS_ICON=e/
 .TP
