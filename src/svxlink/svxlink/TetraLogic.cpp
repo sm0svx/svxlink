@@ -727,7 +727,10 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
 void TetraLogic::initGroupCall(int gc_gssi)
 {
-  std::string cmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0;ATD";
+  std::string cmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0,0";
+  sendPei(cmd);
+
+  cmd = "ATD";
   cmd += to_string(gc_gssi);
   sendPei(cmd);
   
