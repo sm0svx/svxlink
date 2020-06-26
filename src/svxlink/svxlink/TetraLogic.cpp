@@ -283,7 +283,7 @@ bool TetraLogic::initialize(void)
       isok = false;
       cout << "*** ERROR: " << name() << "/DEFAULT_APRS_ICON "
            << "must have 2 characters, e.g. '/e' or if the backslash or "
-           << "a comma is used it has to be encodded with an additional " 
+           << "a comma is used it has to be encoded with an additional " 
            << "'\', e.g. " << "DEFAULT_APRS_ICON=\\r" << endl;
     }
     else 
@@ -364,7 +364,6 @@ bool TetraLogic::initialize(void)
     for (alit=activity_list.begin(); alit!=activity_list.end(); alit++)
     {
       cfg().getValue(sds_useractivity, *alit, value);
-      cout << ">>>" << *alit << ", " << value << endl;
       if (value.length() > 100)
       {
         cout << "+++ WARNING: Message to long (>100 digits) at " << name() 
@@ -446,15 +445,16 @@ bool TetraLogic::initialize(void)
   {
     cerr << "*** ERROR: Opening serial port " << name() << "/\""
          << port << "\"" << endl;
-    isok = false;
+    return false;
   }
+  sendPei("\r\n");
 
   peirequest = INIT;
   initPei();
   
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
-
+  
   processEvent("startup");
   
   return isok;
@@ -727,7 +727,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
 void TetraLogic::initGroupCall(int gc_gssi)
 {
-  std::string cmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0;ATD";  
+  std::string cmd = "AT+CTSDC=0,0,0,1,1,0,1,1,0,0;ATD";
   cmd += to_string(gc_gssi);
   sendPei(cmd);
   
@@ -765,7 +765,7 @@ void TetraLogic::handleCallBegin(std::string message)
   message.erase(0,8);
   std::string h = message;
 
-  // split the message received from the Pei into single parmeters
+  // split the message received from the Pei into single parameters
   // for further use, not all of them are interesting
   t_ci.instance = getNextVal(h);
   t_ci.callstatus = getNextVal(h);
@@ -880,7 +880,8 @@ void TetraLogic::handleSds(std::string sds)
     return;
   } 
   
-  userdata[m_sds.tsi].last_activity = time(NULL);;  // update last activity of sender
+  // update last activity of sender
+  userdata[m_sds.tsi].last_activity = time(NULL);
   int m_sdstype = handleMessage(sds.erase(0,1));
 
   std::string sds_txt;
@@ -911,6 +912,11 @@ void TetraLogic::handleSds(std::string sds)
       if (sds_on_activity.find(lipinfo.reasonforsending) 
               != sds_on_activity.end())
       {
+        if (debug)
+        {
+          cout << "sending Sds (" << getISSI(m_sds.tsi) << "), " << 
+                 sds_on_activity[lipinfo.reasonforsending] << endl;
+        } 
         createSDS(t_sds, getISSI(m_sds.tsi), 
                            sds_on_activity[lipinfo.reasonforsending]);
         sendPei(t_sds);
@@ -1019,15 +1025,31 @@ void TetraLogic::handleTxGrant(std::string txgrant)
 std::string TetraLogic::getTSI(std::string issi)
 {
   stringstream ss;
-  char is[9];
-
-  if (issi.length() < 17)
+  char is[18];
+  int len = issi.length(); 
+  
+  if (len < 9)
   {
     sprintf(is, "%08d", atoi(issi.c_str()));
-    ss << mcc << mnc << is;
+    ss << mcc << mnc << is;  
   }
+  else if (issi.substr(0,1) != "0")
+  {
+    sprintf(is, "%04d%05d%s", atoi(issi.substr(0,3).c_str()),
+                              atoi(issi.substr(3,len-11).c_str()),
+                              issi.substr(-8,8).c_str());
+    ss << is;
+  } 
+  else 
+  {
+    sprintf(is, "%04d%05d%s", atoi(issi.substr(0,4).c_str()),
+                              atoi(issi.substr(4,len-12).c_str()),
+                              issi.substr(-8,8).c_str());
+    ss << is;
+  }
+
   return ss.str();
-} /* TetraLogic::totsi */
+} /* TetraLogic::getTSI */
 
 
 std::string TetraLogic::getISSI(std::string tsi)
@@ -1129,7 +1151,7 @@ void TetraLogic::handleCallReleased(std::string message)
     }
     else
     {
-      m_aprsmesg += "Transmission ended";  
+      m_aprsmesg += "Transmission ended";
     }
 
     if (debug)
@@ -1172,7 +1194,7 @@ void TetraLogic::onComTimeout(Async::Timer *timer)
   ss << "peiCom_timeout";
   processEvent(ss.str());
   peistate = TIMEOUT;
-} /* TetraLogic::onPeiTimeout */
+} /* TetraLogic::onComTimeout */
 
 
 void TetraLogic::onPeiActivityTimeout(Async::Timer *timer)
@@ -1180,7 +1202,7 @@ void TetraLogic::onPeiActivityTimeout(Async::Timer *timer)
   sendPei("AT");
   peirequest = CHECK_AT;
   peiActivityTimer.reset();
-} /* TetraLogic::onPeiTimeout */
+} /* TetraLogic::onPeiActivityTimeout */
 
 
 /*
@@ -1332,6 +1354,10 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   if (iu == userdata.end()) return;
   
   stringstream ss;
+  if (debug)
+  {
+    cout << iu->second.call << " state change: " << endl;
+  }
   ss << iu->second.call << " state change: ";
   
   if (sds_when_dmo_on && reason == DMO_ON)

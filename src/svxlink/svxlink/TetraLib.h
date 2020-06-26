@@ -438,7 +438,6 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     
     /* 
     reason for sending
-    0A0088A22A487432FFE810
     */
     lipinfo.reasonforsending = std::stoi(in.substr(20,1),nullptr, 16);
 
@@ -550,7 +549,8 @@ float calcDistance(float lat1, float lon1, float lat2, float lon2)
   double dlon = PIx * (lon2 - lon1) / 180.0;
   double dlat = PIx * (lat2 - lat1) / 180.0;
   
-  double a = (sin(dlat / 2) * sin(dlat / 2)) + cos(PIx*lat1/180.0) * cos(PIx*lat2/180) * (sin(dlon / 2) * sin(dlon / 2));
+  double a = (sin(dlat / 2) * sin(dlat / 2)) + cos(PIx*lat1/180.0) * 
+              cos(PIx*lat2/180) * (sin(dlon / 2) * sin(dlon / 2));
   double angle = 2 * atan2(sqrt(a), sqrt(1 - a));
   return angle * RADIUS;
 } /* calcDistance */
