@@ -132,6 +132,7 @@ TETRA_USERS=Tertra_Users
 STATUS=Tetra_Status
 SDS_ON_USERACTIVITY=SdsOnUserActivity
 SDS_TO_OTHERS_ON_ACTIVITY=DMO_ON,DMO_OFF,PROXIMITY
+SDS_TO_COMMAND=SdsToCommand
 
 [Tetra_Users]
 # ISSI = Call,Name,comment
@@ -152,6 +153,10 @@ SDS_TO_OTHERS_ON_ACTIVITY=DMO_ON,DMO_OFF,PROXIMITY
 3=Hello user Push-to-talk condition is detected
 4=Hello user Status
 5=Hello user TXI=on
+
+[SdsToCommand]
+8200=121
+8201=120
 
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD

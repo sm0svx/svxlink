@@ -227,6 +227,7 @@ class TetraLogic : public Logic
     std::map<std::string, User> userdata;
     
     std::map<int, std::string> sds_on_activity;
+    std::map<std::string, std::string> sds_to_command;
 
     int    peistate;
     std::string peistream;

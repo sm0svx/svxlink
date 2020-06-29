@@ -292,7 +292,7 @@ bool TetraLogic::initialize(void)
       t_aprs_tab = value[1];
     }
   }
-    
+  
   // the pty path: inject messages to send by Sds
   string sds_pty_path;
   cfg().getValue(name(), "SDS_PTY", sds_pty_path);
@@ -309,19 +309,20 @@ bool TetraLogic::initialize(void)
     sds_pty->dataReceived.connect(
         mem_fun(*this, &TetraLogic::sdsPtyReceived));
   }
+  
+  list<string>::iterator slit;
 
   // read infos of tetra users configured in svxlink.conf
   string user_section;
   if (cfg().getValue(name(), "TETRA_USERS", user_section))
   {
     list<string> user_list = cfg().listSection(user_section);
-    list<string>::iterator ulit;
     User m_user;
     
-    for (ulit=user_list.begin(); ulit!=user_list.end(); ulit++)
+    for (slit=user_list.begin(); slit!=user_list.end(); slit++)
     {
-      cfg().getValue(user_section, *ulit, value);
-      if ((*ulit).length() != 17)
+      cfg().getValue(user_section, *slit, value);
+      if ((*slit).length() != 17)
       {
         cout << "*** ERROR: Wrong length of TSI in TETRA_USERS definition, "
              << "should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. "
@@ -349,7 +350,7 @@ bool TetraLogic::initialize(void)
         struct tm mtime = {0}; // set default date/time 31.12.1899
         m_user.last_activity = mktime(&mtime);
         m_user.sent_last_sds = mktime(&mtime);
-        userdata[*ulit] = m_user;
+        userdata[*slit] = m_user;
       }
     }
   }
@@ -360,26 +361,48 @@ bool TetraLogic::initialize(void)
   if (cfg().getValue(name(), "SDS_ON_USERACTIVITY", sds_useractivity))
   {
     list<string> activity_list = cfg().listSection(sds_useractivity); 
-    list<string>::iterator alit;
-    for (alit=activity_list.begin(); alit!=activity_list.end(); alit++)
+    for (slit=activity_list.begin(); slit!=activity_list.end(); slit++)
     {
-      cfg().getValue(sds_useractivity, *alit, value);
+      cfg().getValue(sds_useractivity, *slit, value);
       if (value.length() > 100)
       {
         cout << "+++ WARNING: Message to long (>100 digits) at " << name() 
-             << "/" << sds_useractivity << ": " << (*alit) 
+             << "/" << sds_useractivity << ": " << (*slit) 
              << ". Cutting message.";
-        sds_on_activity[atoi((*alit).c_str())] = value.substr(0,100);
+        sds_on_activity[atoi((*slit).c_str())] = value.substr(0,100);
       }
       else 
       {
-        sds_on_activity[atoi((*alit).c_str())] = value;
+        sds_on_activity[atoi((*slit).c_str())] = value;
       }
     }
   }
 
-  // define if Sds's send to all other users if the state of one user is changed
-  // at the moment only: DMO_ON, DMO_OFF, PROXIMITY
+  // a section that combine SDS and a command:
+  // 8055=1234
+  std::string sds_to_cmd;
+  if (cfg().getValue(name(), "SDS_TO_COMMAND", sds_to_cmd))
+  {
+    list<string> sds2cmd_list = cfg().listSection(sds_to_cmd);
+    for (slit=sds2cmd_list.begin(); slit!=sds2cmd_list.end(); slit++)
+    {
+      cfg().getValue(sds_to_cmd, *slit, value);
+      if ( (*slit).length() != 4)
+      {
+        cout << "***ERROR: Sds length in section " << name() 
+             << "/SDS_TO_COMMAND to long (" << (*slit) 
+             << "), must be 4, ignoring" << endl;
+      } 
+      else
+      {
+        sds_to_command[*slit] = value;
+        cout << *slit << "=" << value << endl;
+      }
+    }
+  }
+  
+  // define if Sds's send to all other users if the state of one user is 
+  // changed at the moment only: DMO_ON, DMO_OFF, PROXIMITY
   std::string sds_othersactivity;
   if (cfg().getValue(name(), "SDS_TO_OTHERS_ON_ACTIVITY", sds_othersactivity))
   {
@@ -404,7 +427,7 @@ bool TetraLogic::initialize(void)
       }
       else if (item == "DMO_OFF")
       {
-        sds_when_dmo_off = true;  
+        sds_when_dmo_off = true;
       }
       else if (item == "PROXIMITY")
       {
@@ -418,11 +441,19 @@ bool TetraLogic::initialize(void)
   if (cfg().getValue(name(), "TETRA_STATUS", status_section))
   {
     list<string> state_list = cfg().listSection(status_section);
-    list<string>::iterator slit;
     for (slit=state_list.begin(); slit!=state_list.end(); slit++)
     {
       cfg().getValue(status_section, *slit, value);
-      state_sds[*slit] = value;
+      if( (*slit).length() != 4)
+      {
+        cout << "***ERROR: Sds length in section "<< name() 
+             << "/TETRA_STATUS to long (" << (*slit)
+             << "), must be 4, ignoring" << endl;
+      }
+      else
+      {
+        state_sds[*slit] = value;
+      }
     }
   }
 
@@ -1079,7 +1110,13 @@ void TetraLogic::handleStateSds(std::string m_message)
     cout << "State Sds received: " << m_message << endl;        
   }
   
-  if (state_sds[m_message].empty())
+  // to connect/disconnect Links
+  if (!sds_to_command[m_message].empty())
+  {
+    ss << m_message << "#";
+    injectDtmf(ss.str(), 10);
+  }
+  else if (state_sds[m_message].empty() )
   {
     ss << "D" << m_message << "#";  
     // process macro, if defined
