@@ -134,6 +134,12 @@ class TetraLogic : public Logic
      */
     bool initialize(void);
 
+    /**
+     * @brief   is called up when a command from an other logic has been received
+     */
+    virtual void remoteCmdReceived(LogicBase* src_logic,
+                                   const std::string& cmd);
+
   protected:
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual void squelchOpen(bool is_open);

@@ -493,6 +493,11 @@ bool TetraLogic::initialize(void)
 } /* TetraLogic::initialize */
 
 
+void TetraLogic::remoteCmdReceived(LogicBase* src_logic, const std::string& cmd)
+{
+  cout << "command received:" << cmd << endl;
+} /* TetraLogic::remoteCmdReceived */
+
 
 /****************************************************************************
  *
@@ -920,6 +925,7 @@ void TetraLogic::handleSds(std::string sds)
 
   std::string sds_txt;
   stringstream m_aprsinfo;
+  std::map<string, string>::iterator it;
   
   LipInfo lipinfo;
     
@@ -963,9 +969,13 @@ void TetraLogic::handleSds(std::string sds)
       handleStateSds(sds);
       userdata[m_sds.tsi].state = sds;
       //cfmSdsReceived(m_sds.tsi);
-      m_aprsinfo << ">" << "State:" 
-                 << state_sds.find(sds)->second
-                 << " (" << sds << ")";
+      m_aprsinfo << ">" << "State:";
+      if ((it = state_sds.find(sds)) != state_sds.end())
+      {
+        m_aprsinfo << it->second;
+      }        
+      m_aprsinfo << " (" << sds << ")";
+
       ss << "state_sds_received " << m_sds.tsi << " " << sds;
       break;
       
@@ -1110,16 +1120,18 @@ void TetraLogic::handleStateSds(std::string m_message)
     cout << "State Sds received: " << m_message << endl;        
   }
   
-  // to connect/disconnect Links
-  if (!sds_to_command[m_message].empty())
+  std::map<string, string>::iterator it = sds_to_command.find(m_message);
+  
+  if (it != sds_to_command.end())
   {
-    ss << m_message << "#";
+    // to connect/disconnect Links
+    ss << it->second << "#";
     injectDtmf(ss.str(), 10);
   }
-  else if (state_sds[m_message].empty() )
+  else if (state_sds.find(m_message) != state_sds.end())
   {
-    ss << "D" << m_message << "#";  
     // process macro, if defined
+    ss << "D" << m_message << "#";  
     injectDtmf(ss.str(), 10);
   }
 } /* TetraLogic::handleStateSds */
@@ -1335,7 +1347,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   std::string m_tsi = getNextStr(injmessage);
   std::string sds;
 
-  if(!createSDS(sds, m_tsi, injmessage))
+  if(!createSDS(sds, getISSI(m_tsi), injmessage))
   {
     std::string s = "*** ERROR: creating Sds to ";
     s += m_tsi;
@@ -1344,7 +1356,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
     return;
   }
 
-  // out the new Sds int a queue...
+  // put the new Sds int a queue...
   Sds m_Sds;
   m_Sds.tsi = m_tsi;
   m_Sds.content = injmessage;
@@ -1357,6 +1369,9 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 
   int m_t = pending_sds.size()+1;
   pending_sds[m_t] = m_Sds;
+  
+  // sending message to PEI
+  pei->write(sds.c_str(), sds.length());
 
 } /* TetraLogic::sdsPtyReceived */
 
@@ -1435,6 +1450,19 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
           continue;
         }
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
+        
+         // put the new Sds int a queue...
+        Sds m_Sds;
+        m_Sds.tsi = t_iu->first;
+        m_Sds.content = ss.str();
+        m_Sds.message = t_sds;
+        m_Sds.direction = OUTGOING;
+        m_Sds.type = TEXT;
+        m_Sds.tos = time(NULL);
+        int m_t = pending_sds.size()+1;
+        pending_sds[m_t] = m_Sds;
+
+        // send SDS
         sendPei(t_sds);
         t_iu->second.sent_last_sds = time(NULL);
       }
