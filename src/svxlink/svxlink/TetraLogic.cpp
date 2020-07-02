@@ -1343,7 +1343,12 @@ void TetraLogic::handleCnumf(std::string m_message)
 void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 {
   const char *buffer = reinterpret_cast<const char*>(buf);
-  std::string injmessage = buffer;
+  std::string injmessage = "";
+  
+  for (size_t i=0; i<count; i++)
+  {
+    injmessage += *buffer++;
+  }
   std::string m_tsi = getNextStr(injmessage);
   std::string sds;
 
