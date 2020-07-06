@@ -1345,7 +1345,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   const char *buffer = reinterpret_cast<const char*>(buf);
   std::string injmessage = "";
   
-  for (size_t i=0; i<count; i++)
+  for (size_t i=0; i<count-1; i++)
   {
     injmessage += *buffer++;
   }
@@ -1361,6 +1361,9 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
     return;
   }
 
+  // sending message to PEI
+  sendPei(sds);
+  
   // put the new Sds int a queue...
   Sds m_Sds;
   m_Sds.tsi = m_tsi;
@@ -1375,9 +1378,6 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   int m_t = pending_sds.size()+1;
   pending_sds[m_t] = m_Sds;
   
-  // sending message to PEI
-  pei->write(sds.c_str(), sds.length());
-
 } /* TetraLogic::sdsPtyReceived */
 
 
