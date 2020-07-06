@@ -759,15 +759,15 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
   prm.opt.audioCount = 1;
   prm.opt.videoCount = 0;
 
-  std::string caller = getCallerNumber(ci.remoteContact);
+  std::string caller = getCallerNumber(ci.remoteUri);
 
   stringstream ss;
-  ss << "ringing \"" << ci.remoteContact << "\"";
+  ss << "ringing \"" << caller << "\"";
   processEvent(ss.str());
 
   if (regexec(reject_incoming_regex, caller.c_str(), 0, 0, 0) == 0)
   {
-    ss << "reject_incoming_call \"" << ci.remoteContact << "\"";
+    ss << "reject_incoming_call \"" << caller << "\"";
     processEvent(ss.str());
     return;
   }
@@ -909,6 +909,8 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
   stringstream ss;
   pj::CallInfo ci = call->getInfo();
 
+  std::string caller = getCallerNumber(ci.remoteUri);
+
   for (std::vector<sip::_Call *>::iterator it=calls.begin();
           it != calls.end(); it++)
   {
@@ -918,8 +920,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
       if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
       {
         cout << name()
-             << ": Call hangup (" << getCallerNumber(ci.remoteContact)
-             << "), duration "
+             << ": Call hangup (" << caller << "), duration "
              << (*it)->getInfo().totalDuration.sec << "."
              << (*it)->getInfo().totalDuration.msec << " secs" << endl;
         m_out_src->allSamplesFlushed();
@@ -930,7 +931,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
           //m_infrom_sip->setOpen(false);
           onSquelchOpen(false);
         }
-        ss << "hangup_call " << getCallerNumber(ci.remoteContact) << " "
+        ss << "hangup_call " << caller << " "
            << (*it)->getInfo().totalDuration.sec << "."
            << (*it)->getInfo().totalDuration.msec;
         processEvent(ss.str());
@@ -939,14 +940,14 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // incoming call
       if (ci.state == PJSIP_INV_STATE_INCOMING)
       {
-        ss << "incoming_call " << ci.remoteContact;
+        ss << "incoming_call " << caller;
         processEvent(ss.str());
       }
 
        // connecting
       if (ci.state == PJSIP_INV_STATE_CONNECTING)
       {
-        ss << "pickup_call " << ci.remoteContact;
+        ss << "pickup_call " << caller;
         processEvent(ss.str());
         m_call_timeout_timer.setEnable(false);
         m_call_timeout_timer.reset();
@@ -955,7 +956,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
        // calling
       if (ci.state == PJSIP_INV_STATE_CALLING)
       {
-        ss << "outgoing_call " << ci.remoteContact;
+        ss << "outgoing_call " << caller;
         processEvent(ss.str());
         cout << name() << ": Calling" << endl;
       }
@@ -970,7 +971,7 @@ void SipLogic::onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm)
 {
   pj::CallInfo ci = call->getInfo();
   stringstream ss;
-  ss << "dtmf_digit_received " << prm.digit << " " << ci.remoteContact;
+  ss << "dtmf_digit_received " << prm.digit << " " << getCallerNumber(ci.remoteUri);
   processEvent(ss.str());
 } /* SipLogic::onDtmfDigit */
 
