@@ -656,7 +656,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
   found = peistream.find("\r\n");
   found2 = peistream.find("\r\n", found + 1);
   found3 =  peistream.find("\r\n", found2 + 1);
-  
+
   if (found != string::npos && found2 != string::npos)
   {
     // check for an incoming SDS
@@ -917,8 +917,8 @@ void TetraLogic::handleSds(std::string sds)
     sendPei(t_sds);
     if (debug) cout << "+++ sending welcome to " << t_sds << endl;
     return;
-  } 
-  
+  }
+
   // update last activity of sender
   userdata[m_sds.tsi].last_activity = time(NULL);
   int m_sdstype = handleMessage(sds.erase(0,1));
@@ -926,9 +926,10 @@ void TetraLogic::handleSds(std::string sds)
   std::string sds_txt;
   stringstream m_aprsinfo;
   std::map<string, string>::iterator it;
-  
+  std::map<int, string>::iterator oa;
+
   LipInfo lipinfo;
-    
+
   switch (m_sdstype)
   {
     case LIP_SDS:
@@ -949,16 +950,15 @@ void TetraLogic::handleSds(std::string sds)
              << endl;
       }
       // Power-On -> send sds
-      if (sds_on_activity.find(lipinfo.reasonforsending) 
-              != sds_on_activity.end())
+      oa = sds_on_activity.find(lipinfo.reasonforsending);
+      if (oa != sds_on_activity.end())
       {
         if (debug)
         {
           cout << "sending Sds (" << getISSI(m_sds.tsi) << "), " << 
-                 sds_on_activity[lipinfo.reasonforsending] << endl;
+                 oa->second << endl;
         } 
-        createSDS(t_sds, getISSI(m_sds.tsi), 
-                           sds_on_activity[lipinfo.reasonforsending]);
+        createSDS(t_sds, getISSI(m_sds.tsi), oa->second);
         sendPei(t_sds);
       }
       // proximity, dmo on, dmo off?

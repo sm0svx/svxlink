@@ -439,7 +439,7 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     /* 
     reason for sending
     */
-    lipinfo.reasonforsending = std::stoi(in.substr(20,1),nullptr, 16);
+    lipinfo.reasonforsending = std::stoi(in.substr(19,1),nullptr, 16);
 
   }
   // (NMEA) 0183 over SDS-TL
