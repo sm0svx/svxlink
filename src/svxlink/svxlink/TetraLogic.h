@@ -286,6 +286,7 @@ class TetraLogic : public Logic
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
+    void handlePeiAnswer(std::string m_message);
     void handleSds(std::string sds_head);
     void handleCnumf(std::string m_message);
     std::string handleTextSds(std::string m_message);

@@ -636,8 +636,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 {
   peiComTimer.setEnable(false);
   peiActivityTimer.reset();
-  std::string m_message;
-  size_t found, found2, found3, found_ds;
+  size_t found;
 
   peistream += buf;
 
@@ -653,44 +652,20 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
   +CTSDSR:xxx message.
   */
 
-  found = peistream.find("\r\n");
-  found2 = peistream.find("\r\n", found + 1);
-  found3 =  peistream.find("\r\n", found2 + 1);
-
-  if (found != string::npos && found2 != string::npos)
+  while ((found = peistream.find("\r\n")) != string::npos)
   {
-    // check for an incoming SDS
-    if ((found_ds = peistream.find("+CTSDSR:") != string::npos))
+    if (found != 0)
     {
-      if (found3 == string::npos)
-      {
-        return;  
-      }
-      else 
-      {
-        peistream.replace(found2, 2, ", ");
-        m_message = peistream.substr(found + 2, found3 - found - 2);
-        peistream.erase(found, found3 + 2);
-      }
+      handlePeiAnswer(peistream.substr(0, found));
     }
-    else
-    {
-      m_message = peistream.substr(found + 2, found2 - found - 2);
-      peistream.erase(found, found2 + 2);
-    }
-  }
-  else
-  {
-    return;
+    peistream.erase(0, found+2);
   }
 
-   // debug output
-  if (debug)
-  {
-    cout << "Pei message: >" << m_message << "<" << endl;
-  }
+} /* TetraLogic::onCharactersReceived */
 
-  stringstream ss;
+
+void TetraLogic::handlePeiAnswer(std::string m_message)
+{
   int response = handleMessage(m_message);
 
   switch (response)
@@ -710,7 +685,7 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
     case CNUMF:
       handleCnumf(m_message);  
       break;
-      
+
     case CALL_BEGIN:
       handleCallBegin(m_message);
       break;
@@ -753,12 +728,12 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
       break;
   }
 
-  if (peirequest == INIT)
+  if (peirequest == INIT && (response == OK || response == ERROR))
   {
     initPei();
   }
 
-} /* TetraLogic::onCharactersReceived*/
+} /* TetraLogic::handlePeiAnswer */
 
 
 void TetraLogic::initGroupCall(int gc_gssi)
@@ -1304,15 +1279,12 @@ void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
 void TetraLogic::handleCnumf(std::string m_message)
 {
 
-  if (m_message.length() < 27)
+  size_t f = m_message.find("+CNUMF: ");
+  if (f != string::npos)
   {
-    cout << "*** ERROR: Can not determine the values for MCC, MNC and ISSI "
-         << "configured in the MS, Pei-answer string to short: "
-         << m_message << endl;
-    return;
+    m_message.erase(0,8);
   }
-  m_message.erase(0,8);
-  // e.g. +CNUMF: 6,09011638300023401
+ // e.g. +CNUMF: 6,09011638300023401
   
   short m_numtype = getNextVal(m_message);
   if (debug) cout << "<num type> is " << m_numtype << " (" 
@@ -1513,11 +1485,11 @@ int TetraLogic::handleMessage(std::string mesg)
     if (rmatch(mesg, rt->first))
     {
       retvalue = rt->second;
-      break;
+      return retvalue;
     }
   }
 
-  return retvalue;
+  return peistate;
 } /* TetraLogic::handleMessage */
 
 
