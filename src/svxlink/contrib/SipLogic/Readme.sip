@@ -1,6 +1,6 @@
 #
 # SipLogic (beta)
-# Adi Bier / DL1HRC (dl1hrc@gmx.de)
+# Adi Bier / DL1HRC (dl1hrc [at] gmx.de)
 # V0.2.0 - 15.03.2019
 #
 svxlink.conf is a sample configuration for a SipLogic connected to a Fritzbox 
