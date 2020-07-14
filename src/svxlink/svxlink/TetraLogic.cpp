@@ -666,6 +666,12 @@ void TetraLogic::onCharactersReceived(char *buf, int count)
 
 void TetraLogic::handlePeiAnswer(std::string m_message)
 {
+
+  if (debug)
+  {
+    cout << "From PEI:" << m_message << endl;
+  }
+
   int response = handleMessage(m_message);
 
   switch (response)
@@ -1202,12 +1208,12 @@ void TetraLogic::sendPei(std::string cmd)
   {
     cmd += "\r";
   }
-  
+
   pei->write(cmd.c_str(), cmd.length());
 
   if (debug)
   {
-    cout << "sending --->" << cmd << endl;
+    cout << "  To PEI:" << cmd;
   }
 
   peiComTimer.reset();
