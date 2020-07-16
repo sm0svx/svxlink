@@ -109,6 +109,7 @@ using namespace SvxLink;
 #define SIMPLE_TEXT 24
 #define SDS_ACK 25
 #define SDS_ID 26
+#define SDS_CONCAT 27
 
 #define DMO_OFF 7
 #define DMO_ON 8
@@ -926,7 +927,7 @@ void TetraLogic::handleSds(std::string sds)
       userdata[m_sds.tsi].reasonforsending = lipinfo.reasonforsending;
       if (debug)
       { 
-        cout << m_aprsinfo.str() << endl;
+        cout << " To APRS:" << m_aprsinfo.str() << endl;
         cout << m_sds.tsi << ":" << ReasonForSending[lipinfo.reasonforsending]
              << endl;
       }
@@ -936,7 +937,7 @@ void TetraLogic::handleSds(std::string sds)
       {
         if (debug)
         {
-          cout << "sending Sds (" << getISSI(m_sds.tsi) << "), " << 
+          cout << "Send SDS:" << getISSI(m_sds.tsi) << ", " << 
                  oa->second << endl;
         } 
         createSDS(t_sds, getISSI(m_sds.tsi), oa->second);
@@ -1359,28 +1360,6 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 } /* TetraLogic::sdsPtyReceived */
 
 
-/*
-+CTSDSR: 12,2629143,0,262905,0,84
-0A008CACAA480A120201D0
-DL1xxx-9>APRS,qAR,DB0xxx-10:!5119.89N/01221.83E>
-*/
-std::string TetraLogic::createAprsLip(std::string mesg)
-{
-  /* Protocol identifier PDU
-     0x02 = Simple Text Messaging
-     0x03 = Simple location system
-     0x06 = M-DMO (Managed DMO)
-     0x09 = Simple immediate text messaging
-     0x0A = LIP (Location Information Protocol)
-     0x0C = Concatenated SDS message
-     0x82 = Text Messaging
-     0x83 = Complex SDS-TL GPS message transfer
-  */
-   std::string t;
-   return t;
-} /* TetraLogic::handleLipSds */
-
-
 void TetraLogic::sendInfoSds(std::string tsi, short reason)
 {
   double timediff;
@@ -1483,6 +1462,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^0A"]                                      = LIP_SDS;
   mre["^8204"]                                    = TEXT_SDS;
   mre["^821000"]                                  = SDS_ACK;
+  mre["^0C"]                                      = SDS_CONCAT;
   mre["^83"]                                      = COMPLEX_SDS;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
 

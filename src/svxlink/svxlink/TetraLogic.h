@@ -306,7 +306,6 @@ class TetraLogic : public Logic
     void handleCallBegin(std::string m_message);
     void handleTransmissionEnd(std::string m_message);
     void sdsPtyReceived(const void *buf, size_t count);
-    std::string createAprsLip(std::string mesg);
     void sendInfoSds(std::string tsi, short reasonforsending);
     void handleCallReleased(std::string m_message);
     void getOpMode(std::string opmode);
