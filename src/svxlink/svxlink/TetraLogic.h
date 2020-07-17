@@ -276,6 +276,14 @@ class TetraLogic : public Logic
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
     Call*    call;
+    
+    struct pSds {
+      int sdstype;
+      std::string fromtsi;
+      std::string totsi;
+      time_t last_activity;
+    };
+    pSds pSDS;
 
     std::map<std::string, std::string> state_sds;
     StrList m_cmds;
@@ -288,6 +296,7 @@ class TetraLogic : public Logic
     void sendPei(std::string cmd);
     void handlePeiAnswer(std::string m_message);
     void handleSds(std::string sds_head);
+    void handleSdsMsg(std::string sds);
     void handleCnumf(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);

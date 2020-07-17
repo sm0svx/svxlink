@@ -106,10 +106,10 @@ using namespace SvxLink;
 #define COMPLEX_SDS 21
 #define MS_CNUM 22
 #define WAP_PROTOCOL 23
-#define SIMPLE_TEXT 24
-#define SDS_ACK 25
+#define SIMPLE_TEXT_SDS 24
+#define ACK_SDS 25
 #define SDS_ID 26
-#define SDS_CONCAT 27
+#define CONCAT_SDS 27
 
 #define DMO_OFF 7
 #define DMO_ON 8
@@ -708,6 +708,16 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
     case SDS:
       handleSds(m_message);
       break;
+      
+    case TEXT_SDS:
+    case SIMPLE_TEXT_SDS:
+    case STATE_SDS:
+    case ACK_SDS:
+    case COMPLEX_SDS:
+    case CONCAT_SDS:
+    case LIP_SDS:
+      handleSdsMsg(m_message);
+      break;
 
     case SDS_ID:
       // +CMGS: <SDS Instance>[, <SDS status> [, <message reference>]]
@@ -850,7 +860,7 @@ void TetraLogic::handleCallBegin(std::string message)
     m_aprsmesg << aprspath << ">" << iu->second.call
                << " initiated groupcall: " << t_ci.o_issi 
                << " -> " << t_ci.d_issi;
-    cout << m_aprsmesg.str() << endl;
+    cout << " To APRS:" << m_aprsmesg.str() << endl;
     LocationInfo::instance()->update3rdState(iu->second.call, m_aprsmesg.str());
   }
 } /* TetraLogic::handleCallBegin */
@@ -866,26 +876,47 @@ void TetraLogic::handleCallBegin(std::string message)
  [<end to end encryption>]<CR><LF>user data
 
  Example:
- +CTSDSR: 12,23404,0,23401,0,112, 82040801476A61746A616A676A61
+ +CTSDSR: 12,23404,0,23401,0,112
+ (82040801476A61746A616A676A61)
 */
 void TetraLogic::handleSds(std::string sds)
 {
-  stringstream ss;
-  Sds m_sds;
-  std::string t_sds;
-  
   sds.erase(0,9);  // remove "+CTSDSR: "
-  int m_sdsid = pending_sds.size() + 1;
-    
-  m_sds.tos = time(NULL);       // last activity
-  m_sds.direction = INCOMING;   // 1 = received
   
-  m_sds.type = getNextVal(sds); // type of SDS (12)
-  m_sds.tsi = getTSI(getNextStr(sds)); // sender Tsi (23404)
-  getNextVal(sds); // (0)
-  getNextVal(sds); // destination Issi
-  getNextVal(sds); // (0)
-  getNextVal(sds); // Sds length (112)
+  // store header of sds for further handling
+  pSDS.sdstype = getNextVal(sds);        // type of SDS (12)
+  pSDS.fromtsi = getTSI(getNextStr(sds)); // sender Tsi (23404)
+  getNextVal(sds);                     // (0)
+  pSDS.totsi = getNextVal(sds);        // destination Issi
+  getNextVal(sds);                     // (0)
+  getNextVal(sds);                     // Sds length (112)
+  pSDS.last_activity = time(NULL);
+} /* TetraLogic::handleSds */
+
+
+/*
+ Handle the sds message
+ Example:
+ (+CTSDSR: 12,23404,0,23401,0,112)
+ 82040801476A61746A616A676A61
+*/
+void TetraLogic::handleSdsMsg(std::string sds)
+{
+
+  Sds m_sds;
+  stringstream ss;
+  std::string sds_txt;
+  std::string t_sds;
+  stringstream m_aprsinfo;
+  std::map<string, string>::iterator it;
+  std::map<int, string>::iterator oa;
+  LipInfo lipinfo;
+
+  int m_sdsid = pending_sds.size() + 1;
+
+  m_sds.tos = pSDS.last_activity;      // last activity
+  m_sds.direction = INCOMING;          // 1 = received
+  m_sds.tsi = pSDS.fromtsi;
   
   // check if the user is stored? no -> default
   std::map<std::string, User>::iterator iu = userdata.find(m_sds.tsi);
@@ -897,21 +928,14 @@ void TetraLogic::handleSds(std::string sds)
     userdata[m_sds.tsi].aprs_tab = t_aprs_tab;
     createSDS(t_sds, getISSI(m_sds.tsi), infosds);
     sendPei(t_sds);
-    if (debug) cout << "+++ sending welcome to " << t_sds << endl;
+    if (debug) cout << "+++ sending welcome sds to " << t_sds << endl;
     return;
   }
-
-  // update last activity of sender
+      
+   // update last activity of sender
   userdata[m_sds.tsi].last_activity = time(NULL);
-  int m_sdstype = handleMessage(sds.erase(0,1));
-
-  std::string sds_txt;
-  stringstream m_aprsinfo;
-  std::map<string, string>::iterator it;
-  std::map<int, string>::iterator oa;
-
-  LipInfo lipinfo;
-
+     
+  int m_sdstype = handleMessage(sds);
   switch (m_sdstype)
   {
     case LIP_SDS:
@@ -928,8 +952,8 @@ void TetraLogic::handleSds(std::string sds)
       if (debug)
       { 
         cout << " To APRS:" << m_aprsinfo.str() << endl;
-        cout << m_sds.tsi << ":" << ReasonForSending[lipinfo.reasonforsending]
-             << endl;
+        cout << "         " << m_sds.tsi << ":" 
+             << ReasonForSending[lipinfo.reasonforsending] << endl;
       }
       // Power-On -> send sds
       oa = sds_on_activity.find(lipinfo.reasonforsending);
@@ -968,15 +992,16 @@ void TetraLogic::handleSds(std::string sds)
       ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt << "\"";
       break;
 
-    case SIMPLE_TEXT:
+    case SIMPLE_TEXT_SDS:
       sds_txt = handleSimpleTextSds(sds);
       m_aprsinfo << ">" << sds_txt;
       cfmSdsReceived(m_sds.tsi);
       ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt << "\"";
       break;
       
-    case SDS_ACK:
-      // +CTSDSR: 12,23404,0,23401,0,32, 82100002
+    case ACK_SDS:
+      // +CTSDSR: 12,23404,0,23401,0,32
+      // 82100002
       // sds msg received by MS from remote
       ss << "sds_receiced_ack " << sds;
       break;
@@ -1022,14 +1047,14 @@ std::string TetraLogic::handleTextSds(std::string m_message)
 {
   if (m_message.length() > 8) m_message.erase(0,8);  // delete 00A3xxxx
   return decodeSDS(m_message);
-} /* TetraLogic::handleTextMessage */
+} /* TetraLogic::handleTextSds */
 
 
 std::string TetraLogic::handleSimpleTextSds(std::string m_message)
 {
   if (m_message.length() > 4) m_message.erase(0,4);  // delete 0201
   return decodeSDS(m_message);
-} /* TetraLogic::handleSimpleTextMessage */
+} /* TetraLogic::handleSimpleTextSds */
 
 
 /*
@@ -1214,7 +1239,7 @@ void TetraLogic::sendPei(std::string cmd)
 
   if (debug)
   {
-    cout << "  To PEI:" << cmd;
+    cout << "  To PEI:" << cmd << endl;
   }
 
   peiComTimer.reset();
@@ -1371,10 +1396,6 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   if (iu == userdata.end()) return;
   
   stringstream ss;
-  if (debug)
-  {
-    cout << iu->second.call << " state change: " << endl;
-  }
   ss << iu->second.call << " state change: ";
   
   if (sds_when_dmo_on && reason == DMO_ON)
@@ -1391,6 +1412,11 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   }
   else return;
   
+  if (debug)
+  {
+    cout << ss.str() << endl;
+  }
+    
   for (std::map<std::string, User>::iterator t_iu = userdata.begin();
         t_iu != userdata.end(); t_iu++)
   {
@@ -1456,13 +1482,13 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
   mre["^\\+CMGS:"]                                = SDS_ID;
   mre["^\\+CNUMF:"]                               = CNUMF;
-  mre["^02"]                                      = SIMPLE_TEXT; 
+  mre["^02"]                                      = SIMPLE_TEXT_SDS; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A"]                                      = LIP_SDS;
   mre["^8204"]                                    = TEXT_SDS;
-  mre["^821000"]                                  = SDS_ACK;
-  mre["^0C"]                                      = SDS_CONCAT;
+  mre["^821000"]                                  = ACK_SDS;
+  mre["^0C"]                                      = CONCAT_SDS;
   mre["^83"]                                      = COMPLEX_SDS;
   mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
 
