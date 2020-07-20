@@ -23,6 +23,8 @@
 
 * Chunked mode added to the Async::HttpServerConnection.
 
+* Fix small memory deallocation bug in Async::AudioEncoderOpus.
+
 
 
  1.6.0 -- 01 Sep 2019
