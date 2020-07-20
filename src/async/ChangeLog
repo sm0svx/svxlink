@@ -21,6 +21,8 @@
 * Add a signal to the Config class so that one can subscribe to changes in the
   configuration.
 
+* Chunked mode added to the Async::HttpServerConnection.
+
 
 
  1.6.0 -- 01 Sep 2019

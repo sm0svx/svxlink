@@ -156,7 +156,7 @@ class HttpServerConnection : public TcpConnection
     class Response
     {
       public:
-        Response(void) : m_code(0), m_send_content(true) {}
+        Response(void) : m_code(0), m_send_content(false) {}
 
         unsigned code(void) const { return m_code; }
         void setCode(unsigned code) { m_code = code; }
@@ -177,6 +177,7 @@ class HttpServerConnection : public TcpConnection
           m_content = content;
           setHeader("Content-type", content_type);
           setHeader("Content-length", m_content.size());
+          setSendContent(true);
         }
         bool sendContent(void) const { return m_send_content; }
         void setSendContent(bool send_content)
@@ -230,11 +231,32 @@ class HttpServerConnection : public TcpConnection
     virtual void disconnect(void);
 
     /**
+     * @brief   Send data with chunked transfer encoding
+     *
+     * Calling this function will enable data to be sent in chunks. The
+     * "Transfer-encoding: chunked" will be set in the header and each call to
+     * write() will send a chunk.
+     */
+    void setChunked(void) { m_chunked = true; }
+
+    /**
      * @brief   Send a HTTP response
      * @param   res The response (@see Response)
      * @return  Return \em true on success or else \em false
      */
     virtual bool write(const Response& res);
+
+    /**
+     * @brief   Write data to the socket
+     * @param   buf The buffer containing the data to write
+     * @param   len Then length of the data in the buffer
+     * @return  Return \em true on success or else \em false
+     *
+     * If chunked mode has been set a chunked header and trailer will be added
+     * to the data. If not in chunked mode, the raw buffer will be sent without
+     * modification.
+     */
+    virtual bool write(const char* buf, int len);
 
     /**
      * @brief   A signal that is emitted when a connection has been terminated
@@ -309,6 +331,7 @@ class HttpServerConnection : public TcpConnection
     State                   m_state;
     std::string             m_row;
     Request                 m_req;
+    bool                    m_chunked;
 
     HttpServerConnection(const HttpServerConnection&);
     HttpServerConnection& operator=(const HttpServerConnection&);
