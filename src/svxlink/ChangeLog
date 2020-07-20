@@ -44,6 +44,9 @@
   SQL_EXTENDED_HANGTIME_THRESH are now settable from within a C++ module for
   example.
 
+* Improved GPIO up/down scripts with more error handling and support for
+  handling more cases.
+
 
 
  1.7.0 -- 01 Sep 2019
