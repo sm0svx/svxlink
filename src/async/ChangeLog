@@ -25,6 +25,8 @@
 
 * Fix small memory deallocation bug in Async::AudioEncoderOpus.
 
+* New template class Async::Factory for creating object factories.
+
 
 
  1.6.0 -- 01 Sep 2019
