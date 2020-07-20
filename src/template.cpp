@@ -2,13 +2,13 @@
 @file   Template.cpp
 @brief  A_brief_description_for_this_file
 @author Tobias Blomberg / SM0SVX
-@date   2019-
+@date   2020-
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 
 
 /****************************************************************************
@@ -53,15 +52,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Template.h"
 
 
-
 /****************************************************************************
  *
  * Namespaces to use
  *
  ****************************************************************************/
 
-using namespace std;
-
+using namespace MyNamespace;
 
 
 /****************************************************************************
@@ -93,7 +90,6 @@ using namespace std;
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
