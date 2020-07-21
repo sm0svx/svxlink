@@ -1,8 +1,8 @@
 /**
-@file	 AsyncFactory.h
-@brief   Some templates used to support the creation of an object factory class
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-01-26
+@file   AsyncFactory.h
+@brief  Some templates used to support the creation of an object factory
+@author Tobias Blomberg / SM0SVX
+@date   2020-07-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -106,48 +106,78 @@ namespace Async
 
 /**
 @brief  Base class for an object factory
+@tparam T     The baseclass
+@tparam Args  Contructor arguments, if any
 @author Tobias Blomberg / SM0SVX
-@date   2014-01-26
+@date   2020-07-21
 
-Use this class as a base when creating an object factory. For example, to
-create a factory for a class called "MyObj", use the code below.
+This class implements the actual factory. The type of the factory class would
+be something like Async::Factory<Animal> for a base class representing animals.
+It is most often adviced to create a typedef to represent the type of the
+factory, e.g.:
 
-  struct MyObjFactoryBase : public FactoryBase<MyObj>
+@code
+  typedef Async::Factory<Animal> AnimalFactory;
+@endcode
+
+Creating a typedef bocomes incresingly convenient when the constructor of the
+objects being manufactured take one or more arguments since the type definition
+will become quite long.
+
+Also the addition of a convenience function for creating objects make the usage
+of the factory easier and more readable. This function make use of the typedef
+declared above and also rely on that a convenience struct for the specific
+factories have been declared as described for Async::SpecificFactory.
+
+@code
+  Animal* createAnimal(const std::string& obj_name)
   {
-    MyObjFactoryBase(const std::string &name) : FactoryBase<MyObj>(name) {}
-  };
+    static AnimalSpecificFactory<Dog> dog_factory;
+    static AnimalSpecificFactory<Cat> cat_factory;
+    static AnimalSpecificFactory<Fox> fox_factory;
+    return AnimalFactory::createNamedObject(obj_name);
+  }
+@endcode
 
+The following example will describe in more detail how to use the factory
+classes.
+
+@example AsyncFactory_demo.cpp
 */
-template <class T>
-class FactoryBase
+template <class T, typename... Args>
+class Factory
 {
   public:
     /**
-     * @brief 	Create an instance of the named class
-     * @param 	name The name of the class to create an instance of
-     * @return	Returns a newly constucted object or 0 on failure
+     * @brief   Create an instance of the named class
+     * @param   name The name of the class to create an instance of
+     * @param   args Arguments to pass to constructor, if any
+     * @return  Returns a newly constucted object or 0 on failure
      */
-    static T *createNamedObject(const std::string& name)
+    static T *createNamedObject(const std::string& name, Args... args)
     {
-      typename std::map<std::string, FactoryBase<T>*>::iterator it;
-      it = factories.find(name);
-      if (it == factories.end())
+      typename std::map<std::string, Factory<T, Args...>*>::iterator it;
+      it = factories().find(name);
+      if (it == factories().end())
       {
         return 0;
       }
 
-      return (*it).second->createObject();
+      return (*it).second->createObject(args...);
     } /* Factory::createNamedObject */
 
     /**
-     * @brief 	Get a list of valid class names
-     * @return	Return a string containing a list of valid class names
+     * @brief   Get a list of valid class names
+     * @return  Return a string containing a list of valid class names
+     *
+     * This function is mostly useful for printing a message informing about
+     * which classes are available.
      */
     static std::string validFactories(void)
     {
       std::stringstream ss;
-      for (typename FactoryMap::const_iterator it = factories.begin();
-           it != factories.end(); ++it)
+      for (typename FactoryMap::const_iterator it = factories().begin();
+           it != factories().end(); ++it)
       {
         ss << "\"" << (*it).first << "\" ";
       }
@@ -155,99 +185,132 @@ class FactoryBase
     }
 
     /**
-     * @brief 	Constructor
+     * @brief   Constructor
      * @param   name The name of the specific object factory being created
      */
-    FactoryBase(const std::string &name)
-      : m_name(name)
+    Factory(const std::string &name) : m_name(name)
     {
-      typename FactoryMap::iterator it = factories.find(m_name);
-      assert(it == factories.end());
-      factories[name] = this;
+      typename FactoryMap::iterator it = factories().find(m_name);
+      assert(it == factories().end());
+      factories()[name] = this;
     } /* Factory::Factory */
 
     /**
-     * @brief 	Destructor
+     * @brief   Don't allow copy construction
      */
-    virtual ~FactoryBase(void)
+    Factory(const Factory<T, Args...>&) = delete;
+
+    /**
+     * @brief   Don't allow assignment
+     */
+    Factory& operator=(const Factory<T, Args...>&) = delete;
+
+    /**
+     * @brief   Destructor
+     */
+    virtual ~Factory(void)
     {
-      typename FactoryMap::iterator it = factories.find(m_name);
-      assert(it != factories.end());
-      factories.erase(it);
+      typename FactoryMap::iterator it = factories().find(m_name);
+      assert(it != factories().end());
+      factories().erase(it);
     } /* Factory::~Factory */
 
   protected:
     /**
-     * @brief 	Create and return a new instance of an object
-     * @return	Returns a newly created instance of the object
+     * @brief   Create and return a new instance of an object
+     * @param   args Arguments to pass to constructor, if any
+     * @return  Returns a newly created instance of the object
      */
-    virtual T *createObject(void) = 0;
+    virtual T *createObject(Args... args) = 0;
 
   private:
-    typedef std::map<std::string, FactoryBase<T>*> FactoryMap;
-    static FactoryMap factories;
+    typedef std::map<std::string, Factory<T, Args...>*> FactoryMap;
     std::string m_name;
 
-    FactoryBase(const FactoryBase<T>&);
-    FactoryBase& operator=(const FactoryBase<T>&);
-
-};  /* class FactoryBase */
-
-
-template <class T>
-typename FactoryBase<T>::FactoryMap FactoryBase<T>::factories;
+    static FactoryMap& factories(void)
+    {
+      static FactoryMap factory_map;
+      return factory_map;
+    }
+};  /* class Factory */
 
 
 /**
 @brief  Base class for a specific object factory
+@tparam Base  The baseclass
+@tparam T     The specific class
+@tparam Args  Contructor arguments, if any
 @author Tobias Blomberg / SM0SVX
-@date   2014-01-26
+@date   2020-07-21
 
-This class should be used as the base for a specific factory. Let's say we
-have a couple of classes MyObjOne and MyObjTwo which use MyObj as a base class.
-Declare the following two classes to make it possible to create any of the two
-objects using a factory.
+This class is used as the base for a specific factory. To make it easier to
+declare and use new specific factories it is beneficial to declare the
+convenience class below. In this example we assume that there is a base class,
+Animal, that is inherited by specific animal classes.
 
-  struct MyObjOneFactory : public MyObjFactory<MyObjOne>
+@code
+  template <class T>
+  struct AnimalSpecificFactory : public Async::SpecificFactory<Animal, T>
   {
-    MyObjOneFactory(void) : MyObjFactory<MyObjOne>("One") {}
+    AnimalSpecificFactory(void)
+      : Async::SpecificFactory<Animal, T>(T::OBJNAME) {}
   };
-  struct MyObjTwoFactory : public MyObjFactory<MyObjTwo>
-  {
-    MyObjTwoFactory(void) : MyObjFactory<MyObjTwo>("Two") {}
-  };
+@endcode
 
-Now you need to instantiate one instance of each class so that they will
-register in the factory. This have to be done before calling the
-createNamedObject function.
+The struct above relies on the fact that each specific animal class have
+declared a constant, OBJNAME. That constant specify the name for the class
+that is used when using the factory to create objects, i.e.:
+
+@code
+  struct Dog : public Animal
+  {
+    static constexpr const char* OBJNAME = "dog";
+    // ...
+  };
+@endcode
+
+To make each specific class available to the factory an instance of each
+specific factory will have to be created before calling the
+Async::Factory::createNamedObject function, i.e.:
+
+@code
+  AnimalSpecificFactory<Dog> dog_factory;
+@endcode
+
+The instatiation of all specific factories is most easily placed in a function
+that is declared in the same files as the base class, as described in the
+documentation for the Async::Factory class.
+
+The following example will describe in more detail how to use the factory
+classes.
+
+@example AsyncFactory_demo.cpp
 */
-template <class FactoryT, class T>
-class Factory : public FactoryT
+template <class Base, class T, typename... Args>
+class SpecificFactory : public Factory<Base, Args...>
 {
   public:
     /**
-     * @brief 	Constructor
+     * @brief   Constructor
      * @param   name The name of the specific object factory being created
      */
-    Factory(const std::string &name) : FactoryT(name) {}
+    SpecificFactory(const std::string &name) : Factory<Base, Args...>(name) {}
 
   protected:
     /**
-     * @brief 	Create and return a new instance of an object
-     * @return	Returns a newly created instance of the object
+     * @brief   Create and return a new instance of an object
+     * @return  Returns a newly created instance of the object
      */
-    T *createObject(void)
+    T *createObject(Args... args)
     {
-      return new T;
+      return new T(args...);
     }
 };
 
 
-} /* namespace SvxLink */
+} /* namespace Async */
 
 #endif /* ASYNC_FACTORY_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
