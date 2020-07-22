@@ -181,7 +181,8 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   debug(false), talkgroup_up(false), sds_when_dmo_on(false),
   sds_when_dmo_off(false), sds_when_proximity(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
-  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true)
+  peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
+  proximity_warning(3.1), time_between_sds(3600)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
@@ -456,6 +457,16 @@ bool TetraLogic::initialize(void)
         state_sds[*slit] = value;
       }
     }
+  }
+    
+  if (cfg().getValue(name(), "PROXIMITY_WARNING", value))
+  {
+    proximity_warning = atof(value.c_str());  
+  }
+    
+  if (cfg().getValue(name(), "TIME_BETWEEN_SDS", value))
+  {
+    time_between_sds = atoi(value.c_str());  
   }
 
   // init the Pei device
@@ -1429,7 +1440,8 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         distancediff = calcDistance(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
 
-        if (sds_when_proximity && distancediff < 3.0 && sds_diff > 360)
+        if (sds_when_proximity && distancediff < proximity_warning 
+                 && sds_diff > time_between_sds)
         {
           ss << distancediff << "km";
         } 

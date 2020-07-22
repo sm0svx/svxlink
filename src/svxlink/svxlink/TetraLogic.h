@@ -290,6 +290,8 @@ class TetraLogic : public Logic
     int pending_sdsid;
     char t_aprs_sym;
     char t_aprs_tab;
+    float proximity_warning;
+    int time_between_sds;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);

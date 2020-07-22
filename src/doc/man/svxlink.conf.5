@@ -738,6 +738,17 @@ MCC=901
 If unsure comment out this parameter. Example:
 APRSPATH=APRS,qAR
 .TP
+.B PROXIMITY_WARNING
+If configured SvxLink sends a Sds to all users if one or more are in the 
+vicinity. The unit is kilometer.
+Example:
+PROXIMITY_WARNING=3.2
+.TP
+.B TIME_BETWEEN_SDS
+The minimum time between two individual messages. The unit is seconds.
+Example:
+TIME_BETWEEN_SDS=360
+.TP
 .B INIT_PEI
 The initialisation commands that are send to the Tetra radio to enable a 
 bi-drectional communication whes SvxLink is starting. Example:
