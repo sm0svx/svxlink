@@ -39,6 +39,25 @@ else(Opus_FOUND)
   message("--   be unavailable.")
 endif(Opus_FOUND)
 
+# Find OGG
+find_package(OGG)
+if(OGG_FOUND)
+  if(DEFINED OGG_VERSION_MAJOR)
+    include_directories(${OGG_INCLUDE_DIRS})
+    add_definitions(${OGG_DEFINITIONS})
+    add_definitions("-DOGG_MAJOR=${OGG_VERSION_MAJOR}")
+    set(LIBS ${LIBS} ${OGG_LIBRARIES})
+  else()
+    message(WARNING
+      "Found OGG but version could not be resolved. "
+      "Will proceed without Opus.")
+  endif()
+else(OGG_FOUND)
+  message("--   OGG is an optional dependency. The build will complete")
+  message("--   without it but support for the OGG audio format will")
+  message("--   be unavailable.")
+endif(OGG_FOUND)
+
 find_package(GSM REQUIRED)
 include_directories(${GSM_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GSM_LIBRARY})
@@ -57,7 +76,9 @@ set(EXPINC AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h
            AsyncAudioDecoder.h AsyncAudioRecorder.h
            AsyncAudioJitterFifo.h AsyncAudioDeviceFactory.h
            AsyncAudioDevice.h AsyncAudioNoiseAdder.h AsyncAudioGenerator.h
-           AsyncAudioFsf.h)
+           AsyncAudioFsf.h AsyncAudioContainer.h AsyncAudioContainerWav.h
+           AsyncAudioContainerPcm.h
+           )
 
 set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioProcessor.cpp AsyncAudioCompressor.cpp
@@ -72,7 +93,9 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp
            AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
            AsyncAudioDeviceUDP.cpp AsyncAudioNoiseAdder.cpp
-           AsyncAudioFsf.cpp)
+           AsyncAudioFsf.cpp AsyncAudioContainer.cpp AsyncAudioContainerWav.cpp
+           AsyncAudioContainerPcm.cpp
+           )
 
 if(Speex_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp)
@@ -81,6 +104,11 @@ endif(Speex_FOUND)
 if(Opus_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderOpus.cpp AsyncAudioDecoderOpus.cpp)
 endif(Opus_FOUND)
+
+if(OGG_FOUND AND Opus_FOUND)
+  set(EXPINC ${EXPINC} AsyncAudioContainerOpus.h)
+  set(LIBSRC ${LIBSRC} AsyncAudioContainerOpus.cpp)
+endif(OGG_FOUND AND Opus_FOUND)
 
 if(USE_ALSA)
   set(LIBSRC ${LIBSRC} AsyncAudioDeviceAlsa.cpp)

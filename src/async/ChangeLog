@@ -1,4 +1,4 @@
- 1.6.1 -- ?? ??? 2019
+ 1.6.1 -- ?? ??? 2020
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
@@ -26,6 +26,8 @@
 * Fix small memory deallocation bug in Async::AudioEncoderOpus.
 
 * New template class Async::Factory for creating object factories.
+
+* Added an AudioContainer framework.
 
 
 
