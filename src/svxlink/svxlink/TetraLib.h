@@ -482,7 +482,7 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
     ss << std::hex << (int)message[a];
   }
 
-  char f[ss.str().lenght() + issi.length() +20];
+  char f[ss.str().length() + issi.length() +20];
   sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
              std::to_string(std::stoi(issi)).c_str(),
              (int)ss.str().length() * 4,
