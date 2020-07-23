@@ -511,7 +511,7 @@ bool createStateSDS(std::string & sds, std::string issi)
   ss << "821000" << std::setfill('0') << std::setw(sizeof(short)) 
      << std::hex << getSdsMesgId();
      
-  char f[issi.length()+20];
+  char f[issi.length() + ss.str().length()+20];
   sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
              std::to_string(std::stoi(issi)).c_str(),
              (int)ss.str().length() * 4,
