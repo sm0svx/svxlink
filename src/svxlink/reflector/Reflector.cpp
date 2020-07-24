@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cassert>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -44,7 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncUdpSocket.h>
 #include <AsyncApplication.h>
 #include <common.h>
-#include <json/json.h>
 
 
 /****************************************************************************
@@ -91,9 +91,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace {
-void delete_client(ReflectorClient *client);
-};
 
 
 /****************************************************************************
@@ -101,7 +98,6 @@ void delete_client(ReflectorClient *client);
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -385,7 +381,7 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
     broadcastMsg(MsgNodeLeft(client->callsign()),
         ReflectorClient::ExceptFilter(client));
   }
-  Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_client), client));
+  Application::app().runTask([=]{ delete client; });
 } /* Reflector::clientDisconnected */
 
 
@@ -764,11 +760,6 @@ void Reflector::httpClientDisconnected(Async::HttpServerConnection *con,
   //          << ": " << Async::HttpServerConnection::disconnectReasonStr(reason)
   //          << std::endl;
 } /* Reflector::httpClientDisconnected */
-
-
-namespace {
-void delete_client(ReflectorClient *client) { delete client; }
-};
 
 
 /*
