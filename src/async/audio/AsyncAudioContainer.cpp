@@ -49,7 +49,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "AsyncAudioContainer.h"
 #include "AsyncAudioContainerWav.h"
+#ifdef OGG_MAJOR
 #include "AsyncAudioContainerOpus.h"
+#endif
 #include "AsyncAudioContainerPcm.h"
 
 
@@ -111,7 +113,9 @@ using namespace Async;
 AudioContainer* Async::createAudioContainer(const std::string& name)
 {
   static AudioContainerSpecificFactory<AudioContainerWav> wav;
+#ifdef OGG_MAJOR
   static AudioContainerSpecificFactory<AudioContainerOpus> opus;
+#endif
   static AudioContainerSpecificFactory<AudioContainerPcm> pcm;
   return AudioContainerFactory::createNamedObject(name);
 } /* Async::createAudioContainer */
