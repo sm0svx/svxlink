@@ -177,8 +177,8 @@ class TGHandler : public sigc::trackable
       time_t            auto_qsy_time;
 
       TGInfo(uint32_t tg)
-        : id(tg), talker(0), sql_timeout_cnt(0), auto_qsy_time(-1),
-          auto_qsy_after_s(0)
+        : id(tg), talker(0), sql_timeout_cnt(0), auto_qsy_after_s(0),
+          auto_qsy_time(-1)
       {
         timerclear(&last_talker_timestamp);
       }
