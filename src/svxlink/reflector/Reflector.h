@@ -212,6 +212,8 @@ class Reflector : public sigc::trackable
     void httpClientConnected(Async::HttpServerConnection *con);
     void httpClientDisconnected(Async::HttpServerConnection *con,
         Async::HttpServerConnection::DisconnectReason reason);
+    void onRequestAutoQsy(uint32_t from_tg);
+    uint32_t nextRandomQsyTg(void);
 
 };  /* class Reflector */
 

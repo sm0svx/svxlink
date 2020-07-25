@@ -47,6 +47,11 @@
 * Improved GPIO up/down scripts with more error handling and support for
   handling more cases.
 
+* New SvxReflector feature: Auto QSY. It is now possible to set a per
+  talkgroup time in the reflector after which a QSY to a random talkgroup is
+  performed. This can typically be used on call channels so that stations do
+  not dwell there for too long.
+
 
 
  1.7.0 -- 01 Sep 2019
