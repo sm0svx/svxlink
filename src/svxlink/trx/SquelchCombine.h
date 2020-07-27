@@ -247,7 +247,9 @@ class SquelchCombine : public Squelch
     typedef std::deque<std::string> Tokens;
     class Node;
     class LeafNode;
-    class BinOpNode;
+    class UnaryOpNode;
+    struct NegationOpNode;
+    class BinaryOpNode;
     struct OrOpNode;
     struct AndOpNode;
 
@@ -257,6 +259,7 @@ class SquelchCombine : public Squelch
 
     bool tokenize(const std::string& expr);
     Node* parseInstExpression(void);
+    Node* parseUnaryOpExpression(void);
     Node* parseAndExpression(void);
     Node* parseOrExpression(void);
     Node* parseExpression(void);

@@ -1170,12 +1170,12 @@ Example: GPIO_SQL_PIN=!gpio4
 This configuration variable is used to set a logical expression that is used to
 combine multiple squelch types. The expression syntax consist of names for
 configuration file sections where a specific squelch type is set up and of
-the operators '| (logical or) and '&' (logical and). Parts of the expression
-may be grouped by surrounding them with parentheses, effectively changing
-operator precedence. The normal precedence is that '&' bind harder to its
-operands than '|'.
+the operators '| (logical or), '&' (logical and) and '!' (logical negation).
+Parts of the expression may be grouped by surrounding them with parentheses,
+effectively changing operator precedence. The normal precedence is that '&'
+bind harder to its operands than '|'. The '!' operator bind hardest.
 
-Below is an example of how to set up a combined squelch.
+Below is a simple example of how to set up a combined squelch.
 
   [Rx1:CTCSS]
   SQL_DET=CTCSS

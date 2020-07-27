@@ -178,19 +178,98 @@ class SquelchCombine::LeafNode : public SquelchCombine::Node
 }; /* SquelchCombine::LeafNode */
 
 
-class SquelchCombine::BinOpNode : public SquelchCombine::Node
+class SquelchCombine::UnaryOpNode : public SquelchCombine::Node
 {
   public:
-    BinOpNode(const std::string& n, Node* l, Node* r)
+    UnaryOpNode(const std::string& name, Node *node)
+      : Node(name), m_node(node)
+    {
+      m_node->squelchOpen.connect(squelchOpen.make_slot());
+    }
+
+    virtual ~UnaryOpNode(void)
+    {
+      delete m_node;
+      m_node = nullptr;
+    }
+
+    virtual void print(std::ostream& os)
+    {
+      os << name() << "(";
+      m_node->print(os);
+      os << ")";
+    }
+
+    virtual bool initialize(Async::Config& cfg)
+    {
+      return m_node->initialize(cfg);
+    }
+
+    virtual void setStartDelay(int delay)
+    {
+      m_node->setStartDelay(delay);
+    }
+
+    virtual void setHangtime(int hang)
+    {
+      m_node->setHangtime(hang);
+    }
+
+    virtual void setExtendedHangtime(int hang)
+    {
+      m_node->setExtendedHangtime(hang);
+    }
+
+    virtual void enableExtendedHangtime(bool enable)
+    {
+      m_node->enableExtendedHangtime(enable);
+    }
+
+    virtual void setDelay(int delay)
+    {
+      m_node->setDelay(delay);
+    }
+
+    virtual void setSqlTimeout(int timeout)
+    {
+      m_node->setSqlTimeout(timeout);
+    }
+
+    virtual void reset(void)
+    {
+      m_node->reset();
+    }
+
+    virtual void writeSamples(const float *samples, int count)
+    {
+      m_node->writeSamples(samples, count);
+    }
+
+  protected:
+    Node* m_node;
+}; /* SquelchCombine::UnaryOpNode */
+
+
+struct SquelchCombine::NegationOpNode : public SquelchCombine::UnaryOpNode
+{
+  NegationOpNode(Node* node) : UnaryOpNode("NOT", node) {}
+  virtual bool isOpen(void) const { return !m_node->isOpen(); }
+}; /* SquelchCombine::NegationOpNode */
+
+
+class SquelchCombine::BinaryOpNode : public SquelchCombine::Node
+{
+  public:
+    BinaryOpNode(const std::string& n, Node* l, Node* r)
       : Node(n), m_left(l), m_right(r)
     {
       m_left->squelchOpen.connect(
-          sigc::mem_fun(*this, &BinOpNode::onSquelchOpen));
+          sigc::mem_fun(*this, &BinaryOpNode::onSquelchOpen));
       m_right->squelchOpen.connect(
-          sigc::mem_fun(*this, &BinOpNode::onSquelchOpen));
+          sigc::mem_fun(*this, &BinaryOpNode::onSquelchOpen));
     }
 
-    virtual ~BinOpNode(void)
+    virtual ~BinaryOpNode(void)
     {
       delete m_left;
       m_left = nullptr;
@@ -268,13 +347,12 @@ class SquelchCombine::BinOpNode : public SquelchCombine::Node
   protected:
     Node* m_left;
     Node* m_right;
-}; /* SquelchCombine::BinOpNode */
+}; /* SquelchCombine::BinaryOpNode */
 
 
-struct SquelchCombine::OrOpNode : public SquelchCombine::BinOpNode
+struct SquelchCombine::OrOpNode : public SquelchCombine::BinaryOpNode
 {
-  OrOpNode(Node* l, Node* r)
-    : BinOpNode("OR", l, r) {}
+  OrOpNode(Node* l, Node* r) : BinaryOpNode("OR", l, r) {}
 
   virtual bool isOpen(void) const
   {
@@ -283,10 +361,9 @@ struct SquelchCombine::OrOpNode : public SquelchCombine::BinOpNode
 }; /* SquelchCombine::OrOpNode */
 
 
-struct SquelchCombine::AndOpNode : public SquelchCombine::BinOpNode
+struct SquelchCombine::AndOpNode : public SquelchCombine::BinaryOpNode
 {
-  AndOpNode(Node* l, Node* r)
-    : BinOpNode("AND", l, r) {}
+  AndOpNode(Node* l, Node* r) : BinaryOpNode("AND", l, r) {}
 
   virtual bool isOpen(void) const
   {
@@ -451,7 +528,8 @@ bool SquelchCombine::tokenize(const std::string& expr)
   string token;
   for (std::string::const_iterator it=expr.begin(); it!=expr.end(); ++it)
   {
-    if ((*it == '|') || (*it == '&') || (*it == '(') || (*it == ')'))
+    if ((*it == '|') || (*it == '&') || (*it == '(') || (*it == ')') ||
+        (*it == '!'))
     {
       if (!token.empty())
       {
@@ -524,9 +602,28 @@ SquelchCombine::Node* SquelchCombine::parseInstExpression(void)
 } /* SquelchCombine::parseInstExpression */
 
 
+SquelchCombine::Node* SquelchCombine::parseUnaryOpExpression(void)
+{
+  bool is_negation_op = false;
+  if (m_tokens.front() == "!")
+  {
+    is_negation_op = true;
+    m_tokens.pop_front();
+  }
+
+  Node* node = parseInstExpression();
+  if ((node == nullptr) || !is_negation_op)
+  {
+    return node;
+  }
+
+  return new NegationOpNode(node);
+} /* SquelchCombine::parseUnaryOpExpression */
+
+
 SquelchCombine::Node* SquelchCombine::parseAndExpression(void)
 {
-  Node* left = parseInstExpression();
+  Node* left = parseUnaryOpExpression();
   if ((left == nullptr) || m_tokens.empty() || (m_tokens.front() != "&"))
   {
     return left;
