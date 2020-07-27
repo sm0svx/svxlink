@@ -113,6 +113,9 @@ script.
 class SquelchPty : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "PTY";
+
     /**
      * @brief 	Default constuctor
      */

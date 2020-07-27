@@ -1,13 +1,11 @@
 /**
-@file   MyNamespaceTemplate.h
-@brief  A_brief_description_for_this_file
+@file   AsyncAudioContainerPcm.cpp
+@brief  Handle PCM type audio container
 @author Tobias Blomberg / SM0SVX
-@date   2020-
-
-A_detailed_description_for_this_file
+@date   2020-02-29
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+Async - A library for programming event driven applications
 Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -26,20 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example MyNamespaceTemplate_demo.cpp
-An example of how to use the Template class
-*/
-
-#ifndef TEMPLATE_INCLUDED
-#define TEMPLATE_INCLUDED
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -56,37 +47,37 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include "AsyncAudioContainerPcm.h"
 
 
 /****************************************************************************
  *
- * Forward declarations
+ * Namespaces to use
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-namespace MyNamespace
-{
-
-
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+using namespace Async;
 
 
 /****************************************************************************
  *
  * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
  *
  ****************************************************************************/
 
@@ -102,50 +93,97 @@ namespace MyNamespace
 
 /****************************************************************************
  *
- * Class definitions
+ * Local Global Variables
  *
  ****************************************************************************/
 
-/**
-@brief  A_brief_class_description
-@author Tobias Blomberg / SM0SVX
-@date   2020-
 
-A_detailed_class_description
 
-\include MyNamespaceTemplate_demo.cpp
-*/
-class Template
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+AudioContainerPcm::AudioContainerPcm(void)
 {
-  public:
-    /**
-     * @brief   Default constructor
-     */
-    Template(void);
-
-    /**
-     * @brief   Destructor
-     */
-    ~Template(void);
-
-    /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
-     */
-
-  protected:
-
-  private:
-    Template(const Template&);
-    Template& operator=(const Template&);
-
-};  /* class Template */
+  m_block.reserve(m_block_size);
+} /* AudioContainerPcm::AudioContainerPcm */
 
 
-} /* namespace */
+AudioContainerPcm::~AudioContainerPcm(void)
+{
+} /* AudioContainerPcm::~AudioContainerPcm */
 
-#endif /* TEMPLATE_INCLUDED */
+
+int AudioContainerPcm::writeSamples(const float *samples, int count)
+{
+  //std::cout << "### AudioContainerPcm::writeSamples: count=" << count
+  //          << std::endl;
+  if (count <= 0)
+  {
+    return -1;
+  }
+
+  for (int i=0; i<count; ++i)
+  {
+    int16_t sample;
+    if (samples[i] > 1.0f)
+    {
+      sample = 32767;
+    }
+    else if (samples[i] < -1.0f)
+    {
+      sample = -32767;
+    }
+    else
+    {
+      sample = samples[i] * 32767.0f;
+    }
+    m_block.push_back(sample);
+
+    if (m_block.size() >= m_block_size)
+    {
+      writeBlock(reinterpret_cast<char*>(m_block.data()),
+          sizeof(int16_t) * m_block.size());
+      m_block.clear();
+    }
+  }
+  return count;
+} /* AudioContainerPcm::writeSamples */
+
+
+void AudioContainerPcm::flushSamples(void)
+{
+  //std::cout << "### AudioContainerPcm::flushSamples" << std::endl;
+  if (m_block.size() > 0)
+  {
+    writeBlock(reinterpret_cast<char*>(m_block.data()),
+        sizeof(int16_t) * m_block.size());
+    m_block.clear();
+  }
+} /* AudioContainerPcm::flushSamples */
+
+
+//void AudioContainerOpus::endStream(void)
+//{
+//  flushSamples();
+//} /* AudioContainerOpus::endStream */
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
 
 /*
  * This file has not been truncated

@@ -119,6 +119,9 @@ will be interpreted as squelch close.
 class SquelchHidraw : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "HIDRAW";
+
     /**
      * @brief 	Default constuctor
      */

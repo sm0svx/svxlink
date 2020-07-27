@@ -35,3 +35,4 @@ add_dependencies(svxreflector version-svxreflector)
 # Install targets
 install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})
 install_if_not_exists(svxreflector.conf ${SVX_SYSCONF_INSTALL_DIR})
+install(PROGRAMS svxreflector_status.py DESTINATION ${BIN_INSTALL_DIR})

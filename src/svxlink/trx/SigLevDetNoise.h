@@ -118,10 +118,8 @@ namespace Async
 class SigLevDetNoise : public SigLevDet
 {
   public:
-    struct Factory : public SigLevDetFactory<SigLevDetNoise>
-    {
-      Factory(void) : SigLevDetFactory<SigLevDetNoise>("NOISE") {}
-    };
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "NOISE";
 
     /**
      * @brief 	Default constuctor

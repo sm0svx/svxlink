@@ -234,7 +234,7 @@ void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
 	update_counter += block_size;
 	if (update_counter >= update_interval)
 	{
-	  signalLevelUpdated(lastSiglev());
+	  signalLevelUpdated(siglevIntegrated());
 	  update_counter = 0;
 	}
       }

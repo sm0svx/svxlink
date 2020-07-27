@@ -110,6 +110,8 @@ This "squelch detector" always report squelch open
 class SquelchOpen : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "OPEN";
 
   protected:
     /**
