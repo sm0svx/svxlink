@@ -141,7 +141,7 @@ struct ToneDetector::DetectorParams
 ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
   : tone_fq(tone_hz), samples_left(0), is_activated(false),
     last_active(false), stable_count(0), phase_check_left(-1),
-    par(0) 
+    par(0), last_snr(0.0f)
 {
   det_par = new DetectorParams;
   det_par->bw = width_hz;
@@ -597,17 +597,17 @@ void ToneDetector::postProcess(void)
       // arbitrarily set the SNR to a constant in that case. This typically
       // happens on signals with extremely little noise in them. Probably we
       // will only see this in constructed scenarious like in simulation.
-    float snr = 70.0f;
+    last_snr = 70.0f;
     if (Pnoise > 0.0f)
     {
-      snr = 10.0f * log10f(Ptone / Pnoise);
+      last_snr = 10.0f * log10f(Ptone / Pnoise);
     }
     
       // Check if the SNR is over the threshold
-    active = active && (snr > par->snr_thresh);
+    active = active && (last_snr > par->snr_thresh);
 
       // Tell subscribers that the SNR changed
-    snrUpdated(snr);
+    snrUpdated(last_snr);
   }
   
     // If phase checking is active, check the phase

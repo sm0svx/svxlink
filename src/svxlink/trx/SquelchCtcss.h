@@ -36,7 +36,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <vector>
+#include <cmath>
 
 
 /****************************************************************************
@@ -126,7 +128,8 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void) : m_splitter(0), m_active_det(0) {}
+    explicit SquelchCtcss(void)
+      : m_splitter(0), m_active_det(0), m_ctcss_snr_offset(0.0f) {}
 
     /**
      * @brief 	Destructor
@@ -157,8 +160,7 @@ class SquelchCtcss : public Squelch
       int ctcss_mode = 0;
       cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
       
-      float ctcss_snr_offset = 0.0f;
-      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", ctcss_snr_offset);
+      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", m_ctcss_snr_offset);
       
       float open_thresh = 15.0f;
       float close_thresh = 9.0f;
@@ -177,8 +179,8 @@ class SquelchCtcss : public Squelch
 	cfg.getValue(rx_name, "CTCSS_CLOSE_THRESH", close_thresh);
       }
 
-      open_thresh += ctcss_snr_offset;
-      close_thresh += ctcss_snr_offset;
+      open_thresh += m_ctcss_snr_offset;
+      close_thresh += m_ctcss_snr_offset;
       
       unsigned bpf_low = 60;
       cfg.getValue(rx_name, "CTCSS_BPF_LOW", bpf_low);
@@ -304,6 +306,15 @@ class SquelchCtcss : public Squelch
         m_splitter->addSink(sink, true);
       }
 
+      bool debug = false;
+      cfg.getValue(rx_name, "CTCSS_DEBUG", debug);
+
+      if (debug)
+      {
+        m_dets.front()->snrUpdated.connect(
+            sigc::mem_fun(*this, &SquelchCtcss::printSnr));
+      }
+
       return Squelch::initialize(cfg, rx_name);
     }
 
@@ -375,6 +386,7 @@ class SquelchCtcss : public Squelch
     DetList                 m_dets;
     Async::AudioSplitter *  m_splitter;
     ToneDetector *          m_active_det;
+    float                   m_ctcss_snr_offset;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
@@ -397,6 +409,19 @@ class SquelchCtcss : public Squelch
           setSignalDetected(false);
         }
       }
+    }
+
+    void printSnr(float level)
+    {
+      std::ostringstream os;
+      os << rxName() << ": ";
+      for (auto det : m_dets)
+      {
+        float snr = det->lastSnr() + m_ctcss_snr_offset;
+        os << std::setw(4) << static_cast<int>(roundf(snr))
+          << ":" << std::fixed << std::setprecision(1) << det->toneFq();
+      }
+      std::cout << os.str() << std::endl;
     }
 };  /* class SquelchCtcss */
 

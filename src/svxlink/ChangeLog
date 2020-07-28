@@ -62,6 +62,9 @@
   instead of the integrated one. This fix can change the behavior of the voter
   and the extended hangtime feature.
 
+* Added debug mode for the CTCSS detector. Enable by setting CTCSS_DEBUG to 1
+  in a receiver configuration section.
+
 
 
  1.7.0 -- 01 Sep 2019

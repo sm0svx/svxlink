@@ -415,6 +415,12 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     bool isActivated(void) const { return is_activated; }
 
     /**
+     * @brief   Get the latest calculated SNR
+     * @return  Returns the SNR value that was calculated latest
+     */
+    float lastSnr(void) const { return last_snr; }
+
+    /**
      * @brief  Reset the tone detector
      */
     void reset(void);
@@ -475,6 +481,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     DetectorParams	*undet_par;
     DetectorParams	*par;
     double		passband_energy;
+    float               last_snr;
 
     std::vector<float>::const_iterator win;
 
