@@ -417,7 +417,7 @@ class SquelchCtcss : public Squelch
       os << rxName() << ": ";
       for (auto det : m_dets)
       {
-        float snr = det->lastSnr() + m_ctcss_snr_offset;
+        float snr = det->lastSnr() - m_ctcss_snr_offset;
         os << std::setw(4) << static_cast<int>(roundf(snr))
           << ":" << std::fixed << std::setprecision(1) << det->toneFq();
       }
