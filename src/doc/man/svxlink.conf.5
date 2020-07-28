@@ -891,7 +891,7 @@ SvxLink to keep the audio device open from application start to exit.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV, SIGLEV, PTY, GPIO, HIDRAW or COMBINE.
+SERIAL, EVDEV, SIGLEV, PTY, GPIO, HIDRAW, INTERNAL or COMBINE.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -951,6 +951,9 @@ configurations. This may be good if there is one script handling all functions.
 
 The HIDRAW squelch supports human interface devices (HID), USB devices
 like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
+
+The INTERNAL squelch ca be used fron other logic instances for further
+implementations.
 
 The COMBINE squelch make it possible to combine multiple squelch types using a
 logical expression. The expression is set up using the SQL_COMBINE

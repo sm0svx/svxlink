@@ -60,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifdef HAS_HIDRAW_SUPPORT
 #include "SquelchHidraw.h"
 #endif
+#include "SquelchInternal.h"
 #include "Squelch.h"
 
 
@@ -138,6 +139,7 @@ Squelch* createSquelch(const std::string& sql_name)
 #ifdef HAS_HIDRAW_SUPPORT
   static SquelchSpecificFactory<SquelchHidraw> hidraw_factory;
 #endif
+  static SquelchSpecificFactory<SquelchInternal> internal_factory;
   static SquelchSpecificFactory<SquelchCombine> combine_factory;
 
   return SquelchFactory::createNamedObject(sql_name);
