@@ -1,5 +1,8 @@
  1.8.0 -- ?? ??? ????
 ----------------------
+* MetarInformation, more flexible airport announcement at the beginning of a
+  Metar
+
 * SvxReflector now support switching traffic on talk groups.
 
 * ReflectorLogic can now request switching talk groups based on the received
@@ -46,6 +49,24 @@
 * Each DDR (e.g RTL-SDR dongle digital receiver) now run in its own thread
   which makes it possible to run multiple receivers on a Raspberry Pi for
   example.
+
+* Improved GPIO up/down scripts with more error handling and support for
+  handling more cases.
+
+* New SvxReflector feature: Auto QSY. It is now possible to set a per
+  talkgroup time in the reflector after which a QSY to a random talkgroup is
+  performed. This can typically be used on call channels so that stations do
+  not dwell there for too long.
+
+* New squelch type: COMBINE. There now is a new squelch type that can combine
+  multiple other squelch types using a logical expression.
+  Implementing this new feature required rewriting quite a lot of the squelch
+  infrastructure code. Watch out for changed behavior in the squelch
+  functionality.
+
+* Bugfix: Squelch types DDR, SIM and TONE reported the "raw" signal strength
+  instead of the integrated one. This fix can change the behavior of the voter
+  and the extended hangtime feature.
 
 
 

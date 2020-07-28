@@ -83,9 +83,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gpio.conf.in
   @ONLY
   )
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_up.in
-	${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up)
+	${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up
+        @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
-	${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_down)
+	${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_down
+        @ONLY)
 
 # Install targets
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})

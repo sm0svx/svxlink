@@ -115,6 +115,9 @@ a pin in the serial port. The pins that can be used are CTS, DSR, DCD and RI.
 class SquelchSerial : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "SERIAL";
+
     /**
      * @brief 	Default constuctor
      */

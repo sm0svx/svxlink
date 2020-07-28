@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
@@ -35,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cerrno>
 #include <sstream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -114,7 +113,8 @@ using namespace Async;
  ****************************************************************************/
 
 HttpServerConnection::HttpServerConnection(size_t recv_buf_len)
-  : TcpConnection(recv_buf_len), m_state(STATE_DISCONNECTED)
+  : TcpConnection(recv_buf_len), m_state(STATE_DISCONNECTED),
+    m_chunked(false)
 {
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &HttpServerConnection::onSendBufferFull));
@@ -125,7 +125,7 @@ HttpServerConnection::HttpServerConnection(
     int sock, const IpAddress& remote_addr, uint16_t remote_port,
     size_t recv_buf_len)
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
-    m_state(STATE_EXPECT_START_LINE)
+    m_state(STATE_EXPECT_START_LINE), m_chunked(false)
 {
 } /* HttpServerConnection::HttpServerConnection */
 
@@ -193,6 +193,10 @@ bool HttpServerConnection::write(const Response& res)
   {
     os << (*it).first << ": " << (*it).second << "\r\n";
   }
+  if (m_chunked)
+  {
+    os << "Transfer-encoding: chunked\r\n";
+  }
   os << "\r\n";
   if (res.sendContent())
   {
@@ -200,8 +204,32 @@ bool HttpServerConnection::write(const Response& res)
   }
   //std::cout << "### HttpServerConnection::write:" << std::endl;
   //std::cout << os.str() << std::endl;
-  int len = TcpConnection::write(os.str().c_str(), os.str().size());
-  return len == static_cast<int>(os.str().size());
+  int len = os.str().size();
+  return TcpConnection::write(os.str().c_str(), len) == len;
+} /* HttpServerConnection::write */
+
+
+bool HttpServerConnection::write(const char* buf, int len)
+{
+  assert(len >= 0);
+
+  int ret = -1;
+  if (m_chunked)
+  {
+    std::ostringstream os;
+    //os << hex << len << ";tg=240;talker=SM0SVX\r\n";
+    os << hex << len << "\r\n";
+    ret = TcpConnection::write(os.str().c_str(), os.str().size());
+    ret += TcpConnection::write(buf, len);
+    ret += TcpConnection::write("\r\n", 2);
+    len += os.str().size() + 2;
+  }
+  else
+  {
+    ret = TcpConnection::write(buf, len);
+  }
+
+  return ret == len;
 } /* HttpServerConnection::write */
 
 
@@ -412,6 +440,8 @@ const char* HttpServerConnection::codeToString(unsigned code)
       return "OK";
     case 404:
       return "Not Found";
+    case 406:
+      return "Not Acceptable";
     case 501:
       return "Not Implemented";
     default:

@@ -5,8 +5,9 @@ set(EXPINC AsyncApplication.h AsyncFdWatch.h AsyncTimer.h AsyncIpAddress.h
            AsyncTcpConnection.h AsyncConfig.h AsyncSerial.h AsyncFileReader.h
            AsyncAtTimer.h AsyncExec.h AsyncPty.h AsyncPtyStreamBuf.h AsyncMsg.h
            AsyncFramedTcpConnection.h AsyncTcpClientBase.h AsyncTcpServerBase.h
-           AsyncHttpServerConnection.h AsyncMutex.h AsyncThreadSigCSignal.h
-           AsyncTaskRunner.h)
+           AsyncHttpServerConnection.h AsyncFactory.h AsyncMutex.h
+           AsyncThreadSigCSignal.h AsyncTaskRunner.h
+           )
 
 set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClientBase.cpp

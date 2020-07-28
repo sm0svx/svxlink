@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -139,6 +140,8 @@ class TGHandler : public sigc::trackable
      * @param   param1 Description_of_param1
      * @return  Return_value_of_this_member_function
      */
+    void setConfig(const Async::Config* cfg) { m_cfg = cfg; }
+
     void setSqlTimeout(unsigned sql_timeout) { m_sql_timeout = sql_timeout; }
 
     void setSqlTimeoutBlocktime(unsigned sql_timeout_blocktime);
@@ -158,6 +161,8 @@ class TGHandler : public sigc::trackable
     sigc::signal<void, uint32_t,
       ReflectorClient*, ReflectorClient*> talkerUpdated;
 
+    sigc::signal<void, uint32_t> requestAutoQsy;
+
   private:
     static const time_t TALKER_AUDIO_TIMEOUT = 3; // Max three seconds gap
 
@@ -168,9 +173,12 @@ class TGHandler : public sigc::trackable
       ReflectorClient*  talker;
       struct timeval    last_talker_timestamp;
       unsigned          sql_timeout_cnt;
+      time_t            auto_qsy_after_s;
+      time_t            auto_qsy_time;
 
       TGInfo(uint32_t tg)
-        : id(tg), talker(0), sql_timeout_cnt(0)
+        : id(tg), talker(0), sql_timeout_cnt(0), auto_qsy_after_s(0),
+          auto_qsy_time(-1)
       {
         timerclear(&last_talker_timestamp);
       }
@@ -178,15 +186,16 @@ class TGHandler : public sigc::trackable
     typedef std::map<uint32_t, TGInfo*>               IdMap;
     typedef std::map<const ReflectorClient*, TGInfo*> ClientMap;
 
-    IdMap         m_id_map;
-    ClientMap     m_client_map;
-    Async::Timer  m_timeout_timer;
-    unsigned      m_sql_timeout;
-    unsigned      m_sql_timeout_blocktime;
+    const Async::Config*  m_cfg;
+    IdMap                 m_id_map;
+    ClientMap             m_client_map;
+    Async::Timer          m_timeout_timer;
+    unsigned              m_sql_timeout;
+    unsigned              m_sql_timeout_blocktime;
 
     TGHandler(const TGHandler&);
     TGHandler& operator=(const TGHandler&);
-    void checkTalkerTimeout(Async::Timer *t);
+    void checkTimers(Async::Timer *t);
     void removeClientP(TGInfo *tg_info, ReflectorClient* client);
     void printTGStatus(void);
 };  /* class TGHandler */

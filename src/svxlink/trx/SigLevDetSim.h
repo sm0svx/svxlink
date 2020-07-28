@@ -113,10 +113,8 @@ for debugging the application using the signal level detector.
 class SigLevDetSim : public SigLevDet
 {
   public:
-    struct Factory : public SigLevDetFactory<SigLevDetSim>
-    {
-      Factory(void) : SigLevDetFactory<SigLevDetSim>("SIM") {}
-    };
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "SIM";
 
     /**
      * @brief 	Default constuctor

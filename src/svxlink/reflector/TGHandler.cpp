@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <algorithm>
+#include <sstream>
 
 
 /****************************************************************************
@@ -108,11 +109,11 @@ using namespace std;
  ****************************************************************************/
 
 TGHandler::TGHandler(void)
-  : m_timeout_timer(1000, Async::Timer::TYPE_PERIODIC),
+  : m_cfg(0), m_timeout_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_sql_timeout(0), m_sql_timeout_blocktime(60)
 {
   m_timeout_timer.expired.connect(
-      mem_fun(*this, &TGHandler::checkTalkerTimeout));
+      mem_fun(*this, &TGHandler::checkTimers));
 } /* TGHandler::TGHandler */
 
 
@@ -157,6 +158,14 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
     else
     {
       tg_info = new TGInfo(tg);
+      std::ostringstream ss;
+      ss << "TG#" << tg;
+      tg_info->auto_qsy_after_s = 0;
+      m_cfg->getValue(ss.str(), "AUTO_QSY_AFTER", tg_info->auto_qsy_after_s);
+      if (tg_info->auto_qsy_after_s > 0)
+      {
+        tg_info->auto_qsy_time = time(NULL) + tg_info->auto_qsy_after_s;
+      }
       m_id_map[tg] = tg_info;
     }
     tg_info->clients.insert(client);
@@ -212,6 +221,14 @@ void TGHandler::setTalkerForTG(uint32_t tg, ReflectorClient* new_talker)
   tg_info->sql_timeout_cnt = (new_talker != 0) ? m_sql_timeout : 0;
   id_map_it->second->talker = new_talker;
   talkerUpdated(tg, old_talker, new_talker);
+
+  time_t now = time(NULL);
+  if ((new_talker == 0) && (tg_info->auto_qsy_time > 0) &&
+      (now > tg_info->auto_qsy_time))
+  {
+    requestAutoQsy(tg_info->id);
+    tg_info->auto_qsy_time = now + tg_info->auto_qsy_after_s;
+  }
   //printTGStatus();
 } /* TGHandler::setTalkerForTG */
 
@@ -252,16 +269,18 @@ uint32_t TGHandler::TGForClient(ReflectorClient* client)
  *
  ****************************************************************************/
 
-void TGHandler::checkTalkerTimeout(Async::Timer *t)
+void TGHandler::checkTimers(Async::Timer *t)
 {
   for (IdMap::iterator it = m_id_map.begin(); it != m_id_map.end(); ++it)
   {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+
     TGInfo *tg_info = it->second;
     assert(tg_info != 0);
     if (tg_info->talker != 0)
     {
-      struct timeval now, diff;
-      gettimeofday(&now, NULL);
+      struct timeval diff;
       timersub(&now, &tg_info->last_talker_timestamp, &diff);
       if (diff.tv_sec > TALKER_AUDIO_TIMEOUT)
       {
@@ -278,8 +297,15 @@ void TGHandler::checkTalkerTimeout(Async::Timer *t)
         setTalkerForTG(tg_info->id, 0);
       }
     }
+
+    //if ((tg_info->auto_qsy_time > 0) &&
+    //    (now.tv_sec > tg_info->auto_qsy_time))
+    //{
+    //  requestAutoQsy(tg_info->id);
+    //  tg_info->auto_qsy_time = time(NULL) + tg_info->auto_qsy_after_s;
+    //}
   }
-} /* TGHandler::checkTalkerTimeout */
+} /* TGHandler::checkTimers */
 
 
 void TGHandler::removeClientP(TGInfo *tg_info, ReflectorClient* client)
