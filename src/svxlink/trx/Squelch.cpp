@@ -169,7 +169,6 @@ bool Squelch::initialize(Async::Config& cfg, const std::string& rx_name)
   unsigned timeout = 0;
   if (cfg.getValue(rx_name, CFG_SQL_TIMEOUT, timeout))
   {
-    std::cout << "### Squelch::intialize: timeout=" << timeout << std::endl;
     setSqlTimeout(timeout);
   }
 

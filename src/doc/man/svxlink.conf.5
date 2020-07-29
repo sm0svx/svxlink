@@ -1216,6 +1216,11 @@ passband, the less stable the detector will be. You may need to compensate by
 increasing the open/close thresholds or by setting up SQL_DELAY and
 SQL_HANGTIME. Default is 270Hz.
 .TP
+.B CTCSS_DEBUG
+Set this to 1 to enable continuously printing SNR values for the CTCSS tone
+measurements. This is only meant to be activated temporarily while searching
+for a problem or for initial adjustment.
+.TP
 .B SERIAL_PORT
 If SQL_DET is set to SERIAL, this config variable determines which serial port should be
 used for hardware squelch input (COS - Carrier Operated Squelch).
