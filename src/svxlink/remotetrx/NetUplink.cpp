@@ -576,7 +576,7 @@ void NetUplink::handleMsg(Msg *msg)
     
     case MsgRxAudioCodecSelect::TYPE:
     {
-      MsgRxAudioCodecSelect *codec_msg =
+      MsgRxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgRxAudioCodecSelect *>(msg);
       if (audio_enc != 0)
       {
@@ -615,10 +615,10 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-
+    
     case MsgTxAudioCodecSelect::TYPE:
     {
-      MsgTxAudioCodecSelect *codec_msg =
+      MsgTxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgTxAudioCodecSelect *>(msg);
       delete audio_dec;
 

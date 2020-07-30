@@ -116,7 +116,7 @@ class AudioEncoderSpeex : public AudioEncoder
      * @brief 	Default constuctor with options
      */
     AudioEncoderSpeex(const Options& options = Options());
-
+  
     /**
      * @brief 	Destructor
      */

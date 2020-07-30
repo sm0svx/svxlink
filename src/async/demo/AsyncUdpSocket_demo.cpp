@@ -25,9 +25,11 @@ class MyClass : public sigc::trackable
   private:
     UdpSocket * sock;
     
-    void onDataReceived(const IpAddress& addr, void *buf, int count)
+    void onDataReceived(const IpAddress& addr, uint16_t port,
+                        void *buf, int count)
     {
-      cout << "Data received from " << addr << ": " << static_cast<char *>(buf);
+      cout << "Data received from " << addr << ":" << port << ": "
+           << static_cast<char *>(buf);
       Application::app().quit();
     }
 };

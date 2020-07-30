@@ -2,7 +2,7 @@
 @file	 AsyncAudioAmp.h
 @brief   Contains an audio pipe class for amplification/attenuation
 @author  Tobias Blomberg / SM0SVX
-@date	 2017-03-10
+@date	 2006-07-08
 
 \verbatim
 Async - A library for programming event driven applications
@@ -78,7 +78,7 @@ namespace Async
  *
  ****************************************************************************/
 
-
+  
 
 /****************************************************************************
  *
@@ -116,25 +116,25 @@ class AudioAmp : public Async::AudioProcessor
      * @brief 	Default constuctor
      */
     AudioAmp(void) : m_gain(1.0) {}
-
+  
     /**
      * @brief 	Destructor
      */
     ~AudioAmp(void) {}
-
+  
     /**
      * @brief 	Set the gain to use
      * @param 	gain_db The gain given in dB
      */
     void setGain(float gain_db) { m_gain = powf(10, gain_db / 20); }
-
+    
     /**
      * @brief 	Read the gain
      * @return	Return the gain in dB
      */
     float gain(void) const { return 20 * log10(m_gain); }
-
-
+    
+    
   protected:
     void processSamples(float *dest, const float *src, int count)
     {
@@ -143,14 +143,14 @@ class AudioAmp : public Async::AudioProcessor
       	dest[i] = src[i] * m_gain;
       }
     }
-
-
+    
+    
   private:
     AudioAmp(const AudioAmp&);
     AudioAmp& operator=(const AudioAmp&);
-
+    
     float m_gain;
-
+    
 };  /* class AudioAmp */
 
 
