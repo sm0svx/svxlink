@@ -429,13 +429,13 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
         }
         else
         {
-          processEvent("tg_qsy_idle");
+          processEvent("tg_qsy_failed");
         }
       }
     }
     else
     {
-      processEvent("tg_qsy_idle");
+      processEvent("tg_qsy_failed");
     }
   }
   else if (cmd == "3")   // Follow last QSY
