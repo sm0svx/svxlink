@@ -238,7 +238,7 @@ int SigLevDetSim::writeSamples(const float *samples, int count)
       if (++update_counter >= update_interval)
       {
         update_counter = 0;
-        signalLevelUpdated(lastSiglev());
+        signalLevelUpdated(siglevIntegrated());
       }
     }
   }

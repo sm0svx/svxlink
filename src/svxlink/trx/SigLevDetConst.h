@@ -114,10 +114,8 @@ constant signal level.
 class SigLevDetConst : public SigLevDet
 {
   public:
-    struct Factory : public SigLevDetFactory<SigLevDetConst>
-    {
-      Factory(void) : SigLevDetFactory<SigLevDetConst>("CONST") {}
-    };
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "CONST";
 
     /**
      * @brief   Default constuctor

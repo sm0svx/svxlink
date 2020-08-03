@@ -122,10 +122,8 @@ superimposed on the audio signal.
 class SigLevDetAfsk : public SigLevDet
 {
   public:
-    struct Factory : public SigLevDetFactory<SigLevDetAfsk>
-    {
-      Factory(void) : SigLevDetFactory<SigLevDetAfsk>("AFSK") {}
-    };
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "AFSK";
 
     /**
      * @brief 	Constuctor

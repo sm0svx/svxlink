@@ -118,6 +118,9 @@ will be interpreted as squelch close.
 class SquelchGpio : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "GPIO";
+
     /**
      * @brief 	Default constuctor
      */

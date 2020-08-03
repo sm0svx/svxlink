@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioSink.h>
+#include <AsyncFactory.h>
+
 
 
 /****************************************************************************
@@ -55,7 +57,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Factory.h"
 
 
 /****************************************************************************
@@ -66,8 +67,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class AudioFilter;
-  class SigCAudioSink;
   class Config;
 };
 
@@ -133,7 +132,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Destructor
      */
-    virtual ~SigLevDet(void) {}
+    virtual ~SigLevDet(void);
     
     /**
      * @brief 	Initialize the signal detector
@@ -219,50 +218,59 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     void updateRxId(char rx_id);
     
   private:
+    typedef std::map<std::string, SigLevDet*> DetMap;
+
+    std::string name;
     bool  force_rx_id;
     char  last_rx_id;
 
+    static DetMap& detMap(void)
+    {
+      static DetMap det_map;
+      return det_map;
+    }
+
     SigLevDet(const SigLevDet&);
     SigLevDet& operator=(const SigLevDet&);
-    
+
+    friend SigLevDet* createSigLevDet(Async::Config& cfg,
+                                      const std::string& name);
+
 };  /* class SigLevDet */
 
 
 /**
-@brief	Base class for a signal level detector factory
-@author Tobias Blomberg / SM0SVX
-@date   2014-07-17
-
-This is the base class for a signal level detector factory. However, this
-is not the class to inherit from when implementing a signal level detector
-factory. Use the SigLevDetFactory class for that.
-This class is essentially used only to access the createNamedSigLevDet
-function.
-*/
-struct SigLevDetFactoryBase : public FactoryBase<SigLevDet>
-{
-  static SigLevDet *createNamedSigLevDet(Async::Config& cfg,
-                                         const std::string& name);
-  SigLevDetFactoryBase(const std::string &name) : FactoryBase<SigLevDet>(name)
-  {
-  }
-};  /* class SigLevDetFactoryBase */
+ * @brief   Convenience typedef for easier access to the factory members
+ *
+ * This typedef make it easier to access the members in the Async::Factory
+ * class e.g. SigLevDetFactory::validFactories().
+ */
+typedef Async::Factory<SigLevDet> SigLevDetFactory;
 
 
 /**
-@brief	Base class for implementing a signal level detector factory
-@author Tobias Blomberg / SM0SVX
-@date   2014-07-17
-
-This class should be inherited from when implementing a new signal level
-detector factory.
-*/
+ * @brief   Convenience struct to make specific factory instantiation easier
+ *
+ * This struct make it easier to create a specific factory for a SigLevDet
+ * class. The constant OBJNAME must be declared in the class that the specific
+ * factory is for. To instantiate a specific factory is then as easy as:
+ *
+ *   static SigLevDetSpecificFactory<SigLevDetCtcss> ctcss;
+ */
 template <class T>
-struct SigLevDetFactory : public Factory<SigLevDetFactoryBase, T>
+struct SigLevDetSpecificFactory : public Async::SpecificFactory<SigLevDet, T>
 {
-  SigLevDetFactory(const std::string &name)
-    : Factory<SigLevDetFactoryBase, T>(name) {}
-}; /* class SigLevDetFactory */
+  SigLevDetSpecificFactory(void)
+    : Async::SpecificFactory<SigLevDet, T>(T::OBJNAME) {}
+};
+
+
+/**
+ * @brief   Create a named SigLevDet-derived object
+ * @param   name The OBJNAME of the class
+ * @return  Returns a new SigLevDet or nullptr on failure
+ */
+SigLevDet* createSigLevDet(Async::Config& cfg, const std::string& name);
 
 
 //} /* namespace */

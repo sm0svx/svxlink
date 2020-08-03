@@ -127,10 +127,8 @@ from other receivers.
 class SigLevDetTone : public SigLevDet
 {
   public:
-    struct Factory : public SigLevDetFactory<SigLevDetTone>
-    {
-      Factory(void) : SigLevDetFactory<SigLevDetTone>("TONE") {}
-    };
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "TONE";
 
     /**
      * @brief 	Constuctor

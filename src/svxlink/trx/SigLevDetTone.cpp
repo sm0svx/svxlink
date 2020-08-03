@@ -386,7 +386,7 @@ int SigLevDetTone::processSamples(const float *samples, int count)
 	update_counter += BLOCK_SIZE;
 	if (update_counter >= update_interval)
 	{
-	  signalLevelUpdated(lastSiglev());
+	  signalLevelUpdated(siglevIntegrated());
 	  update_counter = 0;
 	}
       }

@@ -143,6 +143,7 @@ class TetraLogic::Call
 };
 
 
+
 /****************************************************************************
  *
  * Prototypes
@@ -196,11 +197,14 @@ TetraLogic::~TetraLogic(void)
   peiComTimer = 0;
   peiActivityTimer = 0;
   delete call;
+  delete tetra_modem_sql;
+  tetra_modem_sql = 0;
 } /* TetraLogic::~TetraLogic */
 
 
 bool TetraLogic::initialize(void)
 {
+  static SquelchSpecificFactory<SquelchTetra> tetra_modem_factory;
   bool isok = true;
   if (!Logic::initialize())
   {
@@ -263,7 +267,7 @@ bool TetraLogic::initialize(void)
     infosds = "Welcome TETRA-User@";
     infosds += callsign(); 
   }
-  
+
   cfg().getValue(name(), "DEBUG", debug);
 
   if (!cfg().getValue(name(), "PORT", port))
@@ -294,7 +298,7 @@ bool TetraLogic::initialize(void)
       t_aprs_tab = value[1];
     }
   }
-  
+
   // the pty path: inject messages to send by Sds
   string sds_pty_path;
   cfg().getValue(name(), "SDS_PTY", sds_pty_path);
@@ -311,7 +315,7 @@ bool TetraLogic::initialize(void)
     sds_pty->dataReceived.connect(
         mem_fun(*this, &TetraLogic::sdsPtyReceived));
   }
-  
+
   list<string>::iterator slit;
 
   // read infos of tetra users configured in svxlink.conf
@@ -320,7 +324,7 @@ bool TetraLogic::initialize(void)
   {
     list<string> user_list = cfg().listSection(user_section);
     User m_user;
-    
+
     for (slit=user_list.begin(); slit!=user_list.end(); slit++)
     {
       cfg().getValue(user_section, *slit, value);
@@ -463,10 +467,23 @@ bool TetraLogic::initialize(void)
   {
     proximity_warning = atof(value.c_str());  
   }
-    
+
   if (cfg().getValue(name(), "TIME_BETWEEN_SDS", value))
   {
     time_between_sds = atoi(value.c_str());  
+  }
+
+  // create the special Tetra-squelch
+  Squelch *squelch_det = createSquelch("TETRA_SQL");
+  tetra_modem_sql = dynamic_cast<SquelchTetra*>(squelch_det);
+  if (tetra_modem_sql != nullptr)
+  {
+    cout << "Creating tetra specific Sql ok" << endl;
+  }
+  else
+  {
+    cout << "*** ERROR creating Tetra specific squelch" << endl;
+    isok = false;
   }
 
   // init the Pei device
@@ -579,7 +596,7 @@ void TetraLogic::squelchOpen(bool is_open)
     return;
   }
 
-  rx().setSql(is_open);
+  tetra_modem_sql->setSql(is_open);
   Logic::squelchOpen(is_open);
 
 } /* TetraLogic::squelchOpen */
@@ -942,10 +959,10 @@ void TetraLogic::handleSdsMsg(std::string sds)
     if (debug) cout << "+++ sending welcome sds to " << t_sds << endl;
     return;
   }
-      
+
    // update last activity of sender
   userdata[m_sds.tsi].last_activity = time(NULL);
-     
+
   int m_sdstype = handleMessage(sds);
   switch (m_sdstype)
   {
@@ -981,7 +998,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
       // proximity, dmo on, dmo off?
       sendInfoSds(m_sds.tsi, lipinfo.reasonforsending);
       break;
-    
+
     case STATE_SDS:
       handleStateSds(sds);
       userdata[m_sds.tsi].state = sds;
@@ -1045,7 +1062,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
     LocationInfo::instance()->update3rdState(userdata.find(m_sds.tsi)->second.call, 
                                                m_aprsmessage.str());
   }
-      
+
   if (ss.str().length() > 0)
   {
     processEvent(ss.str());

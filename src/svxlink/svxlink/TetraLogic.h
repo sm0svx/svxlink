@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Logic.h"
+#include "Squelch.h"
 
 
 /****************************************************************************
@@ -107,6 +108,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+class SquelchTetra : public Squelch
+{
+  public:
+     /// The name of this class when used by the object factory 
+  static constexpr const char* OBJNAME = "TETRA_SQL";
+
+  SquelchTetra(void) {}
+
+  ~SquelchTetra(void) {}
+
+  void setSql(bool is_open)
+  {
+    setSignalDetected(is_open);
+  }
+
+  protected:
+    /**
+     * @brief 	Process the incoming samples in the squelch detector
+     * @param 	samples A buffer containing samples
+     * @param 	count The number of samples in the buffer
+     * @return	Return the number of processed samples
+     */
+    int processSamples(const float *samples, int count)
+    {
+      return count;
+    }
+
+  private:
+    SquelchTetra(const SquelchTetra&);
+    SquelchTetra& operator=(const SquelchTetra&);
+
+}; /* SquelchTetra */
+
+
 /**
 @brief	This class implements a Tetra logic core
 @author Adi Bier
@@ -147,6 +182,7 @@ class TetraLogic : public Logic
     virtual void allMsgsWritten(void);
 
   private:
+
     class Call;
 
     bool  mute_rx_on_tx;
@@ -202,7 +238,7 @@ class TetraLogic : public Logic
       std::list<std::string> members;
     };
     QsoInfo Qso;
-    
+
     // contain a sds (state and message)
     struct Sds {
       std::string tsi;
@@ -292,6 +328,7 @@ class TetraLogic : public Logic
     char t_aprs_tab;
     float proximity_warning;
     int time_between_sds;
+    SquelchTetra* tetra_modem_sql;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
