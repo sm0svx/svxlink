@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Sox options for raw sample format
 SOX_RAW_SAMP_FMT="-traw -e signed-integer -b 16"
