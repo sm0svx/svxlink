@@ -227,7 +227,8 @@ class AudioDevice : public sigc::trackable
       AudioDevice::channels = channels;
     }
 
-    
+    static int getChannels(void) { return channels; }
+
     /**
      * @brief 	Check if the audio device has full duplex capability
      * @return	Returns \em true if the device has full duplex capability

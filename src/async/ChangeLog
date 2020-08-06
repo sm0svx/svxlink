@@ -1,4 +1,4 @@
- 1.6.1 -- ?? ??? 2019
+ 1.6.1 -- ?? ??? 2020
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
@@ -20,6 +20,14 @@
 
 * Add a signal to the Config class so that one can subscribe to changes in the
   configuration.
+
+* Chunked mode added to the Async::HttpServerConnection.
+
+* Fix small memory deallocation bug in Async::AudioEncoderOpus.
+
+* New template class Async::Factory for creating object factories.
+
+* Added an AudioContainer framework.
 
 
 

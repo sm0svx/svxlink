@@ -1,13 +1,11 @@
 /**
-@file   MyNamespaceTemplate.h
-@brief  A_brief_description_for_this_file
+@file   AsyncAudioContainer.cpp
+@brief  Base class for audio container handlers
 @author Tobias Blomberg / SM0SVX
-@date   2020-
-
-A_detailed_description_for_this_file
+@date   2020-02-29
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+Async - A library for programming event driven applications
 Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -25,13 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example MyNamespaceTemplate_demo.cpp
-An example of how to use the Template class
-*/
-
-#ifndef TEMPLATE_INCLUDED
-#define TEMPLATE_INCLUDED
 
 
 /****************************************************************************
@@ -56,37 +47,42 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include "AsyncAudioContainer.h"
+#include "AsyncAudioContainerWav.h"
+#ifdef OGG_MAJOR
+#include "AsyncAudioContainerOpus.h"
+#endif
+#include "AsyncAudioContainerPcm.h"
 
 
 /****************************************************************************
  *
- * Forward declarations
+ * Namespaces to use
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-namespace MyNamespace
-{
-
-
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+using namespace Async;
 
 
 /****************************************************************************
  *
  * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
  *
  ****************************************************************************/
 
@@ -102,50 +98,42 @@ namespace MyNamespace
 
 /****************************************************************************
  *
- * Class definitions
+ * Local Global Variables
  *
  ****************************************************************************/
 
-/**
-@brief  A_brief_class_description
-@author Tobias Blomberg / SM0SVX
-@date   2020-
 
-A_detailed_class_description
 
-\include MyNamespaceTemplate_demo.cpp
-*/
-class Template
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+AudioContainer* Async::createAudioContainer(const std::string& name)
 {
-  public:
-    /**
-     * @brief   Default constructor
-     */
-    Template(void);
-
-    /**
-     * @brief   Destructor
-     */
-    ~Template(void);
-
-    /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
-     */
-
-  protected:
-
-  private:
-    Template(const Template&);
-    Template& operator=(const Template&);
-
-};  /* class Template */
+  static AudioContainerSpecificFactory<AudioContainerWav> wav;
+#ifdef OGG_MAJOR
+  static AudioContainerSpecificFactory<AudioContainerOpus> opus;
+#endif
+  static AudioContainerSpecificFactory<AudioContainerPcm> pcm;
+  return AudioContainerFactory::createNamedObject(name);
+} /* Async::createAudioContainer */
 
 
-} /* namespace */
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
 
-#endif /* TEMPLATE_INCLUDED */
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
 
 /*
  * This file has not been truncated

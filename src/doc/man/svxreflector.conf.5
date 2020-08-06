@@ -167,6 +167,23 @@ to use the same password specified by
 in the PASSWORDS section. User
 .BR SM1XYZ " have his own password."
 .
+.SS Talkgroup Configuration Sections
+.
+It is possible to set configuration parameters that are only applied to one talkgroup. Those parameters are placed in a configuration section named "TG#<talkgroup id>". Example:
+
+  [TG#9999]
+  AUTO_QSY_AFTER=300
+
+The following configuration variables are valid in a talkgroup configuration
+section.
+.TP
+.B AUTO_QSY_AFTER
+Set this to the number of seconds after which an automatic QSY to a random
+talkgroup is requested. This is typically used to keep call channels and wide
+area channels clear so that stations does not dwell there for too long.
+Auto QSY is only triggered directly aftar a talker stop event.
+The default is that auto QSY is disabled (AUTO_QSY_AFTER=0).
+.
 .SH FILES
 .
 .TP

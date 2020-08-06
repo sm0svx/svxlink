@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ###############################################################################
 #
 # This is the filter_sounds.sh script which is used to process sound clips for

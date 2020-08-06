@@ -318,6 +318,16 @@ bool AudioIO::isFullDuplexCapable(void)
 
 bool AudioIO::open(Mode mode)
 {
+  if (m_channel >= AudioDevice::getChannels())
+  {
+    std::cerr << "*** ERROR: Audio channel out of range when opening audio "
+                 "device \"" << audio_dev->devName() << ". "
+              << "The card have " << AudioDevice::getChannels()
+              << " channel(s) configured, but (zero based) channel number "
+              << m_channel << " was requested." << std::endl;
+    return false;
+  }
+
   if (audio_dev == 0)
   {
     return false;

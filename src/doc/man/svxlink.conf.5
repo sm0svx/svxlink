@@ -1047,7 +1047,7 @@ SvxLink to keep the audio device open from application start to exit.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV, SIGLEV, PTY, GPIO or HIDRAW.
+SERIAL, EVDEV, SIGLEV, PTY, GPIO, HIDRAW or COMBINE.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -1107,6 +1107,10 @@ configurations. This may be good if there is one script handling all functions.
 
 The HIDRAW squelch supports human interface devices (HID), USB devices
 like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
+
+The COMBINE squelch make it possible to combine multiple squelch types using a
+logical expression. The expression is set up using the SQL_COMBINE
+configuration variable.
 .TP
 .B SQL_START_DELAY
 The squelch start delay is of most use when using VOX squelch. For example, if
@@ -1260,6 +1264,11 @@ passband, the less stable the detector will be. You may need to compensate by
 increasing the open/close thresholds or by setting up SQL_DELAY and
 SQL_HANGTIME. Default is 270Hz.
 .TP
+.B CTCSS_DEBUG
+Set this to 1 to enable continuously printing SNR values for the CTCSS tone
+measurements. This is only meant to be activated temporarily while searching
+for a problem or for initial adjustment.
+.TP
 .B SERIAL_PORT
 If SQL_DET is set to SERIAL, this config variable determines which serial port should be
 used for hardware squelch input (COS - Carrier Operated Squelch).
@@ -1317,6 +1326,52 @@ gpio4. Some GPIO drivers use more complex names, like gpio33_pe11. If inverted
 operation is desired, prefix the pin name with an exclamation mark (!).
 
 Example: GPIO_SQL_PIN=!gpio4
+.TP
+.B SQL_COMBINE
+This configuration variable is used to set a logical expression that is used to
+combine multiple squelch types. The expression syntax consist of names for
+configuration file sections where a specific squelch type is set up and of
+the operators '| (logical or), '&' (logical and) and '!' (logical negation).
+Parts of the expression may be grouped by surrounding them with parentheses,
+effectively changing operator precedence. The normal precedence is that '&'
+bind harder to its operands than '|'. The '!' operator bind hardest.
+
+Below is a simple example of how to set up a combined squelch.
+
+  [Rx1:CTCSS]
+  SQL_DET=CTCSS
+  CTCSS_FQ=77.0
+  CTCSS_SNR_OFFSET=-3.22
+
+  [Rx1:SIGLEV]
+  SQL_DET=SIGLEV
+  SIGLEV_RX_NAME=Rx1
+  SIGLEV_OPEN_THRESH=30
+  SIGLEV_CLOSE_THRESH=2
+
+  [Rx1]
+  ...
+  SQL_DET=COMBINE
+  SQL_COMBINE=Rx1:CTCSS | Rx1:SIGLEV
+  ...
+
+The configuration section names used above is just a convention but it is wise
+to include the name of the associated RX for better diagnostic messages.
+
+An important thing to note is that configuration variables in the main RX
+section override configuration in the squelch type specific configuration. For
+example, if you set SQL_HANGTIME in both [Rx1] and [Rx1:SIGLEV], the one set in
+the [Rx1] section will "win" and be applied to both squelches. So the main
+configuration section can not be used to set up defaults for all squelch types.
+This is unfortunately a bit counter intuitive but is a product of the
+implementation.
+.TP
+.B SIGLEV_RX_NAME
+When using the SIGLEV squelch type, specify the name of the receiver that
+provide the signal level. This is only useful when the squelch configuration
+is not in the same configuration section as the receiver, like when using the
+COMBINE squelch type. The default is to use the same configuration section as
+where the SIGLEV squelch is configured.
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. The available choices are:
