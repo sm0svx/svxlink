@@ -584,8 +584,8 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
  
 void TetraLogic::squelchOpen(bool is_open)
 {
-  //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
-  //     << endl;
+  cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
+       << endl;
 
     // FIXME: A squelch open should not be possible to receive while
     // transmitting unless mute_rx_on_tx is false, in which case it
@@ -1416,7 +1416,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 void TetraLogic::sendInfoSds(std::string tsi, short reason)
 {
   double timediff;
-  double sds_diff;
+  //double sds_diff;
   float distancediff;
   
   std::string t_sds;
@@ -1451,14 +1451,13 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
     if (t_iu->first != tsi)
     {
       timediff = difftime(time(NULL), t_iu->second.last_activity);
-      if (timediff < 3600)
+      if (timediff > time_between_sds)
       {
-        sds_diff = difftime(time(NULL), t_iu->second.sent_last_sds);
+        //sds_diff = difftime(time(NULL), t_iu->second.sent_last_sds);
         distancediff = calcDistance(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
 
-        if (sds_when_proximity && distancediff < proximity_warning 
-                 && sds_diff > time_between_sds)
+        if (sds_when_proximity && distancediff < proximity_warning)
         {
           ss << distancediff << "km";
         } 
