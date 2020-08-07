@@ -105,6 +105,7 @@ RX=Rx1
 TX=Tx1
 MODULES=ModuleHelp,ModuleParrot,ModuleEchoLink,ModuleTclVoiceMail
 CALLSIGN=MYCALL
+DEFAULT_LANG=en_US
 BAUD=115200
 PORT=/dev/ttyUSB0
 ISSI=23401
