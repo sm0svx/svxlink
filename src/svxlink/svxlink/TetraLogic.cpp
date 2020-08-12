@@ -1416,7 +1416,7 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 void TetraLogic::sendInfoSds(std::string tsi, short reason)
 {
   double timediff;
-  float distancediff;
+  float distancediff, bearing;
   stringstream ss;
   std::string t_sds;
   std::map<std::string, User>::iterator iu = userdata.find(tsi);
@@ -1427,13 +1427,15 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   {
     if (t_iu->first != tsi)
     {
-      timediff = difftime(time(NULL), t_iu->second.last_activity);
+      timediff = difftime(time(NULL), t_iu->second.sent_last_sds);
 
       if (timediff >= time_between_sds)
       {
         distancediff = calcDistance(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
 
+        bearing = calcBearing(iu->second.lat, iu->second.lon,
+                              t_iu->second.lat, t_iu->second.lon);
         ss.str("");
         ss << iu->second.call << " state change, ";
         if (sds_when_dmo_on && reason == DMO_ON)
@@ -1446,7 +1448,7 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         } 
         else if (sds_when_proximity && distancediff <= proximity_warning)
         {
-          ss << "new distance" << distancediff << " km";
+          ss << "Dist:" << distancediff << "km, Bear:" << bearing << "°";
         }
 
         if (debug)

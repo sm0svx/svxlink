@@ -552,8 +552,17 @@ float calcDistance(float lat1, float lon1, float lat2, float lon2)
   double a = (sin(dlat / 2) * sin(dlat / 2)) + cos(PIx*lat1/180.0) * 
               cos(PIx*lat2/180) * (sin(dlon / 2) * sin(dlon / 2));
   double angle = 2 * atan2(sqrt(a), sqrt(1 - a));
-  return angle * RADIUS;
+  return static_cast<float>(static_cast<int>(angle * RADIUS * 100.))/100.;
 } /* calcDistance */
+
+
+float calcBearing(float lat1, float lon1, float lat2, float lon2)
+{
+
+  float bearing = atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), 
+                  sin(lon2-lon1)*cos(lat2));
+  return static_cast<float>(static_cast<int>(bearing * 10.))/10.;
+} /* calcBearing */
 
 
 std::string getPeiError(int errorcode)
