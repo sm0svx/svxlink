@@ -1416,55 +1416,44 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 void TetraLogic::sendInfoSds(std::string tsi, short reason)
 {
   double timediff;
-  //double sds_diff;
   float distancediff;
-  
+  stringstream ss;
   std::string t_sds;
   std::map<std::string, User>::iterator iu = userdata.find(tsi);
   if (iu == userdata.end()) return;
   
-  stringstream ss;
-  ss << iu->second.call << " state change: ";
-  
-  if (sds_when_dmo_on && reason == DMO_ON)
-  {
-    ss << "DMO=on";
-  } 
-  else if (sds_when_dmo_off && reason == DMO_OFF)
-  {
-    ss << "DMO=off";  
-  } 
-  else if (sds_when_proximity)
-  {
-    ss << " new distance ";
-  }
-  else return;
-  
-  if (debug)
-  {
-    cout << ss.str() << endl;
-  }
-    
   for (std::map<std::string, User>::iterator t_iu = userdata.begin();
         t_iu != userdata.end(); t_iu++)
   {
     if (t_iu->first != tsi)
     {
       timediff = difftime(time(NULL), t_iu->second.last_activity);
-      if (timediff > time_between_sds)
+
+      if (timediff >= time_between_sds)
       {
-        //sds_diff = difftime(time(NULL), t_iu->second.sent_last_sds);
         distancediff = calcDistance(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
 
-        if (sds_when_proximity && distancediff < proximity_warning)
+        ss.clear();
+        ss << iu->second.call << " state change, ";
+        if (sds_when_dmo_on && reason == DMO_ON)
         {
-          ss << distancediff << "km";
+          ss << "DMO=on";
         } 
-        else 
+        else if (sds_when_dmo_off && reason == DMO_OFF)
         {
-          continue;
+          ss << "DMO=off";  
+        } 
+        else if (sds_when_proximity && distancediff <= proximity_warning)
+        {
+          ss << "new distance" << distancediff << " km";
         }
+
+        if (debug)
+        {
+          cout << ss.str() << endl;
+        }
+
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
         
          // put the new Sds int a queue...
