@@ -1434,7 +1434,7 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         distancediff = calcDistance(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
 
-        ss.clear();
+        ss.str("");
         ss << iu->second.call << " state change, ";
         if (sds_when_dmo_on && reason == DMO_ON)
         {
