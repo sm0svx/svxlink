@@ -1425,7 +1425,7 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
   for (std::map<std::string, User>::iterator t_iu = userdata.begin();
         t_iu != userdata.end(); t_iu++)
   {
-    if (t_iu->first != tsi)
+    if (!t_iu->first.empty() && t_iu->first != tsi)
     {
       timediff = difftime(time(NULL), t_iu->second.sent_last_sds);
 
