@@ -128,8 +128,7 @@ class Proxy : public sigc::trackable
 
     typedef enum
     {
-      TCP_STATE_DISCONNECTED, TCP_STATE_DISCONNECTING, TCP_STATE_CONNECTING,
-      TCP_STATE_CONNECTED
+      TCP_STATE_DISCONNECTED, TCP_STATE_CONNECTING, TCP_STATE_CONNECTED
     } TcpState;
 
     static Proxy *instance(void) { return the_instance; }
@@ -335,7 +334,7 @@ class Proxy : public sigc::trackable
 
     static const int NONCE_SIZE         = 8;
     static const int MSG_HEADER_SIZE    = 1 + 4 + 4;
-    static const int RECONNECT_INTERVAL = 10000;
+    static const int RECONNECT_TIMEOUT  = 10000;
     static const int CMD_TIMEOUT        = 10000;
     static const int recv_buf_size      = 16384;
 
@@ -374,7 +373,8 @@ class Proxy : public sigc::trackable
     void handleUdpCtrlMsg(const Async::IpAddress &remote_ip, uint8_t *buf,
                           int len);
     void handleSystemMsg(const unsigned char *buf, int len);
-    void cmdTimeout(void);
+    void reconnectTimeout(Async::Timer *t);
+    void cmdTimeout(Async::Timer *t);
     
 };  /* class Proxy */
 
