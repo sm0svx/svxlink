@@ -1417,7 +1417,7 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
 {
   double timediff;
   float distancediff, bearing;
-  stringstream ss;
+  stringstream ss, sstcl;
   std::string t_sds;
   std::map<std::string, User>::iterator iu = userdata.find(tsi);
   if (iu == userdata.end()) return;
@@ -1437,18 +1437,23 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         bearing = calcBearing(iu->second.lat, iu->second.lon,
                               t_iu->second.lat, t_iu->second.lon);
         ss.str("");
+        sstcl.str("");
         ss << iu->second.call << " state change, ";
         if (sds_when_dmo_on && reason == DMO_ON)
         {
           ss << "DMO=on";
+          sstcl << "dmo_on " << t_iu->first;
         } 
         else if (sds_when_dmo_off && reason == DMO_OFF)
         {
-          ss << "DMO=off";  
+          ss << "DMO=off";
+          sstcl << "dmo_off " << t_iu->first;
         } 
         else if (sds_when_proximity && distancediff <= proximity_warning)
         {
           ss << "Dist:" << distancediff << "km, Bear:" << bearing << "°";
+          sstcl << "proximity_info " << t_iu->first << " " << distancediff 
+                << " " << bearing;
         }
 
         if (debug)
@@ -1457,6 +1462,9 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         }
 
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
+        
+        // execute tcl procedure(s)
+        processEvent(sstcl.str());
         
          // put the new Sds int a queue...
         Sds m_Sds;

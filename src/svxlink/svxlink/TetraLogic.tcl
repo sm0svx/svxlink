@@ -420,6 +420,30 @@ proc register_station {tsi} {
 
 }
 
+
+#
+# Executed when a station is switching DMO-mode=on
+#
+proc dmo_on {tsi} {
+
+}
+
+
+#
+# Executed when a station is switching DMO-mode=off
+#
+proc dmo_off {tsi} {
+
+}
+
+
+#
+# Executed when a station is in the vicinity
+#
+proc proximity_info {tsi distance bearing} {
+
+}
+
 # end of namespace
 }
 
