@@ -194,6 +194,12 @@ class LocationInfo
       std::string comment;
     };
 
+    Coordinate getCoordinate(bool isLatitude)
+    {
+      if (isLatitude) return loc_cfg.lat_pos;
+      return loc_cfg.lon_pos;
+    }
+
     static bool initialize(const Async::Config &cfg, const std::string &cfg_name);
 
     void updateDirectoryStatus(EchoLink::StationData::Status new_status);

@@ -183,7 +183,8 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   sds_when_dmo_off(false), sds_when_proximity(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
-  proximity_warning(3.1), time_between_sds(3600)
+  proximity_warning(3.1), time_between_sds(3600),own_lat(0.0),
+  own_lon(0.0)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
@@ -209,6 +210,13 @@ bool TetraLogic::initialize(void)
   if (!Logic::initialize())
   {
     isok = false;
+  }
+  
+   // get own position
+  if (LocationInfo::has_instance())
+  {
+    own_lat = getDecimalDegree(LocationInfo::instance()->getCoordinate(true));
+    own_lon = getDecimalDegree(LocationInfo::instance()->getCoordinate(false));
   }
 
   cfg().getValue(name(), "MUTE_RX_ON_TX", mute_rx_on_tx);
@@ -932,7 +940,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
 {
 
   Sds m_sds;
-  stringstream ss;
+  stringstream ss, sstcl;
   std::string sds_txt;
   std::string t_sds;
   stringstream m_aprsinfo;
@@ -997,6 +1005,13 @@ void TetraLogic::handleSdsMsg(std::string sds)
       }
       // proximity, dmo on, dmo off?
       sendInfoSds(m_sds.tsi, lipinfo.reasonforsending);
+      
+      // calculate distance RPT<->MS
+      sstcl << "distance_rpt_ms " << m_sds.tsi << " "
+         << calcDistance(own_lat, own_lon, lipinfo.latitude, lipinfo.longitude)
+         << " "
+         << calcBearing(own_lat, own_lon, lipinfo.latitude, lipinfo.longitude);
+      processEvent(sstcl.str());
       break;
 
     case STATE_SDS:

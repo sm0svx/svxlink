@@ -559,10 +559,19 @@ float calcDistance(float lat1, float lon1, float lat2, float lon2)
 float calcBearing(float lat1, float lon1, float lat2, float lon2)
 {
 
-  float bearing = atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), 
-                  sin(lon2-lon1)*cos(lat2));
+  float bearing = abs(atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), 
+                  sin(lon2-lon1)*cos(lat2)));
   return static_cast<float>(static_cast<int>(bearing * 10.))/10.;
 } /* calcBearing */
+
+
+float getDecimalDegree(LocationInfo::Coordinate pos)
+{
+  float degree = 0.0;
+  degree = static_cast<float>(pos.deg + (pos.min + (pos.sec/60.0))/60.0);
+  return degree;
+
+} /* getDecimalDegree */
 
 
 std::string getPeiError(int errorcode)

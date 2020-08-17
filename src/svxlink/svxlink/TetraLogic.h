@@ -329,6 +329,8 @@ class TetraLogic : public Logic
     float proximity_warning;
     int time_between_sds;
     SquelchTetra* tetra_modem_sql;
+    float own_lat;
+    float own_lon;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
