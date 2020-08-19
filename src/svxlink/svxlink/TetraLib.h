@@ -94,7 +94,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
+# define M_PI           3.14159265358979323846  /* pi */
+# define RADIUS         6378.16                 /* Earth radius */
 
 /****************************************************************************
  *
@@ -543,28 +544,24 @@ std::string decodeSDS(std::string hexSDS)
 
 float radians(float degrees)
 {
-  const double PIx = 3.141592653589793;
-  return (degrees * PIx) / 180.0;
+  return (degrees * M_PI) / 180.0;
 } /* radians */
 
 
 float degrees(float radians)
 {
-  const double PIx = 3.141592653589793;
-  return (radians * 180.0) / PIx;
+  return (radians * 180.0) / M_PI;
 } /* degrees */
 
 
 float calcDistance(float lat1, float lon1, float lat2, float lon2)
 {
-  const double PIx = 3.141592653589793;
-  const double RADIUS = 6378.16;
 
-  double dlon = PIx * (lon2 - lon1) / 180.0;
-  double dlat = PIx * (lat2 - lat1) / 180.0;
+  double dlon = M_PI * (lon2 - lon1) / 180.0;
+  double dlat = M_PI * (lat2 - lat1) / 180.0;
   
-  double a = (sin(dlat / 2) * sin(dlat / 2)) + cos(PIx*lat1/180.0) * 
-              cos(PIx*lat2/180) * (sin(dlon / 2) * sin(dlon / 2));
+  double a = (sin(dlat / 2) * sin(dlat / 2)) + cos(M_PI*lat1/180.0) * 
+              cos(M_PI*lat2/180) * (sin(dlon / 2) * sin(dlon / 2));
   double angle = 2 * atan2(sqrt(a), sqrt(1 - a));
   return static_cast<float>(static_cast<int>(angle * RADIUS * 100.))/100.;
 } /* calcDistance */
