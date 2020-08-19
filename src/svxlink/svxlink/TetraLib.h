@@ -541,6 +541,20 @@ std::string decodeSDS(std::string hexSDS)
 } /* decodeSDS */
 
 
+float radians(float degrees)
+{
+  const double PIx = 3.141592653589793;
+  return (degrees * PIx) / 180.0;
+} /* radians */
+
+
+float degrees(float radians)
+{
+  const double PIx = 3.141592653589793;
+  return (radians * 180.0) / PIx;
+} /* degrees */
+
+
 float calcDistance(float lat1, float lon1, float lat2, float lon2)
 {
   const double PIx = 3.141592653589793;
@@ -558,10 +572,14 @@ float calcDistance(float lat1, float lon1, float lat2, float lon2)
 
 float calcBearing(float lat1, float lon1, float lat2, float lon2)
 {
+  float teta1 = radians(lat1);
+  float teta2 = radians(lat2);
+  float delta2 = radians(lon2-lon1);
 
-  float bearing = abs(atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), 
-                  sin(lon2-lon1)*cos(lat2)));
-  return static_cast<float>(static_cast<int>(bearing * 10.))/10.;
+  float y = sin(delta2) * cos(teta2);
+  float x = cos(teta1)*sin(teta2) - sin(teta1)*cos(teta2)*cos(delta2);
+  float br = fmod(degrees(atan2(y,x)) + 360., 360.);
+  return static_cast<float>(static_cast<int>(br * 10.))/10.;
 } /* calcBearing */
 
 
