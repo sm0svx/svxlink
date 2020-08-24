@@ -280,7 +280,7 @@ class TetraLogic : public Logic
 
     typedef enum
     {
-      IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT
+      IDLE, CHECK_AT, INIT, IGNORE_ERRORS, INIT_COMPLETE, WAIT, AT_CMD_WAIT
     } Peidef;
     Peidef    peirequest;
 
@@ -311,6 +311,7 @@ class TetraLogic : public Logic
     bool sds_when_proximity;
     Async::Timer peiComTimer;
     Async::Timer peiActivityTimer;
+    Async::Timer peiBreakCommandTimer;
     Call*    call;
     
     struct pSds {
@@ -349,6 +350,7 @@ class TetraLogic : public Logic
     std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);
     void onPeiActivityTimeout(Async::Timer *timer);
+    void onPeiBreakCommandTimeout(Async::Timer *timer);
     void initGroupCall(int gssi);
     void cfmSdsReceived(std::string tsi);
     void cfmTxtSdsReceived(std::string message, std::string tsi);

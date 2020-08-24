@@ -183,11 +183,13 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   sds_when_dmo_off(false), sds_when_proximity(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
+  peiBreakCommandTimer(3000, Timer::TYPE_ONESHOT, false),
   proximity_warning(3.1), time_between_sds(3600),own_lat(0.0),
   own_lon(0.0)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
+  peiBreakCommandTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiBreakCommandTimeout));
 } /* TetraLogic::TetraLogic */
 
 
@@ -197,6 +199,7 @@ TetraLogic::~TetraLogic(void)
   pei = 0;
   peiComTimer = 0;
   peiActivityTimer = 0;
+  peiBreakCommandTimer = 0;
   delete call;
   delete tetra_modem_sql;
   tetra_modem_sql = 0;
@@ -517,7 +520,7 @@ bool TetraLogic::initialize(void)
   }
   sendPei("\r\n");
 
-  peirequest = INIT;
+  peirequest = AT_CMD_WAIT;
   initPei();
   
   rxValveSetOpen(true);
@@ -650,6 +653,12 @@ void TetraLogic::initPei(void)
 {
   stringstream ss;
   std::string cmd;
+  
+  if (peirequest == AT_CMD_WAIT)
+  {
+    peiBreakCommandTimer.reset();
+    peiBreakCommandTimer.setEnable(true);
+  }
   if (!m_cmds.empty())
   {
     cmd = *(m_cmds.begin());
@@ -1305,6 +1314,13 @@ void TetraLogic::onPeiActivityTimeout(Async::Timer *timer)
   peirequest = CHECK_AT;
   peiActivityTimer.reset();
 } /* TetraLogic::onPeiActivityTimeout */
+
+
+void TetraLogic::onPeiBreakCommandTimeout(Async::Timer *timer)
+{
+  peirequest = INIT;
+  initPei();
+} /* TetraLogic::onPeiBreakCommandTimeout */
 
 
 /*
