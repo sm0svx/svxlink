@@ -608,6 +608,7 @@ void TetraLogic::squelchOpen(bool is_open)
   }
 
   tetra_modem_sql->setSql(is_open);
+  rx().setSql(is_open);
   Logic::squelchOpen(is_open);
 
 } /* TetraLogic::squelchOpen */

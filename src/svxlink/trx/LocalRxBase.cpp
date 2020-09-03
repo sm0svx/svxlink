@@ -752,6 +752,11 @@ void LocalRxBase::reset(void)
 } /* LocalRxBase::reset */
 
 
+void LocalRxBase::setSql(bool is_open)
+{
+  squelch_det->squelchOpen(is_open);
+} /* LocalRxBase::setSql */
+
 
 /****************************************************************************
  *
