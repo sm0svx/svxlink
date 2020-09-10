@@ -140,9 +140,9 @@ SDS_TO_COMMAND=SdsToCommand
 
 [Tetra_Users]
 # ISSI = Call,Name,comment
-090116383000023401=DM0SVX,DMO-Repeater,\\r,Halle/Saale
-090116383000023404=DL1HRC,Adi,\\E,SvxLink operator
-090116383000023428=DL1HQN,Martin,\\E,Groebers
+09011638300023401=DM0SVX,DMO-Repeater,\\r,Halle/Saale
+09011638300023404=DL1HRC,Adi,\\E,SvxLink operator
+09011638300023428=DL1HQN,Martin,\\E,Groebers
 
 [Tetra_Status]
 # status=message

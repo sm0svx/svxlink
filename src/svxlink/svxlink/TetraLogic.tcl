@@ -444,6 +444,14 @@ proc proximity_info {tsi distance bearing} {
 
 }
 
+
+#
+# Executed each time a distance between mobile station and repeater is calculated
+#
+proc distance_rpt_ms {tsi distance bearing} {
+
+}
+
 # end of namespace
 }
 
