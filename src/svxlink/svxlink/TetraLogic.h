@@ -340,6 +340,7 @@ class TetraLogic : public Logic
     void handleSds(std::string sds_head);
     void handleSdsMsg(std::string sds);
     void handleCnumf(std::string m_message);
+    void handleCtgs(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);
     void handleStateSds(std::string m_message);

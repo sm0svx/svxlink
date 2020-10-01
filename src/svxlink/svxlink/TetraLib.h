@@ -103,6 +103,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
  
+/* TxGrant
+   This parameter is used in the call maintenance phase of simplex circuit 
+   mode calls. When received from the MT the TE will know what to do with 
+   the transmitter on the established circuit.
+*/
 std::string TxGrant[] = { 
    "0 - Transmission granted",
    "1 - Transmission not granted",
@@ -110,6 +115,10 @@ std::string TxGrant[] = {
    "3 - Transmission granted to another"
 };
 
+/* Call status
+   The call status information element shall inform the MS/LS about the 
+   status of the call
+*/
 std::string CallStatus[] = {
   "0 - Call progressing",
   "1 - Call queued",
@@ -137,6 +146,10 @@ std::string OpMode[] = {
    "6 - DMO Repeater mode"
 };
 
+/* TX demand priority
+   The TX demand priority information element shall inform the SwMI about
+   the importance of a TX-Demand
+*/
 std::string TxDemandPriority[] = {
    "0 - Low", 
    "1 - High", 
@@ -144,6 +157,10 @@ std::string TxDemandPriority[] = {
    "3 - Emergency"
 };
 
+/* Transient communication type
+   This parameter is used to indicate the communication type in either 
+   V+D or DMO.
+*/
 std::string TransientComType[] = {
    "0 - Voice + Data",
    "1 - DMO-Direct MS-MS",
@@ -152,6 +169,10 @@ std::string TransientComType[] = {
    "4 - DMO-Via DM-REP/GATE" 
 };
 
+/* Reg stat
+   This parameter is used to indicate the registration status of the MT to the 
+   TEI.
+*/
 std::string RegStat[] = {
    "0 - Registering or searching a network, one or more networks are available",
    "1 - Registered, home network",
@@ -161,6 +182,10 @@ std::string RegStat[] = {
    "5 - Registered, visited network"
 };
 
+/* AI Service
+   This parameter is used to determine the type of service to be used in air 
+   interface call set up signalling.
+*/
 std::string AiService[] = {
    "0 - TETRA speech",
    "1 - 7,2 kbit/s unprotected data",
@@ -178,6 +203,10 @@ std::string AiService[] = {
    "13 - Status (16 bits, some values are reserved in EN 300 392-2 [3])"
 };
 
+/* AI mode
+   This parameter is used to indicate the mode of operation or the air 
+   interface protocol stack.
+*/
 std::string AiMode[] = {
    "0 - V+D (trunked mode operation)",
    "1 - DMO",
@@ -186,6 +215,13 @@ std::string AiMode[] = {
    "4 - V+D and DMO (used in conjunction CTSP command)"
 };
 
+/* Disconnect cause
+   This parameter is given in the disconnect message from the MT 
+   when a circuit-mode call is cleared by the other end, the
+   SwMI, the gateway (in the case of DMO) or the MT itself. The 
+   latter may have been requested by the TE. The TE could
+   use the information in MMI or to initiate retries.
+*/
 std::string DisconnectCause[] = {
    "0 - Not defined or unknown",
    "1 - User request",
@@ -230,6 +266,12 @@ std::string DisconnectCause[] = {
    "40 - Security parameter mismatch"
 };
 
+/* DM communication type
+   This parameter is used to indicate the communication type 
+   for outgoing calls in DMO, i.e. whether it is a direct
+   communication between MSs, or whether it is being routed 
+   via a DM-REP, DM-GATE or DM-REP/GATE.
+*/
 std::string DmCommunicationType[] = {
    "0 - Any, MT decides",
    "1 - Direct MS-MS",
@@ -251,6 +293,12 @@ std::string TetraNumType[] = {
   "7 - Group (extended TSI)"
 };
 
+/* Num type
+   This parameter is used to indicate the type of identity returned by the 
+   +CNUM command. The service centre is used as (an optional) part of the 
+   SDS-TL transport service protocol. The gateways returned are those used in 
+   the SwMI for access to PSTN and PABX services.
+*/
 std::string NumType[] = {
    "0 - Individual (ISSI or ITSI)",
    "1 - Group (GSSI or GTSI)",
@@ -287,13 +335,37 @@ std::string ReasonForSending[] = {
   "21 - Reserved"
 };
 
+/* Group type
+   This parameter is used when setting the MT groups for use in V+D. A 
+   selected group will be used for outgoing calls.
+   Either selected or scanned groups will receive incoming calls. Only 
+   incoming group calls with a priority higher than the scan level will 
+   interrupt ongoing group calls of a lower level.
+   If the group type is "none" all groups will be detached from the SwMI.
+*/
+std::string GroupType[] = {
+  "0 - None",
+  "1 - Select",
+  "2 - Scan priority 1",
+  "3 - Scan priority 2",
+  "4 - Scan priority 3",
+  "5 - Scan priority 4",
+  "6 - Scan priority 5",
+  "7 - Scan priority 6"
+};
 
+// This parameter enables the unsolicited reporting of changes in visible 
+// gateways and/or repeaters.
 std::string sdsStatus[] {
-"0 - Incoming message stored and unread",
-"1 - Incoming message stored and read",
-"2 - Outgoing message stored and unsent",
-"3 - Outgoing message stored and sent"
-} ;
+  "0 - Incoming message stored and unread",
+  "1 - Incoming message stored and read",
+  "2 - Outgoing message stored and unsent",
+  "3 - Outgoing message stored and sent"
+};
+
+std::string GrUnsolic[] {
+
+};
 
 // contain decoded data of a lip sds
 struct LipInfo {

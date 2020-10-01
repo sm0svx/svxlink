@@ -110,6 +110,7 @@ using namespace SvxLink;
 #define ACK_SDS 25
 #define SDS_ID 26
 #define CONCAT_SDS 27
+#define CTGS 28
 
 #define DMO_OFF 7
 #define DMO_ON 8
@@ -784,6 +785,10 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       getOpMode(m_message);
       break;
 
+    case CTGS:
+      handleCtgs(m_message);
+      break;
+      
     case INVALID:
       cout << "+++ Pei answer not known, ignoring ;)" << endl;
 
@@ -1368,6 +1373,21 @@ void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
 } /* TetraLogic::cfmSdsReceived */
 
 
+// +CTGS=[<group type>], <called party identity> ... [,[<group type>], 
+//       < called party identity>]
+// In V+D group type shall be used. In DMO the group type may be omitted,
+// as it will be ignored.
+// PEI: +CTGS: 1,09011638300000001
+void TetraLogic::handleCtgs(std::string m_message)
+{
+  size_t f = m_message.find("+CTGS: ");
+  if ( f != string::npos)
+  {
+    m_message.erase(0,7);
+  }
+} /* TetraLogic::handleCtgs */
+
+
 void TetraLogic::handleCnumf(std::string m_message)
 {
 
@@ -1541,6 +1561,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
   mre["^\\+CMGS:"]                                = SDS_ID;
   mre["^\\+CNUMF:"]                               = CNUMF;
+  mre["^\\+CTGS:"]                                = CTGS;
   mre["^02"]                                      = SIMPLE_TEXT_SDS; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
