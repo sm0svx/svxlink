@@ -108,7 +108,7 @@ using namespace SvxLink;
 #define WAP_PROTOCOL 23
 #define SIMPLE_TEXT_SDS 24
 #define ACK_SDS 25
-#define SDS_ID 26
+#define CMGS 26
 #define CONCAT_SDS 27
 #define CTGS 28
 
@@ -413,8 +413,8 @@ bool TetraLogic::initialize(void)
       } 
       else
       {
-        sds_to_command[*slit] = value;
         cout << *slit << "=" << value << endl;
+        sds_to_command[*slit] = value;
       }
     }
   }
@@ -470,6 +470,7 @@ bool TetraLogic::initialize(void)
       }
       else
       {
+        cout << *slit << "=" << value << endl;
         state_sds[*slit] = value;
       }
     }
@@ -766,7 +767,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       handleSdsMsg(m_message);
       break;
 
-    case SDS_ID:
+    case CMGS:
       // +CMGS: <SDS Instance>[, <SDS status> [, <message reference>]]
       // sds state send be MS
       break;
@@ -1069,6 +1070,10 @@ void TetraLogic::handleSdsMsg(std::string sds)
       cfmSdsReceived(m_sds.tsi);
       break;
     
+    case CMGS:
+      ss << "sent_message \"" << handleCmgs(sds) << "\"" << endl;
+      break;
+    
     case INVALID:
       ss << "unknown_sds_received";
       cout << "*** Unknown type of SDS" << endl;
@@ -1099,6 +1104,34 @@ void TetraLogic::handleSdsMsg(std::string sds)
   }
 
 } /* TetraLogic::getTypeOfService */
+
+
+// +CTGS=[<group type>], <called party identity> ... [,[<group type>], 
+//       < called party identity>]
+// In V+D group type shall be used. In DMO the group type may be omitted,
+// as it will be ignored.
+// PEI: +CTGS: 1,09011638300000001
+std::string TetraLogic::handleCtgs(std::string m_message)
+{
+  size_t f = m_message.find("+CTGS: ");
+  if ( f != string::npos)
+  {
+    m_message.erase(0,7);
+  }
+  return m_message;
+} /* TetraLogic::handleCtgs */
+
+
+// +CMGS= <called party identity >, <length><CR><LF>user data<CtrlZ> 
+std::string TetraLogic::handleCmgs(std::string m_message)
+{
+  size_t f = m_message.find("+CMGS: ");
+  if ( f != string::npos)
+  {
+    m_message.erase(0,7);
+  }  
+  return m_message;
+} /* TetraLogic::handleCmgs */
 
 
 std::string TetraLogic::handleTextSds(std::string m_message)
@@ -1182,21 +1215,23 @@ void TetraLogic::handleStateSds(std::string m_message)
 
   if (debug)
   {
-    cout << "State Sds received: " << m_message << endl;        
+    cout << "State Sds received: " << m_message << endl;
   }
-  
+
   std::map<string, string>::iterator it = sds_to_command.find(m_message);
-  
+
   if (it != sds_to_command.end())
   {
     // to connect/disconnect Links
     ss << it->second << "#";
     injectDtmf(ss.str(), 10);
   }
-  else if (state_sds.find(m_message) != state_sds.end())
+
+  it = state_sds.find(m_message);
+  if (it != state_sds.end())
   {
     // process macro, if defined
-    ss << "D" << m_message << "#";  
+    ss << "D" << m_message << "#";
     injectDtmf(ss.str(), 10);
   }
 } /* TetraLogic::handleStateSds */
@@ -1373,21 +1408,6 @@ void TetraLogic::cfmTxtSdsReceived(std::string message, std::string tsi)
 } /* TetraLogic::cfmSdsReceived */
 
 
-// +CTGS=[<group type>], <called party identity> ... [,[<group type>], 
-//       < called party identity>]
-// In V+D group type shall be used. In DMO the group type may be omitted,
-// as it will be ignored.
-// PEI: +CTGS: 1,09011638300000001
-void TetraLogic::handleCtgs(std::string m_message)
-{
-  size_t f = m_message.find("+CTGS: ");
-  if ( f != string::npos)
-  {
-    m_message.erase(0,7);
-  }
-} /* TetraLogic::handleCtgs */
-
-
 void TetraLogic::handleCnumf(std::string m_message)
 {
 
@@ -1507,6 +1527,10 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
           sstcl << "proximity_info " << t_iu->first << " " << distancediff 
                 << " " << bearing;
         }
+        else 
+        {
+          continue;
+        }
 
         if (debug)
         {
@@ -1516,7 +1540,10 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
         
         // execute tcl procedure(s)
-        processEvent(sstcl.str());
+        if (sstcl.str().length() > 0)
+        {
+          processEvent(sstcl.str());
+        }
         
          // put the new Sds int a queue...
         Sds m_Sds;
@@ -1559,7 +1586,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTXW:"]                                = TX_WAIT;
   mre["^\\+CNUM:"]                                = MS_CNUM;
   mre["^\\+CTOM: [0-9]$"]                         = OP_MODE;
-  mre["^\\+CMGS:"]                                = SDS_ID;
+  mre["^\\+CMGS:"]                                = CMGS;
   mre["^\\+CNUMF:"]                               = CNUMF;
   mre["^\\+CTGS:"]                                = CTGS;
   mre["^02"]                                      = SIMPLE_TEXT_SDS; 
@@ -1569,8 +1596,8 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^8204"]                                    = TEXT_SDS;
   mre["^821000"]                                  = ACK_SDS;
   mre["^0C"]                                      = CONCAT_SDS;
-  mre["^83"]                                      = COMPLEX_SDS;
-  mre["^8[0-9A-F]{3}$"]                           = STATE_SDS;
+  //mre["^83"]                                    = COMPLEX_SDS;
+  mre["^[8-9A-F][0-9A-F]{3}$"]                    = STATE_SDS;
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {

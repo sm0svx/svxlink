@@ -452,6 +452,16 @@ proc distance_rpt_ms {tsi distance bearing} {
 
 }
 
+
+#
+# Executed when the MS sends a message about the state of a Sds
+# +CMGS= <called party identity >, <length><CR><LF>user data<CtrlZ> 
+#
+proc sent_message {response} {
+
+}
+
+
 # end of namespace
 }
 
