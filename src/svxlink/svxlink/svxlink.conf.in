@@ -146,9 +146,9 @@ SDS_TO_COMMAND=SdsToCommand
 
 [Tetra_Status]
 # status=message
-8051=not available
-8052=available
-8053=no further information
+32849=not available
+32850=available
+32851=no further information
 
 [SdsOnUserActivity]
 0=Hello user you have powered on
@@ -159,8 +159,8 @@ SDS_TO_COMMAND=SdsToCommand
 5=Hello user TXI=on
 
 [SdsToCommand]
-8200=121
-8201=120
+33280=121
+33281=120
 
 [LinkToR4]
 CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD

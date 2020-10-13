@@ -397,24 +397,26 @@ bool TetraLogic::initialize(void)
   }
 
   // a section that combine SDS and a command:
-  // 8055=1234
+  // 32768=1234
   std::string sds_to_cmd;
+  unsigned int isds;
   if (cfg().getValue(name(), "SDS_TO_COMMAND", sds_to_cmd))
   {
     list<string> sds2cmd_list = cfg().listSection(sds_to_cmd);
     for (slit=sds2cmd_list.begin(); slit!=sds2cmd_list.end(); slit++)
     {
       cfg().getValue(sds_to_cmd, *slit, value);
-      if ( (*slit).length() != 4)
+      isds = static_cast<unsigned int>(std::stoul(*slit));
+      if (isds < 32768 || isds > 65535)
       {
-        cout << "***ERROR: Sds length in section " << name() 
-             << "/SDS_TO_COMMAND to long (" << (*slit) 
-             << "), must be 4, ignoring" << endl;
+        cout << "*** ERROR: Sds decimal value in section " << name() 
+             << "/SDS_TO_COMMAND is not valid (" << isds 
+             << "), must be between 32768 and 65535" << endl;
       } 
       else
       {
-        cout << *slit << "=" << value << endl;
-        sds_to_command[*slit] = value;
+        if (debug) cout << isds << "=" << value << endl;
+        sds_to_command[isds] = value;
       }
     }
   }
@@ -462,16 +464,17 @@ bool TetraLogic::initialize(void)
     for (slit=state_list.begin(); slit!=state_list.end(); slit++)
     {
       cfg().getValue(status_section, *slit, value);
-      if( (*slit).length() != 4)
+      isds = static_cast<unsigned int>(std::stoul(*slit));
+      if(isds < 32768 || isds > 65536)
       {
-        cout << "***ERROR: Sds length in section "<< name() 
-             << "/TETRA_STATUS to long (" << (*slit)
-             << "), must be 4, ignoring" << endl;
+        cout << "*** ERROR: Sds decimal value in section " << name()
+             << "/TETRA_STATUS is not valid (" << isds
+             << "), must be between 32768 and 65535" << endl;
       }
       else
       {
-        cout << *slit << "=" << value << endl;
-        state_sds[*slit] = value;
+        if (debug) cout << isds << "=" << value << endl;
+        state_sds[isds] = value;
       }
     }
   }
@@ -960,7 +963,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
   std::string sds_txt;
   std::string t_sds;
   stringstream m_aprsinfo;
-  std::map<string, string>::iterator it;
+  std::map<unsigned int, string>::iterator it;
   std::map<int, string>::iterator oa;
   LipInfo lipinfo;
 
@@ -988,6 +991,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
   userdata[m_sds.tsi].last_activity = time(NULL);
 
   int m_sdstype = handleMessage(sds);
+  unsigned int isds;
   switch (m_sdstype)
   {
     case LIP_SDS:
@@ -1031,17 +1035,17 @@ void TetraLogic::handleSdsMsg(std::string sds)
       break;
 
     case STATE_SDS:
-      handleStateSds(sds);
-      userdata[m_sds.tsi].state = sds;
-      //cfmSdsReceived(m_sds.tsi);
+      isds = hex2int(sds);
+      handleStateSds(isds);
+      userdata[m_sds.tsi].state = isds;
       m_aprsinfo << ">" << "State:";
-      if ((it = state_sds.find(sds)) != state_sds.end())
+      if ((it = state_sds.find(isds)) != state_sds.end())
       {
         m_aprsinfo << it->second;
       }        
-      m_aprsinfo << " (" << sds << ")";
+      m_aprsinfo << " (" << isds << ")";
 
-      ss << "state_sds_received " << m_sds.tsi << " " << sds;
+      ss << "state_sds_received " << m_sds.tsi << " " << isds;
       break;
       
     case TEXT_SDS:
@@ -1209,16 +1213,16 @@ std::string TetraLogic::getISSI(std::string tsi)
 } /* TetraLogic::getISSI */
 
 
-void TetraLogic::handleStateSds(std::string m_message)
+void TetraLogic::handleStateSds(unsigned int isds)
 {
   stringstream ss;
 
   if (debug)
   {
-    cout << "State Sds received: " << m_message << endl;
+    cout << "State Sds received: " << isds << endl;
   }
 
-  std::map<string, string>::iterator it = sds_to_command.find(m_message);
+  std::map<unsigned int, string>::iterator it = sds_to_command.find(isds);
 
   if (it != sds_to_command.end())
   {
@@ -1227,11 +1231,11 @@ void TetraLogic::handleStateSds(std::string m_message)
     injectDtmf(ss.str(), 10);
   }
 
-  it = state_sds.find(m_message);
+  it = state_sds.find(isds);
   if (it != state_sds.end())
   {
     // process macro, if defined
-    ss << "D" << m_message << "#";
+    ss << "D" << isds << "#";
     injectDtmf(ss.str(), 10);
   }
 } /* TetraLogic::handleStateSds */
@@ -1636,6 +1640,15 @@ bool TetraLogic::rmatch(std::string tok, std::string pattern)
   return success;
 } /* TetraLogic::rmatch */
 
+
+unsigned int TetraLogic::hex2int(std::string sds)
+{
+  unsigned int t;
+  std::stringstream ss;
+  ss << std::hex << sds;
+  ss >> t;
+  return t;
+} /* Logic::hex2int */
 
 /*
  * This file has not been truncated

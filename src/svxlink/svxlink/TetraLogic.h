@@ -269,7 +269,7 @@ class TetraLogic : public Logic
     std::map<std::string, User> userdata;
     
     std::map<int, std::string> sds_on_activity;
-    std::map<std::string, std::string> sds_to_command;
+    std::map<unsigned int, std::string> sds_to_command;
 
     int    peistate;
     std::string peistream;
@@ -322,7 +322,7 @@ class TetraLogic : public Logic
     };
     pSds pSDS;
 
-    std::map<std::string, std::string> state_sds;
+    std::map<unsigned int, std::string> state_sds;
     StrList m_cmds;
     int pending_sdsid;
     char t_aprs_sym;
@@ -344,7 +344,7 @@ class TetraLogic : public Logic
     std::string handleCmgs(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);
-    void handleStateSds(std::string m_message);
+    void handleStateSds(unsigned int isds);
     void handleTxGrant(std::string txgrant);
     std::string getTSI(std::string issi);
     std::string getISSI(std::string tsi);
@@ -364,6 +364,7 @@ class TetraLogic : public Logic
     void handleCallReleased(std::string m_message);
     void getOpMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
+    unsigned int hex2int(std::string sds);
 
 };  /* class TetraLogic */
 

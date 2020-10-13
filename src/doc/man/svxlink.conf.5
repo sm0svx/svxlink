@@ -762,23 +762,24 @@ The format is:
 09011638300012345=DL1ABC,NoName,/e,Testuser
 .TP
 .B TETRA_STATUS
-The section name that contain a list of status codes and descriptions. Example:
+The section name that contain a list of status codes in decimal notation and 
+descriptions. Example:
 TETRA_STATUS=Tetra_Status
 The format is:
 [Tetra_Status]
-8000=at home
-8001=on the road
+32768=at home
+32769=on the road
 .TP
 .B SDS_TO_COMMAND
-The section name that contain a list of status codes and the according command 
-that will be executed when the state sds has been received. The idea behind is 
-the possibility to connect/disconntct links.
+The section name that contain a list of status codes in decimal notation and the
+according command that will be executed when the state sds has been received. 
+The idea behind is the possibility to connect/disconntct links.
 Example:
 SDS_TO_COMMAND=SdsToCommand
 the format is:
 [SdsToCommand]
-8030=721#
-8030=72#
+82816=721
+82817=72
 .TP
 .B SDS_ON_USERACTIVITY
 The section name that contain a list of "Reason of Sending"="Sds-Message". If 
