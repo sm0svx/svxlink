@@ -372,8 +372,19 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+  cfg().getValue(name(), "SIPPORT", m_sip_port); // SIP udp-port default: 5060
+  
   std::string m_sipregistrar;
   cfg().getValue(name(), "SIPREGISTRAR", m_sipregistrar);
+  std::string t_sreg = ":";
+  t_sreg += to_string(m_sip_port);
+  
+  if (m_sip_port != 5060 && (m_sipregistrar.find(t_sreg) == std::string::npos))
+  {
+    cout << "+++ WARNING: The SIPPORT is not the default (5060), so the param "
+         << "SIPREGISTRAR should be configured as 'SIPREGISTRAR=" 
+         << m_sipregistrar << ":" << m_sip_port << "'." << endl;
+  }
 
   std::string dtmf_ctrl_pty_path;
   cfg().getValue(name(), "SIP_CTRL_PTY", dtmf_ctrl_pty_path);
@@ -420,8 +431,6 @@ bool SipLogic::initialize(void)
   cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-6
   if (m_siploglevel < 0 || m_siploglevel > 6) m_siploglevel = 3;
 
-  cfg().getValue(name(), "SIPPORT", m_sip_port); // SIP udp-port default: 5060
-
   uint16_t m_reg_timeout = 300;
   cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
   if (m_reg_timeout < 60 || m_reg_timeout > 1000) m_reg_timeout = 300;
@@ -437,13 +446,14 @@ bool SipLogic::initialize(void)
     value = "^.*$";
   }
   accept_incoming_regex = new regex_t;
+  size_t err_size;
   int err = regcomp(accept_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
     size_t msg_size = regerror(err, accept_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, accept_incoming_regex, msg, msg_size);
+    err_size = regerror(err, accept_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << name() << "/ACCEPT_INCOMING: "
          << msg << endl;
@@ -461,14 +471,14 @@ bool SipLogic::initialize(void)
   {
     size_t msg_size = regerror(err, reject_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, reject_incoming_regex, msg, msg_size);
+    err_size = regerror(err, reject_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << name() << "/REJECT_INCOMING: "
          << msg << endl;
     return false;
   }
 
-   if (!cfg().getValue(name(), "ACCEPT_OUTGOING", value))
+  if (!cfg().getValue(name(), "ACCEPT_OUTGOING", value))
   {
     value = "^.*$";
   }
@@ -479,7 +489,7 @@ bool SipLogic::initialize(void)
   {
     size_t msg_size = regerror(err, accept_outgoing_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, accept_outgoing_regex, msg, msg_size);
+    err_size = regerror(err, accept_outgoing_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << name() << "/ACCEPT_OUTGOING: "
          << msg << endl;
@@ -497,7 +507,7 @@ bool SipLogic::initialize(void)
   {
     size_t msg_size = regerror(err, reject_outgoing_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, reject_outgoing_regex, msg, msg_size);
+    err_size = regerror(err, reject_outgoing_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << name() << "/REJECT_OUTGOING: "
          << msg << endl;
@@ -812,6 +822,7 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
         media->startTransmit(*sip_buf);
         m_infrom_sip->setOpen(true);
         m_outto_sip->setOpen(true);
+        onSquelchOpen(false);
       }
     }
   }
@@ -928,7 +939,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
         if (calls.empty())
         {
           m_outto_sip->setOpen(false);
-          //m_infrom_sip->setOpen(false);
+          m_infrom_sip->setOpen(false);
           onSquelchOpen(false);
         }
         ss << "hangup_call " << caller << " "

@@ -136,10 +136,6 @@ proc checkPeriodicIdentify {} {
 proc pickup_call {caller} {
   puts "pickup call from: $caller";
   playSilence 500;
-  playMsg "SipLogic" "incoming_phonecall";
-  playSilence 100;
-  spellNumber [getCallerNumber $caller];
-  playSilence 500;
 }
 
 
@@ -258,7 +254,12 @@ proc registration_state {server state code} {
 proc getCallerNumber {uri} {
   set r [split $uri @];
   set number [split [lindex $r 0] :];
-  return [lindex $number 1];
+  set nr [lindex $number 1];
+  if {$nr ne ""} {
+    return $nr;
+  } else {
+    return $uri;
+  }
 }
 
 # end of namespace
