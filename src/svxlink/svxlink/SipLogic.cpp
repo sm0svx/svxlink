@@ -867,12 +867,12 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
 
   if ((got = m_ar->readSamples(smpl, count)) > 0)
   {
-    for (int i = 0; i < got; i++)
+    int i = 0;
+    for (float* s = smpl; s < smpl + sizeof(float)*got; s += sizeof(float))
     {
       samples[i] = (pj_int16_t)(smpl[i] * 32768);
+      i++;
     }
-    // mit Pointer Arithmetik idR schneller
-    // for(float* s = smpl; s < smpl + sizeof(float)*got; s += sizeof(float))
   }
 
   /*
