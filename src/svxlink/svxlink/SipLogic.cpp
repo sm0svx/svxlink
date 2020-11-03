@@ -603,7 +603,7 @@ bool SipLogic::initialize(void)
   prev_src->registerSink(m_infrom_sip, true);
   prev_src = m_infrom_sip;
 
-  unsigned sql_hangtime = 1200;
+  unsigned sql_hangtime;
 
   if (!semi_duplex)
   {
@@ -620,6 +620,10 @@ bool SipLogic::initialize(void)
     if (cfg().getValue(name(), "SQL_HANGTIME", sql_hangtime))
     {
       squelch_det->setHangtime(sql_hangtime);
+    }
+    else
+    {
+      squelch_det->setHangtime(1300);
     }
     squelch_det->squelchOpen.connect(mem_fun(*this, &SipLogic::onSquelchOpen));
     splitter->addSink(squelch_det, true);
