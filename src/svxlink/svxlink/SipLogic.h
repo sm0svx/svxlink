@@ -160,6 +160,8 @@ class SipLogic : public LogicBase
 
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
+    virtual void playTone(int fq, int amp, int len);
+    virtual void playDtmf(const std::string& digits, int amp, int len);    
     virtual void initCall(const std::string& remote);
 
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
@@ -199,6 +201,7 @@ class SipLogic : public LogicBase
     bool                      report_events_as_idle;
     bool                      startup_finished;
     Async::AudioSelector      *selector;
+    bool                      semi_duplex;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);

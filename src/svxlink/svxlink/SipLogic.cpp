@@ -271,7 +271,7 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     squelch_det(0), accept_incoming_regex(0), reject_incoming_regex(0),
     accept_outgoing_regex(0), reject_outgoing_regex(0),
     msg_handler(0), event_handler(0), report_events_as_idle(false),
-    startup_finished(false), selector(0)
+    startup_finished(false), selector(0), semi_duplex(false)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -405,8 +405,7 @@ bool SipLogic::initialize(void)
 
   cfg().getValue(name(), "AUTOANSWER", m_autoanswer); // auto pickup the call
 
-  bool m_semiduplex = false;
-  cfg().getValue(name(), "SEMI_DUPLEX", m_semiduplex); // only for RepeaterLogics
+  cfg().getValue(name(), "SEMI_DUPLEX", semi_duplex); // only for RepeaterLogics
 
   std::string  m_autoconnect = "";
   if (cfg().getValue(name(), "AUTOCONNECT", m_autoconnect)) // auto connect a number
@@ -540,28 +539,6 @@ bool SipLogic::initialize(void)
     return false;
   }
 
-    // the event handler
-  string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
-  {
-    cerr << name() << ":*** ERROR: Config variable EVENT_HANDLER not set"
-         << endl;
-    return false;
-  }
-  event_handler = new EventHandler(event_handler_str, name());
-  event_handler->setVariable("is_core_event_handler", "1");
-  event_handler->setVariable("logic_name", name().c_str());
-  event_handler->playFile.connect(mem_fun(*this, &SipLogic::playFile));
-  event_handler->initCall.connect(mem_fun(*this, &SipLogic::initCall));
-  event_handler->processEvent("namespace eval SipLogic {}");
-
-  if (!event_handler->initialize())
-  {
-    cout << name() << ":*** ERROR initializing eventhandler in SipLogic."
-         << endl;
-    return false;
-  }
-
    // add SipAccount
   AccountConfig acc_cfg;
   acc_cfg.idUri = "\"";
@@ -628,7 +605,7 @@ bool SipLogic::initialize(void)
 
   unsigned sql_hangtime = 1200;
 
-  if (!m_semiduplex)
+  if (!semi_duplex)
   {
     squelch_det = new SquelchVox;
     if (!squelch_det->initialize(cfg(), name()))
@@ -649,10 +626,7 @@ bool SipLogic::initialize(void)
     cout << name() << ": Simplexmode, using VOX squelch for Sip." << endl;
   }
   else {
-    // ToDo
-    cout << name() << ": *** Semiduplexmode is still not implemented *** "
-         << " -> use SEMI_DUPLEX=0" << endl;
-    return false;
+    cout << name() << ": Semiduplexmode, no Sql used for Sip." << endl;
   }
 
    // Create the AudioSelector for Sip and message audio streams
@@ -670,6 +644,31 @@ bool SipLogic::initialize(void)
 
   m_logic_con_out = selector;
 
+    // the event handler
+  string event_handler_str;
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  {
+    cerr << name() << ":*** ERROR: Config variable EVENT_HANDLER not set"
+         << endl;
+    return false;
+  }
+  event_handler = new EventHandler(event_handler_str, name());
+  event_handler->setVariable("is_core_event_handler", "1");
+  event_handler->setVariable("logic_name", name().c_str());
+  event_handler->playFile.connect(mem_fun(*this, &SipLogic::playFile));
+  event_handler->playSilence.connect(mem_fun(*this, &SipLogic::playSilence));
+  event_handler->playTone.connect(mem_fun(*this, &SipLogic::playTone));
+  event_handler->playDtmf.connect(mem_fun(*this, &SipLogic::playDtmf));
+  event_handler->initCall.connect(mem_fun(*this, &SipLogic::initCall));
+  event_handler->processEvent("namespace eval SipLogic {}");
+
+  if (!event_handler->initialize())
+  {
+    cout << name() << ":*** ERROR initializing eventhandler in SipLogic."
+         << endl;
+    return false;
+  }
+  
   /*************** outgoing to sip ********************/
 
    // handler for audio stream from logic to sip
@@ -820,9 +819,8 @@ void SipLogic::onMediaState(sip::_Call *call, pj::OnCallMediaStateParam &prm)
         sip_buf = static_cast<pj::AudioMedia *>(call->getMedia(0));
         sip_buf->startTransmit(*media);
         media->startTransmit(*sip_buf);
-        m_infrom_sip->setOpen(true);
         m_outto_sip->setOpen(true);
-        onSquelchOpen(false);
+        m_infrom_sip->setOpen(semi_duplex);      
       }
     }
   }
@@ -940,7 +938,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
         {
           m_outto_sip->setOpen(false);
           m_infrom_sip->setOpen(false);
-          onSquelchOpen(false);
+          //onSquelchOpen(false);
         }
         ss << "hangup_call " << caller << " "
            << (*it)->getInfo().totalDuration.sec << "."
@@ -1091,7 +1089,6 @@ std::string SipLogic::getCallerNumber(std::string uri)
     return uri.substr(pos + 1 , pos2 - pos - 1);
   }
   return "unknown";
-
 } /* SipLogic::getCallerNumber */
 
 
@@ -1102,7 +1099,6 @@ void SipLogic::callTimeout(Async::Timer *t)
   processEvent(ss.str());
   m_call_timeout_timer.setEnable(false);
   m_call_timeout_timer.reset();
-
 } /* SipLogic::flushTimeout */
 
 
@@ -1146,6 +1142,22 @@ void SipLogic::playSilence(int length)
 {
   msg_handler->playSilence(length, report_events_as_idle);
 } /* SipLogic::playSilence */
+
+
+void SipLogic::playTone(int fq, int amp, int len)
+{
+  msg_handler->playTone(fq, amp, len, report_events_as_idle);
+} /* SipLogic::playTone */
+
+
+void SipLogic::playDtmf(const std::string& digits, int amp, int len)
+{
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    msg_handler->playDtmf(digits[i], amp, len);
+    msg_handler->playSilence(50, report_events_as_idle);
+  }
+} /* SipLogic::playDtmf */
 
 
 void SipLogic::initCall(const string& remote)

@@ -262,6 +262,24 @@ proc getCallerNumber {uri} {
   }
 }
 
+
+#
+# ToDo: Sends a reject-message to the caller via Sip
+#
+proc remote_reject_call {} {
+  playMsg "call_rejected";
+  playSilence 2500;
+}
+
+
+#
+# ToDo: Sends a greeting message to the caller via Sip
+#
+proc remote_greeting {} {
+  playMsg "welcome";
+  playSilence 200;
+}
+
 # end of namespace
 }
 
