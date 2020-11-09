@@ -10,6 +10,7 @@ use Fcntl;
 use Socket;
 use JSON::PP;
 use XML::Simple;
+use Try::Tiny;
 
 my $state_pty ="/dev/shm/state_pty";
 my $logfile = "/var/log/eventsource";
