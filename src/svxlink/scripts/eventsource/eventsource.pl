@@ -71,7 +71,13 @@ sub parse($) {
     $parsed{"event"} = shift @fields;
 
     $json = JSON::PP->new;
-    my $rx_info = $json->decode(shift @fields);
+    my $rx_info_raw = shift @fields;
+    my $rx_info;
+    try {
+    	$rx_info = $json->decode(shift @fields);
+    } catch {
+        unshift @fields, $rx_info_raw;
+    };
 
     if ($parsed{"event"} eq "Voter:sql_state") {
         foreach $item (@$rx_info) {
