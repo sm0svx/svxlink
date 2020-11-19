@@ -577,7 +577,7 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
     ss << std::hex << (int)message[a];
   }
 
-  char f[ss.str().length() + issi.length() +20];
+  char f[ss.str().length() + issi.length() + 20];
   sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
              std::to_string(std::stoi(issi)).c_str(),
              (int)ss.str().length() * 4,
@@ -585,6 +585,19 @@ bool createSDS(std::string & sds, std::string issi, std::string message)
   sds = f;
   return true;
 } /* createSDS */
+
+
+bool createRawSDS(std::string & sds, std::string issi, std::string message)
+{
+  if (message.length() > 220 || issi.length() > 8) return false;
+  char f[message.length() + issi.length() + 20];
+  sprintf(f, "AT+CMGS=%s,%03d\r\n%s%c",
+             std::to_string(std::stoi(issi)).c_str(),
+             (int)message.length() * 4,
+             message.c_str(), 0x1a);
+  sds = f;
+  return true;
+} /* createRawSDS */
 
 
 bool createCfmSDS(std::string & sds, std::string issi, std::string msg)

@@ -1446,8 +1446,12 @@ void TetraLogic::handleCnumf(std::string m_message)
 } /* TetraLogic::handleCnumf */
 
 
-// format of inject a Sds into SvxLink/TetraLogic
-// tsi,Message
+/* format of inject a Sds into SvxLink/TetraLogic
+   1) normal: "tsi,message" > /tmp/sds_pty
+   e.g. "0901163830023451,This is a test"
+   2) raw: "tsi,rawmessage" > /tmp/sds_pty
+   e.g. "0901163830023451,82040102432E4E34E"
+*/
 void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
 {
   const char *buffer = reinterpret_cast<const char*>(buf);
@@ -1459,8 +1463,18 @@ void TetraLogic::sdsPtyReceived(const void *buf, size_t count)
   }
   std::string m_tsi = getNextStr(injmessage);
   std::string sds;
-
-  if(!createSDS(sds, getISSI(m_tsi), injmessage))
+  bool ok = true;
+ 
+  if (rmatch(injmessage, "[^0-9A-F]"))
+  {
+    ok = createSDS(sds, getISSI(m_tsi), injmessage);
+  }
+  else
+  {
+    ok = createRawSDS(sds, getISSI(m_tsi), injmessage);
+  }
+  
+  if(!ok)
   {
     std::string s = "*** ERROR: creating Sds to ";
     s += m_tsi;

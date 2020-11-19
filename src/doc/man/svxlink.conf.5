@@ -824,7 +824,11 @@ Example:
 DEFAULT_APRS_ICON=e/
 .TP
 .B SDS_PTY
-The pseudo tty device for sending commands to this logic.
+The pseudo tty device for sending commands to this logic. There are two ways:
+If the message contains only digits 0-9 and A-F then the pty device expect 
+a raw sds. You have to start with the PDU type (e.g. 8204xxx).
+If you include one or more other digits like k or <space> the pty device see 
+a normal text based Sds.
 Example:
 SDS_PTY=/tmp/tetra_sds
 .TP
