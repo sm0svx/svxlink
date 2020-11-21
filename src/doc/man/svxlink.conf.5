@@ -643,11 +643,6 @@ free-form JSON but the general structure should be kept so that SvxLink and
 the reflector server can fill in dynamic information about the node like signal
 strengths for receivers. Use the default node_info.json as a template. You
 can add more information rather freely but don't change the overall structure.
-.P
-It is also possible to set audio codec parameters using the same configuration
-variables as documented for networked receivers and transmitters. For example,
-to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
-to something lower than 9.
 .TP
 .B MUTE_FIRST_TX_LOC
 Mute the first transmission after selecting a talk group due to local activity.
@@ -676,6 +671,17 @@ transmission to "open up" the local node. This is easy to forget.
 This configuration variable determines after how many seconds a manually added
 temporary talk group monitor will time out. Set to 0 to disable this feature.
 Default is 3600, one hour.
+.TP
+.B UDP_HEARTBEAT_INTERVAL
+The number of seconds between UDP heartbeat messages sent to the reflector
+server. This configuration variable can normally be left at the default value
+but if you get frequent disconnects due to UDP heartbeat timeout it may help to
+lower this value. Default: 15
+.P
+It is also possible to set audio codec parameters using the same configuration
+variables as documented for networked receivers and transmitters. For example,
+to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
+to something lower than 9.
 .
 .SS QSO Recorder Section
 .
