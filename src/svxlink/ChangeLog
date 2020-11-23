@@ -65,6 +65,9 @@
 * Added debug mode for the CTCSS detector. Enable by setting CTCSS_DEBUG to 1
   in a receiver configuration section.
 
+* ReflectorLogic: Now possible to adjust the UDP heartbeat interval using the
+  UDP_HEARTBEAT_INTERVAL configuration variable.
+
 
 
  1.7.0 -- 01 Sep 2019
