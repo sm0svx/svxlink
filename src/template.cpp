@@ -1,5 +1,5 @@
 /**
-@file   Template.cpp
+@file   MyNamespaceTemplate.cpp
 @brief  A_brief_description_for_this_file
 @author Tobias Blomberg / SM0SVX
 @date   2020-
@@ -25,7 +25,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 
 /****************************************************************************
  *
@@ -71,35 +70,30 @@ using namespace MyNamespace;
 
 /****************************************************************************
  *
+ * Static class variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
  *
  ****************************************************************************/
 
+namespace {
 
 
 /****************************************************************************
  *
- * Prototypes
+ * Local functions
  *
  ****************************************************************************/
 
 
 
-/****************************************************************************
- *
- * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local Global Variables
- *
- ****************************************************************************/
-
-
+}; /* End of anonymous namespace */
 
 /****************************************************************************
  *
@@ -109,11 +103,13 @@ using namespace MyNamespace;
 
 Template::Template(void)
 {
+
 } /* Template::Template */
 
 
 Template::~Template(void)
 {
+
 } /* Template::~Template */
 
 
@@ -130,6 +126,8 @@ Template::~Template(void)
  * Private member functions
  *
  ****************************************************************************/
+
+
 
 /*
  * This file has not been truncated

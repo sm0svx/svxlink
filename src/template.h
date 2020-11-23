@@ -124,6 +124,16 @@ class Template
     Template(void);
 
     /**
+     * @brief   Disallow copy construction
+     */
+    Template(const Template&) = delete;
+
+    /**
+     * @brief   Disallow copy assignment
+     */
+    Template& operator=(const Template&) = delete;
+
+    /**
      * @brief   Destructor
      */
     ~Template(void);
@@ -137,13 +147,11 @@ class Template
   protected:
 
   private:
-    Template(const Template&);
-    Template& operator=(const Template&);
 
 };  /* class Template */
 
 
-} /* namespace */
+} /* namespace MyNamespace */
 
 #endif /* TEMPLATE_INCLUDED */
 

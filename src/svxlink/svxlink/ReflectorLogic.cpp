@@ -126,6 +126,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+    m_udp_heartbeat_tx_cnt_reset(DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
@@ -361,6 +362,9 @@ bool ReflectorLogic::initialize(void)
   }
   m_node_info["sw"] = "SvxLink";
   m_node_info["swVer"] = SVXLINK_VERSION;
+
+  cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
+      m_udp_heartbeat_tx_cnt_reset);
 
   if (!LogicBase::initialize())
   {
@@ -648,7 +652,7 @@ void ReflectorLogic::onConnected(void)
   cout << name() << ": Connection established to " << m_con->remoteHost() << ":"
        << m_con->remotePort() << endl;
   sendMsg(MsgProtoVer());
-  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+  m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
@@ -1283,7 +1287,7 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
     return;
   }
 
-  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+  m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
 
   if (m_udp_sock == 0)
   {
