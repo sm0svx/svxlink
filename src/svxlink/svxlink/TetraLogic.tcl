@@ -461,6 +461,13 @@ proc sent_message {response} {
 
 }
 
+#
+# Executed when a visible DmoRepeater or gateway is located in the vicinity
+# [<DM communication type>], [<gateway/repeater address>], [<MNI>],
+#             [<presence information>]
+proc dmo_gw_rpt {dmct gw_rpt_issi mni pi} {
+
+}
 
 # end of namespace
 }

@@ -111,6 +111,7 @@ using namespace SvxLink;
 #define CMGS 26
 #define CONCAT_SDS 27
 #define CTGS 28
+#define CTDGR 29
 
 #define DMO_OFF 7
 #define DMO_ON 8
@@ -793,6 +794,10 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       handleCtgs(m_message);
       break;
       
+    case CTDGR:
+      handleCtdgr(m_message);
+      break;
+
     case INVALID:
       cout << "+++ Pei answer not known, ignoring ;)" << endl;
 
@@ -1077,7 +1082,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
     case CMGS:
       ss << "sent_message \"" << handleCmgs(sds) << "\"" << endl;
       break;
-    
+
     case INVALID:
       ss << "unknown_sds_received";
       cout << "*** Unknown type of SDS" << endl;
@@ -1110,7 +1115,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
 } /* TetraLogic::getTypeOfService */
 
 
-// +CTGS=[<group type>], <called party identity> ... [,[<group type>], 
+// +CTGS [<group type>], <called party identity> ... [,[<group type>], 
 //       < called party identity>]
 // In V+D group type shall be used. In DMO the group type may be omitted,
 // as it will be ignored.
@@ -1124,6 +1129,40 @@ std::string TetraLogic::handleCtgs(std::string m_message)
   }
   return m_message;
 } /* TetraLogic::handleCtgs */
+
+
+// +CTDGR: [<DM communication type>], [<gateway/repeater address>], [<MNI>],
+//         [<presence information>]
+// TETRA DMO visible gateways/repeaters +CTDGR
+// +CTDGR: 2,1001,90116383,0
+std::string TetraLogic::handleCtdgr(std::string m_message)
+{
+  m_message.erase(0,8);
+  stringstream ss, ssret;
+  size_t n = std::count(m_message.begin(), m_message.end(), ',');
+  DmoRpt drp;
+  struct tm mtime = {0};
+  
+  if (n == 3)
+  {
+    int dmct = getNextVal(m_message);
+    drp.issi = getNextVal(m_message);
+    drp.mni = getNextStr(m_message);
+    drp.state = getNextVal(m_message);
+    drp.last_activity = mktime(&mtime);
+    
+    ssret << "detected: " << TransientComType[dmct] << ", ISSI=" << drp.issi
+          << ", MNI=" << drp.mni << ", state=" << drp.state;
+    
+    dmo_rep_gw.emplace(drp.issi, drp);
+    
+    ss << "dmo_gw_rpt " << dmct << " " << drp.issi << " " << drp.mni << " " 
+       << drp.state;
+    processEvent(ss.str());
+  }
+
+  return ssret.str();
+} /* TetraLogic::handleCtdgr */
 
 
 // +CMGS= <called party identity >, <length><CR><LF>user data<CtrlZ> 
@@ -1607,6 +1646,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CMGS:"]                                = CMGS;
   mre["^\\+CNUMF:"]                               = CNUMF;
   mre["^\\+CTGS:"]                                = CTGS;
+  mre["^\\+CTDGR:"]                               = CTDGR;
   mre["^02"]                                      = SIMPLE_TEXT_SDS; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;

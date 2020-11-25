@@ -166,7 +166,9 @@ std::string TransientComType[] = {
    "1 - DMO-Direct MS-MS",
    "2 - DMO-Via DM-REP",
    "3 - DMO-Via DM-GATE",
-   "4 - DMO-Via DM-REP/GATE"
+   "4 - DMO-Via DM-REP/GATE",
+   "5 - Reserved",
+   "6 - Direct MS-MS, but maintain gateway registration"
 };
 
 /* Reg stat

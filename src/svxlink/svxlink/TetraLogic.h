@@ -268,6 +268,14 @@ class TetraLogic : public Logic
     };
     std::map<std::string, User> userdata;
     
+    struct DmoRpt {
+      int issi;
+      std::string mni;
+      int state;
+      time_t last_activity;
+    };
+    std::map<int, DmoRpt> dmo_rep_gw;
+    
     std::map<int, std::string> sds_on_activity;
     std::map<unsigned int, std::string> sds_to_command;
 
@@ -341,6 +349,7 @@ class TetraLogic : public Logic
     void handleSdsMsg(std::string sds);
     void handleCnumf(std::string m_message);
     std::string handleCtgs(std::string m_message);
+    std::string handleCtdgr(std::string m_message);
     std::string handleCmgs(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);
