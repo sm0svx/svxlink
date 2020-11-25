@@ -112,6 +112,7 @@ using namespace SvxLink;
 #define CONCAT_SDS 27
 #define CTGS 28
 #define CTDGR 29
+#define CLVL 30
 
 #define DMO_OFF 7
 #define DMO_ON 8
@@ -797,6 +798,10 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
     case CTDGR:
       handleCtdgr(m_message);
       break;
+      
+    case CLVL:
+      handleClvl(m_message);
+      break;
 
     case INVALID:
       cout << "+++ Pei answer not known, ignoring ;)" << endl;
@@ -1163,6 +1168,21 @@ std::string TetraLogic::handleCtdgr(std::string m_message)
 
   return ssret.str();
 } /* TetraLogic::handleCtdgr */
+
+
+void TetraLogic::handleClvl(std::string m_message)
+{
+  stringstream ss;
+  size_t f = m_message.find("+CLVL: ");
+  if ( f != string::npos)
+  {
+    m_message.erase(0,7);
+  }  
+  
+  int lvl = getNextVal(m_message);
+  ss << "audio_level " << lvl;
+  processEvent(ss.str());
+} /* TetraLogic::handleClvl */
 
 
 // +CMGS= <called party identity >, <length><CR><LF>user data<CtrlZ> 
@@ -1647,6 +1667,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CNUMF:"]                               = CNUMF;
   mre["^\\+CTGS:"]                                = CTGS;
   mre["^\\+CTDGR:"]                               = CTDGR;
+  mre["^\\+CLVL:"]                                = CLVL;
   mre["^02"]                                      = SIMPLE_TEXT_SDS; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;

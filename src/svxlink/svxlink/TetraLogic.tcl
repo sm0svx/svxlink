@@ -461,11 +461,20 @@ proc sent_message {response} {
 
 }
 
+
 #
 # Executed when a visible DmoRepeater or gateway is located in the vicinity
 # [<DM communication type>], [<gateway/repeater address>], [<MNI>],
 #             [<presence information>]
 proc dmo_gw_rpt {dmct gw_rpt_issi mni pi} {
+
+}
+
+
+#
+# Executed when the audio level of the Rx has been changed
+#
+proc audio_level {lvl} {
 
 }
 

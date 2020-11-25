@@ -350,6 +350,7 @@ class TetraLogic : public Logic
     void handleCnumf(std::string m_message);
     std::string handleCtgs(std::string m_message);
     std::string handleCtdgr(std::string m_message);
+    void handleClvl(std::string m_message);
     std::string handleCmgs(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);
