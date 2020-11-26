@@ -103,10 +103,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-/* TxGrant
-   This parameter is used in the call maintenance phase of simplex circuit
-   mode calls. When received from the MT the TE will know what to do with
-   the transmitter on the established circuit.
+/* 8.5.221 Transmission grant
+   The transmission grant information element shall inform the MS/LS about 
+   permission to transmit
 */
 std::string TxGrant[] = {
    "0 - Transmission granted",
@@ -115,9 +114,10 @@ std::string TxGrant[] = {
    "3 - Transmission granted to another"
 };
 
-/* Call status
-   The call status information element shall inform the MS/LS about the
-   status of the call
+/* 6.17.8 Call status
+   This parameter is used to indicate the status of either incoming or outgoing
+   circuit mode call set up. The values are sent in D-Call Proceeding and 
+   D-info on the air interface.
 */
 std::string CallStatus[] = {
   "0 - Call progressing",
@@ -127,6 +127,12 @@ std::string CallStatus[] = {
   "4 - Hang time expired"
 };
 
+/* 6.17.11 Called party identity type
+   This parameter is used to indicate the type of identity to be used as the
+   called party address. The associated identity used in signalling will be 
+   interpreted differently according to this parameter. External subscriber 
+   number addresses are used in association with a PSTN or PABX gateway.
+*/
 std::string CalledPartyIdentityType[] = {
   "0 - SSI",
   "1 - TSI",
@@ -136,7 +142,11 @@ std::string CalledPartyIdentityType[] = {
   "5 - Extended TSI"
 };
 
-std::string OpMode[] = {
+/* 6.17.4 AI mode
+   This parameter is used to indicate the mode of operation or the air 
+   interface protocol stack.
+*/
+std::string AiMode[] = {
    "0 - V+D (trunked mode operation)",
    "1 - DMO",
    "2 - V+D with dual watch of DMO",
@@ -146,8 +156,8 @@ std::string OpMode[] = {
    "6 - DMO Repeater mode"
 };
 
-/* TX demand priority
-   The TX demand priority information element shall inform the SwMI about
+/* 8.5.227 TX demand priority
+   The TX demand priority information element shall inform the SwMI about 
    the importance of a TX-Demand
 */
 std::string TxDemandPriority[] = {
@@ -157,9 +167,9 @@ std::string TxDemandPriority[] = {
    "3 - Emergency"
 };
 
-/* Transient communication type
-   This parameter is used to indicate the communication type in either
-   V+D or DMO.
+/* 6.17.63 Transient communication type
+   This parameter is used to indicate the communication type in either V+D 
+   or DMO.
 */
 std::string TransientComType[] = {
    "0 - Voice + Data",
@@ -171,7 +181,7 @@ std::string TransientComType[] = {
    "6 - Direct MS-MS, but maintain gateway registration"
 };
 
-/* Reg stat
+/* 6.17.46 Reg stat
    This parameter is used to indicate the registration status of the MT to the
    TEI.
 */
@@ -184,9 +194,10 @@ std::string RegStat[] = {
    "5 - Registered, visited network"
 };
 
-/* AI Service
-   This parameter is used to determine the type of service to be used in air
-   interface call set up signalling.
+/* 6.17.3 AI Service
+   This parameter is used to determine the type of service to be used in air 
+   interface call set up signalling. The services are all defined in 
+   EN 300 392-2 [3] or EN 300 396-3 [25].
 */
 std::string AiService[] = {
    "0 - TETRA speech",
@@ -205,24 +216,11 @@ std::string AiService[] = {
    "13 - Status (16 bits, some values are reserved in EN 300 392-2 [3])"
 };
 
-/* AI mode
-   This parameter is used to indicate the mode of operation or the air
-   interface protocol stack.
-*/
-std::string AiMode[] = {
-   "0 - V+D (trunked mode operation)",
-   "1 - DMO",
-   "2 - V+D with dual watch of DMO",
-   "3 - DMO with dual watch of V+D",
-   "4 - V+D and DMO (used in conjunction CTSP command)"
-};
-
-/* Disconnect cause
-   This parameter is given in the disconnect message from the MT
-   when a circuit-mode call is cleared by the other end, the
-   SwMI, the gateway (in the case of DMO) or the MT itself. The
-   latter may have been requested by the TE. The TE could
-   use the information in MMI or to initiate retries.
+/* 6.17.18 Disconnect cause
+   This parameter is given in the disconnect message from the MT  when a 
+   circuit-mode call is cleared by the other end, the SwMI, the gateway 
+   (in the case of DMO) or the MT itself. The latter may have been requested
+   by the TE. The TE could use the information in MMI or to initiate retries.
 */
 std::string DisconnectCause[] = {
    "0 - Not defined or unknown",
@@ -268,11 +266,10 @@ std::string DisconnectCause[] = {
    "40 - Security parameter mismatch"
 };
 
-/* DM communication type
-   This parameter is used to indicate the communication type
-   for outgoing calls in DMO, i.e. whether it is a direct
-   communication between MSs, or whether it is being routed
-   via a DM-REP, DM-GATE or DM-REP/GATE.
+/* 6.17.20 DM communication type
+   This parameter is used to indicate the communication type for outgoing
+   calls in DMO, i.e. whether it is a direct communication between MSs, 
+   or whether it is being routed via a DM-REP, DM-GATE or DM-REP/GATE.
 */
 std::string DmCommunicationType[] = {
    "0 - Any, MT decides",
@@ -284,22 +281,11 @@ std::string DmCommunicationType[] = {
    "6 - Direct MS-MS, but maintain gateway registration"
 };
 
-std::string TetraNumType[] = {
-  "0 - Individual (ISSI or ITSI)",
-  "1 - Group (GSSI or GTSI)",
-  "2 - PSTN Gateway (ISSI or ITSI)",
-  "3 - PABX Gateway (ISSI or ITSI)",
-  "4 - Service Centre (ISSI or ITSI)",
-  "5 - Service Centre (E.164 number)",
-  "6 - Individual (extended TSI)",
-  "7 - Group (extended TSI)"
-};
-
-/* Num type
+/* 6.17.38 Num type
    This parameter is used to indicate the type of identity returned by the
-   +CNUM command. The service centre is used as (an optional) part of the
-   SDS-TL transport service protocol. The gateways returned are those used in
-   the SwMI for access to PSTN and PABX services.
+   +CNUM command. The service centre is used as (an optional) part of the 
+   SDS-TL transport service protocol. The gateways returned are those used 
+   in the SwMI for access to PSTN and PABX services.
 */
 std::string NumType[] = {
    "0 - Individual (ISSI or ITSI)",
@@ -312,6 +298,11 @@ std::string NumType[] = {
    "7 - Group (extended TSI)"
 };
 
+/* 6.3.64 ETSI TS 100 392-18-1 V1.3.1 (2007-04)
+   Reason for sending
+   The reason for sending shall indicate the reason why location information 
+   was sent from the location determination entity
+*/
 std::string ReasonForSending[] = {
   "0 - Subscriber unit is powered ON",
   "1 - Subscriber unit is powered OFF",
@@ -337,12 +328,11 @@ std::string ReasonForSending[] = {
   "21 - Reserved"
 };
 
-/* Group type
-   This parameter is used when setting the MT groups for use in V+D. A
-   selected group will be used for outgoing calls.
-   Either selected or scanned groups will receive incoming calls. Only
-   incoming group calls with a priority higher than the scan level will
-   interrupt ongoing group calls of a lower level.
+/* 6.17.25 Group type
+   This parameter is used when setting the MT groups for use in V+D. A selected
+   group will be used for outgoing calls. Either selected or scanned groups 
+   will receive incoming calls. Only incoming group calls with a priority higher
+   than the scan level will interrupt ongoing group calls of a lower level.
    If the group type is "none" all groups will be detached from the SwMI.
 */
 std::string GroupType[] = {
@@ -356,8 +346,10 @@ std::string GroupType[] = {
   "7 - Scan priority 6"
 };
 
-// This parameter enables the unsolicited reporting of changes in visible
-// gateways and/or repeaters.
+/* 6.17.51 SDS Status
+   This parameter is used to indicate the status of outgoing and incoming SDS 
+   messages.
+*/
 std::string sdsStatus[] {
   "0 - Incoming message stored and unread",
   "1 - Incoming message stored and read",

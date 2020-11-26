@@ -372,7 +372,7 @@ class TetraLogic : public Logic
     void sdsPtyReceived(const void *buf, size_t count);
     void sendInfoSds(std::string tsi, short reasonforsending);
     void handleCallReleased(std::string m_message);
-    void getOpMode(std::string opmode);
+    void getAiMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
     unsigned int hex2int(std::string sds);
 

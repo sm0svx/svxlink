@@ -187,7 +187,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
   peiBreakCommandTimer(3000, Timer::TYPE_ONESHOT, false),
-  proximity_warning(3.1), time_between_sds(3600),own_lat(0.0),
+  proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
   own_lon(0.0)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
@@ -788,7 +788,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       break;
 
     case OP_MODE:
-      getOpMode(m_message);
+      getAiMode(m_message);
       break;
 
     case CTGS:
@@ -796,7 +796,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       break;
       
     case CTDGR:
-      handleCtdgr(m_message);
+      cout << handleCtdgr(m_message);
       break;
       
     case CLVL:
@@ -1156,8 +1156,9 @@ std::string TetraLogic::handleCtdgr(std::string m_message)
     drp.state = getNextVal(m_message);
     drp.last_activity = mktime(&mtime);
     
-    ssret << "detected: " << TransientComType[dmct] << ", ISSI=" << drp.issi
-          << ", MNI=" << drp.mni << ", state=" << drp.state;
+    ssret << "INFO: Station " << TransientComType[dmct] << " detected (ISSI=" 
+          << drp.issi << ", MNI=" << drp.mni << ", state=" << drp.state << ")" 
+          << endl;
     
     dmo_rep_gw.emplace(drp.issi, drp);
     
@@ -1179,8 +1180,7 @@ void TetraLogic::handleClvl(std::string m_message)
     m_message.erase(0,7);
   }  
   
-  int lvl = getNextVal(m_message);
-  ss << "audio_level " << lvl;
+  ss << "audio_level " << getNextVal(m_message);
   processEvent(ss.str());
 } /* TetraLogic::handleClvl */
 
@@ -1483,7 +1483,7 @@ void TetraLogic::handleCnumf(std::string m_message)
   
   short m_numtype = getNextVal(m_message);
   if (debug) cout << "<num type> is " << m_numtype << " (" 
-               << TetraNumType[m_numtype] << ")" << endl; 
+               << NumType[m_numtype] << ")" << endl; 
   if (m_numtype == 6)
   {
     if (mcc != m_message.substr(0,4)) 
@@ -1691,14 +1691,14 @@ int TetraLogic::handleMessage(std::string mesg)
 } /* TetraLogic::handleMessage */
 
 
-void TetraLogic::getOpMode(std::string opmode)
+void TetraLogic::getAiMode(std::string aimode)
 {
-  if (opmode.length() > 6)
+  if (aimode.length() > 6)
   {
-    int t = atoi(opmode.erase(0,6).c_str());
-    cout << "+++ New Tetra mode: " << OpMode[t] << endl;      
+    int t = atoi(aimode.erase(0,6).c_str());
+    cout << "+++ New Tetra mode: " << AiMode[t] << endl;      
   }
-} /* TetraLogic::getOpMode */
+} /* TetraLogic::getAiMode */
 
 
 bool TetraLogic::rmatch(std::string tok, std::string pattern)
