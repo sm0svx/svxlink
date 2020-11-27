@@ -29,6 +29,7 @@
 
 * Added an AudioContainer framework.
 
+* The Config::valueUpdated signal is now only emitted if the value is changed.
 
 
  1.6.0 -- 01 Sep 2019
