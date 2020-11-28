@@ -101,13 +101,23 @@ $.getJSON("/repeater-info.json", function( info ) {
     jsonStream.onmessage = function (e) {
         var message = JSON.parse(e.data);
 
+        var tx = -1;
+        if (message.event == 'Tx:state') {
+            for (const txname in message.tx) {
+                tx = (message.tx[txname].transmit == 'true') ? 1 : 0;
+                if (tx == 1) {
+                  break;
+                }
+            }
+        }
         if (message.event == 'Logic:transmit') {
-            var tx = '';
-            if (message.tx == 1) { tx = '<img src="/icons/ball.red.png">'; };
-            $('#tx').html(tx);
+            tx = (message.tx == 1) ? 1 : 0;
+        }
+        if (tx >= 0) {
+            $('#tx').html((tx == 1) ? '<img src="/icons/ball.red.png">' : '');
         }
 
-        if (message.event == 'Voter:sql_state') {
+        if (message.event.match(/^.*:sql_state$/)) {
             for (index = 0; index < info.rxlist.length; ++index) {
                 var rx = info.rxlist[index];
                 var tri = 'tr#'+rx+' ';
