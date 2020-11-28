@@ -75,7 +75,7 @@ sub parse($) {
     my $rx_info_raw = shift @fields;
     my $rx_info;
     try {
-    	$rx_info = $json->decode(shift @fields);
+        $rx_info = $json->decode($rx_info_raw);
     } catch {
         unshift @fields, $rx_info_raw;
     };
