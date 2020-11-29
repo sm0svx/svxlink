@@ -427,7 +427,8 @@ class Config
      * @param   tag     The tag (variable name) of the update
      *
      * This signal is emitted whenever a configuration variable is changed
-     * by calling the setValue function.
+     * by calling the setValue function. It will only be emitted if the value
+     * actually changes.
      */
     sigc::signal<void, const std::string&, const std::string&> valueUpdated;
 
