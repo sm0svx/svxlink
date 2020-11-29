@@ -133,7 +133,13 @@ class Pty : public sigc::trackable
      * @brief 	Destructor
      */
     ~Pty(void);
-  
+
+    void setLineBuffered(bool line_buffered)
+    {
+      m_is_line_buffered = line_buffered;
+      m_line_buffer.clear();
+    }
+
     /**
      * @brief   Open the PTY
      * @return  Returns \em true on success or \em false on failure
@@ -196,6 +202,8 @@ class Pty : public sigc::trackable
     int     	    master;
     Async::FdWatch  *watch;
     Async::Timer    pollhup_timer;
+    bool            m_is_line_buffered = false;
+    std::string     m_line_buffer;
 
     Pty(const Pty&);
     Pty& operator=(const Pty&);
