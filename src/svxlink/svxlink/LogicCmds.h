@@ -388,7 +388,6 @@ class OnlineCmd : public Command
     {
       if (subcmd == "0")
       {
-        std::cout << logic->name() << ": Setting logic offline\n";
         logic->setOnline(false);
       }
       else

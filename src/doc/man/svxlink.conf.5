@@ -367,6 +367,10 @@ online and 9988770 will set it offline. If a module is active or if the
 ACTIVATE_MODULE_ON_LONG_CMD is used, the command must be prefixed with a star
 to work as expected. The star means "force core command".
 .TP
+.B ONLINE
+Set to 0 to make SvxLink start offline. Settable at runtime. Default is 1
+(online).
+.TP
 .B STATE_PTY
 Using this configuration variable it is possible to specify a path to a UNIX 98
 PTY that SvxLink state events is published to. The published events is in a
@@ -434,6 +438,25 @@ is open.
 .B RGR_SOUND_ALWAYS
 Set to 1 to always send roger sound after squelch close, even when no module is
 active.
+.TP
+.B COMMAND_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that can be used to send commands to a SvxLink logic core. SvxLink will
+create a softlink to the actual slave PTY. For that reason, SvxLink must have
+write permissions in the directory where the softlink should be created.
+Sending commands to the PTY is as simple as doing a
+.B "echo 'THE COMMAND TO EXECUTE' > /path/to/pty"
+after starting SvxLink.
+
+Valid commands:
+.RS
+.IP \(bu 4
+.BR "CFG <section> <tag> <value>" " --"
+Set a configuration variable. Only a few configuration variables support being
+set at runtime. Example: CFG RepeaterLogic ONLINE 0.
+.RE
+
+Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
 .
 .SS Repeater Logic Section
 .
@@ -1089,7 +1112,7 @@ multiple receivers. A normal value could be somewhere in between 20-100ms.
 .B SQL_HANGTIME
 How long, in milliseconds, the squelch will stay open after the detector has
 indicated that it is closed. This configuration variable will affect all
-squelch detector types.
+squelch detector types Settable at runtime.
 .TP
 .B SQL_EXTENDED_HANGTIME
 At low signal strengths it can be beneficial to use a longer squelch hangtime
@@ -1107,7 +1130,7 @@ below the set threshold, the extended hangtime will be used. Start out with a
 value between 10 to 15. The SQL_EXTENDED_HANGTIME variable is used to set how
 long the extended squelch hangtime should be. Make sure that you have
 calibrated the signal level detector before turning this feature on. Otherwise
-it will not work as expected.
+it will not work as expected. Settable at runtime.
 .TP
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limit, in seconds, for how

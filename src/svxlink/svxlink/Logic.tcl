@@ -678,6 +678,15 @@ proc logic_online {online} {
 }
 
 
+#
+# Executed when a configuration variable is updated at runtime in the logic
+# core
+#
+proc config_updated {tag value} {
+  #puts "Configuration variable updated: $tag=$value"
+}
+
+
 ##############################################################################
 #
 # Main program
