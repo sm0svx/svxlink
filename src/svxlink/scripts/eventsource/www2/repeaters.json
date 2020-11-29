@@ -5,19 +5,15 @@
     "To have your repeater added to this list send mail to PE1CHL"
   ],
   "repeaterlist": [
-    "PI6TEN",
-    "PI3UTR",
-    "PI2NOS"
+    "MYCALL",
+    "MYCALL2"
   ],
   "info": {
-    "PI2NOS": {
-      "uri": "http://pi2nos.ampr.org/repeater-info.json"
+    "MYCALL": {
+      "uri": "http://localhost:1336/repeater-info.json"
     },
-    "PI3UTR": {
-      "uri": "http://pi3utr.ampr.org/repeater-info.json"
-    },
-    "PI6TEN": {
-      "uri": "http://pi6ten.ampr.org/repeater-info.json"
+    "MYCALL2": {
+      "uri": "http://localhost:1338/repeater-info.json"
     }
   }
 }

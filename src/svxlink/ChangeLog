@@ -71,6 +71,22 @@
 * ReflectorLogic: Now possible to adjust the UDP heartbeat interval using the
   UDP_HEARTBEAT_INTERVAL configuration variable.
 
+* Now possible to set configuration variables from TCL using the
+  setConfigValue function. This can be used to change certain configuration of
+  SvxLink while it is running. Only some configuration variables support being
+  changed at runtime.
+
+* If a configuration variable is changed in the logic core, or in the main
+  configuration section for a module, the new TCL function config_updated will
+  be called.
+
+* New configuration variable ONLINE that can be used to decide if a logic core
+  should be active or not on program startup. This variable also support being
+  set at runtime.
+
+* Use the new configuration variable COMMAND_PTY to set up a PTY that can be
+  used to send commands to a logic core.
+
 
 
  1.7.0 -- 01 Sep 2019

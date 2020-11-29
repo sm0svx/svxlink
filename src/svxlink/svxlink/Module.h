@@ -491,6 +491,13 @@ class Module : public sigc::trackable, public Async::AudioSink,
      */
     bool isWritingMessage(void);
 
+    /**
+     * @brief   Called when a configuration variable is updated
+     * @param   section The name of the configuration section
+     * @param   tag     The name of the configuration variable
+     */
+    virtual void cfgUpdated(const std::string& section,
+                            const std::string& tag);
 
   private:
     void      	      *m_dl_handle;

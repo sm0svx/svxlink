@@ -29,6 +29,11 @@
 
 * Added an AudioContainer framework.
 
+* The Config::valueUpdated signal is now only emitted if the value is changed.
+
+* The Pty::setLineBuffered method can now be used to enable line buffered mode
+  where incoming chars are buffered until a <CR> or <LF> is received.
+
 
 
  1.6.0 -- 01 Sep 2019

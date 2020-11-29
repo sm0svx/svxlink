@@ -304,7 +304,30 @@ void Pty::charactersReceived(void)
     reopen();
     return;
   }
-  dataReceived(buf, rd);
+
+  if (m_is_line_buffered)
+  {
+    for (int i = 0; i < rd; ++i)
+    {
+      const char& ch = buf[i];
+      if ((ch == '\r') || (ch == '\n'))
+      {
+        if (!m_line_buffer.empty())
+        {
+          dataReceived(m_line_buffer.c_str(), m_line_buffer.size());
+          m_line_buffer.clear();
+        }
+      }
+      else
+      {
+        m_line_buffer += ch;
+      }
+    }
+  }
+  else
+  {
+    dataReceived(buf, rd);
+  }
 } /* Pty::charactersReceived */
 
 
