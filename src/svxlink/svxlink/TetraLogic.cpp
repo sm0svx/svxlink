@@ -1345,7 +1345,15 @@ void TetraLogic::handleCallReleased(std::string message)
   stringstream ss;
   getNextStr(message);
 
-  ss << "call_end \"" << DisconnectCause[getNextVal(message)] << "\"";
+  if (tetra_modem_sql->isOpen())
+  {
+    squelchOpen(false);  // close Squelch
+    ss << "out_of_range " << getNextVal(message);
+  }
+  else
+  {
+    ss << "call_end \"" << DisconnectCause[getNextVal(message)] << "\"";      
+  }
   processEvent(ss.str());
   
   // send call/qso end to aprs network

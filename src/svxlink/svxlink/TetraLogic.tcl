@@ -478,6 +478,15 @@ proc audio_level {lvl} {
 
 }
 
+
+#
+# Executed if the squelch has not be closed by call-end but by e.g. out of
+# range or transmission has been stopped by low battery
+#
+proc out_of_range {dc} {
+
+}
+
 # end of namespace
 }
 
