@@ -115,7 +115,7 @@ class AudioEncoderOpus : public AudioEncoder
     /**
      * @brief 	Default constuctor
      */
-    AudioEncoderOpus(void);
+    AudioEncoderOpus(const Options &options);
   
     /**
      * @brief 	Destructor

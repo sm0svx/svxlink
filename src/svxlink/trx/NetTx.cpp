@@ -173,7 +173,23 @@ bool NetTx::initialize(void)
   pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512, 50);
   setHandler(pacer);
   
-  audio_enc = AudioEncoder::create(audio_enc_name);
+  string opt_prefix(audio_enc_name);
+  opt_prefix += "_ENC_";
+  map<string,string> enc_options;
+  list<string> names = cfg.listSection(name());
+  list<string>::const_iterator nit;
+  for (nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg.getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      enc_options[opt_name] = opt_value;
+    }
+  }
+
+  audio_enc = AudioEncoder::create(audio_enc_name, enc_options);
   if (audio_enc == 0)
   {
     cerr << "*** ERROR: Illegal audio codec (" << audio_enc_name
@@ -184,20 +200,6 @@ bool NetTx::initialize(void)
           mem_fun(*this, &NetTx::writeEncodedSamples));
   audio_enc->flushEncodedSamples.connect(
           mem_fun(*this, &NetTx::flushEncodedSamples));
-  string opt_prefix(audio_enc->name());
-  opt_prefix += "_ENC_";
-  list<string> names = cfg.listSection(name());
-  list<string>::const_iterator nit;
-  for (nit=names.begin(); nit!=names.end(); ++nit)
-  {
-    if ((*nit).find(opt_prefix) == 0)
-    {
-      string opt_value;
-      cfg.getValue(name(), *nit, opt_value);
-      string opt_name((*nit).substr(opt_prefix.size()));
-      audio_enc->setOption(opt_name, opt_value);
-    }
-  }
   audio_enc->printCodecParams();
   pacer->registerSink(audio_enc);
   

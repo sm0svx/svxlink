@@ -134,7 +134,8 @@ bool AudioDecoder::isAvailable(const std::string &name)
 } /* AudioDecoder::isAvailable */
 
 
-AudioDecoder *AudioDecoder::create(const std::string &name)
+AudioDecoder *AudioDecoder::create(const std::string &name, 
+                            const std::map<std::string,std::string> &options)
 {
   if (name == "NULL")
   {
@@ -159,13 +160,13 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
-    return new AudioDecoderSpeex;
+    return new AudioDecoderSpeex(options);
   }
 #endif
 #ifdef OPUS_MAJOR
   else if (name == "OPUS")
   {
-    return new AudioDecoderOpus;
+    return new AudioDecoderOpus(options);
   }
 #endif
   else

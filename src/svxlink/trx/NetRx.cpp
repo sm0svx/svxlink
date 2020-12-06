@@ -190,17 +190,9 @@ bool NetRx::initialize(void)
   string auth_key;
   cfg.getValue(name(), "AUTH_KEY", auth_key);
   
-  audio_dec = AudioDecoder::create(audio_dec_name);
-  if (audio_dec == 0)
-  {
-    cerr << name() << ": *** ERROR: Illegal audio codec (" << audio_dec_name
-          << ") specified for receiver " << name() << "\n";
-    return false;
-  }
-  audio_dec->allEncodedSamplesFlushed.connect(
-          mem_fun(*this, &NetRx::allEncodedSamplesFlushed));
-  string opt_prefix(audio_dec->name());
+  string opt_prefix(audio_dec_name);
   opt_prefix += "_DEC_";
+  map<string,string> dec_options;
   list<string> names = cfg.listSection(name());
   list<string>::const_iterator nit;
   for (nit=names.begin(); nit!=names.end(); ++nit)
@@ -210,9 +202,19 @@ bool NetRx::initialize(void)
       string opt_value;
       cfg.getValue(name(), *nit, opt_value);
       string opt_name((*nit).substr(opt_prefix.size()));
-      audio_dec->setOption(opt_name, opt_value);
+      dec_options[opt_name] = opt_value;
     }
   }
+
+  audio_dec = AudioDecoder::create(audio_dec_name, dec_options);
+  if (audio_dec == 0)
+  {
+    cerr << name() << ": *** ERROR: Illegal audio codec (" << audio_dec_name
+          << ") specified for receiver " << name() << "\n";
+    return false;
+  }
+  audio_dec->allEncodedSamplesFlushed.connect(
+          mem_fun(*this, &NetRx::allEncodedSamplesFlushed));
   audio_dec->printCodecParams();
   setHandler(audio_dec);
   

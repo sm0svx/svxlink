@@ -114,7 +114,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioEncoderOpus::AudioEncoderOpus(void)
+AudioEncoderOpus::AudioEncoderOpus(const Options &options)
   : enc(0), frame_size(0), sample_buf(0), buf_len(0)
 {
   int error;
@@ -125,10 +125,11 @@ AudioEncoderOpus::AudioEncoderOpus(void)
     cerr << "*** ERROR: Opus encoder error: " << opus_strerror(error) << endl;
     exit(1);
   }
-
-  setFrameSize(20);
-  setBitrate(20000);
-  enableVbr(true);
+  Options::const_iterator it;
+  for (it=options.begin(); it!=options.end(); it++)
+  {
+    setOption((*it).first,(*it).second);  
+  }
   setMaxBandwidth(OPUS_BANDWIDTH_MEDIUMBAND);
   setBandwidth(OPUS_AUTO);
   setSignalType(OPUS_SIGNAL_VOICE);
