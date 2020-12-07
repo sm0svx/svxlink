@@ -113,10 +113,10 @@ class AudioDecoderOpus : public AudioDecoder
 {
   public:
     /**
-     * @brief 	Default constuctor with options
+     * @brief 	Default constuctor
      */
     AudioDecoderOpus(const Options& options = Options());
-
+  
     /**
      * @brief 	Destructor
      */
@@ -169,6 +169,7 @@ class AudioDecoderOpus : public AudioDecoder
      * @param 	value The value of the option
      */
     virtual void setOption(const std::string &name, const std::string &value);
+    
   private:
     OpusDecoder *dec;
     int         frame_size;

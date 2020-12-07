@@ -8,82 +8,133 @@
 #
 ##############################################################################
 
-GPIO_CONF="@SVX_SYSCONF_INSTALL_DIR@/gpio.conf"
-[ -r "$GPIO_CONF" ] && . "$GPIO_CONF"
+# Exit on failed commands and undefined variables
+set -eu
+
+# Read configuration file
+GPIO_CONF=${GPIO_CONF-"@SVX_SYSCONF_INSTALL_DIR@/gpio.conf"}
+[ -r "${GPIO_CONF}" ] && . "${GPIO_CONF}"
 
 
-# Set up the given GPIO input pin.
-# Enable the given GPIO pin, set direction to input and set active state
-# (active low or active high). Also set user, group and mode for the pin.
-gpio_in_setup()
+# Print error message to stderr and exit
+#
+#   MSG -- The message to print
+#
+error()
 {
-  local PIN="$1"
-  local ACTIVE_LEVEL="$2"
-
-  if [ "$ACTIVE_LEVEL" = "low" ]; then
-    local ACTIVE_LOW="1"
-  else
-    local ACTIVE_LOW="0"
-  fi
-
-  if [ -n "$PIN" -a ! -e /sys/class/gpio/$PIN ]; then
-    # Extract pinnumber from the full pin name (e.g. gpio4_pd0 -> 4)
-    local pinnum=$(echo "$PIN" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
-    echo $pinnum > $GPIO_PATH/export && \
-      echo "in" > $GPIO_PATH/$PIN/direction && \
-      echo "$ACTIVE_LOW" > $GPIO_PATH/$PIN/active_low
-    [ -n "$GPIO_USER" ] && chown "$GPIO_USER" $GPIO_PATH/$PIN/value
-    [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" $GPIO_PATH/$PIN/value
-    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" $GPIO_PATH/$PIN/value
-  fi
+  local MSG="$1"; shift
+  echo "*** ERROR: ${MSG}" 1>&2
+  exit 1
 }
 
 
-# Set up the given GPIO output pin.
-# Enable the given GPIO pin, set direction to output, set active state (active
-# low or active high) and reset to OFF value. Also set user, group and mode for
-# the pin.
-gpio_out_setup()
+# Set up the given GPIO pin.
+#
+# Enable the given GPIO pin, set direction (in/out), set active state (active
+# low or active high) and reset outputs to OFF value. Also set user, group and
+# mode for the pin.
+#
+# The function take three arguments:
+#
+#   PIN           -- The name of the GPIO pin (e.g. gpio4)
+#   DIRECTION     -- If this is an input or output pin ("in" or "out")
+#   ACTIVE_LEVEL  -- What level signifies active state ("low" or "high")
+#
+gpio_setup()
 {
-  local PIN="$1"
-  local ACTIVE_LEVEL="$2"
+  local PIN="$1"; shift
+  local DIRECTION="$1"; shift
+  local ACTIVE_LEVEL="$1"; shift
 
-  if [ "$ACTIVE_LEVEL" = "low" ]; then
-    local ACTIVE_LOW="1"
-  else
-    local ACTIVE_LOW="0"
+  if [ -z "${PIN}" ]; then
+    error "GPIO pin name is empty"
+    return 1
   fi
 
-  if [ -n "$PIN" -a ! -e $GPIO_PATH/$PIN ]; then
+  local direction="${DIRECTION}"
+  if [ "${ACTIVE_LEVEL}" = "high" ]; then
+    local active_low="0"
+    [ "${DIRECTION}" = "out" ] && direction="low"
+  else
+    local active_low="1"
+    [ "${DIRECTION}" = "out" ] && direction="high"
+  fi
+
+  local pin_path="${GPIO_PATH}/${PIN}"
+  local value_path="${pin_path}/value"
+  local active_low_path="${pin_path}/active_low"
+  local direction_path="${pin_path}/direction"
+  local changed="false"
+
+  if [ ! -e "${pin_path}" ]; then
     # Extract pinnumber from the full pin name (e.g. gpio4_pd0 -> 4)
-    local pinnum=$(echo "$PIN" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
-    echo $pinnum > $GPIO_PATH/export && \
-      echo "out" > $GPIO_PATH/$PIN/direction && \
-      echo "$ACTIVE_LOW" > $GPIO_PATH/$PIN/active_low && \
-      echo 0 > $GPIO_PATH/$PIN/value
-    [ -n "$GPIO_USER" ] && chown "$GPIO_USER" $GPIO_PATH/$PIN/value
-    [ -n "$GPIO_GROUP" ] && chgrp "$GPIO_GROUP" $GPIO_PATH/$PIN/value
-    [ -n "$GPIO_MODE" ] && chmod "$GPIO_MODE" $GPIO_PATH/$PIN/value
+    local pinnum=$(echo "${PIN}" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
+    if ! echo ${pinnum} > "${GPIO_PATH}/export"; then
+      error "Failed to export GPIO pin \"${PIN}\" (pin number ${pinnum})"
+    fi
+    local retries=5
+    while [ ! -e "${pin_path}" ]; do
+      retries=$((retries - 1))
+      if [ ${retries} -eq 0 ]; then
+        error "GPIO pin \"${pin_path}\" not created within ${retries} seconds"
+      fi
+      sleep 1
+    done
+    if [ -n "${GPIO_USER:-}" ]; then
+      if ! chown "${GPIO_USER}" "${value_path}"; then
+        error "Failed to change owner of GPIO pin \"${value_path}\""
+      fi
+    fi
+    if [ -n "${GPIO_GROUP:-}" ]; then
+      if ! chgrp "${GPIO_GROUP}" "${value_path}"; then
+        error "Failed to change group of GPIO pin \"${value_path}\""
+      fi
+    fi
+    if [ -n "${GPIO_MODE:-}" ]; then
+      if ! chmod "${GPIO_MODE}" "${value_path}"; then
+        error "Failed to change mode of GPIO pin \"${value_path}\""
+      fi
+    fi
+    changed="true"
+  fi
+
+  if [ ! -e "${active_low_path}" ]; then
+    error "Missing path \"${active_low_path}\" for GPIO pin"
+  fi
+  if $changed || [ "$(cat "${active_low_path}")" != "${active_low}" ]; then
+     if ! echo "${active_low}" > "${active_low_path}"; then
+      error "Failed to set active_low state of GPIO pin \"${active_low_path}\""
+    fi
+    changed="true"
+  fi
+
+  if [ ! -e "${direction_path}" ]; then
+    error "Missing path \"${direction_path}\" for GPIO pin"
+  fi
+  if $changed || [ "$(cat "${direction_path}")" != "${DIRECTION}" ]; then
+    if ! echo "${direction}" > "${direction_path}"; then
+      error "Failed to set active_low state of GPIO pin \"${direction_path}\""
+    fi
   fi
 }
 
 
 ## Set up GPIO input pins that should be active high
-for pin in $GPIO_IN_HIGH; do
-  gpio_in_setup "$pin" high
+for pin in ${GPIO_IN_HIGH:-}; do
+  gpio_setup "${pin}" "in" "high"
 done
 
 ## Set up GPIO input pins that should be active low
-for pin in $GPIO_IN_LOW; do
-  gpio_in_setup "$pin" low
+for pin in ${GPIO_IN_LOW:-}; do
+  gpio_setup "${pin}" "in" "low"
 done
 
 ## Set up GPIO output pins that should be active high
-for pin in $GPIO_OUT_HIGH; do
-  gpio_out_setup "$pin" high
+for pin in ${GPIO_OUT_HIGH:-}; do
+  gpio_setup "${pin}" "out" "high"
 done
 
 ## Set up GPIO output pins that should be active low
-for pin in $GPIO_OUT_LOW; do
-  gpio_out_setup "$pin" low
+for pin in ${GPIO_OUT_LOW:-}; do
+  gpio_setup "${pin}" "out" "low"
 done

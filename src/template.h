@@ -1,14 +1,14 @@
 /**
-@file   Template.h
+@file   MyNamespaceTemplate.h
 @brief  A_brief_description_for_this_file
 @author Tobias Blomberg / SM0SVX
-@date   2019-
+@date   2020-
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,10 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Template_demo.cpp
+/** @example MyNamespaceTemplate_demo.cpp
 An example of how to use the Template class
 */
-
 
 #ifndef TEMPLATE_INCLUDED
 #define TEMPLATE_INCLUDED
@@ -73,7 +72,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-namespace MyNameSpace
+namespace MyNamespace
 {
 
 
@@ -110,11 +109,11 @@ namespace MyNameSpace
 /**
 @brief  A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2019-
+@date   2020-
 
 A_detailed_class_description
 
-\include Template_demo.cpp
+\include MyNamespaceTemplate_demo.cpp
 */
 class Template
 {
@@ -123,6 +122,16 @@ class Template
      * @brief   Default constructor
      */
     Template(void);
+
+    /**
+     * @brief   Disallow copy construction
+     */
+    Template(const Template&) = delete;
+
+    /**
+     * @brief   Disallow copy assignment
+     */
+    Template& operator=(const Template&) = delete;
 
     /**
      * @brief   Destructor
@@ -138,13 +147,11 @@ class Template
   protected:
 
   private:
-    Template(const Template&);
-    Template& operator=(const Template&);
 
 };  /* class Template */
 
 
-} /* namespace */
+} /* namespace MyNamespace */
 
 #endif /* TEMPLATE_INCLUDED */
 

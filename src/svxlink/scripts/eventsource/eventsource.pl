@@ -10,10 +10,33 @@ use Fcntl;
 use Socket;
 use JSON::PP;
 use XML::Simple;
+use Try::Tiny;
+use Getopt::Long;
 
 my $state_pty ="/dev/shm/state_pty";
 my $logfile = "/var/log/eventsource";
 my $datafile = "/var/spool/svxlink/state_info/state.log";
+
+GetOptions('statepty=s' => \$state_pty,
+            'logfile=s' => \$logfile,
+            'datafile=s' => \$datafile)
+or die("Error in command line arguments\n");
+
+if ($state_pty =~ '^([A-Za-z0-9/_\-.]+)$') {
+    $state_pty = $1;
+} else {
+    die("Illegal path for --state_pty")
+}
+if ($logfile =~ '^([A-Za-z0-9/_\-.]+)$') {
+    $logfile = $1;
+} else {
+    die("Illegal path for --logfile")
+}
+if ($datafile =~ '^([A-Za-z0-9/_\-.]+)$') {
+    $datafile = $1;
+} else {
+    die("Illegal path for --datafile")
+}
 
 my ($sel,$lsn,$pty,$fh,$fh2,$new,$flags,$peer,$port,$name,$buf,$line);
 my ($event,$type,$json,$xs,$out);
@@ -63,33 +86,58 @@ sub closeclient($) {
 
 sub parse($) {
     my ($line) = (@_);
-    my (@fields,@values,$item,$rx,$sql,$lvl,$name,$value);
+    my (@fields,@values,$item,$name,$value);
 
     (@fields) = split / /,$line;
 
     $parsed{"time"} = shift @fields;
     $parsed{"event"} = shift @fields;
 
+    $json = JSON::PP->new;
+    my $rx_info_raw = shift @fields;
+    my $rx_info;
+    try {
+        $rx_info = $json->decode($rx_info_raw);
+    } catch {
+        unshift @fields, $rx_info_raw;
+    };
+
     if ($parsed{"event"} eq "Voter:sql_state") {
-	# parser for voter squelch and siglev information
-	foreach $item (@fields) {
-	    ($rx,$sql,$lvl) = ($item =~ m/^(.*)([_:*])([+-]\d\d\d)$/) or next;
-	    $sql = "closed" if ($sql eq "_");
-	    $sql = "open" if ($sql eq ":");
-	    $sql = "active" if ($sql eq "*");
-	    $parsed{"rx"}{$rx}{"sql"} = $sql;
-	    $parsed{"rx"}{$rx}{"lvl"} = $lvl + 0;
-	}
+        foreach $item (@$rx_info) {
+            my ($sql, $lvl);
+            if ($item->{enabled}) {
+                $sql = ($item->{sql_open}) ? "open" : "closed";
+                $sql = "active" if ($item->{active});
+                $lvl = $item->{siglev} + 0;
+            } else {
+                $sql = "disabled";
+                $lvl = 0;
+            }
+            $parsed{"rx"}{$item->{name}} = {
+                sql => $sql,
+                lvl => $lvl
+            };
+        }
+    } elsif ($parsed{"event"} eq "Rx:sql_state") {
+        $parsed{"rx"}{$rx_info->{name}} = {
+            sql => ($rx_info->{sql_open}) ? "active" : "closed",
+            lvl => $rx_info->{siglev} + 0
+        };
+    } elsif ($parsed{"event"} eq "Tx:state") {
+        $parsed{"tx"}{$rx_info->{name}} = {
+            id       => $rx_info->{id},
+            transmit => ($rx_info->{transmit}) ? "true" : "false"
+        };
     } else {
-	# generic parser for events name=value or name:item1:item2:item3
-	foreach $item (@fields) {
-	    if (scalar(($name,$value) = split /=/,$item,2) == 2) {
-		$parsed{$name} = $value;
-	    } elsif (scalar((@values) = split /:/,$item) >= 2) {
-		$name = shift @values;
-		$parsed{$name} = [ @values ];
-	    }
-	}
+        # generic parser for events name=value or name:item1:item2:item3
+        foreach $item (@fields) {
+            if (scalar(($name,$value) = split /=/,$item,2) == 2) {
+                $parsed{$name} = $value;
+            } elsif (scalar((@values) = split /:/,$item) >= 2) {
+                $name = shift @values;
+                $parsed{$name} = [ @values ];
+            }
+        }
     }
 }
 
@@ -128,6 +176,7 @@ while (1) {
 	logline("failed to open datafile $datafile");
 	exit 1;
     }
+    DATAFILE->autoflush;
 
 SEL:
     for (;;) {

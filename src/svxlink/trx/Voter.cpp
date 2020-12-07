@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <sigc++/bind.h>
 #include <sys/time.h>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -124,6 +125,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 		mem_fun(*this, &SatRx::rxSquelchOpen));
 	rx->signalLevelUpdated.connect(
 		mem_fun(*this, &SatRx::rxSignalLevelUpdated));
+        // FIXME: We should take care of publishStateEvent
 	
 	// FIXME: Should we buffer the tone detector output like we do with
 	// DTMF and selcall?
@@ -686,32 +688,35 @@ void Voter::resetAll(void)
 
 void Voter::printSquelchState(void)
 {
-  stringstream os;
-  os << setfill('0') << std::internal;
-
+  Json::Value event(Json::arrayValue);
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    float siglev = (*it)->signalStrength();
-    bool sql_is_open = (*it)->squelchIsOpen();
-    bool is_enabled = (*it)->isEnabled();
-
-    os << (*it)->name();
-    if (!is_enabled)
+    SatRx *srx = *it;
+    float siglev = srx->signalStrength();
+    bool sql_is_open = srx->squelchIsOpen();
+    bool is_enabled = srx->isEnabled();
+    bool is_active = sql_is_open && ((*it) == sm->activeSrx());
+    Json::Value rx(Json::objectValue);
+    rx["name"] = srx->name();
+    char rx_id = srx->id();
+    rx["id"] = std::string(&rx_id, &rx_id+1);
+    rx["enabled"] = is_enabled;
+    if (is_enabled)
     {
-      os << "#";
+      rx["sql_open"] = sql_is_open;
+      rx["active"] = is_active;
+      rx["siglev"] = static_cast<int>(siglev);
     }
-    else if (sql_is_open)
-    {
-      os << ((*it) == sm->activeSrx() ? "*" : ":");
-    }
-    else
-    {
-      os << "_";
-    }
-    os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
-    os << " ";
+    event.append(rx);
   }
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  stringstream os;
+  writer->write(event, &os);
+  delete writer;
   publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
 

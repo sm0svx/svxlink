@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncUdpSocket.h>
 #include <common.h>
+#include "version/SVXLINK.h"
 
 
 /****************************************************************************
@@ -65,7 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "RewindLogic.h"
 #include "sha256.h"
 #include "multirate_filter_coeff.h"
-#include "version/SVXLINK.h"
+#include "EventHandler.h"
 
 
 /****************************************************************************
@@ -135,7 +136,8 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
     m_reconnect_timer(15000, Timer::TYPE_PERIODIC, false),
     sequenceNumber(0), rtSequenceNumber(0),  m_slot1(false), m_slot2(false),
     subscribed(0), inTransmission(false),
-    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false)
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+    m_event_handler(0)
 {
   m_reconnect_timer.expired.connect(mem_fun(*this, &RewindLogic::reconnect));
   m_flush_timeout_timer.expired.connect(
@@ -145,6 +147,8 @@ RewindLogic::RewindLogic(Async::Config& cfg, const std::string& name)
 
 RewindLogic::~RewindLogic(void)
 {
+  delete m_event_handler;
+  m_event_handler = 0;
   delete m_udp_sock;
   delete dns;
   delete m_logic_con_in;
@@ -214,6 +218,14 @@ bool RewindLogic::initialize(void)
   if (!cfg().getValue(name(), "RECONNECT_INTERVAL", m_rc_interval))
   {
     m_rc_interval = "16000";
+  }
+
+  string event_handler_str;
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/EVENT_HANDLER not set\n";
+    return false;
   }
 
   if (!cfg().getValue(name(), "LOCATION", m_location))
@@ -353,6 +365,36 @@ bool RewindLogic::initialize(void)
   m_logic_con_out->registerSink(up, true);
   m_logic_con_out = up;
 //#endif
+
+  m_event_handler = new EventHandler(event_handler_str, name());
+  if (LinkManager::hasInstance())
+  {
+    m_event_handler->playFile.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playFile), this));
+    m_event_handler->playSilence.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playSilence), this));
+    m_event_handler->playTone.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
+    m_event_handler->playDtmf.connect(sigc::bind<0>(
+          mem_fun(LinkManager::instance(), &LinkManager::playDtmf), this));
+  }
+  m_event_handler->setVariable("logic_name", name().c_str());
+
+  m_event_handler->processEvent("namespace eval Logic {}");
+  list<string> cfgvars = cfg().listSection(name());
+  list<string>::const_iterator cfgit;
+  for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
+  {
+    string var = "Logic::CFG_" + *cfgit;
+    string value;
+    cfg().getValue(name(), *cfgit, value);
+    m_event_handler->setVariable(var, value);
+  }
+
+  if (!m_event_handler->initialize())
+  {
+    return false;
+  }
 
   if (!LogicBase::initialize())
   {

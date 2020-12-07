@@ -191,7 +191,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
   private:
     static const unsigned DEFAULT_HANGTIME = 0;
     
-    Async::Config   m_cfg;
+    Async::Config&  m_cfg;
     std::string     m_name;
     unsigned   	    m_hangtime;
     

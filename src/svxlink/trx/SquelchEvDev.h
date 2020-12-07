@@ -119,6 +119,9 @@ device, that is an /dev/input/eventX device.
 class SquelchEvDev : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "EVDEV";
+
     /**
      * @brief 	Default constuctor
      */

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <algorithm>
 #include <cerrno>
+#include <iterator>
 
 
 /****************************************************************************
@@ -57,7 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ReflectorClient.h"
 #include "Reflector.h"
-
+#include "TGHandler.h"
 
 
 /****************************************************************************
@@ -119,9 +120,17 @@ uint32_t ReflectorClient::next_client_id = 0;
  *
  ****************************************************************************/
 
+bool ReflectorClient::TgFilter::operator()(ReflectorClient* client) const
+{
+  //cout << "m_tg=" << m_tg << "  client_tg="
+  //     << TGHandler::instance()->TGForClient(client) << endl;
+  return m_tg == TGHandler::instance()->TGForClient(client);
+}
+
+
 ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con,
                                  Async::Config *cfg)
-  : m_con(con), m_msg_type(0), m_con_state(STATE_EXPECT_PROTO_VER),
+  : m_con(con), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
     m_client_id(next_client_id++), m_remote_udp_port(0), m_cfg(cfg),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
@@ -130,7 +139,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_heartbeat_rx_cnt(HEARTBEAT_RX_CNT_RESET),
     m_udp_heartbeat_tx_cnt(UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
-    m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0)
+    m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0),
+    m_current_tg(0)
 {
   m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
   m_con->frameReceived.connect(
@@ -173,6 +183,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
 
 ReflectorClient::~ReflectorClient(void)
 {
+  TGHandler::instance()->removeClient(this);
 } /* ReflectorClient::~ReflectorClient */
 
 
@@ -295,6 +306,32 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
     case MsgAuthResponse::TYPE:
       handleMsgAuthResponse(ss);
       break;
+    case MsgSelectTG::TYPE:
+      handleSelectTG(ss);
+      break;
+    case MsgTgMonitor::TYPE:
+      handleTgMonitor(ss);
+      break;
+    case MsgNodeInfo::TYPE:
+      handleNodeInfo(ss);
+      break;
+    case MsgSignalStrengthValues::TYPE:
+      handleMsgSignalStrengthValues(ss);
+      break;
+    case MsgTxStatus::TYPE:
+      handleMsgTxStatus(ss);
+      break;
+#if 0
+    case MsgNodeInfo::TYPE:
+      handleNodeInfo(ss);
+      break;
+#endif
+    case MsgRequestQsy::TYPE:
+      handleRequestQsy(ss);
+      break;
+    case MsgStateEvent::TYPE:
+      handleStateEvent(ss);
+      break;
     case MsgError::TYPE:
       handleMsgError(ss);
       break;
@@ -320,23 +357,35 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
   MsgProtoVer msg;
   if (!msg.unpack(is))
   {
-    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " ERROR: Could not unpack MsgProtoVer\n";
+    std::cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+              << " ERROR: Could not unpack MsgProtoVer\n";
     sendError("Illegal MsgProtoVer protocol message received");
     return;
   }
-  m_client_proto_ver.major_ver = msg.majorVer();
-  m_client_proto_ver.minor_ver = msg.minorVer();
-  if (m_client_proto_ver < ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER) ||
-      m_client_proto_ver > ProtoVer(MsgProtoVer::MAJOR, MsgProtoVer::MINOR))
+  m_client_proto_ver.set(msg.majorVer(), msg.minorVer());
+  ProtoVer max_proto_ver(MsgProtoVer::MAJOR, MsgProtoVer::MINOR);
+  if (m_client_proto_ver > max_proto_ver)
   {
-    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
-         << " Incompatible protocol version: "
-         << msg.majorVer() << "." << msg.minorVer() << ". Should be "
-         << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR << "." << endl;
-    stringstream ss;
+    std::cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+              << " use protocol version "
+              << msg.majorVer() << "." << msg.minorVer()
+              << " which is newer than we can handle. Asking for downgrade to "
+              << MsgProtoVer::MAJOR << "." << MsgProtoVer::MINOR << "."
+              << std::endl;
+    sendMsg(MsgProtoVerDowngrade());
+    return;
+  }
+  else if (m_client_proto_ver < ProtoVer(MIN_MAJOR_VER, MIN_MINOR_VER))
+  {
+    std::cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+              << " is using protocol version "
+              << msg.majorVer() << "." << msg.minorVer()
+              << " which is too old. Must at least be version "
+              << MIN_MAJOR_VER << "." << MIN_MINOR_VER << "." << std::endl;
+    std::ostringstream ss;
     ss << "Unsupported protocol version " << msg.majorVer() << "."
-       << msg.minorVer();
+       << msg.minorVer() << ". Must be at least "
+       << MIN_MAJOR_VER << "." << MIN_MINOR_VER << ".";
     sendError(ss.str());
     return;
   }
@@ -381,8 +430,8 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       sendMsg(MsgAuthOk());
       cout << m_callsign << ": Login OK from "
            << m_con->remoteHost() << ":" << m_con->remotePort()
-           << " with protocol version " << m_client_proto_ver.major_ver
-           << "." << m_client_proto_ver.minor_ver
+           << " with protocol version " << m_client_proto_ver.majorVer()
+           << "." << m_client_proto_ver.minorVer()
            << endl;
       m_con_state = STATE_CONNECTED;
       MsgServerInfo msg_srv_info(m_client_id, m_supported_codecs);
@@ -393,7 +442,12 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
         MsgNodeList msg_node_list(msg_srv_info.nodes());
         sendMsg(msg_node_list);
       }
-      m_reflector->broadcastMsgExcept(MsgNodeJoined(m_callsign), this);
+      if (m_client_proto_ver < ProtoVer(2, 0))
+      {
+        TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients());
+        m_current_tg = m_reflector->tgForV1Clients();
+      }
+      m_reflector->broadcastMsg(MsgNodeJoined(m_callsign), ExceptFilter(this));
     }
     else
     {
@@ -409,6 +463,246 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     sendError("Access denied");
   }
 } /* ReflectorClient::handleMsgAuthResponse */
+
+
+void ReflectorClient::handleSelectTG(std::istream& is)
+{
+  MsgSelectTG msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgSelectTG" << endl;
+    sendError("Illegal MsgSelectTG protocol message received");
+    return;
+  }
+  if (msg.tg() != m_current_tg)
+  {
+    cout << m_callsign << ": Select TG #" << msg.tg() << endl;
+    ReflectorClient *talker = TGHandler::instance()->talkerForTG(m_current_tg);
+    if (talker == this)
+    {
+      m_reflector->broadcastUdpMsg(MsgUdpFlushSamples(),
+          mkAndFilter(
+            TgFilter(m_current_tg),
+            ExceptFilter(this)));
+    }
+    else if (talker != 0)
+    {
+      sendUdpMsg(MsgUdpFlushSamples());
+    }
+    m_current_tg = msg.tg();
+    TGHandler::instance()->switchTo(this, msg.tg());
+  }
+} /* ReflectorClient::handleSelectTG */
+
+
+void ReflectorClient::handleTgMonitor(std::istream& is)
+{
+  MsgTgMonitor msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgTgMonitor" << endl;
+    sendError("Illegal MsgTgMonitor protocol message received");
+    return;
+  }
+  const std::set<uint32_t>& tgs = msg.tgs();
+  cout << m_callsign << ": Monitor TG#: [ ";
+  std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
+  cout << "]" << endl;
+
+  m_monitored_tgs = tgs;
+} /* ReflectorClient::handleTgMonitor */
+
+
+void ReflectorClient::handleNodeInfo(std::istream& is)
+{
+  MsgNodeInfo msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgNodeInfo" << endl;
+    sendError("Illegal MsgNodeInfo protocol message received");
+    return;
+  }
+  //std::cout << "### handleNodeInfo: " << msg.json() << std::endl;
+  try
+  {
+    std::istringstream is(msg.json());
+    is >> m_node_info;
+  }
+  catch (const Json::Exception& e)
+  {
+    std::cerr << "*** WARNING[" << m_callsign
+              << "]: Failed to parse MsgNodeInfo JSON object: "
+              << e.what() << std::endl;
+  }
+} /* ReflectorClient::handleNodeInfo */
+
+
+void ReflectorClient::handleMsgSignalStrengthValues(std::istream& is)
+{
+  MsgSignalStrengthValues msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** WARNING[" << callsign()
+         << "]: Could not unpack incoming "
+            "MsgSignalStrengthValues message" << endl;
+    return;
+  }
+  typedef MsgSignalStrengthValues::Rxs::const_iterator RxsIter;
+  for (RxsIter it = msg.rxs().begin(); it != msg.rxs().end(); ++it)
+  {
+    const MsgSignalStrengthValues::Rx& rx = *it;
+    //std::cout << "### MsgSignalStrengthValues:"
+    //  << " id=" << rx.id()
+    //  << " siglev=" << rx.siglev()
+    //  << " enabled=" << rx.enabled()
+    //  << " sql_open=" << rx.sqlOpen()
+    //  << " active=" << rx.active()
+    //  << std::endl;
+    setRxSiglev(rx.id(), rx.siglev());
+    setRxEnabled(rx.id(), rx.enabled());
+    setRxSqlOpen(rx.id(), rx.sqlOpen());
+    setRxActive(rx.id(), rx.active());
+  }
+} /* ReflectorClient::handleMsgSignalStrengthValues */
+
+
+void ReflectorClient::handleMsgTxStatus(std::istream& is)
+{
+  MsgTxStatus msg;
+  if (!msg.unpack(is))
+  {
+    cerr << "*** WARNING[" << callsign()
+         << "]: Could not unpack incoming MsgTxStatus message" << endl;
+    return;
+  }
+  typedef MsgTxStatus::Txs::const_iterator TxsIter;
+  for (TxsIter it = msg.txs().begin(); it != msg.txs().end(); ++it)
+  {
+    const MsgTxStatus::Tx& tx = *it;
+    //std::cout << "### MsgTxStatus:"
+    //  << " id=" << tx.id()
+    //  << " transmit=" << tx.transmit()
+    //  << std::endl;
+    setTxTransmit(tx.id(), tx.transmit());
+  }
+} /* ReflectorClient::handleMsgTxStatus */
+
+
+void ReflectorClient::handleRequestQsy(std::istream& is)
+{
+  MsgRequestQsy msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgRequestQsy" << endl;
+    sendError("Illegal MsgRequestQsy protocol message received");
+    return;
+  }
+  m_reflector->requestQsy(this, msg.tg());
+} /* ReflectorClient::handleRequestQsy */
+
+
+void ReflectorClient::handleStateEvent(std::istream& is)
+{
+  MsgStateEvent msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgStateEvent" << endl;
+    sendError("Illegal MsgStateEvent protocol message received");
+    return;
+  }
+  cout << "### ReflectorClient::handleStateEvent:"
+       << " src=" << msg.src()
+       << " name=" << msg.name()
+       << " msg=" << msg.msg()
+       << std::endl;
+} /* ReflectorClient::handleStateEvent */
+
+
+#if 0
+void ReflectorClient::handleNodeInfo(std::istream& is)
+{
+  MsgNodeInfo msg;
+  if (!msg.unpack(is))
+  {
+    cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+         << " ERROR: Could not unpack MsgNodeInfo" << endl;
+    sendError("Illegal MsgNodeInfo protocol message received");
+    return;
+  }
+  cout << m_callsign << ": Client info"
+       << "\n--- Software: \"" << msg.swInfo() << "\"";
+  for (size_t i=0; i<msg.rxSites().size(); ++i)
+  {
+    const MsgNodeInfo::RxSite& rx_site = msg.rxSites().at(i);
+    cout << "\n--- Receiver \"" << rx_site.rxName() << "\":"
+         << "\n---   QTH Name          : " << rx_site.qthName();
+    if (rx_site.antennaHeightIsValid())
+    {
+      cout << "\n---   Antenna Height    : " << rx_site.antennaHeight()
+           << "m above sea level";
+    }
+    if (rx_site.antennaDirectionIsValid())
+    {
+      cout << "\n---   Antenna Direction : " << rx_site.antennaDirection()
+           << " degrees";
+    }
+    if (rx_site.rfFrequencyIsValid())
+    {
+      cout << "\n---   RF Frequency      : " << rx_site.rfFrequency()
+           << "Hz";
+    }
+    if (rx_site.ctcssFrequenciesIsValid())
+    {
+      cout << "\n---   CTCSS Frequencies : ";
+      std::copy(rx_site.ctcssFrequencies().begin(),
+                rx_site.ctcssFrequencies().end(),
+                std::ostream_iterator<float>(cout, " "));
+    }
+  }
+  for (size_t i=0; i<msg.txSites().size(); ++i)
+  {
+    const MsgNodeInfo::TxSite& tx_site = msg.txSites().at(i);
+    cout << "\n--- Transmitter \"" << tx_site.txName() << "\":"
+         << "\n---   QTH Name          : " << tx_site.qthName();
+    if (tx_site.antennaHeightIsValid())
+    {
+      cout << "\n---   Antenna Height    : " << tx_site.antennaHeight()
+           << "m above sea level";
+    }
+    if (tx_site.antennaDirectionIsValid())
+    {
+      cout << "\n---   Antenna Direction : " << tx_site.antennaDirection()
+           << " degrees";
+    }
+    if (tx_site.rfFrequencyIsValid())
+    {
+      cout << "\n---   RF Frequency      : " << tx_site.rfFrequency()
+           << "Hz";
+    }
+    if (tx_site.ctcssFrequenciesIsValid())
+    {
+      cout << "\n---   CTCSS Frequencies : ";
+      std::copy(tx_site.ctcssFrequencies().begin(),
+                tx_site.ctcssFrequencies().end(),
+                std::ostream_iterator<float>(cout, " "));
+    }
+    if (tx_site.txPowerIsValid())
+    {
+      cout << "\n---   TX Power          : " << tx_site.txPower() << "W";
+    }
+  }
+  //if (!msg.qthName().empty())
+  //{
+  //  cout << "\n--- QTH Name=\"" << msg.qthName() << "\"";
+  //}
+  cout << endl;
+} /* ReflectorClient::handleNodeInfo */
+#endif
 
 
 void ReflectorClient::handleMsgError(std::istream& is)

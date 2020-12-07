@@ -171,6 +171,9 @@ if(NOT DEFINED SVX_MODULE_INSTALL_DIR)
   set(SVX_MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/svxlink)
 endif(NOT DEFINED SVX_MODULE_INSTALL_DIR)
 
+# Clear global variables implemented using internal cache
+set(CONFIG_FILES "" CACHE INTERNAL "CONFIG_FILES")
+set(FILE_OWNER "" CACHE INTERNAL "FILE_OWNER")
 
 ##############################################################################
 # Functions
@@ -184,55 +187,6 @@ function(expinc filename)
     )
 endfunction(expinc)
 
-# Add a target for building a version/xyz.h file
-#
-#   add_version_target(name [depends_var])
-#
-# The name of the version variable should be VER_name and the versions file
-# will be named versions/name.h.
-# If depends_var is given it will be set to a list of dependencies that the
-# target using the versions file should add to its dependency list.
-function(add_version_target name)
-  set(depends_var ${ARGV1})
-  if(DEFINED depends_var)
-    set(${depends_var} ${${depends_var}}
-      "${PROJECT_INCLUDE_DIR}/version/${name}.h"
-      PARENT_SCOPE
-      )
-  endif(DEFINED depends_var)
-
-  if(VER_${name})
-    set(VERSION ${VER_${name}})
-  else(VER_${name})
-    set(VERSION "?.?.?")
-  endif(VER_${name})
-
-  add_custom_command(
-    OUTPUT ${PROJECT_INCLUDE_DIR}/version/${name}.h
-    WORKING_DIRECTORY ${PROJECT_INCLUDE_DIR}
-    COMMAND ${CMAKE_COMMAND} -DVER_NAME=${name} -DVER_VALUE=${VERSION} 
-                     -P ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
-    DEPENDS ${CMAKE_SOURCE_DIR}/versions
-            ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
-  )
-endfunction(add_version_target)
-
-# Read a versions file and set up CMake variables for each entry
-function(read_versions_file filename)
-  message(STATUS "Reading versions file...")
-  file(STRINGS ${filename} versions REGEX .*=.*)
-  foreach(version ${versions})
-    string(REGEX REPLACE \(.*\)=\(.*\) "VER_\\1;\\2" version ${version})
-    set(${version} PARENT_SCOPE)
-    if(version MATCHES ^VER_LIB)
-      list(GET version 0 varname)
-      list(GET version 1 varvalue)
-      string(REGEX MATCH [0-9]+\\.[0-9]+ ${varname}_SOVERSION ${varvalue})
-      set(${varname}_SOVERSION ${${varname}_SOVERSION} PARENT_SCOPE)
-    endif(version MATCHES ^VER_LIB)
-  endforeach(version)
-endfunction(read_versions_file)
-
 # Create a post install target to change the owner of an installed file.
 # If DO_INSTALL_CHOWN is set to YES, the owner will be changed during
 # installation.
@@ -242,6 +196,8 @@ endfunction(read_versions_file)
 # unset, chown operations are performed.
 function(install_chown filename owner)
   if(owner)
+    set(FILE_OWNER "${FILE_OWNER}${owner} ${filename};"
+	    CACHE INTERNAL "FILE_OWNER")
     set(chown_commands "
       set(CHOWN_TOOL ${CHOWN_TOOL})
       if(NOT CHOWN_TOOL)
@@ -294,6 +250,8 @@ function(install_if_not_exists src dest)
   if (NOT IS_ABSOLUTE "${dest}")
     set(dest "${CMAKE_INSTALL_PREFIX}/${dest}")
   endif()
+  set(CONFIG_FILES "${CONFIG_FILES}${dest}/${src_name} "
+	  CACHE INTERNAL "CONFIG_FILES")
   install(CODE "
     if(NOT EXISTS \"\$ENV{DESTDIR}${dest}/${src_name}\")
       #file(INSTALL \"${src}\" DESTINATION \"${dest}\")
@@ -314,9 +272,6 @@ endfunction(install_if_not_exists)
 ##############################################################################
 # Main execution starts here
 ##############################################################################
-
-# Load the versions file and define version variables
-read_versions_file(${PROJECT_SOURCE_DIR}/versions)
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.in
   ${CMAKE_BINARY_DIR}/config.h
@@ -339,6 +294,7 @@ message(STATUS "SvxLink user = ${SVXLINK_USER}")
 message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
 # Add directories to build
+add_subdirectory(include)
 add_subdirectory(async)
 add_subdirectory(misc)
 add_subdirectory(echolib)
@@ -373,5 +329,18 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/../COPYRIGHT")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/../README.adoc")
 
 #set(CPACK_GENERATOR "DEB")
+if (CPACK_GENERATOR STREQUAL "DEB")
+  #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsigc++-2.0-0v5, libgsm1, libpopt0, tcl, libgcrypt20, libspeex1, libasound2, libopus0, alsa-utils, vorbis-tools, libcurl4, rtl-sdr, libjsoncpp1")
+  string(REPLACE " " "\n" CONFIG_FILES_NL "${CONFIG_FILES}")
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/conffiles" "${CONFIG_FILES_NL}")
+  foreach(file ${FILE_OWNER})
+    set(chown_file_commands "${chown_file_commands}${CHOWN_TOOL} ${file}\n")
+  endforeach()
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/postinst"
+    "getent group ${SVXLINK_GROUP} >/dev/null || groupadd -r ${SVXLINK_GROUP}\n"
+    "getent passwd ${SVXLINK_USER} >/dev/null || useradd -r -g ${SVXLINK_GROUP} ${SVXLINK_USER}\n"
+    "${chown_file_commands}")
+  set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/conffiles;${CMAKE_CURRENT_BINARY_DIR}/postinst")
+endif(CPACK_GENERATOR STREQUAL "DEB")
 
 include(CPack)

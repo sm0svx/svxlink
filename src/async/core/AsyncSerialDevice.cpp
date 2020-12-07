@@ -235,7 +235,7 @@ SerialDevice::~SerialDevice(void)
 
 bool SerialDevice::openPort(bool flush)
 {
-  fd = ::open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK | O_SYNC);
+  fd = ::open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
   if (fd == -1)
   {
     return false;

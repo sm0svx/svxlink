@@ -68,7 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/MODULE_ECHOLINK.h"
+#include "version/MODULE_ECHO_LINK.h"
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 
@@ -164,7 +164,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
     autocon_timer(0), proxy(0), pty(0)
 {
-  cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
+  cout << "\tModule EchoLink v" MODULE_ECHO_LINK_VERSION " starting...\n";
   
 } /* ModuleEchoLink */
 
@@ -433,8 +433,13 @@ bool ModuleEchoLink::initialize(void)
     moduleCleanup();
     return false;
   }
-  Dispatcher::instance()->incomingConnection.connect(
-      mem_fun(*this, &ModuleEchoLink::onIncomingConnection));
+  bool drop_all_incoming = false;
+  if (!cfg().getValue(cfgName(), "DROP_ALL_INCOMING", drop_all_incoming) ||
+      !drop_all_incoming)
+  {
+    Dispatcher::instance()->incomingConnection.connect(
+        mem_fun(*this, &ModuleEchoLink::onIncomingConnection));
+  }
 
     // Create audio pipe chain for audio transmitted to the remote EchoLink
     // stations: <from core> -> Valve -> Splitter (-> QsoImpl ...)

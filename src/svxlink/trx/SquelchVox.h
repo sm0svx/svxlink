@@ -111,6 +111,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class SquelchVox : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "VOX";
+
     /**
      * @brief 	Default constuctor
      */

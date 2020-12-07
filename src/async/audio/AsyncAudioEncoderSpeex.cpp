@@ -133,8 +133,6 @@ AudioEncoderSpeex::AudioEncoderSpeex(const Options& options)
   //setAbr(8000);
   //setVbrMaxBitrate(32000);
   //enableHighpass(false);
-
-  setOptions(options);
 } /* AsyncAudioEncoderSpeex::AsyncAudioEncoderSpeex */
 
 

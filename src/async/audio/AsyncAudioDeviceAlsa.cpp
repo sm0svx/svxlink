@@ -194,7 +194,7 @@ AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
   : AudioDevice(dev_name), play_block_size(0), play_block_count(0),
     rec_block_size(0), rec_block_count(0), play_handle(0), 
     rec_handle(0), play_watch(0), rec_watch(0), duplex(false),
-    zerofill_on_underflow(false)
+    zerofill_on_underflow(true)
 {
   assert(AudioDeviceAlsa_creator_registered);
 

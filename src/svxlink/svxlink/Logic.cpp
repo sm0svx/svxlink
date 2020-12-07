@@ -170,7 +170,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0)
+    dtmf_ctrl_pty(0),                       command_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -206,6 +206,8 @@ bool Logic::initialize(void)
       return false;
     }
   }
+
+  cfg().getValue(name(), "ONLINE", is_online);
 
   ChangeLangCmd *lang_cmd = new ChangeLangCmd(&cmd_parser, this);
   if (!lang_cmd->addToParser())
@@ -290,6 +292,24 @@ bool Logic::initialize(void)
     }
     dtmf_ctrl_pty->dataReceived.connect(
         mem_fun(*this, &Logic::dtmfCtrlPtyCmdReceived));
+  }
+
+  string command_pty_path;
+  cfg().getValue(name(), "COMMAND_PTY", command_pty_path);
+  if (!command_pty_path.empty())
+  {
+    command_pty = new Pty(command_pty_path);
+    if (!command_pty->open())
+    {
+      cerr << "*** ERROR: Could not open command PTY "
+           << command_pty_path << " as specified in configuration variable "
+           << name() << "/" << "COMMAND_PTY" << endl;
+      cleanup();
+      return false;
+    }
+    command_pty->setLineBuffered(true);
+    command_pty->dataReceived.connect(
+        mem_fun(*this, &Logic::commandPtyCmdReceived));
   }
 
   string value;
@@ -399,7 +419,7 @@ bool Logic::initialize(void)
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
-  rx().publishStateEvent.connect(mem_fun(*this, &Logic::publishStateEvent));
+  rx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -557,6 +577,7 @@ bool Logic::initialize(void)
   }
   tx().transmitterStateChange.connect(
       mem_fun(*this, &Logic::transmitterStateChange));
+  tx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
   prev_tx_src->registerSink(m_tx);
   prev_tx_src = 0;
 
@@ -588,9 +609,11 @@ bool Logic::initialize(void)
   event_handler->deactivateModule.connect(
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->publishStateEvent.connect(
-          mem_fun(*this, &Logic::publishStateEvent));
+          mem_fun(*this, &Logic::onPublishStateEvent));
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
+  event_handler->setConfigValue.connect(
+          sigc::mem_fun(cfg(), &Async::Config::setValue));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -655,6 +678,39 @@ bool Logic::initialize(void)
       mem_fun(*this, &Logic::putCmdOnQueue));
   exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
+
+  typedef std::vector<SvxLink::SepPair<float, uint32_t> > CtcssToTgVec;
+  CtcssToTgVec ctcss_to_tg;
+  if (!cfg().getValue(name(), "CTCSS_TO_TG", ctcss_to_tg, true))
+  {
+    cerr << "*** ERROR: Illegal value for configuration variable "
+         << name() << "/CTCSS_TO_TG" << endl;
+    return false;
+  }
+  for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
+       it != ctcss_to_tg.end(); ++it)
+  {
+    int bw = 4;
+    if (it->first > 300)
+    {
+      bw = 50;
+    }
+    if (rx().addToneDetector(it->first, bw, 10, 1000))
+    {
+      uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*it->first));
+      uint32_t tg = it->second;
+      m_ctcss_to_tg[uint_fq] = tg;
+    }
+    else
+    {
+      cerr << "*** WARNING: Could not setup tone detector for CTCSS "
+           << it->first << " to TG #" << it->second << " map in logic "
+           << name() << endl;
+    }
+  }
+  rx().toneDetected.connect(mem_fun(*this, &Logic::detectedTone));
+
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &Logic::cfgUpdated));
 
   return true;
 
@@ -903,7 +959,15 @@ Async::AudioSink *Logic::logicConIn(void)
 
 void Logic::setOnline(bool online)
 {
+  if (online == is_online)
+  {
+    return;
+  }
+
   is_online = online;
+  cfg().setValue(name(), "ONLINE", is_online ? "1" : "0");
+  std::cout << name() << ": Setting logic "
+            << (online ? "ONLINE" : "OFFLINE") << std::endl;
   if (online)
   {
     tx().setTxCtrlMode(currently_set_tx_ctrl_mode);
@@ -960,6 +1024,7 @@ void Logic::squelchOpen(bool is_open)
       }
     }
     processCommandQueue();
+    setReceivedTg(0);
   }
   else
   {
@@ -1018,6 +1083,42 @@ void Logic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
     }
   }
 } /* Logic::dtmfCtrlPtyCmdReceived */
+
+
+void Logic::commandPtyCmdReceived(const void *buf, size_t count)
+{
+  const char* ptr = reinterpret_cast<const char*>(buf);
+  const std::string cmdline(ptr, ptr + count);
+  //std::cout << "### Logic::commandPtyCmdReceived: " << cmdline << std::endl;
+  std::istringstream ss(cmdline);
+  std::string cmd;
+  if (!(ss >> cmd))
+  {
+    std::cerr << "*** ERROR: Invalid PTY command in logic " << name() << ": \""
+              << cmdline << "\"" << std::endl;
+    return;
+  }
+  if (cmd == "CFG")
+  {
+    std::string section, tag, value;
+    if (!(ss >> section >> tag >> value) || !ss.eof())
+    {
+      std::cerr << "*** ERROR: Invalid PTY command in logic "
+                << name() << ": \"" << cmdline << "\". "
+                << "Usage: CFG <section> <tag> <value>"
+                << std::endl;
+      return;
+    }
+    cfg().setValue(section, tag, value);
+  }
+  else
+  {
+    std::cerr << "*** ERROR: Unknown PTY command in logic "
+              << name() << ": \"" << cmdline << "\". "
+              << "Valid commands are: CFG"
+              << std::endl;
+  }
+} /* Logic::commandPtyCmdReceived */
 
 
 void Logic::clearPendingSamples(void)
@@ -1441,23 +1542,16 @@ void Logic::processMacroCmd(const string& macro_cmd)
 } /* Logic::processMacroCmd */
 
 
-void Logic::checkIfOnlineCmd(void)
-{
-  if (dtmf_digit_handler->command() == (online_cmd + "1"))
-  {
-    cout << name() << ": Setting logic online\n";
-    setOnline(true);
-  }
-} /* Logic::checkIfOnlineCmd */
-
-
 void Logic::putCmdOnQueue(void)
 {
   exec_cmd_on_sql_close_timer.setEnable(false);
 
   if (!is_online)
   {
-    checkIfOnlineCmd();
+    if (dtmf_digit_handler->command() == (online_cmd + "1"))
+    {
+      setOnline(true);
+    }
     return;
   }
 
@@ -1592,6 +1686,7 @@ void Logic::cleanup(void)
   delete qso_recorder;                qso_recorder = 0;
   delete state_pty;                   state_pty = 0;
   delete dtmf_ctrl_pty;               dtmf_ctrl_pty = 0;
+  delete command_pty;                 command_pty = 0;
 } /* Logic::cleanup */
 
 
@@ -1623,8 +1718,10 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 } /* Logic::audioFromModuleStreamStateChanged */
 
 
-void Logic::publishStateEvent(const string &event_name, const string &msg)
+void Logic::onPublishStateEvent(const string &event_name, const string &msg)
 {
+  publishStateEvent(event_name, msg);
+
   if (state_pty == 0)
   {
     return;
@@ -1637,7 +1734,43 @@ void Logic::publishStateEvent(const string &event_name, const string &msg)
   os << event_name << " " << msg;
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
-} /* Logic::publishStateEvent */
+} /* Logic::onPublishStateEvent */
+
+
+void Logic::detectedTone(float fq)
+{
+  //cout << name() << ": " << fq << " Hz tone call detected" << endl;
+  uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*fq));
+  std::map<uint16_t, uint32_t>::const_iterator it = m_ctcss_to_tg.find(uint_fq);
+  if (it != m_ctcss_to_tg.end())
+  {
+    uint32_t tg = it->second;
+    //cout << "### Map CTCSS " << fq << " to TG #" << tg << endl;
+    setReceivedTg(tg);
+  }
+} /* Logic::detectedTone */
+
+
+void Logic::cfgUpdated(const std::string& section, const std::string& tag)
+{
+  if (section == name())
+  {
+    std::string value;
+    if (cfg().getValue(name(), tag, value))
+    {
+      event_handler->setVariable("Logic::CFG_" + tag, value);
+      processEvent("config_updated CFG_" + tag + " \"" + value + "\"");
+    }
+    if (tag == "ONLINE")
+    {
+      bool online;
+      if (cfg().getValue(name(), "ONLINE", online))
+      {
+        setOnline(online);
+      }
+    }
+  }
+} /* Logic::cfgUpdated */
 
 
 /*

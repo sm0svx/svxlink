@@ -39,6 +39,7 @@ RUN rm src/librtlsdr.so
 WORKDIR ${HOME}
 ARG GIT_REPO=https://github.com/sm0svx/svxlink.git
 ARG GIT_REF=master
+ARG GIT_SSL_NO_VERIFY=true
 RUN git clone --branch ${GIT_REF} ${GIT_REPO}
 #ADD find_librtlsdr.patch ${HOME}/
 #RUN cd svxlink && patch -p1 < ${HOME}/find_librtlsdr.patch

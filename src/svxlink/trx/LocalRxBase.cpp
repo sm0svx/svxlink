@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -74,12 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SigLevDet.h"
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
-#include "SquelchVox.h"
 #include "SquelchCtcss.h"
-#include "SquelchSerial.h"
-#include "SquelchSigLev.h"
-#include "SquelchEvDev.h"
-#include "SquelchGpio.h"
 #include "LocalRxBase.h"
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
@@ -88,11 +84,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "HdlcDeframer.h"
 #include "Tx.h"
 #include "Emphasis.h"
-#include "SquelchPty.h"
-#include "SquelchOpen.h"
-#ifdef HAS_HIDRAW_SUPPORT
-#include "SquelchHidraw.h"
-#endif
 
 
 /****************************************************************************
@@ -227,6 +218,10 @@ class AudioUdpSink : public UdpSocket, public AudioSink
  *
  ****************************************************************************/
 
+namespace {
+  typedef const char *CfgTag;
+  CfgTag CFG_SQL_EXTENDED_HANGTIME_THRESH = "SQL_EXTENDED_HANGTIME_THRESH";
+};
 
 
 /****************************************************************************
@@ -236,7 +231,7 @@ class AudioUdpSink : public UdpSocket, public AudioSink
  ****************************************************************************/
 
 LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
-  : Rx(cfg, name), cfg(cfg), mute_state(MUTE_ALL),
+  : Rx(cfg, name), mute_state(MUTE_ALL),
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
@@ -266,25 +261,25 @@ bool LocalRxBase::initialize(void)
   }
   
   bool deemphasis = false;
-  cfg.getValue(name(), "DEEMPHASIS", deemphasis);
+  cfg().getValue(name(), "DEEMPHASIS", deemphasis);
   
   int delay_line_len = 0;
   bool  mute_1750 = false;
-  if (cfg.getValue(name(), "1750_MUTING", mute_1750))
+  if (cfg().getValue(name(), "1750_MUTING", mute_1750))
   {
     delay_line_len = max(delay_line_len, TONE_1750_MUTING_PRE);
   }
 
-  cfg.getValue(name(), "SQL_TAIL_ELIM", sql_tail_elim);
+  cfg().getValue(name(), "SQL_TAIL_ELIM", sql_tail_elim);
   if (sql_tail_elim > 0)
   {
     delay_line_len = max(delay_line_len, sql_tail_elim);
   }
   
-  cfg.getValue(name(), "PREAMP", preamp_gain);
+  cfg().getValue(name(), "PREAMP", preamp_gain);
   
   bool peak_meter = false;
-  cfg.getValue(name(), "PEAK_METER", peak_meter);
+  cfg().getValue(name(), "PEAK_METER", peak_meter);
   
     // Get the audio source object
   AudioSource *prev_src = audioSource();
@@ -297,7 +292,7 @@ bool LocalRxBase::initialize(void)
   prev_src = input_fifo;
 
   SvxLink::SepPair<string, uint16_t> raw_audio_fwd_dest;
-  if (cfg.getValue(name(), "RAW_AUDIO_UDP_DEST", raw_audio_fwd_dest))
+  if (cfg().getValue(name(), "RAW_AUDIO_UDP_DEST", raw_audio_fwd_dest))
   {
     AudioSplitter *raw_audio_splitter = new AudioSplitter;
     prev_src->registerSink(raw_audio_splitter, true);
@@ -347,14 +342,9 @@ bool LocalRxBase::initialize(void)
   prev_src->registerSink(siglevdet_splitter, true);
 
     // Create the signal level detector
-  siglevdet = SigLevDetFactoryBase::createNamedSigLevDet(cfg, name());
-  if ((siglevdet == 0) ||
-      (!siglevdet->initialize(cfg, name(), INTERNAL_SAMPLE_RATE)))
+  siglevdet = createSigLevDet(cfg(), name());
+  if (siglevdet == 0)
   {
-    cout << "*** ERROR: Could not initialize the signal level detector for "
-         << "receiver " << name() << endl;
-    delete siglevdet;
-    siglevdet = 0;
     return false;
   }
   siglevdet->setIntegrationTime(0);
@@ -403,97 +393,60 @@ bool LocalRxBase::initialize(void)
 
     // Create the configured squelch detector and initialize it
   string sql_det_str;
-  if (!cfg.getValue(name(), "SQL_DET", sql_det_str))
+  if (!cfg().getValue(name(), "SQL_DET", sql_det_str))
   {
     cerr << "*** ERROR: Config variable " << name() << "/SQL_DET not set\n";
     return false;
   }
 
-  if (sql_det_str == "OPEN")
-  {
-    squelch_det = new SquelchOpen;
-  }
-  else if (sql_det_str == "VOX")
-  {
-    squelch_det = new SquelchVox;
-  }
-  else if (sql_det_str == "CTCSS")
-  {
-    SquelchCtcss *squelch_ctcss = new SquelchCtcss;
-    squelch_ctcss->snrUpdated.connect(ctcssSnrUpdated.make_slot());
-    squelch_det = squelch_ctcss;
-  }
-  else if (sql_det_str == "SERIAL")
-  {
-    squelch_det = new SquelchSerial;
-  }
-  else if (sql_det_str == "SIGLEV")
-  {
-    squelch_det = new SquelchSigLev(siglevdet);
-  }
-  else if (sql_det_str == "EVDEV")
-  {
-    squelch_det = new SquelchEvDev;
-  }
-  else if (sql_det_str == "GPIO")
-  {
-    squelch_det = new SquelchGpio;
-  }
-  else if (sql_det_str == "PTY")
-  {
-    squelch_det = new SquelchPty;
-  }
-#ifdef HAS_HIDRAW_SUPPORT
-  else if (sql_det_str == "HIDRAW")
-  {
-    squelch_det = new SquelchHidraw;
-  }
-#endif
-  else
+  squelch_det = createSquelch(sql_det_str);
+  if (squelch_det == 0)
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
-      	 << name() << "/SQL_DET. Legal values are: OPEN, VOX, CTCSS, SIGLEV, "
-	 << "EVDEV, GPIO, PTY and SERIAL\n";
+         << name() << "/SQL_DET. Legal squelch types are: "
+         << SquelchFactory::validFactories() << std::endl;
     // FIXME: Cleanup
     return false;
   }
-  
-  if (!squelch_det->initialize(cfg, name()))
+  if (!squelch_det->initialize(cfg(), name()))
   {
-    cerr << "*** ERROR: Squelch detector initialization failed for RX \""
-      	 << name() << "\"\n";
+    std::cerr << "*** ERROR: Squelch detector initialization failed for RX \""
+              << name() << "\"" << std::endl;
     delete squelch_det;
     squelch_det = 0;
     // FIXME: Cleanup
     return false;
   }
+  if (sql_det_str == SquelchCtcss::OBJNAME)
+  {
+    SquelchCtcss *squelch_ctcss = dynamic_cast<SquelchCtcss*>(squelch_det);
+    squelch_ctcss->snrUpdated.connect(ctcssSnrUpdated.make_slot());
+  }
 
   readyStateChanged.connect(mem_fun(*this, &LocalRxBase::rxReadyStateChanged));
 
-  if (cfg.getValue(name(), "SQL_HANGTIME", sql_hangtime))
-  {
-    squelch_det->setHangtime(sql_hangtime);
-  }
-  cfg.getValue(name(), "SQL_EXTENDED_HANGTIME", sql_extended_hangtime);
-  cfg.getValue(name(), "SQL_EXTENDED_HANGTIME_THRESH",
-      sql_extended_hangtime_thresh);
-  
+  cfg().getValue(name(), CFG_SQL_EXTENDED_HANGTIME_THRESH,
+                         sql_extended_hangtime_thresh);
+
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRxBase::onSquelchOpen));
   fullband_splitter->addSink(squelch_det, true);
+
+  squelchOpen.connect(
+      sigc::hide(sigc::mem_fun(*this, &LocalRxBase::publishSquelchState)));
 
     // Set up out of band AFSK demodulator if configured
   float voice_gain = 0.0f;
   bool ob_afsk_enable = false;
-  if (cfg.getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable) && ob_afsk_enable)
+  if (cfg().getValue(name(), "OB_AFSK_ENABLE", ob_afsk_enable) && ob_afsk_enable)
   {
     unsigned fc = 5500;
-    //cfg.getValue(name(), "OB_AFSK_CENTER_FQ", fc);
+    //cfg().getValue(name(), "OB_AFSK_CENTER_FQ", fc);
     unsigned shift = 170;
-    //cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
+    //cfg().getValue(name(), "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
-    //cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
+    //cfg().getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
     voice_gain = 6.0f;
-    cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
+    cfg().getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
 
       // Frequency sampling filter with passband center 5500Hz, about 400Hz
       // wide and about 40dB stop band attenuation
@@ -528,14 +481,14 @@ bool LocalRxBase::initialize(void)
   }
 
   bool ib_afsk_enable = false;
-  if (cfg.getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable) && ib_afsk_enable)
+  if (cfg().getValue(name(), "IB_AFSK_ENABLE", ib_afsk_enable) && ib_afsk_enable)
   {
     unsigned fc = 1700;
-    //cfg.getValue(name(), "IB_AFSK_CENTER_FQ", fc);
+    //cfg().getValue(name(), "IB_AFSK_CENTER_FQ", fc);
     unsigned shift = 1000;
-    //cfg.getValue(name(), "IB_AFSK_SHIFT", shift);
+    //cfg().getValue(name(), "IB_AFSK_SHIFT", shift);
     unsigned baudrate = 1200;
-    //cfg.getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
+    //cfg().getValue(name(), "IB_AFSK_BAUDRATE", baudrate);
 
     AfskDemodulator *fsk_demod =
       new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
@@ -576,10 +529,10 @@ bool LocalRxBase::initialize(void)
 
     // Create the configured type of DTMF decoder and add it to the splitter
   string dtmf_dec_type("NONE");
-  cfg.getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
+  cfg().getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
   if (dtmf_dec_type != "NONE")
   {
-    DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg, name());
+    DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg(), name());
     if ((dtmf_dec == 0) || !dtmf_dec->initialize())
     {
       // FIXME: Cleanup?
@@ -593,7 +546,7 @@ bool LocalRxBase::initialize(void)
     voiceband_splitter->addSink(dtmf_dec, true);
 
     bool dtmf_muting = false;
-    cfg.getValue(name(), "DTMF_MUTING", dtmf_muting);
+    cfg().getValue(name(), "DTMF_MUTING", dtmf_muting);
     if (dtmf_muting)
     {
       dtmf_muting_pre = dtmf_dec->detectionTime();
@@ -603,10 +556,10 @@ bool LocalRxBase::initialize(void)
   
     // Create a selective multiple tone detector object
   string sel5_dec_type("NONE");
-  cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_dec_type);
+  cfg().getValue(name(), "SEL5_DEC_TYPE", sel5_dec_type);
   if (sel5_dec_type != "NONE")
   {
-    Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg, name());
+    Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg(), name());
     if (sel5_dec == 0 || !sel5_dec->initialize())
     {
       cerr << "*** ERROR: Sel5 decoder initialization failed for RX \""
@@ -669,7 +622,7 @@ bool LocalRxBase::initialize(void)
     // the LocalRxBase class
   setHandler(prev_src);
   
-  cfg.getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
+  cfg().getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
 
     // Open the audio device for reading
   if (!audioOpen())
@@ -688,8 +641,10 @@ bool LocalRxBase::initialize(void)
     //cout << "### Enabling 1750Hz muting\n";
   }
 
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &LocalRxBase::cfgUpdated));
+
   return true;
-  
+
 } /* LocalRxBase:initialize */
 
 
@@ -942,6 +897,7 @@ void LocalRxBase::onSignalLevelUpdated(float siglev)
 {
   setSqlHangtimeFromSiglev(siglev);
   signalLevelUpdated(siglev);
+  publishSquelchState();
 } /* LocalRxBase::onSignalLevelUpdated */
 
 
@@ -949,14 +905,9 @@ void LocalRxBase::setSqlHangtimeFromSiglev(float siglev)
 {
   if (sql_extended_hangtime_thresh > 0)
   {
-    if ((siglev > sql_extended_hangtime_thresh) || (mute_state != MUTE_NONE))
-    {
-      squelch_det->setHangtime(sql_hangtime);
-    }
-    else
-    {
-      squelch_det->setHangtime(sql_extended_hangtime);
-    }
+    squelch_det->enableExtendedHangtime(
+        ((siglev < sql_extended_hangtime_thresh) &&
+         (mute_state == MUTE_NONE)));
   }
 } /* LocalRxBase::setSqlHangtime */
 
@@ -972,6 +923,45 @@ void LocalRxBase::rxReadyStateChanged(void)
   }
 } /* LocalRxBase::rxReadyStateChanged */
 
+
+void LocalRxBase::publishSquelchState(void)
+{
+  //std::cout << "### LocalRxBase::publishSquelchState: " << std::endl;
+  float siglev = signalStrength();
+  Json::Value rx(Json::objectValue);
+  rx["name"] = name();
+  char rx_id = sqlRxId();
+  rx["id"] = std::string(&rx_id, &rx_id+1);
+  rx["sql_open"] = squelchIsOpen();
+  rx["siglev"] = static_cast<int>(siglev);
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  stringstream os;
+  writer->write(rx, &os);
+  delete writer;
+  publishStateEvent("Rx:sql_state", os.str());
+} /* LocalRxBase::publishSquelchState */
+
+
+void LocalRxBase::cfgUpdated(const std::string& section, const std::string& tag)
+{
+  //std::cout << "### LocalRxBase::cfgUpdated: "
+  //          << section << "/" << tag << "=" << cfg().getValue(section, tag)
+  //          << std::endl;
+  if (section == name())
+  {
+    if (tag == CFG_SQL_EXTENDED_HANGTIME_THRESH)
+    {
+      cfg().getValue(name(), CFG_SQL_EXTENDED_HANGTIME_THRESH,
+                     sql_extended_hangtime_thresh);
+      std::cout << "Setting " << CFG_SQL_EXTENDED_HANGTIME_THRESH << " to "
+                << sql_extended_hangtime_thresh
+                << " for receiver " << name() << std::endl;
+    }
+  }
+} /* LocalRxBase::cfgUpdated */
 
 
 /*

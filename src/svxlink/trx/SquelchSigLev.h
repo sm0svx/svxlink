@@ -118,11 +118,14 @@ level squelch.
 class SquelchSigLev : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "SIGLEV";
+
     /**
      * @brief 	Default constuctor
      */
-    SquelchSigLev(SigLevDet *det)
-      : sig_lev_det(det), open_thresh(0), close_thresh(0) {}
+    SquelchSigLev(void)
+      : sig_lev_det(0), open_thresh(0), close_thresh(0) {}
 
     /**
      * @brief 	Destructor
@@ -132,34 +135,36 @@ class SquelchSigLev : public Squelch
     /**
      * @brief 	Initialize the squelch detector
      * @param 	cfg A previsously initialized config object
-     * @param 	rx_name The name of the RX (config section name)
+     * @param 	name The name of the config section
      * @return	Returns \em true on success or else \em false
      */
-    bool initialize(Async::Config& cfg, const std::string& rx_name)
+    bool initialize(Async::Config& cfg, const std::string& name)
     {
-      if (!Squelch::initialize(cfg, rx_name))
+      if (!Squelch::initialize(cfg, name))
       {
       	return false;
       }
 
-      std::string value;
-      if (!cfg.getValue(rx_name, "SIGLEV_OPEN_THRESH", value))
+      if (!cfg.getValue(name, "SIGLEV_OPEN_THRESH", open_thresh))
       {
-	std::cerr << "*** ERROR: Config variable " << rx_name
+	std::cerr << "*** ERROR: Config variable " << name
 	      	  << "/SIGLEV_OPEN_THRESH not set\n";
 	return false;
       }
-      open_thresh = atoi(value.c_str());
 
-      if (!cfg.getValue(rx_name, "SIGLEV_CLOSE_THRESH", value))
+      if (!cfg.getValue(name, "SIGLEV_CLOSE_THRESH", close_thresh))
       {
-	std::cerr << "*** ERROR: Config variable " << rx_name
+	std::cerr << "*** ERROR: Config variable " << name
 	      	  << "/SIGLEV_CLOSE_THRESH not set\n";
 	return false;
       }
-      close_thresh = atoi(value.c_str());
 
-      return true;
+      std::string rx_name(name);
+      cfg.getValue(name, "SIGLEV_RX_NAME", rx_name);
+
+      sig_lev_det = createSigLevDet(cfg, rx_name);
+
+      return (sig_lev_det != 0);
     }
 
   protected:

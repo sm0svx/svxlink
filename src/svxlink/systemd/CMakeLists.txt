@@ -23,10 +23,12 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/svxlink_gpio_setup.service
 message(STATUS "Systemd unit files will be installed to "
         "${SYSTEMD_CONFIGURATIONS_FILES_DIR} after make install")
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/svxlink
-              ${CMAKE_CURRENT_BINARY_DIR}/remotetrx
-              ${CMAKE_CURRENT_BINARY_DIR}/svxreflector
-        DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink
+        ${SYSTEMD_DEFAULTS_FILES_DIR} )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/remotetrx
+        ${SYSTEMD_DEFAULTS_FILES_DIR} )
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxreflector
+        ${SYSTEMD_DEFAULTS_FILES_DIR} )
 message(STATUS "Systemd unit configuration files will be "
                "installed to ${SYSTEMD_DEFAULTS_FILES_DIR} "
                "after make install")

@@ -237,7 +237,6 @@ class LocalRxBase : public Rx
     virtual Async::AudioSource *audioSource(void) = 0;
     
   private:
-    Async::Config     	      	&cfg;
     MuteState      	      	mute_state;
     Squelch   	      	      	*squelch_det;
     SigLevDet 	      	        *siglevdet;
@@ -268,6 +267,8 @@ class LocalRxBase : public Rx
     void onSignalLevelUpdated(float siglev);
     void setSqlHangtimeFromSiglev(float siglev);
     void rxReadyStateChanged(void);
+    void publishSquelchState(void);
+    void cfgUpdated(const std::string& section, const std::string& tag);
 
 };  /* class LocalRxBase */
 

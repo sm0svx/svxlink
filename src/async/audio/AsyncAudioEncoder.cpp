@@ -54,13 +54,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioEncoderRaw.h"
 #include "AsyncAudioEncoderS16.h"
 #include "AsyncAudioEncoderGsm.h"
-#include "AsyncAudioEncoderAmbe.h"
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioEncoderSpeex.h"
 #endif
 #ifdef OPUS_MAJOR
 #include "AsyncAudioEncoderOpus.h"
 #endif
+#include "AsyncAudioEncoderAmbe.h"
 
 
 /****************************************************************************
@@ -124,7 +124,7 @@ using namespace Async;
 bool AudioEncoder::isAvailable(const std::string &name)
 {
   return (name == "NULL") || (name == "RAW") || (name == "S16") ||
-         (name == "GSM") || (name == "AMBE")
+         (name == "GSM") || (name == "AMBE") ||
 #ifdef SPEEX_MAJOR
          (name == "SPEEX") ||
 #endif
@@ -135,7 +135,8 @@ bool AudioEncoder::isAvailable(const std::string &name)
 } /* AudioEncoder::isAvailable */
 
 
-AudioEncoder *AudioEncoder::create(const std::string &name)
+AudioEncoder *AudioEncoder::create(const std::string &name,
+               const std::map<std::string,std::string> &options)
 {
   if (name == "NULL")
   {
@@ -157,10 +158,6 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
   {
     return new AudioEncoderGsm;
   }
-  else if (name == "AMBE")
-  {
-    return AudioCodecAmbe::create(options);
-  }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
@@ -173,9 +170,13 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
     return new AudioEncoderOpus(options);
   }
 #endif
+  else if (name == "AMBE")
+  {
+    return AudioCodecAmbe::create(options);
+  }
   else
   {
-    return NULL;
+    return 0;
   }
 } /* AudioEncoder::create */
 
@@ -199,3 +200,4 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
 /*
  * This file has not been truncated
  */
+

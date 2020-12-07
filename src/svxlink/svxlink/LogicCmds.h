@@ -223,7 +223,10 @@ class LinkCmd : public Command
     {
       std::string event =
           LinkManager::instance()->cmdReceived(link, logic, subcmd);
-      logic->processEvent(event);
+      if (!event.empty())
+      {
+        logic->processEvent(event);
+      }
     }
 
   protected:
@@ -385,7 +388,6 @@ class OnlineCmd : public Command
     {
       if (subcmd == "0")
       {
-        std::cout << logic->name() << ": Setting logic offline\n";
         logic->setOnline(false);
       }
       else

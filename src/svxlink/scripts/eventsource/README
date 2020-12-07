@@ -1,9 +1,13 @@
+# Eventsource display web page
+
+## Introduction
 The eventsource server reads a state PTY configured in SvxLink and
 converts the events to JSON and XML form to be easily used in web
 applications.   It has to be started as a daemon running under the
 same user ID as the svxlink service itself.  An example script to
 start it (for Debian) is provided.
 
+## Configuration
 In /etc/svxlink/svxlink.conf, add the following to the RepeaterLogic
 section:
 
@@ -15,7 +19,12 @@ Also make sure the /var/spool/svxlink/state_info directory exists
 and is writable for that user.
 
 Alternatively, the paths for the above items can be modified in
-eventsource.pl when it is installed.
+eventsource.pl when it is installed or even better use the command line
+arguments to set them.
+
+  --statepty -- Path to STATE_PTY
+  --logfile  -- Path to logfile
+  --datafile -- Path to state info logfile
 
 The script uses the following Perl packages:
 
@@ -25,6 +34,8 @@ Fcntl
 Socket
 JSON::PP
 XML::Simple
+Try::Tiny;
+Getopt::Long;
 
 You might have to install some of them, e.g. on Debian using:
 
@@ -50,6 +61,9 @@ A second example (www2) can display the information from multiple repeaters.
 It uses another .json file with a list of the repeaters, pointing to
 the repeater info for each repeater.
 
+NOTE: The Logic:transmit event below only have to be added on older versions
+of SvxLink that does not provide the Tx:state event.
+
 To get the "transmit" indication in those examples, add an event to the
 transmit TCL event function (after copying it to a local directory), i.e.
 in file /usr/share/svxlink/events.d/local/Logic.tcl put:
@@ -62,3 +76,18 @@ When you want to see an example before going through installing all this,
 check: http://pe1chl.nl.eu.org/repeaters/
 
 Rob PE1CHL
+
+
+## Testing on localhost
+To test all this on a local computer one may start the eventsource.pl script
+and a couple of webservers. Ensure that SvxLink is running on the local
+computer. Then start the following applications each one in its own terminal.
+```
+./eventsource.pl --datafile=/tmp/state.log --logfile=/tmp/eventsource
+cd www; ../simple_web_server.py 1336
+cd www2; ../simple_web_server.py 1337
+```
+Now point your web browser to http://localhost:1336 for the single repeater
+view or http://localhost:1337 for the multi repeater view.
+
+SM0SVX

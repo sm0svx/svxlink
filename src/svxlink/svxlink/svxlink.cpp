@@ -85,8 +85,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
 #include "ReflectorLogic.h"
-#include "RewindLogic.h"
 #include "LinkManager.h"
+#include "RewindLogic.h"
 
 
 

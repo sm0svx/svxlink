@@ -1,4 +1,92 @@
- 1.7.0 -- ?? ??? 2019
+ 1.8.0 -- ?? ??? ????
+----------------------
+* MetarInformation, more flexible airport announcement at the beginning of a
+  Metar
+
+* SvxReflector now support switching traffic on talk groups.
+
+* ReflectorLogic can now request switching talk groups based on the received
+  CTCSS tone frequency. It is also possible to switch to any talk group using
+  DTMF.
+
+* Now possible to use multiple CTCSS squelch tones in parallell.
+
+* SvxReflector now have a QSY functionality used to switch all active nodes on
+  a talk group to another talk group.
+
+* A logic link is now disconnected using <prefix># instead of <prefix>0#. If
+  any digits are specified after the prefix the link will be activated and the
+  digits will be given to the remote logic(s) for processing. Right now only
+  the ReflectorLogic care about these extra digits, also called the
+  subcommand.
+
+* A logic core connected to a logic link can now play announcements on all
+  other connected logics. This is used in the ReflectorLogic to announce talk
+  group selections and command feedback.
+
+* New signal level "detector": CONST
+
+* ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work if the
+  remote_timeout TCL function was changed to not play any sound.
+
+* ModuleEchoLink bugfix: The LINK_IDLE_TIMEOUT did not work with short timeout
+  values where the timeout was shorter than the length of a locally received
+  transmission.
+
+* ModuleMetarInfo bugfix: Announcing twice
+
+* ModuleMetarInfo bugfix: SvxLink crashed on long LocationInfo comments
+
+* ModuleEchoLink: Now possible to silently ignore all incoming connections
+  using the DROP_ALL_INCOMING configuration variable.
+
+* The receiver configuration variables SQL_HANGTIME, SQL_EXTENDED_HANGTIME and
+  SQL_EXTENDED_HANGTIME_THRESH are now settable from within a C++ module for
+  example.
+
+* Improved GPIO up/down scripts with more error handling and support for
+  handling more cases.
+
+* New SvxReflector feature: Auto QSY. It is now possible to set a per
+  talkgroup time in the reflector after which a QSY to a random talkgroup is
+  performed. This can typically be used on call channels so that stations do
+  not dwell there for too long.
+
+* New squelch type: COMBINE. There now is a new squelch type that can combine
+  multiple other squelch types using a logical expression.
+  Implementing this new feature required rewriting quite a lot of the squelch
+  infrastructure code. Watch out for changed behavior in the squelch
+  functionality.
+
+* Bugfix: Squelch types DDR, SIM and TONE reported the "raw" signal strength
+  instead of the integrated one. This fix can change the behavior of the voter
+  and the extended hangtime feature.
+
+* Added debug mode for the CTCSS detector. Enable by setting CTCSS_DEBUG to 1
+  in a receiver configuration section.
+
+* ReflectorLogic: Now possible to adjust the UDP heartbeat interval using the
+  UDP_HEARTBEAT_INTERVAL configuration variable.
+
+* Now possible to set configuration variables from TCL using the
+  setConfigValue function. This can be used to change certain configuration of
+  SvxLink while it is running. Only some configuration variables support being
+  changed at runtime.
+
+* If a configuration variable is changed in the logic core, or in the main
+  configuration section for a module, the new TCL function config_updated will
+  be called.
+
+* New configuration variable ONLINE that can be used to decide if a logic core
+  should be active or not on program startup. This variable also support being
+  set at runtime.
+
+* Use the new configuration variable COMMAND_PTY to set up a PTY that can be
+  used to send commands to a logic core.
+
+
+
+ 1.7.0 -- 01 Sep 2019
 ----------------------
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
   switched to https only. Read documentation and/or README in directory 
@@ -45,9 +133,6 @@
   RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay will now
   be 100+350=450ms for the fast receivers and 300+350-200=450ms for the slow
   receiver. That is, all receivers are now equally fast.
-
-* Support was added to control the frequency and modulation of receivers and
-  transmitters connected to the SvxLink node.
 
 * New configuration variable CTRL_PTY that can be used in RX and TX
   configuration setions. It will set a PTY than can be used to control the

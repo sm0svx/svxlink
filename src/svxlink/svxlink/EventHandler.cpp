@@ -149,6 +149,8 @@ EventHandler::EventHandler(const string& event_script, const string& logic_name)
                     this, NULL);
   Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
   Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
+  Tcl_CreateCommand(interp, "setConfigValue", setConfigValueHandler,
+                    this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -439,6 +441,27 @@ int EventHandler::injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 } /* EventHandler::injectDtmfHandler */
+
+
+int EventHandler::setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
+                                        int argc, const char *argv[])
+{
+  if(argc != 4)
+  {
+    static char msg[] = "Usage: setConfigValue <section> <tag> <value>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  string section(argv[1]);
+  string tag(argv[2]);
+  string value(argv[3]);
+  //std::cout << "### EventHandler::setConfigValueHandler: " << section << "/"
+  //          << tag << "=" << value << std::endl;
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->setConfigValue(section, tag, value);
+
+  return TCL_OK;
+} /* EventHandler::setConfigValueHandler */
 
 
 /*

@@ -2,7 +2,7 @@
 @file	 ModuleMetarInfo.cpp
 @brief   gives out a METAR report
 @author  Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2018-03-10
+@date	 2020-04-19
 
 \verbatim
 A module (plugin) to request the latest METAR (weather) information from
@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/MODULE_METARINFO.h"
+#include "version/MODULE_METAR_INFO.h"
 #include "ModuleMetarInfo.h"
 #include "common.h"
 
@@ -412,7 +412,7 @@ ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
                                  const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), http(0)
 {
-  cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
+  cout << "\tModule MetarInfo v" MODULE_METAR_INFO_VERSION " starting...\n";
 
 } /* ModuleMetarInfo */
 
@@ -997,6 +997,8 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
   }
 
   handleMetar(metar);
+
+  html = "";
 } /* onDataReceived */
 
 
@@ -1045,10 +1047,8 @@ int ModuleMetarInfo::handleMetar(std::string input)
    temp << "metar \"" << input << "\"";
    say(temp);
 
-   temp << "airports " << icao;
+   temp << "announce_airport " << icao;
    say(temp);
-
-   processEvent("say airport");
 
    splitStr(values, input, " ");
    StrList::iterator it = values.begin();

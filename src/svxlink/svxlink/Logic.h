@@ -215,6 +215,7 @@ class Logic : public LogicBase
     virtual void transmitterStateChange(bool is_transmitting);
     virtual void selcallSequenceDetected(std::string sequence);
     virtual void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
+    virtual void commandPtyCmdReceived(const void *buf, size_t count);
 
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
@@ -282,6 +283,8 @@ class Logic : public LogicBase
     DtmfDigitHandler                *dtmf_digit_handler;
     Async::Pty                      *state_pty;
     Async::Pty                      *dtmf_ctrl_pty;
+    std::map<uint16_t, uint32_t>    m_ctcss_to_tg;
+    Async::Pty                      *command_pty;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
@@ -295,14 +298,15 @@ class Logic : public LogicBase
 	void timeoutNextSecond(void);
     void everyMinute(Async::AtTimer *t);
 	void everySecond(Async::AtTimer *t);
-    void checkIfOnlineCmd(void);
     void dtmfDigitDetectedP(char digit, int duration);
     void cleanup(void);
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    void publishStateEvent(const std::string &event_name,
-                           const std::string &msg);
+    void onPublishStateEvent(const std::string &event_name,
+                             const std::string &msg);
+    void detectedTone(float fq);
+    void cfgUpdated(const std::string& section, const std::string& tag);
 
 };  /* class Logic */
 

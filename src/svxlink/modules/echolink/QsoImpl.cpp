@@ -9,7 +9,7 @@ EchoLink Qso.
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -136,7 +136,8 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   : m_qso(station.ip()), module(module), event_handler(0), msg_handler(0),
     output_sel(0), init_ok(false), reject_qso(false), last_message(""),
     last_info_msg(""), idle_timer(0), disc_when_done(false), idle_timer_cnt(0),
-    idle_timeout(0), destroy_timer(0), station(station), sink_handler(0)
+    idle_timeout(0), destroy_timer(0), station(station), sink_handler(0),
+    logic_is_idle(true)
 {
   assert(module != 0);
 
@@ -302,11 +303,8 @@ void QsoImpl::logicIdleStateChanged(bool is_idle)
   printf("QsoImpl::logicIdleStateChanged: is_idle=%s\n",
       is_idle ? "TRUE" : "FALSE");
   */
-  
-  if (!is_idle)
-  {
-    idle_timer_cnt = 0;
-  }
+
+  logic_is_idle = is_idle;
 } /* QsoImpl::logicIdleStateChanged */
 
 
@@ -548,21 +546,25 @@ void QsoImpl::onStateChange(Qso::State state)
 
 void QsoImpl::idleTimeoutCheck(Timer *t)
 {
-  if (receivingAudio())
+  if (receivingAudio() || !logic_is_idle)
   {
     idle_timer_cnt = 0;
     return;
-  }  
-  
+  }
+
   if (++idle_timer_cnt == idle_timeout)
   {
-    cout << remoteCallsign() << ": EchoLink connection idle timeout. "
-      	 "Disconnecting...\n";
+    cout << remoteCallsign()
+         << ": EchoLink connection idle timeout. Disconnecting..." << endl;
     module->processEvent("link_inactivity_timeout");
     disc_when_done = true;
     msg_handler->begin();
     event_handler->processEvent(string(module->name()) + "::remote_timeout");
     msg_handler->end();
+    if (!msg_handler->isWritingMessage())
+    {
+      disconnect();
+    }
   }
 } /* idleTimeoutCheck */
 

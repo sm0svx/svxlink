@@ -183,7 +183,7 @@ bool RfUplink::initialize(void)
     loop_rx_to_tx = atoi(value.c_str()) != 0;
   }
 
-  CtcssDetPar ctcss_det_par;
+  std::vector<CtcssDetPar> ctcss_det_par;
   if (!cfg.getValue(name, "DETECT_CTCSS", ctcss_det_par, true))
   {
     cerr << "*** ERROR: Format error for config variable "
@@ -205,9 +205,13 @@ bool RfUplink::initialize(void)
       mem_fun(*this, &RfUplink::rxToneDetected));
   rx->reset();
   rx->setMuteState(Rx::MUTE_NONE);
-  if ((ctcss_det_par.fq > 0) && (ctcss_det_par.duration > 0))
+  for (std::vector<CtcssDetPar>::const_iterator it=ctcss_det_par.begin();
+       it != ctcss_det_par.end(); ++it)
   {
-    rx->addToneDetector(ctcss_det_par.fq, 4, 10, ctcss_det_par.duration);
+    if (((*it).fq > 0) && ((*it).duration > 0))
+    {
+      rx->addToneDetector((*it).fq, 4, 10, (*it).duration);
+    }
   }
   if (det_1750_duration > 0)
   {

@@ -172,13 +172,6 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
   port_settings.c_cflag = CREAD   /* Enable receiver */
       	      	      	| CLOCAL  /* Ignore modem status lines */
 			;
-  port_settings.c_cc[VMIN] = 0;
-  port_settings.c_cc[VTIME] = 1;
-  port_settings.c_lflag &= ~(ECHO|ECHOE|ICANON|IEXTEN|ISIG);
-  port_settings.c_iflag &= ~(BRKINT|ICRNL|INPCK|ISTRIP|IXON|IXOFF|IXANY);
-  port_settings.c_cflag &= ~(CSTOPB|PARENB|PARODD);
-  port_settings.c_cflag |=CRTSCTS;
-
   switch (flow)
   {
     case FLOW_NONE:
@@ -293,9 +286,6 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
       break;
     case 230400:
       serial_speed = B230400;
-      break;
-    case 460800:
-      serial_speed = B460800;
       break;
     default:
       errno = EINVAL;

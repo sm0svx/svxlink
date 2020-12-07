@@ -110,7 +110,36 @@ second.
 .B CODECS
 A comma separated list of allowed codecs. For the moment only one codec can be
 specified. Choose from the following codecs: OPUS, SPEEX, GSM, S16
-(uncompressed signed 16 bit), RAW (uncompressed 32 bit floats).
+(uncompressed signed 16 bit), RAW (uncompressed 32 bit floats). The default is
+OPUS and you should have a very good reason for changing this since that codec
+provide both low bandwidth (~20kbps by default) and very good audio quality.
+.TP
+.B TG_FOR_V1_CLIENTS
+Set which talk group to place protocol version 1 clients in. Without this
+configuration version 1 clients will not be able to use the reflector since
+they cannot select a talk group by themselves. Talk groups should normally be
+configured to start with the ITU-T E.212 Mobile Country Code (MCC) for your
+country, e.g. 240 for Sweden.
+.TP
+.B RANDOM_QSY_RANGE
+Specify in which talk group range the reflector server should select random
+talk groups used when using the QSY functionality. The range is specified using
+two colon separated values. The first one is the lower limit and the second
+value is the number of talk groups in the range. As an example, if set to
+1239900:100 QSY talk groups will be selected from the range 1239900 to 1239999.
+The recommended lower range to use is <MCC>9900 where MCC is the ITU-T E.212
+Mobile Country Code for your country, e.g. 240 for Sweden.
+.TP
+.B HTTP_SRV_PORT
+Set which port to use for the HTTP server. The HTTP server can be used to fetch
+reflector status. No port is set by default. Don't expose this port to the
+public Internet. There are multiple reasons for that. The built in web server
+is very simple and could be incompatible with some clients. It has not been
+audited for security problems so there may be security issues. There is also
+the risk of some client overwhelming the reflector with requests causing
+disturbances in the reflector operation.
+
+Example: HTTP_SRV_PORT=8080
 .
 .SS USERS and PASSWORDS sections
 .
@@ -137,6 +166,23 @@ to use the same password specified by
 .B MyNodes
 in the PASSWORDS section. User
 .BR SM1XYZ " have his own password."
+.
+.SS Talkgroup Configuration Sections
+.
+It is possible to set configuration parameters that are only applied to one talkgroup. Those parameters are placed in a configuration section named "TG#<talkgroup id>". Example:
+
+  [TG#9999]
+  AUTO_QSY_AFTER=300
+
+The following configuration variables are valid in a talkgroup configuration
+section.
+.TP
+.B AUTO_QSY_AFTER
+Set this to the number of seconds after which an automatic QSY to a random
+talkgroup is requested. This is typically used to keep call channels and wide
+area channels clear so that stations does not dwell there for too long.
+Auto QSY is only triggered directly aftar a talker stop event.
+The default is that auto QSY is disabled (AUTO_QSY_AFTER=0).
 .
 .SH FILES
 .

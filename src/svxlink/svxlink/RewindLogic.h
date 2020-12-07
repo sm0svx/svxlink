@@ -73,7 +73,7 @@ namespace Async
   class UdpSocket;
   class DnsLookup;
 };
-
+class EventHandler;
 
 
 /****************************************************************************
@@ -219,6 +219,7 @@ class RewindLogic : public LogicBase
     std::list<int>        tglist;
     bool                  inTransmission;
     Async::Timer          m_flush_timeout_timer;
+    EventHandler*         m_event_handler;
 
 
     RewindLogic(const RewindLogic&);
@@ -240,7 +241,6 @@ class RewindLogic : public LogicBase
     void reconnect(Async::Timer *t);
     void dnsResultsReady(Async::DnsLookup& dns_lookup);
     void disconnect(void);
-    void reconnect(void);
     void allEncodedSamplesFlushed(void);
     void pingHandler(Async::Timer *t);
     void authenticate(uint8_t salt[], const std::string pass);

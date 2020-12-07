@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <iostream>
+#include <iomanip>
+#include <vector>
+#include <cmath>
 
 
 /****************************************************************************
@@ -46,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncAudioFilter.h>
+#include <AsyncAudioSplitter.h>
 
 
 /****************************************************************************
@@ -107,28 +111,32 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A CTCSS squelch detector
+@brief  A CTCSS squelch detector
 @author Tobias Blomberg / SM0SVX
 @date   2005-08-02
 
-This squelch detector use a tone detector to detect the presence of a CTCSS
-squelch tone. The actual tone detector is implemented outside of this class.
+This squelch detector use tone detectors to detect the presence of one or more
+CTCSS squelch tones. The actual tone detector is implemented outside of this
+class.
 */
 class SquelchCtcss : public Squelch
 {
   public:
+      /// The name of this class when used by the object factory
+    static constexpr const char* OBJNAME = "CTCSS";
+
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void) : det(0), filter(0), sink(0) {}
+    explicit SquelchCtcss(void)
+      : m_splitter(0), m_active_det(0), m_ctcss_snr_offset(0.0f) {}
 
     /**
      * @brief 	Destructor
      */
     virtual ~SquelchCtcss(void)
     {
-      delete det;
-      delete filter;
+      delete m_splitter;
     }
 
     /**
@@ -139,21 +147,20 @@ class SquelchCtcss : public Squelch
      */
     virtual bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
-      float ctcss_fq = 0.0f;
-      cfg.getValue(rx_name, "CTCSS_FQ", ctcss_fq);
-      if (ctcss_fq <= 0)
+      typedef std::vector<float> FqList;
+      FqList ctcss_fqs;
+      cfg.getValue(rx_name, "CTCSS_FQ", ctcss_fqs);
+      if (ctcss_fqs.empty())
       {
-	std::cerr << "*** ERROR: Config variable " << rx_name
-      	     << "/CTCSS_FQ (" << ctcss_fq
-      	     << ") not set or is set to an illegal value.\n";
-	return false;
+        std::cerr << "*** ERROR: Config variable " << rx_name
+                  << "/CTCSS_FQ not set or is set to an illegal value.\n";
+        return false;
       }
 
       int ctcss_mode = 0;
       cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
       
-      float ctcss_snr_offset = 0.0f;
-      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", ctcss_snr_offset);
+      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", m_ctcss_snr_offset);
       
       float open_thresh = 15.0f;
       float close_thresh = 9.0f;
@@ -172,8 +179,8 @@ class SquelchCtcss : public Squelch
 	cfg.getValue(rx_name, "CTCSS_CLOSE_THRESH", close_thresh);
       }
 
-      open_thresh += ctcss_snr_offset;
-      close_thresh += ctcss_snr_offset;
+      open_thresh += m_ctcss_snr_offset;
+      close_thresh += m_ctcss_snr_offset;
       
       unsigned bpf_low = 60;
       cfg.getValue(rx_name, "CTCSS_BPF_LOW", bpf_low);
@@ -202,78 +209,110 @@ class SquelchCtcss : public Squelch
 		  << bpf_high << ") for receiver " << rx_name << ".\n";
 	return false;
       }
-      
-#if 0
-      std::cout << "### mode=" << ctcss_mode
-		<< " open=" << open_thresh
-		<< " close=" << close_thresh
-		<< " low=" << bpf_low
-		<< " high=" << bpf_high
-		<< std::endl;
-#endif
-		
-      det = new ToneDetector(ctcss_fq, 8.0f);
-      det->activated.connect(mem_fun(*this, &SquelchCtcss::setSignalDetected));
-      det->snrUpdated.connect(snrUpdated.make_slot());
-      sink = det;
 
-      std::stringstream filter_spec;
-      filter_spec << "BpBu8/" << bpf_low << "-" << bpf_high;
-	  
-      switch (ctcss_mode)
+      m_splitter = new Async::AudioSplitter;
+
+      for (FqList::const_iterator it = ctcss_fqs.begin();
+           it != ctcss_fqs.end(); ++it)
       {
-        case 1:
-          //std::cout << "### CTCSS mode: Neighbour bins\n";
-	  det->setDetectPeakThresh(open_thresh);
-	  det->setUndetectPeakThresh(close_thresh);
-          break;
+        float ctcss_fq = *it;
 
-        case 3:
-          //std::cout << "### CTCSS mode: Estimated SNR + Phase\n";
-          //det->setDetectUseWindowing(false);
-          det->setDetectBw(16.0f);
-          det->setDetectPeakThresh(0.0f);
-          //det->setDetectPeakToTotPwrThresh(0.6f);
-          det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
-          det->setDetectStableCountThresh(1);
-          det->setDetectPhaseBwThresh(2.0f, 2.0f);
+        ToneDetector *det = new ToneDetector(ctcss_fq, 8.0f);
+        if (ctcss_fqs.size() == 1)
+        {
+          det->activated.connect(
+              sigc::mem_fun(*this, &SquelchCtcss::setSignalDetected));
+        }
+        else
+        {
+          det->activated.connect(sigc::bind(
+              sigc::mem_fun(*this, &SquelchCtcss::checkSignalDetected), det));
+        }
+        if (it == ctcss_fqs.begin())
+        {
+          det->snrUpdated.connect(snrUpdated.make_slot());
+        }
+        Async::AudioSink *sink = det;
 
-          //det->setUndetectBw(8.0f);
-          det->setUndetectUseWindowing(false);
-          det->setUndetectPeakThresh(0.0f);
-          //det->setUndetectPeakToTotPwrThresh(0.3f);
-          det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
-          det->setUndetectStableCountThresh(2);
-          //det->setUndetectPhaseBwThresh(4.0f, 16.0f);
+        m_dets.push_back(det);
 
-            // Set up CTCSS band pass filter
-          filter = new Async::AudioFilter(filter_spec.str());
-          filter->registerSink(det);
-          sink = filter;
-          break;
+        std::stringstream filter_spec;
+        filter_spec << "BpBu8/" << bpf_low << "-" << bpf_high;
 
-        case 2:
-        default:
-          //std::cout << "### CTCSS mode: Estimated SNR\n";
-          //det->setDetectBw(6.0f);
-          det->setDetectUseWindowing(false);
-          det->setDetectPeakThresh(0.0f);
-          //det->setDetectPeakToTotPwrThresh(0.6f);
-          det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
-          det->setDetectStableCountThresh(1);
+        switch (ctcss_mode)
+        {
+          case 1:
+          {
+            //std::cout << "### CTCSS mode: Neighbour bins\n";
+            det->setDetectPeakThresh(open_thresh);
+            det->setUndetectPeakThresh(close_thresh);
+            break;
+          }
 
-          //det->setUndetectBw(8.0f);
-          det->setUndetectUseWindowing(false);
-          det->setUndetectPeakThresh(0.0f);
-          //det->setUndetectPeakToTotPwrThresh(0.3f);
-          det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
-          det->setUndetectStableCountThresh(2);
+          case 3:
+          {
+            //std::cout << "### CTCSS mode: Estimated SNR + Phase\n";
+            //det->setDetectUseWindowing(false);
+            det->setDetectBw(16.0f);
+            det->setDetectPeakThresh(0.0f);
+            //det->setDetectPeakToTotPwrThresh(0.6f);
+            det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+            det->setDetectStableCountThresh(1);
+            det->setDetectPhaseBwThresh(2.0f, 2.0f);
 
-            // Set up CTCSS band pass filter
-          filter = new Async::AudioFilter(filter_spec.str());
-          filter->registerSink(det);
-          sink = filter;
-          break;
+            //det->setUndetectBw(8.0f);
+            det->setUndetectUseWindowing(false);
+            det->setUndetectPeakThresh(0.0f);
+            //det->setUndetectPeakToTotPwrThresh(0.3f);
+            det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+            det->setUndetectStableCountThresh(2);
+            //det->setUndetectPhaseBwThresh(4.0f, 16.0f);
+
+              // Set up CTCSS band pass filter
+            Async::AudioFilter *filter =
+              new Async::AudioFilter(filter_spec.str());
+            filter->registerSink(det, true);
+            sink = filter;
+            break;
+          }
+
+          case 2:
+          default:
+          {
+            //std::cout << "### CTCSS mode: Estimated SNR\n";
+            //det->setDetectBw(6.0f);
+            det->setDetectUseWindowing(false);
+            det->setDetectPeakThresh(0.0f);
+            //det->setDetectPeakToTotPwrThresh(0.6f);
+            det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+            det->setDetectStableCountThresh(1);
+
+            //det->setUndetectBw(8.0f);
+            det->setUndetectUseWindowing(false);
+            det->setUndetectPeakThresh(0.0f);
+            //det->setUndetectPeakToTotPwrThresh(0.3f);
+            det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+            det->setUndetectStableCountThresh(2);
+
+              // Set up CTCSS band pass filter
+            Async::AudioFilter *filter =
+              new Async::AudioFilter(filter_spec.str());
+            filter->registerSink(det, true);
+            sink = filter;
+            break;
+          }
+        }
+
+        m_splitter->addSink(sink, true);
+      }
+
+      bool debug = false;
+      cfg.getValue(rx_name, "CTCSS_DEBUG", debug);
+
+      if (debug)
+      {
+        m_dets.front()->snrUpdated.connect(
+            sigc::mem_fun(*this, &SquelchCtcss::printSnr));
       }
 
       return Squelch::initialize(cfg, rx_name);
@@ -287,17 +326,12 @@ class SquelchCtcss : public Squelch
      */
     virtual void reset(void)
     {
-      det->reset();
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
+      {
+        (*it)->reset();
+      }
+      m_active_det = 0;
       Squelch::reset();
-    }
-
-    /**
-     * @brief   Set the time the squelch should hang open after squelch close
-     * @param   hang The number of milliseconds to hang
-     */
-    virtual void setHangtime(int hang)
-    {
-      det->setUndetectDelay(hang);
     }
 
     /**
@@ -306,7 +340,10 @@ class SquelchCtcss : public Squelch
       */
     virtual void setDelay(int delay)
     {
-      det->setDetectDelay(delay);
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
+      {
+        (*it)->setDetectDelay(delay);
+      }
     }
 
     /**
@@ -328,17 +365,64 @@ class SquelchCtcss : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      return sink->writeSamples(samples, count);
+      return m_splitter->writeSamples(samples, count);
+    }
+
+    /**
+     * @brief   Set the time the squelch should hang open after squelch close
+     * @param   hang The number of milliseconds to hang
+     */
+    virtual void setCurrentHangtime(int hang)
+    {
+      for (DetList::iterator it = m_dets.begin(); it != m_dets.end(); ++it)
+      {
+        (*it)->setUndetectDelay(hang);
+      }
     }
 
   private:
-    ToneDetector	*det;
-    Async::AudioFilter	*filter;
-    Async::AudioSink	*sink;
+    typedef std::vector<ToneDetector*> DetList;
+
+    DetList                 m_dets;
+    Async::AudioSplitter *  m_splitter;
+    ToneDetector *          m_active_det;
+    float                   m_ctcss_snr_offset;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
 
+    void checkSignalDetected(bool is_detected, ToneDetector *det)
+    {
+      if (is_detected)
+      {
+        if (m_active_det == 0)
+        {
+          m_active_det = det;
+          setSignalDetected(true);
+        }
+      }
+      else
+      {
+        if (m_active_det == det)
+        {
+          m_active_det = 0;
+          setSignalDetected(false);
+        }
+      }
+    }
+
+    void printSnr(float level)
+    {
+      std::ostringstream os;
+      os << rxName() << ": ";
+      for (auto det : m_dets)
+      {
+        float snr = det->lastSnr() - m_ctcss_snr_offset;
+        os << std::setw(4) << static_cast<int>(roundf(snr))
+          << ":" << std::fixed << std::setprecision(1) << det->toneFq();
+      }
+      std::cout << os.str() << std::endl;
+    }
 };  /* class SquelchCtcss */
 
 

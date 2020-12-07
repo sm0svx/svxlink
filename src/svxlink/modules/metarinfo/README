@@ -1,13 +1,13 @@
-Metar information module for SvxLink 
+Metar information module for SvxLink
 by Adi / DL1HRC
 
 VERSION 1.0.99.0 (21 Feb 2017)
 VERSION 1.2.0.0 (12 Mar 2018)
+VERSION 1.2.1.99.2 (19 Apr 2020)
 
 
 CHANGES:
-- support for https since aviationweather.gov has switched to secure 
-  http
+- make airport announcement more flexible, porting code from c++ to tcl
 
 
 FUNCTION:

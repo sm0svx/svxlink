@@ -123,7 +123,6 @@ AudioDecoderSpeex::AudioDecoderSpeex(const Options& options)
   speex_decoder_ctl(dec_state, SPEEX_GET_FRAME_SIZE, &frame_size);
   
   //enableEnhancer(false);
-  setOptions(options);
 } /* AudioDecoderSpeex::AudioDecoderSpeex */
 
 

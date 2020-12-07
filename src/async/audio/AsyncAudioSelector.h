@@ -7,7 +7,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2017  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -162,14 +162,20 @@ class AudioSelector : public AudioSource
      * @return	Returns \em true if auto select is enabled for the given source
      *          or else \em false is returned
      */
-    bool autoSelectEnabled(AudioSource *source) const;
+    bool autoSelectEnabled(const AudioSource *source) const;
 
     /**
      * @brief 	Select one of the previously added audio sources
      * @param 	source The audio source to select. 0 = none selected.
      */
     void selectSource(AudioSource *source);
-    
+
+    /**
+     * @brief   Find out which source that is currently selected
+     * @return  Returns the selected source or 0 if no source is selected
+     */
+    AudioSource *selectedSource(void) const;
+
     /**
      * @brief   Set if this souce want to wait for allSamplesFlushed
      * @param 	source The audio source to select. 0 = none selected.

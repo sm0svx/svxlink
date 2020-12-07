@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2017  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2019  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -117,7 +117,7 @@ namespace Async
 @author Tobias Blomberg
 @date   2017-02-10
 
-That LogicBase class only have the most basic functionality
+The LogicBase class only have the most basic functionality
 for a logic. The only thing it can do is work with the link manager to
 connect to other logic cores and stream audio into and out of the logic.
 The LogicBase class can be used to implement all sorts of audio sources
@@ -136,7 +136,7 @@ class LogicBase : public sigc::trackable
      * @param   name The name of the logic core
      */
     LogicBase(Async::Config& cfg, const std::string& name)
-      : m_cfg(cfg), m_name(name), m_is_idle(true) {}
+      : m_cfg(cfg), m_name(name), m_is_idle(true), m_received_tg(0) {}
 
     /**
      * @brief 	Destructor
@@ -185,10 +185,98 @@ class LogicBase : public sigc::trackable
     virtual Async::AudioSource *logicConOut(void) = 0;
 
     /**
+     * @brief   A command has been received from another logic
+     * @param   cmd The received command
+     *
+     * This function is typically called when a link activation command is
+     * issued to connect two or more logics together.
+     */
+    virtual void remoteCmdReceived(LogicBase* src_logic,
+                                   const std::string& cmd) {}
+
+    /**
+     * @brief   Get the talk group associated with current reception
+     * @return  Returns the current TG id if provided by the logic
+     */
+    uint32_t receivedTg(void) const { return m_received_tg; }
+
+
+    /**
+     * @brief   Play the given file
+     * @param   path The full path to the file to play
+     */
+    virtual void playFile(const std::string& path) {}
+
+    /**
+     * @brief   Play the a length of silence
+     * @param   length The length, in milliseconds, of silence to play
+     */
+    virtual void playSilence(int length) {}
+
+    /**
+     * @brief   Play a tone with the given properties
+     * @param   fq The tone frequency
+     * @param   amp The tone amplitude in "milliunits", 1000=full strength
+     * @param   len The length of the tone in milliseconds
+     */
+    virtual void playTone(int fq, int amp, int len) {}
+
+    /**
+     * @brief   Play DTMF digits
+     * @param   digits The DTMF digits to play
+     * @param   amp The amplitude of the individual DTMF tones (0-1000)
+     * @param   len The length in milliseconds of the digit
+     */
+    virtual void playDtmf(const std::string& digits, int amp, int len) {}
+
+    /**
+     * @brief   A linked logic has updated its recieved talk group
+     * @param   logic The pointer to the remote logic object
+     * @param   tg    The new received talk group
+     */
+    virtual void remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg) {}
+
+    /**
+     * @brief   A linked logic has published a state event
+     * @param   logic       The pointer to the remote logic object
+     * @param   event_name  The name of the event
+     * @param   msg The state update message
+     *
+     * This function is called when a linked logic has published a state update
+     * event message. A state update message is a free text message that can be
+     * used by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    virtual void remoteReceivedPublishStateEvent(
+        LogicBase *logic, const std::string& event_name,
+        const std::string& msg) {}
+
+    /**
      * @brief   A signal that is emitted when the idle state change
      * @param   is_idle \em True if the logic core is idle or \em false if not
      */
     sigc::signal<void, bool> idleStateChanged;
+
+    /**
+     * @brief   A signal that is emitted when the received talk group changes
+     * @param   tg The new talk group
+     */
+    sigc::signal<void, uint32_t> receivedTgUpdated;
+
+    /**
+     * @brief   A signal that is emitted to publish a state update event
+     * @param   event_name  The name of the event
+     * @param   msg         The state update message
+     *
+     * This signal is emitted when this logic wish to publish a state update
+     * message. A state update message is a free text message that can be used
+     * by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
 
   protected:
     /**
@@ -207,10 +295,24 @@ class LogicBase : public sigc::trackable
       }
     }
 
+    /**
+     * @brief   Used by a logic to indicate received talk group
+     * @param   tg The received talk group
+     *
+     * This function is used by a logic implementation to set which talk group
+     * that local traffic is received on.
+     */
+    void setReceivedTg(uint32_t tg)
+    {
+      m_received_tg = tg;
+      receivedTgUpdated(tg);
+    }
+
   private:
     Async::Config     	  &m_cfg;
     std::string       	  m_name;
     bool      	      	  m_is_idle;
+    uint32_t              m_received_tg;
 
 };  /* class LogicBase */
 

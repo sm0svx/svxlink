@@ -152,7 +152,13 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @brief 	Destructor
      */
     virtual ~Rx(void);
-  
+
+    /**
+     * @brief   The config object
+     * @returns Returns a reference to the configuration object
+     */
+    Async::Config& cfg(void) { return m_cfg; }
+
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
@@ -303,11 +309,11 @@ class Rx : public sigc::trackable, public Async::AudioSource
     
     
   private:
-    std::string   m_name;
-    bool          m_verbose;
-    bool      	  m_sql_open;
-    Async::Config m_cfg;
-    Async::Timer  *m_sql_tmo_timer;
+    std::string     m_name;
+    bool            m_verbose;
+    bool            m_sql_open;
+    Async::Config&  m_cfg;
+    Async::Timer*   m_sql_tmo_timer;
     
     void sqlTimeout(Async::Timer *t);
     

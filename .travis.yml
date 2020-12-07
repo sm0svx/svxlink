@@ -2,7 +2,7 @@ language: cpp
 
 sudo: required
 
-dist: trusty
+dist: bionic
 
 compiler: gcc
 
@@ -12,7 +12,7 @@ env:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y cmake doxygen groff libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl8.5-dev libgcrypt11-dev libspeex-dev libasound2-dev libopus-dev librtlsdr-dev $QT_PACKAGES
+  - sudo apt-get install -y cmake doxygen groff libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl8.5-dev libgcrypt11-dev libspeex-dev libasound2-dev libopus-dev librtlsdr-dev libjsoncpp-dev $QT_PACKAGES
 
 before_script:
   - mkdir build

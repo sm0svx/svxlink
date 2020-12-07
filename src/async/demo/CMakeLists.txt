@@ -4,7 +4,9 @@ set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo
              AsyncSerial_demo AsyncAtTimer_demo AsyncExec_demo
              AsyncPtyStreamBuf_demo AsyncMsg_demo AsyncFramedTcpServer_demo
              AsyncFramedTcpClient_demo AsyncAudioSelector_demo
-             AsyncAudioFsf_demo)
+             AsyncAudioFsf_demo AsyncHttpServer_demo AsyncFactory_demo
+             AsyncAudioContainer_demo
+             )
 
 
 foreach(prog ${CPPPROGS})

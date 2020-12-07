@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpServer.h>
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
+#include <AsyncHttpServerConnection.h>
 
 
 /****************************************************************************
@@ -57,6 +58,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "ProtoVer.h"
+#include "ReflectorClient.h"
 
 
 /****************************************************************************
@@ -71,7 +74,6 @@ namespace Async
   class Config;
 };
 
-class ReflectorClient;
 class ReflectorMsg;
 class ReflectorUdpMsg;
 
@@ -144,16 +146,16 @@ class Reflector : public sigc::trackable
     void nodeList(std::vector<std::string>& nodes) const;
 
     /**
-     * @brief   Broadcast a TCP message to all connected clients except one
+     * @brief   Broadcast a TCP message to connected clients
      * @param   msg The message to broadcast
-     * @param   client The client to exclude from the broadcast
+     * @param   filter The client filter to apply
      *
      * This function is used to broadcast a message to all connected clients,
-     * possibly excluding one client. The excluded client is most often the one
-     * where the message originate from. The message is not really a IP
+     * possibly applying a client filter.  The message is not really a IP
      * broadcast but rather unicast to all connected clients.
      */
-    void broadcastMsgExcept(const ReflectorMsg& msg, ReflectorClient *except=0);
+    void broadcastMsg(const ReflectorMsg& msg,
+        const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
 
     /**
      * @brief   Send a UDP datagram to the specificed ReflectorClient
@@ -164,25 +166,37 @@ class Reflector : public sigc::trackable
      */
     bool sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
 
-  private:
-    static const time_t TALKER_AUDIO_TIMEOUT = 3;   // Max three seconds gap
+    void broadcastUdpMsg(const ReflectorUdpMsg& msg,
+        const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
 
+    /**
+     * @brief   Get the TG for protocol V1 clients
+     * @return  Returns the TG used for protocol V1 clients
+     */
+    uint32_t tgForV1Clients(void) { return m_tg_for_v1_clients; }
+
+    /**
+     * @brief   Request QSY to another talk group
+     * @param   tg The talk group to QSY to
+     */
+    void requestQsy(ReflectorClient *client, uint32_t tg);
+
+  private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
 
-    FramedTcpServer*      m_srv;
-    Async::UdpSocket*     m_udp_sock;
-    ReflectorClientMap    m_client_map;
-    ReflectorClient*      m_talker;
-    Async::Timer          m_talker_timeout_timer;
-    struct timeval        m_last_talker_timestamp;
-    ReflectorClientConMap m_client_con_map;
-    unsigned              m_sql_timeout;
-    unsigned              m_sql_timeout_cnt;
-    unsigned              m_sql_timeout_blocktime;
-    Async::Config*        m_cfg;
+    FramedTcpServer*                                m_srv;
+    Async::UdpSocket*                               m_udp_sock;
+    ReflectorClientMap                              m_client_map;
+    ReflectorClientConMap                           m_client_con_map;
+    Async::Config*                                  m_cfg;
+    uint32_t                                        m_tg_for_v1_clients;
+    uint32_t                                        m_random_qsy_lo;
+    uint32_t                                        m_random_qsy_hi;
+    uint32_t                                        m_random_qsy_tg;
+    Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
@@ -191,10 +205,15 @@ class Reflector : public sigc::trackable
                             Async::FramedTcpConnection::DisconnectReason reason);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-    void broadcastUdpMsgExcept(const ReflectorClient *except,
-                               const ReflectorUdpMsg& msg);
-    void checkTalkerTimeout(Async::Timer *t);
-    void setTalker(ReflectorClient *client);
+    void onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
+                         ReflectorClient *new_talker);
+    void httpRequestReceived(Async::HttpServerConnection *con,
+                             Async::HttpServerConnection::Request& req);
+    void httpClientConnected(Async::HttpServerConnection *con);
+    void httpClientDisconnected(Async::HttpServerConnection *con,
+        Async::HttpServerConnection::DisconnectReason reason);
+    void onRequestAutoQsy(uint32_t from_tg);
+    uint32_t nextRandomQsyTg(void);
 
 };  /* class Reflector */
 

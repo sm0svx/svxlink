@@ -286,7 +286,13 @@ LocalTx::~LocalTx(void)
 bool LocalTx::initialize(void)
 {
   string value;
-  
+
+  char tx_id = '\0';
+  if (cfg.getValue(name(), "TX_ID", tx_id))
+  {
+    setId(tx_id);
+  }
+
   string audio_dev;
   if (!cfg.getValue(name(), "AUDIO_DEV", audio_dev))
   {

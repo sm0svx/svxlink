@@ -1,4 +1,42 @@
- 1.6.0 -- ?? ??? 2019
+ 1.6.1 -- ?? ??? 2020
+----------------------
+
+* ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
+
+* Config::getValue() for vectors now tokenize on comma in addition to
+  whitespace.
+
+* Improved implementation for SvxLink::SepPair to work better with streaming.
+
+* Config: Add support for calling getValue on keyed containers, like std::set
+  and std::multiset.
+
+* Msg: Add support for std::set variable in messages.
+
+* New member function AudioSelector::selectedSource() used to find out which
+  source that are currently selected.
+
+* AudioSelector::autoSelectEnabled() can now be called with a constant source.
+
+* Add a signal to the Config class so that one can subscribe to changes in the
+  configuration.
+
+* Chunked mode added to the Async::HttpServerConnection.
+
+* Fix small memory deallocation bug in Async::AudioEncoderOpus.
+
+* New template class Async::Factory for creating object factories.
+
+* Added an AudioContainer framework.
+
+* The Config::valueUpdated signal is now only emitted if the value is changed.
+
+* The Pty::setLineBuffered method can now be used to enable line buffered mode
+  where incoming chars are buffered until a <CR> or <LF> is received.
+
+
+
+ 1.6.0 -- 01 Sep 2019
 ----------------------
 
 * New class Async::AudioFsf, an implementation of a frequency sampling filter.

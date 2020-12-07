@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <sstream>
 
 
 /****************************************************************************
@@ -134,7 +135,15 @@ class EventHandler : public sigc::trackable
      * @param 	value The value to set the given variable to
      */
     void setVariable(const std::string& name, const std::string& value);
-  
+
+    template <typename T>
+    void setVariable(const std::string& name, const T& value)
+    {
+      std::ostringstream os;
+      os << value;
+      setVariable(name, os.str());
+    } /* EventHandler::setVariable */
+
     /**
      * @brief 	Process the given event
      * @param 	event The event must be a valid TCL function call
@@ -216,7 +225,17 @@ class EventHandler : public sigc::trackable
      * @param 	duration  The duration of each digit in milliseconds
      */
     sigc::signal<void, const std::string&, int> injectDtmf;
-    
+
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to set
+     *	      	a configuration variable
+     * @param 	section The name of the configuration section
+     * @param 	tag     The name of the configureation variable
+     * @param 	value   The new value for the configuration variable
+     */
+    sigc::signal<void, const std::string&, const std::string&,
+                 const std::string&> setConfigValue;
+
   protected:
 
   private:
@@ -239,6 +258,8 @@ class EventHandler : public sigc::trackable
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
     static int injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                    int argc, const char *argv[]);
+    static int setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
 
 };  /* class EventHandler */
