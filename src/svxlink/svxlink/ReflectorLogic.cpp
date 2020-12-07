@@ -308,7 +308,6 @@ bool ReflectorLogic::initialize(void)
           mem_fun(LinkManager::instance(), &LinkManager::playDtmf), this));
   }
   m_event_handler->setVariable("logic_name", name().c_str());
-
   m_event_handler->processEvent("namespace eval Logic {}");
   list<string> cfgvars = cfg().listSection(name());
   list<string>::const_iterator cfgit;
