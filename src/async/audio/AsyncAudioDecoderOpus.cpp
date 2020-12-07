@@ -124,6 +124,11 @@ AudioDecoderOpus::AudioDecoderOpus(const Options &options)
     cerr << "*** ERROR: Could not initialize Opus decoder\n";
     exit(1);
   }
+  Options::const_iterator it;
+  for (it=options.begin(); it!=options.end(); it++)
+  {
+    setOption((*it).first,(*it).second);  
+  }
 } /* AudioDecoderOpus::AudioDecoderOpus */
 
 

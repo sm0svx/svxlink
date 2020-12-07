@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@file   AsyncAudioContainerPcm.cpp
+@brief  Handle PCM type audio container
+@author Tobias Blomberg / SM0SVX
+@date   2020-02-29
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -48,19 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderDummy.h"
-#include "AsyncAudioDecoderNull.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioDecoderOpus.h"
-#endif
-#include "AsyncAudioDecoderAmbe.h"
+#include "AsyncAudioContainerPcm.h"
 
 
 /****************************************************************************
@@ -69,9 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace std;
 using namespace Async;
-
 
 
 /****************************************************************************
@@ -106,7 +91,6 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -121,64 +105,70 @@ using namespace Async;
  *
  ****************************************************************************/
 
-bool AudioDecoder::isAvailable(const std::string &name)
+AudioContainerPcm::AudioContainerPcm(void)
 {
-  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
-         (name == "GSM") || (name == "AMBE") ||
-#ifdef SPEEX_MAJOR
-         (name == "SPEEX") ||
-#endif
-#ifdef OPUS_MAJOR
-         (name == "OPUS") ||
-#endif
-         (name == "DUMMY");
-} /* AudioDecoder::isAvailable */
+  m_block.reserve(m_block_size);
+} /* AudioContainerPcm::AudioContainerPcm */
 
 
-AudioDecoder *AudioDecoder::create(const std::string &name, 
-            const std::map<std::string,std::string> &options)
+AudioContainerPcm::~AudioContainerPcm(void)
 {
-  if (name == "NULL")
+} /* AudioContainerPcm::~AudioContainerPcm */
+
+
+int AudioContainerPcm::writeSamples(const float *samples, int count)
+{
+  //std::cout << "### AudioContainerPcm::writeSamples: count=" << count
+  //          << std::endl;
+  if (count <= 0)
   {
-    return new AudioDecoderNull;
+    return -1;
   }
-  else if (name == "DUMMY")
+
+  for (int i=0; i<count; ++i)
   {
-    return new AudioDecoderDummy;
+    int16_t sample;
+    if (samples[i] > 1.0f)
+    {
+      sample = 32767;
+    }
+    else if (samples[i] < -1.0f)
+    {
+      sample = -32767;
+    }
+    else
+    {
+      sample = samples[i] * 32767.0f;
+    }
+    m_block.push_back(sample);
+
+    if (m_block.size() >= m_block_size)
+    {
+      writeBlock(reinterpret_cast<char*>(m_block.data()),
+          sizeof(int16_t) * m_block.size());
+      m_block.clear();
+    }
   }
-  else if (name == "RAW")
+  return count;
+} /* AudioContainerPcm::writeSamples */
+
+
+void AudioContainerPcm::flushSamples(void)
+{
+  //std::cout << "### AudioContainerPcm::flushSamples" << std::endl;
+  if (m_block.size() > 0)
   {
-    return new AudioDecoderRaw;
+    writeBlock(reinterpret_cast<char*>(m_block.data()),
+        sizeof(int16_t) * m_block.size());
+    m_block.clear();
   }
-  else if (name == "S16")
-  {
-    return new AudioDecoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-    else if (name == "AMBE")
-  {
-    return AudioDecoderAmbe::create(options);
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex(options);
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus(options);
-  }
-#endif
-  else
-  {
-    return 0;
-  }
-}
+} /* AudioContainerPcm::flushSamples */
+
+
+//void AudioContainerOpus::endStream(void)
+//{
+//  flushSamples();
+//} /* AudioContainerOpus::endStream */
 
 
 /****************************************************************************
@@ -195,9 +185,6 @@ AudioDecoder *AudioDecoder::create(const std::string &name,
  *
  ****************************************************************************/
 
-
-
 /*
  * This file has not been truncated
  */
-

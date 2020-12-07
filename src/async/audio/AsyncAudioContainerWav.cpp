@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@file   AsyncAudioContainerWav.cpp
+@brief  Handle WAV type audio container
+@author Tobias Blomberg / SM0SVX
+@date   2020-02-29
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <cstring>
 
 
 /****************************************************************************
@@ -40,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -48,19 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderDummy.h"
-#include "AsyncAudioDecoderNull.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioDecoderOpus.h"
-#endif
-#include "AsyncAudioDecoderAmbe.h"
+#include "AsyncAudioContainerWav.h"
 
 
 /****************************************************************************
@@ -69,9 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace std;
 using namespace Async;
-
 
 
 /****************************************************************************
@@ -106,7 +92,6 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -121,64 +106,132 @@ using namespace Async;
  *
  ****************************************************************************/
 
-bool AudioDecoder::isAvailable(const std::string &name)
+AudioContainerWav::AudioContainerWav(void)
 {
-  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
-         (name == "GSM") || (name == "AMBE") ||
-#ifdef SPEEX_MAJOR
-         (name == "SPEEX") ||
-#endif
-#ifdef OPUS_MAJOR
-         (name == "OPUS") ||
-#endif
-         (name == "DUMMY");
-} /* AudioDecoder::isAvailable */
+  m_block = new char[m_block_size];
+  m_block_ptr = m_block;
+} /* AudioContainerWav::AudioContainerWav */
 
 
-AudioDecoder *AudioDecoder::create(const std::string &name, 
-            const std::map<std::string,std::string> &options)
+AudioContainerWav::~AudioContainerWav(void)
 {
-  if (name == "NULL")
+  delete [] m_block;
+  m_block = nullptr;
+  m_block_ptr = nullptr;
+} /* AudioContainerWav::~AudioContainerWav */
+
+
+int AudioContainerWav::writeSamples(const float *samples, int count)
+{
+  //std::cout << "### AudioContainerWav::writeSamples: count=" << count
+  //          << std::endl;
+  if (count <= 0)
   {
-    return new AudioDecoderNull;
+    return -1;
   }
-  else if (name == "DUMMY")
+
+  for (int i=0; i<count; ++i)
   {
-    return new AudioDecoderDummy;
+    int16_t sample;
+    if (samples[i] > 1.0f)
+    {
+      sample = 32767;
+    }
+    else if (samples[i] < -1.0f)
+    {
+      sample = -32767;
+    }
+    else
+    {
+      sample = samples[i] * 32767.0f;
+    }
+    m_block_ptr += store16bitValue(m_block_ptr, sample);
+
+    if (m_block_ptr >= m_block+m_block_size)
+    {
+      writeBlock(reinterpret_cast<char*>(m_block), m_block_size);
+      m_samples_written += m_block_size;
+      m_block_ptr = m_block;
+    }
   }
-  else if (name == "RAW")
+  return count;
+} /* AudioContainerWav::writeSamples */
+
+
+void AudioContainerWav::flushSamples(void)
+{
+  if (m_block_ptr > m_block)
   {
-    return new AudioDecoderRaw;
+    writeBlock(reinterpret_cast<char*>(m_block), m_block_ptr - m_block);
+    m_samples_written += m_block_ptr - m_block;
+    m_block_ptr = m_block;
   }
-  else if (name == "S16")
+} /* AudioContainerWav::flushSamples */
+
+
+const char* AudioContainerWav::header(void)
+{
+  char *ptr = m_wave_header;
+
+    // ChunkID
+  ptr += storeBuf(ptr, "RIFF", 4);
+
+    // ChunkSize
+  if (m_realtime)
   {
-    return new AudioDecoderS16;
+    ptr += store32bitValue(ptr, 0xffffffff);
   }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-    else if (name == "AMBE")
-  {
-    return AudioDecoderAmbe::create(options);
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex(options);
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus(options);
-  }
-#endif
   else
   {
-    return 0;
+    ptr += store32bitValue(ptr,
+        WAVE_HEADER_SIZE - 8 + m_samples_written * NUM_CHANNELS * sizeof(short));
   }
-}
+
+    // Format
+  ptr += storeBuf(ptr, "WAVE", 4);
+
+    // Subchunk1ID
+  ptr += storeBuf(ptr, "fmt ", 4);
+
+    // Subchunk1Size
+  ptr += store32bitValue(ptr, 16);
+
+    // AudioFormat (PCM)
+  ptr += store16bitValue(ptr, 1);
+
+    // NumChannels
+  ptr += store16bitValue(ptr, NUM_CHANNELS);
+
+    // SampleRate
+  ptr += store32bitValue(ptr, m_sample_rate);
+
+    // ByteRate (sample rate * num channels * bytes per sample)
+  ptr += store32bitValue(ptr, m_sample_rate * NUM_CHANNELS * sizeof(short));
+
+    // BlockAlign (num channels * bytes per sample)
+  ptr += store16bitValue(ptr, NUM_CHANNELS * sizeof(short));
+
+    // BitsPerSample
+  ptr += store16bitValue(ptr, 16);
+
+    // Subchunk2ID
+  ptr += storeBuf(ptr, "data", 4);
+
+    // Subchunk2Size (num samples * num channels * bytes per sample)
+  if (m_realtime)
+  {
+    ptr += store32bitValue(ptr, 0xffffffff - WAVE_HEADER_SIZE + 8);
+  }
+  else
+  {
+    ptr += store32bitValue(ptr,
+        m_samples_written * NUM_CHANNELS * sizeof(short));
+  }
+
+  assert(ptr - m_wave_header == WAVE_HEADER_SIZE);
+
+  return m_wave_header;
+} /* AudioContainerWav::header */
 
 
 /****************************************************************************
@@ -195,9 +248,6 @@ AudioDecoder *AudioDecoder::create(const std::string &name,
  *
  ****************************************************************************/
 
-
-
 /*
  * This file has not been truncated
  */
-

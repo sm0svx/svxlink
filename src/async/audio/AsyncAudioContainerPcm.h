@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioEncoder.h
-@brief   Base class for an audio decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@file   AsyncAudioContainerPcm.h
+@brief  Handle PCM type audio container
+@author Tobias Blomberg / SM0SVX
+@date   2020-02-29
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef ASYNC_AUDIO_ENCODER_INCLUDED
-#define ASYNC_AUDIO_ENCODER_INCLUDED
+/** @example AsyncAudioContainer_demo.cpp
+An example of how to use the Async::AudioContainer class
+*/
+
+#ifndef ASYNC_AUDIO_CONTAINER_PCM_INCLUDED
+#define ASYNC_AUDIO_CONTAINER_PCM_INCLUDED
 
 
 /****************************************************************************
@@ -34,9 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-#include <string>
-#include <map>
+#include <vector>
 
 
 /****************************************************************************
@@ -45,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
+#include <AsyncAudioContainer.h>
 
 
 /****************************************************************************
@@ -80,7 +82,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -105,105 +107,87 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	Base class for an audio encoder
+@brief  Handle a PCM type audio container
 @author Tobias Blomberg / SM0SVX
-@date   2008-10-06
+@date   2020-02-29
 
-This is the base class for implementing an audio encoder.
+This is an implementation of a PCM audio container. An audio container is
+a format for storing audio to file or stream it over a network. Audio
+containers are normally created using a factory, via the
+Async::createAudioContainer function, but it is possible to create an audio
+container directly as well.
+
+The PCM audio container really is not a container but a raw format where the
+samples are just stored as is, without any header or other metadata.
+
+\example AsyncAudioContainer_demo.cpp
 */
-class AudioEncoder : public AudioSink, public virtual sigc::trackable
+class AudioContainerPcm : public AudioContainer
 {
   public:
-    /**
-     * @brief   Check if a specific encoder is available
-     * @param   name The name of the encoder to look for
-     */
-    static bool isAvailable(const std::string &name);
-    
-    /**
-     * @brief   Create a new encoder of the specified type
-     * @param   name The name of the encoder to create
-     */
-    typedef std::map<std::string, std::string> Options;
-    
-    /**
-     * @brief   Create a new encoder of the specified type
-     * @param   name The name of the encoder to create
-     */
-    static AudioEncoder *create(const std::string &name, const Options &options);
-    
-    /**
-     * @brief 	Default constuctor
-     */
-    AudioEncoder(void) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~AudioEncoder(void) {}
-  
-    /**
-     * @brief   Get the name of the codec
-     * @returns Return the name of the codec
-     */
-    virtual const char *name(void) const = 0;
-    
-    /**
-     * @brief 	Set an option for the encoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value) {}
+      /// The name of this class when used by the object factory
+    static constexpr const char *OBJNAME = "vnd.svxlink.pcm";
 
     /**
-     * @brief Print codec parameter settings
+     * @brief   Default constructor
      */
-    virtual void printCodecParams(void) {}
-    
+    AudioContainerPcm(void);
+
     /**
-     * @brief 	Call this function when all encoded samples have been flushed
+     * @brief   Destructor
      */
-    void allEncodedSamplesFlushed(void) { sourceAllSamplesFlushed(); }
-    
+    virtual ~AudioContainerPcm(void);
+
     /**
-     * @brief 	Tell the sink to flush the previously written samples
+     * @brief   Retrieve the media type for the audio container
+     * @return  Returns a string representing the media type, e.g. audio/wav
+     */
+    virtual const char* mediaType(void) const
+    {
+      return "audio/vnd.svxlink.pcm";
+    }
+
+    /**
+     * @brief   Get the standard filename extension for the audio container
+     * @return  Returns a string containing the filename extention, e.g. wav
+     */
+    virtual const char* filenameExtension(void) const { return "raw"; }
+
+    /**
+     * @brief   Write samples into this audio sink
+     * @param   samples The buffer containing the samples
+     * @param   count   The number of samples in the buffer
+     * @return  Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     */
+    virtual int writeSamples(const float *samples, int count);
+
+    /**
+     * @brief   Tell the sink to flush the previously written samples
      *
      * This function is used to tell the sink to flush previously written
      * samples. When done flushing, the sink should call the
      * sourceAllSamplesFlushed function.
-     * This function is normally only called from a connected source object.
      */
-    virtual void flushSamples(void) { flushEncodedSamples(); }
-    
-    /**
-     * @brief 	A signal emitted when encoded samples are available
-     * @param 	buf  Buffer containing encoded samples
-     * @param 	size The size of the buffer
-     */
-    sigc::signal<void,const void *,int> writeEncodedSamples;
-    
-    /**
-     * @brief This signal is emitted when the source calls flushSamples
-     */
-    sigc::signal<void> flushEncodedSamples;
-    
-  
-  protected:
-    
+    virtual void flushSamples(void);
+
   private:
-    AudioEncoder(const AudioEncoder&);
-    AudioEncoder& operator=(const AudioEncoder&);
-    
-};  /* class AudioEncoder */
+    size_t                m_block_size  = INTERNAL_SAMPLE_RATE / 10;
+    std::vector<int16_t>  m_block;
+
+    AudioContainerPcm(const AudioContainerPcm&);
+    AudioContainerPcm& operator=(const AudioContainerPcm&);
+
+};  /* class AudioContainerPcm */
 
 
 } /* namespace */
 
-#endif /* ASYNC_AUDIO_ENCODER_INCLUDED */
-
-
+#endif /* ASYNC_AUDIO_CONTAINER_PCM_INCLUDED */
 
 /*
  * This file has not been truncated
  */
-

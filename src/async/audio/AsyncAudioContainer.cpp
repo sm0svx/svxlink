@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@file   AsyncAudioContainer.cpp
+@brief  Base class for audio container handlers
+@author Tobias Blomberg / SM0SVX
+@date   2020-02-29
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 
 
 /****************************************************************************
@@ -48,19 +47,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderDummy.h"
-#include "AsyncAudioDecoderNull.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
+#include "AsyncAudioContainer.h"
+#include "AsyncAudioContainerWav.h"
+#ifdef OGG_MAJOR
+#include "AsyncAudioContainerOpus.h"
 #endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioDecoderOpus.h"
-#endif
-#include "AsyncAudioDecoderAmbe.h"
+#include "AsyncAudioContainerPcm.h"
 
 
 /****************************************************************************
@@ -69,9 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace std;
 using namespace Async;
-
 
 
 /****************************************************************************
@@ -106,7 +96,6 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -121,64 +110,15 @@ using namespace Async;
  *
  ****************************************************************************/
 
-bool AudioDecoder::isAvailable(const std::string &name)
+AudioContainer* Async::createAudioContainer(const std::string& name)
 {
-  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
-         (name == "GSM") || (name == "AMBE") ||
-#ifdef SPEEX_MAJOR
-         (name == "SPEEX") ||
+  static AudioContainerSpecificFactory<AudioContainerWav> wav;
+#ifdef OGG_MAJOR
+  static AudioContainerSpecificFactory<AudioContainerOpus> opus;
 #endif
-#ifdef OPUS_MAJOR
-         (name == "OPUS") ||
-#endif
-         (name == "DUMMY");
-} /* AudioDecoder::isAvailable */
-
-
-AudioDecoder *AudioDecoder::create(const std::string &name, 
-            const std::map<std::string,std::string> &options)
-{
-  if (name == "NULL")
-  {
-    return new AudioDecoderNull;
-  }
-  else if (name == "DUMMY")
-  {
-    return new AudioDecoderDummy;
-  }
-  else if (name == "RAW")
-  {
-    return new AudioDecoderRaw;
-  }
-  else if (name == "S16")
-  {
-    return new AudioDecoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-    else if (name == "AMBE")
-  {
-    return AudioDecoderAmbe::create(options);
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex(options);
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus(options);
-  }
-#endif
-  else
-  {
-    return 0;
-  }
-}
+  static AudioContainerSpecificFactory<AudioContainerPcm> pcm;
+  return AudioContainerFactory::createNamedObject(name);
+} /* Async::createAudioContainer */
 
 
 /****************************************************************************
@@ -195,9 +135,6 @@ AudioDecoder *AudioDecoder::create(const std::string &name,
  *
  ****************************************************************************/
 
-
-
 /*
  * This file has not been truncated
  */
-

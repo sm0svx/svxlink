@@ -115,7 +115,7 @@ class AudioDecoderSpeex : public AudioDecoder
     /**
      * @brief 	Default constuctor
      */
-    AudioDecoderSpeex(const Options& options = Options());
+    AudioDecoderSpeex(const Options &options);
   
     /**
      * @brief 	Destructor
@@ -127,6 +127,13 @@ class AudioDecoderSpeex : public AudioDecoder
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "SPEEX"; }
+  
+    /**
+     * @brief 	Set an option for the decoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value);
 
     /**
      * @brief Print codec parameter settings
@@ -162,13 +169,6 @@ class AudioDecoderSpeex : public AudioDecoder
     
 
   protected:
-            
-    /**
-     * @brief 	Set an option for the decoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value);
     
   private:
     SpeexBits bits;

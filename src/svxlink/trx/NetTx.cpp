@@ -173,11 +173,11 @@ bool NetTx::initialize(void)
   pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512, 50);
   setHandler(pacer);
   
-  string opt_prefix(audio_enc->name());
+  string opt_prefix(audio_enc_name);
   opt_prefix += "_ENC_";
+  map<string,string> enc_options;
   list<string> names = cfg.listSection(name());
   list<string>::const_iterator nit;
-  map<string,string> enc_options;
   for (nit=names.begin(); nit!=names.end(); ++nit)
   {
     if ((*nit).find(opt_prefix) == 0)

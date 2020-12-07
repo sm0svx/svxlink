@@ -115,7 +115,7 @@ class AudioEncoderOpus : public AudioEncoder
     /**
      * @brief 	Default constuctor
      */
-    AudioEncoderOpus(const Options& options = Options());
+    AudioEncoderOpus(const Options &options = Options());
   
     /**
      * @brief 	Destructor
@@ -144,6 +144,13 @@ class AudioEncoderOpus : public AudioEncoder
      * @returns Returns the current frame size
      */
     int frameSize(void) const { return frame_size; }
+    
+    /**
+     * @brief 	Set an option for the encoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value);
     
     /**
      * @brief Print codec parameter settings
@@ -405,13 +412,6 @@ class AudioEncoderOpus : public AudioEncoder
     
     
   protected:
-      
-    /**
-     * @brief 	Set an option for the encoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value);
     
   private:
     OpusEncoder *enc;

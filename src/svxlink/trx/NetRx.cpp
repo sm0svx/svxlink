@@ -192,9 +192,9 @@ bool NetRx::initialize(void)
   
   string opt_prefix(audio_dec_name);
   opt_prefix += "_DEC_";
+  map<string,string> dec_options;
   list<string> names = cfg.listSection(name());
   list<string>::const_iterator nit;
-  map<string,string> dec_options;
   for (nit=names.begin(); nit!=names.end(); ++nit)
   {
     if ((*nit).find(opt_prefix) == 0)
@@ -215,7 +215,7 @@ bool NetRx::initialize(void)
   }
   audio_dec->allEncodedSamplesFlushed.connect(
           mem_fun(*this, &NetRx::allEncodedSamplesFlushed));
-
+  audio_dec->printCodecParams();
   setHandler(audio_dec);
   
   tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));

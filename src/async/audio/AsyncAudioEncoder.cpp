@@ -158,6 +158,10 @@ AudioEncoder *AudioEncoder::create(const std::string &name,
   {
     return new AudioEncoderGsm;
   }
+  else if (name == "AMBE")
+  {
+    return AudioEncoderAmbe::create(options);
+  }
 #ifdef SPEEX_MAJOR
   else if (name == "SPEEX")
   {
@@ -170,10 +174,6 @@ AudioEncoder *AudioEncoder::create(const std::string &name,
     return new AudioEncoderOpus(options);
   }
 #endif
-  else if (name == "AMBE")
-  {
-    return AudioCodecAmbe::create(options);
-  }
   else
   {
     return 0;

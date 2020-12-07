@@ -115,7 +115,7 @@ class AudioDecoderOpus : public AudioDecoder
     /**
      * @brief 	Default constuctor
      */
-    AudioDecoderOpus(const Options& options = Options());
+    AudioDecoderOpus(const Options &options = Options());
   
     /**
      * @brief 	Destructor
@@ -127,6 +127,13 @@ class AudioDecoderOpus : public AudioDecoder
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "OPUS"; }
+  
+    /**
+     * @brief 	Set an option for the decoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value);
 
     /**
      * @brief Print codec parameter settings
@@ -162,13 +169,6 @@ class AudioDecoderOpus : public AudioDecoder
     
 
   protected:
-    
-    /**
-     * @brief 	Set an option for the decoder
-     * @param 	name The name of the option
-     * @param 	value The value of the option
-     */
-    virtual void setOption(const std::string &name, const std::string &value);
     
   private:
     OpusDecoder *dec;

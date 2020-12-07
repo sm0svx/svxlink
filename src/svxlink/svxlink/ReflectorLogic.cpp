@@ -1411,7 +1411,6 @@ void ReflectorLogic::handleTimerTick(Async::Timer *t)
 bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
 {
   delete m_enc;
-  
   string opt_prefix(codec_name);
   opt_prefix += "_ENC_";
   map<string,string> enc_options;
@@ -1425,8 +1424,7 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
       string opt_name((*nit).substr(opt_prefix.size()));
       enc_options[opt_name] = opt_value;
     }
-  }
-
+  } 
   m_enc = Async::AudioEncoder::create(codec_name, enc_options);
   if (m_enc == 0)
   {
@@ -1442,7 +1440,6 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
   m_enc->flushEncodedSamples.connect(
       mem_fun(*this, &ReflectorLogic::flushEncodedAudio));
   m_enc_endpoint->registerSink(m_enc, false);
-
   m_enc->printCodecParams();
 
   AudioSink *sink = 0;
@@ -1466,7 +1463,6 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
       dec_options[opt_name] = opt_value;
     }
   }
-
   m_dec = Async::AudioDecoder::create(codec_name, dec_options);
   if (m_dec == 0)
   {
@@ -1484,18 +1480,6 @@ bool ReflectorLogic::setAudioCodec(const std::string& codec_name)
     m_dec->registerSink(sink, true);
   }
 
-  opt_prefix = string(m_dec->name()) + "_DEC_";
-  names = cfg().listSection(name());
-  for (list<string>::const_iterator nit=names.begin(); nit!=names.end(); ++nit)
-  {
-    if ((*nit).find(opt_prefix) == 0)
-    {
-      string opt_value;
-      cfg().getValue(name(), *nit, opt_value);
-      string opt_name((*nit).substr(opt_prefix.size()));
-      m_dec->setOption(opt_name, opt_value);
-    }
-  }
   m_dec->printCodecParams();
 
   return true;
