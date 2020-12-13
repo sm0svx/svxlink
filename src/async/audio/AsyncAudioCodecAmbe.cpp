@@ -718,8 +718,8 @@ namespace {
 
       ~AudioCodecAmbeDv3kTty()
       {
-          serial->close();
-          delete serial;
+        serial->close();
+        delete serial;
       }
 
     protected:
@@ -739,28 +739,29 @@ namespace {
         Options::const_iterator type_it = options.find("TYPE");
         if(type_it!=options.end())
         {
-            if(type_it->second=="AMBESERVER")
-                return new AudioCodecAmbeDv3kAmbeServer(options);
-            else if(type_it->second=="TTY")
-                return new AudioCodecAmbeDv3kTty(options);
-            else
-                throw "unknown Ambe codec TYPE";
+          if(type_it->second=="AMBESERVER")
+            return new AudioCodecAmbeDv3kAmbeServer(options);
+          else if(type_it->second=="TTY")
+            return new AudioCodecAmbeDv3kTty(options);
+          else
+            throw "unknown Ambe codec TYPE";
         }
         else
-            throw "unspecified Ambe codec TYPE";
+          throw "unspecified Ambe codec TYPE";
     }
 }
 
 
-AudioCodecAmbe *AudioCodecAmbe::create(const Options &options) {
-    Options::const_iterator type_it = options.find("TYPE");
-    if(type_it!=options.end())
-    {
-        if(type_it->second=="AMBESERVER" || type_it->second=="TTY")
-            return AudioCodecAmbeDv3k::getPtr(options);
-        else
-            throw "unknown Ambe codec TYPE";
-    }
+AudioCodecAmbe *AudioCodecAmbe::create(const Options &options) 
+{
+  Options::const_iterator type_it = options.find("TYPE");
+  if(type_it!=options.end())
+  {
+    if (type_it->second=="AMBESERVER" || type_it->second=="TTY")
+      return AudioCodecAmbeDv3k::getPtr(options);
     else
-        throw "unspecified Ambe codec TYPE";
+      throw "unknown Ambe codec TYPE";
+  }
+  else
+    throw "unspecified Ambe codec TYPE";
 }

@@ -126,19 +126,21 @@ AudioEncoderOpus::AudioEncoderOpus(const Options &options)
     exit(1);
   }
 
-  Options::const_iterator it;
-  for (it=options.begin(); it!=options.end(); it++)
-  {
-    setOption((*it).first,(*it).second);  
-  }
   setMaxBandwidth(OPUS_BANDWIDTH_MEDIUMBAND);
   setBandwidth(OPUS_AUTO);
   setSignalType(OPUS_SIGNAL_VOICE);
+  setFrameSize(20);
+  setBitrate(20000);
   enableDtx(false);
 #if OPUS_MAJOR > 0
   setLsbDepth(16);
 #endif
-
+  
+  Options::const_iterator it;
+  for (it=options.begin(); it!=options.end(); it++)
+  {
+    setOption((*it).first,(*it).second);
+  }
 } /* AsyncAudioEncoderOpus::AsyncAudioEncoderOpus */
 
 
@@ -224,6 +226,7 @@ float AudioEncoderOpus::setFrameSize(float new_frame_size_ms)
     static_cast<int>(new_frame_size_ms * INTERNAL_SAMPLE_RATE / 1000);
   delete [] sample_buf;
   sample_buf = new float[frame_size];
+  cout << "framesize=" << frame_size << endl;
   return new_frame_size_ms;
 } /* AudioEncoderOpus::setFrameSize */
 
@@ -635,15 +638,17 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
 {
   for (int i=0; i<count; ++i)
   {
+    cout << "1: i=" << i << ", count=" << count << endl;
     sample_buf[buf_len++] = samples[i];
-    
+    cout << "2: buf_len=" << buf_len << endl;
     if (buf_len == frame_size)
     {
       buf_len = 0;
       unsigned char output_buf[4000];
+      cout << "3: xx" << endl;
       opus_int32 nbytes = opus_encode_float(enc, sample_buf, frame_size,
                                             output_buf, sizeof(output_buf));
-      //cout << "### frame_size=" << frame_size << " nbytes=" << nbytes << endl;
+      cout << "### frame_size=" << frame_size << " nbytes=" << nbytes << endl;
       if (nbytes > 0)
       {
         writeEncodedSamples(output_buf, nbytes);
