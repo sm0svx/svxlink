@@ -581,7 +581,7 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBESERVER_HOST not defined.";
+          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_AMBESERVER_HOST not defined.";
         }
 
         if((it=options.find("AMBESERVER_PORT"))!=options.end())
@@ -590,7 +590,7 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBESERVER_PORT not defined.";
+          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_AMBESERVER_PORT not defined.";
         }
         udpInit();
       }
@@ -683,21 +683,21 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBE_TTY_DEVICE not defined.";
+          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_TTY_DEVICE not defined.";
         }
 
-        if((it=options.find("TTY_BAUDRATE"))!=options.end())
+        if((it=options.find("TTY_SPEED"))!=options.end())
         {
           baudrate = atoi((*it).second.c_str());
         }
         else
         {
-          throw "*** ERROR: Parameter AMBE_TTY_BAUDRATE not defined.";
+          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_TTY_SPEED not defined.";
         }
 
         if (baudrate != 230400 && baudrate != 460800)
         {
-          throw "*** ERROR: AMBE_TTY_BAUDRATE must be 230400 or 460800.";
+          throw "*** ERROR: AMBE_(ENC|DEC)_TTY_BAUDRATE must be 230400 or 460800.";
         }
 
         serial = new Serial(device);
@@ -736,32 +736,54 @@ namespace {
     };
 
     AudioCodecAmbeDv3k *AudioCodecAmbeDv3k::create(const Options &options) {
-        Options::const_iterator type_it = options.find("TYPE");
-        if(type_it!=options.end())
+      Options::const_iterator type_it = options.find("TYPE");
+      if(type_it!=options.end())
+      {
+        if(type_it->second=="AMBESERVER")
         {
-          if(type_it->second=="AMBESERVER")
-            return new AudioCodecAmbeDv3kAmbeServer(options);
-          else if(type_it->second=="TTY")
-            return new AudioCodecAmbeDv3kTty(options);
-          else
-            throw "unknown Ambe codec TYPE";
+          return new AudioCodecAmbeDv3kAmbeServer(options);  
+        }          
+        else if(type_it->second=="TTY")
+        {
+          return new AudioCodecAmbeDv3kTty(options);  
         }
         else
-          throw "unspecified Ambe codec TYPE";
+          throw "unknown Ambe codec TYPE";
+      }
+      else
+        throw "unspecified Ambe codec TYPE";
     }
 }
 
 
 AudioCodecAmbe *AudioCodecAmbe::create(const Options &options) 
 {
-  Options::const_iterator type_it = options.find("TYPE");
+  
+  Options::const_iterator type_it;
+  Options t_options;
+  for (type_it=options.begin(); type_it!=options.end(); type_it++)
+  {
+    std::string t_type = type_it->first;
+    if (t_type.find("AMBE_ENC_")!=std::string::npos
+        ||t_type.find("AMBE_DEC_")!=std::string::npos)
+    {
+      t_type.erase(0,9);
+    }
+    t_options[t_type] = type_it->second;
+  }
+  
+  type_it=t_options.find("TYPE");
   if(type_it!=options.end())
   {
     if (type_it->second=="AMBESERVER" || type_it->second=="TTY")
-      return AudioCodecAmbeDv3k::getPtr(options);
+    {
+      return AudioCodecAmbeDv3k::getPtr(t_options);  
+    }
     else
       throw "unknown Ambe codec TYPE";
   }
   else
-    throw "unspecified Ambe codec TYPE";
+  {
+    throw "unspecified Ambe codec TYPE";  
+  }
 }

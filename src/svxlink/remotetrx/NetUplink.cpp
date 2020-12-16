@@ -597,7 +597,7 @@ void NetUplink::handleMsg(Msg *msg)
           cfg.getValue(name, *it, opt_value);
           enc_options[*it] = opt_value;
         }
-      }  
+      }
       audio_enc = AudioEncoder::create(codec_msg->name(), enc_options);
       if (audio_enc != 0)
       {

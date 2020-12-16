@@ -638,17 +638,14 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
 {
   for (int i=0; i<count; ++i)
   {
-    cout << "1: i=" << i << ", count=" << count << endl;
     sample_buf[buf_len++] = samples[i];
-    cout << "2: buf_len=" << buf_len << endl;
     if (buf_len == frame_size)
     {
       buf_len = 0;
       unsigned char output_buf[4000];
-      cout << "3: xx" << endl;
       opus_int32 nbytes = opus_encode_float(enc, sample_buf, frame_size,
                                             output_buf, sizeof(output_buf));
-      cout << "### frame_size=" << frame_size << " nbytes=" << nbytes << endl;
+      // cout << "### frame_size=" << frame_size << " nbytes=" << nbytes << endl;
       if (nbytes > 0)
       {
         writeEncodedSamples(output_buf, nbytes);

@@ -189,7 +189,6 @@ bool NetRx::initialize(void)
   
   string auth_key;
   cfg.getValue(name(), "AUTH_KEY", auth_key);
-  
   string opt_prefix(audio_dec_name);
   opt_prefix += "_DEC_";
   map<string,string> dec_options;
@@ -205,7 +204,6 @@ bool NetRx::initialize(void)
       dec_options[opt_name] = opt_value;
     }
   }
-  
   audio_dec = AudioDecoder::create(audio_dec_name, dec_options);
   if (audio_dec == 0)
   {
