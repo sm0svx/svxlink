@@ -1581,10 +1581,14 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
       m_previous_tg = m_selected_tg;
     }
     m_selected_tg = tg;
-    m_tg_local_activity = false;
     if (tg == 0)
     {
+      m_tg_local_activity = false;
       m_use_prio = true;
+    }
+    else
+    {
+      m_tg_local_activity = !m_logic_con_in->isIdle();
     }
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
