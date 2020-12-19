@@ -254,6 +254,7 @@ class ReflectorLogic : public LogicBase
     bool                              m_mute_first_tx_rem;
     Async::Timer                      m_tmp_monitor_timer;
     int                               m_tmp_monitor_timeout;
+    bool                              m_use_prio;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
