@@ -84,6 +84,10 @@
 * Use the new configuration variable COMMAND_PTY to set up a PTY that can be
   used to send commands to a logic core.
 
+* Filter out CTCSS band for voice output. Interference on CTCSS transmission
+  could be caused by low frequency content in audio clips or incoming audio on
+  Echolink for example.
+
 
 
  1.7.0 -- 01 Sep 2019
