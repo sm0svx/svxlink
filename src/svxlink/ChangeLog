@@ -87,6 +87,16 @@
 * Use the new configuration variable COMMAND_PTY to set up a PTY that can be
   used to send commands to a logic core.
 
+* Filter out CTCSS band for voice output. Interference on CTCSS transmission
+  could be caused by low frequency content in audio clips or incoming audio on
+  Echolink for example.
+
+* Ignore prioritized talkgroups qfter QSY if there have been local node
+  activity prior to the QSY. This fix a problem where a node would switch to a
+  prioritized talkgroup after a QSY to a lower priority talkgroup, if there
+  have been no local activity after the QSY. Priority will be honored again
+  after the node have switched to TG#0.
+
 
 
  1.7.0 -- 01 Sep 2019
