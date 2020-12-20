@@ -583,14 +583,21 @@ void NetUplink::handleMsg(Msg *msg)
 	    rx_splitter->removeSink(audio_enc);
 	    delete audio_enc;
       }
-      MsgRxAudioCodecSelect::Opts opts;
-      codec_msg->options(opts);
+      string opt_prefix(codec_msg->name());
+      opt_prefix += "_ENC_";
+      list<string> names = cfg.listSection(name);
       map<string,string> enc_options;
-      MsgRxAudioCodecSelect::Opts::const_iterator it;
-      for (it=opts.begin(); it!=opts.end(); ++it)
+      list<string>::const_iterator it;
+
+      for (it=names.begin(); it!=names.end(); ++it)
       {
-        enc_options[(*it).first] = (*it).second;
-      }  
+        if ((*it).find(opt_prefix) == 0)
+        {
+          string opt_value;
+          cfg.getValue(name, *it, opt_value);
+          enc_options[*it] = opt_value;
+        }
+      }
       audio_enc = AudioEncoder::create(codec_msg->name(), enc_options);
       if (audio_enc != 0)
       {
@@ -616,14 +623,25 @@ void NetUplink::handleMsg(Msg *msg)
     {
       MsgTxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgTxAudioCodecSelect *>(msg);
-      delete audio_dec;
+      if (audio_dec != 0)
+      {
+	    delete audio_dec;
+      }
+
+      string opt_prefix(codec_msg->name());
+      opt_prefix += "_DEC_";
+      list<string> names = cfg.listSection(name);
       map<string,string> dec_options;
- 	  MsgRxAudioCodecSelect::Opts opts;
-	  codec_msg->options(opts);
-	  MsgTxAudioCodecSelect::Opts::const_iterator it;
-	  for (it=opts.begin(); it!=opts.end(); ++it)
+      list<string>::const_iterator it;
+
+	  for (it=names.begin(); it!=names.end(); ++it)
 	  {
-	    dec_options[(*it).first] = (*it).second;
+        if ((*it).find(opt_prefix) == 0)
+        {
+          string opt_value;
+          cfg.getValue(name, *it, opt_value);
+	      dec_options[*it] = opt_value;
+        }
 	  }    
       audio_dec = AudioDecoder::create(codec_msg->name(), dec_options);
       if (audio_dec != 0)
