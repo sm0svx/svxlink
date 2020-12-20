@@ -149,9 +149,10 @@ EventHandler::EventHandler(const string& event_script, const string& logic_name)
                     this, NULL);
   Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
   Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
-  Tcl_CreateCommand(interp, "initCall", initCallHandler, this, NULL);
   Tcl_CreateCommand(interp, "setConfigValue", setConfigValueHandler,
                     this, NULL);
+  Tcl_CreateCommand(interp, "initCall", initCallHandler, this, NULL);
+
   setVariable("script_path", event_script);
 
 } /* EventHandler::EventHandler */
@@ -481,6 +482,7 @@ int EventHandler::initCallHandler(ClientData cdata, Tcl_Interp *irp, int argc,
 
   return TCL_OK;
 }
+
 
 
 /*

@@ -138,7 +138,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
     m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT)
+    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -400,6 +400,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       {
         selectTg(tg, "tg_command_activation", true);
         m_tg_local_activity = true;
+        m_use_prio = false;
       }
       else
       {
@@ -410,6 +411,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     {
       selectTg(m_previous_tg, "tg_command_activation", true);
       m_tg_local_activity = true;
+      m_use_prio = false;
     }
   }
   else if (cmd[0] == '2')   // QSY
@@ -448,6 +450,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     {
       selectTg(m_last_qsy, "tg_command_activation", true);
       m_tg_local_activity = true;
+      m_use_prio = false;
     }
     else
     {
@@ -510,6 +513,7 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
   {
     selectTg(tg, "tg_local_activation", !m_mute_first_tx_loc);
     m_tg_local_activity = true;
+    m_use_prio = false;
   }
 } /* ReflectorLogic::remoteReceivedTgUpdated */
 
@@ -1051,7 +1055,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   {
     selectTg(msg.tg(), "tg_remote_activation", !m_mute_first_tx_rem);
   }
-  else
+  else if (m_use_prio)
   {
     uint32_t selected_tg_prio = 0;
     MonitorTgsSet::const_iterator selected_tg_it =
@@ -1063,8 +1067,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     MonitorTgsSet::const_iterator talker_tg_it =
       m_monitor_tgs.find(MonitorTgEntry(msg.tg()));
     if ((talker_tg_it != m_monitor_tgs.end()) &&
-        (talker_tg_it->prio > selected_tg_prio) &&
-        !m_tg_local_activity)
+        (talker_tg_it->prio > selected_tg_prio))
     {
       std::cout << name() << ": Activity on prioritized TG #"
                 << msg.tg() << ". Switching!" << std::endl;
@@ -1513,6 +1516,7 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
       }
     }
     m_tg_local_activity = true;
+    m_use_prio = false;
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 
@@ -1577,7 +1581,15 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
       m_previous_tg = m_selected_tg;
     }
     m_selected_tg = tg;
-    m_tg_local_activity = false;
+    if (tg == 0)
+    {
+      m_tg_local_activity = false;
+      m_use_prio = true;
+    }
+    else
+    {
+      m_tg_local_activity = !m_logic_con_in->isIdle();
+    }
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
   }

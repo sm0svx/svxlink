@@ -93,7 +93,7 @@ bool Module::initialize(void)
   }
 
   cfg().valueUpdated.connect(sigc::mem_fun(*this, &Module::cfgUpdated));
-  
+
   return true;
   
 } /* Module::initialize */

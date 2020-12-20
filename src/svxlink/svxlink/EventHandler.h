@@ -243,6 +243,7 @@ class EventHandler : public sigc::trackable
      */
     sigc::signal<void, const std::string&> initCall;
     
+
   protected:
 
   private:
@@ -268,8 +269,11 @@ class EventHandler : public sigc::trackable
                     int argc, const char *argv[]);
     static int setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
+<<<<<<< HEAD
     static int initCallHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
+=======
+>>>>>>> sm0svx/master
 
 };  /* class EventHandler */
 

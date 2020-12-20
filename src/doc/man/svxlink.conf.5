@@ -1112,14 +1112,14 @@ multiple receivers. A normal value could be somewhere in between 20-100ms.
 .B SQL_HANGTIME
 How long, in milliseconds, the squelch will stay open after the detector has
 indicated that it is closed. This configuration variable will affect all
-squelch detector types Settable at runtime.
+squelch detector types. Settable at runtime.
 .TP
 .B SQL_EXTENDED_HANGTIME
 At low signal strengths it can be beneficial to use a longer squelch hangtime
 so that it is less likely for the squelch to close. This configuration variable
 is unset by default. A value of 1000 milliseconds may be a good value to start
 out with. To enable the extended squelch hangtime feature, set up the
-SQL_EXTENDED_HANGTIME_THRESH variable.
+SQL_EXTENDED_HANGTIME_THRESH variable. Settable at runtime.
 .TP
 .B SQL_EXTENDED_HANGTIME_THRESH
 At low signal strengths it can be beneficial to use a longer squelch hangtime
