@@ -697,7 +697,7 @@ namespace {
 
         if (baudrate != 230400 && baudrate != 460800)
         {
-          throw "*** ERROR: AMBE_(ENC|DEC)_TTY_BAUDRATE must be 230400 or 460800.";
+          throw "*** ERROR: AMBE_(ENC|DEC)_TTY_SPEED must be 230400 or 460800.";
         }
 
         serial = new Serial(device);
