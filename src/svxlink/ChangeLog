@@ -95,6 +95,13 @@
   have been no local activity after the QSY. Priority will be honored again
   after the node have switched to TG#0.
 
+* Make the audio limiter threshold in the receiver configurable using the
+  LIMITER_THRESH configuration variable in a receiver configuration section.
+
+* Add an audio limiter to the transmitted audio path. The threshold may be set
+  using the LIMITER_THRESH configuration variable in a TX configuration
+  section.
+
 
 
  1.7.0 -- 01 Sep 2019
