@@ -112,7 +112,8 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
-#define USE_AUDIO_VALVE 0
+#define USE_AUDIO_VALVE         0
+#define DEFAULT_LIMITER_THRESH  0.0
 
 
 /****************************************************************************
@@ -471,18 +472,22 @@ bool LocalTx::initialize(void)
     prev_src->registerSink(preemph, true);
     prev_src = preemph;
   }
-  
-  /*
-  AudioCompressor *limit = new AudioCompressor;
-  limit->setThreshold(-1);
-  limit->setRatio(0.1);
-  limit->setAttack(2);
-  limit->setDecay(20);
-  limit->setOutputGain(1);
-  prev_src->registerSink(limit, true);
-  prev_src = limit;
-  */
-  
+
+    // Add a limiter to smoothly limit the audio before hard clipping it
+  double limiter_thresh = DEFAULT_LIMITER_THRESH;
+  cfg.getValue(name(), "LIMITER_THRESH", limiter_thresh);
+  if (limiter_thresh != 0.0)
+  {
+    AudioCompressor *limit = new AudioCompressor;
+    limit->setThreshold(limiter_thresh);
+    limit->setRatio(0.1);
+    limit->setAttack(2);
+    limit->setDecay(20);
+    limit->setOutputGain(1);
+    prev_src->registerSink(limit, true);
+    prev_src = limit;
+  }
+
     // Clip audio to limit its amplitude
   AudioClipper *clipper = new AudioClipper;
   prev_src->registerSink(clipper, true);
