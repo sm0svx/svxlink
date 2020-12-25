@@ -918,6 +918,14 @@ close it when it does not have to be open anymore. This may cause problems in
 some applications or with some sound hardware. Set this variable to 1 to force
 SvxLink to keep the audio device open from application start to exit.
 .TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level for overmodulating stations. For a
+properly calibrated SvxLink node max FM deviation is -6dBFS. A good value to
+start with for this parameter is then -6 but try to lower it further (like -9
+to -12) if it does not affect audio quality negatively.
+.TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
 SERIAL, EVDEV, SIGLEV, PTY, GPIO, HIDRAW or COMBINE.
@@ -2000,6 +2008,14 @@ The normal behaviour for SvxLink is to open an audio device when needed and
 close it when it does not have to be open anymore. This may cause problems in
 some applications or with some sound hardware. Set this variable to 1 to force
 SvxLink to keep the audio device open from application start to exit.
+.TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level to not overmodulate the transmitter.
+For a properly calibrated SvxLink node max FM deviation is -6dBFS. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
 .TP
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
