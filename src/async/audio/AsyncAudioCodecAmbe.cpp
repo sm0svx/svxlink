@@ -40,7 +40,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 
 
-
 /****************************************************************************
  *
  * Project Includes
@@ -209,7 +208,7 @@ namespace {
           Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
           m_state = RESET;
           send(init_packet);
-        }
+        } /* void */
 
         virtual void prodid()
         {
@@ -243,32 +242,30 @@ namespace {
         } /* ratep */
 
 
-        /* method to prepare incoming frames from BM network to be decoded later */
+        /* method to prepare incoming frames from network to be decoded later */
         virtual Buffer<> packForDecoding(const Buffer<> &buffer) { return buffer; }
 
-        /* method to handle prepared encoded Data from BM network and send them to AudioSink */
+
+        /* method to handle prepared encoded Data from network and them to AudioSink */
         virtual Buffer<float> unpackDecoded(const Buffer<> &buffer)
         {
           unsigned char *s8_samples = reinterpret_cast<unsigned char *>(buffer.data);
           int count = buffer.length / 2;
           float t[count];
-          float avg = 0.0;
           size_t b = 0;
+
           // starts with 4 to omit the DV3K-HEADER
-          for (int a=4; a < (int)buffer.length-2; a+=2)
+          for (int a=DV3K_AMBE_HEADER_IN_LEN; a < (int)buffer.length-2; a+=2)
           {
             int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
             // 16384.0 has been calculated experimental, is a subject to change!
             // maybe a simple audio compressor/clipper could be implemented here
             // by analyzing the decoded audio level
-            //t[b++] = (float) (w / 16384.0);
-            t[b++] = (float) (w / rxavg);
-            avg += (t[b-1] * t[b-1]);
+            t[b++] = (float) (w / 16384.0);
           }
-          rxavg = 12000.0 * (1 + avg / 5);
           Buffer<float> audiobuf(t, b-1);
           return audiobuf;
-        }
+        } /* unpackDecoded */
 
         /* method to prepare incoming Audio frames from local RX to be encoded later */
         virtual Buffer<> packForEncoding(const Buffer<> &buffer)
@@ -289,145 +286,115 @@ namespace {
           memcpy(dv3k_buffer.data + DV3K_VOICE_FRAME_LEN, buffer.data, buffer.length);
           dv3k_buffer.length = DV3K_VOICE_FRAME_LEN + DV3K_AUDIO_LEN;
           return dv3k_buffer;
-        }
+        } /* packForEncoding */
 
         virtual Buffer<> unpackEncoded(const Buffer<> &buffer)
         {
           return buffer;
-        }
+        } /* unpackEncoded */
 
         /**
-         * @brief 	Write encoded samples into the decoder
+         * @brief 	encoded Ambe stream from NetRx -> 
          * @param 	buf  Buffer containing encoded samples
          * @param 	size The size of the buffer
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-         // const char DV3K_AMBE_HEADERFRAME[] = {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
-
-          // this defines had been provided by Artem/R3ABM, thank you!
+          //const char DV3K_AMBE_HEADERFRAME[] = 
+          // {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
+          const int DV3K_AMBE_HEADERFRAME_LEN = 6;
+          
           const unsigned char DV3K_AMBE_HEADERFRAMEOUT[] = {DV3K_START_BYTE, 0x00, 0x0e,
                                                           DV3K_TYPE_AMBE, 0x40, 0x01, 0x48};
+          const int DV3K_AMBE_HEADERFRAMEOUT_LEN = 7;
+          
           const unsigned char DV3K_WAIT[] = {0x03, 0xa0};
           const int DV3K_WAIT_LEN = 2;
-
-          char ambe_to_dv3k[DV3K_AMBE_HEADER_OUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN];
+          
+          cout << "writeEncodedSamples from NetRx " << size << endl;
           Buffer<> buffer;
           buffer.data = reinterpret_cast<char*>(buf);
           buffer.length = size;
-          Buffer<>ambe_frame;
 
-           // devide the 27 bytes into a 9 byte long frame, sends them to the dv3k-decoder
-           // REWIND_DMR_AUDIO_FRAME_LENGTH=27, DV3K_AMBE_FRAME_LEN=9
-          for (int a=0; a<REWIND_DMR_AUDIO_FRAME_LENGTH; a+=DV3K_AMBE_FRAME_LEN)
-          {
-            memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT, DV3K_AMBE_HEADER_OUT_LEN);
-            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADER_OUT_LEN, buffer.data+a, DV3K_AMBE_FRAME_LEN);
-            memcpy(ambe_to_dv3k + DV3K_AMBE_HEADER_OUT_LEN + DV3K_AMBE_FRAME_LEN, DV3K_WAIT, DV3K_WAIT_LEN);
-            ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADER_OUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN);
-            // sending HEADER + 9 bytes to DV3K-Adapter
-            send(ambe_frame);
-          }
-        }
+          char ambe_to_dv3k[DV3K_AMBE_HEADERFRAMEOUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN];
+          memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT, DV3K_AMBE_HEADERFRAMEOUT_LEN); 
+          memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAMEOUT_LEN, buffer.data + DV3K_AMBE_HEADERFRAME_LEN, DV3K_AMBE_FRAME_LEN);
+          memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAMEOUT_LEN + DV3K_AMBE_FRAME_LEN, DV3K_WAIT, DV3K_WAIT_LEN);
+          
+          Buffer<>ambe_frame;
+          ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN);
+          send(ambe_frame);
+        } /* writeEncodedSamples */
 
         virtual void send(const Buffer<> &packet) = 0;
 
         virtual void callback(const Buffer<> &buffer)
         {
-          uint32_t tlen = 0;
-          int type = 0;
-
+          size_t tlen = 0;
+          
           // create a new buffer to handle the received data
-          Buffer<> dv3k_buffer = Buffer<>(new char[512], sizeof(size_t));
-
-          // a typical Dv3K-Header will start with 0x61, the length (2 bytes) and the
-          // type (0x00, 0x00, 0x02) will follow.
-          // if not it maybe following data from the serial line/AMBEServer to feed the
-          // ring buffer...
-          // if not - we have a problem :/
-          if (buffer.data[0] == DV3K_START_BYTE
-                           && buffer.length >= DV3K_HEADER_LEN)
+          t_buffer = Buffer<>(new char[512], sizeof(size_t));
+          memcpy(t_buffer.data + stored_bufferlen, buffer.data, buffer.length);
+          t_buffer.length = buffer.length + stored_bufferlen;
+          
+          while (t_buffer.length >= DV3K_HEADER_LEN)  // more than 4 bytes?
           {
-            // we passed the 0x61, next is the length (2 bytes) of the data
-            tlen = buffer.data[2] + buffer.data[1] * 256;
-            stored_bufferlen = 0;
-
-             // is it only a part of the 160byte audio frame?
-            if (tlen + DV3K_HEADER_LEN > buffer.length)
-            {
-               // store incoming data to a temporary buffer
-              t_buffer = Buffer<>(new char[512], sizeof(size_t));
-              memcpy(t_buffer.data, buffer.data, buffer.length);
-              t_buffer.length = buffer.length;
-              stored_bufferlen = tlen;
-              return;
+            for (size_t a=0; a < t_buffer.length; a++)  
+            {                // seek for 0x61
+              if (t_buffer.data[a] == DV3K_START_BYTE && t_buffer.length-a > DV3K_HEADER_LEN)
+              {
+                tlen = t_buffer.data[a+1]*256 + t_buffer.data[a+2]; // get length of inbuff
+                if (tlen + DV3K_HEADER_LEN <= t_buffer.length)
+                {
+                  Buffer<> dv3k_buffer = Buffer<>(new char[t_buffer.length+1], sizeof(size_t));
+                  memcpy(dv3k_buffer.data, t_buffer.data + a, DV3K_HEADER_LEN + tlen);
+                  dv3k_buffer.length = DV3K_HEADER_LEN + tlen;
+                  handleBuffer(dv3k_buffer);
+                  
+                  size_t pos = a + DV3K_HEADER_LEN + tlen;
+                  stored_bufferlen = t_buffer.length - pos;
+                  memmove(t_buffer.data, t_buffer.data + pos, t_buffer.length - pos);
+                  t_buffer.length -= pos;
+                  continue;
+                }
+              }
             }
-            dv3k_buffer.data = buffer.data;
-            dv3k_buffer.length = buffer.length;
           }
-          else if (stored_bufferlen > 0)
-          {
-            memcpy(t_buffer.data + t_buffer.length, buffer.data, buffer.length);
-            t_buffer.length += buffer.length;
-            t_b = t_buffer.length;
+        } /* callback */
 
-            /* decoded audio frames are 320 bytes long / 324 bytes with header
-               cut after 324 bytes and send them to the
-               packForDecoder + AudioDecoder::sinkWriteSamples */
-            if (t_buffer.length >= stored_bufferlen + DV3K_HEADER_LEN)
-            {
 
-              // prepare a complete frame to be handled by following methods
-              memcpy(dv3k_buffer.data, t_buffer.data, stored_bufferlen + DV3K_HEADER_LEN);
-              dv3k_buffer.length = stored_bufferlen + DV3K_HEADER_LEN;
-
-              // move the rest of the buffer in t_buffer to the begin
-              memmove(t_buffer.data, t_buffer.data + (stored_bufferlen + DV3K_HEADER_LEN),
-                        t_buffer.length - stored_bufferlen - DV3K_HEADER_LEN);
-
-              t_buffer.length = t_b - stored_bufferlen - DV3K_HEADER_LEN;
-              stored_bufferlen = t_buffer.data[2] + t_buffer.data[1] * 256;
-            }
-            else return;
-          }
-          else
-          {
-            // we have a problem, check the serial communication to the DV3K stick if is happen
-            // often!
-            cout << "*** ERROR: DV3k frame to short." << endl;
-            cout << "stored_bufferlen=" << stored_bufferlen << ",buffer.len="
-                 << buffer.length << ", t_buffer.len=" << t_buffer.length
-                 << endl;
-            //init();
-            return;
-          }
-
+        // a typical Dv3K-Header will start with 0x61, the length (2 bytes) and the
+        // type (0x00, 0x00, 0x02) will follow.
+        // if not it maybe following data from the serial line/AMBEServer to feed the
+        // ring buffer...
+        virtual void handleBuffer(const Buffer <> inbuffer)
+        {
           // we have 3 types:
           // 0x00 - Command byte
           // 0x01 - AMBE encoded stream
           // 0x02 - Audiostream
-          type = dv3k_buffer.data[3];
-
+          int type = inbuffer.data[3];
+                  
           /* test the type of incoming frame */
           if (type == DV3K_TYPE_CONTROL)
           {
-            if (m_state == RESET)
+            if (m_state == RESET) 
             {
-              /* reset the device just bto be sure */
+              /* reset the device just to be sure */
               cout << "--- DV3K: Reset OK" << endl;
               prodid();
             }
             else if (m_state == PRODID)
             {
               /* give out product name of DV3k */
-              cout << "--- DV3K (ProdID): "  << dv3k_buffer.data+5 << endl;
-              versid();
+              cout << "--- DV3K (ProdID): "  << inbuffer.data+5 << endl;
+              versid();            
             }
             else if (m_state == VERSID)
             {
               /* give out version of DV3k */
-              cout << "--- DV3K (VersID): " << dv3k_buffer.data+5 << endl;
-              ratep();
+              cout << "--- DV3K (VersID): " << inbuffer.data+5 << endl;
+              ratep();                
             }
             else if (m_state == RATEP)
             {
@@ -436,43 +403,30 @@ namespace {
               m_state = READY;
             }
           }
-          /* test if buffer contains encoded frame (AMBE) */
+          /* test if buffer contains encoded frame (AMBE) to the network */
           else if (type == DV3K_TYPE_AMBE)
           {
-            // prepare encoded Frames to be send to BM network
-            // Buffer<> unpacked = unpackEncoded(dv3k_buffer);
-            // use only the dmr audio frame, not the DV3k-header from dongle
-            memcpy(r_buf + r_bufcnt, buffer.data + DV3K_AMBE_HEADER_IN_LEN, DV3K_AMBE_FRAME_LEN);
-            r_bufcnt += DV3K_AMBE_FRAME_LEN;
-
-            // collect at least 27 bytes since the bm network send and expect 27 chars of
-            // ambe encoded audio, REWIND_DMR_AUDIO_FRAME_LENGTH = 27
-            while (r_bufcnt >= REWIND_DMR_AUDIO_FRAME_LENGTH)
-            {
-              char rt[REWIND_DMR_AUDIO_FRAME_LENGTH];
-              memcpy(rt, r_buf, REWIND_DMR_AUDIO_FRAME_LENGTH);
-
-               // forward encoded samples
-              AudioEncoder::writeEncodedSamples(rt, REWIND_DMR_AUDIO_FRAME_LENGTH);
-              r_bufcnt -= REWIND_DMR_AUDIO_FRAME_LENGTH;
-              memmove(r_buf, r_buf + REWIND_DMR_AUDIO_FRAME_LENGTH, r_bufcnt);
-            }
+            AudioEncoder::writeEncodedSamples(inbuffer.data, inbuffer.length);
           }
-          /* or is a raw 8kHz audio frame */
+          /* or is a raw 8kHz audio frame from Dv3K device*/
           else if (type == DV3K_TYPE_AUDIO)
           {
             // unpack decoded frame
-            Buffer<float> unpacked = unpackDecoded(dv3k_buffer);
+            Buffer<float> unpacked = unpackDecoded(inbuffer);
 
             // pass decoded samples into sink
-            AudioDecoder::sinkWriteSamples(unpacked.data, unpacked.length);
+            if (unpacked.length > 0)
+            {
+              AudioDecoder::sinkWriteSamples(unpacked.data, unpacked.length);
+            }
           }
           else
           {
             /* frame is unknown */
             cout << "--- WARNING: received unkown DV3K type." << endl;
           }
-        }
+        } /* handleBuffer */
+        
 
         /* method is called up to send encoded AMBE frames to BM network */
         virtual int writeSamples(const float *samples, int count)
@@ -495,9 +449,8 @@ namespace {
               // received
               // its working for now, but it can not be the goal
               int32_t w = (int) ( (inbuf[a] + inbuf[a+1]) * 2048.0);
-        //      if (w > 1000 || w < -1000) cout << w << ",";
-              t_data[a] = w >> 8;
-              t_data[a+1] = w & 0x00ff;
+              t_data[a] = (w & 0xff00) >> 8;
+              t_data[a+1] = (w & 0x00ff) >> 0;
             }
 
             ambe_buf.data = t_data;
@@ -512,7 +465,7 @@ namespace {
           }
           inbuf[bufcnt] = '\0';
           return count;
-        }
+        } /* writeSamples */
 
     protected:
       static const char DV3K_TYPE_CONTROL = 0x00;
@@ -581,7 +534,8 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_AMBESERVER_HOST not defined.";
+          cout << "*** ERROR: Parameter AMBE_(ENC|DEC)_AMBESERVER_HOST not defined." << endl;
+          throw;
         }
 
         if((it=options.find("AMBESERVER_PORT"))!=options.end())
@@ -590,10 +544,11 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_AMBESERVER_PORT not defined.";
+          cout << "*** ERROR: Parameter AMBE_(ENC|DEC)_AMBESERVER_PORT not defined." << endl;
+          throw;
         }
         udpInit();
-      }
+      } /* AudioCodecAmbeDv3kAmbeServer */
 
       /* initialize the udp socket */
       void udpInit(void)
@@ -636,21 +591,21 @@ namespace {
       virtual void send(const Buffer<> &packet)
       {
         ambesock->write(ambehost, ambeport, packet.data, packet.length);
-      }
+      } /* send */
 
       ~AudioCodecAmbeDv3kAmbeServer()
       {
         delete dns;
         dns = 0;
         delete ambesock;
-      }
+      } /* ~AudioCodecAmbeDv3kAmbeServer */
 
    protected:
       virtual void callbackUdp(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
       {
         callback(Buffer<>(reinterpret_cast<char *>(buf), count));
-      }
+      } /* callbackUdp */
 
     private:
 
@@ -683,7 +638,8 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_TTY_DEVICE not defined.";
+          cout << "*** ERROR: Parameter AMBE_(ENC|DEC)_TTY_DEVICE not defined." << endl;
+          return;
         }
 
         if((it=options.find("TTY_SPEED"))!=options.end())
@@ -692,12 +648,14 @@ namespace {
         }
         else
         {
-          throw "*** ERROR: Parameter AMBE_(ENC|DEC)_TTY_SPEED not defined.";
+          cout << "*** ERROR: Parameter AMBE_(ENC|DEC)_TTY_SPEED not defined." << endl;
+          return;
         }
 
         if (baudrate != 230400 && baudrate != 460800)
         {
-          throw "*** ERROR: AMBE_(ENC|DEC)_TTY_BAUDRATE must be 230400 or 460800.";
+          cout << "*** ERROR: AMBE_(ENC|DEC)_TTY_BAUDRATE must be 230400 or 460800." << endl;
+          return;
         }
 
         serial = new Serial(device);
@@ -705,22 +663,24 @@ namespace {
         if (!(serial->open(true)))
         {
           cerr << "*** ERROR: Can not open device " << device << endl;
-          throw;
+          return;
         }
         serial->charactersReceived.connect(
              sigc::mem_fun(*this, &AudioCodecAmbeDv3kTty::callbackTty));
         init();
-      }
+      } /* AudioCodecAmbeDv3kTty */
 
-      virtual void send(const Buffer<> &packet) {
+      virtual void send(const Buffer<> &packet) 
+      {
+        //cout << "sending to tty device " << packet.length << endl;
         serial->write(packet.data, packet.length);
-      }
+      } /* send */
 
       ~AudioCodecAmbeDv3kTty()
       {
         serial->close();
         delete serial;
-      }
+      } /* ~AudioCodecAmbeDv3kTty */
 
     protected:
       virtual void callbackTty(const char *buf, int count)
@@ -748,11 +708,17 @@ namespace {
           return new AudioCodecAmbeDv3kTty(options);  
         }
         else
-          throw "unknown Ambe codec TYPE";
+        {
+          cout << "unknown Ambe codec TYPE" << endl;
+          throw;
+        }
       }
       else
-        throw "unspecified Ambe codec TYPE";
-    }
+      {
+        cout << "unspecified Ambe codec TYPE" << endl;
+        throw;
+      }
+    } /* AudioCodecAmbeDv3k::create */
 }
 
 
@@ -786,4 +752,8 @@ AudioCodecAmbe *AudioCodecAmbe::create(const Options &options)
   {
     throw "unspecified Ambe codec TYPE";  
   }
-}
+} /* AudioCodecAmbe::create */
+
+/*
+ * This file has not been truncated
+ */

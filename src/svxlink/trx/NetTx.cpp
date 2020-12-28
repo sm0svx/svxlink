@@ -419,6 +419,7 @@ void NetTx::sendMsg(Msg *msg)
 
 void NetTx::writeEncodedSamples(const void *buf, int size)
 {
+  //cout << "NetUplink::writeEncodedSamples: size=" << size << endl;
   pending_flush = false;
   unflushed_samples = true;
   
