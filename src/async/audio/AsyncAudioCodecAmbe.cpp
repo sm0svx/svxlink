@@ -654,8 +654,12 @@ namespace {
 
         if (baudrate != 230400 && baudrate != 460800)
         {
+<<<<<<< HEAD
           cout << "*** ERROR: AMBE_(ENC|DEC)_TTY_BAUDRATE must be 230400 or 460800." << endl;
           return;
+=======
+          throw "*** ERROR: AMBE_(ENC|DEC)_TTY_SPEED must be 230400 or 460800.";
+>>>>>>> 82d392035a003e84c9c11196f3e98fc970d0a172
         }
 
         serial = new Serial(device);
