@@ -126,6 +126,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+    m_udp_heartbeat_tx_cnt_reset(DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_tx_cnt(0), m_udp_heartbeat_rx_cnt(0),
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
@@ -137,7 +138,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
     m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT)
+    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -362,6 +363,9 @@ bool ReflectorLogic::initialize(void)
   m_node_info["sw"] = "SvxLink";
   m_node_info["swVer"] = SVXLINK_VERSION;
 
+  cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
+      m_udp_heartbeat_tx_cnt_reset);
+
   if (!LogicBase::initialize())
   {
     return false;
@@ -396,6 +400,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       {
         selectTg(tg, "tg_command_activation", true);
         m_tg_local_activity = true;
+        m_use_prio = false;
       }
       else
       {
@@ -406,6 +411,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     {
       selectTg(m_previous_tg, "tg_command_activation", true);
       m_tg_local_activity = true;
+      m_use_prio = false;
     }
   }
   else if (cmd[0] == '2')   // QSY
@@ -429,13 +435,13 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
         }
         else
         {
-          processEvent("tg_qsy_idle");
+          processEvent("tg_qsy_failed");
         }
       }
     }
     else
     {
-      processEvent("tg_qsy_idle");
+      processEvent("tg_qsy_failed");
     }
   }
   else if (cmd == "3")   // Follow last QSY
@@ -444,6 +450,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     {
       selectTg(m_last_qsy, "tg_command_activation", true);
       m_tg_local_activity = true;
+      m_use_prio = false;
     }
     else
     {
@@ -506,6 +513,7 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
   {
     selectTg(tg, "tg_local_activation", !m_mute_first_tx_loc);
     m_tg_local_activity = true;
+    m_use_prio = false;
   }
 } /* ReflectorLogic::remoteReceivedTgUpdated */
 
@@ -648,7 +656,7 @@ void ReflectorLogic::onConnected(void)
   cout << name() << ": Connection established to " << m_con->remoteHost() << ":"
        << m_con->remotePort() << endl;
   sendMsg(MsgProtoVer());
-  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+  m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
@@ -1047,7 +1055,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   {
     selectTg(msg.tg(), "tg_remote_activation", !m_mute_first_tx_rem);
   }
-  else
+  else if (m_use_prio)
   {
     uint32_t selected_tg_prio = 0;
     MonitorTgsSet::const_iterator selected_tg_it =
@@ -1059,8 +1067,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     MonitorTgsSet::const_iterator talker_tg_it =
       m_monitor_tgs.find(MonitorTgEntry(msg.tg()));
     if ((talker_tg_it != m_monitor_tgs.end()) &&
-        (talker_tg_it->prio > selected_tg_prio) &&
-        !m_tg_local_activity)
+        (talker_tg_it->prio > selected_tg_prio))
     {
       std::cout << name() << ": Activity on prioritized TG #"
                 << msg.tg() << ". Switching!" << std::endl;
@@ -1283,7 +1290,7 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
     return;
   }
 
-  m_udp_heartbeat_tx_cnt = UDP_HEARTBEAT_TX_CNT_RESET;
+  m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
 
   if (m_udp_sock == 0)
   {
@@ -1509,6 +1516,7 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
       }
     }
     m_tg_local_activity = true;
+    m_use_prio = false;
     m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 
@@ -1573,7 +1581,15 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
       m_previous_tg = m_selected_tg;
     }
     m_selected_tg = tg;
-    m_tg_local_activity = false;
+    if (tg == 0)
+    {
+      m_tg_local_activity = false;
+      m_use_prio = true;
+    }
+    else
+    {
+      m_tg_local_activity = !m_logic_con_in->isIdle();
+    }
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
   }

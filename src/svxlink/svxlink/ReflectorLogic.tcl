@@ -202,7 +202,7 @@ proc tg_qsy {new_tg old_tg} {
 # currently active or there is no connection to the reflector server.
 #
 proc tg_qsy_failed {} {
-  #puts "### tg_qsy_idle"
+  #puts "### tg_qsy_failed"
   playSilence 100
   playMsg "Core" "qsy"
   playSilence 200

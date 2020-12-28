@@ -68,6 +68,45 @@
   instead of the integrated one. This fix can change the behavior of the voter
   and the extended hangtime feature.
 
+* Added debug mode for the CTCSS detector. Enable by setting CTCSS_DEBUG to 1
+  in a receiver configuration section.
+
+* ReflectorLogic: Now possible to adjust the UDP heartbeat interval using the
+  UDP_HEARTBEAT_INTERVAL configuration variable.
+
+* Now possible to set configuration variables from TCL using the
+  setConfigValue function. This can be used to change certain configuration of
+  SvxLink while it is running. Only some configuration variables support being
+  changed at runtime.
+
+* If a configuration variable is changed in the logic core, or in the main
+  configuration section for a module, the new TCL function config_updated will
+  be called.
+
+* New configuration variable ONLINE that can be used to decide if a logic core
+  should be active or not on program startup. This variable also support being
+  set at runtime.
+
+* Use the new configuration variable COMMAND_PTY to set up a PTY that can be
+  used to send commands to a logic core.
+
+* Filter out CTCSS band for voice output. Interference on CTCSS transmission
+  could be caused by low frequency content in audio clips or incoming audio on
+  Echolink for example.
+
+* Ignore prioritized talkgroups qfter QSY if there have been local node
+  activity prior to the QSY. This fix a problem where a node would switch to a
+  prioritized talkgroup after a QSY to a lower priority talkgroup, if there
+  have been no local activity after the QSY. Priority will be honored again
+  after the node have switched to TG#0.
+
+* Make the audio limiter threshold in the receiver configurable using the
+  LIMITER_THRESH configuration variable in a receiver configuration section.
+
+* Add an audio limiter to the transmitted audio path. The threshold may be set
+  using the LIMITER_THRESH configuration variable in a TX configuration
+  section.
+
 
 
  1.7.0 -- 01 Sep 2019

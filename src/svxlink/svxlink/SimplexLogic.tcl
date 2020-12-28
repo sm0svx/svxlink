@@ -299,6 +299,15 @@ proc logic_online {online} {
 }
 
 
+#
+# Executed when a configuration variable is updated at runtime in the logic
+# core
+#
+proc config_updated {tag value} {
+  Logic::config_updated "$tag" "$value"
+}
+
+
 # end of namespace
 }
 

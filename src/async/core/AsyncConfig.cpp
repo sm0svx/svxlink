@@ -224,8 +224,11 @@ void Config::setValue(const std::string& section, const std::string& tag,
       	      	      const std::string& value)
 {
   Values &values = sections[section];
-  values[tag] = value;
-  valueUpdated(section, tag);
+  if (value != values[tag])
+  {
+    values[tag] = value;
+    valueUpdated(section, tag);
+  }
 } /* Config::setValue */
 
 

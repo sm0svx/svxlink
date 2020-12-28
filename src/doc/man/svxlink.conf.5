@@ -367,6 +367,10 @@ online and 9988770 will set it offline. If a module is active or if the
 ACTIVATE_MODULE_ON_LONG_CMD is used, the command must be prefixed with a star
 to work as expected. The star means "force core command".
 .TP
+.B ONLINE
+Set to 0 to make SvxLink start offline. Settable at runtime. Default is 1
+(online).
+.TP
 .B STATE_PTY
 Using this configuration variable it is possible to specify a path to a UNIX 98
 PTY that SvxLink state events is published to. The published events is in a
@@ -434,6 +438,25 @@ is open.
 .B RGR_SOUND_ALWAYS
 Set to 1 to always send roger sound after squelch close, even when no module is
 active.
+.TP
+.B COMMAND_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that can be used to send commands to a SvxLink logic core. SvxLink will
+create a softlink to the actual slave PTY. For that reason, SvxLink must have
+write permissions in the directory where the softlink should be created.
+Sending commands to the PTY is as simple as doing a
+.B "echo 'THE COMMAND TO EXECUTE' > /path/to/pty"
+after starting SvxLink.
+
+Valid commands:
+.RS
+.IP \(bu 4
+.BR "CFG <section> <tag> <value>" " --"
+Set a configuration variable. Only a few configuration variables support being
+set at runtime. Example: CFG RepeaterLogic ONLINE 0.
+.RE
+
+Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
 .
 .SS Repeater Logic Section
 .
@@ -643,11 +666,6 @@ free-form JSON but the general structure should be kept so that SvxLink and
 the reflector server can fill in dynamic information about the node like signal
 strengths for receivers. Use the default node_info.json as a template. You
 can add more information rather freely but don't change the overall structure.
-.P
-It is also possible to set audio codec parameters using the same configuration
-variables as documented for networked receivers and transmitters. For example,
-to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
-to something lower than 9.
 .TP
 .B MUTE_FIRST_TX_LOC
 Mute the first transmission after selecting a talk group due to local activity.
@@ -676,6 +694,17 @@ transmission to "open up" the local node. This is easy to forget.
 This configuration variable determines after how many seconds a manually added
 temporary talk group monitor will time out. Set to 0 to disable this feature.
 Default is 3600, one hour.
+.TP
+.B UDP_HEARTBEAT_INTERVAL
+The number of seconds between UDP heartbeat messages sent to the reflector
+server. This configuration variable can normally be left at the default value
+but if you get frequent disconnects due to UDP heartbeat timeout it may help to
+lower this value. Default: 15
+.P
+It is also possible to set audio codec parameters using the same configuration
+variables as documented for networked receivers and transmitters. For example,
+to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
+to something lower than 9.
 .
 .SS QSO Recorder Section
 .
@@ -889,6 +918,14 @@ close it when it does not have to be open anymore. This may cause problems in
 some applications or with some sound hardware. Set this variable to 1 to force
 SvxLink to keep the audio device open from application start to exit.
 .TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level for overmodulating stations. For a
+properly calibrated SvxLink node max FM deviation is -6dBFS. A good value to
+start with for this parameter is then -6 but try to lower it further (like -9
+to -12) if it does not affect audio quality negatively.
+.TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
 SERIAL, EVDEV, SIGLEV, PTY, GPIO, HIDRAW or COMBINE.
@@ -975,14 +1012,14 @@ multiple receivers. A normal value could be somewhere in between 20-100ms.
 .B SQL_HANGTIME
 How long, in milliseconds, the squelch will stay open after the detector has
 indicated that it is closed. This configuration variable will affect all
-squelch detector types. 
+squelch detector types. Settable at runtime.
 .TP
 .B SQL_EXTENDED_HANGTIME
 At low signal strengths it can be beneficial to use a longer squelch hangtime
 so that it is less likely for the squelch to close. This configuration variable
 is unset by default. A value of 1000 milliseconds may be a good value to start
 out with. To enable the extended squelch hangtime feature, set up the
-SQL_EXTENDED_HANGTIME_THRESH variable.
+SQL_EXTENDED_HANGTIME_THRESH variable. Settable at runtime.
 .TP
 .B SQL_EXTENDED_HANGTIME_THRESH
 At low signal strengths it can be beneficial to use a longer squelch hangtime
@@ -993,7 +1030,7 @@ below the set threshold, the extended hangtime will be used. Start out with a
 value between 10 to 15. The SQL_EXTENDED_HANGTIME variable is used to set how
 long the extended squelch hangtime should be. Make sure that you have
 calibrated the signal level detector before turning this feature on. Otherwise
-it will not work as expected.
+it will not work as expected. Settable at runtime.
 .TP
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limit, in seconds, for how
@@ -1107,6 +1144,11 @@ passband. Note however that the more narrow you make the
 passband, the less stable the detector will be. You may need to compensate by
 increasing the open/close thresholds or by setting up SQL_DELAY and
 SQL_HANGTIME. Default is 270Hz.
+.TP
+.B CTCSS_DEBUG
+Set this to 1 to enable continuously printing SNR values for the CTCSS tone
+measurements. This is only meant to be activated temporarily while searching
+for a problem or for initial adjustment.
 .TP
 .B SERIAL_PORT
 If SQL_DET is set to SERIAL, this config variable determines which serial port should be
@@ -1966,6 +2008,14 @@ The normal behaviour for SvxLink is to open an audio device when needed and
 close it when it does not have to be open anymore. This may cause problems in
 some applications or with some sound hardware. Set this variable to 1 to force
 SvxLink to keep the audio device open from application start to exit.
+.TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level to not overmodulate the transmitter.
+For a properly calibrated SvxLink node max FM deviation is -6dBFS. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
 .TP
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to

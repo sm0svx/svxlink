@@ -91,7 +91,9 @@ bool Module::initialize(void)
     cfg().getValue(cfgName(), *cfgit, value);
     setEventVariable(var, value);
   }
-  
+
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &Module::cfgUpdated));
+
   return true;
   
 } /* Module::initialize */
@@ -266,6 +268,20 @@ bool Module::squelchIsOpen(void)
 } /* Module::squelchIsOpen */
 
 
+void Module::cfgUpdated(const std::string& section, const std::string& tag)
+{
+  if (section == cfgName())
+  {
+    std::string value;
+    if (cfg().getValue(cfgName(), tag, value))
+    {
+      setEventVariable(name() + "::CFG_" + tag, value);
+      processEvent("config_updated CFG_" + tag + " \"" + value + "\"");
+    }
+  }
+} /* Module::cfgUpdated */
+
+
 bool Module::isWritingMessage(void)
 {
   return logic()->isWritingMessage();
@@ -280,4 +296,6 @@ void Module::moduleTimeout(Timer *t)
 } /* ModuleParrot::moduleTimeout */
 
 
-
+/*
+ * This file has not been truncated
+ */

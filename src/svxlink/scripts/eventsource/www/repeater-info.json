@@ -1,175 +1,61 @@
 {
-  "callsign"   : "PI2NOS",
-  "name"       : "Bovenregionale repeater Hilversum",
-  "input_freq" : 431725000,
-  "output_freq": 430125000,
+  "callsign"   : "MYCALL",
+  "name"       : "My Repeater System",
+  "input_freq" : 432600000,
+  "output_freq": 434600000,
   "ctcss_in"   : 0,
   "ctcss_out"  : 88.5,
-  "echolink_id": 430125,
+  "echolink_id": 123456,
   "uri"        : {
-    "homepage"             : "http://www.hobbyscoop.nl/",
-    "signalEventStream"    : "http://pi2nos.ampr.org:1535/json",
-    "signalWebsocketStream": "ws://pc7x.net:1535/ws/pi2nos",
-    "audiostream"          : "http://icecast.pe1rjv.nl:8000/pi2nos"
+    "homepage"             : "http://www.svxlink.org/",
+    "signalEventStream"    : "http://localhost:1535/json",
+    "signalWebsocketStream": "ws://localhost:1535/ws/pi2nos",
+    "audiostream"          : "http://localhost:8000/mycall"
   },
-  "antennalist"  : ["HilversumH", "HilversumM", "IJsselsteinL", "Zierikzee", "Amsterdam", "Apeldoorn", "Denhaag", "GoesH"],
+  "antennalist"  : ["Dummy"],
   "antenna"      : {
-    "HilversumH": {
-      "name"       : "Hilversum",
-      "description": "4x Sector antenne",
+    "Dummy": {
+      "name"       : "Dummy antenna",
+      "description": "Just a random antenna",
       "location"   : {
         "lon": 5.164326284803233,
         "lat": 52.24249959861779,
         "alt": 196
       }
-    },
-    "HilversumM": {
-      "name"       : "Hilversum",
-      "description": "2x Omnidirectioneel",
-      "location"   : {
-        "lon": 5.164326284803233,
-        "lat": 52.24249959861779,
-        "alt": 160
-      }
-    },
-    "IJsselsteinL"  : {
-      "name"       : "IJsselstein",
-      "description": "Omnidirectioneel",
-      "location": {
-        "lon": 5.053434032571373,
-        "lat": 52.00992614369851,
-        "alt": 220
-      }
-    },
-    "Zierikzee": {
-      "name"       : "Zierikzee",
-      "description": "Omnidirectioneel",
-      "location": {
-        "lon": 3.932027805927121,
-        "lat": 51.64719069114837,
-        "alt": 55
-      }
-    },
-    "Amsterdam": {
-      "name"       : "Amsterdam",
-      "description": "Omnidirectioneel",
-      "location": {
-        "lon": 4.78980338760532,
-        "lat": 52.36033042450219,
-        "alt": 60
-      }
-    },
-    "Apeldoorn": {
-      "name"       : "Apeldoorn",
-      "description": "4x Sector antenne",
-      "location": {
-        "lon": 5.907332571081582,
-        "lat": 52.22466339809532,
-        "alt": 180
-      }
-    },
-    "Denhaag": {
-      "name"       : "den Haag",
-      "description": "Omnidirectioneel",
-      "location": {
-        "lon": 4.324655302855868,
-        "lat": 52.07121436914049,
-        "alt": 140
-      }
-    },
-    "GoesH": {
-      "name"       : "Goes",
-      "description": "4x Sector antenne",
-      "location": {
-        "lon": 3.884167,
-        "lat": 51.501111,
-        "alt": 137
-      }
     }
   },
   "rxlist"         : [
-    "Rx_Hilversum",
-    "Rx_Utrecht",
-    "Rx_Amsterdam",
-    "Rx_Zierikzee",
-    "Rx_Apeldoorn",
-    "Rx_Denhaag",
-    "Rx_PI4AA",
+    "Rx1",
     "Dailyminutes"
   ],
   "rx": {
-    "Rx_Hilversum" : {
-      "name"       : "Hilversum",
-      "description": "Base Station",
-      "make"       : "Spectra",
-      "model"      : "MX800",
-      "infoUrl"    : "http://www.spectraeng.com.au/mx800.shtml",
-      "antenna"    : "HilversumM",
+    "Rx1" : {
+      "name"       : "First RX",
+      "description": "RTL dongle",
+      "make"       : "Unknown",
+      "model"      : "Unknown",
+      "infoUrl"    : "https://rtl-sdr.com/",
+      "antenna"    : "Dummy",
       "type"       : "radio"
-    },
-    "Rx_Utrecht"   : {
-      "name"       : "IJsselstein",
-      "description": "Diversity RX",
-      "antenna"    : "IJsselsteinL",
-      "type"       : "radio"
-    },
-    "Rx_Amsterdam" : {
-      "name"       : "Amsterdam",
-      "description": "Diversity RX",
-      "antenna"    : "Amsterdam",
-      "type"       : "radio"
-    },
-    "Rx_Zierikzee" : {
-      "name"       : "Zierikzee",
-      "description": "Diversity RX",
-      "antenna"    : "Zierikzee",
-      "type"       : "radio"
-    },
-    "Rx_Apeldoorn" : {
-      "name"       : "Apeldoorn",
-      "description": "Diversity RX",
-      "antenna"    : "Apeldoorn",
-      "type"       : "radio"
-    },
-    "Rx_Denhaag"   : {
-      "name"       : "den Haag /A",
-      "description": "Diversity RX",
-      "antenna"    : "Denhaag",
-      "type"       : "radio"
-    },
-    "Rx_PI4AA"     : {
-      "name"       : "PI4AA",
-      "description": "PI4AA, eerste vrijdag van de maand om 21:00 uur.",
-      "type"       : "virtual"
     },
     "Dailyminutes" : {
       "name"       : "Daily Minutes",
-      "description": "Dialy Minutes, dagelijks om 19:00 uur.",
+      "description": "Dialy Minutes, daily at 19:00 hours.",
       "type"       : "virtual"
     }
   },
   "txlist"         : [
-    "Tx_Hilversum19",
-    "Tx_Goes",
+    "Tx1",
     "Tx_Stream"
   ],
   "tx": {
-    "Tx_Hilversum19": {
-      "name"       : "Hilversum",
-      "description": "Base Station",
-      "make"       : "Spectra",
-      "model"      : "MX800",
-      "infoUrl"    : "http://www.spectraeng.com.au/mx800.shtml",
-      "antenna"    : "HilversumH",
-      "type"       : "radio"
-    },
-    "Tx_Goes": {
-      "name"       : "Goes",
-      "description": "Base Station",
-      "make"       : "Spectra",
-      "model"      : "MX800",
-      "infoUrl"    : "http://www.spectraeng.com.au/mx800.shtml",
-      "antenna"    : "GoesH",
+    "Tx1": {
+      "name"       : "Speaker left",
+      "description": "Built in speaker",
+      "make"       : "Unknown",
+      "model"      : "Unknown",
+      "infoUrl"    : "http://www.google.com/",
+      "antenna"    : "Dummy",
       "type"       : "radio"
     },
     "Tx_Stream"    : {
