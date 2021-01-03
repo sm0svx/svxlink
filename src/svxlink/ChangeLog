@@ -101,6 +101,10 @@
   using the LIMITER_THRESH configuration variable in a TX configuration
   section.
 
+* Bugfix: When AUTOACTIVATE_ON_SQL is used in a logic link definition it is
+  supposed to default to a timeout of 30 seconds if TIMEOUT is not set. That
+  did not work though.
+
 
 
  1.7.0 -- 01 Sep 2019

@@ -212,16 +212,8 @@ bool LinkManager::initialize(const Async::Config &cfg,
       init_ok = false;
     }
 
-    cfg.getValue(link.name, "TIMEOUT", link.timeout);
-    link.timeout *= 1000;
-    if (link.timeout > 0)
-    {
-      link.timeout_timer = new Timer(link.timeout);
-      link.timeout_timer->setEnable(false);
-      link.timeout_timer->expired.connect(sigc::bind(
-          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
-          &link));
-    }
+    int timeout = -1;
+    cfg.getValue(link.name, "TIMEOUT", timeout);
 
       // Automatically activate the link, if one (or more) logics
       // has activity, e.g. squelch open.
@@ -232,12 +224,21 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
         // An automatically connected link should be disconnected after a
         // while so the TIMEOUT configuration variable must be set.
-      if (link.timeout == 0)
+      if (timeout <= 0)
       {
         cout << "*** WARNING: missing param " << link.name
              << "/TIMEOUT=??, set to default (30 sec)\n";
-        link.timeout = 30000;
+        timeout = 30;
       }
+    }
+
+    if (timeout > 0)
+    {
+      link.timeout_timer = new Timer(1000 * timeout);
+      link.timeout_timer->setEnable(false);
+      link.timeout_timer->expired.connect(sigc::bind(
+          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
+          &link));
     }
 
     cfg.getValue(link.name, "DEFAULT_ACTIVE", link.default_active);
