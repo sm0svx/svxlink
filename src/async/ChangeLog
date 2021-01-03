@@ -34,6 +34,9 @@
 * The Pty::setLineBuffered method can now be used to enable line buffered mode
   where incoming chars are buffered until a <CR> or <LF> is received.
 
+* Templated function Async::Config::setValue() so that generic types can be
+  used without converting them to string first.
+
 
 
  1.6.0 -- 01 Sep 2019
