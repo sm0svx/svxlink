@@ -1610,6 +1610,7 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
 {
   cout << name() << ": Selecting TG #" << tg << endl;
 
+  m_tg_selection_event.clear();
   if (!event.empty())
   {
     ostringstream os;
