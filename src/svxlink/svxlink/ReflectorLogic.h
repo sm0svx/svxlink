@@ -205,11 +205,11 @@ class ReflectorLogic : public LogicBase
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
 
     static const unsigned DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET  = 15;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 60;
-    static const unsigned TCP_HEARTBEAT_TX_CNT_RESET  = 10;
-    static const unsigned TCP_HEARTBEAT_RX_CNT_RESET  = 15;
-    static const unsigned DEFAULT_TG_SELECT_TIMEOUT   = 30;
-    static const int      DEFAULT_TMP_MONITOR_TIMEOUT = 3600;
+    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET          = 60;
+    static const unsigned TCP_HEARTBEAT_TX_CNT_RESET          = 10;
+    static const unsigned TCP_HEARTBEAT_RX_CNT_RESET          = 15;
+    static const unsigned DEFAULT_TG_SELECT_TIMEOUT           = 30;
+    static const int      DEFAULT_TMP_MONITOR_TIMEOUT         = 3600;
 
     std::string                       m_reflector_host;
     uint16_t                          m_reflector_port;
@@ -255,6 +255,7 @@ class ReflectorLogic : public LogicBase
     Async::Timer                      m_tmp_monitor_timer;
     int                               m_tmp_monitor_timeout;
     bool                              m_use_prio;
+    Async::Timer                      m_qsy_pending_timer;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
@@ -297,6 +298,7 @@ class ReflectorLogic : public LogicBase
     void processEvent(const std::string& event);
     void processTgSelectionEvent(void);
     void checkTmpMonitorTimeout(void);
+    void qsyPendingTimeout(void);
 
 };  /* class ReflectorLogic */
 

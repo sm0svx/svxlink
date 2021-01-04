@@ -651,7 +651,8 @@ priority.
 .B TG_SELECT_TIMEOUT
 The number of seconds after which a selected talk group will be unselected. The
 node will return to talk group 0 (no talk group) and start monitoring the
-configured talk groups again. Default: 30 seconds.
+configured talk groups again. The value must be larger than zero. Default: 30
+seconds.
 .TP
 .B ANNOUNCE_REMOTE_MIN_INTERVAL
 The minimum number of seconds between announcements of the same TG for remote
@@ -700,6 +701,15 @@ The number of seconds between UDP heartbeat messages sent to the reflector
 server. This configuration variable can normally be left at the default value
 but if you get frequent disconnects due to UDP heartbeat timeout it may help to
 lower this value. Default: 15
+.TP
+.B QSY_PENDING_TIMEOUT
+Set to the number of seconds to enable following a QSY request on squelch
+activity. That is, after a remote QSY request, during the configured number of
+seconds, it will be possible to follow a QSY request by just pushing the PTT
+instead of having to use DTMF commands. Note that the timer starts when the QSY
+request is received so the time it takes to play the QSY announcement is also
+included in the timeout time. A good value is within 10 to 15 seconds.
+Default is -1 (disabled).
 .P
 It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
