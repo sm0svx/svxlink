@@ -27,6 +27,10 @@ variable prev_announce_tg 0
 # Change through ANNOUNCE_REMOTE_MIN_INTERVAL config variable.
 variable announce_remote_min_interval 0
 
+# This variable will be set to 1 if the QSY pending feature ("QSY on squelch
+# activity") is active. See configuration variable QSY_PENDING_TIMEOUT.
+variable qsy_pending_active 0
+
 #
 # Checking to see if this is the correct logic core
 #
@@ -196,6 +200,17 @@ proc tg_qsy {new_tg old_tg} {
 
 
 #
+# Executed when a QSY is followed due to squelch open (see QSY_PENDING_TIMEOUT)
+#
+#   tg -- The talk group that has been activated
+#
+proc tg_qsy_on_sql {tg} {
+  playSilence 100
+  playMsg "Core" "qsy"
+}
+
+
+#
 # Executed when a TG QSY request fails
 #
 # A TG QSY may fail for primarily two reasons, either no talk group is
@@ -211,16 +226,36 @@ proc tg_qsy_failed {} {
 
 
 #
+# Executed when a TG QSY request is pending
+#
+# tg -- The talk group requested in the QSY
+#
+proc tg_qsy_pending {tg} {
+  playSilence 100
+  playMsg "Core" "qsy"
+  spellNumber $tg
+  playMsg "Core" "pending"
+}
+
+
+#
 # Executed when a TG QSY request is ignored
 #
 # tg -- The talk group requested in the QSY
 #
 proc tg_qsy_ignored {tg} {
-  #puts "### tg_qsy_ignored"
+  variable qsy_pending_active
   playSilence 100
-  playMsg "Core" "qsy"
-  spellNumber $tg
+  if {!$qsy_pending_active} {
+    playMsg "Core" "qsy"
+    spellNumber $tg
+  }
   playMsg "Core" "ignored"
+  playSilence 500
+  playTone 880 200 50
+  playTone 659 200 50
+  playTone 440 200 50
+  playSilence 100
 }
 
 
@@ -297,6 +332,12 @@ proc tmp_monitor_remove {tg} {
 
 if [info exists ::Logic::CFG_ANNOUNCE_REMOTE_MIN_INTERVAL] {
   set announce_remote_min_interval $::Logic::CFG_ANNOUNCE_REMOTE_MIN_INTERVAL
+}
+
+if [info exists ::Logic::CFG_QSY_PENDING_TIMEOUT] {
+  if {$::Logic::CFG_QSY_PENDING_TIMEOUT > 0} {
+    set qsy_pending_active 1
+  }
 }
 
 

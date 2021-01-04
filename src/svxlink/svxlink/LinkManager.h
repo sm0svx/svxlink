@@ -267,7 +267,8 @@ class LinkManager : public sigc::trackable
      * @param   amp The amplitude of the individual DTMF tones (0-1000)
      * @param   len The length in milliseconds of the digit
      */
-    void playDtmf(LogicBase *src_logic, const std::string& digits, int amp, int len);
+    void playDtmf(LogicBase *src_logic, const std::string& digits, int amp,
+                  int len);
 
   private:
     struct LogicProperties
@@ -280,15 +281,12 @@ class LinkManager : public sigc::trackable
     struct Link
     {
       Link(void)
-        : timeout(0), default_active(false), is_activated(false),
-          timeout_timer(0)
-      {}
+        : default_active(false), is_activated(false), timeout_timer(0) {}
       ~Link(void) { delete timeout_timer; }
 
       std::string  name;
       LogicPropMap logic_props;
       StrSet       auto_activate;
-      unsigned     timeout;
       bool         default_active;
       bool         is_activated;
       Async::Timer *timeout_timer;
