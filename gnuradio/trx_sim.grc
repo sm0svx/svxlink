@@ -260,7 +260,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /tmp/rtl_vx6.raw
+    file: file
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -428,6 +428,23 @@ blocks:
     coordinate: [24, 580.0]
     rotation: 0
     state: enabled
+- name: file
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: File
+    short_id: f
+    type: str
+    value: /dev/zero
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [872, 12.0]
+    rotation: 0
+    state: true
 - name: qtgui_freq_sink_x_0
   id: qtgui_freq_sink_x
   parameters:
@@ -460,7 +477,7 @@ blocks:
     comment: ''
     ctrlpanel: 'False'
     fc: '0'
-    fftsize: '1024'
+    fftsize: '2048'
     freqhalf: 'False'
     grid: 'True'
     gui_hint: ''
@@ -498,7 +515,7 @@ blocks:
     width7: '1'
     width8: '1'
     width9: '1'
-    wintype: firdes.WIN_RECTANGULAR
+    wintype: firdes.WIN_BLACKMAN_hARRIS
     ymax: '10'
     ymin: '-110'
   states:

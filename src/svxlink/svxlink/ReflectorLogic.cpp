@@ -138,7 +138,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
     m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true)
+    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true),
+    m_qsy_pending_timer(-1)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -154,6 +155,8 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
         sigc::mem_fun(*this, &ReflectorLogic::processTgSelectionEvent)));
   m_tmp_monitor_timer.expired.connect(sigc::hide(
         sigc::mem_fun(*this, &ReflectorLogic::checkTmpMonitorTimeout)));
+  m_qsy_pending_timer.expired.connect(sigc::hide(
+        sigc::mem_fun(*this, &ReflectorLogic::qsyPendingTimeout)));
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -293,7 +296,22 @@ bool ReflectorLogic::initialize(void)
   prev_src = 0;
 
   cfg().getValue(name(), "DEFAULT_TG", m_default_tg);
-  cfg().getValue(name(), "TG_SELECT_TIMEOUT", m_tg_select_timeout);
+  if (!cfg().getValue(name(), "TG_SELECT_TIMEOUT", 1U,
+                      std::numeric_limits<unsigned>::max(),
+                      m_tg_select_timeout, true))
+  {
+    std::cout << "*** ERROR[" << name()
+              << "]: Illegal value (" << m_tg_select_timeout
+              << ") for TG_SELECT_TIMEOUT" << std::endl;
+    return false;
+  }
+
+  int qsy_pending_timeout = -1;
+  if (cfg().getValue(name(), "QSY_PENDING_TIMEOUT", qsy_pending_timeout) &&
+      (qsy_pending_timeout > 0))
+  {
+    m_qsy_pending_timer.setTimeout(1000 * qsy_pending_timeout);
+  }
 
   m_event_handler = new EventHandler(event_handler_str, name());
   if (LinkManager::hasInstance())
@@ -1116,10 +1134,24 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
   else
   {
     m_last_qsy = msg.tg();
-    cout << name()
-         << ": Server QSY request ignored. No local activity." << endl;
+    selectTg(0, "", false);
     std::ostringstream os;
-    os << "tg_qsy_ignored " << msg.tg();
+    if (m_qsy_pending_timer.timeout() > 0)
+    {
+      cout << name() << ": Server QSY request pending" << endl;
+      os << "tg_qsy_pending " << msg.tg();
+      m_qsy_pending_timer.setEnable(true);
+      m_use_prio = false;
+      m_tg_select_timeout_cnt = 1 + m_qsy_pending_timer.timeout() / 1000;
+    }
+    else
+    {
+      cout << name()
+           << ": Server QSY request ignored due to no local activity" << endl;
+      os << "tg_qsy_ignored " << msg.tg();
+      m_use_prio = true;
+      m_tg_select_timeout_cnt = 0;
+    }
     processEvent(os.str());
   }
 } /* ReflectorLogic::handleMsgRequestQsy */
@@ -1505,6 +1537,16 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     {
       m_logic_con_in_valve->setOpen(true);
     }
+    if (m_qsy_pending_timer.isEnabled())
+    {
+      std::ostringstream os;
+      os << "tg_qsy_on_sql " << m_last_qsy;
+      processEvent(os.str());
+      selectTg(m_last_qsy, "", true);
+      m_qsy_pending_timer.setEnable(false);
+      m_tg_local_activity = true;
+      m_use_prio = false;
+    }
   }
   else
   {
@@ -1515,6 +1557,7 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
         selectTg(m_default_tg, "tg_default_activation", !m_mute_first_tx_loc);
       }
     }
+    m_qsy_pending_timer.reset();
     m_tg_local_activity = true;
     m_use_prio = false;
     m_tg_select_timeout_cnt = m_tg_select_timeout;
@@ -1567,11 +1610,15 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
 {
   cout << name() << ": Selecting TG #" << tg << endl;
 
-  ostringstream os;
-  os << event << " " << tg << " " << m_selected_tg;
-  m_tg_selection_event = os.str();
-  m_report_tg_timer.reset();
-  m_report_tg_timer.setEnable(true);
+  m_tg_selection_event.clear();
+  if (!event.empty())
+  {
+    ostringstream os;
+    os << event << " " << tg << " " << m_selected_tg;
+    m_tg_selection_event = os.str();
+    m_report_tg_timer.reset();
+    m_report_tg_timer.setEnable(true);
+  }
 
   if (tg != m_selected_tg)
   {
@@ -1589,6 +1636,7 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
     else
     {
       m_tg_local_activity = !m_logic_con_in->isIdle();
+      m_qsy_pending_timer.setEnable(false);
     }
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
@@ -1651,6 +1699,19 @@ void ReflectorLogic::checkTmpMonitorTimeout(void)
             m_monitor_tgs.begin(), m_monitor_tgs.end())));
   }
 } /* ReflectorLogic::checkTmpMonitorTimeout */
+
+
+void ReflectorLogic::qsyPendingTimeout(void)
+{
+  m_qsy_pending_timer.setEnable(false);
+  m_use_prio = true;
+  m_tg_select_timeout_cnt = 0;
+  cout << name()
+       << ": Server QSY request ignored due to no local activity" << endl;
+  std::ostringstream os;
+  os << "tg_qsy_ignored " << m_last_qsy;
+  processEvent(os.str());
+} /* ReflectorLogic::qsyPendingTimeout */
 
 
 /*

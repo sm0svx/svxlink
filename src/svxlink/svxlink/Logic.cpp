@@ -613,7 +613,7 @@ bool Logic::initialize(void)
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
   event_handler->setConfigValue.connect(
-          sigc::mem_fun(cfg(), &Async::Config::setValue));
+          sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
