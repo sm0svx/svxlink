@@ -3,5 +3,6 @@ NAME=PropagationMonitor
 PLUGIN_NAME=Tcl
 ID=10
 TIMEOUT=10
+#MUTE_LOGIC_LINKING=1
 SPOOL_DIR=@SVX_SPOOL_INSTALL_DIR@/propagation_monitor
 

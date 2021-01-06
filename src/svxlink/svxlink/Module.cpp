@@ -49,7 +49,7 @@ using namespace Async;
 Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
   : m_dl_handle(dl_handle), m_logic(logic), m_id(-1), m_name(cfg_name),
     m_is_transmitting(false), m_is_active(false), m_cfg_name(cfg_name),
-    m_tmo_timer(0)
+    m_tmo_timer(0), m_mute_linking(true)
 {
   
 } /* Module::Module */
@@ -81,7 +81,9 @@ bool Module::initialize(void)
     m_tmo_timer->setEnable(false);
     m_tmo_timer->expired.connect(mem_fun(*this, &Module::moduleTimeout));
   }
-  
+
+  cfg().getValue(cfgName(), "MUTE_LOGIC_LINKING", m_mute_linking);
+
   list<string> vars = cfg().listSection(cfgName());
   list<string>::const_iterator cfgit;
   for (cfgit=vars.begin(); cfgit!=vars.end(); ++cfgit)
@@ -114,7 +116,8 @@ void Module::activate(void)
 
   m_logic_idle_con = logic()->idleStateChanged.connect(
       mem_fun(*this, &Module::logicIdleStateChanged));
-  
+
+  m_logic->setMuteLinking(m_mute_linking);
   setIdle(logic()->isIdle());
   activateInit();
 }
@@ -135,6 +138,7 @@ void Module::deactivate(void)
   m_is_active = false;
 
   setIdle(true);
+  m_logic->setMuteLinking(false);
 }
 
 

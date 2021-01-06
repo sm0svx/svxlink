@@ -111,6 +111,10 @@
 * ReflectorLogic: Use the QSY_PENDING_TIMEOUT configuration variable to enable
   following a just ignored QSY request on squelch open.
 
+* By default, when activating a module in a logic core, all logic linking
+  audio will be muted. This behavior can be changed by using the
+  MUTE_LOGIC_LINKING configuration variable in the module configuration.
+
 
 
  1.7.0 -- 01 Sep 2019
