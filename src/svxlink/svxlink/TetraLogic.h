@@ -340,6 +340,7 @@ class TetraLogic : public Logic
     SquelchTetra* tetra_modem_sql;
     float own_lat;
     float own_lon;
+    std::string endCmd;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);

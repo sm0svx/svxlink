@@ -188,7 +188,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
   peiBreakCommandTimer(3000, Timer::TYPE_ONESHOT, false),
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
-  own_lon(0.0)
+  own_lon(0.0), endCmd("")
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this, &TetraLogic::onPeiActivityTimeout));
@@ -198,14 +198,18 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
 
 TetraLogic::~TetraLogic(void)
 {
-  delete pei;
-  pei = 0;
+  if (endCmd.length()>0)
+  {
+    sendPei(endCmd);
+  }
   peiComTimer = 0;
   peiActivityTimer = 0;
   peiBreakCommandTimer = 0;
   delete call;
   delete tetra_modem_sql;
   tetra_modem_sql = 0;
+  delete pei;
+  pei = 0;
 } /* TetraLogic::~TetraLogic */
 
 
@@ -512,6 +516,8 @@ bool TetraLogic::initialize(void)
   }
   SvxLink::splitStr(initcmds, initstr, ";");
 
+  cfg().getValue(name(), "END_CMD", endCmd);
+  
   m_cmds = initcmds;
 
   pei = new Serial(port);

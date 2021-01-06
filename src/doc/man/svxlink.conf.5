@@ -876,6 +876,15 @@ To give out more information for error detection. Valid values are 1 or 0;
 Example:
 DEBUG=1
 .TP
+.B END_CMD
+The command that is sent last to the MS shortly before SvxLink is terminated. 
+It is intended for the case that the MS is in TX and SvxLink is stopped 
+manually. In this case dsd MS would remain in TX mode, which must be 
+prevented. However, it is not guaranteed that the execution will work if 
+SvxLink crashes due to a segmentation fault.
+Example:
+END_CMD=ATH
+.TP
 .
 .SS QSO Recorder Section
 .
