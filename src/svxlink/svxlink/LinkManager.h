@@ -8,7 +8,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -238,6 +238,17 @@ class LinkManager : public sigc::trackable
     LogicBase *currentTalkerFor(const std::string& logic_name);
 
     /**
+     * @brief   Set mute state for the given logic core
+     * @param   logic The logic to operate on
+     * @param   mute Set to \em true to mute the given logic core
+     *
+     * Muting a logic core is used to temporarily disconnect it from the
+     * switching matrix. No audio and no events will be passed to/from the
+     * muted logic core.
+     */
+    void setLogicMute(const LogicBase *logic, bool mute);
+
+    /**
      * @brief   Play the given file
      * @param   src_logic The initiating logic, which will not play the file
      * @param   path The full path to the file to play
@@ -309,10 +320,12 @@ class LinkManager : public sigc::trackable
     typedef std::map<std::string, SinkInfo>   SinkMap;
     struct LogicInfo
     {
+      LogicInfo(LogicBase* logic) : logic(logic), is_muted(false) {}
       LogicBase         *logic;
       sigc::connection  idle_state_changed_con;
       sigc::connection  received_tg_update_con;
       sigc::connection  received_publish_state_event_con;
+      bool              is_muted;
     };
     typedef std::map<std::string, LogicInfo> LogicMap;
 
@@ -331,6 +344,7 @@ class LinkManager : public sigc::trackable
 
     std::vector<std::string> getLinkNames(const std::string& logicname);
     void wantedConnections(LogicConSet &want);
+    void updateConnections(void);
     void activateLink(Link &link);
     void deactivateLink(Link &link);
     void sendCmdToLogics(Link &link, LogicBase *src_logic,

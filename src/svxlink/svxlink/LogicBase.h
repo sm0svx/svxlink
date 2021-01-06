@@ -173,6 +173,19 @@ class LogicBase : public sigc::trackable
     bool isIdle(void) const { return m_is_idle; }
 
     /**
+     * @brief   Set state for logic linking muting
+     * @param   mute Set to \em true to mute this logic core
+     *
+     * Muting a logic core is about the same as disconnecting it from the logic
+     * linking layer. Muting is used when needing to temporarity block
+     * interaction with other logic cores.
+     */
+    void setMuteLinking(bool mute)
+    {
+      LinkManager::instance()->setLogicMute(this, mute);
+    }
+
+    /**
      * @brief 	Get the audio pipe sink used for writing audio into this logic
      * @return	Returns an audio pipe sink object
      */
