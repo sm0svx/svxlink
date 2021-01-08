@@ -208,6 +208,7 @@ namespace {
           Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
           m_state = RESET;
           send(init_packet);
+           t_buffer = Buffer<>(new char[512], sizeof(size_t));
         } /* void */
 
         virtual void prodid()
@@ -247,12 +248,11 @@ namespace {
 
 
         /* method to handle prepared encoded Data from network and them to AudioSink */
-        virtual Buffer<float> unpackDecoded(const Buffer<> &buffer)
+        virtual void unpackDecoded(const Buffer<> &buffer, Buffer<float> &out)
         {
           unsigned char *s8_samples = reinterpret_cast<unsigned char *>(buffer.data);
-          int count = buffer.length / 2;
-          float t[count];
           size_t b = 0;
+          float t[buffer.length];
 
           // starts with 4 to omit the DV3K-HEADER
           for (int a=DV3K_AMBE_HEADER_IN_LEN; a < (int)buffer.length-2; a+=2)
@@ -263,8 +263,8 @@ namespace {
             // by analyzing the decoded audio level
             t[b++] = (float) (w / 16384.0);
           }
-          Buffer<float> audiobuf(t, b-1);
-          return audiobuf;
+          out.data = t;
+          out.length = b-1;
         } /* unpackDecoded */
 
         /* method to prepare incoming Audio frames from local RX to be encoded later */
@@ -300,7 +300,7 @@ namespace {
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-          //const char DV3K_AMBE_HEADERFRAME[] = 
+          // const char DV3K_AMBE_HEADERFRAME[] = 
           // {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
           const int DV3K_AMBE_HEADERFRAME_LEN = 6;
           
@@ -333,11 +333,12 @@ namespace {
           size_t tlen = 0;
           
           // create a new buffer to handle the received data
-          t_buffer = Buffer<>(new char[512], sizeof(size_t));
+          // t_buffer = Buffer<>(new char[512], sizeof(size_t));
           memcpy(t_buffer.data + stored_bufferlen, buffer.data, buffer.length);
           t_buffer.length = buffer.length + stored_bufferlen;
+          stored_bufferlen = t_buffer.length;
           
-          while (t_buffer.length >= DV3K_HEADER_LEN)  // more than 4 bytes?
+          while(t_buffer.length >= DV3K_HEADER_LEN)
           {
             for (size_t a=0; a < t_buffer.length; a++)  
             {                // seek for 0x61
@@ -350,12 +351,16 @@ namespace {
                   memcpy(dv3k_buffer.data, t_buffer.data + a, DV3K_HEADER_LEN + tlen);
                   dv3k_buffer.length = DV3K_HEADER_LEN + tlen;
                   handleBuffer(dv3k_buffer);
-                  
+                
                   size_t pos = a + DV3K_HEADER_LEN + tlen;
-                  stored_bufferlen = t_buffer.length - pos;
                   memmove(t_buffer.data, t_buffer.data + pos, t_buffer.length - pos);
                   t_buffer.length -= pos;
-                  continue;
+                  stored_bufferlen = t_buffer.length;
+                  break;
+                }
+                else
+                {
+                  return;
                 }
               }
             }
@@ -412,7 +417,8 @@ namespace {
           else if (type == DV3K_TYPE_AUDIO)
           {
             // unpack decoded frame
-            Buffer<float> unpacked = unpackDecoded(inbuffer);
+            Buffer<float> unpacked;
+            unpackDecoded(inbuffer, unpacked);
 
             // pass decoded samples into sink
             if (unpacked.length > 0)
@@ -448,10 +454,12 @@ namespace {
               // created that the audio stream from linked logics could be
               // received
               // its working for now, but it can not be the goal
-              int32_t w = (int) ( (inbuf[a] + inbuf[a+1]) * 2048.0);
+              int32_t w = (int) ((inbuf[a] + inbuf[a+1]) * 32768.0);
+              // printf("%d ", w);
               t_data[a] = (w & 0xff00) >> 8;
               t_data[a+1] = (w & 0x00ff) >> 0;
             }
+            //cout << endl;
 
             ambe_buf.data = t_data;
             ambe_buf.length = DV3K_AUDIO_LEN;
@@ -654,12 +662,8 @@ namespace {
 
         if (baudrate != 230400 && baudrate != 460800)
         {
-<<<<<<< HEAD
           cout << "*** ERROR: AMBE_(ENC|DEC)_TTY_BAUDRATE must be 230400 or 460800." << endl;
           return;
-=======
-          throw "*** ERROR: AMBE_(ENC|DEC)_TTY_SPEED must be 230400 or 460800.";
->>>>>>> 82d392035a003e84c9c11196f3e98fc970d0a172
         }
 
         serial = new Serial(device);
