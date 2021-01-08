@@ -303,8 +303,11 @@ void Squelch::cfgUpdated(Async::Config& cfg, const std::string& section,
 
 void Squelch::setSignalDetectedP(bool is_detected)
 {
-  //std::cout << "### Squelch::setSignalDetectedP: is_detected="
-  //          << is_detected << std::endl;
+  //std::cout << "### Squelch::setSignalDetectedP["
+  //          << m_name << "]: is_detected=" << is_detected
+  //          << " m_delay=" << m_delay
+  //          << " m_delay_left=" << m_delay_left
+  //          << std::endl;
 
   m_signal_detected = is_detected;
 
@@ -351,6 +354,9 @@ void Squelch::setSignalDetectedP(bool is_detected)
 
 void Squelch::setOpen(bool is_open)
 {
+  //std::cout << "### Squelch::setOpen["
+  //          << m_name << "]: is_open=" << is_open << std::endl;
+
   if (is_open == m_open)
   {
     return;
@@ -366,6 +372,7 @@ void Squelch::setOpen(bool is_open)
   }
 
   m_open = is_open;
+  m_last_info = m_signal_detected_info;
   squelchOpen(is_open);
 } /* Squelch::setOpen */
 

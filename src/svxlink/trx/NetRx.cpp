@@ -258,7 +258,7 @@ void NetRx::setMuteState(Rx::MuteState new_mute_state)
           sql_is_open = false;
           if (!unflushed_samples)
           {
-            setSquelchState(false);
+            setSquelchState(false, "MUTED");
           }
           break;
 
@@ -309,11 +309,12 @@ void NetRx::reset(void)
   
   if (unflushed_samples)
   {
+    last_sql_activity_info = "MUTED";
     audio_dec->flushEncodedSamples();
   }
   else
   {
-    setSquelchState(false);
+    setSquelchState(false, "MUTED");
   }
 
   MsgReset *msg = new MsgReset;
@@ -422,11 +423,12 @@ void NetRx::connectionReady(bool is_ready)
     sql_is_open = false;
     if (unflushed_samples)
     {
+      last_sql_activity_info = "DISCONNECTED";
       audio_dec->flushEncodedSamples();
     }
     else
     {
-      setSquelchState(false);
+      setSquelchState(false, "DISCONNECTED");
     }
   }
 } /* NetRx::connectionReady */
@@ -444,9 +446,10 @@ void NetRx::handleMsg(Msg *msg)
         last_signal_strength = sql_msg->signalStrength();
         last_sql_rx_id = sql_msg->sqlRxId();
         sql_is_open = sql_msg->isOpen();
+        last_sql_activity_info = sql_msg->sqlActivityInfo();
         if (sql_msg->isOpen())
         {
-          setSquelchState(true);
+          setSquelchState(true, last_sql_activity_info);
         }
         else
         {
@@ -456,7 +459,7 @@ void NetRx::handleMsg(Msg *msg)
           }
           else
           {
-            setSquelchState(false);
+            setSquelchState(false, last_sql_activity_info);
           }
         }
       }
@@ -539,7 +542,7 @@ void NetRx::allEncodedSamplesFlushed(void)
   unflushed_samples = false;
   if (!sql_is_open)
   {
-    setSquelchState(false);
+    setSquelchState(false, last_sql_activity_info);
   }
 } /* NetRx::allEncodedSamplesFlushed */
 

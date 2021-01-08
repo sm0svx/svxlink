@@ -197,6 +197,11 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     float signalStrength(void) const { return rx->signalStrength(); }
 
+    const std::string& squelchActivityInfo(void) const
+    {
+      return rx->squelchActivityInfo();
+    }
+
     void setMuteState(Rx::MuteState new_mute_state)
     {
       mute_state = new_mute_state;
@@ -377,7 +382,7 @@ Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
     sm(Macho::State<Top>(this)), is_processing_event(false), command_pty(0)
 {
-  Rx::setVerbose(false);
+  //Rx::setVerbose(false);
 } /* Voter::Voter */
 
 
@@ -840,6 +845,7 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
   }
 } /* Voter::Top::satSignalLevelUpdated */
 
+
 void Voter::Top::runTask(sigc::slot<void> task)
 {
   box().task_list.push_back(task);
@@ -1082,15 +1088,15 @@ void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
 
 void Voter::SquelchOpen::entry(void)
 {
+  std::ostringstream ss;
   if (voter().m_verbose)
   {
-    SatRx *srx = activeSrx();
-    cout << voter().name() << ": The squelch is OPEN"
-	 << " (" << srx->name() << "=" << srx->signalStrength() << ")"
-	 << endl;
+    const SatRx *srx = activeSrx();
+    ss << srx->name() << "[" << srx->squelchActivityInfo() << "]="
+       << srx->signalStrength();
   }
-  
-  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true));
+
+  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true, ss.str()));
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));
   runTask(mem_fun(voter(), &Voter::printSquelchState));
 } /* Voter::SquelchOpen::entry */
@@ -1104,15 +1110,15 @@ void Voter::SquelchOpen::init(void)
 
 void Voter::SquelchOpen::exit(void)
 {
+  std::ostringstream ss;
   if (voter().m_verbose)
   {
-    SatRx *srx = activeSrx();
-    cout << voter().name() << ": The squelch is CLOSED"
-	 << " (" << srx->name() << "=" << srx->signalStrength() << ")"
-	 << endl;
+    const SatRx *srx = activeSrx();
+    ss << srx->name() << "[" << srx->squelchActivityInfo() << "]="
+       << srx->signalStrength();
   }
-  
-  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false));
+
+  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false, ss.str()));
   runTask(mem_fun(voter(), &Voter::printSquelchState));
 } /* Voter::SquelchOpen::exit */
 

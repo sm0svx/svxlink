@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <iterator>
+#include <set>
 
 
 /****************************************************************************
@@ -77,6 +78,7 @@ using namespace std;
 class SquelchCombine::Node
 {
   public:
+    typedef std::set<std::string> SquelchStates;
     Node(const std::string& name) : m_name(name) {}
     virtual ~Node(void) {}
     const std::string name(void) const { return m_name; }
@@ -91,6 +93,8 @@ class SquelchCombine::Node
     virtual void reset(void) = 0;
     virtual void writeSamples(const float *samples, int count) = 0;
     virtual bool isOpen(void) const = 0;
+    virtual std::string activityInfo(void) const = 0;
+    virtual SquelchStates& squelchStates(SquelchStates& states) = 0;
     sigc::signal<void, bool> squelchOpen;
 
   private:
@@ -130,7 +134,25 @@ class SquelchCombine::LeafNode : public SquelchCombine::Node
       return true;
     }
 
-    virtual bool isOpen(void) { return m_squelch->isOpen(); }
+    virtual bool isOpen(void) const { return m_squelch->isOpen(); }
+
+    virtual std::string activityInfo(void) const
+    {
+      std::string act_info = name();
+      if (m_squelch->isOpen())
+      {
+        act_info += "*";
+      }
+      if (!m_squelch->activityInfo().empty())
+      {
+        if (!m_squelch->isOpen())
+        {
+          act_info += "=";
+        }
+        act_info += m_squelch->activityInfo();
+      }
+      return act_info;
+    }
 
     virtual void setStartDelay(int delay) { m_squelch->setStartDelay(delay); }
 
@@ -171,7 +193,11 @@ class SquelchCombine::LeafNode : public SquelchCombine::Node
       } while (pos < count);
     }
 
-    virtual bool isOpen(void) const { return m_squelch->isOpen(); }
+    virtual SquelchStates& squelchStates(SquelchStates& states)
+    {
+      states.emplace(activityInfo());
+      return states;
+    }
 
   private:
     Squelch* m_squelch = nullptr;
@@ -243,6 +269,16 @@ class SquelchCombine::UnaryOpNode : public SquelchCombine::Node
     virtual void writeSamples(const float *samples, int count)
     {
       m_node->writeSamples(samples, count);
+    }
+
+    virtual SquelchStates& squelchStates(SquelchStates& states)
+    {
+      return m_node->squelchStates(states);
+    }
+
+    virtual std::string activityInfo(void) const
+    {
+      return name() + "(" + m_node->activityInfo() + ")";
     }
 
   protected:
@@ -342,6 +378,19 @@ class SquelchCombine::BinaryOpNode : public SquelchCombine::Node
     void onSquelchOpen(bool is_open)
     {
       squelchOpen(isOpen());
+    }
+
+    virtual SquelchStates& squelchStates(SquelchStates& states)
+    {
+      m_left->squelchStates(states);
+      m_right->squelchStates(states);
+      return states;
+    }
+
+    virtual std::string activityInfo(void) const
+    {
+      return name() + "(" + m_left->activityInfo() + ", " +
+             m_right->activityInfo() + ")";
     }
 
   protected:
@@ -690,7 +739,19 @@ void SquelchCombine::onSquelchOpen(bool is_open)
   if (m_is_open != is_open)
   {
     m_is_open = is_open;
-    squelchOpen(is_open);
+    std::string info;
+    info.reserve(127);
+    SquelchCombine::Node::SquelchStates states;
+    for (const auto& state : m_comb->squelchStates(states))
+    {
+      if (!info.empty())
+      {
+        info += " ";
+      }
+      info += state;
+    }
+    setSignalDetected(is_open, info);
+    //setSignalDetected(is_open, m_comb->activityInfo());
   }
 } /* SquelchCombine::onSquelchOpen */
 

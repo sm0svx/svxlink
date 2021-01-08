@@ -737,9 +737,9 @@ void NetUplink::squelchOpen(bool is_open)
       mute_tx_timer->setEnable(true);
     }
   }
-  
+
   MsgSquelch *msg = new MsgSquelch(is_open, rx->signalStrength(),
-      	      	      	      	   rx->sqlRxId());
+                                   rx->sqlRxId(), rx->squelchActivityInfo());
   sendMsg(msg);
 } /* NetUplink::squelchOpen */
 

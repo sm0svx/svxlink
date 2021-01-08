@@ -173,7 +173,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 7;
+    static const uint16_t MINOR = 8;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -510,18 +510,36 @@ class MsgSquelch : public Msg
 {
   public:
     static const unsigned TYPE = 250;
-    MsgSquelch(bool is_open, float signal_strength, char sql_rx_id)
+    static const int MAX_ACTIVITY_INFO_LEN = 127;
+    MsgSquelch(bool is_open, float signal_strength, char sql_rx_id,
+               const std::string& sql_activity_info)
       : Msg(TYPE, sizeof(MsgSquelch)), m_is_open(is_open),
-      	m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id) {}
+        m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id)
+    {
+      std::memset(m_sql_activity_info, 0, MAX_ACTIVITY_INFO_LEN+1);
+      std::strncpy(m_sql_activity_info, sql_activity_info.data(),
+          MAX_ACTIVITY_INFO_LEN);
+    }
     bool isOpen(void) const { return m_is_open; }
     float signalStrength(void) const { return m_signal_strength; }
     char sqlRxId(void) const { return m_sql_rx_id; }
-  
+    std::string sqlActivityInfo(void) const
+    {
+      const char *end = reinterpret_cast<const char*>(
+          std::memchr(m_sql_activity_info, 0, MAX_ACTIVITY_INFO_LEN));
+      if (end == NULL)
+      {
+        end = m_sql_activity_info+MAX_ACTIVITY_INFO_LEN;
+      }
+      return std::string(m_sql_activity_info, end);
+    }
+
   private:
     bool  m_is_open;
     float m_signal_strength;
     char  m_sql_rx_id;
-    
+    char  m_sql_activity_info[MAX_ACTIVITY_INFO_LEN+1];
+
 }; /* MsgSquelch */
 
 
