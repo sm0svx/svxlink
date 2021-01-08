@@ -218,16 +218,8 @@ class SquelchCtcss : public Squelch
         float ctcss_fq = *it;
 
         ToneDetector *det = new ToneDetector(ctcss_fq, 8.0f);
-        if (ctcss_fqs.size() == 1)
-        {
-          det->activated.connect(
-              sigc::mem_fun(*this, &SquelchCtcss::setSignalDetected));
-        }
-        else
-        {
-          det->activated.connect(sigc::bind(
-              sigc::mem_fun(*this, &SquelchCtcss::checkSignalDetected), det));
-        }
+        det->activated.connect(sigc::bind(
+            sigc::mem_fun(*this, &SquelchCtcss::checkSignalDetected), det));
         if (it == ctcss_fqs.begin())
         {
           det->snrUpdated.connect(snrUpdated.make_slot());
@@ -393,12 +385,15 @@ class SquelchCtcss : public Squelch
 
     void checkSignalDetected(bool is_detected, ToneDetector *det)
     {
+      std::ostringstream ss;
+      ss << std::setprecision(1) << std::fixed << det->toneFq()
+         << ":" << static_cast<int>(std::roundf(det->lastSnr()));
       if (is_detected)
       {
         if (m_active_det == 0)
         {
           m_active_det = det;
-          setSignalDetected(true);
+          setSignalDetected(true, ss.str());
         }
       }
       else
@@ -406,7 +401,7 @@ class SquelchCtcss : public Squelch
         if (m_active_det == det)
         {
           m_active_det = 0;
-          setSignalDetected(false);
+          setSignalDetected(false, ss.str());
         }
       }
     }

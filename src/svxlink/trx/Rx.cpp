@@ -313,21 +313,27 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
  *
  ****************************************************************************/
 
-void Rx::setSquelchState(bool is_open)
+void Rx::setSquelchState(bool is_open, const std::string& info)
 {
   if (is_open == m_sql_open)
   {
     return;
   }
-  
+
   if (m_verbose)
   {
-    cout << m_name << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
-         << " (" << signalStrength() << ")" << endl;
+    std::cout << m_name << ": The squelch is "
+              << (is_open ? "OPEN" : "CLOSED");
+    if (!info.empty())
+    {
+      std::cout << " (" << info << ")";
+    }
+    std::cout << std::endl;
   }
   m_sql_open = is_open;
+  m_sql_info = info;
   squelchOpen(is_open);
-  
+
   if (m_sql_tmo_timer != 0)
   {
     m_sql_tmo_timer->setEnable(is_open);
@@ -346,7 +352,7 @@ void Rx::sqlTimeout(Timer *t)
 {
   cerr << "*** WARNING: The squelch was open for too long for receiver "
        << name() << ". Forcing it closed.\n";
-  setSquelchState(false);
+  setSquelchState(false, "TIMEOUT");
 } /* Rx::sqlTimeout */
 
 

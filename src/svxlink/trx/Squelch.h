@@ -262,7 +262,17 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      * @brief 	Get the state of the squelch
      * @return	Return \em true if the squelch is open, or else \em false
      */
-    virtual bool isOpen(void) const { return m_open || (m_hangtime_left > 0); }
+    virtual bool isOpen(void) const { return m_open; }
+
+    /**
+     * @brief   Get the last squelch activity info
+     * @return  Returns the last squelch activity info
+     *
+     * The info is typically used when printing the squelch open/close message
+     * as a bit of extra information as to what caused the squelch activity. It
+     * should be a short string.
+     */
+    const std::string& activityInfo(void) const { return m_last_info; }
 
     /**
      * @brief 	A signal that indicates when the squelch state changes
@@ -296,12 +306,19 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Used by the actual squelch detector to indicate signal presence
      * @param 	is_detected Set to \em true if a signal is detected
+     * @param   info Info about the squelch open/close
+     *
+     * A squelch implementation should use this function to indicate if the
+     * squelch is opened or closed. The info parameter is used when printing
+     * the squelch open/close message as a bit of extra information as to what
+     * caused the squelch activity. It should be a short string.
      */
-    inline void setSignalDetected(bool is_detected)
+    inline void setSignalDetected(bool is_detected, const std::string& info="")
     {
       if (m_signal_detected != is_detected)
       {
-	setSignalDetectedP(is_detected);
+        m_signal_detected_info = info;
+        setSignalDetectedP(is_detected);
       }
     }
 
@@ -336,6 +353,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     int         m_timeout_left;
     bool	m_signal_detected;
     bool	m_signal_detected_filtered;
+    std::string m_signal_detected_info;
+    std::string m_last_info;
 
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);

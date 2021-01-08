@@ -422,6 +422,32 @@ class Config
       	      	  const std::string& value);
 
     /**
+     * @brief   Set the value of a configuration variable (generic type)
+     * @param   section   The name of the section where the configuration
+     *                    variable is located
+     * @param   tag       The name of the configuration variable to set.
+     * @param   value     The value to set
+     *
+     * This function is used to set the value of a configuration variable.
+     * The type of the value may be any type that support streaming to string.
+     * If the given configuration section or variable does not exist, it
+     * is created.
+     * Note that this function will not write anything back to the
+     * associated configuration file. It will only set the value in memory.
+     *
+     * The valueUpdated signal will be emitted so that subscribers can get
+     * notified when the value of a configuration variable is changed.
+     */
+    template <typename Rsp>
+    void setValue(const std::string& section, const std::string& tag,
+                  const Rsp& value)
+    {
+      std::ostringstream ss;
+      ss << value;
+      setValue(section, tag, ss.str());
+    }
+
+    /**
      * @brief   A signal that is emitted when a config value is updated
      * @param   section The config section of the update
      * @param   tag     The tag (variable name) of the update

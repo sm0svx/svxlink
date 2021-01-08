@@ -215,6 +215,7 @@ class NetRx : public Rx
     Async::AudioDecoder *audio_dec;
     unsigned            fq;
     Modulation::Type    modulation;
+    std::string         last_sql_activity_info;
 
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);

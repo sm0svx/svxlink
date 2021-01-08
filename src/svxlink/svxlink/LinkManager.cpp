@@ -8,7 +8,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -212,16 +212,8 @@ bool LinkManager::initialize(const Async::Config &cfg,
       init_ok = false;
     }
 
-    cfg.getValue(link.name, "TIMEOUT", link.timeout);
-    link.timeout *= 1000;
-    if (link.timeout > 0)
-    {
-      link.timeout_timer = new Timer(link.timeout);
-      link.timeout_timer->setEnable(false);
-      link.timeout_timer->expired.connect(sigc::bind(
-          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
-          &link));
-    }
+    int timeout = -1;
+    cfg.getValue(link.name, "TIMEOUT", timeout);
 
       // Automatically activate the link, if one (or more) logics
       // has activity, e.g. squelch open.
@@ -232,12 +224,21 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
         // An automatically connected link should be disconnected after a
         // while so the TIMEOUT configuration variable must be set.
-      if (link.timeout == 0)
+      if (timeout <= 0)
       {
         cout << "*** WARNING: missing param " << link.name
              << "/TIMEOUT=??, set to default (30 sec)\n";
-        link.timeout = 30000;
+        timeout = 30;
       }
+    }
+
+    if (timeout > 0)
+    {
+      link.timeout_timer = new Timer(1000 * timeout);
+      link.timeout_timer->setEnable(false);
+      link.timeout_timer->expired.connect(sigc::bind(
+          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
+          &link));
     }
 
     cfg.getValue(link.name, "DEFAULT_ACTIVE", link.default_active);
@@ -299,18 +300,28 @@ void LinkManager::addLogic(LogicBase *logic)
     sinks[logic->name()].connectors[(*it).first] = connector;
   }
 
-  LogicInfo logic_info;
-  logic_info.logic = logic;
+    // Create new object containing metadata for this logic core
+  LogicInfo logic_info(logic);
 
     // Keep track of the newly added logics idle state so that we can start
     // and stop timeout timers.
   logic_info.idle_state_changed_con = logic->idleStateChanged.connect(
       sigc::bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
 
-    // Add the logic to the logic map
-  logic_map[logic->name()] = logic_info;
+    // Connect signals that convey information to other linked logics
+  logic_info.received_tg_update_con = logic->receivedTgUpdated.connect(
+      sigc::bind<0>(
+        sigc::mem_fun(*this, &LinkManager::onReceivedTgUpdated), logic));
+  logic_info.received_publish_state_event_con = logic->publishStateEvent.connect(
+      sigc::bind<0>(
+        sigc::mem_fun(*this, &LinkManager::onPublishStateEvent), logic));
+
+    // Add the logic core to the logic map
+  logic_map.emplace(logic->name(), logic_info);
 
     // Create command objects associated with this logic
+    // FIXME: We should not reference to a specific logic core type in this
+    //        class
   Logic *cmd_logic = dynamic_cast<Logic*>(logic);
   if (cmd_logic != 0)
   {
@@ -333,13 +344,6 @@ void LinkManager::addLogic(LogicBase *logic)
       }
     }
   }
-
-  logic_info.received_tg_update_con = logic->receivedTgUpdated.connect(
-      sigc::bind<0>(
-        sigc::mem_fun(*this, &LinkManager::onReceivedTgUpdated), logic));
-  logic_info.received_publish_state_event_con = logic->publishStateEvent.connect(
-      sigc::bind<0>(
-        sigc::mem_fun(*this, &LinkManager::onPublishStateEvent), logic));
 } /* LinkManager::addLogic */
 
 
@@ -358,8 +362,11 @@ void LinkManager::deleteLogic(LogicBase *logic)
 
     // Disconnect the sigc signals that was connected when the
     // logic was first registered.
+  assert(logic_info.idle_state_changed_con.connected());
   logic_info.idle_state_changed_con.disconnect();
+  assert(logic_info.received_tg_update_con.connected());
   logic_info.received_tg_update_con.disconnect();
+  assert(logic_info.received_publish_state_event_con.connected());
   logic_info.received_publish_state_event_con.disconnect();
 
     // Delete the logic source splitter and all connections associated with it
@@ -494,11 +501,26 @@ LogicBase *LinkManager::currentTalkerFor(const std::string& logic_name)
     if (it->second == selected)
     {
       //cout << "### Selected source: " << it->first << endl;
-      return logic_map[it->first].logic;
+      return logic_map.at(it->first).logic;
     }
   }
   return 0;
 } /* LinkManager::currentTalkerFor */
+
+
+void LinkManager::setLogicMute(const LogicBase *logic, bool mute)
+{
+  LogicInfo &info = logic_map.at(logic->name());
+  if (mute != info.is_muted)
+  {
+    info.is_muted = mute;
+    updateConnections();
+    for (const auto& link_name : getLinkNames(logic->name()))
+    {
+      checkTimeoutTimer(links.at(link_name));
+    }
+  }
+} /* LinkManager::setLogicMute */
 
 
 void LinkManager::playFile(LogicBase *src_logic, const std::string& path)
@@ -509,7 +531,7 @@ void LinkManager::playFile(LogicBase *src_logic, const std::string& path)
   {
     const std::string& logic_name = it->first;
     const Async::AudioSource *con = it->second;
-    LogicBase *logic = logic_map[logic_name].logic;
+    LogicBase *logic = logic_map.at(logic_name).logic;
     if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
     {
       logic->playFile(path);
@@ -526,7 +548,7 @@ void LinkManager::playSilence(LogicBase *src_logic, int length)
   {
     const std::string& logic_name = it->first;
     const Async::AudioSource *con = it->second;
-    LogicBase *logic = logic_map[logic_name].logic;
+    LogicBase *logic = logic_map.at(logic_name).logic;
     if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
     {
       logic->playSilence(length);
@@ -543,7 +565,7 @@ void LinkManager::playTone(LogicBase *src_logic, int fq, int amp, int len)
   {
     const std::string& logic_name = it->first;
     const Async::AudioSource *con = it->second;
-    LogicBase *logic = logic_map[logic_name].logic;
+    LogicBase *logic = logic_map.at(logic_name).logic;
     if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
     {
       logic->playTone(fq, amp, len);
@@ -560,13 +582,13 @@ void LinkManager::playDtmf(LogicBase *src_logic, const std::string& digits, int 
   {
     const std::string& logic_name = it->first;
     const Async::AudioSource *con = it->second;
-    LogicBase *logic = logic_map[logic_name].logic;
+    LogicBase *logic = logic_map.at(logic_name).logic;
     if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
     {
       logic->playDtmf(digits, amp, len);
     }
   }
-} /* LinkManager::playTone */
+} /* LinkManager::playDtmf */
 
 
 
@@ -625,10 +647,14 @@ void LinkManager::wantedConnections(LogicConSet &want)
         LogicPropMap::iterator iit = oit;
         for (++iit; iit != link.logic_props.end(); ++iit)
         {
-          if ((*oit).first != (*iit).first)
+          const std::string& l1_name = (*oit).first;
+          const std::string& l2_name = (*iit).first;
+          const LogicInfo &l1_info = logic_map.at(l1_name);
+          const LogicInfo &l2_info = logic_map.at(l2_name);
+          if ((l1_name != l2_name) && !l1_info.is_muted && !l2_info.is_muted)
           {
-            want.insert(make_pair((*oit).first, (*iit).first));
-            want.insert(make_pair((*iit).first, (*oit).first));
+            want.insert(make_pair(l1_name, l2_name));
+            want.insert(make_pair(l2_name, l1_name));
           }
         }
       }
@@ -684,24 +710,33 @@ void LinkManager::wantedConnections(LogicConSet &want)
 } /* LinkManager::wantedConnections */
 
 
-/**
- * @brief Activates the specified link
- */
-void LinkManager::activateLink(Link &link)
+void LinkManager::updateConnections(void)
 {
-  if (link.is_activated)
-  {
-    return;
-  }
-
-  cout << "Activating link " << link.name << endl;
-
-    // Mark link as activated
-  link.is_activated = true;
-
     // Get the wanted logic connections based on which links that are activated
   LogicConSet want;
   wantedConnections(want);
+
+    // Calculate which of the current connections should be broken.
+    // This is easily done with a simple difference set operation.
+    // After this operation the "to_disconnect" variable will contain
+    // the set of logic connections that have to be broken.
+  LogicConSet to_disconnect;
+  set_difference(current_cons.begin(), current_cons.end(),
+                 want.begin(), want.end(),
+                 inserter(to_disconnect, to_disconnect.end()));
+
+  for (auto it = to_disconnect.begin(); it != to_disconnect.end(); ++it)
+  {
+    const string &src_name = it->first;
+    const string &sink_name = it->second;
+    SinkInfo &sink = sinks.at(sink_name);
+
+      // Disconnect the audio path from source logic to sink logic
+    sink.selector->disableAutoSelect(sink.connectors.at(src_name));
+
+      // Delete the link connect information
+    current_cons.erase(*it);
+  }
 
     // Calculate the difference between the wanted connection set and the
     // current connection set. This is easily done using the difference set
@@ -713,87 +748,53 @@ void LinkManager::activateLink(Link &link)
                  inserter(to_connect, to_connect.end()));
 
     // Establish missing connections
-  for (LogicConSet::iterator it = to_connect.begin();
-       it != to_connect.end();
-       ++it)
+  for (auto it = to_connect.begin(); it != to_connect.end(); ++it)
   {
     const string &src_name = it->first;
     const string &sink_name = it->second;
-    //cout << "### " << src_name << " ===> " << sink_name << endl;
-    SinkInfo &sink = sinks[sink_name];
-    sink.selector->enableAutoSelect(sink.connectors[src_name], 0);
+    SinkInfo &sink = sinks.at(sink_name);
+    sink.selector->enableAutoSelect(sink.connectors.at(src_name), 0);
 
       // Store all connections in "current_cons" (current connections)
     current_cons.insert(*it);
   }
+} /* LinkManager::updateConnections */
 
-    // Check if the timeout timer should be enabled or disabled
-  checkTimeoutTimer(link);
 
+void LinkManager::activateLink(Link &link)
+{
+  if (!link.is_activated)
+  {
+    cout << "Activating link " << link.name << endl;
+    link.is_activated = true;
+    updateConnections();
+    checkTimeoutTimer(link);
+  }
 } /* LinkManager::activateLink */
 
 
 void LinkManager::deactivateLink(Link &link)
 {
-  if (!link.is_activated)
+  if (link.is_activated)
   {
-    return;
+    cout << "Deactivating link " << link.name << endl;
+    link.is_activated = false;
+    updateConnections();
+    checkTimeoutTimer(link);
   }
-
-  cout << "Deactivating link " << link.name << endl;
-
-    // Clear the activation flag
-  link.is_activated = false;
-
-    // Get the wanted connections
-  LogicConSet want;
-  wantedConnections(want);
-
-    // Calculate which of the current connections should be broken.
-    // This is easily done with a simple difference set operation.
-  LogicConSet to_disconnect;
-  set_difference(current_cons.begin(), current_cons.end(),
-                 want.begin(), want.end(),
-                 inserter(to_disconnect, to_disconnect.end()));
-
-  for (LogicConSet::iterator it = to_disconnect.begin();
-       it != to_disconnect.end();
-       ++it)
-  {
-    const string &src_name = it->first;
-    const string &sink_name = it->second;
-    //cout << "### " << src_name << " =X=> " << sink_name << endl;
-
-    SinkMap::iterator sink_it = sinks.find(sink_name);
-    assert(sink_it != sinks.end());
-    SinkInfo &sink = (*sink_it).second;
-
-      // Disconnect the audio path from source logic to sink logic
-    sink.selector->disableAutoSelect(sink.connectors[src_name]);
-
-      // Delete the link connect information
-    current_cons.erase(*it);
-  }
-
-    // Check if the timeout timer should be enabled or disabled
-  checkTimeoutTimer(link);
-
 } /* LinkManager::deactivateLink */
 
 
 void LinkManager::sendCmdToLogics(Link& link, LogicBase* src_logic,
                                   const std::string& cmd)
 {
-  for (LogicPropMap::iterator it = link.logic_props.begin();
-       it != link.logic_props.end(); ++it)
+  for (const auto& props : link.logic_props)
   {
-    const string &logic_name = (*it).first;
-    LogicMap::iterator lmit = logic_map.find(logic_name);
-    assert(lmit != logic_map.end());
-    LogicBase *logic = (*lmit).second.logic;
-    if (logic != src_logic)
+    const string &logic_name = props.first;
+    const LogicInfo &logic_info = logic_map.at(logic_name);
+    if ((logic_info.logic != src_logic) && !logic_info.is_muted)
     {
-      logic->remoteCmdReceived(src_logic, cmd);
+      logic_info.logic->remoteCmdReceived(src_logic, cmd);
     }
   }
 } /* LinkManager::sendCmdToLogics */
@@ -859,7 +860,7 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const LogicBase *logic)
     return;
   }
 
-    // We need all linknames where the logic is included in
+    // We need all linknames where the logic is included
   vector<string> link_names = getLinkNames(logic->name());
 
     // Loop through all links associated with the logic to see if we should
@@ -903,27 +904,15 @@ void LinkManager::checkTimeoutTimer(Link &link)
   }
 
   bool all_logics_idle = true;
-  for (LogicPropMap::iterator cpit = link.logic_props.begin();
-       cpit != link.logic_props.end();
-       ++cpit)
+  for (const auto& prop : link.logic_props)
   {
-    const string &logic_name = (*cpit).first;
-    LogicMap::iterator lmit = logic_map.find(logic_name);
-    assert(lmit != logic_map.end());
-    LogicBase *logic = (*lmit).second.logic;
-    all_logics_idle &= logic->isIdle();
+    const std::string &logic_name = prop.first;
+    const LogicInfo &logic_info = logic_map.at(logic_name);
+    all_logics_idle &= logic_info.is_muted || logic_info.logic->isIdle();
   }
 
-  if (all_logics_idle && (link.is_activated != link.default_active))
-  {
-    //cout << "### Enabling timeout timer for link " << link.name << endl;
-    link.timeout_timer->setEnable(true);
-  }
-  else
-  {
-    //cout << "### Disabling timeout timer for link " << link.name << endl;
-    link.timeout_timer->setEnable(false);
-  }
+  link.timeout_timer->setEnable(
+      all_logics_idle && (link.is_activated != link.default_active));
 } /* LinkManager::checkTimeoutTimer */
 
 
@@ -937,7 +926,7 @@ void LinkManager::onReceivedTgUpdated(LogicBase *src_logic, uint32_t tg)
   {
     const std::string& logic_name = it->first;
     const Async::AudioSource *con = it->second;
-    LogicBase *logic = logic_map[logic_name].logic;
+    LogicBase *logic = logic_map.at(logic_name).logic;
     if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
     {
       logic->remoteReceivedTgUpdated(src_logic, tg);
@@ -959,13 +948,13 @@ void LinkManager::onPublishStateEvent(LogicBase *src_logic,
   {
     const std::string& logic_name = it->first;
     const Async::AudioSource *con = it->second;
-    LogicBase *logic = logic_map[logic_name].logic;
+    LogicBase *logic = logic_map.at(logic_name).logic;
     if ((logic != src_logic) && (selector->autoSelectEnabled(con)))
     {
       logic->remoteReceivedPublishStateEvent(src_logic, event_name, msg);
     }
   }
-} /* LinkManager::onReceivedTgUpdated */
+} /* LinkManager::onPublishStateEvent */
 
 
 /*

@@ -188,7 +188,9 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @return	Return \em true if the squelch is open or else \em false
      */
     bool squelchIsOpen(void) const { return m_sql_open; }
-    
+
+    const std::string& squelchActivityInfo(void) const { return m_sql_info; }
+
     /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
@@ -298,22 +300,27 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     sigc::signal<void> readyStateChanged;
 
-    
   protected:
     /**
-     * @brief 	Set the state of the squelch
-     * @param	is_open Set to \em true if the squelch is open and to
-     *	      	      	\em false if it is closed.
+     * @brief   Set the state of the squelch
+     * @param   is_open Set to \em true if the squelch is open and to
+     *                  \em false if it is closed.
+     * @param   info Information about the squelch event
+     *
+     * This function is used by a receiver implementation to set the state of
+     * the squelch, if it's opened or closed. The info argument is used to
+     * supply a short text string containing information about why the squelch
+     * opened or closed. It may be a signal level or a CTCSS frequency.
      */
-    void setSquelchState(bool is_open);
-    
-    
+    void setSquelchState(bool is_open, const std::string& info="");
+
   private:
     std::string     m_name;
     bool            m_verbose;
     bool            m_sql_open;
     Async::Config&  m_cfg;
     Async::Timer*   m_sql_tmo_timer;
+    std::string     m_sql_info;
     
     void sqlTimeout(Async::Timer *t);
     

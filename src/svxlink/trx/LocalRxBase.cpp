@@ -103,9 +103,10 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_POST      200
-#define TONE_1750_MUTING_PRE  75
-#define TONE_1750_MUTING_POST 100
+#define DTMF_MUTING_POST        200
+#define TONE_1750_MUTING_PRE    75
+#define TONE_1750_MUTING_POST   100
+#define DEFAULT_LIMITER_THRESH  -1.0
 
 
 /****************************************************************************
@@ -593,15 +594,20 @@ bool LocalRxBase::initialize(void)
     prev_src = delay;
   }
 
-    // Add a limiter to smoothly limiting the audio before hard clipping it
-  AudioCompressor *limit = new AudioCompressor;
-  limit->setThreshold(-1);
-  limit->setRatio(0.1);
-  limit->setAttack(2);
-  limit->setDecay(20);
-  limit->setOutputGain(1);
-  prev_src->registerSink(limit, true);
-  prev_src = limit;
+    // Add a limiter to smoothly limit the audio before hard clipping it
+  double limiter_thresh = DEFAULT_LIMITER_THRESH;
+  cfg().getValue(name(), "LIMITER_THRESH", limiter_thresh);
+  if (limiter_thresh != 0.0)
+  {
+    AudioCompressor *limit = new AudioCompressor;
+    limit->setThreshold(limiter_thresh);
+    limit->setRatio(0.1);
+    limit->setAttack(2);
+    limit->setDecay(20);
+    limit->setOutputGain(1);
+    prev_src->registerSink(limit, true);
+    prev_src = limit;
+  }
 
     // Clip audio to limit its amplitude
   AudioClipper *clipper = new AudioClipper;
@@ -673,7 +679,7 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
             audioClose();
 	  }
           squelch_det->reset();
-          setSquelchState(false);
+          setSquelchState(false, "MUTED");
           break;
          
         default:
@@ -832,7 +838,7 @@ void LocalRxBase::audioStreamStateChange(bool is_active, bool is_idle)
 {
   if (is_idle && !squelch_det->isOpen())
   {
-    setSquelchState(false);
+    setSquelchState(false, squelch_det->activityInfo());
   }
 } /* LocalRxBase::audioStreamStateChange */
 
@@ -850,7 +856,7 @@ void LocalRxBase::onSquelchOpen(bool is_open)
     {
       delay->clear();
     }
-    setSquelchState(true);
+    setSquelchState(true, squelch_det->activityInfo());
     if (mute_state == MUTE_NONE)
     {
       sql_valve->setOpen(true);
@@ -867,7 +873,7 @@ void LocalRxBase::onSquelchOpen(bool is_open)
     }
     if (!sql_valve->isOpen())
     {
-      setSquelchState(false);
+      setSquelchState(false, squelch_det->activityInfo());
     }
     else
     {

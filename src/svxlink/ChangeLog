@@ -94,6 +94,33 @@
   have been no local activity after the QSY. Priority will be honored again
   after the node have switched to TG#0.
 
+* Make the audio limiter threshold in the receiver configurable using the
+  LIMITER_THRESH configuration variable in a receiver configuration section.
+
+* Add an audio limiter to the transmitted audio path. The threshold may be set
+  using the LIMITER_THRESH configuration variable in a TX configuration
+  section.
+
+* Bugfix: When AUTOACTIVATE_ON_SQL is used in a logic link definition it is
+  supposed to default to a timeout of 30 seconds if TIMEOUT is not set. That
+  did not work though.
+
+* ReflectorLogic: Use the QSY_PENDING_TIMEOUT configuration variable to enable
+  following a just ignored QSY request on squelch open.
+
+* By default, when activating a module in a logic core, all logic linking
+  audio will be muted. This behavior can be changed by using the
+  MUTE_LOGIC_LINKING configuration variable in the module configuration.
+
+* More informative squelch open/close printouts implemented. The information
+  that is printed within the parenthesis after the squelch open/close message
+  is now specific for each squelch type so that meaningful information can be
+  printed for that squelch type. For example the CTCSS tone frequency and SNR
+  is printed for CTCSS squelch. The value printed for SIGLEV squelch is now
+  the actual value that is used by the squelch. Previously there was no
+  connection between the value used by the squelch and the printed signal
+  level.
+
 
 
  1.7.0 -- 01 Sep 2019

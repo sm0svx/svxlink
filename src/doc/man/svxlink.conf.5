@@ -651,7 +651,8 @@ priority.
 .B TG_SELECT_TIMEOUT
 The number of seconds after which a selected talk group will be unselected. The
 node will return to talk group 0 (no talk group) and start monitoring the
-configured talk groups again. Default: 30 seconds.
+configured talk groups again. The value must be larger than zero. Default: 30
+seconds.
 .TP
 .B ANNOUNCE_REMOTE_MIN_INTERVAL
 The minimum number of seconds between announcements of the same TG for remote
@@ -700,6 +701,15 @@ The number of seconds between UDP heartbeat messages sent to the reflector
 server. This configuration variable can normally be left at the default value
 but if you get frequent disconnects due to UDP heartbeat timeout it may help to
 lower this value. Default: 15
+.TP
+.B QSY_PENDING_TIMEOUT
+Set to the number of seconds to enable following a QSY request on squelch
+activity. That is, after a remote QSY request, during the configured number of
+seconds, it will be possible to follow a QSY request by just pushing the PTT
+instead of having to use DTMF commands. Note that the timer starts when the QSY
+request is received so the time it takes to play the QSY announcement is also
+included in the timeout time. A good value is within 10 to 15 seconds.
+Default is -1 (disabled).
 .P
 It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
@@ -953,6 +963,14 @@ The normal behaviour for SvxLink is to open an audio device when needed and
 close it when it does not have to be open anymore. This may cause problems in
 some applications or with some sound hardware. Set this variable to 1 to force
 SvxLink to keep the audio device open from application start to exit.
+.TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level for overmodulating stations. For a
+properly calibrated SvxLink node max FM deviation is -6dBFS. A good value to
+start with for this parameter is then -6 but try to lower it further (like -9
+to -12) if it does not affect audio quality negatively.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
@@ -2037,6 +2055,14 @@ close it when it does not have to be open anymore. This may cause problems in
 some applications or with some sound hardware. Set this variable to 1 to force
 SvxLink to keep the audio device open from application start to exit.
 .TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level to not overmodulate the transmitter.
+For a properly calibrated SvxLink node max FM deviation is -6dBFS. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.TP
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
 control the PTT.  Specify "SerialPin" for using a pin in the serial port,
@@ -2426,6 +2452,10 @@ from the radio interface.
 .B TIMEOUT
 Specify the timeout time, in seconds, after which a module will be automatically
 deactivated if there has been no activity.
+.TP
+.B MUTE_LOGIC_LINKING
+Set to 1 to mute all logic linking audio when the module is activated or 0 to
+keep logic linking unmuted at all times. Default is 1 (mute).
 .P
 Module specific configuration variables are described in the man page for that module. The
 documentation for the Parrot module can for example be found in the
