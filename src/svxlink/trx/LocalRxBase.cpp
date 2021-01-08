@@ -679,7 +679,7 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
             audioClose();
 	  }
           squelch_det->reset();
-          setSquelchState(false);
+          setSquelchState(false, "MUTED");
           break;
          
         default:
@@ -843,7 +843,7 @@ void LocalRxBase::audioStreamStateChange(bool is_active, bool is_idle)
 {
   if (is_idle && !squelch_det->isOpen())
   {
-    setSquelchState(false);
+    setSquelchState(false, squelch_det->activityInfo());
   }
 } /* LocalRxBase::audioStreamStateChange */
 
@@ -861,7 +861,7 @@ void LocalRxBase::onSquelchOpen(bool is_open)
     {
       delay->clear();
     }
-    setSquelchState(true);
+    setSquelchState(true, squelch_det->activityInfo());
     if (mute_state == MUTE_NONE)
     {
       sql_valve->setOpen(true);
@@ -878,7 +878,7 @@ void LocalRxBase::onSquelchOpen(bool is_open)
     }
     if (!sql_valve->isOpen())
     {
-      setSquelchState(false);
+      setSquelchState(false, squelch_det->activityInfo());
     }
     else
     {

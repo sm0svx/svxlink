@@ -115,6 +115,15 @@
   audio will be muted. This behavior can be changed by using the
   MUTE_LOGIC_LINKING configuration variable in the module configuration.
 
+* More informative squelch open/close printouts implemented. The information
+  that is printed within the parenthesis after the squelch open/close message
+  is now specific for each squelch type so that meaningful information can be
+  printed for that squelch type. For example the CTCSS tone frequency and SNR
+  is printed for CTCSS squelch. The value printed for SIGLEV squelch is now
+  the actual value that is used by the squelch. Previously there was no
+  connection between the value used by the squelch and the printed signal
+  level.
+
 
 
  1.7.0 -- 01 Sep 2019

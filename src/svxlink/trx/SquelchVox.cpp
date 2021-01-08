@@ -220,13 +220,13 @@ int SquelchVox::processSamples(const float *samples, int count)
     head = (head >= buf_size-1) ? 0 : head + 1;
   }
 
-  if (signalDetected())
+  bool opened = !signalDetected() && (sum >= up_thresh);
+  bool closed = signalDetected() && (sum < down_thresh);
+  if (opened || closed)
   {
-    setSignalDetected(sum >= up_thresh);
-  }
-  else
-  {
-    setSignalDetected(sum >= down_thresh);
+    std::ostringstream ss;
+    ss << static_cast<int>(std::round(10000 * std::sqrt(sum / buf_size)));
+    setSignalDetected(opened, ss.str());
   }
 
   return count;

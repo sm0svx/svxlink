@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <cmath>
 
 
 /****************************************************************************
@@ -176,15 +178,15 @@ class SquelchSigLev : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      if (signalDetected())
+      float siglev = sig_lev_det->lastSiglev();
+      bool opened = !signalDetected() && (siglev >= open_thresh);
+      bool closed = signalDetected() && (siglev < close_thresh);
+      if (opened || closed)
       {
-      	setSignalDetected(sig_lev_det->lastSiglev() >= close_thresh);
+        std::ostringstream ss;
+        ss << static_cast<int>(std::roundf(siglev));
+        setSignalDetected(opened, ss.str());
       }
-      else
-      {
-      	setSignalDetected(sig_lev_det->lastSiglev() >= open_thresh);
-      }
-
       return count;
     }
 
