@@ -123,6 +123,8 @@
 
 * Fix receiver muting bug introduced with the AUDIO_DEV_KEEP_OPEN feature.
 
+* Bugfix: SQL_START_DELAY was not honored in all cases.
+
 
 
  1.7.0 -- 01 Sep 2019

@@ -213,10 +213,11 @@ int Squelch::writeSamples(const float *samples, int count)
     count -= sample_cnt;
     samples += sample_cnt;
 
-    if (count == 0)
+    if (m_start_delay_left > 0)
     {
       return orig_count;
     }
+    setSignalDetectedP(m_signal_detected);
   }
 
   while (count > 0)
@@ -310,6 +311,11 @@ void Squelch::setSignalDetectedP(bool is_detected)
   //          << std::endl;
 
   m_signal_detected = is_detected;
+
+  if (m_start_delay_left > 0)
+  {
+    return;
+  }
 
   if (is_detected)
   {
