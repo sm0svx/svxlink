@@ -124,6 +124,8 @@
   connection between the value used by the squelch and the printed signal
   level.
 
+* Fix receiver muting bug introduced with the AUDIO_DEV_KEEP_OPEN feature.
+
 
 
  1.7.0 -- 01 Sep 2019

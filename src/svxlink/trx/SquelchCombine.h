@@ -235,12 +235,6 @@ class SquelchCombine : public Squelch
      */
     virtual int writeSamples(const float *samples, int count);
 
-    /**
-     * @brief   Get the state of the squelch
-     * @return  Return \em true if the squelch is open, or else \em false
-     */
-    virtual bool isOpen(void) const { return m_is_open; }
-
   protected:
 
   private:
@@ -255,7 +249,6 @@ class SquelchCombine : public Squelch
 
     Tokens  m_tokens;
     Node*   m_comb    = nullptr;
-    bool    m_is_open = false;
 
     bool tokenize(const std::string& expr);
     Node* parseInstExpression(void);

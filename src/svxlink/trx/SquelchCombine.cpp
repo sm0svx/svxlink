@@ -547,7 +547,6 @@ void SquelchCombine::setSqlTimeout(int timeout)
 void SquelchCombine::reset(void)
 {
   m_comb->reset();
-  m_is_open = false;
 } /* SquelchCombine::reset */
 
 
@@ -736,9 +735,8 @@ SquelchCombine::Node* SquelchCombine::parseExpression(void)
 
 void SquelchCombine::onSquelchOpen(bool is_open)
 {
-  if (m_is_open != is_open)
+  if (is_open != signalDetected())
   {
-    m_is_open = is_open;
     std::string info;
     info.reserve(127);
     SquelchCombine::Node::SquelchStates states;
