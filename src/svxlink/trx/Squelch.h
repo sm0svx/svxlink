@@ -235,6 +235,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
       m_timeout_left = 0;
       m_signal_detected = false;
       m_signal_detected_filtered = false;
+      m_signal_detected_info.clear();
+      m_last_info.clear();
       enableExtendedHangtime(false);
     }
 
