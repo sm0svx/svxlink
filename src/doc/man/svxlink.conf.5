@@ -1249,13 +1249,11 @@ Below is a simple example of how to set up a combined squelch.
 The configuration section names used above is just a convention but it is wise
 to include the name of the associated RX for better diagnostic messages.
 
-An important thing to note is that configuration variables in the main RX
-section override configuration in the squelch type specific configuration. For
-example, if you set SQL_HANGTIME in both [Rx1] and [Rx1:SIGLEV], the one set in
-the [Rx1] section will "win" and be applied to both squelches. So the main
-configuration section can not be used to set up defaults for all squelch types.
-This is unfortunately a bit counter intuitive but is a product of the
-implementation.
+Squelch timing parameters like SQL_DELAY, SQL_HANGTIME etc may be set up in the
+receiver configuration section (Rx1 above). The parameters will not be applied
+to each subsquelch but rather to the combiner itself. It is often better to set
+up parameters in each squelch specific configuration section unless you really
+know what you are doing.
 .TP
 .B SIGLEV_RX_NAME
 When using the SIGLEV squelch type, specify the name of the receiver that
