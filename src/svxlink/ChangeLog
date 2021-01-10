@@ -128,6 +128,10 @@
 * Rework squelch core code. The core squelch handling code was not fully
   correct causing problems in some configurations.
 
+* New voter configuration variable VERBOSE which cause the voter to print the
+  squelch state events of the satellite receivers. This can be used while fine
+  tuning voter timing for example.
+
 
 
  1.7.0 -- 01 Sep 2019

@@ -1867,6 +1867,11 @@ the operating system. Available commands:
 .P
 Commands can be issued using a simple echo command from the shell. Example:
 echo "DISABLE Rx1" >/dev/shm/voter_ctrl
+.TP
+.B VERBOSE
+Set this to 1 to enable verbose mode. In verbose mode the squelch state events
+of the satellite receivers will be printed. This can be used for fine tuning
+voter timing parameters. Default: 0 (disabled)
 .
 .SS Networked Receiver Section
 .
