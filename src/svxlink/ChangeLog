@@ -125,6 +125,9 @@
 
 * Bugfix: SQL_START_DELAY was not honored in all cases.
 
+* Rework squelch core code. The core squelch handling code was not fully
+  correct causing problems in some configurations.
+
 
 
  1.7.0 -- 01 Sep 2019
