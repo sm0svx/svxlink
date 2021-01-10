@@ -433,6 +433,15 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     virtual int writeSamples(const float *buf, int len);
 
     /**
+     * @brief   Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
+
+    /**
      * @brief  A signal that is emitted when the tone detector changes state
      * @param  is_active \em true when active and \em false if not
      */

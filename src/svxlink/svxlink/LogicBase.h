@@ -182,7 +182,10 @@ class LogicBase : public sigc::trackable
      */
     void setMuteLinking(bool mute)
     {
-      LinkManager::instance()->setLogicMute(this, mute);
+      if (LinkManager::hasInstance())
+      {
+        LinkManager::instance()->setLogicMute(this, mute);
+      }
     }
 
     /**
