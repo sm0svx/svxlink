@@ -1145,7 +1145,7 @@ configuration variable.
 The SIGLEV squelch detector use signal level measurements to determine if the
 squelch is open or not. Which signal level detector to use is determined by the
 setting of the SIGLEV_DET configuration variable. The open and close
-thresholds are set using the SIGLEV_OPEN_THRESH and SIGLEV_CLOSE_THRESH
+thresholds are set using the SQL_SIGLEV_OPEN_THRESH and SQL_SIGLEV_CLOSE_THRESH
 configuration variables.
 If using the NOISE signal level detector note the following. The detector is
 not perfect (it's affected by speech) so you will also want to setup
@@ -1406,9 +1406,9 @@ Below is a simple example of how to set up a combined squelch.
 
   [Rx1:SIGLEV]
   SQL_DET=SIGLEV
-  SIGLEV_RX_NAME=Rx1
-  SIGLEV_OPEN_THRESH=30
-  SIGLEV_CLOSE_THRESH=2
+  SQL_SIGLEV_RX_NAME=Rx1
+  SQL_SIGLEV_OPEN_THRESH=30
+  SQL_SIGLEV_CLOSE_THRESH=2
 
   [Rx1]
   ...
@@ -1419,15 +1419,13 @@ Below is a simple example of how to set up a combined squelch.
 The configuration section names used above is just a convention but it is wise
 to include the name of the associated RX for better diagnostic messages.
 
-An important thing to note is that configuration variables in the main RX
-section override configuration in the squelch type specific configuration. For
-example, if you set SQL_HANGTIME in both [Rx1] and [Rx1:SIGLEV], the one set in
-the [Rx1] section will "win" and be applied to both squelches. So the main
-configuration section can not be used to set up defaults for all squelch types.
-This is unfortunately a bit counter intuitive but is a product of the
-implementation.
+Squelch timing parameters like SQL_DELAY, SQL_HANGTIME etc may be set up in the
+receiver configuration section (Rx1 above). The parameters will not be applied
+to each subsquelch but rather to the combiner itself. It is often better to set
+up parameters in each squelch specific configuration section unless you really
+know what you are doing.
 .TP
-.B SIGLEV_RX_NAME
+.B SQL_SIGLEV_RX_NAME
 When using the SIGLEV squelch type, specify the name of the receiver that
 provide the signal level. This is only useful when the squelch configuration
 is not in the same configuration section as the receiver, like when using the
@@ -1529,7 +1527,7 @@ since it's more important to have fine measurement granularity in the lower
 signal strength range. This is how the mapping look for the AVR: 
 100,84,60,50,37,32,28,23,19,8.
 .TP
-.B SIGLEV_OPEN_THRESH
+.B SQL_SIGLEV_OPEN_THRESH
 This is the squelch open threshold for the SIGLEV squelch detector.
 If using the NOISE signal level detector, make sure to first calibrate the
 signal level detector using the SIGLEV_SLOPE and SIGLEV_OFFSET configuration
@@ -1537,7 +1535,7 @@ variables. The signal level detector should normally be calibrated so that full
 signal strength is 100 and no signal is 0. Depending on your background noise
 level a good value for this configuration variable is between 5 and 20.
 .TP
-.B SIGLEV_CLOSE_THRESH
+.B SQL_SIGLEV_CLOSE_THRESH
 This is the squelch close threshold for the SIGLEV squelch detector.
 If using the NOISE signal level detector, make sure to first calibrate the
 signal level detector using the SIGLEV_SLOPE and SIGLEV_OFFSET configuration
@@ -2039,6 +2037,11 @@ the operating system. Available commands:
 .P
 Commands can be issued using a simple echo command from the shell. Example:
 echo "DISABLE Rx1" >/dev/shm/voter_ctrl
+.TP
+.B VERBOSE
+Set this to 1 to enable verbose mode. In verbose mode the squelch state events
+of the satellite receivers will be printed. This can be used for fine tuning
+voter timing parameters. Default: 0 (disabled)
 .
 .SS Networked Receiver Section
 .
