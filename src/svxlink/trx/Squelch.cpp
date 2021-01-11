@@ -8,7 +8,7 @@ This file contains the base class for implementing a squelch detector
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2020  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2021  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ bool Squelch::initialize(Async::Config& cfg, const std::string& rx_name)
     setStartDelay(start_delay);
   }
 
-  unsigned timeout = 0;
+  int timeout = -1;
   if (cfg.getValue(rx_name, CFG_SQL_TIMEOUT, timeout))
   {
     setSqlTimeout(timeout);
@@ -195,17 +195,24 @@ int Squelch::writeSamples(const float *samples, int count)
 {
   int orig_count = count;
 
+    // The squelch timeout value can be in three states
+    //   <0 -- The timeout is disabled or the squelch is closed
+    //   =0 -- The squelch has timed out
+    //   >0 -- The squelch timeout timer is running (squelch open)
   if (m_timeout_left > 0)
   {
     m_timeout_left -= count;
     if (m_timeout_left <= 0)
     {
-      std::cerr << "*** WARNING: The squelch was open for too long for "
-                << "receiver " << m_name << ". " << "Forcing it closed.\n";
-      setOpen(false);
+      std::cerr << "*** WARNING: The squelch for \"" << m_name
+                << "\" was open for too long. Forcing it closed.\n";
+      m_timeout_left = 0;
+      m_last_info = "TIMEOUT";
+      squelchOpen(false);
     }
   }
 
+    // The squelch start delay is active if > 0
   if (m_start_delay_left > 0)
   {
     int sample_cnt = std::min(count, m_start_delay_left);
@@ -213,43 +220,47 @@ int Squelch::writeSamples(const float *samples, int count)
     count -= sample_cnt;
     samples += sample_cnt;
 
-    if (count == 0)
+    if (m_start_delay_left > 0)
     {
       return orig_count;
     }
+    setSignalDetectedP(m_signal_detected);
   }
 
-  while (count > 0)
+    // Give the actual squelch implementation a chance to process samples
+  int process_cnt = count;
+  const float *process_samples = samples;
+  while (process_cnt > 0)
   {
-    int ret_count = processSamples(samples, count);
+    int ret_count = processSamples(process_samples, process_cnt);
     if (ret_count <= 0)
     {
       std::cout << "*** WARNING: " << count
-                << " samples dropped in squelch detector for receiver "
+                << " samples dropped in squelch detector "
                 << m_name << std::endl;
       break;
     }
-    samples += ret_count;
-    count -= ret_count;
+    process_samples += ret_count;
+    process_cnt -= ret_count;
   }
 
-  if (m_hangtime_left > 0)
+    // The squelch delay is active if > 0
+  if (m_delay_left > 0)
   {
-    m_hangtime_left -= orig_count;
-    if (m_hangtime_left <= 0)
+    m_delay_left -= count;
+    if (m_delay_left <= 0)
     {
-      m_signal_detected_filtered = false;
-      setOpen(false);
+      setOpen(true);
     }
   }
 
-  if (m_delay_left > 0)
+    // The squelch hangtime is active if > 0
+  if (m_hangtime_left > 0)
   {
-    m_delay_left -= orig_count;
-    if (m_delay_left <= 0)
+    m_hangtime_left -= count;
+    if (m_hangtime_left <= 0)
     {
-      m_signal_detected_filtered = true;
-      setOpen(true);
+      setOpen(false);
     }
   }
 
@@ -287,15 +298,18 @@ void Squelch::cfgUpdated(Async::Config& cfg, const std::string& section,
         setHangtime(hangtime);
       }
       std::cout << "Setting " << CFG_SQL_HANGTIME << " to " << hangtime
-                << " for receiver " << m_name << std::endl;
+                << " for squelch " << m_name << std::endl;
     }
     else if (tag == CFG_SQL_EXTENDED_HANGTIME)
     {
       int ext_hangtime = 0;
-      cfg.getValue(m_name, CFG_SQL_EXTENDED_HANGTIME, ext_hangtime);
+      if (cfg.getValue(m_name, CFG_SQL_EXTENDED_HANGTIME, ext_hangtime))
+      {
+        setExtendedHangtime(ext_hangtime);
+      }
       std::cout << "Setting " << CFG_SQL_EXTENDED_HANGTIME << " to "
                 << ext_hangtime
-                << " for receiver " << m_name << std::endl;
+                << " for squelch " << m_name << std::endl;
     }
   }
 } /* LocalRxBase::cfgUpdated */
@@ -303,25 +317,29 @@ void Squelch::cfgUpdated(Async::Config& cfg, const std::string& section,
 
 void Squelch::setSignalDetectedP(bool is_detected)
 {
-  //std::cout << "### Squelch::setSignalDetectedP: is_detected="
-  //          << is_detected << std::endl;
+  //std::cout << "### Squelch::setSignalDetectedP["
+  //          << m_name << "]: is_detected=" << is_detected
+  //          << " m_delay=" << m_delay
+  //          << " m_delay_left=" << m_delay_left
+  //          << std::endl;
 
   m_signal_detected = is_detected;
+
+  if (m_start_delay_left > 0)
+  {
+    return;
+  }
 
   if (is_detected)
   {
     m_hangtime_left = 0;
-    if (m_delay == 0)
+    if (!m_open && (m_delay_left <= 0))
     {
-      if (!m_signal_detected_filtered)
+      if (m_delay == 0)
       {
-        m_signal_detected_filtered = true;
         setOpen(true);
       }
-    }
-    else
-    {
-      if (!m_signal_detected_filtered && (m_delay_left <= 0))
+      else
       {
         m_delay_left = m_delay;
       }
@@ -330,17 +348,13 @@ void Squelch::setSignalDetectedP(bool is_detected)
   else
   {
     m_delay_left = 0;
-    if (m_current_hangtime == 0)
+    if (m_open && (m_hangtime_left <= 0))
     {
-      if (m_signal_detected_filtered)
+      if (m_current_hangtime == 0)
       {
-        m_signal_detected_filtered = false;
         setOpen(false);
       }
-    }
-    else
-    {
-      if (m_signal_detected_filtered && (m_hangtime_left <= 0))
+      else
       {
         m_hangtime_left = m_current_hangtime;
       }
@@ -351,22 +365,19 @@ void Squelch::setSignalDetectedP(bool is_detected)
 
 void Squelch::setOpen(bool is_open)
 {
-  if (is_open == m_open)
-  {
-    return;
-  }
+  //std::cout << "### Squelch::setOpen["
+  //          << m_name << "]: is_open=" << is_open << std::endl;
 
-  if (is_open)
+  if (is_open != m_open)
   {
-    m_timeout_left = m_timeout;
+    m_open = is_open;
+    m_timeout_left = m_open ? m_timeout : -1;
+    m_last_info = m_signal_detected_info;
+    if (m_timeout_left != 0)
+    {
+      squelchOpen(m_open);
+    }
   }
-  else
-  {
-    m_timeout_left = 0;
-  }
-
-  m_open = is_open;
-  squelchOpen(is_open);
 } /* Squelch::setOpen */
 
 

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -171,55 +171,6 @@ class SquelchCombine : public Squelch
     virtual bool initialize(Async::Config& cfg, const std::string& name);
 
     /**
-     * @brief   Set the squelch start delay
-     * @param   delay The delay in milliseconds to set
-     *
-     * Use this function to set the squelch startup delay. The delay is
-     * specified in milliseconds. When a value > 0 is specified, the squelch
-     * will not open within this time after the Squelch::reset function has
-     * been called.
-     */
-    virtual void setStartDelay(int delay);
-
-    /**
-     * @brief  Set the time the squelch should hang open after squelch close
-     * @param  hang The number of milliseconds to hang
-     */
-    virtual void setHangtime(int hang);
-
-    /**
-     * @brief   Set extended time squelch hang open after squelch close
-     * @param   hang The number of milliseconds to hang
-     *
-     * This is the squelch hangtime that is used in extended hangtime mode.
-     */
-    virtual void setExtendedHangtime(int hang);
-
-    /**
-     * @brief   Choose if extended hangtime mode should be active or not
-     * @param   enable Set to \em true to enable or \em false to disable
-     *
-     * Using extended hangtime mode it is possible to temporarily prolong the
-     * time that the squelch will hang open. This can be of use in low signal
-     * strength conditions for example. The switch to extended hangtime is not
-     * handled by this class so the condition for switching must be handled by
-     * the user of this class.
-     */
-    virtual void enableExtendedHangtime(bool enable);
-
-    /**
-     * @brief   Set the time a squelch open should be delayed
-     * @param   delay The delay in milliseconds
-     */
-    virtual void setDelay(int delay);
-
-    /**
-     * @brief   Set the maximum time the squelch is allowed to stay open
-     * @param   timeout The squelch timeout in seconds
-     */
-    virtual void setSqlTimeout(int timeout);
-
-    /**
      * @brief   Reset the squelch detector
      *
      * Reset the squelch so that the detection process starts from
@@ -228,20 +179,23 @@ class SquelchCombine : public Squelch
     virtual void reset(void);
 
     /**
-     * @brief   Write samples into this audio sink
-     * @param   samples The buffer containing the samples
-     * @param   count The number of samples in the buffer
-     * @return  Returns the number of samples that has been taken care of
+     * @brief   Restart the squelch detector
+     *
+     * Restarting a squelch is a kind of soft reset. The only thing that
+     * happens right now is that the squelch start delay is activated. This
+     * function is typically called by a transceiver implementation after
+     * turing the transmitter off.
      */
-    virtual int writeSamples(const float *samples, int count);
-
-    /**
-     * @brief   Get the state of the squelch
-     * @return  Return \em true if the squelch is open, or else \em false
-     */
-    virtual bool isOpen(void) const { return m_is_open; }
+    virtual void restart(void);
 
   protected:
+    /**
+     * @brief   Process the incoming samples in the squelch detector
+     * @param   samples A buffer containing samples
+     * @param   count The number of samples in the buffer
+     * @return  Return the number of processed samples
+     */
+    virtual int processSamples(const float *samples, int count);
 
   private:
     typedef std::deque<std::string> Tokens;
@@ -255,15 +209,14 @@ class SquelchCombine : public Squelch
 
     Tokens  m_tokens;
     Node*   m_comb    = nullptr;
-    bool    m_is_open = false;
 
+    void onSquelchOpen(bool is_open);
     bool tokenize(const std::string& expr);
     Node* parseInstExpression(void);
     Node* parseUnaryOpExpression(void);
     Node* parseAndExpression(void);
     Node* parseOrExpression(void);
     Node* parseExpression(void);
-    void onSquelchOpen(bool is_open);
 
 };  /* class SquelchCombine */
 

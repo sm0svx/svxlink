@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <iterator>
+#include <set>
 
 
 /****************************************************************************
@@ -77,20 +78,18 @@ using namespace std;
 class SquelchCombine::Node
 {
   public:
+    typedef std::set<std::string> SquelchStates;
     Node(const std::string& name) : m_name(name) {}
     virtual ~Node(void) {}
     const std::string name(void) const { return m_name; }
     virtual void print(std::ostream& os) = 0;
     virtual bool initialize(Async::Config& cfg) = 0;
-    virtual void setStartDelay(int delay) = 0;
-    virtual void setHangtime(int hang) = 0;
-    virtual void setExtendedHangtime(int hang) = 0;
-    virtual void enableExtendedHangtime(bool enable) = 0;
-    virtual void setDelay(int delay) = 0;
-    virtual void setSqlTimeout(int timeout) = 0;
     virtual void reset(void) = 0;
-    virtual void writeSamples(const float *samples, int count) = 0;
+    virtual void restart(void) = 0;
+    virtual void processSamples(const float *samples, int count) = 0;
     virtual bool isOpen(void) const = 0;
+    virtual std::string activityInfo(void) const = 0;
+    virtual SquelchStates& squelchStates(SquelchStates& states) = 0;
     sigc::signal<void, bool> squelchOpen;
 
   private:
@@ -130,32 +129,31 @@ class SquelchCombine::LeafNode : public SquelchCombine::Node
       return true;
     }
 
-    virtual bool isOpen(void) { return m_squelch->isOpen(); }
+    virtual bool isOpen(void) const { return m_squelch->isOpen(); }
 
-    virtual void setStartDelay(int delay) { m_squelch->setStartDelay(delay); }
-
-    virtual void setHangtime(int hang) { m_squelch->setHangtime(hang); }
-
-    virtual void setExtendedHangtime(int hang)
+    virtual std::string activityInfo(void) const
     {
-      m_squelch->setExtendedHangtime(hang);
-    }
-
-    virtual void enableExtendedHangtime(bool enable)
-    {
-      m_squelch->enableExtendedHangtime(enable);
-    }
-
-    virtual void setDelay(int delay) { m_squelch->setDelay(delay); }
-
-    virtual void setSqlTimeout(int timeout)
-    {
-      m_squelch->setSqlTimeout(timeout);
+      std::string act_info = name();
+      if (m_squelch->isOpen())
+      {
+        act_info += "*";
+      }
+      if (!m_squelch->activityInfo().empty())
+      {
+        if (!m_squelch->isOpen())
+        {
+          act_info += "=";
+        }
+        act_info += m_squelch->activityInfo();
+      }
+      return act_info;
     }
 
     virtual void reset(void) { m_squelch->reset(); }
 
-    virtual void writeSamples(const float *samples, int count)
+    virtual void restart(void) { m_squelch->restart(); }
+
+    virtual void processSamples(const float *samples, int count)
     {
       int pos = 0;
       do {
@@ -171,7 +169,11 @@ class SquelchCombine::LeafNode : public SquelchCombine::Node
       } while (pos < count);
     }
 
-    virtual bool isOpen(void) const { return m_squelch->isOpen(); }
+    virtual SquelchStates& squelchStates(SquelchStates& states)
+    {
+      states.emplace(activityInfo());
+      return states;
+    }
 
   private:
     Squelch* m_squelch = nullptr;
@@ -205,44 +207,29 @@ class SquelchCombine::UnaryOpNode : public SquelchCombine::Node
       return m_node->initialize(cfg);
     }
 
-    virtual void setStartDelay(int delay)
-    {
-      m_node->setStartDelay(delay);
-    }
-
-    virtual void setHangtime(int hang)
-    {
-      m_node->setHangtime(hang);
-    }
-
-    virtual void setExtendedHangtime(int hang)
-    {
-      m_node->setExtendedHangtime(hang);
-    }
-
-    virtual void enableExtendedHangtime(bool enable)
-    {
-      m_node->enableExtendedHangtime(enable);
-    }
-
-    virtual void setDelay(int delay)
-    {
-      m_node->setDelay(delay);
-    }
-
-    virtual void setSqlTimeout(int timeout)
-    {
-      m_node->setSqlTimeout(timeout);
-    }
-
     virtual void reset(void)
     {
       m_node->reset();
     }
 
-    virtual void writeSamples(const float *samples, int count)
+    virtual void restart(void)
     {
-      m_node->writeSamples(samples, count);
+      m_node->restart();
+    }
+
+    virtual void processSamples(const float *samples, int count)
+    {
+      m_node->processSamples(samples, count);
+    }
+
+    virtual SquelchStates& squelchStates(SquelchStates& states)
+    {
+      return m_node->squelchStates(states);
+    }
+
+    virtual std::string activityInfo(void) const
+    {
+      return name() + "(" + m_node->activityInfo() + ")";
     }
 
   protected:
@@ -291,57 +278,40 @@ class SquelchCombine::BinaryOpNode : public SquelchCombine::Node
       return m_left->initialize(cfg) && m_right->initialize(cfg);
     }
 
-    virtual void setStartDelay(int delay)
-    {
-      m_left->setStartDelay(delay);
-      m_right->setStartDelay(delay);
-    }
-
-    virtual void setHangtime(int hang)
-    {
-      m_left->setHangtime(hang);
-      m_right->setHangtime(hang);
-    }
-
-    virtual void setExtendedHangtime(int hang)
-    {
-      m_left->setExtendedHangtime(hang);
-      m_right->setExtendedHangtime(hang);
-    }
-
-    virtual void enableExtendedHangtime(bool enable)
-    {
-      m_left->enableExtendedHangtime(enable);
-      m_right->enableExtendedHangtime(enable);
-    }
-
-    virtual void setDelay(int delay)
-    {
-      m_left->setDelay(delay);
-      m_right->setDelay(delay);
-    }
-
-    virtual void setSqlTimeout(int timeout)
-    {
-      m_left->setSqlTimeout(timeout);
-      m_right->setSqlTimeout(timeout);
-    }
-
     virtual void reset(void)
     {
       m_left->reset();
       m_right->reset();
     }
 
-    virtual void writeSamples(const float *samples, int count)
+    virtual void restart(void)
     {
-      m_left->writeSamples(samples, count);
-      m_right->writeSamples(samples, count);
+      m_left->restart();
+      m_right->restart();
+    }
+
+    virtual void processSamples(const float *samples, int count)
+    {
+      m_left->processSamples(samples, count);
+      m_right->processSamples(samples, count);
     }
 
     void onSquelchOpen(bool is_open)
     {
       squelchOpen(isOpen());
+    }
+
+    virtual SquelchStates& squelchStates(SquelchStates& states)
+    {
+      m_left->squelchStates(states);
+      m_right->squelchStates(states);
+      return states;
+    }
+
+    virtual std::string activityInfo(void) const
+    {
+      return name() + "(" + m_left->activityInfo() + ", " +
+             m_right->activityInfo() + ")";
     }
 
   protected:
@@ -459,54 +429,18 @@ bool SquelchCombine::initialize(Async::Config& cfg,
 } /* SquelchCombine::initialize */
 
 
-void SquelchCombine::setStartDelay(int delay)
-{
-  m_comb->setStartDelay(delay);
-} /* SquelchCombine::setStartDelay */
-
-
-void SquelchCombine::setHangtime(int hang)
-{
-  m_comb->setHangtime(hang);
-} /* SquelchCombine::setHangtime */
-
-
-void SquelchCombine::setExtendedHangtime(int hang)
-{
-  m_comb->setExtendedHangtime(hang);
-} /* SquelchCombine::setExtendedHangtime */
-
-
-void SquelchCombine::enableExtendedHangtime(bool enable)
-{
-  m_comb->enableExtendedHangtime(enable);
-} /* SquelchCombine::enableExtendedHangtime */
-
-
-void SquelchCombine::setDelay(int delay)
-{
-  m_comb->setDelay(delay);
-} /* SquelchCombine::setDelay */
-
-
-void SquelchCombine::setSqlTimeout(int timeout)
-{
-  m_comb->setSqlTimeout(timeout);
-} /* SquelchCombine::setSqlTimeout */
-
-
 void SquelchCombine::reset(void)
 {
   m_comb->reset();
-  m_is_open = false;
+  Squelch::reset();
 } /* SquelchCombine::reset */
 
 
-int SquelchCombine::writeSamples(const float *samples, int count)
+void SquelchCombine::restart(void)
 {
-  m_comb->writeSamples(samples, count);
-  return count;
-} /* SquelchCombine::writeSamples */
+  m_comb->restart();
+  Squelch::restart();
+} /* SquelchCombine::restart */
 
 
 /****************************************************************************
@@ -515,6 +449,11 @@ int SquelchCombine::writeSamples(const float *samples, int count)
  *
  ****************************************************************************/
 
+int SquelchCombine::processSamples(const float *samples, int count)
+{
+  m_comb->processSamples(samples, count);
+  return count;
+} /* SquelchCombine::processSamples */
 
 
 /****************************************************************************
@@ -522,6 +461,27 @@ int SquelchCombine::writeSamples(const float *samples, int count)
  * Private member functions
  *
  ****************************************************************************/
+
+void SquelchCombine::onSquelchOpen(bool is_open)
+{
+  if (is_open != signalDetected())
+  {
+    std::string info;
+    info.reserve(127);
+    SquelchCombine::Node::SquelchStates states;
+    for (const auto& state : m_comb->squelchStates(states))
+    {
+      if (!info.empty())
+      {
+        info += " ";
+      }
+      info += state;
+    }
+    setSignalDetected(is_open, info);
+    //setSignalDetected(is_open, m_comb->activityInfo());
+  }
+} /* SquelchCombine::onSquelchOpen */
+
 
 bool SquelchCombine::tokenize(const std::string& expr)
 {
@@ -683,16 +643,6 @@ SquelchCombine::Node* SquelchCombine::parseExpression(void)
 {
   return parseOrExpression();
 } /* SquelchCombine::parseExpresseion */
-
-
-void SquelchCombine::onSquelchOpen(bool is_open)
-{
-  if (m_is_open != is_open)
-  {
-    m_is_open = is_open;
-    squelchOpen(is_open);
-  }
-} /* SquelchCombine::onSquelchOpen */
 
 
 /*

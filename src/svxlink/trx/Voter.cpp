@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -197,6 +197,11 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     float signalStrength(void) const { return rx->signalStrength(); }
 
+    const std::string& squelchActivityInfo(void) const
+    {
+      return rx->squelchActivityInfo();
+    }
+
     void setMuteState(Rx::MuteState new_mute_state)
     {
       mute_state = new_mute_state;
@@ -375,9 +380,9 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false), command_pty(0)
+    sm(Macho::State<Top>(this)), is_processing_event(false), command_pty(0),
+    m_print_sat_squelch(false)
 {
-  Rx::setVerbose(false);
 } /* Voter::Voter */
 
 
@@ -504,7 +509,9 @@ bool Voter::initialize(void)
     return false;
   }
   sm->setRxSwitchDelay(rx_switch_delay);
-  
+
+  cfg.getValue(name(), "VERBOSE", m_print_sat_squelch);
+
   selector = new AudioSelector;
   setHandler(selector);
   
@@ -644,8 +651,15 @@ void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 
 void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
-  //cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
-  //     << " srx=" << srx->name() << endl;
+  if (m_print_sat_squelch)
+  {
+    std::cout << name() << "[" << srx->name() << "]"
+         << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
+         << " (siglev="
+         << static_cast<int>(std::roundf(srx->signalStrength()))
+         << ")"
+         << std::endl;
+  }
   dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
 } /* Voter::satSquelchOpen */
 
@@ -839,6 +853,7 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
     runTask(bind(voter().signalLevelUpdated.make_slot(), siglev));
   }
 } /* Voter::Top::satSignalLevelUpdated */
+
 
 void Voter::Top::runTask(sigc::slot<void> task)
 {
@@ -1082,15 +1097,15 @@ void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
 
 void Voter::SquelchOpen::entry(void)
 {
+  std::ostringstream ss;
   if (voter().m_verbose)
   {
-    SatRx *srx = activeSrx();
-    cout << voter().name() << ": The squelch is OPEN"
-	 << " (" << srx->name() << "=" << srx->signalStrength() << ")"
-	 << endl;
+    const SatRx *srx = activeSrx();
+    ss << srx->name() << "[" << srx->squelchActivityInfo() << "]="
+       << static_cast<int>(std::roundf(srx->signalStrength()));
   }
-  
-  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true));
+
+  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true, ss.str()));
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));
   runTask(mem_fun(voter(), &Voter::printSquelchState));
 } /* Voter::SquelchOpen::entry */
@@ -1104,15 +1119,15 @@ void Voter::SquelchOpen::init(void)
 
 void Voter::SquelchOpen::exit(void)
 {
+  std::ostringstream ss;
   if (voter().m_verbose)
   {
-    SatRx *srx = activeSrx();
-    cout << voter().name() << ": The squelch is CLOSED"
-	 << " (" << srx->name() << "=" << srx->signalStrength() << ")"
-	 << endl;
+    const SatRx *srx = activeSrx();
+    ss << srx->name() << "[" << srx->squelchActivityInfo() << "]="
+       << srx->signalStrength();
   }
-  
-  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false));
+
+  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false, ss.str()));
   runTask(mem_fun(voter(), &Voter::printSquelchState));
 } /* Voter::SquelchOpen::exit */
 

@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <cmath>
 
 
 /****************************************************************************
@@ -145,14 +147,24 @@ class SquelchSigLev : public Squelch
       	return false;
       }
 
-      if (!cfg.getValue(name, "SIGLEV_OPEN_THRESH", open_thresh))
+      if (cfg.getValue(name, "SIGLEV_OPEN_THRESH", open_thresh))
       {
-	std::cerr << "*** ERROR: Config variable " << name
-	      	  << "/SIGLEV_OPEN_THRESH not set\n";
-	return false;
+        std::cerr << "*** WARNING: Config variable SIGLEV_OPEN_THRESH has "
+                     "been renamed to SQL_SIGLEV_OPEN_THRESH." << std::endl;
+      }
+      else if (!cfg.getValue(name, "SQL_SIGLEV_OPEN_THRESH", open_thresh))
+      {
+        std::cerr << "*** ERROR: Config variable " << name
+                  << "/SQL_SIGLEV_OPEN_THRESH not set\n";
+        return false;
       }
 
-      if (!cfg.getValue(name, "SIGLEV_CLOSE_THRESH", close_thresh))
+      if (cfg.getValue(name, "SIGLEV_CLOSE_THRESH", close_thresh))
+      {
+        std::cerr << "*** WARNING: Config variable SIGLEV_CLOSE_THRESH has "
+                     "been renamed to SQL_SIGLEV_CLOSE_THRESH." << std::endl;
+      }
+      else if (!cfg.getValue(name, "SQL_SIGLEV_CLOSE_THRESH", close_thresh))
       {
 	std::cerr << "*** ERROR: Config variable " << name
 	      	  << "/SIGLEV_CLOSE_THRESH not set\n";
@@ -160,7 +172,12 @@ class SquelchSigLev : public Squelch
       }
 
       std::string rx_name(name);
-      cfg.getValue(name, "SIGLEV_RX_NAME", rx_name);
+      if (cfg.getValue(name, "SIGLEV_RX_NAME", rx_name))
+      {
+        std::cerr << "*** WARNING: Config variable SIGLEV_RX_NAME has "
+                     "been renamed to SQL_SIGLEV_RX_NAME." << std::endl;
+      }
+      cfg.getValue(name, "SQL_SIGLEV_RX_NAME", rx_name);
 
       sig_lev_det = createSigLevDet(cfg, rx_name);
 
@@ -176,15 +193,15 @@ class SquelchSigLev : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      if (signalDetected())
+      float siglev = sig_lev_det->lastSiglev();
+      bool opened = !signalDetected() && (siglev >= open_thresh);
+      bool closed = signalDetected() && (siglev < close_thresh);
+      if (opened || closed)
       {
-      	setSignalDetected(sig_lev_det->lastSiglev() >= close_thresh);
+        std::ostringstream ss;
+        ss << static_cast<int>(std::roundf(siglev));
+        setSignalDetected(opened, ss.str());
       }
-      else
-      {
-      	setSignalDetected(sig_lev_det->lastSiglev() >= open_thresh);
-      }
-
       return count;
     }
 

@@ -8,7 +8,7 @@ This file contains the base class for implementing a squelch detector
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2020  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2021  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -115,8 +115,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @date   2005-08-02
 
 This class is used as the base when implementing a squelch detector. The
-detector should implement the \em processSamples function. In that function,
-call \em setSignalDetected to indicate if a signal is detected ot not.
+detector may implement the \em processSamples function if the specific squelch
+type derive the squelch state from the audio stream. The \em setSignalDetected
+should be called to indicate if a signal is detected ot not.
+
+This base class implement the core functionality of a squelch. It reads the
+configuration variables SQL_START_DELAY, SQL_DELAY, SQL_HANGTIME, SQL_TIMEOUT
+and SQL_EXTENDED_HANGTIME and handles all timing associated with those.
 */
 class Squelch : public sigc::trackable, public Async::AudioSink
 {
@@ -128,8 +133,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
       : m_open(false), m_start_delay(0), m_start_delay_left(0), m_delay(0),
         m_delay_left(0), m_hangtime(0), m_extended_hangtime(0),
         m_extended_hangtime_enabled(false), m_current_hangtime(0),
-        m_hangtime_left(0), m_timeout(0), m_timeout_left(0),
-        m_signal_detected(false), m_signal_detected_filtered(false) {}
+        m_hangtime_left(0), m_timeout(-1), m_timeout_left(-1),
+        m_signal_detected(false) {}
 
     /**
      * @brief 	Destructor
@@ -217,14 +222,14 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      */
     virtual void setSqlTimeout(int timeout)
     {
-      m_timeout = ((timeout > 0) ? (timeout * INTERNAL_SAMPLE_RATE) : 0);
+      m_timeout = ((timeout > 0) ? (timeout * INTERNAL_SAMPLE_RATE) : -1);
     }
 
     /**
      * @brief 	Reset the squelch detector
      *
-     *  Reset the squelch so that the detection process starts from
-     *	the beginning again.
+     * Reset the squelch so that the detection process starts from
+     * the beginning.
      */
     virtual void reset(void)
     {
@@ -232,10 +237,24 @@ class Squelch : public sigc::trackable, public Async::AudioSink
       m_hangtime_left = 0;
       m_start_delay_left = m_start_delay;
       m_delay_left = 0;
-      m_timeout_left = 0;
+      m_timeout_left = -1;
       m_signal_detected = false;
-      m_signal_detected_filtered = false;
+      m_signal_detected_info.clear();
+      m_last_info.clear();
       enableExtendedHangtime(false);
+    }
+
+    /**
+     * @brief   Restart the squelch detector
+     *
+     * Restarting a squelch is a kind of soft reset. The only thing that
+     * happens right now is that the squelch start delay is activated. This
+     * function is typically called by a transceiver implementation after
+     * turing the transmitter off.
+     */
+    virtual void restart(void)
+    {
+      m_start_delay_left = m_start_delay;
     }
 
     /**
@@ -261,8 +280,22 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Get the state of the squelch
      * @return	Return \em true if the squelch is open, or else \em false
+     *
+     * This function will return \em true if the squelch is open or \em false
+     * if the squelch is cloesd. If a squelch open state have timed out the
+     * function will also return \em false.
      */
-    virtual bool isOpen(void) const { return m_open || (m_hangtime_left > 0); }
+    virtual bool isOpen(void) const { return m_open && (m_timeout_left != 0); }
+
+    /**
+     * @brief   Get the last squelch activity info
+     * @return  Returns the last squelch activity info
+     *
+     * The info is typically used when printing the squelch open/close message
+     * as a bit of extra information as to what caused the squelch activity. It
+     * should be a short string.
+     */
+    const std::string& activityInfo(void) const { return m_last_info; }
 
     /**
      * @brief 	A signal that indicates when the squelch state changes
@@ -296,12 +329,19 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Used by the actual squelch detector to indicate signal presence
      * @param 	is_detected Set to \em true if a signal is detected
+     * @param   info Info about the squelch open/close
+     *
+     * A squelch implementation should use this function to indicate if the
+     * squelch is opened or closed. The info parameter is used when printing
+     * the squelch open/close message as a bit of extra information as to what
+     * caused the squelch activity. It should be a short string.
      */
-    inline void setSignalDetected(bool is_detected)
+    inline void setSignalDetected(bool is_detected, const std::string& info="")
     {
       if (m_signal_detected != is_detected)
       {
-	setSignalDetectedP(is_detected);
+        m_signal_detected_info = info;
+        setSignalDetectedP(is_detected);
       }
     }
 
@@ -335,7 +375,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     int         m_timeout;
     int         m_timeout_left;
     bool	m_signal_detected;
-    bool	m_signal_detected_filtered;
+    std::string m_signal_detected_info;
+    std::string m_last_info;
 
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);
