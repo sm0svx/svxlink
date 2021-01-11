@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -413,7 +413,8 @@ class Voter : public Rx
     EventQueue		  event_queue;
     Async::Pty            *command_pty;
     std::string           command_buf;
-    
+    bool                  m_print_sat_squelch;
+
     void dispatchEvent(Macho::IEvent<Top> *event);
     void satSquelchOpen(bool is_open, SatRx *rx);
     void satSignalLevelUpdated(float siglev, SatRx *srx);
