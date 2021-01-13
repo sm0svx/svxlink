@@ -1369,7 +1369,7 @@ void TetraLogic::handleCallReleased(std::string message)
     
     if (!Qso.members.empty())
     {
-      m_aprsmesg += "Qso ended (";
+      m_aprsmesg += ">Qso ended (";
       for (const auto &it : Qso.members)
       {
         m_aprsmesg += it;
@@ -1380,7 +1380,7 @@ void TetraLogic::handleCallReleased(std::string message)
     }
     else
     {
-      m_aprsmesg += "Transmission ended";
+      m_aprsmesg += ">Transmission ended";
     }
 
     if (debug)
