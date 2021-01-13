@@ -1124,7 +1124,7 @@ void Voter::SquelchOpen::exit(void)
   {
     const SatRx *srx = activeSrx();
     ss << srx->name() << "[" << srx->squelchActivityInfo() << "]="
-       << srx->signalStrength();
+       << static_cast<int>(std::roundf(srx->signalStrength()));
   }
 
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false, ss.str()));
