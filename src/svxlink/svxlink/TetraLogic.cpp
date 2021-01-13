@@ -1238,26 +1238,34 @@ std::string TetraLogic::getTSI(std::string issi)
   stringstream ss;
   char is[18];
   int len = issi.length(); 
-  
+  int t_mcc;
+  std::string t_issi;
+
   if (len < 9)
   {
     sprintf(is, "%08d", atoi(issi.c_str()));
-    ss << mcc << mnc << is;  
+    ss << mcc << mnc << is;
+    return ss.str();
   }
-  else if (issi.substr(0,1) != "0")
+
+  // get MCC (3 or 4 digits)
+  if (issi.substr(0,1) == "0")
   {
-    sprintf(is, "%04d%05d%s", atoi(issi.substr(0,3).c_str()),
-                              atoi(issi.substr(3,len-11).c_str()),
-                              issi.substr(-8,8).c_str());
-    ss << is;
-  } 
-  else 
-  {
-    sprintf(is, "%04d%05d%s", atoi(issi.substr(0,4).c_str()),
-                              atoi(issi.substr(4,len-12).c_str()),
-                              issi.substr(-8,8).c_str());
-    ss << is;
+    t_mcc = atoi(issi.substr(0,4).c_str());
+    issi.erase(0,4);
   }
+  else
+  {
+    t_mcc = atoi(issi.substr(0,3).c_str());
+    issi.erase(0,3);
+  }
+
+  // get ISSI (8 digits)
+  t_issi = issi.substr(-8,8);
+  issi.erase(-8,8);
+
+  sprintf(is, "%04d%05d%s", t_mcc, atoi(issi.c_str()), t_issi.c_str());
+  ss << is;
 
   return ss.str();
 } /* TetraLogic::getTSI */
@@ -1266,9 +1274,9 @@ std::string TetraLogic::getTSI(std::string issi)
 std::string TetraLogic::getISSI(std::string tsi)
 {
   stringstream t_issi;
-  if (tsi.length() == 17)
+  if (tsi.length() > 8)
   {
-    t_issi << atoi(tsi.substr(9,8).c_str());  
+    t_issi << atoi(tsi.substr(-8,8).c_str());
   }
   else
   {
