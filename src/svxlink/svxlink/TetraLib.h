@@ -560,8 +560,11 @@ unsigned short getSdsMesgId(void)
 */
 bool createSDS(std::string & sds, std::string issi, std::string message)
 {
-  if (message.length() > 120 || issi.length() > 8) return false;
-
+  if (message.length() > 120 || issi.length() > 8 || issi.length() == 0)
+  {
+    return false;
+  }
+  
   std::stringstream ss;
   ss << "8204" << std::setfill('0') << std::setw(sizeof(short))
      << std::hex << getSdsMesgId() << "01";

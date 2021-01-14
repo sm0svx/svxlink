@@ -1261,8 +1261,8 @@ std::string TetraLogic::getTSI(std::string issi)
   }
 
   // get ISSI (8 digits)
-  t_issi = issi.substr(-8,8);
-  issi.erase(-8,8);
+  t_issi = issi.substr(len-8,8);
+  issi.erase(len-8,8);
 
   sprintf(is, "%04d%05d%s", t_mcc, atoi(issi.c_str()), t_issi.c_str());
   ss << is;
@@ -1274,14 +1274,14 @@ std::string TetraLogic::getTSI(std::string issi)
 std::string TetraLogic::getISSI(std::string tsi)
 {
   stringstream t_issi;
-  if (tsi.length() > 8)
+  size_t len = tsi.length();
+  
+  if (len < 8)
   {
-    t_issi << atoi(tsi.substr(-8,8).c_str());
+    t_issi << "00000000" << tsi;
+    return t_issi.str().substr(t_issi.str().length()-8, 8);
   }
-  else
-  {
-    t_issi << tsi;  
-  }
+  t_issi << tsi.substr(len-8, 8);
   return t_issi.str();
 } /* TetraLogic::getISSI */
 
@@ -1519,7 +1519,7 @@ void TetraLogic::handleCnumf(std::string m_message)
     }
     if (atoi(issi.c_str()) != atoi(m_message.substr(9,8).c_str())) {
       cout << "*** ERROR: wrong ISSI in MS, will not work! " << issi <<"!=" 
-           << m_message.substr(9,8) << endl;
+           << atoi(m_message.substr(9,8).c_str()) << endl;
     }
   }
   
@@ -1635,9 +1635,8 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         {
           cout << ss.str() << endl;
         }
-
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
-        
+
         // execute tcl procedure(s)
         if (sstcl.str().length() > 0)
         {
