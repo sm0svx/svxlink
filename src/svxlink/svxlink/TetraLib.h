@@ -451,9 +451,19 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
   int t_velo;
   int t_dot;
 
-  //
+  // 0A0088BD4247F737FFE810 - short position report PDU
+  // 0A4E73DDA841F55809493CC081 - long position report PDU
   if (in.substr(0,2) == "0A") // LIP
   {
+    // check that is a shor position report
+    if ((std::stoi(in.substr(2,1),nullptr,16) & 0x0c) != 0)
+    {
+       std::cout << "*** ERROR: Only PDU type=0 supported at the moment,"
+        << " check that you have configured \"short location report PDU\""
+        << " in your codeplug." << std::endl;
+       return;
+    }
+
     lipinfo.time_elapsed = (std::stoi(in.substr(2,1),nullptr,16) & 0x03);
 
     tlo =  std::stol(in.substr(3,1),nullptr,16) << 21;

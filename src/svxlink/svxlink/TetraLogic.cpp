@@ -1692,7 +1692,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^02"]                                      = SIMPLE_TEXT_SDS; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
-  mre["^0A"]                                      = LIP_SDS;
+  mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
   mre["^8204"]                                    = TEXT_SDS;
   mre["^821000"]                                  = ACK_SDS;
   mre["^0C"]                                      = CONCAT_SDS;
