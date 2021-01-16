@@ -198,6 +198,7 @@ class TGHandler : public sigc::trackable
     void checkTimers(Async::Timer *t);
     void removeClientP(TGInfo *tg_info, ReflectorClient* client);
     void printTGStatus(void);
+    bool allowTgSelection(ReflectorClient *client, uint32_t tg);
 };  /* class TGHandler */
 
 

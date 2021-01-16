@@ -78,7 +78,6 @@ target_link_libraries(svxlink ${LIBS} ${PJSIP_LIBRARIES})
 set_target_properties(svxlink PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_dependencies(svxlink version-svxlink)
 
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in

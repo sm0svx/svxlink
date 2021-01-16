@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <algorithm>
 #include <sstream>
+#include <regex>
 
 
 /****************************************************************************
@@ -148,7 +149,7 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
     removeClientP(tg_info, client);
   }
 
-  if (tg > 0)
+  if ((tg > 0) && allowTgSelection(client, tg))
   {
     IdMap::iterator id_map_it = m_id_map.find(tg);
     if (id_map_it != m_id_map.end())
@@ -160,7 +161,6 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
       tg_info = new TGInfo(tg);
       std::ostringstream ss;
       ss << "TG#" << tg;
-      tg_info->auto_qsy_after_s = 0;
       m_cfg->getValue(ss.str(), "AUTO_QSY_AFTER", tg_info->auto_qsy_after_s);
       if (tg_info->auto_qsy_after_s > 0)
       {
@@ -348,6 +348,35 @@ void TGHandler::printTGStatus(void)
   }
   std::cout << "### ------------ END -----------------" << std::endl;
 } /* TGHandler::printTGStatus */
+
+
+bool TGHandler::allowTgSelection(ReflectorClient *client, uint32_t tg)
+{
+  std::ostringstream ss;
+  ss << "TG#" << tg;
+  try
+  {
+    std::string allow;
+    if (m_cfg->getValue(ss.str(), "ALLOW", allow))
+    {
+      if (!std::regex_match(client->callsign(), std::regex(allow)))
+      {
+        // FIXME: Notify the client that the TG selection was not allowed
+        std::cout << client->callsign() << ": Not allowed to use TG #"
+                  << tg << std::endl;
+        return false;
+      }
+      //std::cout << "### " << client->callsign() << " Match!" << std::endl;
+    }
+    return true;
+  }
+  catch (std::regex_error& e)
+  {
+    std::cerr << "*** WARNING: Regular expression parsing error in "
+              << ss.str() << "/ALLOW: " << e.what() << std::endl;
+  }
+  return false;
+} /* TGHandler::allowTgSelection */
 
 
 /*

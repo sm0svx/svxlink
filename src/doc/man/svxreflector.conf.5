@@ -169,10 +169,13 @@ in the PASSWORDS section. User
 .
 .SS Talkgroup Configuration Sections
 .
-It is possible to set configuration parameters that are only applied to one talkgroup. Those parameters are placed in a configuration section named "TG#<talkgroup id>". Example:
+It is possible to set configuration parameters that are only applied to one
+talkgroup. Those parameters are placed in a configuration section named
+"TG#<talkgroup id>". Example:
 
   [TG#9999]
   AUTO_QSY_AFTER=300
+  ALLOW=S[A-M]\\\\d.*|LA8PV
 
 The following configuration variables are valid in a talkgroup configuration
 section.
@@ -183,6 +186,17 @@ talkgroup is requested. This is typically used to keep call channels and wide
 area channels clear so that stations does not dwell there for too long.
 Auto QSY is only triggered directly aftar a talker stop event.
 The default is that auto QSY is disabled (AUTO_QSY_AFTER=0).
+.TP
+.B ALLOW
+A regular expression that must match the whole callsign of the nodes that try
+to select this talkgroup.  The regular expression standard used is the same as
+for ECMAScript with the exception that the backslash special patterns (e.g.
+\\s, \\d etc) must be expressed with double backslash notation (e.g. \\\\s,
+\\\\d etc).
+
+An example that match most Swedish callsigns and a specific Norwegian one is
+"S[A-M]\\\\d.*|LA8PV". That expression will for example match LA8PV, SM0SVX,
+SK3W, SA7ABC etc.
 .
 .SH FILES
 .
