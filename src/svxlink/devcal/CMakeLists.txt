@@ -8,7 +8,6 @@ target_link_libraries(devcal asyncaudio asynccpp trx svxmisc ${POPT_LIBRARIES})
 set_target_properties(devcal PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_dependencies(devcal version-devcal)
 
 #add_executable(noisegen noisegen.cpp)
 #target_link_libraries(noisegen asyncaudio asynccpp trx)
