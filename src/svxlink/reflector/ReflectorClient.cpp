@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -444,8 +444,18 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
       }
       if (m_client_proto_ver < ProtoVer(2, 0))
       {
-        TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients());
-        m_current_tg = m_reflector->tgForV1Clients();
+        if (TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients()))
+        {
+          std::cout << m_callsign << ": Select TG #"
+                    << m_reflector->tgForV1Clients() << std::endl;
+          m_current_tg = m_reflector->tgForV1Clients();
+        }
+        else
+        {
+          std::cout << m_callsign
+                    << ": V1 client not allowed to use default TG #"
+                    << m_reflector->tgForV1Clients() << std::endl;
+        }
       }
       m_reflector->broadcastMsg(MsgNodeJoined(m_callsign), ExceptFilter(this));
     }
@@ -477,7 +487,6 @@ void ReflectorClient::handleSelectTG(std::istream& is)
   }
   if (msg.tg() != m_current_tg)
   {
-    cout << m_callsign << ": Select TG #" << msg.tg() << endl;
     ReflectorClient *talker = TGHandler::instance()->talkerForTG(m_current_tg);
     if (talker == this)
     {
@@ -490,8 +499,17 @@ void ReflectorClient::handleSelectTG(std::istream& is)
     {
       sendUdpMsg(MsgUdpFlushSamples());
     }
-    m_current_tg = msg.tg();
-    TGHandler::instance()->switchTo(this, msg.tg());
+    if (TGHandler::instance()->switchTo(this, msg.tg()))
+    {
+      cout << m_callsign << ": Select TG #" << msg.tg() << endl;
+      m_current_tg = msg.tg();
+    }
+    else
+    {
+      // FIXME: Notify the client that the TG selection was not allowed
+      std::cout << m_callsign << ": Not allowed to use TG #"
+                << msg.tg() << std::endl;
+    }
   }
 } /* ReflectorClient::handleSelectTG */
 
@@ -506,7 +524,16 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
     sendError("Illegal MsgTgMonitor protocol message received");
     return;
   }
-  const std::set<uint32_t>& tgs = msg.tgs();
+  std::set<uint32_t> tgs = msg.tgs();
+  for (auto it=tgs.begin(); it!=tgs.end(); ++it)
+  {
+    if (!TGHandler::instance()->allowTgSelection(this, *it))
+    {
+      std::cout << m_callsign << ": Not allowed to monitor TG #"
+                << *it << std::endl;
+      tgs.erase(it);
+    }
+  }
   cout << m_callsign << ": Monitor TG#: [ ";
   std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
   cout << "]" << endl;
