@@ -257,6 +257,7 @@ class LocalRxBase : public Rx
 
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
+    void onToneDetected(float fq);
     void dataFrameReceived(std::vector<uint8_t> frame);
     void dataFrameReceivedIb(std::vector<uint8_t> frame);
     void dtmfDigitDeactivated(char digit, int duration_ms);
