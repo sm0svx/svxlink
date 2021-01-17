@@ -736,7 +736,7 @@ bool LocalRxBase::addToneDetector(float fq, int bw, float thresh,
   ToneDetector *det = new ToneDetector(fq, bw, required_duration);
   assert(det != 0);
   det->setPeakThresh(thresh);
-  det->detected.connect(toneDetected.make_slot());
+  det->detected.connect(sigc::mem_fun(*this, &LocalRxBase::onToneDetected));
   
   tone_dets->addSink(det, true);
   
@@ -822,7 +822,16 @@ void LocalRxBase::dtmfDigitDeactivated(char digit, int duration_ms)
   {
     delay->mute(false, DTMF_MUTING_POST);
   }
-} /* LocalRxBase::dtmfDigitActivated */
+} /* LocalRxBase::dtmfDigitDeactivated */
+
+
+void LocalRxBase::onToneDetected(float fq)
+{
+  if (mute_state == MUTE_NONE)
+  {
+    toneDetected(fq);
+  }
+} /* LocalRxBase::onToneDetected */
 
 
 void LocalRxBase::dataFrameReceived(vector<uint8_t> frame)
@@ -840,7 +849,10 @@ void LocalRxBase::dataFrameReceived(vector<uint8_t> frame)
          << " cmd=" << Tx::DATA_CMD_TONE_DETECTED
          << " fq=" << fq
          << endl;
-    toneDetected(fq);
+    if (mute_state == MUTE_NONE)
+    {
+      toneDetected(fq);
+    }
   }
   dataReceived(frame);
 } /* LocalRxBase::dataFrameReceived */
