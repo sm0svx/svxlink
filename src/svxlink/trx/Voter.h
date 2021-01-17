@@ -426,7 +426,8 @@ class Voter : public Rx
     SatRx *findBestRx(void) const;
     void onCommandPtyInput(const void *buf, size_t count);
     void handlePtyCommand(const std::string &full_command);
-    void setRxEnabled(const std::string &rx_name, bool do_enable);
+    void setRxEnabled(const std::string &rx_name, bool do_enable,
+                      Rx::MuteState disabled_mute_state=Rx::MUTE_ALL);
 
 };  /* class Voter */
 

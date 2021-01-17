@@ -1971,10 +1971,22 @@ the operating system. Available commands:
 .IP \(bu 4
 .BR "ENABLE rx_name" " - Enable the given receiver"
 .IP \(bu 4
+.BR "MUTE rx_name" " - Mute the given receiver"
+.IP \(bu 4
 .BR "DISABLE rx_name" " - Disable the given receiver"
 .P
+The difference between MUTE and DISABLE is that in the mute state only the
+content (audio, dtmf, selcall tone detectors etc) is muted but the receiver is
+still operational. That is probably only useful if also setting VERBOSE=1 so
+that squelch open/close can be monitored in the log. That may be useful if a
+new receiver is connected to the system which you want to monitor for a while
+without having it actually participate in the voting. It may also be of use if
+a receiver misbehaves in which case it can be monitored until it stops
+misbehaving.
+
 Commands can be issued using a simple echo command from the shell. Example:
 echo "DISABLE Rx1" >/dev/shm/voter_ctrl
+.RE
 .TP
 .B VERBOSE
 Set this to 1 to enable verbose mode. In verbose mode the squelch state events
