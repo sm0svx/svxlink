@@ -22,7 +22,6 @@ target_link_libraries(remotetrx ${LIBS})
 set_target_properties(remotetrx PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_dependencies(remotetrx version-remote-trx)
 
 # Install targets
 install(TARGETS remotetrx DESTINATION ${BIN_INSTALL_DIR})

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <algorithm>
 #include <sstream>
+#include <regex>
 
 
 /****************************************************************************
@@ -133,7 +134,7 @@ void TGHandler::setSqlTimeoutBlocktime(unsigned sql_timeout_blocktime)
 } /* TGHandler::setSqlTimeoutBlocktime */
 
 
-void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
+bool TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
 {
   TGInfo *tg_info = 0;
   ClientMap::iterator client_map_it = m_client_map.find(client);
@@ -143,13 +144,17 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
     assert(tg_info != 0);
     if (tg_info->id == tg)
     {
-      return;
+      return true;
     }
     removeClientP(tg_info, client);
   }
 
   if (tg > 0)
   {
+    if (!allowTgSelection(client, tg))
+    {
+      return false;
+    }
     IdMap::iterator id_map_it = m_id_map.find(tg);
     if (id_map_it != m_id_map.end())
     {
@@ -160,7 +165,6 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
       tg_info = new TGInfo(tg);
       std::ostringstream ss;
       ss << "TG#" << tg;
-      tg_info->auto_qsy_after_s = 0;
       m_cfg->getValue(ss.str(), "AUTO_QSY_AFTER", tg_info->auto_qsy_after_s);
       if (tg_info->auto_qsy_after_s > 0)
       {
@@ -173,6 +177,8 @@ void TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
   }
 
   //printTGStatus();
+
+  return true;
 } /* TGHandler::switchTo */
 
 
@@ -253,6 +259,32 @@ uint32_t TGHandler::TGForClient(ReflectorClient* client)
   }
   return client_map_it->second->id;
 } /* TGHandler::TGForClient */
+
+
+bool TGHandler::allowTgSelection(ReflectorClient *client, uint32_t tg)
+{
+  std::ostringstream ss;
+  ss << "TG#" << tg;
+  try
+  {
+    std::string allow;
+    if (m_cfg->getValue(ss.str(), "ALLOW", allow))
+    {
+      if (!std::regex_match(client->callsign(), std::regex(allow)))
+      {
+        return false;
+      }
+      //std::cout << "### " << client->callsign() << " Match!" << std::endl;
+    }
+    return true;
+  }
+  catch (std::regex_error& e)
+  {
+    std::cerr << "*** WARNING: Regular expression parsing error in "
+              << ss.str() << "/ALLOW: " << e.what() << std::endl;
+  }
+  return false;
+} /* TGHandler::allowTgSelection */
 
 
 /****************************************************************************

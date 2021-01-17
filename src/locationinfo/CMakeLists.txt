@@ -18,7 +18,6 @@ endforeach(incfile)
 # Build only a static library
 add_library(${LIBNAME} STATIC ${LIBSRC})
 target_link_libraries(${LIBNAME} ${LIBS})
-add_dependencies(${LIBNAME} version-svxlink)
 
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})

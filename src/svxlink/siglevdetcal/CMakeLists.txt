@@ -13,7 +13,6 @@ target_link_libraries(siglevdetcal ${LIBS})
 set_target_properties(siglevdetcal PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_dependencies(siglevdetcal version-siglev-det-cal)
 
 # Install targets
 install(TARGETS siglevdetcal DESTINATION ${BIN_INSTALL_DIR})
