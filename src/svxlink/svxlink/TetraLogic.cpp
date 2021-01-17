@@ -1238,26 +1238,34 @@ std::string TetraLogic::getTSI(std::string issi)
   stringstream ss;
   char is[18];
   int len = issi.length(); 
-  
+  int t_mcc;
+  std::string t_issi;
+
   if (len < 9)
   {
     sprintf(is, "%08d", atoi(issi.c_str()));
-    ss << mcc << mnc << is;  
+    ss << mcc << mnc << is;
+    return ss.str();
   }
-  else if (issi.substr(0,1) != "0")
+
+  // get MCC (3 or 4 digits)
+  if (issi.substr(0,1) == "0")
   {
-    sprintf(is, "%04d%05d%s", atoi(issi.substr(0,3).c_str()),
-                              atoi(issi.substr(3,len-11).c_str()),
-                              issi.substr(-8,8).c_str());
-    ss << is;
-  } 
-  else 
-  {
-    sprintf(is, "%04d%05d%s", atoi(issi.substr(0,4).c_str()),
-                              atoi(issi.substr(4,len-12).c_str()),
-                              issi.substr(-8,8).c_str());
-    ss << is;
+    t_mcc = atoi(issi.substr(0,4).c_str());
+    issi.erase(0,4);
   }
+  else
+  {
+    t_mcc = atoi(issi.substr(0,3).c_str());
+    issi.erase(0,3);
+  }
+
+  // get ISSI (8 digits)
+  t_issi = issi.substr(len-8,8);
+  issi.erase(len-8,8);
+
+  sprintf(is, "%04d%05d%s", t_mcc, atoi(issi.c_str()), t_issi.c_str());
+  ss << is;
 
   return ss.str();
 } /* TetraLogic::getTSI */
@@ -1266,14 +1274,14 @@ std::string TetraLogic::getTSI(std::string issi)
 std::string TetraLogic::getISSI(std::string tsi)
 {
   stringstream t_issi;
-  if (tsi.length() == 17)
+  size_t len = tsi.length();
+  
+  if (len < 8)
   {
-    t_issi << atoi(tsi.substr(9,8).c_str());  
+    t_issi << "00000000" << tsi;
+    return t_issi.str().substr(t_issi.str().length()-8, 8);
   }
-  else
-  {
-    t_issi << tsi;  
-  }
+  t_issi << tsi.substr(len-8, 8);
   return t_issi.str();
 } /* TetraLogic::getISSI */
 
@@ -1369,7 +1377,7 @@ void TetraLogic::handleCallReleased(std::string message)
     
     if (!Qso.members.empty())
     {
-      m_aprsmesg += "Qso ended (";
+      m_aprsmesg += ">Qso ended (";
       for (const auto &it : Qso.members)
       {
         m_aprsmesg += it;
@@ -1380,7 +1388,7 @@ void TetraLogic::handleCallReleased(std::string message)
     }
     else
     {
-      m_aprsmesg += "Transmission ended";
+      m_aprsmesg += ">Transmission ended";
     }
 
     if (debug)
@@ -1511,7 +1519,7 @@ void TetraLogic::handleCnumf(std::string m_message)
     }
     if (atoi(issi.c_str()) != atoi(m_message.substr(9,8).c_str())) {
       cout << "*** ERROR: wrong ISSI in MS, will not work! " << issi <<"!=" 
-           << m_message.substr(9,8) << endl;
+           << atoi(m_message.substr(9,8).c_str()) << endl;
     }
   }
   
@@ -1627,9 +1635,8 @@ void TetraLogic::sendInfoSds(std::string tsi, short reason)
         {
           cout << ss.str() << endl;
         }
-
         createSDS(t_sds, getISSI(t_iu->first), ss.str());
-        
+
         // execute tcl procedure(s)
         if (sstcl.str().length() > 0)
         {
@@ -1685,7 +1692,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^02"]                                      = SIMPLE_TEXT_SDS; 
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
-  mre["^0A"]                                      = LIP_SDS;
+  mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
   mre["^8204"]                                    = TEXT_SDS;
   mre["^821000"]                                  = ACK_SDS;
   mre["^0C"]                                      = CONCAT_SDS;
