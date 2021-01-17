@@ -123,6 +123,20 @@
 
 * Fix receiver muting bug introduced with the AUDIO_DEV_KEEP_OPEN feature.
 
+* Bugfix: SQL_START_DELAY was not honored in all cases.
+
+* Rework squelch core code. The core squelch handling code was not fully
+  correct causing problems in some configurations.
+
+* New voter configuration variable VERBOSE which cause the voter to print the
+  squelch state events of the satellite receivers. This can be used while fine
+  tuning voter timing for example.
+
+* Rename configuration variables to make it more clear that they are for
+  squelch configuration. An "SQL_" prefix have been added to the following
+  configuration variables: SIGLEV_RX_NAME, SIGLEV_OPEN_THRESH,
+  SIGLEV_CLOSE_THRESH.
+
 
 
  1.7.0 -- 01 Sep 2019

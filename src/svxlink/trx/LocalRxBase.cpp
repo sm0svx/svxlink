@@ -10,7 +10,7 @@ the SvxLink core is running. It can also be a DDR (Digital Drop Receiver).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -691,7 +691,7 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
           {
             audioClose();
           }
-          squelch_det->reset();
+          //squelch_det->reset();
           setSquelchState(false, "MUTED");
           break;
 
@@ -709,7 +709,7 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
           {
             return;
           }
-          squelch_det->reset();
+          squelch_det->restart();
           break;
 
         case MUTE_NONE:   // MUTE_CONTENT -> MUTE_NONE
