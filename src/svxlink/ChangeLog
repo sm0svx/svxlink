@@ -139,6 +139,9 @@
 
 * Bugfix: Do not emit tone detected events from muted receivers.
 
+* The voter COMMAND_PTY now accept a new command MUTE that will keep the
+  receiver active but block all content.
+
 
 
  1.7.0 -- 01 Sep 2019
