@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Tx.h>
 #include <common.h>
 #include <AsyncTimer.h>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -336,7 +337,6 @@ bool TetraLogic::initialize(void)
 
   list<string>::iterator slit;
 
-  // read infos of tetra users configured in svxlink.conf
   string user_section;
   if (cfg().getValue(name(), "TETRA_USERS", user_section))
   {
@@ -355,6 +355,7 @@ bool TetraLogic::initialize(void)
       }
       else
       {
+        m_user.issi = *slit;
         m_user.call = getNextStr(value);
         m_user.name = getNextStr(value);
         std::string m_aprs = getNextStr(value);
@@ -533,6 +534,10 @@ bool TetraLogic::initialize(void)
   }
   sendPei("\r\n");
 
+   // receive interlogic messages
+  publishStateEvent.connect(
+          mem_fun(*this, &TetraLogic::onPublishStateEvent));
+  
   peirequest = AT_CMD_WAIT;
   initPei();
   
@@ -540,7 +545,7 @@ bool TetraLogic::initialize(void)
   setTxCtrlMode(Tx::TX_AUTO);
   
   processEvent("startup");
-  
+
   return isok;
 
 } /* TetraLogic::initialize */
@@ -683,13 +688,41 @@ void TetraLogic::initPei(void)
   {
     cmd = "AT+CNUMF?"; // get the MCC,MNC,ISSI from MS
     sendPei(cmd);
-  }
-  else 
-  {
     ss << "pei_init_finished";
     processEvent(ss.str());
+    sendUserInfo(); // send userinfo to reflector   
+    peirequest = INIT_COMPLETE;
   }
 } /* TetraLogic::initPei */
+
+
+void TetraLogic::sendUserInfo(void)
+{
+
+  // read infos of tetra users configured in svxlink.conf
+  Json::Value event(Json::arrayValue);
+
+  for (std::map<std::string, User>::iterator iu = userdata.begin(); 
+       iu!=userdata.end(); iu++)
+  {
+    Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["call"] = iu->second.call;
+    t_userinfo["name"] = iu->second.name;
+    t_userinfo["issi"] = iu->second.issi;
+    t_userinfo["comment"] = iu->second.comment;
+    event.append(t_userinfo);
+  }
+
+  // sending own tetra user information to the reflectorlogic network
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+  publishStateEvent("TetraUsers:info", os.str());
+} /* TetraLogic::sendUserInfo */
 
 
 void TetraLogic::onCharactersReceived(char *buf, int count)
@@ -913,13 +946,35 @@ void TetraLogic::handleCallBegin(std::string message)
   Qso.tsi = o_tsi;
   Qso.start = time(NULL);
   
+  // prepare array for tetra users to be send over the network
+  Json::Value event(Json::arrayValue);
+    
   std::list<std::string>::iterator it;
   it = find(Qso.members.begin(), Qso.members.end(), iu->second.call);
   if (it == Qso.members.end())
   {
+    Json::Value qsoinfo(Json::objectValue);
+    qsoinfo["source"] = callsign();
+    qsoinfo["call"] = iu->second.call;
+    qsoinfo["issi"] = Qso.tsi;
+    stringstream la;
+    la << userdata[o_tsi].last_activity;
+    qsoinfo["last_activity"] = la.str();
+    event.append(qsoinfo);
     Qso.members.push_back(iu->second.call);
   }
 
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+  //std::cout << "### " << os.str() << std::endl;
+  publishStateEvent("QsoInfo:state", os.str());
+  // end of publish messages
+ 
   // callup tcl event
   ss << "groupcall_begin " << t_ci.o_issi << " " << t_ci.d_issi;
   processEvent(ss.str());
@@ -982,6 +1037,8 @@ void TetraLogic::handleSdsMsg(std::string sds)
   std::map<unsigned int, string>::iterator it;
   std::map<int, string>::iterator oa;
   LipInfo lipinfo;
+  Json::Value event(Json::arrayValue);
+  Json::Value sdsinfo(Json::objectValue);
 
   int m_sdsid = pending_sds.size() + 1;
 
@@ -1048,6 +1105,11 @@ void TetraLogic::handleSdsMsg(std::string sds)
          << " "
          << calcBearing(own_lat, own_lon, lipinfo.latitude, lipinfo.longitude);
       processEvent(sstcl.str());
+      
+   //   sdsinfo["lat"] = lipinfo.latitude;
+   //   sdsinfo["lon"] = lipinfo.longitude;
+      sdsinfo["reasonforsending"] = lipinfo.reasonforsending;
+      sdsinfo["type"] = LIP_SDS;
       break;
 
     case STATE_SDS:
@@ -1062,6 +1124,8 @@ void TetraLogic::handleSdsMsg(std::string sds)
       m_aprsinfo << " (" << isds << ")";
 
       ss << "state_sds_received " << m_sds.tsi << " " << isds;
+      sdsinfo["state"] = isds;
+      sdsinfo["type"] = STATE_SDS;
       break;
       
     case TEXT_SDS:
@@ -1069,6 +1133,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
       m_aprsinfo << ">" << sds_txt;
       cfmTxtSdsReceived(sds, m_sds.tsi);
       ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt << "\"";
+      sdsinfo["type"] = TEXT_SDS;
       break;
 
     case SIMPLE_TEXT_SDS:
@@ -1076,6 +1141,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
       m_aprsinfo << ">" << sds_txt;
       cfmSdsReceived(m_sds.tsi);
       ss << "text_sds_received " << m_sds.tsi << " \"" << sds_txt << "\"";
+      sdsinfo["type"] = SIMPLE_TEXT_SDS;
       break;
       
     case ACK_SDS:
@@ -1088,6 +1154,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
     case REGISTER_TSI:
       ss << "register_tsi " << m_sds.tsi;
       cfmSdsReceived(m_sds.tsi);
+      sdsinfo["type"] = REGISTER_TSI;
       break;
     
     case CMGS:
@@ -1102,6 +1169,13 @@ void TetraLogic::handleSdsMsg(std::string sds)
     default:
       return;
   }
+  
+  stringstream la;
+  la << userdata[m_sds.tsi].last_activity;
+  sdsinfo["last_activity"] = la.str();
+  sdsinfo["tsi"] = m_sds.tsi;
+  sdsinfo["source"] = callsign();
+  event.append(sdsinfo);
   
   pending_sds[m_sdsid] = m_sds;
 
@@ -1123,6 +1197,17 @@ void TetraLogic::handleSdsMsg(std::string sds)
     processEvent(ss.str());
   }
 
+  // json sends publish event to connected logic
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+  //std::cout << "### " << os.str() << std::endl;
+  publishStateEvent("Sds:info", os.str());
+  
 } /* TetraLogic::getTypeOfService */
 
 
@@ -1745,6 +1830,44 @@ unsigned int TetraLogic::hex2int(std::string sds)
   ss >> t;
   return t;
 } /* Logic::hex2int */
+
+
+// receive interlogic messages here
+void TetraLogic::onPublishStateEvent(const string &event_name, const string &msg)
+{
+  //cout << "TetraLogic::onPublishStateEvent - event_name: " << event_name 
+  //      << ", message: " << msg << endl;
+
+  Json::Value user_arr;
+  Json::Reader reader;
+  bool b = reader.parse(msg, user_arr);
+  if (!b)
+  {
+    cout << "*** Error: parsing StateEvent message (" 
+         << reader.getFormattedErrorMessages() << ")" << endl;
+    return;
+  }
+
+  if (event_name == "TetraUsers:info")
+  {
+    if (debug) cout << "Download userdata from Reflector:" << endl;
+    for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+    {
+      User m_user;
+      Json::Value& t_userdata = user_arr[i];
+      m_user.issi = t_userdata.get("issi", "").asString();
+      m_user.name = t_userdata.get("name","").asString();
+      m_user.call = t_userdata.get("call","").asString();
+      m_user.comment = t_userdata.get("comment","").asString();
+      userdata[m_user.issi] = m_user;
+      if (debug)
+      {
+        cout << "tsi:" << m_user.issi << ",call=" << m_user.call << ",name=" 
+             << m_user.name << ",comment=" << m_user.comment << endl;
+      }
+    }
+  }
+} /* TetraLogic::onPublishStateEvent */
 
 /*
  * This file has not been truncated

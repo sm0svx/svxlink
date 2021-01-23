@@ -642,11 +642,71 @@ void ReflectorClient::handleStateEvent(std::istream& is)
     sendError("Illegal MsgStateEvent protocol message received");
     return;
   }
-  cout << "### ReflectorClient::handleStateEvent:"
-       << " src=" << msg.src()
+  /*cout << "### ReflectorClient::handleStateEvent:"
+       << " src=" << m_callsign
        << " name=" << msg.name()
        << " msg=" << msg.msg()
        << std::endl;
+  */
+  Json::Value user_arr;
+  Json::Reader reader;
+  bool b = reader.parse(msg.msg(), user_arr);
+  if (!b)
+  {
+    cout << "*** Error: parsing StateEvent message (" 
+         << reader.getFormattedErrorMessages() << ")" << endl;
+    return;
+  }
+  
+  for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+  {
+    User m_user;
+    Json::Value& t_userdata = user_arr[i];
+    m_user.issi = t_userdata.get("issi", "").asString();
+    m_user.name = t_userdata.get("name","").asString();
+    m_user.call = t_userdata.get("call","").asString();
+    m_user.comment = t_userdata.get("comment","").asString();
+    if (t_userdata.get("last_activity","").asString().length() > 0)
+    {
+      m_user.last_activity = (time_t) strtol(
+                    t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+    }
+    userdata[m_user.issi] = m_user;
+    //cout << "issi=" << m_user.issi << ", name=" << m_user.name << endl;
+  }
+  
+  Json::Value event(Json::arrayValue);
+
+  for (std::map<std::string, User>::iterator iu = userdata.begin(); 
+       iu!=userdata.end(); iu++)
+  {
+    Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["call"] = iu->second.call;
+    t_userinfo["name"] = iu->second.name;
+    t_userinfo["issi"] = iu->second.issi;
+    t_userinfo["comment"] = iu->second.comment;
+    if (iu->second.last_activity)
+    {
+      stringstream la;
+      la << iu->second.last_activity;
+      t_userinfo["last_activity"] = la.str();
+    }
+    event.append(t_userinfo);
+  }
+  
+   // sending own tetra user information to the svxreflector network
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+
+  // send user info to client nodes
+  m_reflector->broadcastMsg(MsgStateEvent("Reflector","TetraUsers:info", os.str()), 
+                            ExceptFilter(this));
+  
 } /* ReflectorClient::handleStateEvent */
 
 

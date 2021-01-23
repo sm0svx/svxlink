@@ -490,7 +490,7 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     {
       lipinfo.longitude = tlo * 360.0 / 33554432;
     }
-    std::cout << "tlo=" << tlo << ",lipinfo.longitude=" << lipinfo.longitude << std::endl;
+    //std::cout << "tlo=" << tlo << ",lipinfo.longitude=" << lipinfo.longitude << std::endl;
 
     if (tla > 8388608)
     {
@@ -500,7 +500,7 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     {
       lipinfo.latitude = tla * 360.0 / 33554432;
     }
-    std::cout << "tla=" << tla << ",lipinfo.latitude=" << lipinfo.latitude << std::endl;
+    //std::cout << "tla=" << tla << ",lipinfo.latitude=" << lipinfo.latitude << std::endl;
 
     // position error in meter
     lipinfo.positionerror = 2*pow(10,(std::stoi(in.substr(15,1),nullptr,16) & 0x03));

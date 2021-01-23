@@ -253,7 +253,7 @@ class TetraLogic : public Logic
 
      // contain user data
     struct User {
-      int issi;
+      std::string issi;
       std::string call;
       std::string name;
       std::string comment;
@@ -376,6 +376,8 @@ class TetraLogic : public Logic
     void getAiMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
     unsigned int hex2int(std::string sds);
+    void sendUserInfo(void);
+    void onPublishStateEvent(const std::string &event_name, const std::string &msg);
 
 };  /* class TetraLogic */
 
