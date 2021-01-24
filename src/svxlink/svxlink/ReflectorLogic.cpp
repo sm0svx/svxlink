@@ -539,11 +539,11 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
 void ReflectorLogic::remoteReceivedPublishStateEvent(
     LogicBase *logic, const std::string& event_name, const std::string& data)
 {
-  /*cout << "###XX ReflectorLogic::remoteReceivedPublishStateEvent:"
-       << " logic=" << logic->name()
-       << " event_name=" << event_name
-       << " data=" << data
-       << endl;*/
+  //cout << "###XX ReflectorLogic::remoteReceivedPublishStateEvent:"
+  //     << " logic=" << logic->name()
+  //     << " event_name=" << event_name
+  //     << " data=" << data
+  //     << endl;
   //sendMsg(MsgStateEvent(logic->name(), event_name, msg));
 
   if (event_name == "Voter:sql_state")
@@ -655,7 +655,7 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
   else if (event_name == "Sds:info" || event_name == "TetraUsers:info" ||
            event_name == "QsoInfo:state")
   {
-    //cout << "sende: " << event_name << endl;
+   // cout << "sende: " << event_name << "," << data << endl;
     MsgStateEvent msg(logic->name(), event_name, data);
     sendMsg(msg);
   }

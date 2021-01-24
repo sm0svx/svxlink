@@ -516,11 +516,10 @@ bool TetraLogic::initialize(void)
          << "/INIT_PEI, using defaults" << endl;
   }
   SvxLink::splitStr(initcmds, initstr, ";");
-
+  m_cmds = initcmds;
+  
   cfg().getValue(name(), "END_CMD", endCmd);
   
-  m_cmds = initcmds;
-
   pei = new Serial(port);
   pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_HW);
   pei->charactersReceived.connect(
@@ -706,22 +705,15 @@ void TetraLogic::sendUserInfo(void)
        iu!=userdata.end(); iu++)
   {
     Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["tsi"] = iu->second.issi;
     t_userinfo["call"] = iu->second.call;
     t_userinfo["name"] = iu->second.name;
-    t_userinfo["issi"] = iu->second.issi;
+    t_userinfo["tab"] = iu->second.aprs_tab;
+    t_userinfo["sym"] = iu->second.aprs_sym;
     t_userinfo["comment"] = iu->second.comment;
     event.append(t_userinfo);
   }
-
-  // sending own tetra user information to the reflectorlogic network
-  Json::StreamWriterBuilder builder;
-  builder["commentStyle"] = "None";
-  builder["indentation"] = ""; //The JSON document is written on a single line
-  Json::StreamWriter* writer = builder.newStreamWriter();
-  std::stringstream os;
-  writer->write(event, &os);
-  delete writer;
-  publishStateEvent("TetraUsers:info", os.str());
+  publishInfo("TetraUsers:info", event);
 } /* TetraLogic::sendUserInfo */
 
 
@@ -956,23 +948,14 @@ void TetraLogic::handleCallBegin(std::string message)
     Json::Value qsoinfo(Json::objectValue);
     qsoinfo["source"] = callsign();
     qsoinfo["call"] = iu->second.call;
-    qsoinfo["issi"] = Qso.tsi;
+    qsoinfo["tsi"] = Qso.tsi;
     stringstream la;
     la << userdata[o_tsi].last_activity;
     qsoinfo["last_activity"] = la.str();
     event.append(qsoinfo);
     Qso.members.push_back(iu->second.call);
   }
-
-  Json::StreamWriterBuilder builder;
-  builder["commentStyle"] = "None";
-  builder["indentation"] = ""; //The JSON document is written on a single line
-  Json::StreamWriter* writer = builder.newStreamWriter();
-  std::stringstream os;
-  writer->write(event, &os);
-  delete writer;
-  //std::cout << "### " << os.str() << std::endl;
-  publishStateEvent("QsoInfo:state", os.str());
+  publishInfo("QsoInfo:state", event);
   // end of publish messages
  
   // callup tcl event
@@ -1106,8 +1089,8 @@ void TetraLogic::handleSdsMsg(std::string sds)
          << calcBearing(own_lat, own_lon, lipinfo.latitude, lipinfo.longitude);
       processEvent(sstcl.str());
       
-   //   sdsinfo["lat"] = lipinfo.latitude;
-   //   sdsinfo["lon"] = lipinfo.longitude;
+      sdsinfo["lat"] = lipinfo.latitude;
+      sdsinfo["lon"] = lipinfo.longitude;
       sdsinfo["reasonforsending"] = lipinfo.reasonforsending;
       sdsinfo["type"] = LIP_SDS;
       break;
@@ -1196,18 +1179,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
   {
     processEvent(ss.str());
   }
-
-  // json sends publish event to connected logic
-  Json::StreamWriterBuilder builder;
-  builder["commentStyle"] = "None";
-  builder["indentation"] = ""; //The JSON document is written on a single line
-  Json::StreamWriter* writer = builder.newStreamWriter();
-  std::stringstream os;
-  writer->write(event, &os);
-  delete writer;
-  //std::cout << "### " << os.str() << std::endl;
-  publishStateEvent("Sds:info", os.str());
-  
+  publishInfo("Sds:info", event);
 } /* TetraLogic::getTypeOfService */
 
 
@@ -1855,9 +1827,11 @@ void TetraLogic::onPublishStateEvent(const string &event_name, const string &msg
     {
       User m_user;
       Json::Value& t_userdata = user_arr[i];
-      m_user.issi = t_userdata.get("issi", "").asString();
+      m_user.issi = t_userdata.get("tsi", "").asString();
       m_user.name = t_userdata.get("name","").asString();
       m_user.call = t_userdata.get("call","").asString();
+      m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+      m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
       m_user.comment = t_userdata.get("comment","").asString();
       userdata[m_user.issi] = m_user;
       if (debug)
@@ -1868,6 +1842,21 @@ void TetraLogic::onPublishStateEvent(const string &event_name, const string &msg
     }
   }
 } /* TetraLogic::onPublishStateEvent */
+
+
+void TetraLogic::publishInfo(std::string type, Json::Value event)
+{
+   // sending own tetra user information to the reflectorlogic network
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+  publishStateEvent(type, os.str());
+} /* TetraLogic::publishInfo */
+
 
 /*
  * This file has not been truncated

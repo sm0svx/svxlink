@@ -658,32 +658,51 @@ void ReflectorClient::handleStateEvent(std::istream& is)
     return;
   }
   
-  for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
-  {
-    User m_user;
-    Json::Value& t_userdata = user_arr[i];
-    m_user.issi = t_userdata.get("issi", "").asString();
-    m_user.name = t_userdata.get("name","").asString();
-    m_user.call = t_userdata.get("call","").asString();
-    m_user.comment = t_userdata.get("comment","").asString();
-    if (t_userdata.get("last_activity","").asString().length() > 0)
-    {
-      m_user.last_activity = (time_t) strtol(
-                    t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
-    }
-    userdata[m_user.issi] = m_user;
-    //cout << "issi=" << m_user.issi << ", name=" << m_user.name << endl;
-  }
-  
   Json::Value event(Json::arrayValue);
+  User m_user;
+  if (msg.name() == "TetraUsers:info")
+  {
+    cout << "+++ Got new users:" << endl;
+    for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+    {
+      Json::Value& t_userdata = user_arr[i];
+      m_user.issi = t_userdata.get("tsi", "").asString();
+      m_user.name = t_userdata.get("name","").asString();
+      m_user.call = t_userdata.get("call","").asString();
+      m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+      m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+      m_user.comment = t_userdata.get("comment","").asString();
+      if (t_userdata.get("last_activity","").asString().length() > 0)
+      {
+        m_user.last_activity = (time_t) strtol(
+            t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+      }
+      userdata[m_user.issi] = m_user;
+      cout << "call=" << m_user.call << ", issi=" << m_user.issi << ", name=" 
+           << m_user.name << " (" << m_user.comment << ")" << endl;
+    }
+  }
+  else if (msg.name() == "Sds:info")
+  {
+    Json::Value t_userdata = user_arr[0];
+    std::map<std::string, User>::iterator iu = 
+                            userdata.find(t_userdata.get("tsi","").asString());
+    if (iu != userdata.end())
+    {
+      iu->second.last_activity = (time_t) strtol(
+            t_userdata.get("last_activity","").asString().c_str(), NULL,10);
+    }
+  }
 
   for (std::map<std::string, User>::iterator iu = userdata.begin(); 
        iu!=userdata.end(); iu++)
   {
     Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["tsi"] = iu->second.issi;
     t_userinfo["call"] = iu->second.call;
     t_userinfo["name"] = iu->second.name;
-    t_userinfo["issi"] = iu->second.issi;
+    t_userinfo["sym"] = iu->second.aprs_sym;
+    t_userinfo["tab"] = iu->second.aprs_tab;
     t_userinfo["comment"] = iu->second.comment;
     if (iu->second.last_activity)
     {

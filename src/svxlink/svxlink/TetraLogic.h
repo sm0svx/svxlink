@@ -378,6 +378,7 @@ class TetraLogic : public Logic
     unsigned int hex2int(std::string sds);
     void sendUserInfo(void);
     void onPublishStateEvent(const std::string &event_name, const std::string &msg);
+    void publishInfo(std::string type, Json::Value event);
 
 };  /* class TetraLogic */
 
