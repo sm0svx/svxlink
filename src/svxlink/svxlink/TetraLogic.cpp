@@ -182,7 +182,8 @@ class TetraLogic::Call
 TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
   rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
-  port("/dev/ttyUSB0"), baudrate(115200), initstr(""), peistream(""),
+  port("/dev/ttyUSB0"), baudrate(115200), initstr(""),
+  pei(0), sds_pty(0), peistream(""),
   debug(false), talkgroup_up(false), sds_when_dmo_on(false),
   sds_when_dmo_off(false), sds_when_proximity(false),
   peiComTimer(1000, Timer::TYPE_ONESHOT, false),
@@ -203,14 +204,20 @@ TetraLogic::~TetraLogic(void)
   {
     sendPei(endCmd);
   }
+  if (LinkManager::hasInstance())
+  {
+    LinkManager::instance()->deleteLogic(this);
+  }
   peiComTimer = 0;
   peiActivityTimer = 0;
   peiBreakCommandTimer = 0;
-  delete call;
+  //delete call;
   delete tetra_modem_sql;
   tetra_modem_sql = 0;
   delete pei;
   pei = 0;
+  delete sds_pty;
+  sds_pty = 0;
 } /* TetraLogic::~TetraLogic */
 
 
