@@ -193,9 +193,10 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
   std::ifstream cfgfile(cfg_filename);
   if (!cfgfile.is_open())
   {
-    return; 
+    return;
   }
   cfgfile >> cfg_root;
+  cfgfile.close();
   if (cfg_root.size() < 1)
   {
    return;
