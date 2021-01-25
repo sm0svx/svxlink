@@ -446,6 +446,7 @@ class ReflectorClient
     RxMap                       m_rx_map;
     TxMap                       m_tx_map;
     Json::Value                 m_node_info;
+    std::string                 cfg_filename;
          
          // contain user data
     struct User {

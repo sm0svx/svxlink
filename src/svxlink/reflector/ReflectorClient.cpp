@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cerrno>
 #include <iterator>
+#include <fstream>
+#include <iostream>
 
 
 /****************************************************************************
@@ -178,6 +180,33 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     }
     m_supported_codecs.push_back(codec);
   }
+  
+  if (!m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename))
+  {
+    cfg_filename = "/tmp/svxreflector_userdata.json";
+    return;
+  }
+  
+  // loading user info
+  Json::Value cfg_root;
+  std::ifstream cfgfile(cfg_filename);
+  cfgfile >> cfg_root;
+  if (cfg_root.size() < 1) return;
+  for (Json::Value::ArrayIndex i = 0; i != cfg_root.size(); i++)
+  {
+    User m_user;
+    Json::Value& t_userdata = cfg_root[i];
+    m_user.issi = t_userdata.get("tsi", "").asString();
+    m_user.name = t_userdata.get("name","").asString();
+    m_user.call = t_userdata.get("call","").asString();
+    m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+    m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+    m_user.comment = t_userdata.get("comment","").asString();
+    m_user.last_activity = (time_t) strtol(
+          t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+    userdata[m_user.issi] = m_user;
+  }
+  cout << "+++ " << cfg_root.size() << " users loaded." << endl;
 } /* ReflectorClient::ReflectorClient */
 
 
@@ -660,9 +689,9 @@ void ReflectorClient::handleStateEvent(std::istream& is)
   
   Json::Value event(Json::arrayValue);
   User m_user;
+  std::map<std::string, User>::iterator iu;
   if (msg.name() == "TetraUsers:info")
   {
-    cout << "+++ Got new users:" << endl;
     for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
     {
       Json::Value& t_userdata = user_arr[i];
@@ -677,16 +706,35 @@ void ReflectorClient::handleStateEvent(std::istream& is)
         m_user.last_activity = (time_t) strtol(
             t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
       }
-      userdata[m_user.issi] = m_user;
-      cout << "call=" << m_user.call << ", issi=" << m_user.issi << ", name=" 
-           << m_user.name << " (" << m_user.comment << ")" << endl;
+      
+      iu = userdata.find(m_user.issi);
+      if (iu != userdata.end())
+      {
+        iu->second.name= m_user.name;
+        iu->second.aprs_sym = m_user.aprs_sym;
+        iu->second.aprs_tab = m_user.aprs_tab;
+        iu->second.comment = m_user.comment;
+        if (m_user.last_activity)
+        {
+          iu->second.last_activity = m_user.last_activity;
+        }
+        cout << "UPDATE: call=" << m_user.call << ", issi=" << m_user.issi 
+             << ", name=" << m_user.name << " (" << m_user.comment << ")" 
+             << endl;
+      }
+      else
+      {
+        userdata[m_user.issi] = m_user;
+        cout << "NEW: call=" << m_user.call << ", issi=" << m_user.issi 
+             << ", name=" << m_user.name << " (" << m_user.comment << ")" 
+             << endl;
+      }
     }
   }
   else if (msg.name() == "Sds:info")
   {
     Json::Value t_userdata = user_arr[0];
-    std::map<std::string, User>::iterator iu = 
-                            userdata.find(t_userdata.get("tsi","").asString());
+    iu = userdata.find(t_userdata.get("tsi","").asString());
     if (iu != userdata.end())
     {
       iu->second.last_activity = (time_t) strtol(
@@ -694,8 +742,7 @@ void ReflectorClient::handleStateEvent(std::istream& is)
     }
   }
 
-  for (std::map<std::string, User>::iterator iu = userdata.begin(); 
-       iu!=userdata.end(); iu++)
+  for (iu = userdata.begin(); iu!=userdata.end(); iu++)
   {
     Json::Value t_userinfo(Json::objectValue);
     t_userinfo["tsi"] = iu->second.issi;
@@ -710,7 +757,7 @@ void ReflectorClient::handleStateEvent(std::istream& is)
       la << iu->second.last_activity;
       t_userinfo["last_activity"] = la.str();
     }
-    event.append(t_userinfo);
+    event.append(t_userinfo);    
   }
   
    // sending own tetra user information to the svxreflector network
@@ -718,14 +765,16 @@ void ReflectorClient::handleStateEvent(std::istream& is)
   builder["commentStyle"] = "None";
   builder["indentation"] = ""; //The JSON document is written on a single line
   Json::StreamWriter* writer = builder.newStreamWriter();
+  std::ofstream outputFileStream(cfg_filename);
   std::stringstream os;
   writer->write(event, &os);
+  writer->write(event, &outputFileStream);
   delete writer;
 
   // send user info to client nodes
-  m_reflector->broadcastMsg(MsgStateEvent("Reflector","TetraUsers:info", os.str()), 
-                            ExceptFilter(this));
-  
+  m_reflector->broadcastMsg(MsgStateEvent("Reflector","TetraUsers:info", 
+                                          os.str()), ExceptFilter(this));
+
 } /* ReflectorClient::handleStateEvent */
 
 
