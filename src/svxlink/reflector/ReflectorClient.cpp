@@ -181,7 +181,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_supported_codecs.push_back(codec);
   }
   
-  if (!m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename))
+  m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename);
+  if (cfg_filename.length() < 1)
   {
     cfg_filename = "/tmp/svxreflector_userdata.json";
     return;
@@ -190,8 +191,15 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
   // loading user info
   Json::Value cfg_root;
   std::ifstream cfgfile(cfg_filename);
+  if (!cfgfile.is_open())
+  {
+    return; 
+  }
   cfgfile >> cfg_root;
-  if (cfg_root.size() < 1) return;
+  if (cfg_root.size() < 1)
+  {
+   return;
+  }
   for (Json::Value::ArrayIndex i = 0; i != cfg_root.size(); i++)
   {
     User m_user;
@@ -206,7 +214,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
           t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
     userdata[m_user.issi] = m_user;
   }
-  cout << "+++ " << cfg_root.size() << " users loaded." << endl;
+  cout << "+++ " << cfg_root.size() << " users loaded from '" 
+       << cfg_filename << "'" << endl;
 } /* ReflectorClient::ReflectorClient */
 
 
@@ -741,7 +750,7 @@ void ReflectorClient::handleStateEvent(std::istream& is)
             t_userdata.get("last_activity","").asString().c_str(), NULL,10);
     }
   }
-
+  
   for (iu = userdata.begin(); iu!=userdata.end(); iu++)
   {
     Json::Value t_userinfo(Json::objectValue);

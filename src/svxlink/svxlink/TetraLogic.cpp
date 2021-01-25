@@ -774,7 +774,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       break;
 
     case CNUMF:
-      handleCnumf(m_message);  
+      handleCnumf(m_message);
       break;
 
     case CALL_BEGIN:
@@ -1131,7 +1131,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
       // +CTSDSR: 12,23404,0,23401,0,32
       // 82100002
       // sds msg received by MS from remote
-      ss << "sds_receiced_ack " << sds;
+      ss << "sds_received_ack " << sds;
       break;
       
     case REGISTER_TSI:
