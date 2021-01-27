@@ -2032,9 +2032,10 @@ bool ModuleMetarInfo::isWind(std::string &retval, std::string token)
    }
 
    // do we have gusts?
-   if (token.find("g",3) != string::npos)
+   size_t found = token.find("g",3);
+   if (found != string::npos)
    {
-      ss << " " << token.substr(token.length()-4,2) << " " << unit;
+     ss << " " << token.substr(found+1, 2) << " " << unit;
    }
 
    retval = ss.str();
