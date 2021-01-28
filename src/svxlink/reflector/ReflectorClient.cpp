@@ -142,7 +142,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_udp_heartbeat_tx_cnt(UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
     m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0),
-    m_current_tg(0)
+    m_current_tg(0), debug(false)
 {
   m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
   m_con->frameReceived.connect(
@@ -180,6 +180,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     }
     m_supported_codecs.push_back(codec);
   }
+  
+  m_cfg->getValue("GLOBAL", "DEBUG", debug);
   
   m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename);
   if (cfg_filename.length() < 1)
@@ -728,16 +730,22 @@ void ReflectorClient::handleStateEvent(std::istream& is)
         {
           iu->second.last_activity = m_user.last_activity;
         }
-        cout << "UPDATE: call=" << m_user.call << ", issi=" << m_user.issi 
-             << ", name=" << m_user.name << " (" << m_user.comment << ")" 
-             << endl;
+        if (debug)
+        {
+          cout << "UPDATE: call=" << m_user.call << ", issi=" << m_user.issi 
+            << ", name=" << m_user.name << " (" << m_user.comment << ")" 
+            << endl;
+        }
       }
       else
       {
         userdata[m_user.issi] = m_user;
-        cout << "NEW: call=" << m_user.call << ", issi=" << m_user.issi 
-             << ", name=" << m_user.name << " (" << m_user.comment << ")" 
-             << endl;
+        if (debug)
+        {
+          cout << "NEW: call=" << m_user.call << ", issi=" << m_user.issi 
+               << ", name=" << m_user.name << " (" << m_user.comment << ")" 
+               << endl;
+        }
       }
     }
   }

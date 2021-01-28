@@ -447,6 +447,7 @@ class ReflectorClient
     TxMap                       m_tx_map;
     Json::Value                 m_node_info;
     std::string                 cfg_filename;
+    bool                        debug;
          
          // contain user data
     struct User {
