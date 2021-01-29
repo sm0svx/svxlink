@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript', 'python' ]
+        language: [ 'cpp', 'python' ]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
         # Learn more:
         # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
@@ -49,8 +49,8 @@ jobs:
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v1
+    #- name: Autobuild
+    #  uses: github/codeql-action/autobuild@v1
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
@@ -59,9 +59,12 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
 
-    #- run: |
-    #   make bootstrap
-    #   make release
+    - run: |
+        sudo apt install g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl-dev libgcrypt11-dev libspeex-dev libasound2-dev libopus-dev librtlsdr-dev
+        mkdir -p src/build
+        cd src/build
+        cmake ..
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
