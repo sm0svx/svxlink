@@ -190,9 +190,10 @@ namespace {
      * @brief Implement shared Dv3k code here
      * (e.g. initialiation and protocol)
      */
-    class AudioCodecAmbeDv3k : public AudioCodecAmbe, public Multiton<AudioCodecAmbeDv3k,AudioCodecAmbe::Options> {
+    class AudioCodecAmbeDv3k : public AudioCodecAmbe, 
+                               public Multiton<AudioCodecAmbeDv3k,AudioCodecAmbe::Options> {
     public:
-        template <typename T = char>
+        template <typename T = unsigned char>
         struct Buffer {
             Buffer(T *data = (T*) NULL, size_t length = 0) : data(data), length(length) {}
             T *data;
@@ -204,17 +205,17 @@ namespace {
         virtual void init()
         {
           // init the Dv3k stick (ThumbDV dongle)
-          char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
+          unsigned char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01, DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
           Buffer<> init_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
           m_state = RESET;
           send(init_packet);
-           t_buffer = Buffer<>(new char[512], sizeof(size_t));
+           t_buffer = Buffer<>(new unsigned char[512], sizeof(size_t));
         } /* void */
 
         virtual void prodid()
         {
           // reads the product id from dv3k stick, just to give it out for debug purposes
-          char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01,
+          unsigned char DV3K_REQ_PRODID[] = {DV3K_START_BYTE, 0x00, 0x01,
                                    DV3K_TYPE_CONTROL, DV3K_CONTROL_PRODID};
           Buffer<> prodid_packet = Buffer<>(DV3K_REQ_PRODID,sizeof(DV3K_REQ_PRODID));
           send(prodid_packet);
@@ -224,7 +225,7 @@ namespace {
         virtual void versid()
         {
           // reads the version id from dv3k stick, just to give it out for debug purposes
-          char DV3K_REQ_VERSID[] = {DV3K_START_BYTE, 0x00, 0x01,
+          unsigned char DV3K_REQ_VERSID[] = {DV3K_START_BYTE, 0x00, 0x01,
                                    DV3K_TYPE_CONTROL, DV3K_CONTROL_VERSTRING};
           Buffer<> versid_packet = Buffer<>(DV3K_REQ_VERSID,sizeof(DV3K_REQ_VERSID));
           send(versid_packet);
@@ -233,35 +234,36 @@ namespace {
 
         virtual void ratep()
         {
-          // set the rate and some other params (bausrate, codec, ....) to the Dv3k stick.
-          char DV3K_REQ_RATEP[] = {DV3K_START_BYTE, 0x00, 0x07,
+          // set the rate and some other params (baudrate, codec, ....) to the Dv3k stick.
+          /* unsigned char DV3K_REQ_RATEP[] = {DV3K_START_BYTE, 0x00, 0x07,
                                    DV3K_TYPE_CONTROL, 0x40, 0x0b, 0x03,
                                    0x09, 0x21, 0x32, 0x00};
+          */
+          unsigned char DV3K_REQ_RATEP[] = {DV3K_START_BYTE, 0x00U, 0x0DU, DV3K_TYPE_CONTROL, 
+              DV3K_CONTROL_RATEP, 0x01U, 0x30U, 0x07U, 0x63U, 0x40U, 0x00U, 0x00U, 0x00U, 
+              0x00U, 0x00U, 0x00U, 0x48U};
+           
           Buffer<> ratep_packet = Buffer<>(DV3K_REQ_RATEP,sizeof(DV3K_REQ_RATEP));
           send(ratep_packet);
           m_state = RATEP;  /* state is requesting version-id of Stick */
         } /* ratep */
 
-
         /* method to prepare incoming frames from network to be decoded later */
         virtual Buffer<> packForDecoding(const Buffer<> &buffer) { return buffer; }
-
 
         /* method to handle prepared encoded Data from network and them to AudioSink */
         virtual void unpackDecoded(const Buffer<> &buffer, Buffer<float> &out)
         {
-          unsigned char *s8_samples = reinterpret_cast<unsigned char *>(buffer.data);
+          char *s8_samples = reinterpret_cast<char *>(buffer.data);
           size_t b = 0;
-          float t[buffer.length];
+          int g = (int)buffer.length/2 + 1;
+          float t[g];
 
           // starts with 4 to omit the DV3K-HEADER
-          for (int a=DV3K_AMBE_HEADER_IN_LEN; a < (int)buffer.length-2; a+=2)
+          for (size_t a=DV3K_AMBE_HEADER_LEN; a <= buffer.length-DV3K_AMBE_HEADER_LEN; a+=2)
           {
             int16_t w = (s8_samples[a] << 8) | (s8_samples[a+1] << 0);
-            // 16384.0 has been calculated experimental, is a subject to change!
-            // maybe a simple audio compressor/clipper could be implemented here
-            // by analyzing the decoded audio level
-            t[b++] = (float) (w / 16384.0);
+            t[b++] = (float) (w / 32767.0);
           }
           out.data = t;
           out.length = b-1;
@@ -270,21 +272,21 @@ namespace {
         /* method to prepare incoming Audio frames from local RX to be encoded later */
         virtual Buffer<> packForEncoding(const Buffer<> &buffer)
         {
-          const unsigned char DV3K_VOICE_FRAME[] =
+          const unsigned char DV3K_VOICE_HEADER[] =
              {DV3K_START_BYTE, 0x01, 0x42, DV3K_TYPE_AUDIO, 0x00, 0xa0};
-          int DV3K_VOICE_FRAME_LEN = 6;
 
-          if (DV3K_AUDIO_LEN != buffer.length)
+          if (AUDIO_BLOCK_BYTES != buffer.length)
           {
             cerr << "*** ERROR: Buffer invalid!" << endl;
           }
-
+                                            // 320                6
           Buffer<> dv3k_buffer =
-               Buffer<>(new char[330], sizeof(size_t));
-
-          memcpy(dv3k_buffer.data, DV3K_VOICE_FRAME, sizeof(DV3K_VOICE_FRAME));
-          memcpy(dv3k_buffer.data + DV3K_VOICE_FRAME_LEN, buffer.data, buffer.length);
-          dv3k_buffer.length = DV3K_VOICE_FRAME_LEN + DV3K_AUDIO_LEN;
+            Buffer<>(new unsigned char[DV3K_VOICE_HEADER_LEN + AUDIO_BLOCK_BYTES],
+                                 DV3K_VOICE_HEADER_LEN + AUDIO_BLOCK_BYTES);
+                                         // 6               len = 6
+          memcpy(dv3k_buffer.data, DV3K_VOICE_HEADER, DV3K_VOICE_HEADER_LEN);
+          memcpy(dv3k_buffer.data + DV3K_VOICE_HEADER_LEN, buffer.data, buffer.length);
+          dv3k_buffer.length = DV3K_VOICE_HEADER_LEN + AUDIO_BLOCK_BYTES;
           return dv3k_buffer;
         } /* packForEncoding */
 
@@ -300,54 +302,50 @@ namespace {
          */
         virtual void writeEncodedSamples(void *buf, int size)
         {
-          // const char DV3K_AMBE_HEADERFRAME[] = 
-          // {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
-          const int DV3K_AMBE_HEADERFRAME_LEN = 6;
-          
-          const unsigned char DV3K_AMBE_HEADERFRAMEOUT[] = {DV3K_START_BYTE, 0x00, 0x0e,
-                                                          DV3K_TYPE_AMBE, 0x40, 0x01, 0x48};
-          const int DV3K_AMBE_HEADERFRAMEOUT_LEN = 7;
-          
-          const unsigned char DV3K_WAIT[] = {0x03, 0xa0};
-          const int DV3K_WAIT_LEN = 2;
-          
-          cout << "writeEncodedSamples from NetRx " << size << endl;
+          const unsigned char DV3K_AMBE_HEADER[] = 
+                    {DV3K_START_BYTE, 0x00, 0x0b, DV3K_TYPE_AMBE, 0x01, 0x48};
           Buffer<> buffer;
-          buffer.data = reinterpret_cast<char*>(buf);
+          buffer.data = reinterpret_cast<unsigned char*>(buf);
           buffer.length = size;
-
-          char ambe_to_dv3k[DV3K_AMBE_HEADERFRAMEOUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN];
-          memcpy(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT, DV3K_AMBE_HEADERFRAMEOUT_LEN); 
-          memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAMEOUT_LEN, buffer.data + DV3K_AMBE_HEADERFRAME_LEN, DV3K_AMBE_FRAME_LEN);
-          memcpy(ambe_to_dv3k + DV3K_AMBE_HEADERFRAMEOUT_LEN + DV3K_AMBE_FRAME_LEN, DV3K_WAIT, DV3K_WAIT_LEN);
+          
+          for (int a=0; a<size; a++)
+          {
+            cout << hex << (int)buffer.data[a] << " ";
+          }
+          cout << endl;
+                                        // 0x06              0x09
+          unsigned char ambe_to_dv3k[DV3K_AMBE_HEADER_LEN + DV3K_AMBE_FRAME_LEN];
+                                                      //0x06
+          memcpy(ambe_to_dv3k, DV3K_AMBE_HEADER, DV3K_AMBE_HEADER_LEN); 
+          memcpy(ambe_to_dv3k + DV3K_AMBE_HEADER_LEN, buffer.data + DV3K_AMBE_HEADER_LEN, DV3K_AMBE_FRAME_LEN);
           
           Buffer<>ambe_frame;
-          ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADERFRAMEOUT_LEN + DV3K_AMBE_FRAME_LEN + DV3K_WAIT_LEN);
-          send(ambe_frame);
+          ambe_frame = Buffer<>(ambe_to_dv3k, DV3K_AMBE_HEADER_LEN + DV3K_AMBE_FRAME_LEN );
+          send(ambe_frame); // send frame to 
         } /* writeEncodedSamples */
 
         virtual void send(const Buffer<> &packet) = 0;
 
+        // response from udp server or dv3000 tty
         virtual void callback(const Buffer<> &buffer)
-        {
-          size_t tlen = 0;
-          
+        {         
           // create a new buffer to handle the received data
           // t_buffer = Buffer<>(new char[512], sizeof(size_t));
           memcpy(t_buffer.data + stored_bufferlen, buffer.data, buffer.length);
           t_buffer.length = buffer.length + stored_bufferlen;
           stored_bufferlen = t_buffer.length;
-          
+          //                             4
           while(t_buffer.length >= DV3K_HEADER_LEN)
           {
             for (size_t a=0; a < t_buffer.length; a++)  
             {                // seek for 0x61
-              if (t_buffer.data[a] == DV3K_START_BYTE && t_buffer.length-a > DV3K_HEADER_LEN)
+              if (t_buffer.data[a] == DV3K_START_BYTE && (t_buffer.length-a > DV3K_HEADER_LEN))
               {
-                tlen = t_buffer.data[a+1]*256 + t_buffer.data[a+2]; // get length of inbuff
+                size_t tlen = t_buffer.data[a+1]*256 + t_buffer.data[a+2]; // get length of inbuff
+                // tlen     +   4
                 if (tlen + DV3K_HEADER_LEN <= t_buffer.length)
                 {
-                  Buffer<> dv3k_buffer = Buffer<>(new char[t_buffer.length+1], sizeof(size_t));
+                  Buffer<> dv3k_buffer = Buffer<>(new unsigned char[t_buffer.length], t_buffer.length);
                   memcpy(dv3k_buffer.data, t_buffer.data + a, DV3K_HEADER_LEN + tlen);
                   dv3k_buffer.length = DV3K_HEADER_LEN + tlen;
                   handleBuffer(dv3k_buffer);
@@ -411,6 +409,11 @@ namespace {
           /* test if buffer contains encoded frame (AMBE) to the network */
           else if (type == DV3K_TYPE_AMBE)
           {
+            for (size_t i = 0; i<inbuffer.length ; i++)
+            {
+              cout << std::hex << (int)inbuffer.data[i] << " ";
+            }
+            cout << endl;
             AudioEncoder::writeEncodedSamples(inbuffer.data, inbuffer.length);
           }
           /* or is a raw 8kHz audio frame from Dv3K device*/
@@ -434,68 +437,70 @@ namespace {
         } /* handleBuffer */
         
 
-        /* method is called up to send encoded AMBE frames to BM network */
+        /* method is called up to get incoming audio, prepared 
+           for AMBE encoding 
+           normally 160 float samples
+           will be recalculated to 2 bytes
+        */
         virtual int writeSamples(const float *samples, int count)
         {
            // store incoming floats in a buffer until 160 or more samples
            // are received
           Buffer<> ambe_buf;
-
           memcpy(inbuf + bufcnt, samples, sizeof(float)*count);
+          
           bufcnt += count;
-          char t_data[bufcnt];
-          while (bufcnt >= DV3K_AUDIO_LEN)
+          cout << "writeSamples=" << count << ", bufcount=" << bufcnt << endl;
+          unsigned char t_data[AUDIO_BLOCK_BYTES];  // 320
+          while (bufcnt >= DV3K_AUDIO_BLOCK_SIZE)   // 160
           {
-            for (int a = 0; a<DV3K_AUDIO_LEN; a++)
+            unsigned int q = 0;
+                                             // 160
+            for (unsigned int a = 0; a < DV3K_AUDIO_BLOCK_SIZE; a++)
             {
-              // This is a HACK!
-              // the INTERNAL_SAMPLE_RATE is normaly 16000 but the DV3k stick
-              // expects 8000. In the Logic class an Encoder instance must be
-              // created that the audio stream from linked logics could be
-              // received
-              // its working for now, but it can not be the goal
-              int32_t w = (int) ((inbuf[a] + inbuf[a+1]) * 32768.0);
-              // printf("%d ", w);
-              t_data[a] = (w & 0xff00) >> 8;
-              t_data[a+1] = (w & 0x00ff) >> 0;
+              int16_t w = (int16_t)(inbuf[a] * 32767.0);
+              //printf("%d ", w);
+              t_data[q++] = (w & 0xff00) >> 8;
+              t_data[q++] = (w & 0x00ff) >> 0;
             }
             //cout << endl;
 
             ambe_buf.data = t_data;
-            ambe_buf.length = DV3K_AUDIO_LEN;
+            ambe_buf.length = q;
             Buffer<> packet = packForEncoding(ambe_buf);
 
             // sends the ambe stream to the brandmeister network
             send(packet);
 
-            bufcnt -= DV3K_AUDIO_LEN;
-            memmove(inbuf, inbuf + DV3K_AUDIO_LEN-1, bufcnt);
+            bufcnt -= DV3K_AUDIO_BLOCK_SIZE;
+            memmove(inbuf, inbuf + DV3K_AUDIO_BLOCK_SIZE-1, bufcnt);
           }
           inbuf[bufcnt] = '\0';
           return count;
         } /* writeSamples */
 
     protected:
-      static const char DV3K_TYPE_CONTROL = 0x00;
-      static const char DV3K_TYPE_AMBE = 0x01;
-      static const char DV3K_TYPE_AUDIO = 0x02;
-      static const char DV3K_HEADER_LEN = 0x04;
-      static const char DSTAR_AUDIO_BLOCK_SIZE=160;
 
-      static const char DV3K_START_BYTE = 0x61;
+      static const unsigned char DV3K_START_BYTE = 0x61;
+      static const unsigned char DV3K_TYPE_CONTROL = 0x00;
+      static const unsigned char DV3K_TYPE_AMBE = 0x01;
+      static const unsigned char DV3K_TYPE_AUDIO = 0x02;
+      static const unsigned char DV3K_HEADER_LEN = 0x04;
 
-      static const char DV3K_CONTROL_RATEP  = 0x0A;
-      static const char DV3K_CONTROL_PRODID = 0x30;
-      static const char DV3K_CONTROL_VERSTRING = 0x31;
-      static const char DV3K_CONTROL_RESET = 0x33;
-      static const char DV3K_CONTROL_READY = 0x39;
-      static const char DV3K_CONTROL_CHANFMT = 0x15;
+      static const unsigned char DV3K_CONTROL_RATEP  = 0x0A;
+      static const unsigned char DV3K_REQ_RATEP = 0x0d;
+      static const unsigned char DV3K_CONTROL_PRODID = 0x30;
+      static const unsigned char DV3K_CONTROL_VERSTRING = 0x31;
+      static const unsigned char DV3K_CONTROL_RESET = 0x33;
+      static const unsigned char DV3K_CONTROL_READY = 0x39;
+      static const unsigned char DV3K_CONTROL_CHANFMT = 0x15;
 
-      static const uint16_t DV3K_AUDIO_LEN = 320;
-      static const uint16_t DV3K_AMBE_HEADER_IN_LEN = 6;
-      static const uint16_t DV3K_AMBE_HEADER_OUT_LEN = 7;
-      static const uint16_t DV3K_AMBE_FRAME_LEN = 9;
-      static const uint16_t REWIND_DMR_AUDIO_FRAME_LENGTH = 27;
+      static const uint16_t DV3K_AUDIO_BLOCK_SIZE = 160;
+      static const uint16_t AUDIO_BLOCK_BYTES = 320;
+
+      static const unsigned char DV3K_AMBE_FRAME_LEN = 0x09;
+      static const unsigned char DV3K_AMBE_HEADER_LEN = 0x06;
+      static const unsigned char DV3K_VOICE_HEADER_LEN = 0x06;
 
       /**
       * @brief 	Default constuctor
@@ -516,7 +521,7 @@ namespace {
       float inbuf[640];
       uint32_t bufcnt;
       uint32_t r_bufcnt;
-      char r_buf[100];
+      unsigned char r_buf[100];
       float rxavg;
 
       AudioCodecAmbeDv3k(const AudioCodecAmbeDv3k&);
@@ -612,7 +617,7 @@ namespace {
       virtual void callbackUdp(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
       {
-        callback(Buffer<>(reinterpret_cast<char *>(buf), count));
+        callback(Buffer<>(reinterpret_cast<unsigned char *>(buf), count));
       } /* callbackUdp */
 
     private:
@@ -681,7 +686,7 @@ namespace {
       virtual void send(const Buffer<> &packet) 
       {
         //cout << "sending to tty device " << packet.length << endl;
-        serial->write(packet.data, packet.length);
+        serial->write(reinterpret_cast<char*>(packet.data), packet.length);
       } /* send */
 
       ~AudioCodecAmbeDv3kTty()
@@ -693,7 +698,9 @@ namespace {
     protected:
       virtual void callbackTty(const char *buf, int count)
       {
-        callback(Buffer<>(const_cast<char *>(buf),count));
+        //const unsigned char* tmp= reinterpret_cast<const unsigned char *>(buf);
+        //callback(Buffer<>((unsigned char*)tmp,count));
+        callback(Buffer<>((unsigned char*)buf, count));
       }
 
     private:
