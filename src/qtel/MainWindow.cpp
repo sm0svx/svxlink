@@ -322,9 +322,9 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     const string& remote_priv)
 {
   time_t t = time(0);
-  struct tm *tm = localtime(&t);
+  struct tm tm;
   char time_str[16];
-  strftime(time_str, sizeof(time_str), "%H:%M", tm);
+  strftime(time_str, sizeof(time_str), "%H:%M", localtime_r(&t, &tm));
   
   QList<QTreeWidgetItem*> items = incoming_con_view->findItems(
 		QString::fromStdString(remote_call),
