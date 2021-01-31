@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 
 #include <QtAlgorithms>
+#include <QtGlobal>
 
 
 /****************************************************************************
@@ -132,8 +133,13 @@ EchoLinkDirectoryModel::~EchoLinkDirectoryModel(void)
 void EchoLinkDirectoryModel::updateStationList(
 				    const list<StationData> &stn_list)
 {
+#if QT_VERSION >= 0x050b00
   QList<StationData> updated_stations(stn_list.begin(), stn_list.end());
   std::stable_sort(updated_stations.begin(), updated_stations.end());
+#else
+  QList<StationData> updated_stations = QList<StationData>::fromStdList(stn_list);
+  qStableSort(updated_stations);
+#endif
   
   //cout << "### updated_stations=" << updated_stations.count() << endl;  
   
