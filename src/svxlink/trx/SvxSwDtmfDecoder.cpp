@@ -259,7 +259,7 @@ void SvxSwDtmfDecoder::processBlock(void)
   for (size_t i=0; i<BLOCK_SIZE; ++i)
   {
     float sample = block[i] * win[i];
-    block_energy += sample * sample;
+    block_energy += static_cast<double>(sample) * sample;
     row[0].calc(sample);
     row[1].calc(sample);
     row[2].calc(sample);

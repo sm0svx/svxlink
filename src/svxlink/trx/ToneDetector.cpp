@@ -465,7 +465,7 @@ int ToneDetector::writeSamples(const float *buf, int len)
       famp *= *(win++);
     }
 
-    passband_energy += famp * famp;
+    passband_energy += static_cast<double>(famp) * famp;
 
       // Run the recursive Goertzel stage for the center frequency
     par->center.calc(famp);

@@ -324,13 +324,13 @@ class DevPrinter : public AudioSink
         if (++samp_cnt >= block_size)
         {
           double avg_power = pwr_sum / block_size;
-          float tot_dev = sqrt(avg_power) * sqrt(2);
+          double tot_dev = sqrt(avg_power) * sqrt(2);
           tot_dev *= adj_level;
           tot_dev *= headroom * max_dev;
           tot_dev_est = (1.0-ALPHA) * tot_dev + ALPHA * tot_dev_est;
           pwr_sum = 0.0;
 
-          float dev = 0.0f;
+          double dev = 0.0;
           for (size_t i=0; i<g.size(); ++i)
           {
             dev += g[i].magnitudeSquared();
@@ -384,7 +384,7 @@ class DevPrinter : public AudioSink
     vector<Goertzel> g;
     int           samp_cnt;
     float         max_dev;
-    float         headroom;
+    double        headroom;
     double        adj_level;
     double        dev_est;
     size_t        block_cnt;

@@ -138,13 +138,13 @@ class AudioDeviceUDP : public Async::AudioDevice
      * @brief 	Find out what the read (recording) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int readBlocksize(void);
+    virtual size_t readBlocksize(void);
 
     /**
      * @brief 	Find out what the write (playback) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int writeBlocksize(void);
+    virtual size_t writeBlocksize(void);
 
     /**
      * @brief 	Check if the audio device has full duplex capability
@@ -192,10 +192,10 @@ class AudioDeviceUDP : public Async::AudioDevice
 
     
   private:
-    int                 block_size;
+    size_t              block_size;
     Async::UdpSocket    *sock;
     int16_t             *read_buf;
-    int                 read_buf_pos;
+    size_t              read_buf_pos;
     IpAddress           ip_addr;
     uint16_t            port;
     Async::Timer        *pace_timer;

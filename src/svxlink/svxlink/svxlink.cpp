@@ -479,7 +479,7 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
-  int card_channels = 2;
+  size_t card_channels = 2;
   cfg.getValue("GLOBAL", "CARD_CHANNELS", card_channels);
   AudioIO::setChannels(card_channels);
 
