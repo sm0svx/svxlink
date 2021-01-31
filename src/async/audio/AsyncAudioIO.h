@@ -169,19 +169,19 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static void setBlocksize(int size);
+    static void setBlocksize(size_t size);
 
     /**
      * @brief 	Find out what the read (recording) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    int readBlocksize(void);
+    size_t readBlocksize(void);
 
     /**
      * @brief 	Find out what the write (playback) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    int writeBlocksize(void);
+    size_t writeBlocksize(void);
     
     /**
      * @brief 	Set the block count used when opening audio devices
@@ -195,7 +195,7 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static void setBlockCount(int count);
+    static void setBlockCount(size_t count);
     
     /**
      * @brief 	Set the number of channels used when doing future opens
@@ -206,14 +206,14 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static void setChannels(int channels);
+    static void setChannels(size_t channels);
     
     /**
      * @brief Constructor
      * @param dev_name	The name of the device to use
      * @param channel 	The channel number (zero is the first channel)
      */
-    AudioIO(const std::string& dev_name, int channel);
+    AudioIO(const std::string& dev_name, size_t channel);
     
     /**
      * @brief Destructor
@@ -301,7 +301,7 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      * @brief   Return the audio channel used
      * @return  Returns the audio channel that was given to the constructor
      */
-    int channel(void) const { return m_channel; }
+    size_t channel(void) const { return m_channel; }
     
     /**
      * @brief Resume audio output to the sink
@@ -351,7 +351,7 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
     AudioDevice       	    *audio_dev;
     float     	      	    m_gain;
     int       	      	    sample_rate;
-    int       	      	    m_channel;
+    size_t                  m_channel;
     AudioValve              *input_valve;
     InputFifo         	    *input_fifo;
     DelayedFlushAudioReader *audio_reader;

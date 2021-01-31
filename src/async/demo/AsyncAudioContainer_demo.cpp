@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <AsyncCppApplication.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioSplitter.h>
@@ -39,8 +40,12 @@ class AudioFileWriter : public Async::AudioSink
       assert(m_ofs.is_open());
 
         // Reserve space for the file header which is written at the end
-      char dummy[m_container->headerSize()] = {0};
-      m_ofs.write(dummy, sizeof(dummy));
+      if (m_container->headerSize() > 0)
+      {
+        char dummy[m_container->headerSize()];
+        std::memset(dummy, 0, m_container->headerSize());
+        m_ofs.write(dummy, sizeof(dummy));
+      }
       assert(m_ofs.good());
     }
 

@@ -178,7 +178,7 @@ class AudioDevice : public sigc::trackable
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static void setBlocksize(int size)
+    static void setBlocksize(size_t size)
     {
       block_size_hint = size;
     }
@@ -187,13 +187,13 @@ class AudioDevice : public sigc::trackable
      * @brief 	Find out what the read (recording) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int readBlocksize(void) = 0;
+    virtual size_t readBlocksize(void) = 0;
 
     /**
      * @brief 	Find out what the write (playback) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int writeBlocksize(void) = 0;
+    virtual size_t writeBlocksize(void) = 0;
     
     /**
      * @brief 	Set the buffer count used when opening audio devices
@@ -208,7 +208,7 @@ class AudioDevice : public sigc::trackable
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static void setBlockCount(int count)
+    static void setBlockCount(size_t count)
     {
       block_count_hint = (count <= 0) ? 0 : count;
     }
@@ -222,12 +222,16 @@ class AudioDevice : public sigc::trackable
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static void setChannels(int channels)
+    static void setChannels(size_t channels)
     {
       AudioDevice::channels = channels;
     }
 
-    static int getChannels(void) { return channels; }
+    /**
+     * @brief   Get the number of channels used for future opens
+     * @return  Returns the number of channels used for future opens
+     */
+    static size_t getChannels(void) { return channels; }
 
     /**
      * @brief 	Check if the audio device has full duplex capability
@@ -292,9 +296,9 @@ class AudioDevice : public sigc::trackable
     
   protected:
     static int	      	sample_rate;
-    static int	      	block_size_hint;
-    static int	      	block_count_hint;
-    static int	      	channels;
+    static size_t       block_size_hint;
+    static size_t       block_count_hint;
+    static size_t       channels;
 
     std::string       	dev_name;
     
@@ -321,20 +325,45 @@ class AudioDevice : public sigc::trackable
      */
     virtual void closeDevice(void) = 0;
 
-    void putBlocks(int16_t *buf, int frame_cnt);
-    int getBlocks(int16_t *buf, int block_cnt);
-    
-    
+    /**
+     * @brief   Write samples read from audio device to upper layers
+     * @param   buf       Buffer containing frames of samples to write
+     * @param   frame_cnt The number of frames of samples in the buffer
+     *
+     * This function is used by an audio device implementation to write audio
+     * samples recorded from the actual audio device to the upper software
+     * layers, for further processing. The number of samples is given as
+     * frames. A frame contains one sample per channel starting with channel 0.
+     * Frames are put in the buffer one after the other. Thus, the sample
+     * buffer should contain frame_cnt * channels samples.
+     */
+    void putBlocks(int16_t *buf, size_t frame_cnt);
+
+    /**
+     * @brief   Read samples from upper layers to write to audio device
+     * @brief   buf       Buffer which will be filled with frames of samples
+     * @brief   block_cnt The size of the buffer counted in blocks
+     * @return  The number of blocks actually stored in the buffer
+     *
+     * This function is used by an audio device implementation to get samples
+     * from upper layers to write to the actual audio device. The count is
+     * given in blocks. The buffer must be able to store the number given in
+     * block_cnt. Fewer blocks may be returned if the requested block count is
+     * not available. The number of samples a block contain is
+     * ret_blocks * writeBlocksize() * channels.
+     */
+    size_t getBlocks(int16_t *buf, size_t block_cnt);
+
   private:
-    static const int  DEFAULT_SAMPLE_RATE = INTERNAL_SAMPLE_RATE;
-    static const int  DEFAULT_CHANNELS = 2;
-    static const int  DEFAULT_BLOCK_COUNT_HINT = 4;
-    static const int  DEFAULT_BLOCK_SIZE_HINT = 256; // Samples/channel/block
-    
+    static const int    DEFAULT_SAMPLE_RATE = INTERNAL_SAMPLE_RATE;
+    static const size_t DEFAULT_CHANNELS = 2;
+    static const size_t DEFAULT_BLOCK_COUNT_HINT = 4;
+    static const size_t DEFAULT_BLOCK_SIZE_HINT = 256; // Samples/channel/block
+
     static std::map<std::string, AudioDevice*>  devices;
-    
+
     Mode      	      	current_mode;
-    int       	      	use_count;
+    size_t              use_count;
     std::list<AudioIO*> aios;
 
 };  /* class AudioDevice */

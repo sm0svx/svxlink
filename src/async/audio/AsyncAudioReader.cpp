@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <algorithm>
 #include <cstring>
+#include <cassert>
 
 
 /****************************************************************************
@@ -127,11 +128,8 @@ AudioReader::~AudioReader(void)
 
 int AudioReader::readSamples(float *samples, int count)
 {
-  if (count == 0)
-  {
-    return 0;
-  }
-  
+  assert(count > 0);
+
   buf = samples;
   buf_size = count;
   samples_in_buf = 0;

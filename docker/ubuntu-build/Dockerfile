@@ -8,7 +8,7 @@
 #              --privileged -v /dev/snd:/dev/snd
 #              -e HOSTAUDIO_GID=$(stat -c "%g" /dev/snd/timer)
 #
-# To import your git config add (mileage may vary):
+# To import your git config add (your mileage may vary):
 #              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro
 #
 # To use a specific git repositoty instead of the default one:
@@ -22,21 +22,23 @@
 #
 
 FROM ubuntu
-MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
+MAINTAINER Tobias Blomberg <sm0svx@svxlink.org>
 
 # Install required packages and set up the svxlink user
-RUN apt-get update && \
+RUN apt update && \
     export DEBIAN_FRONTEND=noninteractive && \
-    apt-get -y install git cmake g++ make libsigc++-2.0-dev libgsm1-dev \
-                       libpopt-dev tcl8.5-dev libgcrypt11-dev libspeex-dev \
-                       libasound2-dev alsa-utils vorbis-tools libqt4-dev \
-                       libopus-dev librtlsdr-dev libcurl4-openssl-dev curl sudo
-#RUN apt-get -y install groff doxygen
+    apt -y install git cmake g++ make libsigc++-2.0-dev libgsm1-dev \
+                   libpopt-dev tcl-dev libgcrypt20-dev libspeex-dev \
+                   libasound2-dev alsa-utils vorbis-tools qtbase5-dev \
+                   qttools5-dev qttools5-dev-tools libopus-dev \
+                   librtlsdr-dev libjsoncpp-dev libcurl4-openssl-dev \
+                   curl sudo
+#RUN apt -y install groff doxygen
 
 # Install svxlink audio files
 RUN mkdir -p /usr/share/svxlink/sounds && \
     cd /usr/share/svxlink/sounds && \
-    curl -LO https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/14.08/svxlink-sounds-en_US-heather-16k-13.12.tar.bz2 && \
+    curl -LO https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/19.09.99.1/svxlink-sounds-en_US-heather-16k-19.09.99.1.tar.bz2 && \
     tar xvaf svxlink-sounds-* && \
     ln -s en_US-heather-16k en_US && \
     rm svxlink-sounds-*

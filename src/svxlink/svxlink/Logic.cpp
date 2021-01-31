@@ -1580,10 +1580,11 @@ void Logic::timeoutNextMinute(void)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  struct tm *tm = localtime(&tv.tv_sec);
-  tm->tm_min += 1;
-  tm->tm_sec = 0;
-  every_minute_timer.setTimeout(*tm);
+  struct tm tm;
+  localtime_r(&tv.tv_sec, &tm);
+  tm.tm_min += 1;
+  tm.tm_sec = 0;
+  every_minute_timer.setTimeout(tm);
 } /* Logic::timeoutNextMinute */
 
 
@@ -1598,9 +1599,10 @@ void Logic::timeoutNextSecond(void)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  struct tm *tm = localtime(&tv.tv_sec);
-  tm->tm_sec += 1;
-  every_second_timer.setTimeout(*tm);
+  struct tm tm;
+  localtime_r(&tv.tv_sec, &tm);
+  tm.tm_sec += 1;
+  every_second_timer.setTimeout(tm);
 } /* Logic::timeoutNextSecond */
 
 

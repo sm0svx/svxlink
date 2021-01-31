@@ -2167,7 +2167,8 @@ bool ModuleEchoLink::numConCheck(const std::string &callsign)
     {
       time_t next = con_time.tv_sec + num_con_block_time;
       char time_str[64];
-      strftime(time_str, sizeof(time_str), "%c", localtime(&next));
+      struct tm tm;
+      strftime(time_str, sizeof(time_str), "%c", localtime_r(&next, &tm));
       cerr << "*** WARNING: Ingnoring incoming connection because "
            << "the station (" << callsign << ") has connected " 
            << "to often (" << stn.num_con << " times). " 

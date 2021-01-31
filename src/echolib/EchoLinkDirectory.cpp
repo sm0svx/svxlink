@@ -688,9 +688,9 @@ void Directory::ctrlSockConnected(void)
     case Cmd::ONLINE:
     {
       time_t t = time(NULL);
-      struct tm *tm = localtime(&t);
+      struct tm tm;
       char local_time_str[6];
-      strftime(local_time_str, 6, "%H:%M", tm);
+      strftime(local_time_str, 6, "%H:%M", localtime_r(&t, &tm));
       cmdstr = "l" + the_callsign + "\254\254" + the_password +
 	  "\015ONLINE3.38(" + local_time_str + ")\015" + the_description +
 	  "\015";
@@ -700,9 +700,9 @@ void Directory::ctrlSockConnected(void)
     case Cmd::BUSY:
     {
       time_t t = time(NULL);
-      struct tm *tm = localtime(&t);
+      struct tm tm;
       char local_time_str[6];
-      strftime(local_time_str, 6, "%H:%M", tm);
+      strftime(local_time_str, 6, "%H:%M", localtime_r(&t, &tm));
       cmdstr = "l" + the_callsign + "\254\254" + the_password +
 	  "\015BUSY3.40(" + local_time_str + ")\015" + the_description + "\015";
       break;
