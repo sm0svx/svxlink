@@ -124,7 +124,7 @@ class SineGenerator : public Async::AudioSource
       level = level_percent / 100.0;
       if (fqs.size() > 1)
       {
-        level /= powf(10.0f, 3.0f/20.0f) * (fqs.size() - 1);
+        level /= pow(10.0, 3.0/20.0) * (fqs.size() - 1);
       }
     }
 
@@ -313,7 +313,7 @@ class DevPrinter : public AudioSink
     {
       for (int i=0; i<count; ++i)
       {
-        pwr_sum += samples[i] * samples[i];
+        pwr_sum += static_cast<double>(samples[i]) * samples[i];
         amp_sum += samples[i];
 
         float windowed = w[samp_cnt] * samples[i];
