@@ -30,7 +30,6 @@ target_link_libraries(svxreflector ${LIBS})
 set_target_properties(svxreflector PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_dependencies(svxreflector version-svxreflector)
 
 # Install targets
 install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})

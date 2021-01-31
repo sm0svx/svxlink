@@ -27,20 +27,23 @@ class MyClass : public sigc::trackable
     {
       struct timeval tv;
       gettimeofday(&tv, NULL);
-      struct tm *tm = localtime(&tv.tv_sec);
-      tm->tm_min += 1;
-      tm->tm_sec = 0;
-      cout << "Setting timer to expire at " << asctime(tm);
-      timer.setTimeout(*tm);
+      struct tm tm;
+      localtime_r(&tv.tv_sec, &tm);
+      tm.tm_min += 1;
+      tm.tm_sec = 0;
+      char timebuf[256];
+      cout << "Setting timer to expire at " << asctime_r(&tm, timebuf);
+      timer.setTimeout(tm);
     }
 
     void onTimerExpired(AtTimer *t)
     {
       struct timeval now;
       gettimeofday(&now, NULL);
-      struct tm *tm = localtime(&now.tv_sec);
+      struct tm tm;
+      char timebuf[256];
       cout << "Timer expired at (+" << now.tv_usec / 1000 << "msec) "
-           << asctime(tm) << endl;
+           << asctime_r(localtime_r(&now.tv_sec, &tm), timebuf) << endl;
       timeoutNextMinute();
     }
 };

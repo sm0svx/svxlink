@@ -162,7 +162,7 @@ class PowerPlotter : public Async::AudioPassthrough
       double power = 0.0;
       for (int i=0; i<count; ++i)
       {
-        power += samples[i] * samples[i];
+        power += static_cast<double>(samples[i]) * samples[i];
       }
       power /= count;
       power = ALPHA * power + (1-ALPHA) * prev_power;

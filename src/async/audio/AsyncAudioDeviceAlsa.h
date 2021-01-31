@@ -132,13 +132,13 @@ class AudioDeviceAlsa : public AudioDevice
      * @brief 	Find out what the read (recording) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int readBlocksize(void);
+    virtual size_t readBlocksize(void);
 
     /**
      * @brief 	Find out what the write (playback) blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    virtual int writeBlocksize(void);
+    virtual size_t writeBlocksize(void);
 
     /**
      * @brief 	Check if the audio device has full duplex capability
@@ -187,10 +187,10 @@ class AudioDeviceAlsa : public AudioDevice
 
   private:
     class       AlsaWatch;
-    int         play_block_size;
-    int         play_block_count;
-    int         rec_block_size;
-    int         rec_block_count;
+    size_t      play_block_size;
+    size_t      play_block_count;
+    size_t      rec_block_size;
+    size_t      rec_block_count;
     snd_pcm_t   *play_handle;
     snd_pcm_t   *rec_handle;
     AlsaWatch   *play_watch;
@@ -203,8 +203,8 @@ class AudioDeviceAlsa : public AudioDevice
     void audioReadHandler(FdWatch *watch, unsigned short revents);
     void writeSpaceAvailable(FdWatch *watch, unsigned short revents);
     bool initParams(snd_pcm_t *pcm_handle);
-    bool getBlockAttributes(snd_pcm_t *pcm_handle, int &block_size,
-                            int &period_size);
+    bool getBlockAttributes(snd_pcm_t *pcm_handle, size_t &block_size,
+                            size_t &period_size);
     bool startPlayback(snd_pcm_t *pcm_handle);
     bool startCapture(snd_pcm_t *pcm_handle);
     

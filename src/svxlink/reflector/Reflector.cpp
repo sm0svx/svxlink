@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -293,13 +293,20 @@ void Reflector::broadcastUdpMsg(const ReflectorUdpMsg& msg,
 
 void Reflector::requestQsy(ReflectorClient *client, uint32_t tg)
 {
+  uint32_t current_tg = TGHandler::instance()->TGForClient(client);
+  if (current_tg == 0)
+  {
+    std::cout << client->callsign()
+              << ": Cannot request QSY from TG #0" << std::endl;
+    return;
+  }
+
   if (tg == 0)
   {
     tg = nextRandomQsyTg();
     if (tg == 0) { return; }
   }
 
-  uint32_t current_tg = TGHandler::instance()->TGForClient(client);
   cout << client->callsign() << ": Requesting QSY from TG #"
        << current_tg << " to TG #" << tg << endl;
 

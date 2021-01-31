@@ -125,11 +125,9 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 		mem_fun(*this, &SatRx::rxSquelchOpen));
 	rx->signalLevelUpdated.connect(
 		mem_fun(*this, &SatRx::rxSignalLevelUpdated));
+        rx->toneDetected.connect(toneDetected.make_slot());
+
         // FIXME: We should take care of publishStateEvent
-	
-	// FIXME: Should we buffer the tone detector output like we do with
-	// DTMF and selcall?
-	rx->toneDetected.connect(toneDetected.make_slot());
 
 	AudioSource *prev_src = rx;
 
@@ -170,7 +168,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       return true;
     }
 
-    void setEnabled(bool do_enable)
+    void setEnabled(bool do_enable, Rx::MuteState disabled_mute_state)
     {
       if (do_enable)
       {
@@ -180,7 +178,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       else
       {
         Rx::MuteState orig_mute_state = mute_state;
-        setMuteState(Rx::MUTE_ALL);
+        setMuteState(disabled_mute_state);
         mute_state = orig_mute_state;
         enabled = false;
       }
@@ -657,8 +655,13 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
          << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
          << " (siglev="
          << static_cast<int>(std::roundf(srx->signalStrength()))
-         << ")"
-         << std::endl;
+         << ")";
+    if (!srx->isEnabled())
+    {
+      std::cout << " [MUTED]" << std::endl;
+      return;
+    }
+    std::cout << std::endl;
   }
   dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
 } /* Voter::satSquelchOpen */
@@ -666,7 +669,10 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 
 void Voter::satSignalLevelUpdated(float siglev, SatRx *srx)
 {
-  dispatchEvent(Macho::Event(&Top::satSignalLevelUpdated, srx, siglev));
+  if (srx->isEnabled())
+  {
+    dispatchEvent(Macho::Event(&Top::satSignalLevelUpdated, srx, siglev));
+  }
 } /* Voter::satSignalLevelUpdated */
 
 
@@ -742,7 +748,7 @@ Voter::SatRx *Voter::findBestRx(void) const
   list<SatRx *>::const_iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    if ((*it)->squelchIsOpen() &&
+    if ((*it)->isEnabled() && (*it)->squelchIsOpen() &&
 	((best_rx == 0) || ((*it)->signalStrength() > best_rx_siglev)))
     {
       best_rx = *it;
@@ -1124,7 +1130,7 @@ void Voter::SquelchOpen::exit(void)
   {
     const SatRx *srx = activeSrx();
     ss << srx->name() << "[" << srx->squelchActivityInfo() << "]="
-       << srx->signalStrength();
+       << static_cast<int>(std::roundf(srx->signalStrength()));
   }
 
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false, ss.str()));
@@ -1374,6 +1380,17 @@ void Voter::handlePtyCommand(const std::string &full_command)
     }
     setRxEnabled(rx_name, true);
   }
+  else if (command == "MUTE") // Mute receiver audio
+  {
+    std::string rx_name;
+    if (!(is >> rx_name))
+    {
+      cerr << "*** WARNING: Malformed voter PTY command: \""
+           << full_command << "\"" << endl;
+      return;
+    }
+    setRxEnabled(rx_name, false, Rx::MUTE_CONTENT);
+  }
   else if (command == "DISABLE") // Disable receiver
   {
     string rx_name;
@@ -1393,7 +1410,8 @@ void Voter::handlePtyCommand(const std::string &full_command)
 } /* Voter::handlePtyCommand */
 
 
-void Voter::setRxEnabled(const std::string &rx_name, bool do_enable)
+void Voter::setRxEnabled(const std::string &rx_name, bool do_enable,
+                         Rx::MuteState disabled_mute_state)
 {
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -1404,7 +1422,7 @@ void Voter::setRxEnabled(const std::string &rx_name, bool do_enable)
       {
         cout << name() << ": " << (do_enable ? "Enabling" : "Disabling")
              << " receiver " << (*it)->name() << endl;
-        (*it)->setEnabled(do_enable);
+        (*it)->setEnabled(do_enable, disabled_mute_state);
       }
       return;
     }

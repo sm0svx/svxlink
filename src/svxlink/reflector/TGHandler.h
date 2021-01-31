@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ class TGHandler : public sigc::trackable
 
     void setSqlTimeoutBlocktime(unsigned sql_timeout_blocktime);
 
-    void switchTo(ReflectorClient *client, uint32_t tg);
+    bool switchTo(ReflectorClient *client, uint32_t tg);
 
     void removeClient(ReflectorClient* client);
 
@@ -157,6 +157,8 @@ class TGHandler : public sigc::trackable
     ReflectorClient* talkerForTG(uint32_t tg) const;
 
     uint32_t TGForClient(ReflectorClient* client);
+
+    bool allowTgSelection(ReflectorClient *client, uint32_t tg);
 
     sigc::signal<void, uint32_t,
       ReflectorClient*, ReflectorClient*> talkerUpdated;

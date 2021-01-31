@@ -294,8 +294,7 @@ int SigLevDetNoise::processSamples(float *samples, int count)
   for (int i=0; i<count; ++i)
   {
     const float &sample = samples[i];
-    const double square = sample * sample;
-    ss += square;
+    ss += static_cast<double>(sample) * sample;
     if (++ss_cnt >= block_len)
     {
       SsSetIter it = ss_values.insert(ss);

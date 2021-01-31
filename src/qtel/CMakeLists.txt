@@ -64,7 +64,6 @@ target_link_libraries(${PROG} ${LIBS})
 set_target_properties(${PROG} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}  
   )
-add_dependencies(${PROG} version-${PROG})
 
 # Install targets
 install(TARGETS ${PROG} DESTINATION ${BIN_INSTALL_DIR})

@@ -112,9 +112,9 @@ using namespace Async;
 
 map<string, AudioDevice*>  AudioDevice::devices;
 int AudioDevice::sample_rate = DEFAULT_SAMPLE_RATE;
-int AudioDevice::block_size_hint = DEFAULT_BLOCK_SIZE_HINT;
-int AudioDevice::block_count_hint = DEFAULT_BLOCK_COUNT_HINT;
-int AudioDevice::channels = DEFAULT_CHANNELS;
+size_t AudioDevice::block_size_hint = DEFAULT_BLOCK_SIZE_HINT;
+size_t AudioDevice::block_count_hint = DEFAULT_BLOCK_COUNT_HINT;
+size_t AudioDevice::channels = DEFAULT_CHANNELS;
 
 
 
@@ -263,13 +263,13 @@ AudioDevice::~AudioDevice(void)
 } /* AudioDevice::~AudioDevice */
 
 
-void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
+void AudioDevice::putBlocks(int16_t *buf, size_t frame_cnt)
 {
-  //printf("putBlocks: frame_cnt=%d\n", frame_cnt);
+  //printf("putBlocks: frame_cnt=%zu\n", frame_cnt);
   float samples[frame_cnt];
-  for (int ch=0; ch<channels; ch++)
+  for (size_t ch=0; ch<channels; ch++)
   {
-    for (int i=0; i<frame_cnt; i++)
+    for (size_t i=0; i<frame_cnt; i++)
     {
         // no divisions in index calculation (embedded system performance !!!)
       samples[i] = static_cast<float>(buf[i * channels + ch]) / 32768.0;
@@ -286,10 +286,10 @@ void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
 } /* AudioDevice::putBlocks */
 
 
-int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
+size_t AudioDevice::getBlocks(int16_t *buf, size_t block_cnt)
 {
-  unsigned block_size = writeBlocksize();
-  unsigned frames_to_write = block_cnt * block_size;
+  size_t block_size = writeBlocksize();
+  size_t frames_to_write = block_cnt * block_size;
   memset(buf, 0, channels * frames_to_write * sizeof(*buf));
   
     // Loop through all AudioIO objects and find out if they have any
@@ -350,10 +350,11 @@ int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
   {
     if (!(*it)->isIdle())
     {
-      int channel = (*it)->channel();
+      size_t channel = (*it)->channel();
       float tmp[frames_to_write];
       int samples_read = (*it)->readSamples(tmp, frames_to_write);
-      for (int i=0; i<samples_read; ++i)
+      assert(samples_read >= 0);
+      for (size_t i=0; i<static_cast<size_t>(samples_read); ++i)
       {
 	int buf_pos = i * channels + channel;
 	float sample = 32767.0 * tmp[i] + buf[buf_pos];
