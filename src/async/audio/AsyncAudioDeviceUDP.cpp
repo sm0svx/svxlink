@@ -125,13 +125,13 @@ REGISTER_AUDIO_DEVICE_TYPE("udp", AudioDeviceUDP);
  *
  ****************************************************************************/
 
-int AudioDeviceUDP::readBlocksize(void)
+size_t AudioDeviceUDP::readBlocksize(void)
 {
   return block_size;
 } /* AudioDeviceUDP::readBlocksize */
 
 
-int AudioDeviceUDP::writeBlocksize(void)
+size_t AudioDeviceUDP::writeBlocksize(void)
 {
   return block_size;
 } /* AudioDeviceUDP::writeBlocksize */
@@ -193,7 +193,8 @@ AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
     read_buf_pos(0), port(0)
 {
   assert(AudioDeviceUDP_creator_registered);
-  int pace_interval = 1000 * block_size_hint / sampleRate();
+  assert(sampleRate() > 0);
+  size_t pace_interval = 1000 * block_size_hint / sampleRate();
   block_size = pace_interval * sampleRate() / 1000;
 
   read_buf = new int16_t[block_size * channels];
@@ -321,7 +322,7 @@ void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, uint16_t port,
 {
   for (unsigned i=0; i < count / (channels * sizeof(int16_t)); ++i)
   {
-    for (int ch=0; ch < channels; ++ch)
+    for (size_t ch=0; ch < channels; ++ch)
     {
       read_buf[read_buf_pos * channels + ch] =
               ((int16_t *)buf)[i * channels + ch];

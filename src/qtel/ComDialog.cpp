@@ -481,8 +481,8 @@ void ComDialog::createConnection(const StationData *station)
       settings->name().toStdString(), settings->info().toStdString());
   if (!con->initOk())
   {
-    MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	trUtf8("Could not create connection to") + " " + callsign);
+    MyMessageBox *mb = new MyMessageBox(tr("Qtel Error"),
+	tr("Could not create connection to") + " " + callsign);
     mb->show();
     connect(mb, SIGNAL(closed()), this, SLOT(close()));
     delete con;
@@ -524,8 +524,8 @@ void ComDialog::onStationListUpdated(void)
     }
     else
     {
-      MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	  trUtf8("Station data not found in directory server.\nCan't create "
+      MyMessageBox *mb = new MyMessageBox(tr("Qtel Error"),
+	  tr("Station data not found in directory server.\nCan't create "
 	  "connection to") + " " + callsign);
       mb->show();
       connect(mb, SIGNAL(closed()), this, SLOT(close()));
@@ -544,8 +544,8 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
     mic_open_ok = mic_audio_io->open(AudioIO::MODE_RD);
     if (!mic_open_ok)
     {
-      MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	  trUtf8("Could not open mic audio device"));
+      MyMessageBox *mb = new MyMessageBox(tr("Qtel Error"),
+	  tr("Could not open mic audio device"));
       mb->show();
       connect(mb, SIGNAL(closed()), this, SLOT(close()));
     }
@@ -556,8 +556,8 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
     spkr_open_ok = spkr_audio_io->open(AudioIO::MODE_WR);
     if (!spkr_open_ok)
     {
-      MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	  trUtf8("Could not open speaker audio device"));
+      MyMessageBox *mb = new MyMessageBox(tr("Qtel Error"),
+	  tr("Could not open speaker audio device"));
       mb->show();
       connect(mb, SIGNAL(closed()), this, SLOT(close()));
     }
@@ -572,8 +572,8 @@ void ComDialog::dnsResultsReady(DnsLookup &)
 {
   if (dns->addresses().empty())
   {
-    MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	trUtf8("Could not create connection to remote host") + " \"" +
+    MyMessageBox *mb = new MyMessageBox(tr("Qtel Error"),
+	tr("Could not create connection to remote host") + " \"" +
 	dns->label().c_str() + "\"");
     mb->show();
     connect(mb, SIGNAL(closed()), this, SLOT(close()));
@@ -686,7 +686,7 @@ void ComDialog::sendChatMsg()
 
 void ComDialog::infoMsgReceived(const string& msg)
 {
-  info_incoming->append("------------ " + trUtf8("INFO") + " ------------");
+  info_incoming->append("------------ " + tr("INFO") + " ------------");
   info_incoming->append(msg.c_str());
   info_incoming->append("------------------------------");
 } /* ComDialog::infoMsgReceived */
@@ -716,7 +716,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(true);
       chat_outgoing->setEnabled(true);
       ptt_button->setFocus();
-      info_incoming->append(trUtf8("Connected to ") + call->text() + "\n");
+      info_incoming->append(tr("Connected to ") + call->text() + "\n");
       if (name_label->text() == "?")
       {
 	name_label->setText(con->remoteName().c_str());
@@ -729,7 +729,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       disconnect_button->setFocus();
-      info_incoming->append(trUtf8("Connecting to ") + call->text() + "...\n");
+      info_incoming->append(tr("Connecting to ") + call->text() + "...\n");
       break;
       
     case Qso::STATE_BYE_RECEIVED:
@@ -749,7 +749,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       connect_button->setFocus();
-      info_incoming->append(trUtf8("Disconnected") + "\n");
+      info_incoming->append(tr("Disconnected") + "\n");
       break;
   }
   

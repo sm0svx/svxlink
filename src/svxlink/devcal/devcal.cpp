@@ -124,7 +124,7 @@ class SineGenerator : public Async::AudioSource
       level = level_percent / 100.0;
       if (fqs.size() > 1)
       {
-        level /= powf(10.0f, 3.0f/20.0f) * (fqs.size() - 1);
+        level /= pow(10.0, 3.0/20.0) * (fqs.size() - 1);
       }
     }
 
@@ -313,7 +313,7 @@ class DevPrinter : public AudioSink
     {
       for (int i=0; i<count; ++i)
       {
-        pwr_sum += samples[i] * samples[i];
+        pwr_sum += static_cast<double>(samples[i]) * samples[i];
         amp_sum += samples[i];
 
         float windowed = w[samp_cnt] * samples[i];
@@ -324,13 +324,13 @@ class DevPrinter : public AudioSink
         if (++samp_cnt >= block_size)
         {
           double avg_power = pwr_sum / block_size;
-          float tot_dev = sqrt(avg_power) * sqrt(2);
+          double tot_dev = sqrt(avg_power) * sqrt(2);
           tot_dev *= adj_level;
           tot_dev *= headroom * max_dev;
           tot_dev_est = (1.0-ALPHA) * tot_dev + ALPHA * tot_dev_est;
           pwr_sum = 0.0;
 
-          float dev = 0.0f;
+          double dev = 0.0;
           for (size_t i=0; i<g.size(); ++i)
           {
             dev += g[i].magnitudeSquared();
@@ -384,7 +384,7 @@ class DevPrinter : public AudioSink
     vector<Goertzel> g;
     int           samp_cnt;
     float         max_dev;
-    float         headroom;
+    double        headroom;
     double        adj_level;
     double        dev_est;
     size_t        block_cnt;
