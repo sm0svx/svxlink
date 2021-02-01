@@ -1894,11 +1894,11 @@ bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
 
    time_t rawtime;
    struct tm mtime;          // time of METAR
-   struct tm *utc;           // actual time as UTC
+   struct tm utc;            // actual time as UTC
    double diff;
 
    rawtime = time(NULL);
-   utc = gmtime(&rawtime);
+   gmtime_r(&rawtime, &utc);
 
    mtime.tm_sec  = 0;
    mtime.tm_min  = atoi(utctoken.substr(14,2).c_str());
@@ -1910,12 +1910,12 @@ bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
    mtime.tm_yday = -1;
    mtime.tm_isdst = -1;
 
-   diff = difftime(mktime(utc),mktime(&mtime));
+   diff = difftime(mktime(&utc),mktime(&mtime));
 
    if (debug)
    {
-     cout << "UTC: " << utc->tm_hour << ":" << utc->tm_min << ":"
-          << utc->tm_sec << " daytime saving:" << utc->tm_isdst
+     cout << "UTC: " << utc.tm_hour << ":" << utc.tm_min << ":"
+          << utc.tm_sec << " daytime saving:" << utc.tm_isdst
           << " vs " << mtime.tm_hour << ":" << mtime.tm_min
           << ":" << mtime.tm_sec << endl;
    }

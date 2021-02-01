@@ -211,7 +211,7 @@ MainWindow::MainWindow(void)
   connect(directoryBusyAction, SIGNAL(toggled(bool)),
       	  this, SLOT(setBusy(bool)));
   
-  //statusBar()->message(trUtf8("Getting calls from directory server..."));
+  //statusBar()->message(tr("Getting calls from directory server..."));
   //dir->getCalls();
   refresh_call_list_timer = new QTimer(this);
   refresh_call_list_timer->start(
@@ -322,9 +322,9 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     const string& remote_priv)
 {
   time_t t = time(0);
-  struct tm *tm = localtime(&t);
+  struct tm tm;
   char time_str[16];
-  strftime(time_str, sizeof(time_str), "%H:%M", tm);
+  strftime(time_str, sizeof(time_str), "%H:%M", localtime_r(&t, &tm));
   
   QList<QTreeWidgetItem*> items = incoming_con_view->findItems(
 		QString::fromStdString(remote_call),
@@ -363,7 +363,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
   
   if ((dir->status() != StationData::STAT_OFFLINE) && (close_count++ == 0))
   {
-    statusBar()->showMessage(trUtf8("Logging off from directory server..."));
+    statusBar()->showMessage(tr("Logging off from directory server..."));
     dir->makeOffline();
     QTimer::singleShot(5000, this, SLOT(forceQuit()));
     e->ignore();
@@ -588,23 +588,23 @@ void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
   
   QAbstractItemModel *model = 0;
   QItemSelectionModel *m = station_view->selectionModel();
-  if (current->text() == trUtf8("Bookmarks"))
+  if (current->text() == tr("Bookmarks"))
   {
     model = bookmark_model;
   }
-  else if (current->text() == trUtf8("Conferences"))
+  else if (current->text() == tr("Conferences"))
   {
     model = conf_model;
   }
-  else if (current->text() == trUtf8("Links"))
+  else if (current->text() == tr("Links"))
   {
     model = link_model;
   }
-  else if (current->text() == trUtf8("Repeaters"))
+  else if (current->text() == tr("Repeaters"))
   {
     model = repeater_model;
   }
-  else if (current->text() == trUtf8("Stations"))
+  else if (current->text() == tr("Stations"))
   {
     model = station_model;
   }
@@ -659,7 +659,7 @@ void MainWindow::callsignListUpdated(void)
   repeater_model->updateStationList(dir->repeaters());
   station_model->updateStationList(dir->stations());
   
-  statusBar()->showMessage(trUtf8("Station list has been refreshed"), 5000);
+  statusBar()->showMessage(tr("Station list has been refreshed"), 5000);
   
   const string &msg = dir->message();
   if (msg != old_server_msg)
@@ -675,7 +675,7 @@ void MainWindow::refreshCallList(void)
 {
   if (dir->status() >= StationData::STAT_ONLINE)
   {
-    statusBar()->showMessage(trUtf8("Refreshing station list..."));
+    statusBar()->showMessage(tr("Refreshing station list..."));
     dir->getCalls();
   }
 } /* MainWindow::refreshCallList */
@@ -779,8 +779,8 @@ void MainWindow::removeSelectedFromBookmarks(void)
 
 void MainWindow::addNamedStationToBookmarks(void)
 {
-  QString call = QInputDialog::getText(this, trUtf8("Qtel - Add station..."),
-      trUtf8("Enter callsign of the station to add"));
+  QString call = QInputDialog::getText(this, tr("Qtel - Add station..."),
+      tr("Enter callsign of the station to add"));
   
   if (!call.isEmpty())
   {
@@ -823,8 +823,8 @@ void MainWindow::connectionConnectToIpActionActivated(void)
   bool ok;
   QString remote_host = QInputDialog::getText(
 	    this,
-	    trUtf8("Qtel: Connect to IP"),
-	    trUtf8("Enter an IP address or hostname:"),
+	    tr("Qtel: Connect to IP"),
+	    tr("Enter an IP address or hostname:"),
 	    QLineEdit::Normal, Settings::instance()->connectToIp(), &ok);
   if (ok)
   {
@@ -863,16 +863,16 @@ void MainWindow::settings(void)
 
 void MainWindow::helpAbout(void)
 {
-    QMessageBox::about(this, trUtf8("About Qtel"),
-        trUtf8("Qtel v") + QTEL_VERSION +
-        trUtf8(" - Qt EchoLink client.\n") +
+    QMessageBox::about(this, tr("About Qtel"),
+        tr("Qtel v") + QTEL_VERSION +
+        tr(" - Qt EchoLink client.\n") +
         "\n" +
-        trUtf8("Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n"
-               "Qtel comes with ABSOLUTELY NO WARRANTY. "
-               "This is free software, and you "
-               "are welcome to redistribute it in accordance with the "
-               "terms and conditions in "
-               "the GNU GPL (General Public License) version 2 or later."));
+        tr("Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n"
+           "Qtel comes with ABSOLUTELY NO WARRANTY. "
+           "This is free software, and you "
+           "are welcome to redistribute it in accordance with the "
+           "terms and conditions in "
+           "the GNU GPL (General Public License) version 2 or later."));
 } /* MainWindow::helpAbout */
 
 

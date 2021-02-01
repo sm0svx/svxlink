@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 
 #include <QtAlgorithms>
+#include <QtGlobal>
 
 
 /****************************************************************************
@@ -132,9 +133,13 @@ EchoLinkDirectoryModel::~EchoLinkDirectoryModel(void)
 void EchoLinkDirectoryModel::updateStationList(
 				    const list<StationData> &stn_list)
 {
-  QList<StationData> updated_stations =
-				  QList<StationData>::fromStdList(stn_list);
+#if QT_VERSION >= 0x050b00
+  QList<StationData> updated_stations(stn_list.begin(), stn_list.end());
+  std::stable_sort(updated_stations.begin(), updated_stations.end());
+#else
+  QList<StationData> updated_stations = QList<StationData>::fromStdList(stn_list);
   qStableSort(updated_stations);
+#endif
   
   //cout << "### updated_stations=" << updated_stations.count() << endl;  
   
@@ -262,17 +267,17 @@ QVariant EchoLinkDirectoryModel::headerData(int section,
     switch (section)
     {
       case 0:
-	return trUtf8("Callsign");
+	return tr("Callsign");
       case 1:
-	return trUtf8("Location/Description");
+	return tr("Location/Description");
       case 2:
-	return trUtf8("Status");
+	return tr("Status");
       case 3:
-	return trUtf8("Local Time");
+	return tr("Local Time");
       case 4:
-	return trUtf8("Node ID");
+	return tr("Node ID");
       case 5:
-	return trUtf8("IP Address");
+	return tr("IP Address");
       default:
 	return QVariant();
     }

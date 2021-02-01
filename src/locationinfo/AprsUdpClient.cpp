@@ -259,7 +259,7 @@ void AprsUdpClient::dnsResultsReady(DnsLookup& dns_lookup)
 int AprsUdpClient::buildSdesPacket(char *p)
 {
   time_t update;
-  struct tm *utc;
+  struct tm utc;
   char pos[128], info[80], tmp[256];
   char *ap;
   int ver, len;
@@ -294,7 +294,7 @@ int AprsUdpClient::buildSdesPacket(char *p)
 
     // Read update time
   time(&update);
-  utc = gmtime(&update);
+  gmtime_r(&update, &utc);
 
     // Geographic position
   sprintf(pos, "%02d%02d.%02d%cE%03d%02d.%02d%c",
@@ -327,7 +327,7 @@ int AprsUdpClient::buildSdesPacket(char *p)
                loc_cfg.mycall.c_str(), pos,
                getPowerParam(), getHeightParam(), getGainParam(),
                getDirectionParam(), loc_cfg.frequency, getToneParam(),
-               info, utc->tm_hour, utc->tm_min);
+               info, utc.tm_hour, utc.tm_min);
   addText(ap, tmp);
 
   *ap++ = RTCP_SDES_END;

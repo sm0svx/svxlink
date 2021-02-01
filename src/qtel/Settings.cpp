@@ -226,49 +226,49 @@ Settings::Settings(void)
     m_vox_delay(CONF_VOX_DELAY_DEFAULT)
 {
     // The default encoding should be first in the list
-  encodings.push_back(Encoding("ISO8859-1", SettingsDialog::trUtf8("Western")));
-  encodings.push_back(Encoding("ISO8859-2", SettingsDialog::trUtf8("Central European")));
-  encodings.push_back(Encoding("ISO8859-3", SettingsDialog::trUtf8("Central European")));
-  encodings.push_back(Encoding("ISO8859-4", SettingsDialog::trUtf8("Baltic")));
-  encodings.push_back(Encoding("ISO8859-5", SettingsDialog::trUtf8("Cyrillic")));
-  encodings.push_back(Encoding("ISO8859-6", SettingsDialog::trUtf8("Arabic")));
-  encodings.push_back(Encoding("ISO8859-7", SettingsDialog::trUtf8("Greek")));
+  encodings.push_back(Encoding("ISO8859-1", SettingsDialog::tr("Western")));
+  encodings.push_back(Encoding("ISO8859-2", SettingsDialog::tr("Central European")));
+  encodings.push_back(Encoding("ISO8859-3", SettingsDialog::tr("Central European")));
+  encodings.push_back(Encoding("ISO8859-4", SettingsDialog::tr("Baltic")));
+  encodings.push_back(Encoding("ISO8859-5", SettingsDialog::tr("Cyrillic")));
+  encodings.push_back(Encoding("ISO8859-6", SettingsDialog::tr("Arabic")));
+  encodings.push_back(Encoding("ISO8859-7", SettingsDialog::tr("Greek")));
   encodings.push_back(Encoding("ISO8859-8",
-			    SettingsDialog::trUtf8("Hebrew, visually ordered")));
+			    SettingsDialog::tr("Hebrew, visually ordered")));
   encodings.push_back(Encoding("ISO8859-8-i",
-			    SettingsDialog::trUtf8("Hebrew, logically ordered")));
-  encodings.push_back(Encoding("ISO8859-9", SettingsDialog::trUtf8("Turkish")));
+			    SettingsDialog::tr("Hebrew, logically ordered")));
+  encodings.push_back(Encoding("ISO8859-9", SettingsDialog::tr("Turkish")));
   encodings.push_back(Encoding("ISO8859-10"));
   encodings.push_back(Encoding("ISO8859-13"));
   encodings.push_back(Encoding("ISO8859-14"));
-  encodings.push_back(Encoding("ISO8859-15", SettingsDialog::trUtf8("Western")));
-  encodings.push_back(Encoding("utf8", SettingsDialog::trUtf8("Unicode, 8-bit")));
-  encodings.push_back(Encoding("Big5", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("Big5-HKSCS", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("eucJP", SettingsDialog::trUtf8("Japanese")));
-  encodings.push_back(Encoding("eucKR", SettingsDialog::trUtf8("Korean")));
-  encodings.push_back(Encoding("GB2312", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("GBK", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("GB18030", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("JIS7", SettingsDialog::trUtf8("Japanese")));
-  encodings.push_back(Encoding("Shift-JIS", SettingsDialog::trUtf8("Japanese")));
-  encodings.push_back(Encoding("TSCII", SettingsDialog::trUtf8("Tamil")));
-  encodings.push_back(Encoding("KOI8-R", SettingsDialog::trUtf8("Russian")));
-  encodings.push_back(Encoding("KOI8-U", SettingsDialog::trUtf8("Ukrainian")));
+  encodings.push_back(Encoding("ISO8859-15", SettingsDialog::tr("Western")));
+  encodings.push_back(Encoding("utf8", SettingsDialog::tr("Unicode, 8-bit")));
+  encodings.push_back(Encoding("Big5", SettingsDialog::tr("Chinese")));
+  encodings.push_back(Encoding("Big5-HKSCS", SettingsDialog::tr("Chinese")));
+  encodings.push_back(Encoding("eucJP", SettingsDialog::tr("Japanese")));
+  encodings.push_back(Encoding("eucKR", SettingsDialog::tr("Korean")));
+  encodings.push_back(Encoding("GB2312", SettingsDialog::tr("Chinese")));
+  encodings.push_back(Encoding("GBK", SettingsDialog::tr("Chinese")));
+  encodings.push_back(Encoding("GB18030", SettingsDialog::tr("Chinese")));
+  encodings.push_back(Encoding("JIS7", SettingsDialog::tr("Japanese")));
+  encodings.push_back(Encoding("Shift-JIS", SettingsDialog::tr("Japanese")));
+  encodings.push_back(Encoding("TSCII", SettingsDialog::tr("Tamil")));
+  encodings.push_back(Encoding("KOI8-R", SettingsDialog::tr("Russian")));
+  encodings.push_back(Encoding("KOI8-U", SettingsDialog::tr("Ukrainian")));
   encodings.push_back(Encoding("IBM850"));
   encodings.push_back(Encoding("IBM866"));
   encodings.push_back(Encoding("CP874"));
-  encodings.push_back(Encoding("CP1250", SettingsDialog::trUtf8("Central European")));
-  encodings.push_back(Encoding("CP1251", SettingsDialog::trUtf8("Cyrillic")));
-  encodings.push_back(Encoding("CP1252", SettingsDialog::trUtf8("Western")));
-  encodings.push_back(Encoding("CP1253", SettingsDialog::trUtf8("Greek")));
-  encodings.push_back(Encoding("CP1254", SettingsDialog::trUtf8("Turkish")));
-  encodings.push_back(Encoding("CP1255", SettingsDialog::trUtf8("Hebrew")));
-  encodings.push_back(Encoding("CP1255", SettingsDialog::trUtf8("Hebrew")));
-  encodings.push_back(Encoding("CP1256", SettingsDialog::trUtf8("Arabic")));
-  encodings.push_back(Encoding("CP1257", SettingsDialog::trUtf8("Baltic")));
+  encodings.push_back(Encoding("CP1250", SettingsDialog::tr("Central European")));
+  encodings.push_back(Encoding("CP1251", SettingsDialog::tr("Cyrillic")));
+  encodings.push_back(Encoding("CP1252", SettingsDialog::tr("Western")));
+  encodings.push_back(Encoding("CP1253", SettingsDialog::tr("Greek")));
+  encodings.push_back(Encoding("CP1254", SettingsDialog::tr("Turkish")));
+  encodings.push_back(Encoding("CP1255", SettingsDialog::tr("Hebrew")));
+  encodings.push_back(Encoding("CP1255", SettingsDialog::tr("Hebrew")));
+  encodings.push_back(Encoding("CP1256", SettingsDialog::tr("Arabic")));
+  encodings.push_back(Encoding("CP1257", SettingsDialog::tr("Baltic")));
   encodings.push_back(Encoding("CP1258"));
-  encodings.push_back(Encoding("TIS-620", SettingsDialog::trUtf8("Thai")));
+  encodings.push_back(Encoding("TIS-620", SettingsDialog::tr("Thai")));
 } /* Settings::Settings */
 
 
@@ -356,8 +356,8 @@ void Settings::showDialog(void)
 	  settings_dialog.my_vpassword->text())
       {
 	QMessageBox::critical(&settings_dialog,
-	    SettingsDialog::trUtf8("Qtel: Password mismatch"),
-	    SettingsDialog::trUtf8("Passwords do not match"));
+	    SettingsDialog::tr("Qtel: Password mismatch"),
+	    SettingsDialog::tr("Passwords do not match"));
       	settings_dialog.my_password->setText("");
       	settings_dialog.my_vpassword->setText("");
       }
@@ -365,8 +365,8 @@ void Settings::showDialog(void)
                (settings_dialog.proxy_server->text().isEmpty()))
       {
         QMessageBox::critical(&settings_dialog,
-            SettingsDialog::trUtf8("EchoLink proxy configuration problem"),
-            SettingsDialog::trUtf8(
+            SettingsDialog::tr("EchoLink proxy configuration problem"),
+            SettingsDialog::tr(
               "EchoLink proxy enabled but no server given"));
       }
       else

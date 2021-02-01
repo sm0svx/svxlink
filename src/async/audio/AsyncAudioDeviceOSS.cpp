@@ -130,14 +130,14 @@ REGISTER_AUDIO_DEVICE_TYPE("oss", AudioDeviceOSS);
  *
  ****************************************************************************/
 
-int AudioDeviceOSS::readBlocksize(void)
+size_t AudioDeviceOSS::readBlocksize(void)
 {
   assert(fd != -1);
   return frag_size / (channels * sizeof(int16_t));
 } /* AudioDeviceOSS::readBlocksize */
 
 
-int AudioDeviceOSS::writeBlocksize(void)
+size_t AudioDeviceOSS::writeBlocksize(void)
 {
   assert(fd != -1);
   return frag_size / (channels * sizeof(int16_t));
@@ -284,10 +284,10 @@ bool AudioDeviceOSS::openDevice(Mode mode)
     }
   }
   
-  int size = (block_size_hint <= 0) ? 1 :
-	     block_size_hint * channels * sizeof(int16_t);
+  size_t size = (block_size_hint == 0) ? 1 :
+	        block_size_hint * channels * sizeof(int16_t);
   int frag_size_log2 = static_cast<int>(log2(size));
-  arg  = (block_count_hint << 16) | frag_size_log2;
+  arg  = static_cast<int>((block_count_hint << 16) | frag_size_log2);
   if (ioctl(fd, SNDCTL_DSP_SETFRAGMENT, &arg) == -1)
   {
     perror("SNDCTL_DSP_SETFRAGMENT ioctl failed");
@@ -310,16 +310,16 @@ bool AudioDeviceOSS::openDevice(Mode mode)
     return false;
   }
   
-  arg = channels;
+  arg = static_cast<int>(channels);
   if(ioctl(fd, SNDCTL_DSP_CHANNELS, &arg) == -1)
   {
     perror("SNDCTL_DSP_CHANNELS ioctl failed");
     close();
     return false;
   }
-  if(arg != channels)
+  if(arg != static_cast<int>(channels))
   {
-    fprintf(stderr, "*** error: Unable to set number of channels to %d. The "
+    fprintf(stderr, "*** error: Unable to set number of channels to %zu. The "
       	      	    "driver suggested %d channels\n",
 		    channels, arg);
     close();
@@ -372,13 +372,15 @@ bool AudioDeviceOSS::openDevice(Mode mode)
     }
   }
   
-  frag_size = 0;
-  if (ioctl(fd, SNDCTL_DSP_GETBLKSIZE, &frag_size) == -1)
+  arg = 0;
+  if (ioctl(fd, SNDCTL_DSP_GETBLKSIZE, &arg) == -1)
   {
     perror("SNDCTL_DSP_GETBLKSIZE ioctl failed");
     close();
     return false;
   }
+  assert(arg >= 0);
+  frag_size = static_cast<size_t>(arg);
   
   return true;
   
@@ -448,7 +450,7 @@ void AudioDeviceOSS::writeSpaceAvailable(FdWatch *watch)
   audio_buf_info info;
   //unsigned fragsize; // The frag (block) size in frames
   unsigned fragments;
-  unsigned frags_read;
+  size_t frags_read;
   do
   {
       // Find out how many frags we can write to the sound card
@@ -468,7 +470,7 @@ void AudioDeviceOSS::writeSpaceAvailable(FdWatch *watch)
     
     int16_t buf[32768];
     frags_read = getBlocks(buf, fragments);
-    //printf("fragments=%u  frags_read=%u\n", fragments, frags_read);
+    //printf("fragments=%u  frags_read=%zu\n", fragments, frags_read);
     if (frags_read == 0)
     {
       watch->setEnabled(false);
@@ -476,7 +478,7 @@ void AudioDeviceOSS::writeSpaceAvailable(FdWatch *watch)
     }
     
       // Write the samples to the sound card
-    //printf("Writing %d fragments\n", frags_read);
+    //printf("Writing %zu fragments\n", frags_read);
     int written = ::write(fd, buf, frags_read * frag_size);
     if (written < 0)
     {

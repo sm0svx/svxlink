@@ -122,9 +122,9 @@ struct AX25Frame
   void print(void) const
   {
     time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
+    struct tm tm;
     char buf[256];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %T", tm);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %T", localtime_r(&t, &tm));
     //cout << "\a";
     cout << "-- [" << buf << "] ";
     cout << src.callsign;
