@@ -133,11 +133,12 @@ EchoLinkDirectoryModel::~EchoLinkDirectoryModel(void)
 void EchoLinkDirectoryModel::updateStationList(
 				    const list<StationData> &stn_list)
 {
-#if QT_VERSION >= 0x050b00
+#if QT_VERSION >= 0x050e00
   QList<StationData> updated_stations(stn_list.begin(), stn_list.end());
   std::stable_sort(updated_stations.begin(), updated_stations.end());
 #else
-  QList<StationData> updated_stations = QList<StationData>::fromStdList(stn_list);
+  QList<StationData> updated_stations =
+      QList<StationData>::fromStdList(stn_list);
   qStableSort(updated_stations);
 #endif
   
