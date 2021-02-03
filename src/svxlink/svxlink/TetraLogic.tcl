@@ -408,7 +408,7 @@ proc init_group_call {gssi} {
 #
 # Executed when a sds reception has been acknowledged
 #
-proc sds_receiced_ack {message} {
+proc sds_received_ack {message} {
 
 }
 

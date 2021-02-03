@@ -65,6 +65,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Forward declarations
  *
  ****************************************************************************/
+namespace Async
+{
+  class Timer;
+};
 
 
 
@@ -341,6 +345,13 @@ class TetraLogic : public Logic
     float own_lat;
     float own_lon;
     std::string endCmd;
+    Async::TcpClient<>* dapcon;
+    Async::Timer        *reconnect_timer;
+    std::string dapnet_server;
+    int dapnet_port;
+    std::string dapnet_key;
+    std::map<int, std::string> ric2issi;
+    std::string dapmessage;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
@@ -379,6 +390,19 @@ class TetraLogic : public Logic
     void sendUserInfo(void);
     void onPublishStateEvent(const std::string &event_name, const std::string &msg);
     void publishInfo(std::string type, Json::Value event);
+    
+    void handleTimeSync(std::string msg);
+    void handleDapType4(std::string msg);
+    void handleDapText(std::string msg);
+    void dapOK(void);
+    void dapTanswer(std::string msg);
+    void onDapnetConnected(void);
+    void onDapnetDisconnected(Async::TcpConnection *con, 
+                Async::TcpClient<>::DisconnectReason reason);
+    int onDapnetDataReceived(Async::TcpConnection *con, void *buf, int count);
+    void handleDapMessage(std::string dapmessage);
+    void reconnectDapnetServer(Async::Timer *t);
+    int checkDapMessage(std::string mesg);
 
 };  /* class TetraLogic */
 

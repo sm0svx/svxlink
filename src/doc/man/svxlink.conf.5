@@ -885,6 +885,24 @@ SvxLink crashes due to a segmentation fault.
 Example:
 END_CMD=ATH
 .TP
+.B DAPNET_SERVER
+The hosname of the DAPNet master, should alsways be:
+DAPNET_SERVER=dapnet.afu.rwth-aachen.de
+.TP
+.B DAPNET_PORT
+The tcp port to connect to the DAPNet master, should always be 
+DAPNET_PORT=43434
+.TP
+.B DAPNET_KEY
+The key to access the DAPNet service, you have to register there to
+get one.
+.TP
+.B DAPNET_RIC2ISSI
+The section where the RIC is assigned you Tetra ISSI, e.g.:
+DAPNET_RIC2ISSI=Ric2Issi
+[Ric2Issi]
+1234=2620221
+124343=2620031
 .
 .SS QSO Recorder Section
 .
