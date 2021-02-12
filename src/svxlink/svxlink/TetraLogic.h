@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Logic.h"
 #include "Squelch.h"
+#include "DapNetClient.h"
 
 
 /****************************************************************************
@@ -195,13 +196,14 @@ class TetraLogic : public Logic
     std::string   mcc;
     std::string   mnc;
     std::string   issi;
-    int_fast16_t   gssi;
+    int  gssi;
     std::string port;
     int32_t baudrate;
     std::string initstr;
 
     Async::Serial *pei;
     Async::Pty    *sds_pty;
+    DapNetClient  *dapnetclient;
 
     typedef std::vector<std::string> StrList;
     StrList initcmds;
@@ -245,15 +247,18 @@ class TetraLogic : public Logic
 
     // contain a sds (state and message)
     struct Sds {
-      std::string tsi;
-      std::string sds;
-      std::string content;
-      std::string message;
-      time_t tos;
-      int type; //STATE, LIP_SHORT,..
-      int direction;  //INCOMING, OUTGOING
+      int id = 0;           // message reference id
+      std::string tsi;      // destination TSI
+      std::string remark;   // description/state/remark
+      std::string message;  // Sds as text
+      time_t tos = 0;       // Unix time of sending
+      time_t tod = 0;       // Unix time of delivery
+      int type;             // STATE, LIP_SHORT,..
+      int direction;        // INCOMING, OUTGOING
+      int nroftries = 0;    // number of tries
     };
     std::map<int, Sds> pending_sds;
+    std::map<int, Sds> sdsQueue;
 
      // contain user data
     struct User {
@@ -267,8 +272,8 @@ class TetraLogic : public Logic
       short reasonforsending;
       char aprs_sym;
       char aprs_tab;
-      time_t last_activity;
-      time_t sent_last_sds;
+      time_t last_activity = 0;
+      time_t sent_last_sds = 0;
     };
     std::map<std::string, User> userdata;
     
@@ -315,8 +320,14 @@ class TetraLogic : public Logic
      // type of Sds
     typedef enum
     {
-      STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL
+      STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL, RAW
     } SdsType;
+    
+     // Sds sent state
+    typedef enum
+    {
+      SDS_SEND_OK = 4, SDS_SEND_FAILED = 5
+    } SdsSentState;
 
     bool sds_when_dmo_on;
     bool sds_when_dmo_off;
@@ -333,7 +344,7 @@ class TetraLogic : public Logic
       time_t last_activity;
     };
     pSds pSDS;
-
+    
     std::map<unsigned int, std::string> state_sds;
     StrList m_cmds;
     int pending_sdsid;
@@ -345,13 +356,9 @@ class TetraLogic : public Logic
     float own_lat;
     float own_lon;
     std::string endCmd;
-    Async::TcpClient<>* dapcon;
-    Async::Timer        *reconnect_timer;
-    std::string dapnet_server;
-    int dapnet_port;
-    std::string dapnet_key;
-    std::map<int, std::string> ric2issi;
-    std::string dapmessage;
+    bool new_sds;
+    int last_sdsinstance;
+    bool inTransmission;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
@@ -363,20 +370,18 @@ class TetraLogic : public Logic
     std::string handleCtgs(std::string m_message);
     std::string handleCtdgr(std::string m_message);
     void handleClvl(std::string m_message);
-    std::string handleCmgs(std::string m_message);
+    void handleCmgs(std::string m_message);
     std::string handleTextSds(std::string m_message);
     std::string handleSimpleTextSds(std::string m_message);
     void handleStateSds(unsigned int isds);
     void handleTxGrant(std::string txgrant);
     std::string getTSI(std::string issi);
-    std::string getISSI(std::string tsi);
-    int getNextVal(std::string &h);
-    std::string getNextStr(std::string& h);
     void onComTimeout(Async::Timer *timer);
     void onPeiActivityTimeout(Async::Timer *timer);
     void onPeiBreakCommandTimeout(Async::Timer *timer);
     void initGroupCall(int gssi);
     void cfmSdsReceived(std::string tsi);
+    std::string handleAckSds(std::string m_message, std::string tsi);
     void cfmTxtSdsReceived(std::string message, std::string tsi);
     int handleMessage(std::string  m_message);
     void handleCallBegin(std::string m_message);
@@ -384,25 +389,16 @@ class TetraLogic : public Logic
     void sdsPtyReceived(const void *buf, size_t count);
     void sendInfoSds(std::string tsi, short reasonforsending);
     void handleCallReleased(std::string m_message);
+    int queueSds(Sds t_sds);
+    bool checkSds(void);
     void getAiMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);
-    unsigned int hex2int(std::string sds);
     void sendUserInfo(void);
+    void sendWelcomeSds(std::string tsi, short r4s);
     void onPublishStateEvent(const std::string &event_name, const std::string &msg);
     void publishInfo(std::string type, Json::Value event);
-    
-    void handleTimeSync(std::string msg);
-    void handleDapType4(std::string msg);
-    void handleDapText(std::string msg);
-    void dapOK(void);
-    void dapTanswer(std::string msg);
-    void onDapnetConnected(void);
-    void onDapnetDisconnected(Async::TcpConnection *con, 
-                Async::TcpClient<>::DisconnectReason reason);
-    int onDapnetDataReceived(Async::TcpConnection *con, void *buf, int count);
-    void handleDapMessage(std::string dapmessage);
-    void reconnectDapnetServer(Async::Timer *t);
-    int checkDapMessage(std::string mesg);
+    void onDapnetMessage(std::string, std::string message);
+    void sendAprs(std::string call, std::string aprsmessage);
 
 };  /* class TetraLogic */
 

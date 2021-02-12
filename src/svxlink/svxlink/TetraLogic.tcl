@@ -379,7 +379,7 @@ proc lip_sds_received {tsi lat lon} {
 # Executed when a text sds has been received
 #
 proc text_sds_received {tsi message} {
-  puts "SDS received from $tsi: $message"
+ # puts "SDS received from $tsi: $message"
 }
 
 
@@ -484,6 +484,14 @@ proc audio_level {lvl} {
 # range or transmission has been stopped by low battery
 #
 proc out_of_range {dc} {
+
+}
+
+
+#
+# Executed if the tetra mode has changed (AI mode)
+#
+proc tetra_mode {aimode} {
 
 }
 

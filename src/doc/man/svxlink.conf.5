@@ -863,13 +863,15 @@ Example:
 DEFAULT_APRS_ICON=e/
 .TP
 .B SDS_PTY
-The pseudo tty device for sending commands to this logic. There are two ways:
-If the message contains only digits 0-9 and A-F then the pty device expect 
-a raw sds. You have to start with the PDU type (e.g. 8204xxx).
-If you include one or more other digits like k or <space> the pty device see 
-a normal text based Sds.
+The pseudo tty device for sending commands to this logic. 
+The format is TSI,[RT],message
+R - it's a raw message that must be NOT encoded an send in direct way
+    The message must contain only digits 0-9 and A-F.
+T - it's a normal text message that must be encoded
 Example:
 SDS_PTY=/tmp/tetra_sds
+echo "12345,T,das ist ein Test">/tmp/tetra_sds
+echo "12345,R,43EF3E6A">/tmp/tetra_sds
 .TP
 .B DEBUG
 To give out more information for error detection. Valid values are 1 or 0;
@@ -892,6 +894,12 @@ DAPNET_SERVER=dapnet.afu.rwth-aachen.de
 .B DAPNET_PORT
 The tcp port to connect to the DAPNet master, should always be 
 DAPNET_PORT=43434
+.TP
+.B DAPNET_CALLSIGN
+The callsign which is used for the connection to the master server. 
+This DAPNET_CALLSIGN can differ from the one that was configured in the Logic 
+section as CALLSIGN, as a different one may have to be used for the DAPNET 
+login (e.g. DL1HRC -> dl1hrc1). 
 .TP
 .B DAPNET_KEY
 The key to access the DAPNet service, you have to register there to

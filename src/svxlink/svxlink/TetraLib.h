@@ -703,6 +703,56 @@ float getDecimalDegree(LocationInfo::Coordinate pos)
 } /* getDecimalDegree */
 
 
+// return the ISSI as part of the TEI
+std::string getISSI(std::string tsi)
+{
+  std::stringstream t_issi;
+  size_t len = tsi.length();
+  
+  if (len < 8)
+  {
+    t_issi << "00000000" << tsi;
+    return t_issi.str().substr(t_issi.str().length()-8, 8);
+  }
+  t_issi << tsi.substr(len-8, 8);
+  return t_issi.str();
+} /* getISSI */
+
+
+unsigned int hex2int(std::string sds)
+{
+  unsigned int t;
+  std::stringstream ss;
+  ss << std::hex << sds;
+  ss >> t;
+  return t;
+} /* hex2int */
+
+
+int getNextVal(std::string& h)
+{
+  size_t f;
+  int t = atoi(h.substr(0, f = h.find(',')).c_str());
+  if (f != std::string::npos)
+  {
+    h.erase(0, f + 1);
+  }
+  return t;
+} /* getNextVal */
+
+
+std::string getNextStr(std::string& h)
+{
+  size_t f;
+  std::string t = h.substr(0, f = h.find(','));
+  if (f != std::string::npos)
+  {
+    h.erase(0, f + 1);    
+  }
+  return t;
+} /* getNextStr */
+
+
 std::string getPeiError(int errorcode)
 {
 
