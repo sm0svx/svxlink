@@ -1826,7 +1826,8 @@ bool TetraLogic::checkSds(void)
     if (it->second.tos == 0 && it->second.direction == OUTGOING)
     {
       it->second.nroftries++;
-      if (peistate == OK && !inTransmission)
+      // send Sds only if PEI=ok & MS is NOT sending & MS is NOT receiving
+      if (peistate == OK && !inTransmission && !tetra_modem_sql->isOpen())
       {
         string t_sds;
         if (it->second.type == ACK_SDS)
@@ -1918,7 +1919,7 @@ void TetraLogic::onDapnetMessage(string tsi, string message)
   // put the new Sds int a queue...
   Sds t_sds;
   t_sds.tsi = tsi;
-  t_sds.remark = "DAPnet message";
+  t_sds.remark = "DAPNET message";
   t_sds.message = message;
   t_sds.direction = OUTGOING;
   t_sds.type = TEXT;

@@ -1,0 +1,14 @@
+*
+* Adi Bier / DL1HRC
+* dl1hrc { at } gmx . de
+*
+
+This branch only works if you have the following things:
+
+- Motorla MTM5x00, MTM800E, MTM800FuG
+- active data cable, e.g. PMKN4104
+
+The MS is completely controlled by AT-commands over the PEI interface
+
+Installation instructions from Frédéric/F1IWQ can be found here:
+http://dl.free.fr/getfile.pl?file=/RabtkiOU

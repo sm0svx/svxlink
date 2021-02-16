@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v07022021"
+#define DAPNETVERSION "v16022021"
 
 #define INVALID 0
 
@@ -369,11 +369,14 @@ void DapNetClient::handleDapText(std::string msg)
   ss << std::hex << dapList[2];
   ss >> ric;
 
+  // cout << "ORIG:" << msg << endl;
+  // cout << "ROT1:"<< rot1code(msg) << endl;
+  
   // check if the user is stored? no -> default
   std::map<int, string>::iterator iu = ric2issi.find(ric);
   if (iu != ric2issi.end())
   {
-    // find the 4th ocurence of :
+    // find the 4th occurrence of :
     int j;
     size_t i = msg.find(":");
     for (j=1; j<4 && i != string::npos; ++j)
@@ -449,6 +452,17 @@ bool DapNetClient::rmatch(std::string tok, std::string pattern)
   return success;
 } /* DapNetClient::rmatch */
 
+
+string DapNetClient::rot1code(string inmessage)
+{
+  std::string outmessage;
+ 
+  for (string::iterator it= inmessage.begin(); it!=inmessage.end(); it++)
+  {
+    outmessage += (*it - 0x01);
+  }
+  return outmessage;
+} /* DapNetClient::rot1code */
 
 /*
  * This file has not been truncated

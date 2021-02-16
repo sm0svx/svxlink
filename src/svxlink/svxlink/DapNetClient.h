@@ -182,6 +182,7 @@ class DapNetClient : public Async::TcpClient<>
     void reconnectDapnetServer(Async::Timer *t);
     int checkDapMessage(std::string mesg);
     bool rmatch(std::string tok, std::string pattern);
+    std::string rot1code(std::string inmessage);
 
 };  /* class DapNetClient */
 
