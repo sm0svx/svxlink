@@ -1157,7 +1157,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
   // send sds info of a user to aprs network
   string m_aprsmessage = aprspath;
   m_aprsmessage += m_aprsinfo.str();
-  sendAprs(callsign(), m_aprsmessage);
+  sendAprs(userdata[t_sds.tsi].call, m_aprsmessage);
   
   if (ss.str().length() > 0)
   {
