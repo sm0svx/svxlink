@@ -947,6 +947,18 @@ void TetraLogic::handleCallBegin(std::string message)
     userdata[o_tsi].comment = "NN";
     userdata[o_tsi].aprs_sym = t_aprs_sym;
     userdata[o_tsi].aprs_tab = t_aprs_tab;
+    Sds t_sds;
+
+    t_sds.direction = OUTGOING;
+    t_sds.message = infosds;
+    t_sds.tsi = o_tsi;
+    t_sds.remark = "Welcome Sds to newuser";
+    if (debug)
+    {
+      cout << "Sending info Sds to new user: " << t_sds.tsi << " \"" 
+           << infosds << "\"" << endl;
+    }
+    queueSds(t_sds);
     return;
   }
   
@@ -1048,7 +1060,15 @@ void TetraLogic::handleSdsMsg(std::string sds)
     userdata[t_sds.tsi].aprs_sym = t_aprs_sym;
     userdata[t_sds.tsi].aprs_tab = t_aprs_tab;
 
-    sendWelcomeSds(t_sds.tsi, 0);
+    t_sds.direction = OUTGOING;
+    t_sds.message = infosds;
+    t_sds.remark = "Welcome Sds to newuser";
+    if (debug)
+    {
+      cout << "Sending info Sds to new user " << t_sds.tsi << " \"" 
+           << infosds << "\"" << endl;
+    }
+    queueSds(t_sds);
     return;
   }
 
