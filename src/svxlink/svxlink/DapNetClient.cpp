@@ -164,21 +164,21 @@ bool DapNetClient::initialize(void)
       isok = false;
     }
     
-    string dn2ric_section;
+    string ric_section;
     string value;
     list<string>::iterator slit;
-    if (cfg.getValue(name, "DAPNET_RIC2ISSI", dn2ric_section))
+    if (cfg.getValue(name, "DAPNET_RIC2ISSI", ric_section))
     {
-      list<string> dn2ric_list = cfg.listSection(dn2ric_section);
+      list<string> dn2ric_list = cfg.listSection(ric_section);
       
       for (slit=dn2ric_list.begin(); slit!=dn2ric_list.end(); slit++)
       {
-        cfg.getValue(dn2ric_section, *slit, value);
+        cfg.getValue(ric_section, *slit, value);
         if (value.length() > 8)
         {
           cout << "*** ERROR: Issi (" << value << " ) must have " 
                << "8 digits or less, for RIC " << *slit 
-               << " in section [" << dn2ric_section << "]" << endl;
+               << " in section [" << ric_section << "]" << endl;
         }
         else
         {
@@ -192,6 +192,19 @@ bool DapNetClient::initialize(void)
       cout << "*** ERROR: You need a section DAPNET_RIC2ISSI=[xxx] in " 
            << name << endl;
       isok = false;
+    }
+ 
+    // RIC=Rubric1,Rubric2,Rubric22
+    if (cfg.getValue(name, "DAPNET_RUBRIC_REGISTRATION", ric_section))
+    {
+      list<string> dn2ric_list = cfg.listSection(ric_section);
+      
+      for (slit=dn2ric_list.begin(); slit!=dn2ric_list.end(); slit++)
+      {
+        cfg.getValue(ric_section, *slit, value);
+        ric2rubrics[atoi((*slit).c_str())] = value;
+        cout << "RIC:" << *slit << "=rubrics:" << value << endl;
+      }
     }
     
     dapcon = new TcpClient<>(dapnet_server, dapnet_port);
@@ -369,22 +382,29 @@ void DapNetClient::handleDapText(std::string msg)
   ss << std::hex << dapList[2];
   ss >> ric;
 
-  // cout << "ORIG:" << msg << endl;
-  // cout << "ROT1:"<< rot1code(msg) << endl;
-  
-  // check if the user is stored? no -> default
-  std::map<int, string>::iterator iu = ric2issi.find(ric);
-  if (iu != ric2issi.end())
-  {
-    // find the 4th occurrence of :
-    int j;
-    size_t i = msg.find(":");
-    for (j=1; j<4 && i != string::npos; ++j)
-                i = msg.find(":", i+1);
+  // find the 4th occurrence of :
+  int j;
+  size_t i = msg.find(":");
+  for (j=1; j<4 && i != string::npos; ++j)
+              i = msg.find(":", i+1);
 
-    if (j == 4)
+  if (j == 4)
+  {
+    // check if the user is stored? no -> default
+    string t_mesg = msg.substr(i+1, msg.length()-i);
+
+    if (ric == 4512 || ric == 4520)
     {
-      string t_mesg = msg.substr(i+1, msg.length()-i);
+      cout << "---" << rot1code(t_mesg) << endl; 
+    }
+    else
+    {
+      cout << "---" << t_mesg << endl;
+    }
+
+    std::map<int, string>::iterator iu = ric2issi.find(ric);
+    if (iu != ric2issi.end())
+    {
       if (debug)
       {
         cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet " 
@@ -392,6 +412,31 @@ void DapNetClient::handleDapText(std::string msg)
             << endl;
       }
       dapnetMessageReceived(iu->second, t_mesg);
+    }
+
+    // look into ric2rubric-section
+    // RIC    =   Rubric
+    // 12345  =  1024,1028,199 <-rubriclist
+    StrList rubricList;
+    std::map<int, string>::iterator it;
+    for (it=ric2rubrics.begin(); it!= ric2rubrics.end();it++)
+    {
+      // *it is one line from Ric2Rubrics
+      SvxLink::splitStr(rubricList, it->second, ",");
+      unsigned int rubric;
+      for(StrList::const_iterator rl=rubricList.begin(); rl!=rubricList.end(); rl++)
+      {
+        // *rl is one rubric
+        rubric = atoi((*rl).c_str());
+        if(rubric == ric)
+        {
+          iu = ric2issi.find(it->first);
+          if (iu != ric2issi.end())
+          {
+            dapnetMessageReceived(iu->second, t_mesg);
+          }
+        }
+      }
     }
   }
 } /* DapNetClient::handleDapText */

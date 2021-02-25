@@ -147,10 +147,16 @@ DAPNET_PORT=43434
 DAPNET_CALLSIGN=MYCALL
 DAPNET_KEY=secret_key
 DAPNET_RIC2ISSI=Ric2ISSI
+DAPNET_RUBRIC_REGISTRATION=RicRegistration
 
 [Ric2ISSI]
 # RIC=ISSI
 1234=23401
+
+[RicRegistration]
+# RIC=Rubric1,Rubric2,Rubric54   (in decimal)
+1234=1024,1051
+23451=1028,1051
 
 [Tetra_Users]
 # ISSI = Call,Name,comment

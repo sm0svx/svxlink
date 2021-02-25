@@ -257,8 +257,10 @@ class TetraLogic : public Logic
       int direction;        // INCOMING, OUTGOING
       int nroftries = 0;    // number of tries
     };
-    std::map<int, Sds> pending_sds;
-    std::map<int, Sds> sdsQueue;
+
+    Sds pending_sds;        // the Sds that will actually be handled
+
+    std::map<int, Sds> sdsQueue; // the Sds-Queue that contain all stored Sds's
 
      // contain user data
     struct User {
@@ -359,6 +361,7 @@ class TetraLogic : public Logic
     bool new_sds;
     int last_sdsinstance;
     bool inTransmission;
+    bool cmgs_received;
     
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
