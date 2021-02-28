@@ -69,6 +69,7 @@ def genpw():
         data['callsign']=callsign
         #print(data)
         response = make_response(render_template_string(page_template, data=data), 200)
+    response.headers['Cache-Control'] = 'no-store'
     return response
 
 if __name__ == '__main__':
