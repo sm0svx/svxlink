@@ -156,7 +156,7 @@ class DapNetClient : public Async::TcpClient<>
     Async::Config             &cfg;
     std::string                name;
     Async::TcpClient<>        *dapcon;
-    bool                       debug;
+    short                       debug;
     Async::Timer              *reconnect_timer;
     std::string                dapnet_server;
     int                        dapnet_port;

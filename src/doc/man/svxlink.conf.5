@@ -874,9 +874,10 @@ echo "12345,T,das ist ein Test">/tmp/tetra_sds
 echo "12345,R,43EF3E6A">/tmp/tetra_sds
 .TP
 .B DEBUG
-To give out more information for error detection. Valid values are 1 or 0;
+To give out more information for error detection. Valid values are 0 (ERROR), 
+1 (WARN), 2 (INFO) and 3 (DEBUG);
 Example:
-DEBUG=1
+DEBUG=2  # enable Info logging
 .TP
 .B END_CMD
 The command that is sent last to the MS shortly before SvxLink is terminated. 

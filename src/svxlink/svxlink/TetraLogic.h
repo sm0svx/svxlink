@@ -292,7 +292,7 @@ class TetraLogic : public Logic
 
     int    peistate;
     std::string peistream;
-    bool   debug;
+    short  debug;
     std::string aprspath;
     bool talkgroup_up;
     std::string infosds;

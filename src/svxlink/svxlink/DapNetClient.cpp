@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v25022021"
+#define DAPNETVERSION "v01032021"
 
 #define INVALID 0
 
@@ -88,6 +88,10 @@ using namespace SvxLink;
 #define DAP_INVALID 1005
 #define DAP_MESSAGE 1006
 
+#define LOGERROR 0
+#define LOGWARN 1
+#define LOGINFO 2
+#define LOGDEBUG 3
 
 /****************************************************************************
  *
@@ -130,7 +134,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 DapNetClient::DapNetClient(Config &cfg, const string& name)
-  : cfg(cfg), name(name), dapcon(0), debug(false)
+  : cfg(cfg), name(name), dapcon(0), debug(0)
 {
 } /* DapNetClient */
 
@@ -183,7 +187,7 @@ bool DapNetClient::initialize(void)
         else
         {
           ric2issi[atoi((*slit).c_str())] = value;
-          cout << "RIC:" << *slit << "=ISSI:" << value << endl;
+          if (debug >= LOGINFO) cout << "RIC:" << *slit << "=ISSI:" << value << endl;
         }
       }
     }
@@ -203,7 +207,7 @@ bool DapNetClient::initialize(void)
       {
         cfg.getValue(ric_section, *slit, value);
         ric2rubrics[atoi((*slit).c_str())] = value;
-        cout << "RIC:" << *slit << "=rubrics:" << value << endl;
+        if (debug >= LOGINFO) cout << "RIC:" << *slit << "=rubrics:" << value << endl;
       }
     }
     
@@ -248,7 +252,7 @@ void DapNetClient::onDapnetConnected(void)
   cout << "DAPNET connection established to " << dapcon->remoteHost() << "\n";
   ss << "[" << DAPNETSOFT << " " << DAPNETVERSION << " " << callsign <<  " " 
      << dapnet_key << "]\r\n";
-  if (debug) cout << ss.str() << endl;
+  if (debug >= LOGINFO) cout << ss.str() << endl;
   dapcon->write(ss.str().c_str(), ss.str().length());
   reconnect_timer->setEnable(false);
 } /* DapNetClient::onDapnetConnected */
@@ -329,7 +333,7 @@ void DapNetClient::handleDapMessage(std::string dapmessage)
       break;
 
     default:
-      if (debug) cout << "+++ unknown DAPNET message" << dapmessage << endl;
+      if (debug >= LOGERROR) cout << "+++ unknown DAPNET message" << dapmessage << endl;
       break;
   }
 } /* DapNetClient::handleDapMessage*/
@@ -350,10 +354,13 @@ void DapNetClient::handleTimeSync(std::string msg)
 
 void DapNetClient::handleDapType4(std::string msg)
 {
-  msg.erase(0,2);  // erase "4:"
-  for (string::iterator ts = msg.begin(); ts!= msg.end(); ++ts)
+  if (debug >= LOGINFO)
   {
-    cout << "+++ DAPNET: registered at time slot " << *ts << endl;
+    msg.erase(0,2);  // erase "4:"
+    for (string::iterator ts = msg.begin(); ts!= msg.end(); ++ts)
+    {
+      cout << "+++ DAPNET: registered at time slot " << *ts << endl;
+    }
   }
 } /* DapNetClient::handleDapType4 */
 
@@ -395,17 +402,17 @@ void DapNetClient::handleDapText(std::string msg)
 
     if (ric == 4512 || ric == 4520)
     {
-      cout << "---" << rot1code(t_mesg) << endl; 
+      if (debug >=LOGDEBUG) cout << "---" << rot1code(t_mesg) << endl; 
     }
     else
     {
-      cout << "---" << t_mesg << endl;
+       if (debug >=LOGDEBUG) cout << "---" << t_mesg << endl;
     }
 
     std::map<int, string>::iterator iu = ric2issi.find(ric);
     if (iu != ric2issi.end())
     {
-      if (debug)
+      if (debug >= LOGINFO)
       {
         cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet " 
              << "to Tetra (RIC:" << ric << "->ISSI:" << iu->second << ")" 
