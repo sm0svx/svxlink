@@ -145,6 +145,9 @@
 * Bugfix in ModuleMetarInfo: Gusts were not announced correctly in combination
   with mps
 
+* Bugfix in ReflectorLogic: The AUTOACTIVATE_ON_SQL logic linking
+  functionality did not work for the ReflectorLogic.
+
 
 
  1.7.0 -- 01 Sep 2019
