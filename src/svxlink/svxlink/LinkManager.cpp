@@ -134,7 +134,7 @@ LinkManager* LinkManager::_instance = 0;
  *
  ****************************************************************************/
 
-bool LinkManager::initialize(const Async::Config &cfg,
+bool LinkManager::initialize(Async::Config &cfg,
                              const std::string &link_names)
 {
   assert(!LinkManager::hasInstance());
@@ -216,11 +216,19 @@ bool LinkManager::initialize(const Async::Config &cfg,
     cfg.getValue(link.name, "TIMEOUT", timeout);
 
       // Automatically activate the link, if one (or more) logics
-      // has activity, e.g. squelch open.
-    string autoactivate_on_sql;
-    if (cfg.getValue(link.name, "AUTOACTIVATE_ON_SQL", autoactivate_on_sql))
+      // has activity, e.g. squelch open, announcement activity etc.
+    string activate_on_activity;
+    if (cfg.getValue(link.name, "AUTOACTIVATE_ON_SQL", activate_on_activity))
     {
-      SvxLink::splitStr(link.auto_activate, autoactivate_on_sql, ",");
+      std::cerr << "*** WARNING: Configuration variable " << link.name
+                << "/AUTOACTIVATE_ON_SQL has been renamed to "
+                   "ACTIVATE_ON_ACTIVITY"
+                << std::endl;
+      cfg.setValue(link.name, "ACTIVATE_ON_ACTIVITY", activate_on_activity);
+    }
+    if (cfg.getValue(link.name, "ACTIVATE_ON_ACTIVITY", activate_on_activity))
+    {
+      SvxLink::splitStr(link.auto_activate, activate_on_activity, ",");
 
         // An automatically connected link should be disconnected after a
         // while so the TIMEOUT configuration variable must be set.
