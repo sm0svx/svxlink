@@ -151,6 +151,8 @@
 * The AUTOACTIVATE_ON_SQL logic linking configuration variable has been
   renamed to ACTIVATE_ON_ACTIVITY.
 
+* Bugfix in reflector authentication.
+
 
 
  1.7.0 -- 01 Sep 2019
