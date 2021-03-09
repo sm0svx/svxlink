@@ -369,7 +369,7 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   }
 
   string auth_key = lookupUserKey(msg.callsign());
-  if (msg.verify(auth_key, m_auth_challenge))
+  if (!auth_key.empty() && msg.verify(auth_key, m_auth_challenge))
   {
     vector<string> connected_nodes;
     m_reflector->nodeList(connected_nodes);

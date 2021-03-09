@@ -1,5 +1,5 @@
 # Project release version
-PROJECT=19.09
+PROJECT=19.09.2
 
 # Version for the Qtel application
 QTEL=1.2.4
@@ -37,4 +37,4 @@ DEVCAL=1.0.2
 SVXSERVER=0.0.6
 
 # Version for SvxReflector
-SVXREFLECTOR=1.0.1
+SVXREFLECTOR=1.0.2

@@ -1,3 +1,10 @@
+ 1.7.0-1 -- 10 Mar 2021
+------------------------
+
+* Bugfix in SvxReflector authentication code. Upgrade immediately.
+
+
+
  1.7.0 -- 01 Sep 2019
 ----------------------
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
