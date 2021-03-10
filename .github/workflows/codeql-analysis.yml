@@ -61,7 +61,7 @@ jobs:
 
     - run: |
         sudo apt update
-        sudo apt install g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl-dev libgcrypt11-dev libspeex-dev libasound2-dev libopus-dev librtlsdr-dev libjsoncpp-dev libcurl4-openssl-dev qtbase5-dev qttools5-dev qttools5-dev-tools
+        sudo apt install g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev librtlsdr-dev libjsoncpp-dev libcurl4-openssl-dev qtbase5-dev qttools5-dev qttools5-dev-tools
         mkdir -p src/build
         cd src/build
         cmake ..

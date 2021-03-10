@@ -148,6 +148,14 @@
 * Bugfix in ModuleMetarInfo: Gusts were not announced correctly in combination
   with mps
 
+* Bugfix in ReflectorLogic: The AUTOACTIVATE_ON_SQL logic linking
+  functionality did not work for the ReflectorLogic.
+
+* The AUTOACTIVATE_ON_SQL logic linking configuration variable has been
+  renamed to ACTIVATE_ON_ACTIVITY.
+
+* Bugfix in reflector authentication.
+
 
 
  1.7.0 -- 01 Sep 2019
