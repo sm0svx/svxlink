@@ -155,7 +155,7 @@ class LinkManager : public sigc::trackable
      * This function will initialize the link manager. It must be called
      * before calling the instace function.
      */
-    static bool initialize(const Async::Config &cfg,
+    static bool initialize(Async::Config &cfg,
                            const std::string &link_names);
 
     /**
