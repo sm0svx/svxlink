@@ -557,7 +557,7 @@ bool TetraLogic::initialize(void)
          << port << "\"" << endl;
     return false;
   }
-  pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_HW);
+  pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
   pei->charactersReceived.connect(
       	  mem_fun(*this, &TetraLogic::onCharactersReceived));
 
