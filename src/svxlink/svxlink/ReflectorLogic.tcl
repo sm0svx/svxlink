@@ -79,6 +79,27 @@ proc report_tg_status {} {
 
 
 #
+# Executed when a TG has been selected
+# This function is called immediately when a change in talkgroup selection
+# occurs. In constrast, the other more specific talkgroup selection event
+# functions below is called with a delay in order to make announcement ordering
+# more logical.
+#
+#   new_tg -- The talk group that has been activated
+#   old_tg -- The talk group that was active
+#
+proc tg_selected {new_tg old_tg} {
+  #puts "### tg_selected #$new_tg (old #$old_tg)"
+  # Reject incoming Echolink connections while a talkgroup is active
+  #if {$new_tg != 0} {
+  #  setConfigValue "ModuleEchoLink" "REJECT_INCOMING" "^.*$"
+  #} else {
+  #  setConfigValue "ModuleEchoLink" "REJECT_INCOMING" "^$"
+  #}
+}
+
+
+#
 # Executed when a TG has been selected due to local activity
 #
 #   new_tg -- The talk group that has been activated

@@ -266,6 +266,14 @@ class ModuleEchoLink : public Module
     void numConUpdate(void);
     void replaceAll(std::string &str, const std::string &from,
                     const std::string &to) const;
+    bool setRegex(regex_t*& regex, const std::string& cfg_tag,
+                  const std::string& default_regex_str);
+    bool setDropIncomingRegex(void);
+    bool setRejectIncomingRegex(void);
+    bool setAcceptIncomingRegex(void);
+    bool setRejectOutgoingRegex(void);
+    bool setAcceptOutgoingRegex(void);
+    void cfgValueUpdated(const std::string& section, const std::string& tag);
 
 };  /* class ModuleEchoLink */
 
