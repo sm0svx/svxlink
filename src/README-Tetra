@@ -1,0 +1,38 @@
+*
+* Adi Bier / DL1HRC
+* dl1hrc { at } gmx . de
+*
+
+This branch only works if you have the following things:
+
+- Motorola MTM5x00, MTM800E, MTM800FuG
+- active data cable, e.g. PMKN4104
+- (Sepura/Cleartone my work, but no warranty)
+
+The MS is completely controlled by AT-commands over the PEI interface
+
+Installation instructions from Frédéric/F1IWQ can be found here:
+http://dl.free.fr/getfile.pl?file=/RabtkiOU
+
+
+Here are two quick-and-dirty installation/update documentation, keep 
+in mind: No configuration will be done!
+
+1) first time installation (including German(!) voice announcements):
+
+You may use my semi-automatic installation-script from here 
+http://svxlink.ham-radio-op.net/svxlink/svxlink-tetra-contrib.sh
+
+Start installation as root:
+wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-tetra-contrib.sh | bash
+
+
+2) Update an existing tetra-contrib installation made by the previous script 
+as root:
+
+systemctl stop svxlink
+cd /home/svxlink/svxlink/src/build/
+git pull
+make install
+systemctl start svxlink
+

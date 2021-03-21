@@ -490,7 +490,6 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     {
       lipinfo.longitude = tlo * 360.0 / 33554432;
     }
-    //std::cout << "tlo=" << tlo << ",lipinfo.longitude=" << lipinfo.longitude << std::endl;
 
     if (tla > 8388608)
     {
@@ -500,7 +499,6 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     {
       lipinfo.latitude = tla * 360.0 / 33554432;
     }
-    //std::cout << "tla=" << tla << ",lipinfo.latitude=" << lipinfo.latitude << std::endl;
 
     // position error in meter
     lipinfo.positionerror = 2*pow(10,(std::stoi(in.substr(15,1),nullptr,16) & 0x03));
@@ -756,6 +754,12 @@ std::string getNextStr(std::string& h)
 std::string getPeiError(int errorcode)
 {
 
+  if (errorcode > 45)
+  {
+    std::stringstream ss;
+    ss << "Unknown Error occured (" << errorcode << ")" << std::endl;
+    return ss.str();
+  }
 std::string error[] = {
 "0 - The MT was unable to send the data over the air (e.g. to the SwMI)",
 "1 - The MT can not establish a reliable communication with the TE",
