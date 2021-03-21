@@ -1,6 +1,6 @@
 /**
 @file	 DapNetClient.cpp
-@brief   Network connection manager for DapNet transceivers
+@brief   Network connection manager for DapNet
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
 @date	 2021-02-07
 
