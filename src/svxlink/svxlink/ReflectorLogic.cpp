@@ -316,14 +316,14 @@ bool ReflectorLogic::initialize(void)
   m_event_handler = new EventHandler(event_handler_str, name());
   if (LinkManager::hasInstance())
   {
-    m_event_handler->playFile.connect(sigc::bind<0>(
-          mem_fun(LinkManager::instance(), &LinkManager::playFile), this));
-    m_event_handler->playSilence.connect(sigc::bind<0>(
-          mem_fun(LinkManager::instance(), &LinkManager::playSilence), this));
-    m_event_handler->playTone.connect(sigc::bind<0>(
-          mem_fun(LinkManager::instance(), &LinkManager::playTone), this));
-    m_event_handler->playDtmf.connect(sigc::bind<0>(
-          mem_fun(LinkManager::instance(), &LinkManager::playDtmf), this));
+    m_event_handler->playFile.connect(
+          sigc::mem_fun(*this, &ReflectorLogic::handlePlayFile));
+    m_event_handler->playSilence.connect(
+          sigc::mem_fun(*this, &ReflectorLogic::handlePlaySilence));
+    m_event_handler->playTone.connect(
+          sigc::mem_fun(*this, &ReflectorLogic::handlePlayTone));
+    m_event_handler->playDtmf.connect(
+          sigc::mem_fun(*this, &ReflectorLogic::handlePlayDtmf));
   }
   m_event_handler->setVariable("logic_name", name().c_str());
 
@@ -1576,6 +1576,8 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     m_report_tg_timer.reset();
     m_report_tg_timer.setEnable(true);
   }
+
+  checkIdle();
 } /* ReflectorLogic::onLogicConInStreamStateChanged */
 
 
@@ -1595,6 +1597,8 @@ void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
     m_report_tg_timer.reset();
     m_report_tg_timer.setEnable(true);
   }
+
+  checkIdle();
 } /* ReflectorLogic::onLogicConOutStreamStateChanged */
 
 
@@ -1660,6 +1664,7 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
 void ReflectorLogic::processEvent(const std::string& event)
 {
   m_event_handler->processEvent(name() + "::" + event);
+  checkIdle();
 } /* ReflectorLogic::processEvent */
 
 
@@ -1719,6 +1724,47 @@ void ReflectorLogic::qsyPendingTimeout(void)
   os << "tg_qsy_ignored " << m_last_qsy;
   processEvent(os.str());
 } /* ReflectorLogic::qsyPendingTimeout */
+
+
+bool ReflectorLogic::isIdle(void)
+{
+  return m_logic_con_out->isIdle() && m_logic_con_in->isIdle();
+} /* ReflectorLogic::isIdle */
+
+
+void ReflectorLogic::checkIdle(void)
+{
+  setIdle(isIdle());
+} /* ReflectorLogic::checkIdle */
+
+
+void ReflectorLogic::handlePlayFile(const std::string& path)
+{
+  setIdle(false);
+  LinkManager::instance()->playFile(this, path);
+} /* ReflectorLogic::handlePlayFile */
+
+
+void ReflectorLogic::handlePlaySilence(int duration)
+{
+  setIdle(false);
+  LinkManager::instance()->playSilence(this, duration);
+} /* ReflectorLogic::handlePlaySilence */
+
+
+void ReflectorLogic::handlePlayTone(int fq, int amp, int duration)
+{
+  setIdle(false);
+  LinkManager::instance()->playTone(this, fq, amp, duration);
+} /* ReflectorLogic::handlePlayTone */
+
+
+void ReflectorLogic::handlePlayDtmf(const std::string& digit, int amp,
+                                    int duration)
+{
+  setIdle(false);
+  LinkManager::instance()->playDtmf(this, digit, amp, duration);
+} /* ReflectorLogic::handlePlayDtmf */
 
 
 /*
