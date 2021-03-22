@@ -325,6 +325,8 @@ bool ReflectorLogic::initialize(void)
     m_event_handler->playDtmf.connect(
           sigc::mem_fun(*this, &ReflectorLogic::handlePlayDtmf));
   }
+  m_event_handler->setConfigValue.connect(
+      sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   m_event_handler->setVariable("logic_name", name().c_str());
 
   m_event_handler->processEvent("namespace eval Logic {}");
@@ -1651,6 +1653,10 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
     }
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
+
+    ostringstream os;
+    os << "tg_selected " << m_selected_tg << " " << m_previous_tg;
+    processEvent(os.str());
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
 
