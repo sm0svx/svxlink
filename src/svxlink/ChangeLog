@@ -153,6 +153,11 @@
 
 * Bugfix in reflector authentication.
 
+* Now possible to set the Echolink module drop/reject/accept configuration
+  variables at runtime. This can for example be used from TCL, using the
+  setConfigValue function, to change behavior at runtime. See example in
+  ReflectorLogic.tcl.
+
 
 
  1.7.0 -- 01 Sep 2019
