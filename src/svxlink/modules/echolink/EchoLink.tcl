@@ -500,6 +500,14 @@ proc info_received {call msg} {
 }
 
 
+#
+# Executed when a configuration variable is updated at runtime
+#
+proc config_updated {tag value} {
+  #puts "Configuration variable updated: $tag=$value"
+}
+
+
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not
 # played over the local transmitter but are sent to the remote station.

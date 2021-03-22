@@ -299,6 +299,12 @@ class ReflectorLogic : public LogicBase
     void processTgSelectionEvent(void);
     void checkTmpMonitorTimeout(void);
     void qsyPendingTimeout(void);
+    void checkIdle(void);
+    bool isIdle(void);
+    void handlePlayFile(const std::string& path);
+    void handlePlaySilence(int duration);
+    void handlePlayTone(int fq, int amp, int duration);
+    void handlePlayDtmf(const std::string& digit, int amp, int duration);
 
 };  /* class ReflectorLogic */
 
