@@ -127,8 +127,7 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
              const string &password)
   : con(host, port, recv_buf_size), callsign(callsign), password(password),
     state(STATE_DISCONNECTED), tcp_state(TCP_STATE_DISCONNECTED),
-    recv_buf_cnt(0), reconnect_timer(RECONNECT_INTERVAL, Timer::TYPE_PERIODIC),
-    cmd_timer(CMD_TIMEOUT)
+    recv_buf_cnt(0), reconnect_timer(RECONNECT_TIMEOUT), cmd_timer(CMD_TIMEOUT)
 {
   delete the_instance;
   the_instance = this;
@@ -150,10 +149,10 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
   con.disconnected.connect(mem_fun(*this, &Proxy::onDisconnected));
 
   reconnect_timer.setEnable(false);
-  reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient<>::connect)));
+  reconnect_timer.expired.connect(mem_fun(*this, &Proxy::reconnectTimeout));
 
   cmd_timer.setEnable(false);
-  cmd_timer.expired.connect(hide(mem_fun(*this, &Proxy::cmdTimeout)));
+  cmd_timer.expired.connect(mem_fun(*this, &Proxy::cmdTimeout));
 } /* Proxy::Proxy */
 
 
@@ -191,10 +190,6 @@ bool Proxy::tcpOpen(const IpAddress &remote_ip)
   {
     return true;
   }
-  if (tcp_state == TCP_STATE_DISCONNECTING)
-  {
-    return false;
-  }
   tcp_state = TCP_STATE_CONNECTING;
 
   return sendMsgBlock(MSG_TYPE_TCP_OPEN, remote_ip);
@@ -203,13 +198,15 @@ bool Proxy::tcpOpen(const IpAddress &remote_ip)
 
 bool Proxy::tcpClose(void)
 {
-  if (tcp_state <= TCP_STATE_DISCONNECTING)
+  if (tcp_state == TCP_STATE_DISCONNECTED)
   {
     return true;
   }
-  tcp_state = TCP_STATE_DISCONNECTING;
 
-  return sendMsgBlock(MSG_TYPE_TCP_CLOSE);
+  bool ret = sendMsgBlock(MSG_TYPE_TCP_CLOSE);
+  tcp_state = TCP_STATE_DISCONNECTED;
+  tcpDisconnected();
+  return ret;
 } /* Proxy::tcpClose */
 
 
@@ -676,7 +673,15 @@ void Proxy::handleSystemMsg(const unsigned char *buf, int len)
 } /* Proxy::handleSystemMsgBlock */
 
 
-void Proxy::cmdTimeout(void)
+void Proxy::reconnectTimeout(Async::Timer *t)
+{
+  reconnect_timer.setEnable(false);		// stop the reconnect-timer
+  cout << "*** WARNING: Trying to reconnect to EchoLink proxy" << endl;
+  con.connect();
+} /* Proxy::reconnectTimeout */
+
+
+void Proxy::cmdTimeout(Async::Timer *t)
 {
   cerr << "*** ERROR: EchoLink proxy command timeout\n";
   reset();
