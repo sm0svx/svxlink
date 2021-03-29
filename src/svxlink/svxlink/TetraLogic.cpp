@@ -795,7 +795,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
 
     case ERROR:
       peistate = ERROR;
-      if (m_message.length()>11 && debug >= LOGERROR)
+      if (m_message.length()>11 && debug >= LOGINFO)
       {
         cout << getPeiError(atoi(m_message.erase(0,11).c_str())) << endl;
       }
