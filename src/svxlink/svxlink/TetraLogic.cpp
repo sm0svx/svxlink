@@ -550,9 +550,6 @@ bool TetraLogic::initialize(void)
   }
         
   pei = new Serial(port);
-  pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_HW);
-  pei->charactersReceived.connect(
-      	  mem_fun(*this, &TetraLogic::onCharactersReceived));
 
   if (!pei->open(true))
   {
@@ -560,6 +557,10 @@ bool TetraLogic::initialize(void)
          << port << "\"" << endl;
     return false;
   }
+  pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
+  pei->charactersReceived.connect(
+      	  mem_fun(*this, &TetraLogic::onCharactersReceived));
+
   sendPei("\r\n");
 
    // receive interlogic messages
@@ -794,7 +795,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
 
     case ERROR:
       peistate = ERROR;
-      if (m_message.length()>11 && debug >= LOGERROR)
+      if (m_message.length()>11 && debug >= LOGINFO)
       {
         cout << getPeiError(atoi(m_message.erase(0,11).c_str())) << endl;
       }
