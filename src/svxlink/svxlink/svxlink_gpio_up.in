@@ -113,7 +113,7 @@ gpio_setup()
   fi
   if $changed || [ "$(cat "${direction_path}")" != "${DIRECTION}" ]; then
     if ! echo "${direction}" > "${direction_path}"; then
-      error "Failed to set active_low state of GPIO pin \"${direction_path}\""
+      error "Failed to set direction of GPIO pin \"${direction_path}\""
     fi
   fi
 }
