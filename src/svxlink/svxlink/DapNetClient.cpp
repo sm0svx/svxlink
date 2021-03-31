@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v01032021"
+#define DAPNETVERSION "v31032021"
 
 #define INVALID 0
 
@@ -144,6 +144,8 @@ DapNetClient::~DapNetClient(void)
   reconnect_timer = 0;
   delete dapcon;
   dapcon = 0;
+  delete dapwebcon;
+  dapwebcon = 0;
 } /* DapNetClient::~DapNetClient */
 
 
@@ -225,10 +227,51 @@ bool DapNetClient::initialize(void)
                  &DapNetClient::reconnectDapnetServer));
   }
   
+    // connector for sending messages over DAPNET web api
+  if (cfg.getValue(name, "DAPNET_USERNAME", dapnet_username))
+  {
+    if (!cfg.getValue(name, "DAPNET_PASSWORD", dapnet_password))
+    {
+      cout << "*** ERROR: " << name << "/DAPNET_PASSWORD not set" << endl;
+      isok = false;
+    }
+    if (!cfg.getValue(name, "DAPNET_WEBHOST", dapnet_webhost))
+    {
+      cout << "*** ERROR: " << name << "/DAPNET_WEBHOST not set" << endl;
+      isok = false;
+    }
+    if (!cfg.getValue(name, "DAPNET_WEBPORT", dapnet_webport))
+    {
+      dapnet_webport=8080;
+    }
+    cfg.getValue(name, "DAPNET_WEBPATH", dapnet_webpath);
+    if (!cfg.getValue(name, "DAPNET_TXGROUP", txgroup))
+    {
+      cout << "+++ Warning: DAPNET_TXGROUP not set, take 'dl-all'." << endl;
+      txgroup = "dl-all";
+    }
+    dapwebcon = new TcpClient<>(dapnet_webhost, dapnet_webport);
+    dapwebcon->connected.connect(mem_fun(*this, 
+                            &DapNetClient::onDapwebConnected));
+    dapwebcon->disconnected.connect(mem_fun(*this, 
+                            &DapNetClient::onDapwebDisconnected));
+    dapwebcon->dataReceived.connect(mem_fun(*this, 
+                            &DapNetClient::onDapwebDataReceived));
+  }
+
   return isok;
 } /* DapNetClient::initialize */
 
 
+bool DapNetClient::sendDapMessage(std::string call, std::string message)
+{
+  transform(call.begin(), call.end(), call.begin(), ::tolower);
+  destcall = call;
+  destmessage = message;
+  
+  dapwebcon->connect();
+  return true;
+} /* DapNetClient::sendDapMessage */
 
 
 /****************************************************************************
@@ -297,6 +340,118 @@ void DapNetClient::reconnectDapnetServer(Timer *t)
   reconnect_timer->setEnable(false);
   dapcon->connect();
 } /* DapNetClient::reconnectDapnetServer*/
+
+
+void DapNetClient::onDapwebConnected(void)
+{
+  cout << "connected to Dapnet " << dapnet_webhost <<":" 
+       << dapnet_webport << endl;
+  
+  string auth = dapnet_username;
+  auth += ":";
+  auth += dapnet_password;
+
+  stringstream content;
+  content << "{ \"text\": \"" << destmessage 
+          << "\", \"callSignNames\": [\"" << destcall
+          << "\"], \"transmitterGroupNames\": [\"" << txgroup 
+          << "\"], \"emergency\": false }";
+
+  int clen = content.str().length();
+
+  stringstream ss;
+  ss << "POST " << dapnet_webpath << " HTTP/1.1\r\n"
+     << "Host: " << dapnet_webhost << ":" 
+     << dapnet_webport << "\r\n"
+     << "Authorization: Basic " 
+     << encodeBase64(auth.c_str(), auth.length()) << "\r\n"
+     << "User-Agent: " << DAPNETSOFT << "/" << DAPNETVERSION << "\r\n"
+     << "Accept: */*\r\n"
+     << "Content-Type: application/json\r\n"
+     << "Content-Length: " << clen << "\r\n\r\n" 
+     << content.str();
+  
+  if (debug >= LOGDEBUG)
+  {
+    cout << ss.str() << endl;
+  }
+
+  dapwebcon->write(ss.str().c_str(), ss.str().length());
+} /* DapNetClient::onDapwebConnected */
+
+
+char* DapNetClient::encodeBase64(const char input_str[], int len_str)
+{
+  // Character set of base64 encoding scheme
+  char char_set[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  char *res_str = (char *) malloc(1000 * sizeof(char));
+     
+  int index, no_of_bits = 0, padding = 0, val = 0, count = 0, temp;
+  int i, j, k = 0;
+      
+  // Loop takes 3 characters at a time from 
+  // input_str and stores it in val
+  for (i = 0; i < len_str; i += 3)
+  {
+    val = 0, count = 0, no_of_bits = 0;
+  
+    for (j = i; j < len_str && j <= i + 2; j++)
+    {
+      val = val << 8; 
+      val = val | input_str[j]; 
+      count++;
+    }
+  
+    no_of_bits = count * 8; 
+    padding = no_of_bits % 3; 
+    while (no_of_bits != 0) 
+    {
+      if (no_of_bits >= 6)
+      {
+        temp = no_of_bits - 6;
+        index = (val >> temp) & 63; 
+        no_of_bits -= 6;         
+      }
+      else
+      {
+        temp = 6 - no_of_bits;
+        index = (val << temp) & 63; 
+        no_of_bits = 0;
+      }
+      res_str[k++] = char_set[index];
+    }
+  }
+  for (i = 1; i <= padding; i++) 
+  {
+    res_str[k++] = '=';
+  }
+  res_str[k] = '\0';
+  return res_str;  
+} /* DapNetClient::encode_base64 */
+
+
+void DapNetClient::onDapwebDisconnected(TcpConnection *con, 
+                TcpClient<>::DisconnectReason reason)
+{
+  if (debug >= LOGDEBUG)
+  {
+    cout << "+++ disconnected from Dapnetweb, reason=" << reason 
+         << endl;
+  }
+} /* DapNetClient::onDapwebDisconnected */
+
+
+int DapNetClient::onDapwebDataReceived(TcpConnection *con, void *buf, 
+                                                      int count)
+{
+  char *str = static_cast<char *>(buf);
+  string message(str, str+count);
+  if (debug >= LOGINFO)
+  {
+    cout << "From DAPNET:" << message << endl;
+  }
+  return count;
+} /* DapNetClient::onDapwebDataReceived */
 
 
 void DapNetClient::handleDapMessage(std::string dapmessage)

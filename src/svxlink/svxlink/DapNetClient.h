@@ -148,6 +148,12 @@ class DapNetClient : public Async::TcpClient<>
      */
     sigc::signal<void, std::string, std::string> dapnetMessageReceived;
     
+    /**
+     *
+     *
+     */
+    bool sendDapMessage(std::string call, std::string message);
+    
   protected:
 
     
@@ -166,6 +172,15 @@ class DapNetClient : public Async::TcpClient<>
     std::string                dapmessage;
     std::string                callsign;
     typedef std::vector<std::string> StrList;
+    std::string                dapnet_username;
+    std::string                dapnet_password;
+    std::string                dapnet_webhost;
+    std::string                dapnet_webpath;
+    int                        dapnet_webport;
+    Async::TcpClient<>         *dapwebcon;
+    std::string                txgroup;
+    std::string                destcall;
+    std::string                destmessage;
         
     DapNetClient(const DapNetClient&);
     DapNetClient& operator=(const DapNetClient&);
@@ -174,6 +189,11 @@ class DapNetClient : public Async::TcpClient<>
     void onDapnetDisconnected(Async::TcpConnection *con,
       	      	      	 Async::TcpConnection::DisconnectReason reason);
     int onDapnetDataReceived(Async::TcpConnection *con, void *data, int size);
+    void onDapwebConnected(void);
+    void onDapwebDisconnected(Async::TcpConnection *con,
+      	      	      	 Async::TcpConnection::DisconnectReason reason);
+    int onDapwebDataReceived(Async::TcpConnection *con, void *data, int size);
+    char* encodeBase64(const char input_str[], int len_str);
     void handleTimeSync(std::string msg);
     void handleDapType4(std::string msg);
     void handleDapText(std::string msg);
@@ -184,7 +204,6 @@ class DapNetClient : public Async::TcpClient<>
     int checkDapMessage(std::string mesg);
     bool rmatch(std::string tok, std::string pattern);
     std::string rot1code(std::string inmessage);
-
 };  /* class DapNetClient */
 
 

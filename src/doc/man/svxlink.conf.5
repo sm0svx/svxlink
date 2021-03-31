@@ -919,6 +919,28 @@ DAPNET_RUBRIC_REGISTRATION=RicRegistration
 [RicRegistration]
 1234=1028,1051
 234342=1001,3232
+.TP
+.B DAPNET_USERNAME
+The username (usually the callsign) used for login on www.hampager.de.
+it is required to send messages via the website's API.
+.TP
+.B DAPNET_PASSWORD
+The password for the hampager website (API).
+.TP
+.B DAPNET_WEBHOST
+The webserver that provide the API (usually hampager.de)
+.TP
+.B DAPNET_WEBPORT
+The Tcp port to connect the DAPNET_WEBHOST (usually 8080)
+.TP
+.B DAPNET_WEBPATH
+The path where the Api for CallResource is available, 
+usually /calls
+More information can be found here:
+https://github.com/DecentralizedAmateurPagingNetwork/Core/wiki/
+.TP
+.B DAPNET_TXGROUP
+The sender group via which the message is to be sent e.g. de-all
 .
 .SS QSO Recorder Section
 .

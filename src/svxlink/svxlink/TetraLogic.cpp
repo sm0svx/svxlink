@@ -214,6 +214,8 @@ TetraLogic::~TetraLogic(void)
   {
     LinkManager::instance()->deleteLogic(this);
   }
+  delete dapnetclient;
+  dapnetclient = 0;
   peiComTimer = 0;
   peiActivityTimer = 0;
   peiBreakCommandTimer = 0;
@@ -548,7 +550,7 @@ bool TetraLogic::initialize(void)
                     &TetraLogic::onDapnetMessage));
     dapnetclient->initialize();
   }
-        
+
   pei = new Serial(port);
 
   if (!pei->open(true))
@@ -1148,6 +1150,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
       m_aprsinfo << ">" << sds_txt;
       cfmTxtSdsReceived(sds, t_sds.tsi);
       ss << "text_sds_received " << t_sds.tsi << " \"" << sds_txt << "\"";
+      checkIfDapmessage(sds_txt);
       break;
 
     case SIMPLE_TEXT_SDS:
@@ -1982,7 +1985,8 @@ void TetraLogic::onDapnetMessage(string tsi, string message)
 {
   if (debug >= LOGINFO)
   {
-    cout << "+++ new Dapnet message received for " << tsi << endl;
+    cout << "+++ new Dapnet message received for " << tsi 
+         << ":" << message << endl;
   }
   
   // put the new Sds int a queue...
@@ -1995,6 +1999,26 @@ void TetraLogic::onDapnetMessage(string tsi, string message)
 
   queueSds(t_sds);
 } /* TetraLogic::onDapnetMessage */
+
+
+void TetraLogic::checkIfDapmessage(std::string message)
+{
+  string destcall = "";
+  if (dapnetclient)
+  {
+    if (rmatch(message, "^DAP:[0-9A-Za-z]{3,8}:"))
+    {
+      message.erase(0,4);
+      destcall = message.substr(0, message.find(":"));
+      message.erase(0, message.find(":")+1);
+    }
+    if (debug >= LOGDEBUG)
+    {
+      cout << "To DAPNET: call=" << destcall << ", message:" << message << endl;
+    }
+    bool sent = dapnetclient->sendDapMessage(destcall, message);
+  }
+} /* TetraLogic::checkIfDapmessage */
 
 /*
  * This file has not been truncated

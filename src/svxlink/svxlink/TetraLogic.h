@@ -402,6 +402,7 @@ class TetraLogic : public Logic
     void publishInfo(std::string type, Json::Value event);
     void onDapnetMessage(std::string, std::string message);
     void sendAprs(std::string call, std::string aprsmessage);
+    void checkIfDapmessage(std::string message);
 
 };  /* class TetraLogic */
 
