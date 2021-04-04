@@ -1755,8 +1755,8 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
-  mre["^8204"]                                    = TEXT_SDS;
   mre["^821000"]                                  = ACK_SDS;
+  mre["^820"]                                     = TEXT_SDS;
   mre["^0C"]                                      = CONCAT_SDS;
   //mre["^83"]                                    = COMPLEX_SDS;
   mre["^[8-9A-F][0-9A-F]{3}$"]                    = STATE_SDS;
@@ -2016,7 +2016,7 @@ void TetraLogic::checkIfDapmessage(std::string message)
     {
       cout << "To DAPNET: call=" << destcall << ", message:" << message << endl;
     }
-    bool sent = dapnetclient->sendDapMessage(destcall, message);
+    dapnetclient->sendDapMessage(destcall, message);
   }
 } /* TetraLogic::checkIfDapmessage */
 
