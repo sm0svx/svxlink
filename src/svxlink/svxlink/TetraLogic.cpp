@@ -555,8 +555,8 @@ bool TetraLogic::initialize(void)
 
   if (!pei->open(true))
   {
-    cerr << "*** ERROR: Opening serial port " << name() << "/\""
-         << port << "\"" << endl;
+    cerr << "*** ERROR: Opening serial port " << name() << "/PORT="
+         << port << endl;
     return false;
   }
   pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
@@ -574,7 +574,7 @@ bool TetraLogic::initialize(void)
   
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
-  
+
   processEvent("startup");
 
   return isok;
