@@ -421,6 +421,7 @@ bool handle_LIP_compact(std::string lip, float & lat, float & lon)
   ss.clear();
 
   // calculate longitude
+  // 0A06B8ACA67F1822FFE810
   std::string m_lon = lip.substr(13,6);
   ss << std::hex << m_lon;
   ss >> mlonl;
@@ -482,7 +483,7 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
     tla += std::stol(in.substr(14,1),nullptr,16) << 1;
     tla += (std::stol(in.substr(15,1),nullptr,16) & 0x08) >> 3;
 
-    if (tlo > 8388608)
+    if (tlo > 16777216)
     {
       lipinfo.longitude = tlo * 360.0 / 33554432 - 360.0;
     }
