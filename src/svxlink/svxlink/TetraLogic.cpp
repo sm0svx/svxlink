@@ -112,6 +112,9 @@ using namespace SvxLink;
 #define CTGS 28
 #define CTDGR 29
 #define CLVL 30
+#define OTAK 31
+#define WAP_MESSAGE 32
+#define LOCATION_SYSTEM_TSDU 33
 
 #define DMO_OFF 7
 #define DMO_ON 8
@@ -1038,7 +1041,8 @@ void TetraLogic::handleSds(std::string sds)
   sds.erase(0,9);  // remove "+CTSDSR: "
   
   // store header of sds for further handling
-  pSDS.sdstype = getNextVal(sds);        // type of SDS (12)
+  //pSDS.sdstype = getNextVal(sds);    // type of SDS (12)
+  pSDS.aiservice = getNextVal(sds);    // type of SDS (TypeOfService 0-12)
   pSDS.fromtsi = getTSI(getNextStr(sds)); // sender Tsi (23404)
   getNextVal(sds);                     // (0)
   pSDS.totsi = getNextVal(sds);        // destination Issi
@@ -1096,6 +1100,9 @@ void TetraLogic::handleSdsMsg(std::string sds)
 
   int m_sdstype = handleMessage(sds);
   t_sds.type = m_sdstype;
+  
+  
+  
   unsigned int isds;
   switch (m_sdstype)
   {
@@ -1208,6 +1215,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
 } /* TetraLogic::getTypeOfService */
 
 
+// 6.15.6 TETRA Group Set up
 // +CTGS [<group type>], <called party identity> ... [,[<group type>], 
 //       < called party identity>]
 // In V+D group type shall be used. In DMO the group type may be omitted,
@@ -1224,6 +1232,7 @@ std::string TetraLogic::handleCtgs(std::string m_message)
 } /* TetraLogic::handleCtgs */
 
 
+// 6.14.10 TETRA DMO visible gateways/repeaters
 // +CTDGR: [<DM communication type>], [<gateway/repeater address>], [<MNI>],
 //         [<presence information>]
 // TETRA DMO visible gateways/repeaters +CTDGR
@@ -1358,7 +1367,7 @@ std::string TetraLogic::handleSimpleTextSds(std::string m_message)
 
 
 /*
-  Transmission Grant +CTXG
+  6.15.10 Transmission Grant +CTXG
   +CTXG: <CC instance>, <TxGrant>, <TxRqPrmsn>, <end to end encryption>,
          [<TPI type>], [<TPI>]
   e.g.:
@@ -1439,7 +1448,8 @@ void TetraLogic::handleStateSds(unsigned int isds)
 } /* TetraLogic::handleStateSds */
 
 
-// Down Transmission Ceased +CDTXC
+// 6.15.11 Down Transmission Ceased +CDTXC
+// +CDTXC: <CC instance>, <TxRqPrmsn>
 // +CDTXC: 1,0
 void TetraLogic::handleTransmissionEnd(std::string message)
 {
@@ -1450,7 +1460,8 @@ void TetraLogic::handleTransmissionEnd(std::string message)
 } /* TetraLogic::handleTransmissionEnd */
 
 
-// TETRA Call Release +
+// 6.15.3 TETRA Call ReleaseTETRA Call Release
+// +CTCR: <CC instance >, <disconnect cause>
 // +CTCR: 1,13
 void TetraLogic::handleCallReleased(std::string message)
 {
@@ -1751,14 +1762,16 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^\\+CTGS:"]                                = CTGS;
   mre["^\\+CTDGR:"]                               = CTDGR;
   mre["^\\+CLVL:"]                                = CLVL;
-  mre["^02"]                                      = SIMPLE_TEXT_SDS; 
+  mre["^01"]                                      = OTAK;
+  mre["^02"]                                      = SIMPLE_TEXT_SDS;
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
   mre["^821000"]                                  = ACK_SDS;
-  mre["^820"]                                     = TEXT_SDS;
+  mre["^82^(1000)"]                               = TEXT_SDS;
+  mre["^83"]                                      = LOCATION_SYSTEM_TSDU;
+  mre["^84"]                                      = WAP_MESSAGE;
   mre["^0C"]                                      = CONCAT_SDS;
-  //mre["^83"]                                    = COMPLEX_SDS;
   mre["^[8-9A-F][0-9A-F]{3}$"]                    = STATE_SDS;
 
   for (rt = mre.begin(); rt != mre.end(); rt++)

@@ -256,6 +256,7 @@ class TetraLogic : public Logic
       int type;             // STATE, LIP_SHORT,..
       int direction;        // INCOMING, OUTGOING
       int nroftries = 0;    // number of tries
+      int aiservice;        // AI service / type of service
     };
 
     Sds pending_sds;        // the Sds that will actually be handled
@@ -341,6 +342,7 @@ class TetraLogic : public Logic
     
     struct pSds {
       int sdstype;
+      int aiservice;
       std::string fromtsi;
       std::string totsi;
       time_t last_activity;
