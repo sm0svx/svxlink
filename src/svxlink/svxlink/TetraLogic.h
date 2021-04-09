@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -404,7 +404,7 @@ class TetraLogic : public Logic
     void publishInfo(std::string type, Json::Value event);
     void onDapnetMessage(std::string, std::string message);
     void sendAprs(std::string call, std::string aprsmessage);
-    void checkIfDapmessage(std::string message);
+    bool checkIfDapmessage(std::string message);
 
 };  /* class TetraLogic */
 

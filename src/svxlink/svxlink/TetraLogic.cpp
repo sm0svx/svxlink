@@ -976,6 +976,7 @@ void TetraLogic::handleCallBegin(std::string message)
     t_sds.direction = OUTGOING;
     t_sds.message = infosds;
     t_sds.tsi = o_tsi;
+    t_sds.type = TEXT;
     t_sds.remark = "Welcome Sds to newuser";
     if (debug >= LOGINFO)
     {
@@ -1100,9 +1101,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
 
   int m_sdstype = handleMessage(sds);
   t_sds.type = m_sdstype;
-  
-  
-  
+
   unsigned int isds;
   switch (m_sdstype)
   {
@@ -1154,10 +1153,12 @@ void TetraLogic::handleSdsMsg(std::string sds)
       
     case TEXT_SDS:
       sds_txt = handleTextSds(sds);
-      m_aprsinfo << ">" << sds_txt;
       cfmTxtSdsReceived(sds, t_sds.tsi);
       ss << "text_sds_received " << t_sds.tsi << " \"" << sds_txt << "\"";
-      checkIfDapmessage(sds_txt);
+      if (!checkIfDapmessage(sds_txt))
+      {
+        m_aprsinfo << ">" << sds_txt;
+      }
       break;
 
     case SIMPLE_TEXT_SDS:
@@ -1203,9 +1204,12 @@ void TetraLogic::handleSdsMsg(std::string sds)
   event.append(sdsinfo);
 
   // send sds info of a user to aprs network
-  string m_aprsmessage = aprspath;
-  m_aprsmessage += m_aprsinfo.str();
-  sendAprs(userdata[t_sds.tsi].call, m_aprsmessage);
+  if(m_aprsinfo.str().length() > 0)
+  {
+    string m_aprsmessage = aprspath;
+    m_aprsmessage += m_aprsinfo.str();
+    sendAprs(userdata[t_sds.tsi].call, m_aprsmessage);
+  }
   
   if (ss.str().length() > 0)
   {
@@ -1768,7 +1772,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
   mre["^821000"]                                  = ACK_SDS;
-  mre["^82^(1000)"]                               = TEXT_SDS;
+  mre["^82"]                                      = TEXT_SDS;
   mre["^83"]                                      = LOCATION_SYSTEM_TSDU;
   mre["^84"]                                      = WAP_MESSAGE;
   mre["^0C"]                                      = CONCAT_SDS;
@@ -1924,7 +1928,7 @@ bool TetraLogic::checkSds(void)
         it->second.tos = time(NULL);
         if (debug >= LOGINFO)
         {
-          cout << "+++ sending Sds (type=" <<it->second.type << ") " 
+          cout << "+++ sending Sds (type=" << it->second.type << ") " 
                << getISSI(it->second.tsi) << " \"" << it->second.message 
                << "\", tries: " << it->second.nroftries << endl;
         }
@@ -2014,7 +2018,7 @@ void TetraLogic::onDapnetMessage(string tsi, string message)
 } /* TetraLogic::onDapnetMessage */
 
 
-void TetraLogic::checkIfDapmessage(std::string message)
+bool TetraLogic::checkIfDapmessage(std::string message)
 {
   string destcall = "";
   if (dapnetclient)
@@ -2024,13 +2028,15 @@ void TetraLogic::checkIfDapmessage(std::string message)
       message.erase(0,4);
       destcall = message.substr(0, message.find(":"));
       message.erase(0, message.find(":")+1);
+      if (debug >= LOGDEBUG)
+      {
+        cout << "To DAPNET: call=" << destcall << ", message:" << message << endl;
+      }
+      dapnetclient->sendDapMessage(destcall, message);
+      return true;
     }
-    if (debug >= LOGDEBUG)
-    {
-      cout << "To DAPNET: call=" << destcall << ", message:" << message << endl;
-    }
-    dapnetclient->sendDapMessage(destcall, message);
   }
+  return false;
 } /* TetraLogic::checkIfDapmessage */
 
 /*
