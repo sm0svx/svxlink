@@ -826,8 +826,13 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       handleSds(m_message);
       break;
       
-    case ACK_SDS:     
+    case ACK_SDS:
+      break;
+
     case TEXT_SDS:
+      handleSdsMsg(m_message);
+      break;
+      
     case SIMPLE_TEXT_SDS:
     case STATE_SDS:       
     case COMPLEX_SDS:
@@ -1152,11 +1157,13 @@ void TetraLogic::handleSdsMsg(std::string sds)
       break;
       
     case TEXT_SDS:
+      cout << "TEXT_SDS: |" << m_aprsinfo.str() << "|" << endl;
       sds_txt = handleTextSds(sds);
       cfmTxtSdsReceived(sds, t_sds.tsi);
       ss << "text_sds_received " << t_sds.tsi << " \"" << sds_txt << "\"";
       if (!checkIfDapmessage(sds_txt))
       {
+        cout << "!checkIfDapmessage(sds_txt):" << sds_txt << "|" << endl;
         m_aprsinfo << ">" << sds_txt;
       }
       break;
@@ -1204,7 +1211,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
   event.append(sdsinfo);
 
   // send sds info of a user to aprs network
-  if(m_aprsinfo.str().length() > 0)
+  if (m_aprsinfo.str().length() > 0)
   {
     string m_aprsmessage = aprspath;
     m_aprsmessage += m_aprsinfo.str();
@@ -1772,7 +1779,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
   mre["^821000"]                                  = ACK_SDS;
-  mre["^82"]                                      = TEXT_SDS;
+  mre["^82[^1]"]                                  = TEXT_SDS;
   mre["^83"]                                      = LOCATION_SYSTEM_TSDU;
   mre["^84"]                                      = WAP_MESSAGE;
   mre["^0C"]                                      = CONCAT_SDS;
@@ -1787,6 +1794,7 @@ int TetraLogic::handleMessage(std::string mesg)
     }
   }
 
+  cout << "nicht gefunden" << endl;
   return peistate;
 } /* TetraLogic::handleMessage */
 
