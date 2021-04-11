@@ -1794,7 +1794,6 @@ int TetraLogic::handleMessage(std::string mesg)
     }
   }
 
-  cout << "nicht gefunden" << endl;
   return peistate;
 } /* TetraLogic::handleMessage */
 
