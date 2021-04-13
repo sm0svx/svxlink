@@ -395,6 +395,7 @@ class TetraLogic : public Logic
     void sendInfoSds(std::string tsi, short reasonforsending);
     void handleCallReleased(std::string m_message);
     int queueSds(Sds t_sds);
+    void firstContact(Sds tsds);
     bool checkSds(void);
     void getAiMode(std::string opmode);
     bool rmatch(std::string tok, std::string pattern);

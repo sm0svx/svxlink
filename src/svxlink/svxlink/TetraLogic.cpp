@@ -834,7 +834,10 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       break;
       
     case SIMPLE_TEXT_SDS:
-    case STATE_SDS:       
+    case STATE_SDS:
+      handleSdsMsg(m_message);
+      break;
+
     case COMPLEX_SDS:
     case CONCAT_SDS:
     case LIP_SDS:
@@ -1058,6 +1061,27 @@ void TetraLogic::handleSds(std::string sds)
 } /* TetraLogic::handleSds */
 
 
+void TetraLogic::firstContact(Sds tsds)
+{
+  userdata[tsds.tsi].call = "NoCall";
+  userdata[tsds.tsi].name = "NoName";
+  userdata[tsds.tsi].aprs_sym = t_aprs_sym;
+  userdata[tsds.tsi].aprs_tab = t_aprs_tab;
+  userdata[tsds.tsi].last_activity = time(NULL);
+
+  tsds.direction = OUTGOING;
+  tsds.message = infosds;
+  tsds.type = TEXT;
+  tsds.remark = "Welcome Sds to newuser";
+  if (debug >= LOGINFO)
+  {
+    cout << "Sending info Sds to new user " << tsds.tsi << " \"" 
+         << infosds << "\"" << endl;
+  }
+  queueSds(tsds);
+} /* TetraLogic::checkFirstContact */
+
+
 /*
  Handle the sds message
  Example:
@@ -1080,25 +1104,10 @@ void TetraLogic::handleSdsMsg(std::string sds)
   t_sds.direction = INCOMING;          // 1 = received
   t_sds.tsi = pSDS.fromtsi;
   
-  // check if the user is stored? no -> default
   std::map<std::string, User>::iterator iu = userdata.find(t_sds.tsi);
   if (iu == userdata.end())
   {
-    userdata[t_sds.tsi].call = "NoCall";
-    userdata[t_sds.tsi].name = "NoName";
-    userdata[t_sds.tsi].aprs_sym = t_aprs_sym;
-    userdata[t_sds.tsi].aprs_tab = t_aprs_tab;
-
-    t_sds.direction = OUTGOING;
-    t_sds.message = infosds;
-    t_sds.remark = "Welcome Sds to newuser";
-    if (debug >= LOGINFO)
-    {
-      cout << "Sending info Sds to new user " << t_sds.tsi << " \"" 
-           << infosds << "\"" << endl;
-    }
-    queueSds(t_sds);
-    return;
+    firstContact(t_sds);
   }
 
   // update last activity of sender
@@ -1157,13 +1166,11 @@ void TetraLogic::handleSdsMsg(std::string sds)
       break;
       
     case TEXT_SDS:
-      cout << "TEXT_SDS: |" << m_aprsinfo.str() << "|" << endl;
       sds_txt = handleTextSds(sds);
       cfmTxtSdsReceived(sds, t_sds.tsi);
       ss << "text_sds_received " << t_sds.tsi << " \"" << sds_txt << "\"";
       if (!checkIfDapmessage(sds_txt))
       {
-        cout << "!checkIfDapmessage(sds_txt):" << sds_txt << "|" << endl;
         m_aprsinfo << ">" << sds_txt;
       }
       break;
@@ -1778,12 +1785,13 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
   mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
-  mre["^821000"]                                  = ACK_SDS;
-  mre["^82[^1]"]                                  = TEXT_SDS;
-  mre["^83"]                                      = LOCATION_SYSTEM_TSDU;
-  mre["^84"]                                      = WAP_MESSAGE;
-  mre["^0C"]                                      = CONCAT_SDS;
   mre["^[8-9A-F][0-9A-F]{3}$"]                    = STATE_SDS;
+  mre["^8210[0-9A-F]{4}"]                         = ACK_SDS;
+  mre["^8[23][0-9A-F]{3,}"]                       = TEXT_SDS;
+  //mre["^83"]                                    = LOCATION_SYSTEM_TSDU;
+ // mre["^84"]                                    = WAP_MESSAGE;
+  mre["^0C"]                                      = CONCAT_SDS;
+
 
   for (rt = mre.begin(); rt != mre.end(); rt++)
   {
