@@ -1,6 +1,8 @@
 {
   "nodeLocation": "MyTownOrArea",
   "hidden": false,
+  "sysop": "CALL1 CALL2",
+  "toneToTalkgroup": {"136.5": 0, "88.5": 999, "123.0": 9990},
   "qth": [
     {
       "name": "My QTH Name",
@@ -14,7 +16,7 @@
           "name": "Rx1",
           "freq": 433.450,
           "sqlType": "CTCSS",
-          "ctcssFreq": [136.5, 67.0, 77.0, 127.3],
+          "ctcssFreq": [136.5,88.5,123.0],
           "ant": [
             {
               "comment": "Yagi south",
@@ -45,6 +47,7 @@
           "name": "Tx1",
           "freq": 433.450,
           "pwr": 20,
+          "ctcssFreq": 136.5,
           "ant": [
             {
               "comment": "Yagi south",
