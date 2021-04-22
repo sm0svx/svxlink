@@ -64,7 +64,7 @@ set(LIBS trx locationinfo asynccpp asyncaudio asynccore svxmisc ${LIBS})
 add_executable(svxlink
   MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
   EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
-  DtmfDigitHandler.cpp ReflectorLogic.cpp
+  DtmfDigitHandler.cpp ReflectorLogic.cpp UsrpLogic.cpp
   ${VERSION_DEPENDS}
 )
 target_link_libraries(svxlink ${LIBS})
