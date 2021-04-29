@@ -1,8 +1,8 @@
 /**
 @file	 UsrpLogic.cpp
 @brief   A logic core that connect to the SvxUsrp
-@author  Tobias Blomberg / SM0SVX
-@date	 2021-03-24
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2021-04-26
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -80,7 +80,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define USRP_START "USRP"
 
 
 /****************************************************************************
@@ -132,7 +131,7 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_tg_local_activity(false), m_last_qsy(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false), m_use_prio(true),
-    stored_samples(0)
+    udp_seq(0), stored_samples(0)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
@@ -182,7 +181,6 @@ bool UsrpLogic::initialize(void)
     m_udp_rxsock = new UdpSocket(m_usrp_rx_port);
     m_udp_rxsock->dataReceived.connect(
        mem_fun(*this, &UsrpLogic::udpDatagramReceived));
-    //cout << "Usrp Rx socket=" << m_usrp_host << ":" << m_usrp_rx_port << endl;
   }
   
     // Create logic connection incoming audio passthrough
@@ -231,7 +229,7 @@ bool UsrpLogic::initialize(void)
   prev_src->registerSink(m_logic_con_out, true);
   prev_src = 0;
 
-  r_buf = new int16_t[USRP_AUDIO_FRAME_LEN * 2];
+  r_buf = new int8_t[USRP_AUDIO_FRAME_LEN*2];
 
   if (!LogicBase::initialize())
   {
@@ -282,37 +280,27 @@ void UsrpLogic::handleMsgRequestQsy(int tg)
 
 void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 {
-  size_t fsize = sizeof(UsrpFrame) + USRP_AUDIO_FRAME_LEN;
-  struct UsrpFrame* af = (UsrpFrame*)alloca(fsize);
-  int16_t* bufdata = (int16_t*)alloca(USRP_AUDIO_FRAME_LEN);
+  std::vector<uint8_t> audiodata;
+  UsrpMsg usrp;
+  usrp.setType(USRP_TYPE_VOICE);
+  usrp.setKeyup(true);
 
   if (m_flush_timeout_timer.isEnabled())
   {
     m_flush_timeout_timer.setEnable(false);
   }
 
-  int len = count / sizeof(int16_t);
-  cout << "Count=" << len << endl;
-  const int16_t *t = reinterpret_cast<const int16_t*>(buf);
+  const int8_t *t = reinterpret_cast<const int8_t*>(buf);
 
-  memcpy(r_buf+stored_samples, t, len);
-  stored_samples += len;
-  
+  memcpy(r_buf+stored_samples, t, count);
+  stored_samples += count;
+
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
-  {     
-    for (int a=0; a < USRP_AUDIO_FRAME_LEN; a++)
-    {
-      bufdata[a] = r_buf[a];
-    }
-   
-    af->type = USRP_TYPE_VOICE;
-    af->keyup = htole32(1);
-    af->mpxid = 0;
-    af->memory = 0;
-    af->reserved = 0;
-    af->talkgroup = htole32(m_selected_tg);
-    memcpy(af->audio, bufdata, USRP_AUDIO_FRAME_LEN);
-    sendUdpMsg(af, sizeof(UsrpFrame) + USRP_AUDIO_FRAME_LEN);
+  {
+    audiodata.assign(r_buf, r_buf + USRP_AUDIO_FRAME_LEN);
+    usrp.setAudiodata(audiodata);
+
+    sendUdpMsg(usrp);
     memmove(r_buf, r_buf+USRP_AUDIO_FRAME_LEN, stored_samples-USRP_AUDIO_FRAME_LEN);
     stored_samples -= USRP_AUDIO_FRAME_LEN;
   }
@@ -329,24 +317,25 @@ void UsrpLogic::flushEncodedAudio(void)
 void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  // cout << "incoming packet from " << addr.toString() << ", len=" << count 
-  //      << endl;
-    
-  if (count < USRP_HEADER_LEN)
+  //cout << "incoming packet from " << addr.toString() << ", len=" << count 
+  //     << endl;
+
+  stringstream ss;
+  ss.write(reinterpret_cast<const char*>(buf), count);
+  UsrpMsg usrp;
+
+  if (!usrp.unpack(ss))
   {
-    cout << "*** ERROR: count < USRP_HEADER_LEN" << endl;
+    cout << "*** WARNING[" << name()
+         << "]: Unpacking failed for UDP Usrp message" << endl;
     return;
   }
 
-  UsrpFrame *usrp = reinterpret_cast<UsrpFrame*>(buf);
-
-  if (strncmp(usrp->eye, USRP_START, 4) != 0) return;
-  
-  switch (usrp->type)
+  switch (usrp.type())
   {
     case USRP_TYPE_VOICE:
-      if (count <= 32) handleStreamStop();
-      else handleVoiceStream(usrp->audio, count - USRP_HEADER_LEN);
+      if (count <= USRP_HEADER_LEN+5) handleStreamStop();
+      else handleVoiceStream(usrp);
     break;
 
     case USRP_TYPE_DTMF:
@@ -355,7 +344,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
    
     case USRP_TYPE_TEXT:
       cout << "USRP_TYPE_TEXT : " << endl;
-      handleTextMsg(usrp->audio, count - USRP_HEADER_LEN);
+      handleTextMsg(usrp);
     break;
    
     case USRP_TYPE_TLV:
@@ -368,15 +357,21 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     break;
     
     default:
-      cout << "*** unknown type of message:" << usrp->type << endl; 
+      cout << "*** unknown type of message:" << usrp.type() << endl; 
     break;
   }
 } /* UsrpLogic::udpDatagramReceived */
 
 
+void UsrpLogic::handleVoiceStream(UsrpMsg usrp)
+{
+  gettimeofday(&m_last_talker_timestamp, NULL);  
+  m_dec->writeEncodedSamples(&usrp.audioData().front(), usrp.audioData().size());
+} /* UsrpLogic::handleVoiceStream */
+
+
 void UsrpLogic::handleStreamStop(void)
 {
-  cout << "StreamStop" << endl;
   m_dec->flushEncodedSamples();
   checkIdle();
   m_enc->allEncodedSamplesFlushed();
@@ -384,53 +379,41 @@ void UsrpLogic::handleStreamStop(void)
 } /* UsrpLogic::handleStreamStop */
 
 
-void UsrpLogic::handleVoiceStream(const int16_t *audio, int len)
+void UsrpLogic::handleTextMsg(UsrpMsg usrp)
 {
-
- // float smpl[len+1];  
- // for (int a=0; a<len; a++)
- // {
- //   smpl[a] = static_cast<float>(audio[a] / 32767.0);
- // }
-
-  gettimeofday(&m_last_talker_timestamp, NULL);
-  m_dec->writeEncodedSamples(&audio, len);
-} /* UsrpLogic::handleVoiceStream */
-
-
-void UsrpLogic::handleTextMsg(const int16_t* text, int len)
-{
-
 } /* UsrpLogic::handleTextMsg */
 
 
-void UsrpLogic::sendUdpMsg(UsrpFrame *data, size_t len)
+void UsrpLogic::sendUdpMsg(UsrpMsg& usrp)
 {
 
   if (m_udp_sock == 0)
   {
     return;
   }
+
+  IpAddress usrp_addr(m_usrp_host);
+  usrp.setTg(m_selected_tg);
   
-  if (m_next_udp_tx_seq++ > 0x7fff)
+  if (udp_seq++ > 0x7fff) udp_seq = 0;
+  usrp.setSeq(udp_seq);
+  
+  ostringstream ss;
+  if (!usrp.pack(ss))
   {
-    m_next_udp_tx_seq = 0;
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack UDP Usrp message\n";
+    return;
   }
   
-  IpAddress usrp_addr(m_usrp_host);
-  
-  std::string s = USRP_START;
-  memcpy(data->eye, s.c_str(), 4);
-  data->talkgroup = htole32(m_selected_tg);
-  data->seq = htole32(m_next_udp_tx_seq);
-  
-  m_udp_sock->write(usrp_addr, m_usrp_port, data, len);
+  m_udp_sock->write(usrp_addr, m_usrp_port, ss.str().data(), ss.str().size());
+  cout << "ss.str().size()=" << ss.str().size() << endl;
+  cout << "ss.str().length()=" << ss.str().length() << endl;
 } /* UsrpLogic::sendUdpMsg */
 
 
 void UsrpLogic::sendHeartbeat(void)
 {
-
 } /* UsrpLogic::sendHeartbeat */
 
 
@@ -514,8 +497,8 @@ bool UsrpLogic::setAudioCodec(void)
 void UsrpLogic::onLogicConInStreamStateChanged(bool is_active,
                                                     bool is_idle)
 {
-  cout << "### UsrpLogic::onLogicConInStreamStateChanged: is_active="
-       << is_active << ", is_idle=" << is_idle << endl;
+ // cout << "### UsrpLogic::onLogicConInStreamStateChanged: is_active="
+  //     << is_active << ", is_idle=" << is_idle << endl;
 
   checkIdle();
   if (is_idle)
@@ -527,22 +510,18 @@ void UsrpLogic::onLogicConInStreamStateChanged(bool is_active,
 
 void UsrpLogic::sendVoiceStop(void)
 {
-  cout << "sendVoiceStop" << endl;
-  UsrpFrame af;
-  af.type = USRP_TYPE_VOICE;
-  af.keyup = 0;
-  af.talkgroup = m_selected_tg;
-  //af.audio = NULL;
-  sendUdpMsg(&af, USRP_HEADER_LEN);
-  m_dec->flushEncodedSamples();  
+  UsrpMsg usrp;
+  usrp.setType(USRP_TYPE_VOICE);
+  usrp.setKeyup(false);
+  sendUdpMsg(usrp);
 } /* UsrpLogic::sendVoiceStop */
 
 
 void UsrpLogic::onLogicConOutStreamStateChanged(bool is_active,
                                                      bool is_idle)
 {
-  cout << "### UsrpLogic::onLogicConOutStreamStateChanged: is_active="
-       << is_active << "  is_idle=" << is_idle << endl;
+  //cout << "### UsrpLogic::onLogicConOutStreamStateChanged: is_active="
+  //     << is_active << "  is_idle=" << is_idle << endl;
 
   checkIdle();
 } /* UsrpLogic::onLogicConOutStreamStateChanged */
@@ -550,9 +529,6 @@ void UsrpLogic::onLogicConOutStreamStateChanged(bool is_active,
 
 bool UsrpLogic::isIdle(void)
 {
-  //  cout << "m_logic_con_out->isIdle()=" << (m_logic_con_out->isIdle() ? "1" : "0")
-  //       << " | m_logic_con_in->isIdle()=" << (m_logic_con_in->isIdle() ? "1" : "0")
-  //       << endl;
   return m_logic_con_out->isIdle() && m_logic_con_in->isIdle();
 } /* UsrpLogic::isIdle */
 
@@ -561,7 +537,6 @@ void UsrpLogic::checkIdle(void)
 {
   setIdle(isIdle());
 } /* UsrpLogic::checkIdle */
-
 
 
 /*

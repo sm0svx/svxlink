@@ -2,7 +2,7 @@
 @file	 UsrpLogic.h
 @brief   A logic core that connect to the SvxUsrp
 @author  Tobias Blomberg / SM0SVX
-@date	 2021-03-24
+@date	 2021-04-24
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "LogicBase.h"
+#include "UsrpMsg.h"
 
 
 /****************************************************************************
@@ -106,7 +107,7 @@ namespace Async
 /**
 @brief	A logic core that connect to the SvxUsrp
 @author Tobias Blomberg / SM0SVX
-@date   2021-03-24
+@date   2021-04-24
 */
 class UsrpLogic : public LogicBase
 {
@@ -155,8 +156,9 @@ class UsrpLogic : public LogicBase
       operator uint32_t(void) const { return tg; }
     };
 
-    enum { USRP_TYPE_VOICE=0, USRP_TYPE_DTMF=1, USRP_TYPE_TEXT=2, USRP_TYPE_PING=3, 
-           USRP_TYPE_TLV=4, USRP_TYPE_VOICE_ADPCM = 5, USRP_TYPE_VOICE_ULAW = 6 };
+    enum { USRP_TYPE_VOICE=0, USRP_TYPE_DTMF=1, USRP_TYPE_TEXT=2, 
+           USRP_TYPE_PING=3, USRP_TYPE_TLV=4, USRP_TYPE_VOICE_ADPCM = 5, 
+           USRP_TYPE_VOICE_ULAW = 6 };
     
     enum { TLV_TAG_BEGIN_TX = 0, TLV_TAG_AMBE = 1, TLV_TAG_END_TX = 2,
            TLV_TAG_TG_TUNE  = 3, TLV_TAG_PLAY_AMBE= 4, TLV_TAG_REMOTE_CMD= 5,
@@ -166,16 +168,15 @@ class UsrpLogic : public LogicBase
     
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
 
-    static const unsigned DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET  = 15;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET          = 60;
-    static const unsigned DEFAULT_TG_SELECT_TIMEOUT           = 30;
-    static const int      DEFAULT_TMP_MONITOR_TIMEOUT         = 3600;
-    static const int      USRP_AUDIO_FRAME_LEN                = 160;
-    static const int      USRP_HEADER_LEN                     = 32;
-    static const int      USRP_START_LEN                      = 4;
+    static const unsigned DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET = 15;
+    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET         = 60;
+    static const unsigned DEFAULT_TG_SELECT_TIMEOUT          = 30;
+    static const int      DEFAULT_TMP_MONITOR_TIMEOUT        = 3600;
+    static const int      USRP_AUDIO_FRAME_LEN               = 320;
+    static const int      USRP_HEADER_LEN                    = 32;
 
-    struct UsrpFrame {
- 	  char eye[USRP_START_LEN];		// verification string
+ /*   struct UsrpFrame {
+      char eye[USRP_START_LEN];   	// verification string
 	  uint32_t seq;		            // sequence counter
 	  uint32_t memory = 0;       	// memory ID or zero (default)
 	  uint32_t keyup = 0;		    // tracks PTT state
@@ -183,9 +184,8 @@ class UsrpLogic : public LogicBase
 	  uint32_t type = USRP_TYPE_VOICE;		// see above enum
 	  uint32_t mpxid = 0;           // for future use
 	  uint32_t reserved = 0;	    // for future use
-	  int16_t audio[160];          // audio stream
     };
-    
+*/
     std::string                       m_usrp_host;
     uint16_t                          m_usrp_port;
     uint16_t                          m_usrp_rx_port;
@@ -214,12 +214,13 @@ class UsrpLogic : public LogicBase
     Async::AudioSource*               m_enc_endpoint;
     bool                              m_mute_first_tx_loc;
     bool                              m_mute_first_tx_rem;
-  //  Async::Timer                      m_tmp_monitor_timer;
+    // Async::Timer                   m_tmp_monitor_timer;
     int                               m_tmp_monitor_timeout;
     bool                              m_use_prio;
-   // Async::Timer                      m_qsy_pending_timer;
+    int                               udp_seq;
+    // Async::Timer                   m_qsy_pending_timer;
     int                               stored_samples;
-    int16_t                           *r_buf;
+    int8_t                            *r_buf;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
@@ -233,9 +234,9 @@ class UsrpLogic : public LogicBase
                              void *buf, int count);
 
     void handleStreamStop(void);
-    void handleVoiceStream(const int16_t *audio, int len);
-    void handleTextMsg(const int16_t* text, int len);
-    void sendUdpMsg(struct UsrpFrame *data, size_t len);
+    void handleVoiceStream(UsrpMsg usrp);
+    void handleTextMsg(UsrpMsg usrp);
+    void sendUdpMsg(UsrpMsg& usrp);
     void sendHeartbeat(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
