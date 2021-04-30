@@ -443,6 +443,60 @@ class MsgPacker<std::string>
     }
 };
 
+
+// MsgPacker for std::array
+template <typename T, size_t N>
+class MsgPacker<std::array<T, N> >
+{
+public:
+  static bool pack(std::ostream &os, const std::array<T, N> &vec) {
+    for (typename std::array<T, N>::const_iterator it = vec.begin();
+         it != vec.end(); ++it) {
+      MsgPacker<T>::pack(os, *it);
+    }
+    return true;
+  }
+  static size_t packedSize(const std::array<T, N> &vec) {
+    size_t size = 0;
+    for (typename std::array<T, N>::const_iterator it = vec.begin();
+         it != vec.end(); ++it) {
+      size += MsgPacker<T>::packedSize(*it);
+    }
+    return size;
+  }
+  static bool unpack(std::istream &is, std::array<T, N> &vec) {
+    for (size_t i = 0; i < N; ++i) {
+      MsgPacker<T>::unpack(is, vec[i]);
+    }
+    return true;
+  }
+};
+
+
+// MsgPacker for static arrays
+template <typename T, std::size_t N> class MsgPacker<T[N]> {
+public:
+  static bool pack(std::ostream &os, const T (&vec)[N]) {
+    for (const T *it = std::begin(vec); it != std::end(vec); ++it) {
+      MsgPacker<T>::pack(os, *it);
+    }
+    return true;
+  }
+  static size_t packedSize(const T (&vec)[N]) {
+    size_t size = 0;
+    for (const T *it = std::begin(vec); it != std::end(vec); ++it) {
+      size += MsgPacker<T>::packedSize(*it);
+    }
+    return size;
+  }
+  static bool unpack(std::istream &is, T (&vec)[N]) {
+    for (T *it = std::begin(vec); it != std::end(vec); ++it) {
+      MsgPacker<T>::unpack(is, *it);
+    }
+    return true;
+  }
+};
+
 template <typename I>
 class MsgPacker<std::vector<I> >
 {

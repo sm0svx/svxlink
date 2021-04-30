@@ -172,7 +172,7 @@ class UsrpLogic : public LogicBase
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET         = 60;
     static const unsigned DEFAULT_TG_SELECT_TIMEOUT          = 30;
     static const int      DEFAULT_TMP_MONITOR_TIMEOUT        = 3600;
-    static const int      USRP_AUDIO_FRAME_LEN               = 320;
+    static const int      USRP_AUDIO_FRAME_LEN               = 160;
     static const int      USRP_HEADER_LEN                    = 32;
 
  /*   struct UsrpFrame {
@@ -220,7 +220,7 @@ class UsrpLogic : public LogicBase
     int                               udp_seq;
     // Async::Timer                   m_qsy_pending_timer;
     int                               stored_samples;
-    int8_t                            *r_buf;
+    int16_t                           *r_buf;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
@@ -232,7 +232,6 @@ class UsrpLogic : public LogicBase
     void flushEncodedAudio(void);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
-
     void handleStreamStop(void);
     void handleVoiceStream(UsrpMsg usrp);
     void handleTextMsg(UsrpMsg usrp);

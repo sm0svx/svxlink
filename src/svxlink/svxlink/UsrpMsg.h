@@ -104,7 +104,7 @@ class UsrpMsg : public Async::Msg
         
     UsrpMsg(uint32_t seq=0, uint32_t memory=0, uint32_t keyup=0,
             uint32_t talkgroup=0, uint32_t type=0, uint32_t mpxid=0,
-            uint32_t reserved=0, const std::vector<uint8_t>& audio_data={0})
+            uint32_t reserved=0, const std::array<int16_t, 160> audio_data={0})
       : m_seq(type), m_memory(memory), m_keyup(keyup), m_talkgroup(talkgroup),
         m_type(type), m_mpxid(mpxid), m_reserved(reserved), 
         m_audio_data(audio_data) 
@@ -129,19 +129,19 @@ class UsrpMsg : public Async::Msg
     void setType(uint32_t type) { m_type = type;}
     void setSeq(uint32_t seq) { m_seq = seq; }
     void setKeyup(bool keyup) { (keyup ? m_keyup=1 : m_keyup=0); }
-    void setAudiodata(const std::vector<uint8_t> audio)
+    void setAudiodata(const std::array<int16_t, 160> audio)
     {
       m_audio_data = audio;
     }
   
-    std::vector<uint8_t>& audioData(void) { return m_audio_data; }
-    const std::vector<uint8_t>& audioData(void) const { return m_audio_data; }
+    std::array<int16_t, 160>& audioData(void) { return m_audio_data; }
+    const std::array<int16_t, 160>& audioData(void) const { return m_audio_data; }
     
     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
                       m_mpxid, m_reserved, m_audio_data)
                       
   private:
-    std::vector<uint8_t> eye;
+    std::array<char, 4> eye;
     uint32_t m_seq;
     uint32_t m_memory;
     uint32_t m_keyup;
@@ -149,7 +149,7 @@ class UsrpMsg : public Async::Msg
     uint32_t m_type;
     uint32_t m_mpxid;
     uint32_t m_reserved;
-    std::vector<uint8_t> m_audio_data;
+    std::array<int16_t, 160> m_audio_data;
 };
 
 #endif /* USRP_MSG_INCLUDED */

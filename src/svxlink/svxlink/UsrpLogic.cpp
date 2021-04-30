@@ -229,7 +229,7 @@ bool UsrpLogic::initialize(void)
   prev_src->registerSink(m_logic_con_out, true);
   prev_src = 0;
 
-  r_buf = new int8_t[USRP_AUDIO_FRAME_LEN*2];
+  r_buf = new int16_t[USRP_AUDIO_FRAME_LEN*2];
 
   if (!LogicBase::initialize())
   {
@@ -280,7 +280,7 @@ void UsrpLogic::handleMsgRequestQsy(int tg)
 
 void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 {
-  std::vector<uint8_t> audiodata;
+  std::array<int16_t, 160> audiodata;
   UsrpMsg usrp;
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(true);
@@ -290,14 +290,17 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
     m_flush_timeout_timer.setEnable(false);
   }
 
-  const int8_t *t = reinterpret_cast<const int8_t*>(buf);
+  const int16_t *t = reinterpret_cast<const int16_t*>(buf);
 
   memcpy(r_buf+stored_samples, t, count);
   stored_samples += count;
 
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
-    audiodata.assign(r_buf, r_buf + USRP_AUDIO_FRAME_LEN);
+    for(size_t x=0; x<USRP_AUDIO_FRAME_LEN; x++)
+    {
+      audiodata[x] = r_buf[x];
+    }
     usrp.setAudiodata(audiodata);
 
     sendUdpMsg(usrp);
@@ -334,7 +337,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   switch (usrp.type())
   {
     case USRP_TYPE_VOICE:
-      if (count <= USRP_HEADER_LEN+5) handleStreamStop();
+      if (count <= USRP_HEADER_LEN) handleStreamStop();
       else handleVoiceStream(usrp);
     break;
 
@@ -407,8 +410,6 @@ void UsrpLogic::sendUdpMsg(UsrpMsg& usrp)
   }
   
   m_udp_sock->write(usrp_addr, m_usrp_port, ss.str().data(), ss.str().size());
-  cout << "ss.str().size()=" << ss.str().size() << endl;
-  cout << "ss.str().length()=" << ss.str().length() << endl;
 } /* UsrpLogic::sendUdpMsg */
 
 
@@ -511,6 +512,7 @@ void UsrpLogic::onLogicConInStreamStateChanged(bool is_active,
 void UsrpLogic::sendVoiceStop(void)
 {
   UsrpMsg usrp;
+
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(false);
   sendUdpMsg(usrp);
