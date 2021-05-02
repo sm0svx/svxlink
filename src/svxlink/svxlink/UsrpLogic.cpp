@@ -284,6 +284,7 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
   UsrpMsg usrp;
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(true);
+  int len = (int)(count * sizeof(char) / 2);
 
   if (m_flush_timeout_timer.isEnabled())
   {
@@ -292,8 +293,8 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 
   const int16_t *t = reinterpret_cast<const int16_t*>(buf);
 
-  memcpy(r_buf+stored_samples, t, count);
-  stored_samples += count;
+  memcpy(r_buf+stored_samples, t, sizeof(int16_t)*len);
+  stored_samples += len;
 
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
@@ -303,8 +304,9 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
     }
     usrp.setAudiodata(audiodata);
 
-    sendUdpMsg(usrp);
-    memmove(r_buf, r_buf+USRP_AUDIO_FRAME_LEN, stored_samples-USRP_AUDIO_FRAME_LEN);
+    sendMsg(usrp);
+    memmove(r_buf, r_buf + USRP_AUDIO_FRAME_LEN, 
+              sizeof(int16_t)*(stored_samples-USRP_AUDIO_FRAME_LEN));
     stored_samples -= USRP_AUDIO_FRAME_LEN;
   }
 } /* UsrpLogic::sendEncodedAudio */
@@ -369,7 +371,8 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 void UsrpLogic::handleVoiceStream(UsrpMsg usrp)
 {
   gettimeofday(&m_last_talker_timestamp, NULL);  
-  m_dec->writeEncodedSamples(&usrp.audioData().front(), usrp.audioData().size());
+  m_dec->writeEncodedSamples(&usrp.audioData(), 
+                        sizeof(int16_t)*USRP_AUDIO_FRAME_LEN);
 } /* UsrpLogic::handleVoiceStream */
 
 
@@ -387,15 +390,8 @@ void UsrpLogic::handleTextMsg(UsrpMsg usrp)
 } /* UsrpLogic::handleTextMsg */
 
 
-void UsrpLogic::sendUdpMsg(UsrpMsg& usrp)
+void UsrpLogic::sendMsg(UsrpMsg& usrp)
 {
-
-  if (m_udp_sock == 0)
-  {
-    return;
-  }
-
-  IpAddress usrp_addr(m_usrp_host);
   usrp.setTg(m_selected_tg);
   
   if (udp_seq++ > 0x7fff) udp_seq = 0;
@@ -408,9 +404,40 @@ void UsrpLogic::sendUdpMsg(UsrpMsg& usrp)
          << "]: Failed to pack UDP Usrp message\n";
     return;
   }
+  sendUdpMessage(ss);
+} /* UsrpLogic::sendMsg */
+
+
+void UsrpLogic::sendStopMsg(void)
+{
+  UsrpStopMsg usrp;
+  usrp.setTg(m_selected_tg);
+
+  if (udp_seq++ > 0x7fff) udp_seq = 0;
+  usrp.setSeq(udp_seq);
+
+  ostringstream ss;
+  if (!usrp.pack(ss))
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack UDP Usrp message\n";
+    return;
+  }
+  sendUdpMessage(ss);
+} /* UsrpLogic::sendStopMsg */
+
+
+void UsrpLogic::sendUdpMessage(ostringstream& ss)
+{
+  if (m_udp_sock == 0)
+  {
+    return;
+  }
+
+  IpAddress usrp_addr(m_usrp_host);
   
   m_udp_sock->write(usrp_addr, m_usrp_port, ss.str().data(), ss.str().size());
-} /* UsrpLogic::sendUdpMsg */
+} /* UsrpLogic::sendUdpMessage */
 
 
 void UsrpLogic::sendHeartbeat(void)
@@ -504,19 +531,9 @@ void UsrpLogic::onLogicConInStreamStateChanged(bool is_active,
   checkIdle();
   if (is_idle)
   {
-    sendVoiceStop();
+    sendStopMsg();
   }
 } /* UsrpLogic::onLogicConInStreamStateChanged */
-
-
-void UsrpLogic::sendVoiceStop(void)
-{
-  UsrpMsg usrp;
-
-  usrp.setType(USRP_TYPE_VOICE);
-  usrp.setKeyup(false);
-  sendUdpMsg(usrp);
-} /* UsrpLogic::sendVoiceStop */
 
 
 void UsrpLogic::onLogicConOutStreamStateChanged(bool is_active,
@@ -524,7 +541,6 @@ void UsrpLogic::onLogicConOutStreamStateChanged(bool is_active,
 {
   //cout << "### UsrpLogic::onLogicConOutStreamStateChanged: is_active="
   //     << is_active << "  is_idle=" << is_idle << endl;
-
   checkIdle();
 } /* UsrpLogic::onLogicConOutStreamStateChanged */
 

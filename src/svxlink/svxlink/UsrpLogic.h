@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sys/time.h>
+#include <iostream>
 #include <string>
 
 
@@ -235,7 +236,9 @@ class UsrpLogic : public LogicBase
     void handleStreamStop(void);
     void handleVoiceStream(UsrpMsg usrp);
     void handleTextMsg(UsrpMsg usrp);
-    void sendUdpMsg(UsrpMsg& usrp);
+    void sendMsg(UsrpMsg& usrp);
+    void sendStopMsg(void);
+    void sendUdpMessage(std::ostringstream& ss);
     void sendHeartbeat(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
@@ -245,7 +248,6 @@ class UsrpLogic : public LogicBase
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
     void checkIdle(void);
     bool isIdle(void);
-    void sendVoiceStop(void);
 
 };  /* class UsrpLogic */
 
