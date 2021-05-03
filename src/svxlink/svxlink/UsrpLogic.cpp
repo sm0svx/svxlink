@@ -131,7 +131,8 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_tg_local_activity(false), m_last_qsy(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false), m_use_prio(true),
-    udp_seq(0), stored_samples(0)
+    udp_seq(0), stored_samples(0), m_callsign("N0CALL"), ident(false),
+    m_dmrid(1234567)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
@@ -170,6 +171,26 @@ bool UsrpLogic::initialize(void)
   
   m_udp_sock = new UdpSocket(m_usrp_port);
   cout << "Usrp Tx socket=" << m_usrp_host << ":" << m_usrp_port << endl;
+
+  if (!cfg().getValue(name(), "CALL", m_callsign))
+  {
+    cout << "*** ERROR: No " << name() << "/CALL configured" << endl;
+    return false;
+  }
+
+  if (m_callsign.length()>6)
+  {
+    cout << "*** ERROR: Callsign ("<< m_callsign << ") is to long,"
+         << " should have 6 digits maximum." << endl;
+    return false;
+  }
+  
+  if (!cfg().getValue(name(), "DMRID", m_dmrid))
+  {
+    m_dmrid = 1234567;
+    cout << "+++ WARNING: No " << name() << "/DMRID configured, " 
+         << "using " << m_dmrid << endl;
+  }
 
   if (m_usrp_rx_port == m_usrp_port)
   {
@@ -280,11 +301,17 @@ void UsrpLogic::handleMsgRequestQsy(int tg)
 
 void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 {
-  std::array<int16_t, 160> audiodata;
+  // identify as 1st frame
+  if (!ident)
+  {
+    sendMetaMsg();
+  }
+
+  std::array<int16_t, USRP_AUDIO_FRAME_LEN> audiodata;
   UsrpMsg usrp;
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(true);
-  int len = (int)(count * sizeof(char) / 2);
+  int len = (int)(count * sizeof(char) / sizeof(int16_t));
 
   if (m_flush_timeout_timer.isEnabled())
   {
@@ -296,6 +323,7 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
   memcpy(r_buf+stored_samples, t, sizeof(int16_t)*len);
   stored_samples += len;
 
+
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
     for(size_t x=0; x<USRP_AUDIO_FRAME_LEN; x++)
@@ -303,7 +331,6 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
       audiodata[x] = r_buf[x];
     }
     usrp.setAudiodata(audiodata);
-
     sendMsg(usrp);
     memmove(r_buf, r_buf + USRP_AUDIO_FRAME_LEN, 
               sizeof(int16_t)*(stored_samples-USRP_AUDIO_FRAME_LEN));
@@ -349,7 +376,6 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
    
     case USRP_TYPE_TEXT:
       cout << "USRP_TYPE_TEXT : " << endl;
-      handleTextMsg(usrp);
     break;
    
     case USRP_TYPE_TLV:
@@ -385,7 +411,7 @@ void UsrpLogic::handleStreamStop(void)
 } /* UsrpLogic::handleStreamStop */
 
 
-void UsrpLogic::handleTextMsg(UsrpMsg usrp)
+void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
 {
 } /* UsrpLogic::handleTextMsg */
 
@@ -393,10 +419,10 @@ void UsrpLogic::handleTextMsg(UsrpMsg usrp)
 void UsrpLogic::sendMsg(UsrpMsg& usrp)
 {
   usrp.setTg(m_selected_tg);
-  
+
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
-  
+
   ostringstream ss;
   if (!usrp.pack(ss))
   {
@@ -404,12 +430,15 @@ void UsrpLogic::sendMsg(UsrpMsg& usrp)
          << "]: Failed to pack UDP Usrp message\n";
     return;
   }
+
   sendUdpMessage(ss);
+
 } /* UsrpLogic::sendMsg */
 
 
 void UsrpLogic::sendStopMsg(void)
 {
+  
   UsrpStopMsg usrp;
   usrp.setTg(m_selected_tg);
 
@@ -423,8 +452,36 @@ void UsrpLogic::sendStopMsg(void)
          << "]: Failed to pack UDP Usrp message\n";
     return;
   }
+
   sendUdpMessage(ss);
+
+  ident = false;
+  
 } /* UsrpLogic::sendStopMsg */
+
+
+void UsrpLogic::sendMetaMsg(void)
+{
+
+  UsrpMetaMsg usrp;
+  usrp.setTg(m_selected_tg);
+  usrp.setCallsign(m_callsign);
+  usrp.setDmrId(m_dmrid);
+  
+  if (udp_seq++ > 0x7fff) udp_seq = 0;
+  usrp.setSeq(udp_seq);
+
+  ostringstream ss;
+  if (!usrp.pack(ss))
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack UDP Usrp message\n";
+    return;
+  }
+
+  sendUdpMessage(ss);
+  ident = true;
+} /* UsrpLogic::sendMetaMsg */
 
 
 void UsrpLogic::sendUdpMessage(ostringstream& ss)
@@ -525,9 +582,6 @@ bool UsrpLogic::setAudioCodec(void)
 void UsrpLogic::onLogicConInStreamStateChanged(bool is_active,
                                                     bool is_idle)
 {
- // cout << "### UsrpLogic::onLogicConInStreamStateChanged: is_active="
-  //     << is_active << ", is_idle=" << is_idle << endl;
-
   checkIdle();
   if (is_idle)
   {
@@ -539,8 +593,6 @@ void UsrpLogic::onLogicConInStreamStateChanged(bool is_active,
 void UsrpLogic::onLogicConOutStreamStateChanged(bool is_active,
                                                      bool is_idle)
 {
-  //cout << "### UsrpLogic::onLogicConOutStreamStateChanged: is_active="
-  //     << is_active << "  is_idle=" << is_idle << endl;
   checkIdle();
 } /* UsrpLogic::onLogicConOutStreamStateChanged */
 

@@ -1,7 +1,7 @@
 /**
 @file	 UsrpLogic.h
 @brief   A logic core that connect to the SvxUsrp
-@author  Tobias Blomberg / SM0SVX
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
 @date	 2021-04-24
 
 \verbatim
@@ -176,17 +176,6 @@ class UsrpLogic : public LogicBase
     static const int      USRP_AUDIO_FRAME_LEN               = 160;
     static const int      USRP_HEADER_LEN                    = 32;
 
- /*   struct UsrpFrame {
-      char eye[USRP_START_LEN];   	// verification string
-	  uint32_t seq;		            // sequence counter
-	  uint32_t memory = 0;       	// memory ID or zero (default)
-	  uint32_t keyup = 0;		    // tracks PTT state
-	  uint32_t talkgroup = 0;	    // trunk TG id
-	  uint32_t type = USRP_TYPE_VOICE;		// see above enum
-	  uint32_t mpxid = 0;           // for future use
-	  uint32_t reserved = 0;	    // for future use
-    };
-*/
     std::string                       m_usrp_host;
     uint16_t                          m_usrp_port;
     uint16_t                          m_usrp_rx_port;
@@ -222,6 +211,9 @@ class UsrpLogic : public LogicBase
     // Async::Timer                   m_qsy_pending_timer;
     int                               stored_samples;
     int16_t                           *r_buf;
+    std::string                       m_callsign;
+    bool                              ident;
+    uint32_t                          m_dmrid;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
@@ -235,9 +227,10 @@ class UsrpLogic : public LogicBase
                              void *buf, int count);
     void handleStreamStop(void);
     void handleVoiceStream(UsrpMsg usrp);
-    void handleTextMsg(UsrpMsg usrp);
+    void handleTextMsg(UsrpMetaMsg usrp);
     void sendMsg(UsrpMsg& usrp);
     void sendStopMsg(void);
+    void sendMetaMsg(void);
     void sendUdpMessage(std::ostringstream& ss);
     void sendHeartbeat(void);
     void allEncodedSamplesFlushed(void);

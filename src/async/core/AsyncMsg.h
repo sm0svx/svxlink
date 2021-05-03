@@ -900,6 +900,61 @@ class Msg
              unpack(is, v7) && unpack(is, v8) && unpack(is, v9) &&
              unpack(is, v10);
     }
+    
+    
+    // need by Usrp protocol (16 params)
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16, typename T17>
+    bool pack(std::ostream& os, const T1& v1, const T2& v2, const T3& v3,
+              const T4& v4, const T5& v5, const T6& v6, const T7& v7,
+              const T8& v8, const T9& v9, const T10& v10,
+              const T11& v11, const T12& v12, const T13& v13,
+              const T14& v14, const T15& v15, const T16& v16, 
+              const T17& v17) const
+    {
+      return pack(os, v1) && pack(os, v2) && pack(os, v3) && pack(os, v4) &&
+             pack(os, v5) && pack(os, v6) && pack(os, v7) && pack(os, v8) &&
+             pack(os, v9) && pack(os, v10) && pack(os, v11) && pack(os, v12) &&
+             pack(os, v13) && pack(os, v14) && pack(os, v15) && pack(os, v16) &&
+             pack(os, v17);
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16, typename T17>
+              
+    size_t packedSize(const T1& v1, const T2& v2, const T3& v3,
+                      const T4& v4, const T5& v5, const T6& v6,
+                      const T7& v7, const T8& v8, const T9& v9,
+                      const T10& v10, const T11& v11, const T12& v12,
+                      const T13& v13, const T14& v14, const T15& v15, 
+                      const T16& v16, const T17& v17) const
+    {
+      return packedSize(v1) + packedSize(v2) + packedSize(v3) + packedSize(v4) +
+             packedSize(v5) + packedSize(v6) + packedSize(v7) + packedSize(v8) +
+             packedSize(v9) + packedSize(v10) + packedSize(v11) + packedSize(v12) +
+             packedSize(v13) + packedSize(v14) + packedSize(v15) + packedSize(v16) +
+             packedSize(v17);
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16, typename T17>
+              
+    bool unpack(std::istream& is, T1& v1, T2& v2, T3& v3, T4& v4, T5& v5,
+               T6& v6, T7& v7, T8& v8, T9& v9, T10& v10, T11& v11, T12& v12, 
+               T13& v13, T14& v14, T15& v15, T16& v16, T17& v17)
+    {
+      return unpack(is, v1) && unpack(is, v2) && unpack(is, v3) &&
+             unpack(is, v4) && unpack(is, v5) && unpack(is, v6) &&
+             unpack(is, v7) && unpack(is, v8) && unpack(is, v9) &&
+             unpack(is, v10) && unpack(is, v11) && unpack(is, v12) &&
+             unpack(is, v13) && unpack(is, v14) && unpack(is, v15) && 
+             unpack(is, v16) && unpack(is, v17);
+    }  
+    
 }; /* class Msg */
 
 
