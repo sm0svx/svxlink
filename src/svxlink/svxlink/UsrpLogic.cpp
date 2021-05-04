@@ -339,7 +339,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
   stringstream ss;
   ss.write(reinterpret_cast<const char*>(buf), count);
-  UsrpMsg usrp;
+  UsrpHeaderMsg usrp;
 
   if (!usrp.unpack(ss))
   {
@@ -350,11 +350,28 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
   if (usrp.type() == USRP_TYPE_VOICE)
   {
-    if (count <= USRP_HEADER_LEN) handleStreamStop();
-    else handleVoiceStream(usrp);
+    if (count <= USRP_HEADER_LEN) 
+    {
+      handleStreamStop();
+    }
+    else 
+    {
+      stringstream ss;
+      ss.write(reinterpret_cast<const char*>(buf), count);
+      UsrpMsg usrp;
+      if (!usrp.unpack(ss))
+      {
+        cout << "*** WARNING[" << name()
+             << "]: Unpacking failed for UDP UsrpMsg" << endl;
+        return;
+      }
+      handleVoiceStream(usrp);
+    }
   }
   else if (usrp.type() == USRP_TYPE_TEXT)
   {
+    stringstream ss;
+    ss.write(reinterpret_cast<const char*>(buf), count);
     UsrpMetaMsg usrpmeta;
     if (!usrpmeta.unpack(ss))
     {
@@ -395,7 +412,8 @@ void UsrpLogic::handleStreamStop(void)
 
 void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
 {
-  cout << "Stream from: " << usrp.getCallsign() << endl;
+  cout << "Talker " << usrp.getCallsign() << " at TG# " << usrp.getTg()
+       << " DMR-ID " << usrp.getDmrId() << endl;
 } /* UsrpLogic::handleTextMsg */
 
 
@@ -422,7 +440,7 @@ void UsrpLogic::sendMsg(UsrpMsg& usrp)
 void UsrpLogic::sendStopMsg(void)
 {
   
-  UsrpStopMsg usrp;
+  UsrpHeaderMsg usrp;
   usrp.setTg(m_selected_tg);
 
   if (udp_seq++ > 0x7fff) udp_seq = 0;

@@ -452,7 +452,10 @@ public:
   static bool pack(std::ostream &os, const std::array<T, N> &vec) {
     for (typename std::array<T, N>::const_iterator it = vec.begin();
          it != vec.end(); ++it) {
-      MsgPacker<T>::pack(os, *it);
+      if (!MsgPacker<T>::pack(os, *it))
+      {
+        return false;
+      }
     }
     return true;
   }
@@ -466,7 +469,10 @@ public:
   }
   static bool unpack(std::istream &is, std::array<T, N> &vec) {
     for (size_t i = 0; i < N; ++i) {
-      MsgPacker<T>::unpack(is, vec[i]);
+      if (!MsgPacker<T>::unpack(is, vec[i]))
+      {
+        return false;
+      }
     }
     return true;
   }
@@ -478,7 +484,10 @@ template <typename T, std::size_t N> class MsgPacker<T[N]> {
 public:
   static bool pack(std::ostream &os, const T (&vec)[N]) {
     for (const T *it = std::begin(vec); it != std::end(vec); ++it) {
-      MsgPacker<T>::pack(os, *it);
+      if (!MsgPacker<T>::pack(os, *it))
+      {
+        return false;
+      }
     }
     return true;
   }
@@ -491,7 +500,10 @@ public:
   }
   static bool unpack(std::istream &is, T (&vec)[N]) {
     for (T *it = std::begin(vec); it != std::end(vec); ++it) {
-      MsgPacker<T>::unpack(is, *it);
+      if (!MsgPacker<T>::unpack(is, *it))
+      {
+        return false;
+      }
     }
     return true;
   }
@@ -513,7 +525,10 @@ class MsgPacker<std::vector<I> >
            it != vec.end();
            ++it)
       {
-        MsgPacker<I>::pack(os, *it);
+        if (!MsgPacker<I>::pack(os, *it))
+        {
+          return false;
+        }
       }
       return true;
     }
@@ -541,7 +556,10 @@ class MsgPacker<std::vector<I> >
       for (int i=0; i<vec_size; ++i)
       {
         I val;
-        MsgPacker<I>::unpack(is, val);
+        if (!MsgPacker<I>::unpack(is, val))
+        {
+          return false;
+        }
         vec.push_back(val);
       }
       return true;
@@ -559,12 +577,18 @@ class MsgPacker<std::set<I> >
       {
         return false;
       }
-      MsgPacker<uint16_t>::pack(os, s.size());
+      if (!MsgPacker<uint16_t>::pack(os, s.size()))
+      {
+        return false;
+      }
       for (typename std::set<I>::const_iterator it = s.begin();
            it != s.end();
            ++it)
       {
-        MsgPacker<I>::pack(os, *it);
+        if (!MsgPacker<I>::pack(os, *it))
+        {
+          return false;
+        }
       }
       return true;
     }
@@ -581,7 +605,10 @@ class MsgPacker<std::set<I> >
     static bool unpack(std::istream& is, std::set<I>& s)
     {
       uint16_t set_size;
-      MsgPacker<uint16_t>::unpack(is, set_size);
+      if (!MsgPacker<uint16_t>::unpack(is, set_size))
+      {
+        return false;
+      }
       if (set_size > std::numeric_limits<uint16_t>::max())
       {
         return false;
@@ -591,7 +618,10 @@ class MsgPacker<std::set<I> >
       for (int i=0; i<set_size; ++i)
       {
         I val;
-        MsgPacker<I>::unpack(is, val);
+        if (!MsgPacker<I>::unpack(is, val))
+        {
+          return false;
+        }
         s.insert(val);
       }
       return true;

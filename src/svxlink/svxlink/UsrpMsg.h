@@ -91,7 +91,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
+ 
+ 
 /**
  * @brief   Class for Usrp audio network messages
  * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
@@ -157,12 +158,14 @@ class UsrpMsg : public Async::Msg
  * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
  * @date    2021-04-28
  */
-class UsrpStopMsg : public Async::Msg
+class UsrpHeaderMsg : public Async::Msg
 {
   public:
 
-    UsrpStopMsg(uint32_t seq=0, uint32_t talkgroup=0)
-      : m_seq(htonl(seq)), m_talkgroup(htonl(talkgroup))
+    UsrpHeaderMsg(uint32_t seq=0, uint32_t keyup=0, uint32_t talkgroup=0, 
+                  uint32_t type=0)
+      : m_seq(htonl(seq)), m_keyup(htonl(keyup)),
+             m_talkgroup(htonl(talkgroup)), m_type(htonl(type)) 
         {
           eye = {'U','S','R','P'};
           m_memory = 0;
@@ -175,7 +178,15 @@ class UsrpStopMsg : public Async::Msg
     /**
      * @brief 	Destructor
      */
-    virtual ~UsrpStopMsg(void) {}
+    virtual ~UsrpHeaderMsg(void) {}
+    
+    uint32_t type(void) const { return ntohl(m_type); }
+    uint32_t seq(void) const { return ntohl(m_seq); }
+    uint32_t memory(void) const { return m_memory; }
+    uint32_t keyup(void) const { return ntohl(m_keyup); }
+    uint32_t mpxid(void) const { return m_mpxid; }
+    uint32_t reserved(void) const { return m_reserved; }
+    uint32_t talkgroup(void) const { return ntohl(m_talkgroup); }
 
     void setTg(uint32_t tg) { m_talkgroup = htonl(tg);}
     void setSeq(uint32_t seq) { m_seq = htonl(seq); }
@@ -231,11 +242,6 @@ class UsrpMetaMsg : public Async::Msg
     void setTg(uint32_t tg) { m_talkgroup = htonl(tg);}
     void setSeq(uint32_t seq) { m_seq = htonl(seq); }
     
-    std::string getCallsign(void) 
-    { 
-      return std::string(m_callsign.begin(), m_callsign.end());
-    }
-
     // set callsign
     void setCallsign(std::string call)
     {
@@ -257,6 +263,21 @@ class UsrpMetaMsg : public Async::Msg
     void setCC(uint8_t cc) { m_cc = cc; }
     void setTS(uint8_t ts) { m_ts = ts; }
 
+    std::string getCallsign(void) 
+    { 
+      return std::string(m_callsign.begin(), m_callsign.end());
+    }
+    
+    uint32_t getTg(void)
+    {
+      return ntohl(m_talkgroup);
+    }
+    
+    uint32_t getDmrId(void)
+    { 
+      return (m_dmrid[0] & 0xff) + (m_dmrid[1] << 8) + (m_dmrid[2] << 16);
+    }
+    
     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
                       m_mpxid, m_reserved, m_tlv, m_tlvlen, m_dmrid, m_rptid,
                       m_tg, m_ts, m_cc, m_callsign, m_rest)
