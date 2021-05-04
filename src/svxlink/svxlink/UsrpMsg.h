@@ -100,13 +100,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class UsrpMsg : public Async::Msg
 {
   public:
-        
+
     UsrpMsg(uint32_t seq=0, uint32_t memory=0, uint32_t keyup=0,
             uint32_t talkgroup=0, uint32_t type=0, uint32_t mpxid=0,
             uint32_t reserved=0, const std::array<int16_t, 160> audio_data={0})
-      : m_seq(seq), m_memory(memory), m_keyup(keyup), m_talkgroup(talkgroup),
-        m_type(type), m_mpxid(mpxid), m_reserved(reserved), 
-        m_audio_data(audio_data) 
+      : m_seq(htonl(seq)), m_memory(memory), m_keyup(htonl(keyup)), 
+        m_talkgroup(htonl(talkgroup)), m_type(htonl(type)), m_mpxid(mpxid), 
+        m_reserved(reserved), m_audio_data(audio_data) 
         {
           eye = {'U','S','R','P'};
         }
@@ -116,26 +116,26 @@ class UsrpMsg : public Async::Msg
      */
     virtual ~UsrpMsg(void) {}
 
-    uint32_t type(void) const { return m_type; }
-    uint32_t seq(void) const { return m_seq; }
+    uint32_t type(void) const { return ntohl(m_type); }
+    uint32_t seq(void) const { return ntohl(m_seq); }
     uint32_t memory(void) const { return m_memory; }
-    uint32_t keyup(void) const { return m_keyup; }
+    uint32_t keyup(void) const { return ntohl(m_keyup); }
     uint32_t mpxid(void) const { return m_mpxid; }
     uint32_t reserved(void) const { return m_reserved; }
-    uint32_t talkgroup(void) const { return m_talkgroup; }
-    
-    void setTg(uint32_t tg) { m_talkgroup = tg;}
-    void setType(uint32_t type) { m_type = type;}
-    void setSeq(uint32_t seq) { m_seq = seq; }
-    void setKeyup(bool keyup) { (keyup ? m_keyup=1 : m_keyup=0); }
+    uint32_t talkgroup(void) const { return ntohl(m_talkgroup); }
+
+    void setTg(uint32_t tg) { m_talkgroup = htonl(tg);}
+    void setType(uint32_t type) { m_type = htonl(type);}
+    void setSeq(uint32_t seq) { m_seq = htonl(seq); }
+    void setKeyup(bool keyup) { (keyup ? m_keyup=htonl(1) : m_keyup=0); }
     void setAudiodata(const std::array<int16_t, 160> audio)
     {
       m_audio_data = audio;
     }
-  
+
     std::array<int16_t, 160>& audioData(void) { return m_audio_data; }
     const std::array<int16_t, 160>& audioData(void) const { return m_audio_data; }
-    
+
     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
                       m_mpxid, m_reserved, m_audio_data)
 
@@ -160,9 +160,9 @@ class UsrpMsg : public Async::Msg
 class UsrpStopMsg : public Async::Msg
 {
   public:
-        
+
     UsrpStopMsg(uint32_t seq=0, uint32_t talkgroup=0)
-      : m_seq(seq), m_talkgroup(talkgroup)
+      : m_seq(htonl(seq)), m_talkgroup(htonl(talkgroup))
         {
           eye = {'U','S','R','P'};
           m_memory = 0;
@@ -176,13 +176,13 @@ class UsrpStopMsg : public Async::Msg
      * @brief 	Destructor
      */
     virtual ~UsrpStopMsg(void) {}
-  
-    void setTg(uint32_t tg) { m_talkgroup = tg;}
-    void setSeq(uint32_t seq) { m_seq = seq; }
-    
+
+    void setTg(uint32_t tg) { m_talkgroup = htonl(tg);}
+    void setSeq(uint32_t seq) { m_seq = htonl(seq); }
+
     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
                       m_mpxid, m_reserved)
-                      
+
   private:
     std::array<char, 4> eye;
     uint32_t m_seq;
@@ -203,16 +203,16 @@ class UsrpStopMsg : public Async::Msg
 class UsrpMetaMsg : public Async::Msg
 {
   public:
-        
+
     UsrpMetaMsg(uint32_t seq=0, uint32_t talkgroup=0)
-      : m_seq(seq), m_talkgroup(talkgroup)
+      : m_seq(htonl(seq)), m_talkgroup(htonl(talkgroup))
         {
           eye = {'U','S','R','P'};
           m_memory = 0;
           m_keyup = 0;
-          m_type = 2;
+          m_type = htonl(2);
           m_mpxid = 0;
-          m_reserved =0;
+          m_reserved = 0;
           m_tlv = 0x08;
           m_tlvlen = 0x15;
           m_dmrid = {0,0,0};
@@ -227,14 +227,19 @@ class UsrpMetaMsg : public Async::Msg
      * @brief 	Destructor
      */
     virtual ~UsrpMetaMsg(void) {}
-  
-    void setTg(uint32_t tg) { m_talkgroup = tg;}
-    void setSeq(uint32_t seq) { m_seq = seq; }
+
+    void setTg(uint32_t tg) { m_talkgroup = htonl(tg);}
+    void setSeq(uint32_t seq) { m_seq = htonl(seq); }
     
+    std::string getCallsign(void) 
+    { 
+      return std::string(m_callsign.begin(), m_callsign.end());
+    }
+
     // set callsign
     void setCallsign(std::string call)
     {
-      for (int i=0; i<6; i++)
+      for (size_t i=0; i<call.length(); i++)
       m_callsign[i] = call.c_str()[i];
     }
     
@@ -248,10 +253,10 @@ class UsrpMetaMsg : public Async::Msg
       m_dmrid = t; 
     }
 
-    void setRptId(uint32_t rptid) { m_rptid = rptid; }
+    void setRptId(uint32_t rptid) { m_rptid = htonl(rptid); }
     void setCC(uint8_t cc) { m_cc = cc; }
     void setTS(uint8_t ts) { m_ts = ts; }
-    
+
     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
                       m_mpxid, m_reserved, m_tlv, m_tlvlen, m_dmrid, m_rptid,
                       m_tg, m_ts, m_cc, m_callsign, m_rest)
@@ -261,7 +266,7 @@ class UsrpMetaMsg : public Async::Msg
     std::array<char, 4> eye;         // is always "USRP"
     uint32_t m_seq;                  // sequence number
     uint32_t m_memory;               // =0
-    uint32_t m_keyup;
+    uint32_t m_keyup;                // Tx on/off (1/0)
     uint32_t m_talkgroup;
     uint32_t m_type;                 // type of frame
     uint32_t m_mpxid;

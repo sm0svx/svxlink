@@ -180,7 +180,6 @@ class UsrpLogic : public LogicBase
     uint16_t                          m_usrp_port;
     uint16_t                          m_usrp_rx_port;
     unsigned                          m_msg_type;
-    Async::UdpSocket*                 m_udp_sock;
     Async::UdpSocket*                 m_udp_rxsock;
     uint32_t                          m_client_id;
     Async::AudioStreamStateDetector*  m_logic_con_in;

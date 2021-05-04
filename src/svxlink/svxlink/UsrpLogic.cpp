@@ -121,11 +121,9 @@ using namespace Async;
  ****************************************************************************/
 
 UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0),
-    m_logic_con_in(0), m_logic_con_out(0),
-    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
-    m_dec(0),
-    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+  : LogicBase(cfg, name), m_msg_type(0), m_logic_con_in(0), 
+    m_logic_con_out(0), m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
+    m_dec(0), m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_enc(0), m_default_tg(0),
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
@@ -142,8 +140,6 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
 
 UsrpLogic::~UsrpLogic(void)
 {
-  delete m_udp_sock;
-  m_udp_sock = 0;
   delete m_udp_rxsock;
   m_udp_rxsock = 0;
   delete m_logic_con_in;
@@ -168,19 +164,20 @@ bool UsrpLogic::initialize(void)
 
   m_usrp_rx_port = 41233;
   cfg().getValue(name(), "USRP_RX_PORT", m_usrp_rx_port);
-  
-  m_udp_sock = new UdpSocket(m_usrp_port);
-  cout << "Usrp Tx socket=" << m_usrp_host << ":" << m_usrp_port << endl;
 
+  m_udp_rxsock = new UdpSocket(m_usrp_rx_port);
+  m_udp_rxsock->dataReceived.connect(
+       mem_fun(*this, &UsrpLogic::udpDatagramReceived));
+  
   if (!cfg().getValue(name(), "CALL", m_callsign))
   {
-    cout << "*** ERROR: No " << name() << "/CALL configured" << endl;
+    cout << "*** ERROR: No " << name() << "/CALL= configured" << endl;
     return false;
   }
 
-  if (m_callsign.length()>6)
+  if(m_callsign.length() > 6)
   {
-    cout << "*** ERROR: Callsign ("<< m_callsign << ") is to long,"
+    cout << "*** ERROR: Callsign ("<< m_callsign << ") is to long"
          << " should have 6 digits maximum." << endl;
     return false;
   }
@@ -188,20 +185,8 @@ bool UsrpLogic::initialize(void)
   if (!cfg().getValue(name(), "DMRID", m_dmrid))
   {
     m_dmrid = 1234567;
-    cout << "+++ WARNING: No " << name() << "/DMRID configured, " 
+    cout << "+++ WARNING: No " << name() << "/DMRID= configured, " 
          << "using " << m_dmrid << endl;
-  }
-
-  if (m_usrp_rx_port == m_usrp_port)
-  {
-    m_udp_sock->dataReceived.connect(
-      mem_fun(*this, &UsrpLogic::udpDatagramReceived));
-  }
-  else
-  {
-    m_udp_rxsock = new UdpSocket(m_usrp_rx_port);
-    m_udp_rxsock->dataReceived.connect(
-       mem_fun(*this, &UsrpLogic::udpDatagramReceived));
   }
   
     // Create logic connection incoming audio passthrough
@@ -210,13 +195,13 @@ bool UsrpLogic::initialize(void)
       sigc::mem_fun(*this, &UsrpLogic::onLogicConInStreamStateChanged));
   AudioSource *prev_src = m_logic_con_in;
 
-  //if (INTERNAL_SAMPLE_RATE == 16000)
-  //{
-  //  AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8,
-	//				    coeff_16_8_taps);
-  //  prev_src->registerSink(d1, true);
-  //  prev_src = d1;
-  //}
+  if (INTERNAL_SAMPLE_RATE == 16000)
+  {
+    AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8,
+					    coeff_16_8_taps);
+    prev_src->registerSink(d1, true);
+    prev_src = d1;
+  }
   m_enc_endpoint = prev_src;
 
   prev_src = 0;
@@ -235,14 +220,14 @@ bool UsrpLogic::initialize(void)
     fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
   }
 
-  //if (INTERNAL_SAMPLE_RATE == 16000)  
-  //{
-      // Interpolate sample rate to 16kHz
-  //  AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
-   //                                               coeff_16_8_taps);
-   // prev_src->registerSink(i1, true);
-  //  prev_src = i1;
-  //}
+  if (INTERNAL_SAMPLE_RATE == 16000)  
+  {
+     // Interpolate sample rate to 16kHz
+    AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
+                                                  coeff_16_8_taps);
+    prev_src->registerSink(i1, true);
+    prev_src = i1;
+  }
 
   m_logic_con_out = new Async::AudioStreamStateDetector;
   m_logic_con_out->sigStreamStateChanged.connect(
@@ -328,7 +313,7 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
   {
     for(size_t x=0; x<USRP_AUDIO_FRAME_LEN; x++)
     {
-      audiodata[x] = r_buf[x];
+      audiodata[x] = htons(r_buf[x]);
     }
     usrp.setAudiodata(audiodata);
     sendMsg(usrp);
@@ -363,41 +348,38 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  switch (usrp.type())
+  if (usrp.type() == USRP_TYPE_VOICE)
   {
-    case USRP_TYPE_VOICE:
-      if (count <= USRP_HEADER_LEN) handleStreamStop();
-      else handleVoiceStream(usrp);
-    break;
-
-    case USRP_TYPE_DTMF:
-      cout << "USRP_TYPE_DTMF" << endl;
-    break;
-   
-    case USRP_TYPE_TEXT:
-      cout << "USRP_TYPE_TEXT : " << endl;
-    break;
-   
-    case USRP_TYPE_TLV:
-      cout << "USRP_TYPE_TLV" << endl;
-    break;
-   
-    case USRP_TYPE_PING:
-      cout << "USRP_TYPE_PING" << endl;
-      sendHeartbeat();
-    break;
-    
-    default:
-      cout << "*** unknown type of message:" << usrp.type() << endl; 
-    break;
+    if (count <= USRP_HEADER_LEN) handleStreamStop();
+    else handleVoiceStream(usrp);
+  }
+  else if (usrp.type() == USRP_TYPE_TEXT)
+  {
+    UsrpMetaMsg usrpmeta;
+    if (!usrpmeta.unpack(ss))
+    {
+      cout << "*** WARNING[" << name()
+           << "]: Unpacking failed for UDP Meta Usrp message" << endl;
+      return;
+    }
+    handleTextMsg(usrpmeta);
+  }
+  else 
+  {
+    cout << "*** unknown type of message:" << usrp.type() << endl;
   }
 } /* UsrpLogic::udpDatagramReceived */
 
 
 void UsrpLogic::handleVoiceStream(UsrpMsg usrp)
 {
-  gettimeofday(&m_last_talker_timestamp, NULL);  
-  m_dec->writeEncodedSamples(&usrp.audioData(), 
+  gettimeofday(&m_last_talker_timestamp, NULL);
+  std::array<int16_t, 160> m_audio_data;
+  for (size_t i = 0; i<usrp.audioData().size(); i++)
+  {
+    m_audio_data[i] = ntohs(usrp.audioData()[i]);
+  }
+  m_dec->writeEncodedSamples(&m_audio_data, 
                         sizeof(int16_t)*USRP_AUDIO_FRAME_LEN);
 } /* UsrpLogic::handleVoiceStream */
 
@@ -413,6 +395,7 @@ void UsrpLogic::handleStreamStop(void)
 
 void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
 {
+  cout << "Stream from: " << usrp.getCallsign() << endl;
 } /* UsrpLogic::handleTextMsg */
 
 
@@ -462,7 +445,6 @@ void UsrpLogic::sendStopMsg(void)
 
 void UsrpLogic::sendMetaMsg(void)
 {
-
   UsrpMetaMsg usrp;
   usrp.setTg(m_selected_tg);
   usrp.setCallsign(m_callsign);
@@ -486,14 +468,8 @@ void UsrpLogic::sendMetaMsg(void)
 
 void UsrpLogic::sendUdpMessage(ostringstream& ss)
 {
-  if (m_udp_sock == 0)
-  {
-    return;
-  }
-
-  IpAddress usrp_addr(m_usrp_host);
-  
-  m_udp_sock->write(usrp_addr, m_usrp_port, ss.str().data(), ss.str().size());
+  IpAddress usrp_addr(m_usrp_host); 
+  m_udp_rxsock->write(usrp_addr, m_usrp_port, ss.str().data(), ss.str().size());
 } /* UsrpLogic::sendUdpMessage */
 
 

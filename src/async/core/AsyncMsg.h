@@ -902,7 +902,7 @@ class Msg
     }
     
     
-    // need by Usrp protocol (16 params)
+    // need by Usrp protocol (17 params)
     template <typename T1, typename T2, typename T3, typename T4, typename T5,
               typename T6, typename T7, typename T8, typename T9, typename T10,
               typename T11, typename T12, typename T13, typename T14, typename T15,
@@ -942,7 +942,7 @@ class Msg
               typename T6, typename T7, typename T8, typename T9, typename T10,
               typename T11, typename T12, typename T13, typename T14, typename T15,
               typename T16, typename T17>
-              
+
     bool unpack(std::istream& is, T1& v1, T2& v2, T3& v3, T4& v4, T5& v5,
                T6& v6, T7& v7, T8& v8, T9& v9, T10& v10, T11& v11, T12& v12, 
                T13& v13, T14& v14, T15& v15, T16& v16, T17& v17)
@@ -953,7 +953,7 @@ class Msg
              unpack(is, v10) && unpack(is, v11) && unpack(is, v12) &&
              unpack(is, v13) && unpack(is, v14) && unpack(is, v15) && 
              unpack(is, v16) && unpack(is, v17);
-    }  
+    }
     
 }; /* class Msg */
 
