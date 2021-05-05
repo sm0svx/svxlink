@@ -213,6 +213,9 @@ class UsrpLogic : public LogicBase
     std::string                       m_callsign;
     bool                              ident;
     uint32_t                          m_dmrid;
+    uint32_t                          m_rptid;
+    uint8_t                           m_selected_cc;
+    uint8_t                           m_selected_ts;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);

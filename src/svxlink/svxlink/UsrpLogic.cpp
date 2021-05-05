@@ -130,7 +130,7 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
     m_tg_local_activity(false), m_last_qsy(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false), m_use_prio(true),
     udp_seq(0), stored_samples(0), m_callsign("N0CALL"), ident(false),
-    m_dmrid(1234567)
+    m_dmrid(1234567), m_rptid(0), m_selected_cc(0), m_selected_ts(1)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
@@ -189,6 +189,35 @@ bool UsrpLogic::initialize(void)
          << "using " << m_dmrid << endl;
   }
   
+  if (!cfg().getValue(name(), "RPTID", m_rptid))
+  {
+    m_rptid = 0;
+  }
+
+  if (!cfg().getValue(name(), "DEFAULT_TG", m_selected_tg))
+  {
+    m_selected_tg = 0;
+  }
+
+  string in;  
+  if (!cfg().getValue(name(), "DEFAULT_CC", in))
+  {
+    m_selected_cc = 0x01;
+  }
+  else 
+  {  
+    m_selected_cc = atoi(in.c_str()) & 0xff;
+  }
+  
+  if (!cfg().getValue(name(), "DEFAULT_TS", in))
+  {
+    m_selected_ts = 0x01;
+  }
+  else
+  {
+    m_selected_ts = atoi(in.c_str()) & 0xff;
+  }
+
     // Create logic connection incoming audio passthrough
   m_logic_con_in = new Async::AudioStreamStateDetector;
   m_logic_con_in->sigStreamStateChanged.connect(
@@ -296,6 +325,7 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
   UsrpMsg usrp;
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(true);
+
   int len = (int)(count * sizeof(char) / sizeof(int16_t));
 
   if (m_flush_timeout_timer.isEnabled())
@@ -308,13 +338,13 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
   memcpy(r_buf+stored_samples, t, sizeof(int16_t)*len);
   stored_samples += len;
 
-
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
     for(size_t x=0; x<USRP_AUDIO_FRAME_LEN; x++)
     {
       audiodata[x] = htons(r_buf[x]);
     }
+    
     usrp.setAudiodata(audiodata);
     sendMsg(usrp);
     memmove(r_buf, r_buf + USRP_AUDIO_FRAME_LEN, 
@@ -467,6 +497,9 @@ void UsrpLogic::sendMetaMsg(void)
   usrp.setTg(m_selected_tg);
   usrp.setCallsign(m_callsign);
   usrp.setDmrId(m_dmrid);
+  usrp.setRptId(m_rptid);
+  usrp.setCC(m_selected_cc);
+  usrp.setTS(m_selected_ts);
   
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
