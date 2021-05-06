@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <version/SVXLINK.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDecimator.h>
+#include <AsyncAudioAmp.h>
 
 
 /****************************************************************************
@@ -121,16 +122,13 @@ using namespace Async;
  ****************************************************************************/
 
 UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_msg_type(0), m_logic_con_in(0), 
-    m_logic_con_out(0), m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
+  : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0), 
     m_dec(0), m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
-    m_enc(0), m_default_tg(0),
-    m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
-    m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
-    m_tg_local_activity(false), m_last_qsy(0),
-    m_mute_first_tx_loc(true), m_mute_first_tx_rem(false), m_use_prio(true),
-    udp_seq(0), stored_samples(0), m_callsign("N0CALL"), ident(false),
-    m_dmrid(1234567), m_rptid(0), m_selected_cc(0), m_selected_ts(1)
+    m_enc(0), m_default_tg(0), m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
+    m_selected_tg(0), m_tg_local_activity(false), udp_seq(0), 
+    stored_samples(0), m_callsign("N0CALL"), ident(false), 
+    m_dmrid(1234567), m_rptid(0), m_selected_cc(0), m_selected_ts(1), 
+    preamp_gain(0), net_preamp_gain(0)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
@@ -155,7 +153,8 @@ bool UsrpLogic::initialize(void)
 {
   if (!cfg().getValue(name(), "USRP_HOST", m_usrp_host))
   {
-    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" << endl;
+    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" 
+         << endl;
     return false;
   }
 
@@ -188,7 +187,7 @@ bool UsrpLogic::initialize(void)
     cout << "+++ WARNING: No " << name() << "/DMRID= configured, " 
          << "using " << m_dmrid << endl;
   }
-  
+
   if (!cfg().getValue(name(), "RPTID", m_rptid))
   {
     m_rptid = 0;
@@ -224,6 +223,17 @@ bool UsrpLogic::initialize(void)
       sigc::mem_fun(*this, &UsrpLogic::onLogicConInStreamStateChanged));
   AudioSource *prev_src = m_logic_con_in;
 
+  cfg().getValue(name(), "PREAMP", preamp_gain);
+
+   // If a preamp was configured, create it
+  if (preamp_gain != 0)
+  {
+    AudioAmp *preamp = new AudioAmp;
+    preamp->setGain(preamp_gain);
+    prev_src->registerSink(preamp, true);
+    prev_src = preamp;
+  }
+
   if (INTERNAL_SAMPLE_RATE == 16000)
   {
     AudioDecimator *d1 = new AudioDecimator(2, coeff_16_8,
@@ -249,7 +259,17 @@ bool UsrpLogic::initialize(void)
     fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
   }
 
-  if (INTERNAL_SAMPLE_RATE == 16000)  
+   // If a net_preamp was configured, create it
+  cfg().getValue(name(), "NET_PREAMP", net_preamp_gain);
+  if (net_preamp_gain != 0)
+  {
+    AudioAmp *net_preamp = new AudioAmp;
+    net_preamp->setGain(net_preamp_gain);
+    prev_src->registerSink(net_preamp, true);
+    prev_src = net_preamp;
+  }
+  
+  if (INTERNAL_SAMPLE_RATE == 16000)
   {
      // Interpolate sample rate to 16kHz
     AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
