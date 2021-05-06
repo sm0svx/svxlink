@@ -125,8 +125,8 @@ using namespace Async;
 UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
   : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0), 
     m_dec(0), m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
-    m_enc(0), m_default_tg(0), m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
-    m_selected_tg(0), m_tg_local_activity(false), udp_seq(0), 
+    m_enc(0), m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
+    m_selected_tg(0), udp_seq(0), 
     stored_samples(0), m_callsign("N0CALL"), ident(false), 
     m_dmrid(1234567), m_rptid(0), m_selected_cc(0), m_selected_ts(1), 
     preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0)

@@ -187,12 +187,9 @@ class UsrpLogic : public LogicBase
     Async::Timer                      m_flush_timeout_timer;
     struct timeval                    m_last_talker_timestamp;
     Async::AudioEncoder*              m_enc;
-    uint32_t                          m_default_tg;
     unsigned                          m_tg_select_timeout;
     uint32_t                          m_selected_tg;
     Async::Timer                      m_report_tg_timer;
-    std::string                       m_tg_selection_event;
-    bool                              m_tg_local_activity;
     MonitorTgsSet                     m_monitor_tgs;
     Async::AudioSource*               m_enc_endpoint;
     // Async::Timer                   m_tmp_monitor_timer;
