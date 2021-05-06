@@ -62,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "UsrpLogic.h"
 #include "../trx/multirate_filter_coeff.h"
+#include "EventHandler.h"
 
 
 /****************************************************************************
@@ -128,7 +129,7 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
     m_selected_tg(0), m_tg_local_activity(false), udp_seq(0), 
     stored_samples(0), m_callsign("N0CALL"), ident(false), 
     m_dmrid(1234567), m_rptid(0), m_selected_cc(0), m_selected_ts(1), 
-    preamp_gain(0), net_preamp_gain(0)
+    preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
@@ -138,6 +139,8 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
 
 UsrpLogic::~UsrpLogic(void)
 {
+  delete m_event_handler;
+  m_event_handler = 0;
   delete m_udp_rxsock;
   m_udp_rxsock = 0;
   delete m_logic_con_in;
@@ -215,6 +218,36 @@ bool UsrpLogic::initialize(void)
   else
   {
     m_selected_ts = atoi(in.c_str()) & 0xff;
+  }
+  
+  string event_handler_str;
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/EVENT_HANDLER not set\n";
+    return false;
+  }
+  
+  m_event_handler = new EventHandler(event_handler_str, name());
+  if (LinkManager::hasInstance())
+  {
+    m_event_handler->playFile.connect(
+          sigc::mem_fun(*this, &UsrpLogic::handlePlayFile));
+    m_event_handler->playSilence.connect(
+          sigc::mem_fun(*this, &UsrpLogic::handlePlaySilence));
+    m_event_handler->playTone.connect(
+          sigc::mem_fun(*this, &UsrpLogic::handlePlayTone));
+    m_event_handler->playDtmf.connect(
+          sigc::mem_fun(*this, &UsrpLogic::handlePlayDtmf));
+  }
+  m_event_handler->setConfigValue.connect(
+      sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
+  m_event_handler->setVariable("logic_name", name().c_str());
+  m_event_handler->processEvent("namespace eval Logic {}");
+  
+  if (!m_event_handler->initialize())
+  {
+    return false;
   }
 
     // Create logic connection incoming audio passthrough
@@ -316,23 +349,6 @@ void UsrpLogic::handleMsgError(std::istream& is)
 } /* UsrpLogic::handleMsgError */
 
 
-void UsrpLogic::handleMsgTalkerStart(int tg)
-{
-  cout << name() << ": Talker start on TG #" << tg << endl;
-} /* UsrpLogic::handleMsgTalkerStart */
-
-
-void UsrpLogic::handleMsgTalkerStop(int tg)
-{
-  cout << name() << ": Talker stop on TG #" << tg << endl;
-} /* UsrpLogic::handleMsgTalkerStop */
-
-
-void UsrpLogic::handleMsgRequestQsy(int tg)
-{
-} /* UsrpLogic::handleMsgRequestQsy */
-
-
 void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 {
   // identify as 1st frame
@@ -341,7 +357,6 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
     sendMetaMsg();
   }
 
-  std::array<int16_t, USRP_AUDIO_FRAME_LEN> audiodata;
   UsrpMsg usrp;
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(true);
@@ -360,12 +375,7 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
-    for(size_t x=0; x<USRP_AUDIO_FRAME_LEN; x++)
-    {
-      audiodata[x] = htons(r_buf[x]);
-    }
-    
-    usrp.setAudiodata(audiodata);
+    usrp.setAudioData(r_buf);
     sendMsg(usrp);
     memmove(r_buf, r_buf + USRP_AUDIO_FRAME_LEN, 
               sizeof(int16_t)*(stored_samples-USRP_AUDIO_FRAME_LEN));
@@ -457,13 +467,22 @@ void UsrpLogic::handleStreamStop(void)
   checkIdle();
   m_enc->allEncodedSamplesFlushed();
   timerclear(&m_last_talker_timestamp);
+  
+  stringstream ss;
+  ss << "talker_stop " << m_last_call << " " << m_last_tg;
+  processEvent(ss.str());
 } /* UsrpLogic::handleStreamStop */
 
 
 void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
 {
-  cout << "Talker " << usrp.getCallsign() << " at TG# " << usrp.getTg()
-       << " DMR-ID " << usrp.getDmrId() << endl;
+  m_last_tg = usrp.getTg();
+  m_last_call = usrp.getCallsign();
+  
+  stringstream ss;
+  ss << "usrp_metadata_received " << m_last_call << " " 
+     << usrp.getTg() << " " << m_last_tg;
+  processEvent(ss.str());
 } /* UsrpLogic::handleTextMsg */
 
 
@@ -483,31 +502,30 @@ void UsrpLogic::sendMsg(UsrpMsg& usrp)
   }
 
   sendUdpMessage(ss);
-
 } /* UsrpLogic::sendMsg */
 
 
 void UsrpLogic::sendStopMsg(void)
 {
-  
   UsrpHeaderMsg usrp;
   usrp.setTg(m_selected_tg);
 
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
 
-  ostringstream ss;
-  if (!usrp.pack(ss))
+  ostringstream os;
+  if (!usrp.pack(os))
   {
     cerr << "*** ERROR[" << name()
          << "]: Failed to pack UDP Usrp message\n";
     return;
   }
-
-  sendUdpMessage(ss);
-
+  sendUdpMessage(os);
   ident = false;
   
+  stringstream ss;
+  ss << "transmission_stop " << m_selected_tg;
+  processEvent(ss.str());
 } /* UsrpLogic::sendStopMsg */
 
 
@@ -520,20 +538,24 @@ void UsrpLogic::sendMetaMsg(void)
   usrp.setRptId(m_rptid);
   usrp.setCC(m_selected_cc);
   usrp.setTS(m_selected_ts);
-  
+
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
 
-  ostringstream ss;
-  if (!usrp.pack(ss))
+  ostringstream os;
+  if (!usrp.pack(os))
   {
     cerr << "*** ERROR[" << name()
          << "]: Failed to pack UDP Usrp message\n";
     return;
   }
 
-  sendUdpMessage(ss);
+  sendUdpMessage(os);
   ident = true;
+  
+  stringstream ss;
+  ss << "transmission_start " << m_selected_tg;
+  processEvent(ss.str());
 } /* UsrpLogic::sendMetaMsg */
 
 
@@ -655,6 +677,41 @@ void UsrpLogic::checkIdle(void)
   setIdle(isIdle());
 } /* UsrpLogic::checkIdle */
 
+
+void UsrpLogic::processEvent(const std::string& event)
+{
+  m_event_handler->processEvent(name() + "::" + event);
+  checkIdle();
+} /* UsrpLogic::processEvent */
+
+
+void UsrpLogic::handlePlayFile(const std::string& path)
+{
+  setIdle(false);
+  LinkManager::instance()->playFile(this, path);
+} /* UsrpLogic::handlePlayFile */
+
+
+void UsrpLogic::handlePlaySilence(int duration)
+{
+  setIdle(false);
+  LinkManager::instance()->playSilence(this, duration);
+} /* UsrpLogic::handlePlaySilence */
+
+
+void UsrpLogic::handlePlayTone(int fq, int amp, int duration)
+{
+  setIdle(false);
+  LinkManager::instance()->playTone(this, fq, amp, duration);
+} /* UsrpLogic::handlePlayTone */
+
+
+void UsrpLogic::handlePlayDtmf(const std::string& digit, int amp,
+                                    int duration)
+{
+  setIdle(false);
+  LinkManager::instance()->playDtmf(this, digit, amp, duration);
+} /* UsrpLogic::handlePlayDtmf */
 
 /*
  * This file has not been truncated

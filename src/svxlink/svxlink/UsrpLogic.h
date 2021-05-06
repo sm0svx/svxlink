@@ -73,6 +73,7 @@ namespace Async
   class UdpSocket;
   class AudioValve;
 };
+class EventHandler;
 
 
 /****************************************************************************
@@ -207,13 +208,13 @@ class UsrpLogic : public LogicBase
     uint8_t                           m_selected_ts;
     float                             preamp_gain;
     float                             net_preamp_gain;
+    EventHandler*                     m_event_handler;
+    uint32_t                          m_last_tg;
+    std::string                       m_last_call;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
     void handleMsgError(std::istream& is);
-    void handleMsgTalkerStart(int tg);
-    void handleMsgTalkerStop(int tg);
-    void handleMsgRequestQsy(int tg);
     void sendEncodedAudio(const void *buf, int count);
     void flushEncodedAudio(void);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
@@ -234,6 +235,12 @@ class UsrpLogic : public LogicBase
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
     void checkIdle(void);
     bool isIdle(void);
+    void processEvent(const std::string& event);
+    void handlePlayFile(const std::string& path);
+    void handlePlaySilence(int duration);
+    void handlePlayTone(int fq, int amp, int duration);
+    void handlePlayDtmf(const std::string& digit, int amp,
+                                    int duration);
 
 };  /* class UsrpLogic */
 
