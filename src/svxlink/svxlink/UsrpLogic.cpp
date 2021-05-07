@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioAmp.h>
+#include <AsyncAudioFilter.h>
 
 
 /****************************************************************************
@@ -274,6 +275,15 @@ bool UsrpLogic::initialize(void)
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
+  
+  std::string audio_to_usrp;
+  if (cfg().getValue(name(), "FILTER_TO_USRP", audio_to_usrp))
+  {
+    AudioFilter *usrp_out_filt = new AudioFilter(audio_to_usrp);
+    prev_src->registerSink(usrp_out_filt, true);
+    prev_src = usrp_out_filt;
+  }
+  
   m_enc_endpoint = prev_src;
 
   prev_src = 0;
@@ -292,6 +302,14 @@ bool UsrpLogic::initialize(void)
     fifo->setPrebufSamples(jitter_buffer_delay * INTERNAL_SAMPLE_RATE / 1000);
   }
 
+  std::string audio_from_usrp;
+  if (cfg().getValue(name(), "FILTER_FROM_USRP", audio_from_usrp))
+  {
+    AudioFilter *usrp_in_filt = new AudioFilter(audio_from_usrp);
+    prev_src->registerSink(usrp_in_filt, true);
+    prev_src = usrp_in_filt;
+  }
+  
    // If a net_preamp was configured, create it
   cfg().getValue(name(), "NET_PREAMP", net_preamp_gain);
   if (net_preamp_gain != 0)
