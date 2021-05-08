@@ -40,7 +40,11 @@ proc command_failed {cmd} {
 # Executed each time a Usrp Meta fram is received
 #
 proc usrp_metadata_received {call tg dmrid} {
-  puts "Talker $call TG# $tg Dmr-ID $dmrid";
+  if {$dmrid > 0} {
+    puts "Talker $call TG# $tg Dmr-ID $dmrid";
+  } else {
+    puts "Talker $call TG# $tg";
+  }
 }
 
 
