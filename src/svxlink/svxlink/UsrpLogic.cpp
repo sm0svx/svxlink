@@ -208,7 +208,7 @@ bool UsrpLogic::initialize(void)
     m_selected_cc = 0x01;
   }
   else 
-  {  
+  {
     m_selected_cc = atoi(in.c_str()) & 0xff;
   }
   
@@ -506,8 +506,6 @@ void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
 
 void UsrpLogic::sendMsg(UsrpMsg& usrp)
 {
-  usrp.setTg(m_selected_tg);
-
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
 
@@ -526,7 +524,6 @@ void UsrpLogic::sendMsg(UsrpMsg& usrp)
 void UsrpLogic::sendStopMsg(void)
 {
   UsrpHeaderMsg usrp;
-  usrp.setTg(m_selected_tg);
 
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
