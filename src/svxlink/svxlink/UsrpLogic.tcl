@@ -39,12 +39,16 @@ proc command_failed {cmd} {
 #
 # Executed each time a Usrp Meta fram is received
 #
-proc usrp_metadata_received {call tg dmrid} {
+proc usrp_metadata_received {call tgid dmrid} {
+  set dmr "";
+  set tg "";
   if {$dmrid > 0} {
-    puts "Talker $call TG# $tg Dmr-ID $dmrid";
-  } else {
-    puts "Talker $call TG# $tg";
+    set dmr "Dmr-ID $dmrid";
   }
+  if {$tgid > 0} {
+    set tg "TG# $tgid";
+  }
+  puts "Talker $call $dmr $tg";
 }
 
 
