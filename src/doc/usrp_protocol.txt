@@ -1,16 +1,17 @@
-USRP protocol used to send via UDP analog audio (2021.05.09)
+
+USRP protocol used to send via UDP analog audio (2021.05.11)
 
 The USRP was implemented in Allstar (in 2010, KA1RBI) and used by various hamradio applications like
 MMDVMHost, USRP2M17, Analog_Bridge, Analog_Reflector etc
 
 UDP USRP FRAME:
 ==============
-USRP_HEADER (32 bytes) + DATA 
-
+USRP Header (32 bytes) + DATA
 
 Typical sequence for send audio:
 
-USRP_HEADER (Type_Frame=2, PTT=0) + DATA (The first byte is set 0x08 (TLV TAG see below) and contain MetaDATA (see below))
+USRP_HEADER (Type_Frame=2, PTT=0) + DATA (The DATA in first byte contain TLV_TAGS: 0x08 (TLV_TAG_SET_INFO) 
+                                           and contain MetaDATA (see below))
 USRP_HEADER (Type_Frame=0, PTT=1) + DATA (Audio)
 ....
 USRP_HEADER (Type_Frame=0, PTT=0)
@@ -33,20 +34,87 @@ USRP Header:
 Bytes  Value            Notes
 0-3    USRP             string char: USRP
 4-7    Sequence number  
-8-11   Memory?          Set to 0
+8-11   Memory?          Set to 0 (not used)
 12-15  PTT              PTT value is stored in 15 byte. 1 for PTT ON start transmission, 0 for PTT OFF stop transmission
-16-19  Talkgroup?       Set to 0
+16-19  Talkgroup?       Set to 0 (not used) 
 20-23  Type_Frame       Type frame is stored in 20 byte. 0 for Audio (USRP_TYPE_VOICE), 2 for MetaData (USRP_TYPE_TEXT) 
-24-27  Mpxid?           Set to 0
-28-31  Reserved?        Set to 0
-
-The next part from 32 Bytes is contained AUDIO data or MetaData.
-
-Audio signed 16-bit little-endian PCM audio at 8000 samples/sec, 160 samples per packet 
-
-USRP_VOICE_FRAME_SIZE (160*sizeof(short))  // 0.02 * 8k
+24-27  Mpxid?           Set to 0 (not used)
+28-31  Reserved?        Set to 0 (not used)
 
 
+
+Below short descirption type of UDP USRP frames 
+
+
+UDP frame with Audio stream (see example 1)
+===========================================
+In byte 20 of the USRP HEADER, frame type 0 (USRP_TYPE_VOICE) 
+In byte 15 of the USRP HEADER, status PTT: 1 ON, 0 OFF (last frame)
+The DATA contain AUDIO stream.
+Audio signed 16-bit little-endian PCM audio at 8000 samples/sec, 160 samples per packet.
+
+The PTT status in the USRP of the header can be used to control PTT or 
+SQL, or information about start and end transmission in an application that is receiving data via USRP.
+
+UDP frame with MetaData (see example 2)
+=======================================
+In byte 20 of the USRP HEADER, frame type 1 (USRP_TYPE_TEXT) 
+The DATA in first byte contain TLV_TAGS: 0x08 (TLV_TAG_SET_INFO)
+The next bytes contain MetaData:
+
+TLVLenght,dmrID, repeaterID, tg, ts, cc, callsign, 0
+
+TLV Tags         Set 0x08 (see TLV_TAGS)
+TLV Length       Value of lenght of MetaData where TLVLenght = 3 + 4 + 3 + 1 + 1 + len(call) + 1 
+DMR Id           Lenght 3 bytes. Set 0 or ((dmr_id >> 16) & 0xff),((dmr_id >> 8) & 0xff),(dmr_id & 0xff)
+RPT Id           Lenght 4 bytes. Set 0 or ((rpt_id >> 32) & 0xff),((rpt_id >> 16) & 0xff),((rpt_id >> 8) & 0xff),(rpt_id & 0xff)
+TalkGroup        Lenght 3 bytes. Set 0 or ((tg >> 16) & 0xff),((tg >> 8) & 0xff),(tg & 0xff)
+TimeSlot#        Length 1 byte. Set 0 or Time Slot number 
+ColorCode        Length 1 byte. Set 0 or value of ColorCode 
+Callsing         Put the callisgn 
+End of MetData   Set 0
+
+Note:
+For most applications with USRP protocol, it is enough to send in MetaDat 
+only callsign and in the case of DMR network, 
+additionally DMR ID for the given callsign
+The Analog Bridge v1.6.2 set in field CALLSIGN information like:
+ {"call":"N3ABC","name":"Club station"}
+if is connected with Analog Refelctor.
+
+
+UDP frame tune Talk Group on Analog Bridge (see example 3)
+==========================================================
+In byte 20 of the USRP HEADER, frame type 1 (USRP_TYPE_DTMF) 
+The DATA contains a string where the first character 
+is 3 followed by the Talk Group number. For example, we want 
+to set the TG # 10260 string in DATA: 310260 
+
+
+Frame with switch DV mode on Analog Bridge (see example 4)
+==========================================================
+In byte 20 of the USRP HEADER, frame type 1 (USRP_TYPE_DTMF) 
+The DATA contains a string where the first character 
+is * (star) followed by the Digital Voice mode name. 
+For example, we want to set mode DMR string in DATA: *DMR 
+Available DV Mode Names: DMR, YSF, P25, NXDN, DSTAR
+
+
+UDP frame send request INFO to Analog Bridge (see example 5)
+============================================================
+In byte 20 of the USRP HEADER, frame type 2 (USRP_TYPE_TEXT) 
+The DATA contains a string INFO
+
+
+UDP frame received from Analog Bridge with INFO in JSON format (see example 6)
+==============================================================================
+In byte 20 of the USRP HEADER, frame type 2 (USRP_TYPE_TEXT) 
+The DATA contains a string INFO: and next status Analog
+Bridge in JSON format
+
+
+Example 1
+-------------------------------------------
 Dump with USRP Audio data PTT ON = 1
 
 0x0000:  4500 017c 524b 4000 4011 e923 7f00 0001  E..|RK@.@..#....
@@ -65,41 +133,9 @@ The last USRP frame PTT OFF = 0
 0x0040:  0000 0000 0000 0000 0000 0000 0000 0000  ................
 
 
-The PTT status in the USRP of the header can be used to control PTT or 
-SQL, or information about start and end transmission in an application that is receiving data via USRP.
-
-
-The DATA type USRP_TYPE_TEXT
-=============================
-
-If the first byte of USRP_TYPE_TEXT start with 0x08 (see below TLV Tags number) contain MetaDATA like
-DMIR ID, Repeater ID, Talk Group, Tiem Slot, Color Code, Callsign
-
-MetaData for TLV_Tag 8 is follwoing:
-
-0x08,TLVLenght,dmrID, repeaterID, tg, ts, cc, callsign, 0
-
-TLVLength = 3 + 4 + 3 + 1 + 1 + len(callsign) + 1
-
-
-USRP_TYPE_TEXT with TLV_TAG 8 from Analog Bridge version 1.6.1 and USRP2M17
-=================================================================================        
-TLV Tags         Set 0x08 (see TLV_TAGS)
-TLV Length       Value of lenght of MetaData where TLVLenght = 3 + 4 + 3 + 1 + 1 + len(call) + 1 
-DMR Id           Lenght 3 bytes. Set 0 or ((dmr_id >> 16) & 0xff),((dmr_id >> 8) & 0xff),(dmr_id & 0xff)
-RPT Id           Lenght 4 bytes. Set 0 or ((rpt_id >> 32) & 0xff),((rpt_id >> 16) & 0xff),((rpt_id >> 8) & 0xff),(rpt_id & 0xff)
-TalkGroup        Lenght 3 bytes. Set 0 or ((tg >> 16) & 0xff),((tg >> 8) & 0xff),(tg & 0xff)
-TimeSlot#        Length 1 byte. Set 0 or Time Slot number 
-ColorCode        Length 1 byte. Set 0 or value of ColorCode 
-Callsing         Put the callisgn 
-End of MetData   Set 0
-
-Minimum information in Metadata is Callsign for example when we exchanged USRP data between
-Analog and M17. For DMR it will be useful to add DMR ID for callsign
-
-Example dump of MetaData from Analog Bridge v1.6.2 Type of frmae USRP_TYPE_TXT (2) with TLV TAG = 8 
-and TVL Length = 0x13 for callsign N0CALL
-
+Example 2
+--------------------------------------------
+MetaData: Callsign N0CALL DmrID 1234567
 
 0x0000:  0000 0000 0000 0000 0000 0000 0800 4500  ..............E.
 0x0010:  017c cbb9 4000 4011 6fb5 7f00 0001 7f00  .|..@.@.o.......
@@ -110,29 +146,8 @@ and TVL Length = 0x13 for callsign N0CALL
 0x0060:  0000 0000 0000 0000 0000 0000 0000 0000  ................
 
 
-Below example dump from Analog Reflector USRP_TYPE_TXT with TLV TAG = 8
-Analog Reflector use longer TLV (0x15) compare to Analog Bridge (0x13) for 
-example for the same length callsign N0CALL  
-but I did not find information as to what the extra 2 bytes are used in AR 
-
-0x0000:  0000 0000 0000 0000 0000 0000 0800 4500  ..............E.
-0x0010:  017c 5f49 4000 4011 dc25 7f00 0001 7f00  .|_I@.@..%......
-0x0020:  0001 d432 d431 0168 ff7b 5553 5250 0000  ...2.1.h.{USRP..
-0x0030:  0000 0000 0000 0000 0000 0000 0000 0200  ................
-0x0040:  0000 0000 0000 0000 0000 0815 12d6 8700  ............'.Z.
-0x0050:  0000 0000 0000 0000 4e30 4341 4c4c 0000  ........N0CALL..
-0x0060:  0000 0000 0000 0000 0000 0000 0000 0000  ................
-
-
-Remarks: The Analog Bridge v1.6.2 set in field CALLSIGN information like: {"call":"N3ABC","name":"Club station"}
-if is connected with Analog Refelctor
-
-
-
-Examples send remote command to Analog Bridge tune Talk Group 
-Type frame in USRP header is used 1 USRP_TYPE_DTMF (byte 20)
-In 33 byte is value 3 TLV_TAG_TG_TUNE and next bytes contain 
-a number of tuned Talk Group
+Example 3
+--------------------------------------------
 
 Tune Talk Group 4000
 
@@ -142,7 +157,7 @@ Tune Talk Group 4000
     0x0030:  0100 0000 0000 0000 0000 0000 3430 3030  ............4000
     0x0040:  0000 0000 0000 0000 0000 0000 0000 0000  ................
 
-Tune Tlak Group 7
+Tune Talk Group 7
 
     0x0000:  4500 017c d985 4000 4011 61e9 7f00 0001  E..|..@.@.a.....
     0x0010:  7f00 0001 d432 d431 0168 ff7b 5553 5250  .....2.1.h.{USRP
@@ -150,25 +165,85 @@ Tune Tlak Group 7
     0x0030:  0100 0000 0000 0000 0000 0000 3700 0000  ............7...
     0x0040:  0000 0000 0000 0000 0000 0000 0000 0000  ................
 
-Tune Talk Group 17
+Example 4
+--------------------------------------------
 
-    0x0000:  4500 017c e7f3 4000 4011 537b 7f00 0001  E..|..@.@.S{....
+Switch mode to YSF
+
+    0x0000:  4500 017c 32ac 4000 4011 08c3 7f00 0001  E..|2.@.@.......
     0x0010:  7f00 0001 d432 d431 0168 ff7b 5553 5250  .....2.1.h.{USRP
-    0x0020:  0000 0004 0000 0000 0000 0000 0000 0000  ................
-    0x0030:  0100 0000 0000 0000 0000 0000 3137 0000  ............17..
+    0x0020:  0000 0002 0000 0000 0000 0000 0000 0000  ................
+    0x0030:  0100 0000 0000 0000 0000 0000 2a59 5346  ............*YSF
     0x0040:  0000 0000 0000 0000 0000 0000 0000 0000  ................
 
-Tune Talk Group 10650
+Analog Bridge send to client INFO about confirm setting mode YSF
+The byte 20 is type frame 2 USRP_TYPE_TEXT. From byte 33 is 
+string INFO:  and next bytes contain a message
 
-    0x0000:  4500 017c 6f66 4000 4011 cc08 7f00 0001  E..|of@.@.......
+    0x0000:  4500 017c 332f 4000 4011 0840 7f00 0001  E..|3/@.@..@....
+    0x0010:  7f00 0001 d431 d432 0168 ff7b 5553 5250  .....1.2.h.{USRP
+    0x0020:  0000 0ac3 0000 0000 0000 0000 0000 0000  ................
+    0x0030:  0200 0000 0000 0000 0000 0000 494e 464f  ............INFO
+    0x0040:  3a4d 5347 3a53 6574 7469 6e67 206d 6f64  :MSG:Setting.mod
+    0x0050:  6520 746f 2059 5346 0000 0000 0000 0000  e.to.YSF........
+    0x0060:  0000 0000 0000 0000 0000 0000 0000 0000  ................
+
+Example 5
+-----------------------------------------------
+
+    0x0000:  4500 017c 32eb 4000 4011 0884 7f00 0001  E..|2.@.@.......
     0x0010:  7f00 0001 d432 d431 0168 ff7b 5553 5250  .....2.1.h.{USRP
-    0x0020:  0000 0007 0000 0000 0000 0000 0000 0000  ................
-    0x0030:  0100 0000 0000 0000 0000 0000 3130 3236  ............1026
-    0x0040:  3000 0000 0000 0000 0000 0000 0000 0000  0...............
-    0x0050:  0000 0000 0000 0000 0000 0000 0000 0000  ................
+    0x0020:  0000 0000 0000 0000 0000 0000 0000 0000  ................
+    0x0030:  0200 0000 0000 0000 0000 0000 494e 464f  ............INFO
+    0x0040:  3a00 0000 0000 0000 0000 0000 0000 0000  :...............
+
+
+Example 6
+-----------------------------------------------
+
+    0x0000:  4500 0269 12d4 4000 4011 27ae 7f00 0001  E..i..@.@.'.....
+    0x0010:  7f00 0001 d431 d432 0255 0069 5553 5250  .....1.2.U.iUSRP
+    0x0020:  0000 1495 0000 0000 0000 0000 0000 0000  ................
+    0x0030:  0200 0000 0000 0000 0000 0000 494e 464f  ............INFO
+    0x0040:  3a7b 2261 6222 3a7b 2276 6572 7369 6f6e  :{"ab":{"version
+    0x0050:  223a 2231 2e36 2e32 222c 2264 6174 6522  ":"1.6.2","date"
+    0x0060:  3a22 5765 6420 4d61 7220 3331 2031 333a  :"Wed.Mar.31.13:
+    0x0070:  3532 3a31 3020 4544 5420 3230 3231 227d  52:10.EDT.2021"}
+    0x0080:  2c22 6476 3330 3030 223a 7b22 6970 223a  ,"dv3000":{"ip":
+    0x0090:  2231 3237 2e30 2e30 2e31 222c 2270 6f72  "127.0.0.1","por
+    0x00a0:  7422 3a22 3234 3630 222c 2275 7365 5f73  t":"2460","use_s
+    0x00b0:  6572 6961 6c22 3a22 6661 6c73 6522 7d2c  erial":"false"},
+    0x00c0:  2275 7365 5f66 616c 6c62 6163 6b22 3a22  "use_fallback":"
+    0x00d0:  7472 7565 222c 2275 7365 5f65 6d75 6c61  true","use_emula
+    0x00e0:  746f 7222 3a22 7472 7565 222c 226d 7574  tor":"true","mut
+    0x00f0:  6522 3a22 4f46 4622 2c22 7573 7270 223a  e":"OFF","usrp":
+    0x0100:  7b22 6970 223a 2231 3237 2e30 2e30 2e31  {"ip":"127.0.0.1
+    0x0110:  222c 2272 785f 706f 7274 223a 2231 3433  ","rx_port":"143
+    0x0120:  3231 222c 2274 785f 706f 7274 223a 2231  21","tx_port":"1
+    0x0130:  3433 3231 222c 2270 696e 6722 3a22 3130  4321","ping":"10
+    0x0140:  222c 2274 6f5f 7063 6d22 3a7b 2273 6861  ","to_pcm":{"sha
+    0x0150:  7065 223a 2241 5544 494f 5f55 5345 5f41  pe":"AUDIO_USE_A
+    0x0160:  4743 222c 2267 6169 6e22 3a22 342e 3030  GC","gain":"4.00
+    0x0170:  227d 2c22 746f 5f61 6d62 6522 3a7b 2273  "},"to_ambe":{"s
+    0x0180:  6861 7065 223a 2241 5544 494f 5f55 5345  hape":"AUDIO_USE
+    0x0190:  5f47 4149 4e22 2c22 6761 696e 223a 2230  _GAIN","gain":"0
+    0x01a0:  2e33 3522 7d7d 2c22 746c 7622 3a7b 2269  .35"}},"tlv":{"i
+    0x01b0:  7022 3a22 3132 372e 302e 302e 3122 2c22  p":"127.0.0.1","
+    0x01c0:  7478 5f70 6f72 7422 3a22 3022 2c22 7278  tx_port":"0","rx
+    0x01d0:  5f70 6f72 7422 3a22 3022 2c22 616d 6265  _port":"0","ambe
+    0x01e0:  5f73 697a 6522 3a22 3732 222c 2261 6d62  _size":"72","amb
+    0x01f0:  655f 6d6f 6465 223a 224e 5844 4e22 7d2c  e_mode":"NXDN"},
+    0x0200:  2264 6967 6974 616c 223a 7b22 6777 223a  "digital":{"gw":
+    0x0210:  2231 3233 3435 3637 222c 2272 7074 223a  "1234567","rpt":
+    0x0220:  2231 3233 3435 3637 3839 222c 2274 6722  "123456789","tg"
+    0x0230:  3a22 3722 2c22 7473 223a 2232 222c 2263  :"7","ts":"2","c
+    0x0240:  6322 3a22 3122 2c22 6361 6c6c 223a 224E  c":"1","call":"N
+    0x0250:  3043 414C 4C22 7d2c 226c 6173 745f 7475  0CALL"},"last_tu
+    0x0260:  6e65 223a 2237 227d 00                   ne":"7"}.
 
 
 Other information
+-----------------
 
 TYPE of USRP frames
 #######################
@@ -198,12 +273,10 @@ TLV_TAG_FILE_XFER   = 11
 
 
 Information base on:
+he above information about the USRP protocol is based on an analysis of dump 
+frames  from applications that use USRP as well and from links
 
 https://github.com/AllStarLink/ASL-Asterisk/blob/develop/asterisk/channels/chan_usrp.h
 https://github.com/AllStarLink/ASL-Asterisk/blob/develop/asterisk/channels/chan_usrp.c
 https://github.com/DVSwitch/MMDVM_Bridge/blob/master/dvswitch.sh
 https://github.com/DVSwitch/USRP_Client/blob/master/pyUC.py
-
-
-
-

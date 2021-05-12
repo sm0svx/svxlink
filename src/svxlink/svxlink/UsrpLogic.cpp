@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioAmp.h>
 #include <AsyncAudioFilter.h>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -83,7 +84,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
-
+#define USRPSOFT "SvxLink-Usrp"
+#define USRPVERSION "v12052021"
+ 
 
 /****************************************************************************
  *
@@ -494,14 +497,92 @@ void UsrpLogic::handleStreamStop(void)
 
 void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
 {
+  stringstream ss;
   m_last_tg = usrp.getTg();
-  m_last_call = usrp.getCallsign();
+  std::string metadata = usrp.getMetaInfo();
+  
+  if (usrp.getTlv() == TLV_TAG_SET_INFO)
+  {
+    m_last_call = usrp.getCallsign();
+    ss << "usrp_stationdata_received " << m_last_call << " " 
+       << usrp.getTg() << " " << usrp.getDmrId();
+    processEvent(ss.str());
+  }
+  else 
+  {
+    if (metadata.substr(0,6) == "INFO:{")
+    {
+      handleMetaData(metadata.erase(0,5));
+    } 
+    else if (metadata.substr(0,9) == "INFO:MSG:")
+    {
+      handleInfoMsg(metadata.substr(0,9));
+    }
+    else if (metadata.substr(0,5) == "INFO:")
+    {
+       // sendInfoJson();
+    }
+    else if (metadata.substr(0,1) == "{")
+    {
+      size_t fa = metadata.find("{");
+      size_t fe = metadata.find("}");
+      if (fe != std::string::npos && fa != std::string::npos && fa<fe)
+      {
+        ss << "usrp_jsondata_received \"" << metadata.substr(fa, fe-fa) 
+           << "\"";
+        processEvent(ss.str());
+      }
+    }
+  }
+} /* UsrpLogic::handleTextMsg */
+
+
+void UsrpLogic::sendInfoJson(void)
+{
+  stringstream ss;
+  ss << "{\"ab\":{\"version\":\"" 
+  << USRPSOFT << "," << USRPVERSION << "\"},"
+  << "\"digital\":{\"gw\":\""
+  << m_dmrid << "\",\"rpt\":\""
+  << m_rptid << "\",\"tg\":\"" 
+  << m_selected_tg << "\",\"ts\":\"" 
+  << m_selected_ts << "\",\"cc\":\"" 
+  << m_selected_cc <<  "\",\"call\":\"" 
+  << m_callsign << "\"}}";
+
+  cout << ss.str() << endl;
+} /* UsrpLogic::sendInfoJson */
+
+
+void UsrpLogic::handleInfoMsg(std::string infomsg)
+{
+  stringstream ss;
+  ss << "setting_mode " << infomsg;
+  processEvent(ss.str());
+} /* UsrpLogic::handleInfoMsg */
+
+
+void UsrpLogic::handleMetaData(std::string metadata)
+{
+  Json::Value user_arr;
+  Json::Reader reader;
+  bool b = reader.parse(metadata, user_arr);
+  if (!b)
+  {
+    cout << "*** Error: parsing StateEvent message (" 
+         << reader.getFormattedErrorMessages() << ")" << endl;
+    return;
+  }
   
   stringstream ss;
-  ss << "usrp_metadata_received " << m_last_call << " " 
-     << usrp.getTg() << " " << usrp.getDmrId();
-  processEvent(ss.str());
-} /* UsrpLogic::handleTextMsg */
+  for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+  {
+    Json::Value& t_userdata = user_arr[i];
+    ss << t_userdata.get("digital","").asString();
+  }
+  cout << "+++ Metadata received: " << ss.str() << endl;
+  
+} /* UsrpLogic::handleMetaData */
 
 
 void UsrpLogic::sendMsg(UsrpMsg& usrp)
@@ -691,6 +772,34 @@ void UsrpLogic::checkIdle(void)
 {
   setIdle(isIdle());
 } /* UsrpLogic::checkIdle */
+
+
+// switching between DMR, YSF, NXDN, P25
+void UsrpLogic::switchMode(uint8_t mode)
+{
+  UsrpMetaMsg usrp;
+  usrp.setMetaData(selected_mode[mode]);
+  usrp.setType(USRP_TYPE_DTMF);
+  usrp.setTlv(0x00);
+  usrp.setTlvLen(0x00);
+
+  if (udp_seq++ > 0x7fff) udp_seq = 0;
+  usrp.setSeq(udp_seq);
+
+  ostringstream os;
+  if (!usrp.pack(os))
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack UDP Usrp message\n";
+    return;
+  }
+
+  sendUdpMessage(os);
+  
+  stringstream ss;
+  ss << "switch_to_mode " << selected_mode[mode];
+  processEvent(ss.str());
+} /* UsrpLogic::switchMode */
 
 
 void UsrpLogic::processEvent(const std::string& event)

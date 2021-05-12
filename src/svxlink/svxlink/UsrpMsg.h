@@ -75,6 +75,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#define MODE_NONE 0
+#define MODE_DMR 1
+#define MODE_P25 2
+#define MODE_NXDN 3
 
 
 /****************************************************************************
@@ -83,7 +87,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+static const unsigned DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET = 15;
+static const unsigned UDP_HEARTBEAT_RX_CNT_RESET         = 60;
+static const unsigned DEFAULT_TG_SELECT_TIMEOUT          = 30;
+static const int      DEFAULT_TMP_MONITOR_TIMEOUT        = 3600;
 static const int      USRP_AUDIO_FRAME_LEN               = 160;
+static const int      USRP_HEADER_LEN                    = 32;
+
+enum { USRP_TYPE_VOICE=0, USRP_TYPE_DTMF=1, USRP_TYPE_TEXT=2, 
+       USRP_TYPE_PING=3, USRP_TYPE_TLV=4, USRP_TYPE_VOICE_ADPCM = 5, 
+       USRP_TYPE_VOICE_ULAW = 6 };
+
+enum { TLV_TAG_BEGIN_TX = 0, TLV_TAG_AMBE = 1, TLV_TAG_END_TX = 2,
+       TLV_TAG_TG_TUNE  = 3, TLV_TAG_PLAY_AMBE= 4, TLV_TAG_REMOTE_CMD= 5,
+       TLV_TAG_AMBE_49  = 6, TLV_TAG_AMBE_72  = 7, TLV_TAG_SET_INFO = 8,
+       TLV_TAG_IMBE     = 9, TLV_TAG_DSAMBE   = 10, TLV_TAG_FILE_XFER= 11
+};
+
+//std::map<uint8_t, std::string> selected_mode;
+const std::string selected_mode[] = { "*NONE", "*DMR", "*P25", "*NXDN" };
 
 /****************************************************************************
  *
@@ -229,17 +251,17 @@ class UsrpMetaMsg : public Async::Msg
           m_memory = 0;
           m_keyup = 0;
           m_talkgroup = 0;
-          m_type = htobe32(0x02);
+          m_type = htobe32(USRP_TYPE_TEXT);
           m_mpxid = 0;
           m_reserved = 0;
-          m_tlv = 0x08;
+          m_tlv = TLV_TAG_SET_INFO;
           m_tlvlen = 0x13;
           m_dmrid = {0,0,0};
           m_rptid = 0;
           m_tg = {0,0,0};
           m_ts = 0;
           m_cc = 1;
-          m_rest.fill(0);
+          m_meta.fill(0);
         }
 
     /**
@@ -257,6 +279,12 @@ class UsrpMetaMsg : public Async::Msg
       m_tg = t;
     }
     
+    // set USRP_TYPE
+    void setType(uint32_t type)
+    {
+      m_type = htobe32(type);   
+    }
+    
     // set the squence
     void setSeq(uint32_t seq) { m_seq = htole32(seq); }
     
@@ -265,9 +293,15 @@ class UsrpMetaMsg : public Async::Msg
     {
       for (size_t i=0; i<call.length(); i++)
       {
-        m_callsign[i] = call.c_str()[i];
+        m_meta[i] = call.c_str()[i];
       }
       m_tlvlen = static_cast<int>(call.length() + 13) & 0xff;
+    }
+    
+    // set Metadata
+    void setMetaData(std::string metadata)
+    {
+      
     }
     
     // set DMR-ID
@@ -291,12 +325,51 @@ class UsrpMetaMsg : public Async::Msg
     {
       (ts > 4 ? m_ts = 4 : m_ts = ts);
     }
-
+    
+    void setTlv(uint8_t tlv)
+    {
+      m_tlv = tlv;
+    }
+    
+    void setTlvLen(uint8_t tlvlen)
+    {
+      m_tlvlen = tlvlen;    
+    }
+    
     // returns the callsing of the talker
     std::string getCallsign(void)
-    { 
-      return std::string(m_callsign.begin(), m_callsign.end());
+    {
+      uint8_t i;
+      uint8_t call[9];
+      if (m_tlv == TLV_TAG_SET_INFO && m_tlvlen < 0x14)
+      {
+        for(i=0;i<(m_tlvlen-13);i++)
+        {
+          call[i] = m_meta[i];
+        }
+      }
+      return std::string(call, call+(m_tlvlen-13));
     }
+    
+    // returns the info (as json in a string)
+    std::string getMetaInfo(void)
+    {
+      uint8_t metainfo[306];
+      uint8_t z;
+      if (m_type == USRP_TYPE_TEXT && m_tlv == TLV_TAG_BEGIN_TX && m_tlvlen == 0)
+      {
+        for (z=0;z<306;z++)
+        {
+          metainfo[z] = m_meta[z];
+          if (m_meta[z] == 0x00) break;
+        }
+        return std::string(metainfo, metainfo+z);
+      }
+      return "";
+    }
+    
+    // returns the TYPE of message
+    uint32_t type(void) const { return ntohl(m_type); }
     
     // returns the current talkgroup of the talker
     uint32_t getTg(void)
@@ -309,10 +382,16 @@ class UsrpMetaMsg : public Async::Msg
     { 
       return (m_dmrid[2] & 0xff) + (m_dmrid[1] << 8) + (m_dmrid[0] << 16);
     }
-    
+
+    // getTlv
+    uint8_t getTlv(void) { return m_tlv; }
+
+    // getTlvLen
+    uint8_t getTlvLen(void) { return m_tlvlen; }
+
     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
                       m_mpxid, m_reserved, m_tlv, m_tlvlen, m_dmrid, m_rptid,
-                      m_tg, m_ts, m_cc, m_callsign, m_rest)
+                      m_tg, m_ts, m_cc, m_meta)
                       
   private:
 
@@ -331,8 +410,7 @@ class UsrpMetaMsg : public Async::Msg
     std::array<uint8_t, 3> m_tg;     // Talkgroup length 3 bytes
     uint8_t  m_ts;                   // Timeslot length 1 byte
     uint8_t  m_cc;                   // color code length 1 byte
-    std::array<char, 6> m_callsign;  // own callsign
-    std::array<uint8_t, 300> m_rest; // padding the rest with 0x00
+    std::array<uint8_t, 306> m_meta; // padding the rest with 0x00
 };
 
 #endif /* USRP_MSG_INCLUDED */

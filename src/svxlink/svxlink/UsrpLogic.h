@@ -157,26 +157,9 @@ class UsrpLogic : public LogicBase
       bool operator==(const MonitorTgEntry& mte) const { return tg == mte.tg; }
       operator uint32_t(void) const { return tg; }
     };
-
-    enum { USRP_TYPE_VOICE=0, USRP_TYPE_DTMF=1, USRP_TYPE_TEXT=2, 
-           USRP_TYPE_PING=3, USRP_TYPE_TLV=4, USRP_TYPE_VOICE_ADPCM = 5, 
-           USRP_TYPE_VOICE_ULAW = 6 };
-    
-    enum { TLV_TAG_BEGIN_TX = 0, TLV_TAG_AMBE = 1, TLV_TAG_END_TX = 2,
-           TLV_TAG_TG_TUNE  = 3, TLV_TAG_PLAY_AMBE= 4, TLV_TAG_REMOTE_CMD= 5,
-           TLV_TAG_AMBE_49  = 6, TLV_TAG_AMBE_72  = 7, TLV_TAG_SET_INFO = 8,
-           TLV_TAG_IMBE     = 9, TLV_TAG_DSAMBE   = 10, TLV_TAG_FILE_XFER= 11
-    };
     
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
-
-    static const unsigned DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET = 15;
-    static const unsigned UDP_HEARTBEAT_RX_CNT_RESET         = 60;
-    static const unsigned DEFAULT_TG_SELECT_TIMEOUT          = 30;
-    static const int      DEFAULT_TMP_MONITOR_TIMEOUT        = 3600;
-    static const int      USRP_AUDIO_FRAME_LEN               = 160;
-    static const int      USRP_HEADER_LEN                    = 32;
-
+  
     std::string                       m_usrp_host;
     uint16_t                          m_usrp_port;
     uint16_t                          m_usrp_rx_port;
@@ -224,6 +207,7 @@ class UsrpLogic : public LogicBase
     void sendMetaMsg(void);
     void sendUdpMessage(std::ostringstream& ss);
     void sendHeartbeat(void);
+    void sendInfoJson(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
     void handleTimerTick(Async::Timer *t);
@@ -232,7 +216,10 @@ class UsrpLogic : public LogicBase
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
     void checkIdle(void);
     bool isIdle(void);
+    void handleMetaData(std::string metadata);
+    void switchMode(uint8_t mode);
     void processEvent(const std::string& event);
+    void handleInfoMsg(std::string infomsg);
     void handlePlayFile(const std::string& path);
     void handlePlaySilence(int duration);
     void handlePlayTone(int fq, int amp, int duration);

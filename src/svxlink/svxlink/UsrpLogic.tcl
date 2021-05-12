@@ -37,9 +37,10 @@ proc command_failed {cmd} {
 
 
 #
-# Executed each time a Usrp Meta fram is received
+# Executed each time a Usrp Meta frame is received
+# and contains station data
 #
-proc usrp_metadata_received {call tgid dmrid} {
+proc usrp_stationdata_received {call tgid dmrid} {
   set dmr "";
   set tg "";
   if {$dmrid > 0} {
@@ -75,6 +76,31 @@ proc talker_stop {call tg} {
   puts "Talker stop: $call TG# $tg";
 }
 
+
+#
+# Executed when a switch between different modes has initiated
+#
+proc switch_to_mode {mode} {
+  puts "Send request for $mode";
+}
+
+
+#
+# Executed when the analog_bridge confirm to switch the mode
+#
+proc setting_mode {mode} {
+  puts "New mode: $mode";
+  playMsg $mode;
+}
+
+
+#
+# Executed when json data has received, e.g.:
+# {"call":"SP2ONG","name":"Waldek"}
+#
+proc usrp_jsondata_received {jsondata} {
+  puts "JSON: $jsondata";
+}
 
 # end of namespace
 }
