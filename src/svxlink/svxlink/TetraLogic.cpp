@@ -296,8 +296,8 @@ bool TetraLogic::initialize(void)
   if (mnc.length() < 5)
   {
     value = "00000";
-    value += mcc;
-    mcc = value.substr(value.length()-5,5);
+    value += mnc;
+    mnc = value.substr(value.length()-5,5);
   }
   // Welcome message to new users
   if (!cfg().getValue(name(), "INFO_SDS", infosds))
