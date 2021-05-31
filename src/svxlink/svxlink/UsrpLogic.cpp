@@ -396,6 +396,11 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
+    /*for (int i=0;i<USRP_AUDIO_FRAME_LEN; i++)
+    {
+      cout << r_buf[i] << ",";
+    }
+    cout << endl;*/
     usrp.setAudioData(r_buf);
     sendMsg(usrp);
     memmove(r_buf, r_buf + USRP_AUDIO_FRAME_LEN, 
@@ -462,7 +467,11 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     }
     handleTextMsg(usrpmeta);
   }
-  else 
+  else if (usrp.type() == USRP_TYPE_TLV)
+  {
+    cout << "USRP_TYPE_TLV!" << endl;
+  } 
+  else
   {
     cout << "*** unknown type of message:" << usrp.type() << endl;
   }
@@ -500,39 +509,27 @@ void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
   stringstream ss;
   m_last_tg = usrp.getTg();
   std::string metadata = usrp.getMetaInfo();
-  
-  if (usrp.getTlv() == TLV_TAG_SET_INFO)
+
+  if (metadata.substr(0,1) == "{" && usrp.getTlv() == TLV_TAG_SET_INFO)
+  {
+    Json::Reader reader;
+    Json::Value value;
+    //Read data from the string
+    if (reader.parse(metadata,value))
+    {
+      m_last_call = value["call"].asString();
+    }
+  }
+  else
   {
     m_last_call = usrp.getCallsign();
-    ss << "usrp_stationdata_received " << m_last_call << " " 
+  }
+
+  if (usrp.getTlv() == TLV_TAG_SET_INFO)
+  {
+    ss << "usrp_stationdata_received " << m_last_call << " "
        << usrp.getTg() << " " << usrp.getDmrId();
     processEvent(ss.str());
-  }
-  else 
-  {
-    if (metadata.substr(0,6) == "INFO:{")
-    {
-      handleMetaData(metadata.erase(0,5));
-    } 
-    else if (metadata.substr(0,9) == "INFO:MSG:")
-    {
-      handleInfoMsg(metadata.substr(0,9));
-    }
-    else if (metadata.substr(0,5) == "INFO:")
-    {
-       // sendInfoJson();
-    }
-    else if (metadata.substr(0,1) == "{")
-    {
-      size_t fa = metadata.find("{");
-      size_t fe = metadata.find("}");
-      if (fe != std::string::npos && fa != std::string::npos && fa<fe)
-      {
-        ss << "usrp_jsondata_received \"" << metadata.substr(fa, fe-fa) 
-           << "\"";
-        processEvent(ss.str());
-      }
-    }
   }
 } /* UsrpLogic::handleTextMsg */
 

@@ -148,9 +148,9 @@ class UsrpMsg : public Async::Msg
     uint32_t reserved(void) const { return ntohl(m_reserved); }
     uint32_t talkgroup(void) const { return ntohl(m_talkgroup); }
 
-    void setTg(uint32_t tg) { m_talkgroup = htonl(tg);}
-    void setType(uint32_t type) { m_type = htonl(type);}
-    void setSeq(uint32_t seq) { m_seq = htonl(seq); }
+    void setTg(uint32_t tg) { m_talkgroup = htole32(tg);}
+    void setType(uint32_t type) { m_type = htole32(type);}
+    void setSeq(uint32_t seq) { m_seq = htole32(seq); }
     void setKeyup(bool keyup) { (keyup ? m_keyup=1 : m_keyup=0); }
 
     void setAudioData(int16_t in[USRP_AUDIO_FRAME_LEN*2])
@@ -325,32 +325,33 @@ class UsrpMetaMsg : public Async::Msg
     {
       (ts > 4 ? m_ts = 4 : m_ts = ts);
     }
-    
+
     void setTlv(uint8_t tlv)
     {
       m_tlv = tlv;
     }
-    
+
     void setTlvLen(uint8_t tlvlen)
     {
       m_tlvlen = tlvlen;    
     }
-    
+
     // returns the callsing of the talker
     std::string getCallsign(void)
     {
-      uint8_t i;
+      uint8_t i = 0;
       uint8_t call[9];
-      if (m_tlv == TLV_TAG_SET_INFO && m_tlvlen < 0x14)
+      if (m_tlv == TLV_TAG_SET_INFO && m_tlvlen < 0x16)
       {
-        for(i=0;i<(m_tlvlen-13);i++)
+        for(i=0;i<(m_tlvlen-14);i++)
         {
+          if (m_meta[i] == 0x00) break;
           call[i] = m_meta[i];
         }
       }
-      return std::string(call, call+(m_tlvlen-13));
+      return std::string(call, call+i);
     }
-    
+
     // returns the info (as json in a string)
     std::string getMetaInfo(void)
     {
