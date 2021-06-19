@@ -158,6 +158,10 @@
   setConfigValue function, to change behavior at runtime. See example in
   ReflectorLogic.tcl.
 
+* Bugfix in ReflectorLogic: It was possible to activate a temporary TG monitor
+  on a TG that was configured to be permanent. When the temporary monitor
+  timed out the TG was removed from the monitoring list completely.
+
 
 
  1.7.0 -- 01 Sep 2019
