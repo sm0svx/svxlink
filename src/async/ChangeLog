@@ -51,6 +51,8 @@
 * Templated function Async::Config::setValue() so that generic types can be
   used without converting them to string first.
 
+* The Async::Serial class now support all extended baudrates.
+
 
 
  1.6.0 -- 01 Sep 2019

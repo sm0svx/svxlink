@@ -157,6 +157,17 @@
 * The AUTOACTIVATE_ON_SQL logic linking configuration variable has been
   renamed to ACTIVATE_ON_ACTIVITY.
 
+* Bugfix in reflector authentication.
+
+* Now possible to set the Echolink module drop/reject/accept configuration
+  variables at runtime. This can for example be used from TCL, using the
+  setConfigValue function, to change behavior at runtime. See example in
+  ReflectorLogic.tcl.
+
+* Bugfix in ReflectorLogic: It was possible to activate a temporary TG monitor
+  on a TG that was configured to be permanent. When the temporary monitor
+  timed out the TG was removed from the monitoring list completely.
+
 
 
  1.7.0 -- 01 Sep 2019

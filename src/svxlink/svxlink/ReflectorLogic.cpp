@@ -325,6 +325,8 @@ bool ReflectorLogic::initialize(void)
     m_event_handler->playDtmf.connect(
           sigc::mem_fun(*this, &ReflectorLogic::handlePlayDtmf));
   }
+  m_event_handler->setConfigValue.connect(
+      sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   m_event_handler->setVariable("logic_name", name().c_str());
 
   m_event_handler->processEvent("namespace eval Logic {}");
@@ -477,6 +479,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
   }
   else if (cmd[0] == '4')   // Temporarily monitor talk group
   {
+    std::ostringstream os;
     const std::string subcmd(cmd.substr(1));
     if ((m_tmp_monitor_timeout > 0) && !subcmd.empty())
     {
@@ -487,10 +490,21 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
         const MonitorTgsSet::iterator it = m_monitor_tgs.find(tg);
         if (it != m_monitor_tgs.end())
         {
-          std::cout << name() << ": Refresh temporary monitor for TG #"
-                    << tg << std::endl;
-            // NOTE: (*it).timeout is mutable
-          (*it).timeout = m_tmp_monitor_timeout;
+          if ((*it).timeout > 0)
+          {
+            std::cout << name() << ": Refresh temporary monitor for TG #"
+                      << tg << std::endl;
+              // NOTE: (*it).timeout is mutable
+            (*it).timeout = m_tmp_monitor_timeout;
+            os << "tmp_monitor_add " << tg;
+          }
+          else
+          {
+            std::cout << "*** WARNING: Not allowed to add a temporary montior "
+                         "for TG #" << tg << " which is being permanently "
+                         "monitored" << std::endl;
+            os << "command_failed " << cmd;
+          }
         }
         else
         {
@@ -501,20 +515,24 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           m_monitor_tgs.insert(mte);
           sendMsg(MsgTgMonitor(std::set<uint32_t>(
                   m_monitor_tgs.begin(), m_monitor_tgs.end())));
+          os << "tmp_monitor_add " << tg;
         }
-        std::ostringstream os;
-        os << "tmp_monitor_add " << tg;
-        processEvent(os.str());
       }
       else
       {
-        processEvent(std::string("command_failed ") + cmd);
+        std::cout << "*** WARNING: Failed to parse temporary TG monitor "
+                     "command: " << cmd << std::endl;
+        os << "command_failed " << cmd;
       }
     }
     else
     {
-      processEvent(std::string("command_failed ") + cmd);
+      std::cout << "*** WARNING: Ignoring temporary TG monitoring command ("
+                << cmd << ") since that function is not enabled or there "
+                   "were no TG specified" << std::endl;
+      os << "command_failed " << cmd;
     }
+    processEvent(os.str());
   }
   else
   {
@@ -1644,6 +1662,10 @@ void ReflectorLogic::selectTg(uint32_t tg, const std::string& event, bool unmute
     }
     m_event_handler->setVariable(name() + "::selected_tg", m_selected_tg);
     m_event_handler->setVariable(name() + "::previous_tg", m_previous_tg);
+
+    ostringstream os;
+    os << "tg_selected " << m_selected_tg << " " << m_previous_tg;
+    processEvent(os.str());
   }
   m_tg_select_timeout_cnt = (tg > 0) ? m_tg_select_timeout : 0;
 

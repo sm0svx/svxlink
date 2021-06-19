@@ -126,6 +126,13 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
+namespace {
+  const char* CFG_DROP_INCOMING   = "DROP_INCOMING";
+  const char* CFG_REJECT_INCOMING = "REJECT_INCOMING";
+  const char* CFG_ACCEPT_INCOMING = "ACCEPT_INCOMING";
+  const char* CFG_REJECT_OUTGOING = "REJECT_OUTGOING";
+  const char* CFG_ACCEPT_OUTGOING = "ACCEPT_OUTGOING";
+};
 
 
 /****************************************************************************
@@ -273,26 +280,13 @@ bool ModuleEchoLink::initialize(void)
   }
   
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
-  
-  if (!cfg().getValue(cfgName(), "DROP_INCOMING", value))
+
+  if (!setDropIncomingRegex())
   {
-    value = "^$";
-  }
-  drop_incoming_regex = new regex_t;
-  int err = regcomp(drop_incoming_regex, value.c_str(),
-                    REG_EXTENDED | REG_NOSUB | REG_ICASE);
-  if (err != 0)
-  {
-    size_t msg_size = regerror(err, drop_incoming_regex, 0, 0);
-    char msg[msg_size];
-    size_t err_size = regerror(err, drop_incoming_regex, msg, msg_size);
-    assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP_INCOMING: "
-         << msg << endl;
     moduleCleanup();
     return false;
   }
-  
+
     // To reduce the number of senseless connects
   if (cfg().getValue(cfgName(), "CHECK_NR_CONNECTS", value))
   {
@@ -312,82 +306,15 @@ bool ModuleEchoLink::initialize(void)
     num_con_block_time = params[2] * 60;
   }
 
-  if (!cfg().getValue(cfgName(), "REJECT_INCOMING", value))
+  if (!setRejectIncomingRegex() ||
+      !setAcceptIncomingRegex() ||
+      !setRejectOutgoingRegex() ||
+      !setAcceptOutgoingRegex())
   {
-    value = "^$";
-  }
-  reject_incoming_regex = new regex_t;
-  err = regcomp(reject_incoming_regex, value.c_str(),
-                REG_EXTENDED | REG_NOSUB | REG_ICASE);
-  if (err != 0)
-  {
-    size_t msg_size = regerror(err, reject_incoming_regex, 0, 0);
-    char msg[msg_size];
-    size_t err_size = regerror(err, reject_incoming_regex, msg, msg_size);
-    assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_INCOMING: "
-         << msg << endl;
-    moduleCleanup();
-    return false;
-  }
-  
-  if (!cfg().getValue(cfgName(), "ACCEPT_INCOMING", value))
-  {
-    value = "^.*$";
-  }
-  accept_incoming_regex = new regex_t;
-  err = regcomp(accept_incoming_regex, value.c_str(),
-                REG_EXTENDED | REG_NOSUB | REG_ICASE);
-  if (err != 0)
-  {
-    size_t msg_size = regerror(err, accept_incoming_regex, 0, 0);
-    char msg[msg_size];
-    size_t err_size = regerror(err, accept_incoming_regex, msg, msg_size);
-    assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_INCOMING: "
-         << msg << endl;
     moduleCleanup();
     return false;
   }
 
-  if (!cfg().getValue(cfgName(), "REJECT_OUTGOING", value))
-  {
-    value = "^$";
-  }
-  reject_outgoing_regex = new regex_t;
-  err = regcomp(reject_outgoing_regex, value.c_str(),
-                REG_EXTENDED | REG_NOSUB | REG_ICASE);
-  if (err != 0)
-  {
-    size_t msg_size = regerror(err, reject_outgoing_regex, 0, 0);
-    char msg[msg_size];
-    size_t err_size = regerror(err, reject_outgoing_regex, msg, msg_size);
-    assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_OUTGOING: "
-         << msg << endl;
-    moduleCleanup();
-    return false;
-  }
-
-  if (!cfg().getValue(cfgName(), "ACCEPT_OUTGOING", value))
-  {
-    value = "^.*$";
-  }
-  accept_outgoing_regex = new regex_t;
-  err = regcomp(accept_outgoing_regex, value.c_str(),
-                REG_EXTENDED | REG_NOSUB | REG_ICASE);
-  if (err != 0)
-  {
-    size_t msg_size = regerror(err, accept_outgoing_regex, 0, 0);
-    char msg[msg_size];
-    size_t err_size = regerror(err, accept_outgoing_regex, msg, msg_size);
-    assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_OUTGOING: "
-         << msg << endl;
-    moduleCleanup();
-    return false;
-  }
-  
   cfg().getValue(cfgName(), "REJECT_CONF", reject_conf);
   cfg().getValue(cfgName(), "AUTOCON_ECHOLINK_ID", autocon_echolink_id);
   int autocon_time_secs = autocon_time / 1000;
@@ -484,6 +411,9 @@ bool ModuleEchoLink::initialize(void)
     pty->dataReceived.connect(
         sigc::mem_fun(*this, &ModuleEchoLink::onCommandPtyInput));
   }
+
+  cfg().valueUpdated.connect(
+      sigc::mem_fun(*this, &ModuleEchoLink::cfgValueUpdated));
 
   return true;
   
@@ -2248,6 +2178,92 @@ void ModuleEchoLink::replaceAll(std::string &str, const std::string &from,
   }
 } /* ModuleEchoLink::replaceAll */
 
+
+bool ModuleEchoLink::setRegex(regex_t*& regex, const std::string& cfg_tag,
+    const std::string& default_regex_str)
+{
+  std::string regex_str;
+  if (!cfg().getValue(cfgName(), cfg_tag, regex_str))
+  {
+    regex_str = default_regex_str;
+  }
+  delete regex;
+  regex = new regex_t;
+  int err = regcomp(regex, regex_str.c_str(),
+                    REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, regex, msg, msg_size);
+    assert(err_size == msg_size);
+    std::cerr << "*** ERROR: Syntax error in " << cfgName()
+              << "/" << cfg_tag << ": " << msg << std::endl;
+    return false;
+  }
+  return true;
+} /* ModuleEchoLink::setRegex */
+
+
+bool ModuleEchoLink::setDropIncomingRegex(void)
+{
+  return setRegex(drop_incoming_regex, CFG_DROP_INCOMING, "^$");
+} /* ModuleEchoLink::setDropIncomingRegex */
+
+
+bool ModuleEchoLink::setRejectIncomingRegex(void)
+{
+  return setRegex(reject_incoming_regex, CFG_REJECT_INCOMING, "^$");
+} /* ModuleEchoLink::setRejectIncomingRegex */
+
+
+bool ModuleEchoLink::setAcceptIncomingRegex(void)
+{
+  return setRegex(accept_incoming_regex, CFG_ACCEPT_INCOMING, "^.*$");
+} /* ModuleEchoLink::setAcceptIncomingRegex */
+
+
+bool ModuleEchoLink::setRejectOutgoingRegex(void)
+{
+  return setRegex(reject_outgoing_regex, CFG_REJECT_OUTGOING, "^$");
+} /* ModuleEchoLink::setRejectOutgoingRegex */
+
+
+bool ModuleEchoLink::setAcceptOutgoingRegex(void)
+{
+  return setRegex(accept_outgoing_regex, CFG_ACCEPT_OUTGOING, "^.*$");
+} /* ModuleEchoLink::setAcceptOutgoingRegex */
+
+
+void ModuleEchoLink::cfgValueUpdated(const std::string& section,
+    const std::string& tag)
+{
+  if (section != cfgName())
+  {
+    return;
+  }
+
+  if (tag == CFG_DROP_INCOMING)
+  {
+    setDropIncomingRegex();
+  }
+  else if (tag == CFG_REJECT_INCOMING)
+  {
+    setRejectIncomingRegex();
+  }
+  else if (tag == CFG_ACCEPT_INCOMING)
+  {
+    setAcceptIncomingRegex();
+  }
+  else if (tag == CFG_REJECT_OUTGOING)
+  {
+    setRejectOutgoingRegex();
+  }
+  else if (tag == CFG_ACCEPT_OUTGOING)
+  {
+    setAcceptOutgoingRegex();
+  }
+} /* ModuleEchoLink::cfgValueUpdated */
 
 
 /*
