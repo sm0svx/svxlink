@@ -78,6 +78,7 @@ set(EXPINC AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h
            AsyncAudioDevice.h AsyncAudioNoiseAdder.h AsyncAudioGenerator.h
            AsyncAudioFsf.h AsyncAudioContainer.h AsyncAudioContainerWav.h
            AsyncAudioContainerPcm.h
+           AsyncAudioCodecAmbe.h
            )
 
 set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
@@ -95,6 +96,7 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioDeviceUDP.cpp AsyncAudioNoiseAdder.cpp
            AsyncAudioFsf.cpp AsyncAudioContainer.cpp AsyncAudioContainerWav.cpp
            AsyncAudioContainerPcm.cpp
+           AsyncAudioCodecAmbe.cpp
            )
 
 if(Speex_FOUND)
