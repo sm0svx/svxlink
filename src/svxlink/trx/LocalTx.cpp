@@ -718,6 +718,14 @@ bool LocalTx::initialize(void)
     }
   }
 
+  if (!audio_io->open(AudioIO::MODE_WR))
+  {
+    cerr << "*** ERROR: Could not open audio device for transmitter \""
+         << name() << "\"\n";
+    return false;
+  }
+
+  audio_io->close();
   return true;
   
 } /* LocalTx::initialize */

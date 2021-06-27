@@ -151,6 +151,7 @@ EventHandler::EventHandler(const string& event_script, const string& logic_name)
   Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
   Tcl_CreateCommand(interp, "setConfigValue", setConfigValueHandler,
                     this, NULL);
+  Tcl_CreateCommand(interp, "initCall", initCallHandler, this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -462,6 +463,26 @@ int EventHandler::setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 } /* EventHandler::setConfigValueHandler */
+
+
+int EventHandler::initCallHandler(ClientData cdata, Tcl_Interp *irp, int argc,
+                           const char *argv[])
+{
+  if(argc != 2)
+  {
+    static char msg[] = "Usage: initCall: <phone number>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  //cout << "EventHandler::playFile: " << argv[1] << endl;
+
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  string phonenumber(argv[1]);
+  self->initCall(phonenumber);
+
+  return TCL_OK;
+}
+
 
 
 /*
