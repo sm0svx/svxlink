@@ -443,6 +443,72 @@ class MsgPacker<std::string>
     }
 };
 
+
+// MsgPacker for std::array
+template <typename T, size_t N>
+class MsgPacker<std::array<T, N> >
+{
+public:
+  static bool pack(std::ostream &os, const std::array<T, N> &vec) {
+    for (typename std::array<T, N>::const_iterator it = vec.begin();
+         it != vec.end(); ++it) {
+      if (!MsgPacker<T>::pack(os, *it))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+  static size_t packedSize(const std::array<T, N> &vec) {
+    size_t size = 0;
+    for (typename std::array<T, N>::const_iterator it = vec.begin();
+         it != vec.end(); ++it) {
+      size += MsgPacker<T>::packedSize(*it);
+    }
+    return size;
+  }
+  static bool unpack(std::istream &is, std::array<T, N> &vec) {
+    for (size_t i = 0; i < N; ++i) {
+      if (!MsgPacker<T>::unpack(is, vec[i]))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+
+// MsgPacker for static arrays
+template <typename T, std::size_t N> class MsgPacker<T[N]> {
+public:
+  static bool pack(std::ostream &os, const T (&vec)[N]) {
+    for (const T *it = std::begin(vec); it != std::end(vec); ++it) {
+      if (!MsgPacker<T>::pack(os, *it))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+  static size_t packedSize(const T (&vec)[N]) {
+    size_t size = 0;
+    for (const T *it = std::begin(vec); it != std::end(vec); ++it) {
+      size += MsgPacker<T>::packedSize(*it);
+    }
+    return size;
+  }
+  static bool unpack(std::istream &is, T (&vec)[N]) {
+    for (T *it = std::begin(vec); it != std::end(vec); ++it) {
+      if (!MsgPacker<T>::unpack(is, *it))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
 template <typename I>
 class MsgPacker<std::vector<I> >
 {
@@ -459,7 +525,10 @@ class MsgPacker<std::vector<I> >
            it != vec.end();
            ++it)
       {
-        MsgPacker<I>::pack(os, *it);
+        if (!MsgPacker<I>::pack(os, *it))
+        {
+          return false;
+        }
       }
       return true;
     }
@@ -487,7 +556,10 @@ class MsgPacker<std::vector<I> >
       for (int i=0; i<vec_size; ++i)
       {
         I val;
-        MsgPacker<I>::unpack(is, val);
+        if (!MsgPacker<I>::unpack(is, val))
+        {
+          return false;
+        }
         vec.push_back(val);
       }
       return true;
@@ -505,12 +577,18 @@ class MsgPacker<std::set<I> >
       {
         return false;
       }
-      MsgPacker<uint16_t>::pack(os, s.size());
+      if (!MsgPacker<uint16_t>::pack(os, s.size()))
+      {
+        return false;
+      }
       for (typename std::set<I>::const_iterator it = s.begin();
            it != s.end();
            ++it)
       {
-        MsgPacker<I>::pack(os, *it);
+        if (!MsgPacker<I>::pack(os, *it))
+        {
+          return false;
+        }
       }
       return true;
     }
@@ -527,7 +605,10 @@ class MsgPacker<std::set<I> >
     static bool unpack(std::istream& is, std::set<I>& s)
     {
       uint16_t set_size;
-      MsgPacker<uint16_t>::unpack(is, set_size);
+      if (!MsgPacker<uint16_t>::unpack(is, set_size))
+      {
+        return false;
+      }
       if (set_size > std::numeric_limits<uint16_t>::max())
       {
         return false;
@@ -537,7 +618,10 @@ class MsgPacker<std::set<I> >
       for (int i=0; i<set_size; ++i)
       {
         I val;
-        MsgPacker<I>::unpack(is, val);
+        if (!MsgPacker<I>::unpack(is, val))
+        {
+          return false;
+        }
         s.insert(val);
       }
       return true;
@@ -846,6 +930,111 @@ class Msg
              unpack(is, v7) && unpack(is, v8) && unpack(is, v9) &&
              unpack(is, v10);
     }
+    
+    // need by Usrp protocol (16 params)
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16>
+    bool pack(std::ostream& os, const T1& v1, const T2& v2, const T3& v3,
+              const T4& v4, const T5& v5, const T6& v6, const T7& v7,
+              const T8& v8, const T9& v9, const T10& v10,
+              const T11& v11, const T12& v12, const T13& v13,
+              const T14& v14, const T15& v15, const T16& v16) const
+    {
+      return pack(os, v1) && pack(os, v2) && pack(os, v3) && pack(os, v4) &&
+             pack(os, v5) && pack(os, v6) && pack(os, v7) && pack(os, v8) &&
+             pack(os, v9) && pack(os, v10) && pack(os, v11) && pack(os, v12) &&
+             pack(os, v13) && pack(os, v14) && pack(os, v15) && pack(os, v16);
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16>
+              
+    size_t packedSize(const T1& v1, const T2& v2, const T3& v3,
+                      const T4& v4, const T5& v5, const T6& v6,
+                      const T7& v7, const T8& v8, const T9& v9,
+                      const T10& v10, const T11& v11, const T12& v12,
+                      const T13& v13, const T14& v14, const T15& v15, 
+                      const T16& v16) const
+    {
+      return packedSize(v1) + packedSize(v2) + packedSize(v3) + packedSize(v4) +
+             packedSize(v5) + packedSize(v6) + packedSize(v7) + packedSize(v8) +
+             packedSize(v9) + packedSize(v10) + packedSize(v11) + packedSize(v12) +
+             packedSize(v13) + packedSize(v14) + packedSize(v15) + packedSize(v16);
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16>
+
+    bool unpack(std::istream& is, T1& v1, T2& v2, T3& v3, T4& v4, T5& v5,
+               T6& v6, T7& v7, T8& v8, T9& v9, T10& v10, T11& v11, T12& v12, 
+               T13& v13, T14& v14, T15& v15, T16& v16)
+    {
+      return unpack(is, v1) && unpack(is, v2) && unpack(is, v3) &&
+             unpack(is, v4) && unpack(is, v5) && unpack(is, v6) &&
+             unpack(is, v7) && unpack(is, v8) && unpack(is, v9) &&
+             unpack(is, v10) && unpack(is, v11) && unpack(is, v12) &&
+             unpack(is, v13) && unpack(is, v14) && unpack(is, v15) && 
+             unpack(is, v16);
+    }
+
+    
+    // need by Usrp protocol (17 params)
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16, typename T17>
+    bool pack(std::ostream& os, const T1& v1, const T2& v2, const T3& v3,
+              const T4& v4, const T5& v5, const T6& v6, const T7& v7,
+              const T8& v8, const T9& v9, const T10& v10,
+              const T11& v11, const T12& v12, const T13& v13,
+              const T14& v14, const T15& v15, const T16& v16, 
+              const T17& v17) const
+    {
+      return pack(os, v1) && pack(os, v2) && pack(os, v3) && pack(os, v4) &&
+             pack(os, v5) && pack(os, v6) && pack(os, v7) && pack(os, v8) &&
+             pack(os, v9) && pack(os, v10) && pack(os, v11) && pack(os, v12) &&
+             pack(os, v13) && pack(os, v14) && pack(os, v15) && pack(os, v16) &&
+             pack(os, v17);
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16, typename T17>
+              
+    size_t packedSize(const T1& v1, const T2& v2, const T3& v3,
+                      const T4& v4, const T5& v5, const T6& v6,
+                      const T7& v7, const T8& v8, const T9& v9,
+                      const T10& v10, const T11& v11, const T12& v12,
+                      const T13& v13, const T14& v14, const T15& v15, 
+                      const T16& v16, const T17& v17) const
+    {
+      return packedSize(v1) + packedSize(v2) + packedSize(v3) + packedSize(v4) +
+             packedSize(v5) + packedSize(v6) + packedSize(v7) + packedSize(v8) +
+             packedSize(v9) + packedSize(v10) + packedSize(v11) + packedSize(v12) +
+             packedSize(v13) + packedSize(v14) + packedSize(v15) + packedSize(v16) +
+             packedSize(v17);
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5,
+              typename T6, typename T7, typename T8, typename T9, typename T10,
+              typename T11, typename T12, typename T13, typename T14, typename T15,
+              typename T16, typename T17>
+
+    bool unpack(std::istream& is, T1& v1, T2& v2, T3& v3, T4& v4, T5& v5,
+               T6& v6, T7& v7, T8& v8, T9& v9, T10& v10, T11& v11, T12& v12, 
+               T13& v13, T14& v14, T15& v15, T16& v16, T17& v17)
+    {
+      return unpack(is, v1) && unpack(is, v2) && unpack(is, v3) &&
+             unpack(is, v4) && unpack(is, v5) && unpack(is, v6) &&
+             unpack(is, v7) && unpack(is, v8) && unpack(is, v9) &&
+             unpack(is, v10) && unpack(is, v11) && unpack(is, v12) &&
+             unpack(is, v13) && unpack(is, v14) && unpack(is, v15) && 
+             unpack(is, v16) && unpack(is, v17);
+    }
+    
 }; /* class Msg */
 
 

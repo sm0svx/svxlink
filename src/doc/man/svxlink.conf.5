@@ -716,6 +716,50 @@ variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
 .
+.SS UsrpLogic
+.
+The UsprLogic is used to connect SvxLink with a digital Hamradio network. The 
+communication is based on Udp transmission. Some Hamradio applications
+are able to accept the protocol (Asterisk, MMDVM).
+.TP
+.B TYPE
+The type for a Usrp Logic is always "Usrp"
+.TP
+.B CALL
+Specify the callsign used at this logic.
+.TP
+.B USRP_HOST
+The hostname of the Usrp server.
+.TP
+.B USRP_TX_PORT
+The Udp port used to send Udp messages to Usrp server
+.TP
+.B USRP_RX_PORT
+The Udp port used to receive Udp messages from the Usrp server.
+.TP
+.B DMRID
+The DMR-ID ssigned to the callsign.
+.TP
+.B RPTID
+The repeater ID. It's not used in most cases.
+.TP
+.B DEFAULT_TG
+The talk group. Default is 0
+.TP
+.B DEFAULT_CC
+The color code. It's not used in most cases, default is 1
+.TP
+.B DEFAULT_TS
+The time slot. It's not used in most cases, default is 1
+.TP
+.B PREAMP
+The signal (internal audio from connected logic) will be amplified/reduced 
+by the specified number of dB. This processed audio is sent to the usrp server.
+.TP
+.B NET_PREAMP
+The signal received from Usrp network will be amplified/reduced by the 
+number of dB. This processed audio is sent to connected logics.
+.
 .SS QSO Recorder Section
 .
 The QSO recorder is used to record all received audio to files on disk. All
