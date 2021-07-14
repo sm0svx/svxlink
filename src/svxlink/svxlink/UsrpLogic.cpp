@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sstream>
+#include <string.h>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -47,7 +48,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncUdpSocket.h>
-#include <AsyncAudioValve.h>
 #include <version/SVXLINK.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDecimator.h>
@@ -85,7 +85,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "v12052021"
+#define USRPVERSION "v14072021"
  
 
 /****************************************************************************
@@ -378,7 +378,7 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
     sendMetaMsg();
   }
 
-  UsrpMsg usrp;
+  UsrpAudioMsg usrp;
   usrp.setType(USRP_TYPE_VOICE);
   usrp.setKeyup(true);
 
@@ -396,13 +396,8 @@ void UsrpLogic::sendEncodedAudio(const void *buf, int count)
 
   while (stored_samples >= USRP_AUDIO_FRAME_LEN)
   {
-    /*for (int i=0;i<USRP_AUDIO_FRAME_LEN; i++)
-    {
-      cout << r_buf[i] << ",";
-    }
-    cout << endl;*/
     usrp.setAudioData(r_buf);
-    sendMsg(usrp);
+    sendAudioMsg(usrp);
     memmove(r_buf, r_buf + USRP_AUDIO_FRAME_LEN, 
               sizeof(int16_t)*(stored_samples-USRP_AUDIO_FRAME_LEN));
     stored_samples -= USRP_AUDIO_FRAME_LEN;
@@ -422,63 +417,116 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 {
   //cout << "incoming packet from " << addr.toString() << ", len=" << count 
   //     << endl;
-
-  stringstream ss;
-  ss.write(reinterpret_cast<const char*>(buf), count);
+  stringstream si;
+  si.write(reinterpret_cast<const char*>(buf), count);
   UsrpHeaderMsg usrp;
 
-  if (!usrp.unpack(ss))
+  if (!usrp.unpack(si))
   {
     cout << "*** WARNING[" << name()
-         << "]: Unpacking failed for UDP Usrp message" << endl;
+         << "]: Unpacking failed for UDP UsrpHeaderMsg" << endl;
     return;
   }
 
-  if (usrp.type() == USRP_TYPE_VOICE)
+  uint32_t utype = usrp.type();
+
+   // if we receive a fram USRP_TYPE_VOICE and keyup is true 
+   // then  handle it as incoming audio
+  if (utype == USRP_TYPE_VOICE)
   {
-    if (count <= USRP_HEADER_LEN) 
+    if (usrp.keyup() == false)
     {
-      handleStreamStop();
+      handleStreamStop();  // this was an audio stop frame
     }
     else 
     {
-      stringstream ss;
-      ss.write(reinterpret_cast<const char*>(buf), count);
-      UsrpMsg usrp;
-      if (!usrp.unpack(ss))
+      stringstream si;
+      si.write(reinterpret_cast<const char*>(buf), count);
+      UsrpAudioMsg usrpaudio;
+      if (!usrpaudio.unpack(si))
       {
         cout << "*** WARNING[" << name()
-             << "]: Unpacking failed for UDP UsrpMsg" << endl;
+             << "]: Unpacking failed for UDP UsrpAudioMsg" << endl;
         return;
       }
-      handleVoiceStream(usrp);
+      handleVoiceStream(usrpaudio);
     }
   }
-  else if (usrp.type() == USRP_TYPE_TEXT)
+  else if (utype == USRP_TYPE_TEXT)
   {
-    stringstream ss;
-    ss.write(reinterpret_cast<const char*>(buf), count);
-    UsrpMetaMsg usrpmeta;
-    if (!usrpmeta.unpack(ss))
+    // check type of TXT message before further handling
+    // if it's a TLV (0x08) then re-serialize the message
+    stringstream shead;
+    shead.write(reinterpret_cast<const char*>(buf), count);
+
+    UsrpMetaTextMsg usrpmeta;
+    if (!usrpmeta.unpack(shead))
     {
       cout << "*** WARNING[" << name()
-           << "]: Unpacking failed for UDP Meta Usrp message" << endl;
+           << "]: Unpacking failed for UDP stream to UsrpMetaTextMsg" << endl;
       return;
     }
-    handleTextMsg(usrpmeta);
+
+    if (usrpmeta.isTlv())
+    {
+      stringstream stlv;
+      stlv.write(reinterpret_cast<const char*>(buf), count);
+
+      UsrpTlvMetaMsg usrptlvmsg;
+      if (!usrptlvmsg.unpack(stlv))
+      {
+        cout << "*** WARNING[" << name()
+             << "]: Unpacking failed for UDP stream to UsrpTlvMetaMsg" << endl;
+        return;
+      }
+      m_last_call = usrptlvmsg.getCallsign();
+      m_last_tg = usrptlvmsg.getTg();
+      m_last_dmrid = usrptlvmsg.getDmrId();
+    }
+    else
+    {
+      size_t found;
+      stringstream sp;
+      sp.write(reinterpret_cast<const char*>(buf), count);
+      std::string metadata = sp.str().substr(USRP_HEADER_LEN, count - USRP_HEADER_LEN);
+
+      if ((found = metadata.find("INFO:MSG:")) != string::npos)
+      {
+        handleSettingsMsg(metadata.erase(0, metadata.find_last_of(" ") + 1));
+        return;
+      }
+      else if ((found = metadata.find("INFO:{")) != string::npos)
+      {
+        metadata.erase(0,5); // remove "INFO:"
+        Json::Reader reader;
+        Json::Value value;
+        if (reader.parse(metadata,value))
+        {
+          m_last_call = value["digital"]["call"].asString();
+          m_last_tg = atoi(value["digital"]["tg"].asString().c_str());
+          m_last_dmrid = atoi(value["digital"]["rpt"].asString().c_str());
+        }
+      }
+      else if ((found = metadata.find("INFO:")) != string::npos)
+      {
+        metadata.erase(0,5); // to do
+        return;
+      }
+    }
+
+    stringstream ss;
+    ss << "usrp_stationdata_received " << m_last_call << " "
+       << m_last_tg << " " << m_last_dmrid;
+    processEvent(ss.str());
   }
-  else if (usrp.type() == USRP_TYPE_TLV)
-  {
-    cout << "USRP_TYPE_TLV!" << endl;
-  } 
   else
   {
-    cout << "*** unknown type of message:" << usrp.type() << endl;
+    cout << "*** unknown type of message:" << utype << endl;
   }
 } /* UsrpLogic::udpDatagramReceived */
 
 
-void UsrpLogic::handleVoiceStream(UsrpMsg usrp)
+void UsrpLogic::handleVoiceStream(UsrpAudioMsg usrp)
 {
   gettimeofday(&m_last_talker_timestamp, NULL);
   std::array<int16_t, 160> m_audio_data;
@@ -499,39 +547,9 @@ void UsrpLogic::handleStreamStop(void)
   timerclear(&m_last_talker_timestamp);
   
   stringstream ss;
-  ss << "talker_stop " << m_last_call << " " << m_last_tg;
+  ss << "talker_stop " << m_last_tg << " " << m_last_call;
   processEvent(ss.str());
 } /* UsrpLogic::handleStreamStop */
-
-
-void UsrpLogic::handleTextMsg(UsrpMetaMsg usrp)
-{
-  stringstream ss;
-  m_last_tg = usrp.getTg();
-  std::string metadata = usrp.getMetaInfo();
-
-  if (metadata.substr(0,1) == "{" && usrp.getTlv() == TLV_TAG_SET_INFO)
-  {
-    Json::Reader reader;
-    Json::Value value;
-    //Read data from the string
-    if (reader.parse(metadata,value))
-    {
-      m_last_call = value["call"].asString();
-    }
-  }
-  else
-  {
-    m_last_call = usrp.getCallsign();
-  }
-
-  if (usrp.getTlv() == TLV_TAG_SET_INFO)
-  {
-    ss << "usrp_stationdata_received " << m_last_call << " "
-       << usrp.getTg() << " " << usrp.getDmrId();
-    processEvent(ss.str());
-  }
-} /* UsrpLogic::handleTextMsg */
 
 
 void UsrpLogic::sendInfoJson(void)
@@ -551,12 +569,12 @@ void UsrpLogic::sendInfoJson(void)
 } /* UsrpLogic::sendInfoJson */
 
 
-void UsrpLogic::handleInfoMsg(std::string infomsg)
+void UsrpLogic::handleSettingsMsg(std::string infomsg)
 {
   stringstream ss;
   ss << "setting_mode " << infomsg;
   processEvent(ss.str());
-} /* UsrpLogic::handleInfoMsg */
+} /* UsrpLogic::handleSettingsMsg */
 
 
 void UsrpLogic::handleMetaData(std::string metadata)
@@ -582,7 +600,7 @@ void UsrpLogic::handleMetaData(std::string metadata)
 } /* UsrpLogic::handleMetaData */
 
 
-void UsrpLogic::sendMsg(UsrpMsg& usrp)
+void UsrpLogic::sendAudioMsg(UsrpAudioMsg& usrp)
 {
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
@@ -624,7 +642,7 @@ void UsrpLogic::sendStopMsg(void)
 
 void UsrpLogic::sendMetaMsg(void)
 {
-  UsrpMetaMsg usrp;
+  UsrpTlvMetaMsg usrp;
   usrp.setTg(m_selected_tg);
   usrp.setCallsign(m_callsign);
   usrp.setDmrId(m_dmrid);
@@ -774,7 +792,7 @@ void UsrpLogic::checkIdle(void)
 // switching between DMR, YSF, NXDN, P25
 void UsrpLogic::switchMode(uint8_t mode)
 {
-  UsrpMetaMsg usrp;
+  UsrpTlvMetaMsg usrp;
   usrp.setMetaData(selected_mode[mode]);
   usrp.setType(USRP_TYPE_DTMF);
   usrp.setTlv(0x00);

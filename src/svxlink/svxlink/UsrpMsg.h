@@ -120,11 +120,11 @@ const std::string selected_mode[] = { "*NONE", "*DMR", "*P25", "*NXDN" };
  * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
  * @date    2021-04-28
  */
-class UsrpMsg : public Async::Msg
+class UsrpAudioMsg : public Async::Msg
 {
   public:
 
-    UsrpMsg(uint32_t seq=0, uint32_t memory=0, uint32_t keyup=0,
+    UsrpAudioMsg(uint32_t seq=0, uint32_t memory=0, uint32_t keyup=0,
             uint32_t talkgroup=0, uint32_t type=0, uint32_t mpxid=0,
             uint32_t reserved=0, const std::array<int16_t, 160> audio_data={0})
       : m_seq(htole32(seq)), m_memory(htonl(memory)), m_keyup(keyup),
@@ -138,7 +138,7 @@ class UsrpMsg : public Async::Msg
     /**
      * @brief 	Destructor
      */
-    virtual ~UsrpMsg(void) {}
+    virtual ~UsrpAudioMsg(void) {}
 
     uint32_t type(void) const { return ntohl(m_type); }
     uint32_t seq(void) const { return ntohl(m_seq); }
@@ -201,7 +201,7 @@ class UsrpHeaderMsg : public Async::Msg
           m_keyup = 0;
           m_type = 0;
           m_mpxid = 0;
-          m_reserved =0;
+          m_reserved = 0;
         }
 
     /**
@@ -220,8 +220,8 @@ class UsrpHeaderMsg : public Async::Msg
     void setTg(uint32_t tg) { m_talkgroup = htole32(tg); }
     void setSeq(uint32_t seq) { m_seq = htole32(seq); }
 
-    ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, m_type, 
-                      m_mpxid, m_reserved)
+    ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, 
+                      m_type, m_mpxid, m_reserved)
 
   private:
     std::array<char, 4> eye;
@@ -234,40 +234,118 @@ class UsrpHeaderMsg : public Async::Msg
     uint32_t m_reserved;
 };
 
+/*
+template <typename P> 
+class UsrpMsg  {
+    UsrpMsg(UsrpHeaderMsg header, P payload) : header(header), payload(p) {}
+    
+private:
+    UsrpHeaderMsg header;
+    P payload;
+};
+
+
+UrspHeaderMsg h = ....
+if(condition(h)) {
+        
+    std::vector<uint8_t> payload =...
+    UsrpMsg<std::vector> msg(h, payload);
+
+}
+*/
 
 /**
- * @brief   Class for Usrp network Metadata message
+ * @brief   Class for UsrpMetaTextMsg message
+ * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+ * @date    2021-07-02
+ */
+ class UsrpMetaTextMsg : public Async::Msg
+ {
+   public:
+
+     UsrpMetaTextMsg(uint32_t seq=0, uint32_t keyup=0, 
+                     uint32_t talkgroup=0, uint32_t type=0) 
+        : m_seq(htole32(seq)), m_keyup(keyup), 
+          m_talkgroup(htole32(talkgroup)), m_type(htole32(type)) 
+     {
+       eye = {'U','S','R','P'};
+       m_memory = 0;
+       m_keyup = 0;
+       m_talkgroup = 0;
+       m_type = htobe32(USRP_TYPE_TEXT);
+       m_mpxid = 0;
+       m_reserved = 0;
+     }
+     
+     /**
+      * @brief 	Destructor
+      */
+     virtual ~UsrpMetaTextMsg(void) {}
+     
+     /**
+      * public methods
+      */
+     uint32_t type(void) const { return ntohl(m_type); }
+     uint32_t seq(void) const { return m_seq; }
+     uint32_t tg(void) const { return ntohl(m_talkgroup); }
+     uint32_t keyup(void) const { return ntohl(m_keyup); }
+     uint32_t mpx(void) const { return ntohl(m_mpxid); }
+     uint32_t res(void) const { return ntohl(m_reserved); }
+
+     // return true if the message is TLV (first character == 0x08)
+     bool isTlv(void) 
+     { 
+       return (m_meta == 0x08 ? true : false); 
+     }
+    
+     ASYNC_MSG_MEMBERS(eye, m_seq, m_memory, m_keyup, m_talkgroup, 
+                       m_type, m_mpxid, m_reserved, m_meta)
+
+    private:
+      std::array<char, 4> eye;
+      uint32_t m_seq;
+      uint32_t m_memory;
+      uint32_t m_keyup;
+      uint32_t m_talkgroup;          
+      uint32_t m_type;
+      uint32_t m_mpxid;
+      uint32_t m_reserved;
+      uint8_t m_meta;
+}; /* class UsrpMetaTextMsg */
+ 
+
+/**
+ * @brief   Class for Usrp network Metadata message (TLV)
  * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
  * @date    2021-04-28
  */
-class UsrpMetaMsg : public Async::Msg
+class UsrpTlvMetaMsg : public Async::Msg
 {
   public:
 
-    UsrpMetaMsg(uint32_t seq=0)
-      : m_seq(htole32(seq))
+    UsrpTlvMetaMsg(uint32_t seq=0) : m_seq(htole32(seq))
       {
-          eye = {'U','S','R','P'};
-          m_memory = 0;
-          m_keyup = 0;
-          m_talkgroup = 0;
-          m_type = htobe32(USRP_TYPE_TEXT);
-          m_mpxid = 0;
-          m_reserved = 0;
-          m_tlv = TLV_TAG_SET_INFO;
-          m_tlvlen = 0x13;
-          m_dmrid = {0,0,0};
-          m_rptid = 0;
-          m_tg = {0,0,0};
-          m_ts = 0;
-          m_cc = 1;
-          m_meta.fill(0);
-        }
+         eye = {'U','S','R','P'};
+         m_memory = 0;
+         m_keyup = 0;
+         m_talkgroup = 0;
+         m_type = htobe32(USRP_TYPE_TEXT);
+         m_mpxid = 0;
+         m_reserved = 0;
+         m_tlv = TLV_TAG_SET_INFO;
+         m_tlvlen = 0x13;
+         m_dmrid = {0,0,0};
+         m_rptid = 0;
+         m_tg = {0,0,0};
+         m_ts = 0;
+         m_cc = 1;
+         m_meta.fill(0);
+       }
 
     /**
      * @brief 	Destructor
      */
-    virtual ~UsrpMetaMsg(void) {}
+    virtual ~UsrpTlvMetaMsg(void) {}
 
     // set the own talk group
     void setTg(uint32_t tg) 
@@ -301,7 +379,6 @@ class UsrpMetaMsg : public Async::Msg
     // set Metadata
     void setMetaData(std::string metadata)
     {
-      
     }
     
     // set DMR-ID
@@ -343,21 +420,21 @@ class UsrpMetaMsg : public Async::Msg
       uint8_t call[9];
       if (m_tlv == TLV_TAG_SET_INFO && m_tlvlen < 0x16)
       {
-        for(i=0;i<(m_tlvlen-14);i++)
+        for(i=0;i<(m_tlvlen-13);i++)
         {
-          if (m_meta[i] == 0x00) break;
           call[i] = m_meta[i];
+          if (m_meta[i] == 0x00) break;
         }
       }
       return std::string(call, call+i);
     }
 
-    // returns the info (as json in a string)
+    // returns MetaData info
     std::string getMetaInfo(void)
     {
       uint8_t metainfo[306];
       uint8_t z;
-      if (m_type == USRP_TYPE_TEXT && m_tlv == TLV_TAG_BEGIN_TX && m_tlvlen == 0)
+      if (m_tlv == TLV_TAG_SET_INFO)
       {
         for (z=0;z<306;z++)
         {
@@ -387,6 +464,9 @@ class UsrpMetaMsg : public Async::Msg
     // getTlv
     uint8_t getTlv(void) { return m_tlv; }
 
+    // getTS
+    uint8_t getTS(void) { return (m_ts > 4 ? 4 : m_ts); }
+    
     // getTlvLen
     uint8_t getTlvLen(void) { return m_tlvlen; }
 

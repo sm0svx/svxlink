@@ -72,7 +72,7 @@ proc transmission_stop {tg} {
 #
 # Executed when the remote transmision has stopped
 #
-proc talker_stop {call tg} {
+proc talker_stop {tg {call "unknown"}} {
   puts "Talker stop: $call TG# $tg";
 }
 
@@ -90,7 +90,6 @@ proc switch_to_mode {mode} {
 #
 proc setting_mode {mode} {
   puts "New mode: $mode";
-  playMsg $mode;
 }
 
 

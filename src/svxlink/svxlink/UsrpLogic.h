@@ -191,6 +191,7 @@ class UsrpLogic : public LogicBase
     EventHandler*                     m_event_handler;
     uint32_t                          m_last_tg;
     std::string                       m_last_call;
+    uint32_t                          m_last_dmrid;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
@@ -200,9 +201,8 @@ class UsrpLogic : public LogicBase
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
                              void *buf, int count);
     void handleStreamStop(void);
-    void handleVoiceStream(UsrpMsg usrp);
-    void handleTextMsg(UsrpMetaMsg usrp);
-    void sendMsg(UsrpMsg& usrp);
+    void handleVoiceStream(UsrpAudioMsg usrp);
+    void sendAudioMsg(UsrpAudioMsg& usrp);
     void sendStopMsg(void);
     void sendMetaMsg(void);
     void sendUdpMessage(std::ostringstream& ss);
@@ -219,7 +219,7 @@ class UsrpLogic : public LogicBase
     void handleMetaData(std::string metadata);
     void switchMode(uint8_t mode);
     void processEvent(const std::string& event);
-    void handleInfoMsg(std::string infomsg);
+    void handleSettingsMsg(std::string infomsg);
     void handlePlayFile(const std::string& path);
     void handlePlaySilence(int duration);
     void handlePlayTone(int fq, int amp, int duration);
