@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <vector>
 #include <string>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -181,6 +182,24 @@ class Reflector : public sigc::trackable
      */
     void requestQsy(ReflectorClient *client, uint32_t tg);
 
+    /**
+     * @brief  Updates the user information
+     * @param  user array with all data of the useres
+     */
+    void updateUserdata(Json::Value eventmessage);
+
+    /**
+     * @brief  Update Sds information
+     * @param  ToDo
+     */
+    void updateSdsdata(Json::Value eventmessage);
+
+    /**
+     * @brief  Update Qso information
+     * @param  ToDo
+     */
+    void updateQsostate(Json::Value eventmessage);
+
   private:
     typedef std::map<uint32_t, ReflectorClient*> ReflectorClientMap;
     typedef std::map<Async::FramedTcpConnection*,
@@ -197,6 +216,25 @@ class Reflector : public sigc::trackable
     uint32_t                                        m_random_qsy_hi;
     uint32_t                                        m_random_qsy_tg;
     Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
+    std::string                                     cfg_filename;
+    bool                                            debug;
+
+      // contain user data
+    struct User {
+      std::string issi;
+      std::string call;
+      std::string name;
+      std::string comment;
+      float lat;
+      float lon;
+      std::string state;
+      short reasonforsending;
+      char aprs_sym;
+      char aprs_tab;
+      time_t last_activity;
+      time_t sent_last_sds;
+    };
+    std::map<std::string, User> userdata;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
@@ -214,6 +252,9 @@ class Reflector : public sigc::trackable
         Async::HttpServerConnection::DisconnectReason reason);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
+    bool getUserData(void);
+    void writeUserData(std::map<std::string, User> userdata);
+    std::string jsonToString(Json::Value eventmessage);
 
 };  /* class Reflector */
 

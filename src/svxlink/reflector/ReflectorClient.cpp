@@ -142,7 +142,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_udp_heartbeat_tx_cnt(UDP_HEARTBEAT_TX_CNT_RESET),
     m_udp_heartbeat_rx_cnt(UDP_HEARTBEAT_RX_CNT_RESET),
     m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0),
-    m_current_tg(0), debug(false)
+    m_current_tg(0)
 {
   m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
   m_con->frameReceived.connect(
@@ -180,45 +180,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     }
     m_supported_codecs.push_back(codec);
   }
-  
-  m_cfg->getValue("GLOBAL", "DEBUG", debug);
-  
-  m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename);
-  if (cfg_filename.length() < 1)
-  {
-    cfg_filename = "/tmp/svxreflector_userdata.json";
-    return;
-  }
-  
-  // loading user info
-  Json::Value cfg_root;
-  std::ifstream cfgfile(cfg_filename);
-  if (!cfgfile.is_open())
-  {
-    return;
-  }
-  cfgfile >> cfg_root;
-  cfgfile.close();
-  if (cfg_root.size() < 1)
-  {
-   return;
-  }
-  for (Json::Value::ArrayIndex i = 0; i != cfg_root.size(); i++)
-  {
-    User m_user;
-    Json::Value& t_userdata = cfg_root[i];
-    m_user.issi = t_userdata.get("tsi", "").asString();
-    m_user.name = t_userdata.get("name","").asString();
-    m_user.call = t_userdata.get("call","").asString();
-    m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
-    m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
-    m_user.comment = t_userdata.get("comment","").asString();
-    m_user.last_activity = (time_t) strtol(
-          t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
-    userdata[m_user.issi] = m_user;
-  }
-  cout << "+++ " << cfg_root.size() << " users loaded from '" 
-       << cfg_filename << "'" << endl;
+
 } /* ReflectorClient::ReflectorClient */
 
 
@@ -689,110 +651,28 @@ void ReflectorClient::handleStateEvent(std::istream& is)
        << " msg=" << msg.msg()
        << std::endl;
   */
-  Json::Value user_arr;
+  Json::Value eventmessage;
   Json::Reader reader;
-  bool b = reader.parse(msg.msg(), user_arr);
+  bool b = reader.parse(msg.msg(), eventmessage);
   if (!b)
   {
     cout << "*** Error: parsing StateEvent message (" 
          << reader.getFormattedErrorMessages() << ")" << endl;
     return;
   }
-  
-  Json::Value event(Json::arrayValue);
-  User m_user;
-  std::map<std::string, User>::iterator iu;
+
   if (msg.name() == "TetraUsers:info")
   {
-    for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
-    {
-      Json::Value& t_userdata = user_arr[i];
-      m_user.issi = t_userdata.get("tsi", "").asString();
-      m_user.name = t_userdata.get("name","").asString();
-      m_user.call = t_userdata.get("call","").asString();
-      m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
-      m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
-      m_user.comment = t_userdata.get("comment","").asString();
-      if (t_userdata.get("last_activity","").asString().length() > 0)
-      {
-        m_user.last_activity = (time_t) strtol(
-            t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
-      }
-      
-      iu = userdata.find(m_user.issi);
-      if (iu != userdata.end())
-      {
-        iu->second.name= m_user.name;
-        iu->second.aprs_sym = m_user.aprs_sym;
-        iu->second.aprs_tab = m_user.aprs_tab;
-        iu->second.comment = m_user.comment;
-        if (m_user.last_activity)
-        {
-          iu->second.last_activity = m_user.last_activity;
-        }
-        if (debug)
-        {
-          cout << "UPDATE: call=" << m_user.call << ", issi=" << m_user.issi 
-            << ", name=" << m_user.name << " (" << m_user.comment << ")" 
-            << endl;
-        }
-      }
-      else
-      {
-        userdata[m_user.issi] = m_user;
-        if (debug)
-        {
-          cout << "NEW: call=" << m_user.call << ", issi=" << m_user.issi 
-               << ", name=" << m_user.name << " (" << m_user.comment << ")" 
-               << endl;
-        }
-      }
-    }
+    m_reflector->updateUserdata(eventmessage);
   }
   else if (msg.name() == "Sds:info")
   {
-    Json::Value t_userdata = user_arr[0];
-    iu = userdata.find(t_userdata.get("tsi","").asString());
-    if (iu != userdata.end())
-    {
-      iu->second.last_activity = (time_t) strtol(
-            t_userdata.get("last_activity","").asString().c_str(), NULL,10);
-    }
+    m_reflector->updateSdsdata(eventmessage);
   }
-  
-  for (iu = userdata.begin(); iu!=userdata.end(); iu++)
+  else if (msg.name() == "QsoInfo:state")
   {
-    Json::Value t_userinfo(Json::objectValue);
-    t_userinfo["tsi"] = iu->second.issi;
-    t_userinfo["call"] = iu->second.call;
-    t_userinfo["name"] = iu->second.name;
-    t_userinfo["sym"] = iu->second.aprs_sym;
-    t_userinfo["tab"] = iu->second.aprs_tab;
-    t_userinfo["comment"] = iu->second.comment;
-    if (iu->second.last_activity)
-    {
-      stringstream la;
-      la << iu->second.last_activity;
-      t_userinfo["last_activity"] = la.str();
-    }
-    event.append(t_userinfo);    
+    m_reflector->updateQsostate(eventmessage);
   }
-  
-   // sending own tetra user information to the svxreflector network
-  Json::StreamWriterBuilder builder;
-  builder["commentStyle"] = "None";
-  builder["indentation"] = ""; //The JSON document is written on a single line
-  Json::StreamWriter* writer = builder.newStreamWriter();
-  std::ofstream outputFileStream(cfg_filename);
-  std::stringstream os;
-  writer->write(event, &os);
-  writer->write(event, &outputFileStream);
-  delete writer;
-
-  // send user info to client nodes
-  m_reflector->broadcastMsg(MsgStateEvent("Reflector","TetraUsers:info", 
-                                          os.str()), ExceptFilter(this));
-
 } /* ReflectorClient::handleStateEvent */
 
 

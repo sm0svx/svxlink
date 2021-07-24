@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <json/json.h>
+#include <fstream>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -123,7 +125,8 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0)
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0),
+    cfg_filename("/tmp/userinfo.json"), debug(false)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -232,8 +235,90 @@ bool Reflector::initialize(Async::Config &cfg)
         sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
   }
 
+  m_cfg->getValue("GLOBAL", "DEBUG", debug);
+
+  if (!m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename))
+  {
+    cfg_filename = "/tmp/svxreflector_userdata-";
+    cfg_filename += to_string(udp_listen_port);
+    cfg_filename += ".json";
+  }
+
+  // reads the user data from json file
+  if (!getUserData())
+  {
+    cout << "*** Can not read user data from json file: " << cfg_filename << endl;
+  }
+
   return true;
 } /* Reflector::initialize */
+
+
+void Reflector::updateUserdata(Json::Value user_arr)
+{
+  User m_user;
+  for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+  {
+    Json::Value& t_userdata = user_arr[i];
+    m_user.issi = t_userdata.get("tsi", "").asString();
+    m_user.name = t_userdata.get("name","").asString();
+    m_user.call = t_userdata.get("call","").asString();
+    m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+    m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+    m_user.comment = t_userdata.get("comment","").asString();
+    if (t_userdata.get("last_activity","").asString().length() > 0)
+    {
+      m_user.last_activity = (time_t) strtol(
+          t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+    }
+
+    std::map<std::string, User>::iterator iu;
+    iu = userdata.find(m_user.issi);
+    if (iu != userdata.end())
+    {
+      iu->second.name= m_user.name;
+      iu->second.aprs_sym = m_user.aprs_sym;
+      iu->second.aprs_tab = m_user.aprs_tab;
+      iu->second.comment = m_user.comment;
+      if (m_user.last_activity)
+      {
+        iu->second.last_activity = m_user.last_activity;
+      }
+
+      if (debug)
+      {
+        cout << "UPDATE: call=" << m_user.call << ", issi=" << m_user.issi 
+          << ", name=" << m_user.name << " (" << m_user.comment << ")" 
+          << endl;
+      }
+    }
+    else
+    {
+      userdata.insert(std::pair<std::string, User>(m_user.issi, m_user));
+      if (debug)
+      {
+        cout << "New user: call=" << m_user.call << ", issi=" << m_user.issi 
+             << ", name=" << m_user.name << " ("   << m_user.comment << ")"
+             << endl;
+      }
+    }
+  }
+  writeUserData(userdata);
+} /* Reflector::updateUserdata */
+
+
+void Reflector::updateSdsdata(Json::Value eventmessage)
+{
+  std::string message = jsonToString(eventmessage);
+  cout << message << endl;
+} /* Reflector::updateSdsdata */
+
+
+void Reflector::updateQsostate(Json::Value eventmessage)
+{
+  std::string message = jsonToString(eventmessage);
+  cout << message << endl;
+} /* Reflector::updateQsostate */
 
 
 void Reflector::nodeList(std::vector<std::string>& nodes) const
@@ -791,6 +876,100 @@ uint32_t Reflector::nextRandomQsyTg(void)
   return 0;
 } /* Reflector::nextRandomQsyTg */
 
+
+bool Reflector::getUserData(void)
+{
+  // loading user info
+  Json::Value cfg_root;
+  std::ifstream cfgfile(cfg_filename);
+  if (!cfgfile.is_open())
+  {
+    if (debug)
+    {
+      cout << "+++ WARNING: Can not open " << cfg_filename << endl;
+    }
+    return false;
+  }
+  cfgfile >> cfg_root;
+  cfgfile.close();
+  if (cfg_root.size() < 1)
+  {
+    if (debug)
+    {
+      cout << "+++ WARNING: File (" << cfg_filename << ") contains no userdata"
+           << endl;
+    }
+   return false;
+  }
+  for (Json::Value::ArrayIndex i = 0; i != cfg_root.size(); i++)
+  {
+    User m_user;
+    Json::Value& t_userdata = cfg_root[i];
+    m_user.issi = t_userdata.get("tsi", "").asString();
+    m_user.name = t_userdata.get("name","").asString();
+    m_user.call = t_userdata.get("call","").asString();
+    m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+    m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+    m_user.comment = t_userdata.get("comment","").asString();
+    m_user.last_activity = (time_t) strtol(
+          t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+    userdata[m_user.issi] = m_user;
+  }
+  cout << "+++ " << cfg_root.size() << " users loaded from '" 
+       << cfg_filename << "'" << endl;
+
+  return true;
+} /* Reflector::getUserData */
+
+
+void Reflector::writeUserData(std::map<std::string, User> userdata)
+{
+  Json::Value event(Json::arrayValue);
+  std::map<std::string, User>::iterator iu;
+
+  for (iu = userdata.begin(); iu!=userdata.end(); iu++)
+  {
+    Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["tsi"] = iu->second.issi;
+    t_userinfo["call"] = iu->second.call;
+    t_userinfo["name"] = iu->second.name;
+    t_userinfo["sym"] = iu->second.aprs_sym;
+    t_userinfo["tab"] = iu->second.aprs_tab;
+    t_userinfo["comment"] = iu->second.comment;
+    if (iu->second.last_activity)
+    {
+      stringstream la;
+      la << iu->second.last_activity;
+      t_userinfo["last_activity"] = la.str();
+    }
+    event.append(t_userinfo);
+  }
+
+   // sending own tetra user information to the svxreflector network
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::ofstream outputFileStream(cfg_filename);
+  std::stringstream os;
+  writer->write(event, &os);
+  writer->write(event, &outputFileStream);
+  delete writer;
+  // send user info to client nodes
+  broadcastMsg(MsgStateEvent("Reflector","TetraUsers:info", 
+                os.str()), v1_client_filter);
+
+} /* Reflector::writeUserData */
+
+
+string Reflector::jsonToString(Json::Value eventmessage)
+{
+  Json::FastWriter jsontoString;
+  std::string message = jsontoString.write(eventmessage);
+  message.erase(std::remove_if(message.begin(), message.end(), 
+                [](unsigned char x){return std::iscntrl(x);}));
+  return message;
+} /* Reflector::jsonToString */
 
 /*
  * This file has not been truncated

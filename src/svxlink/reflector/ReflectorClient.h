@@ -446,25 +446,6 @@ class ReflectorClient
     RxMap                       m_rx_map;
     TxMap                       m_tx_map;
     Json::Value                 m_node_info;
-    std::string                 cfg_filename;
-    bool                        debug;
-         
-         // contain user data
-    struct User {
-      std::string issi;
-      std::string call;
-      std::string name;
-      std::string comment;
-      float lat;
-      float lon;
-      std::string state;
-      short reasonforsending;
-      char aprs_sym;
-      char aprs_tab;
-      time_t last_activity;
-      time_t sent_last_sds;
-    };
-    std::map<std::string, User> userdata;
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);

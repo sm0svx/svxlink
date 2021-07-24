@@ -412,12 +412,14 @@ int main(int argc, const char *argv[])
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
 
   cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
-          " Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "
           "terms and conditions in the\n";
   cout << "GNU GPL (General Public License) version 2 or later.\n";
+  cout << "This is a special SvxReflector version for Tetra users\n";
+  cout << "modified by Adi / DL1HRC\n";
 
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
 

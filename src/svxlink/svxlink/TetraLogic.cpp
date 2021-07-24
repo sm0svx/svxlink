@@ -1173,6 +1173,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
       {
         m_aprsinfo << ">" << sds_txt;
       }
+      sdsinfo["content"] = sds_txt;
       break;
 
     case SIMPLE_TEXT_SDS:
