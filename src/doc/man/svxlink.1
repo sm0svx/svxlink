@@ -1,4 +1,4 @@
-.TH SVXLINK 1 "APRIL 2021" Linux "User Manuals"
+.TH SVXLINK 1 "AUGUST 2021" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -65,6 +65,9 @@ during startup of the SvxLink server when using OSS audio.
 ASYNC_AUDIO_ALSA_ZEROFILL
 Set this environment variable to 0 to stop the Alsa audio code from writing
 zeros to the audio device when there is no audio to write available.
+ASYNC_AUDIO_UDP_ZEROFILL
+Set this environment variable to 1 to enable the UDP audio code to write zeros
+to the UDP connection when there is no audio to write available.
 .TP
 HOME
 Used to find the per user configuration file.

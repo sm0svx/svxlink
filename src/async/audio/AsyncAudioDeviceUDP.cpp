@@ -40,6 +40,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <vector>
 #include <sstream>
 
@@ -190,7 +192,7 @@ int AudioDeviceUDP::samplesToWrite(void) const
 
 AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
   : AudioDevice(dev_name), block_size(0), sock(0), read_buf(0),
-    read_buf_pos(0), port(0)
+    read_buf_pos(0), port(0), zerofill_on_underflow(false)
 {
   assert(AudioDeviceUDP_creator_registered);
   assert(sampleRate() > 0);
@@ -202,6 +204,12 @@ AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
   pace_timer->setEnable(false);
   pace_timer->expired.connect(
       sigc::hide(mem_fun(*this, &AudioDeviceUDP::audioWriteHandler)));
+
+  char *zerofill_str = std::getenv("ASYNC_AUDIO_UDP_ZEROFILL");
+  if (zerofill_str != 0)
+  {
+    std::istringstream(zerofill_str) >> zerofill_on_underflow;
+  }
 } /* AudioDeviceUDP::AudioDeviceUDP */
 
 
@@ -347,8 +355,16 @@ void AudioDeviceUDP::audioWriteHandler(void)
   frags_read = getBlocks(buf, 1);
   if (frags_read == 0)
   {
-    pace_timer->setEnable(false);
-    return;
+    if (zerofill_on_underflow)
+    {
+      frags_read = 1;
+      std::memset(buf, 0, block_size * channels);
+    }
+    else
+    {
+      pace_timer->setEnable(false);
+      return;
+    }
   }
 
     // Write the samples to the socket
