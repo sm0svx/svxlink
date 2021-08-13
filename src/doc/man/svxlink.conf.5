@@ -938,7 +938,7 @@ to -12) if it does not affect audio quality negatively.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV, SIGLEV, PTY, GPIO, HIDRAW or COMBINE.
+SERIAL, EVDEV, SIGLEV, PTY, GPIO, GPIOD, HIDRAW or COMBINE.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -971,6 +971,11 @@ to open and a LOW (GND) level will set the squelch to closed.
 Specify which squelch pin to use with the GPIO_SQL_PIN configuration variable.
 On some devices, like the Orange Pi, you also need to set the GPIO_PATH
 configuration variable.
+
+The GPIOD squelch detector read a pin in the GPIO subsystem using the gpiod
+library. Depending on the level of the pin, the squelch is switched.  Set GPIOD
+interaction up using the following configuration variables: SQL_GPIOD_CHIP,
+SQL_GPIOD_LINE, SQL_GPIOD_BIAS.
 
 The SIGLEV squelch detector use signal level measurements to determine if the
 squelch is open or not. Which signal level detector to use is determined by the
@@ -1217,6 +1222,35 @@ gpio4. Some GPIO drivers use more complex names, like gpio33_pe11. If inverted
 operation is desired, prefix the pin name with an exclamation mark (!).
 
 Example: GPIO_SQL_PIN=!gpio4
+.TP
+.B SQL_GPIOD_CHIP
+The GPIO chip to use for squelch. The application tries to figure out whether
+the value is the path to the GPIO chip, its name, label or number.
+
+Example: SQL_GPIOD_CHIP=gpiochip0
+.TP
+.B SQL_GPIOD_LINE
+If GPIOD was specified in SQL_DET, set this config variable to the gpiod line
+of the GPIO pin to use. If a number is specified it is assumed to be the GPIO
+pin offset within the chip. If a pin name is specified SvxLink will try to find
+a pin with that name within the chip.
+
+Normally, the pin will be active high but if the pin specification is prefixed
+with an exclamation mark it will be active low instead.
+
+For some hardware platforms you may need to also set the SQL_GPIOD_CHIP
+configuration variable, if the pin you want to use is not on the default GPIO
+chip.
+
+Example: SQL_GPIOD_LINE=17
+.TP
+.B SQL_GPIOD_BIAS
+This config variable is only available when SvxLink has been built with
+libgpiod >= 1.5. It makes it possible to set if the squelch GPIO pin should be
+pulled up or down. If you don't know what that mean you should check the
+documentation for your hardware interface, whether it require a pull up or
+down. It's an electronics thing. In essence, a pull up will force the pin high
+if nothing is connected to it and a pull down will force it low.
 .TP
 .B SQL_COMBINE
 This configuration variable is used to set a logical expression that is used to
@@ -2045,15 +2079,18 @@ to start with for this parameter is then -6 but try to lower it further (like
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
 control the PTT.  Specify "SerialPin" for using a pin in the serial port,
-"GPIO" to use a pin in a GPIO port, "PTY" if you want to use an external
-interface script via a pseudo tty port or "Hidraw" to use the linux/hidraw
-driver to support hidraw devices like CM108 sound card, e.g. URI device
-from DMK.
+"GPIO" (sysfs=deprecated)/"GPIOD" to use a pin in a GPIO port, "PTY" if you
+want to use an external interface script via a pseudo tty port or "Hidraw" to
+use the linux/hidraw driver to support hidraw devices like CM108 sound card,
+e.g.  URI device from DMK.
 
 Set PTT_TYPE to "Dummy" or "NONE"
 to not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
 
-Use PTT_PIN to specify the pin to use for "SerialPin" or "GPIO".
+Use PTT_PIN to specify the pin to use for "SerialPin" or "GPIO",
+
+Use PTT_GPIOD_LINE and PTT_GPIOD_CHIP to specify the GPIO pin to use for
+"GPIOD".
 .TP
 .B PTT_PORT
 Specify the serial port that the PTT is connected to. E.g. /dev/ttyS0 for COM1.
@@ -2078,6 +2115,27 @@ may need to also set the GPIO_PATH configuration variable.
 Use this configuration variable to set the path to the sys control devices for
 GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
 Pi, the path is /sys/class/gpio_sw.
+.TP
+.B PTT_GPIOD_CHIP
+The GPIO chip to use for PTT. The application tries to figure out whether the
+value is the path to the GPIO chip, its name, label or number.
+
+Example: PTT_GPIOD_CHIP=gpiochip0
+.TP
+.B PTT_GPIOD_LINE
+If GPIOD was specified in PTT_TYPE, set this config variable to the gpiod line
+of the GPIO pin to use. If a number is specified it is assumed to be the GPIO
+pin offset within the chip. If a pin name is specified SvxLink will try to find
+a pin with that name within the chip.
+
+Normally, the pin will be active high but if the pin specification is prefixed
+with an exclamation mark it will be active low instead.
+
+For some hardware platforms you may need to also set the PTT_GPIOD_CHIP
+configuration variable, if the pin you want to use is not on the default GPIO
+chip.
+
+Example: PTT_GPIOD_LINE=17
 .TP
 .B PTT_PTY
 If PTT_TYPE is set to "PTY" this configuration variable will set the path for

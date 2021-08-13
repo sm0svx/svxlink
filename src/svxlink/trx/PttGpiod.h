@@ -1,12 +1,12 @@
 /**
-@file	 Ptt.cpp
-@brief   Base class for PTT hw control
+@file    PttGpiod.h
+@brief   A PTT hardware controller using a pin in a GPIO port
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-01-26
+@date    2021-08-13
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef PTT_GPIOD_INCLUDED
+#define PTT_GPIOD_INCLUDED
 
 
 /****************************************************************************
@@ -32,8 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cassert>
+#include <gpiod.h>
+#include <string>
 
 
 /****************************************************************************
@@ -51,26 +53,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Ptt.h"
-#include "PttSerialPin.h"
-#include "PttGpio.h"
-#include "PttPty.h"
-#ifdef HAS_HIDRAW_SUPPORT
-#include "PttHidraw.h"
-#endif
-#ifdef HAS_GPIOD_SUPPORT
-#include "PttGpiod.h"
-#endif
+
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Namespace
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
@@ -84,114 +89,66 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local class definitions
- *
- ****************************************************************************/
-
-namespace {
-  class PttDummy : public Ptt
-  {
-    public:
-      struct Factory : public PttFactory<PttDummy>
-      {
-        Factory(void) : PttFactory<PttDummy>("Dummy") {}
-      };
-
-      virtual bool initialize(Config &cfg, const string name) { return true; }
-      virtual bool setTxOn(bool tx_on) { return true; }
-  };
-};
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
  * Exported Global Variables
  *
  ****************************************************************************/
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
+/**
+@brief  A PTT hardware controller using a pin in a GPIO port
+@author Tobias Blomberg / SM0SVX
+@date   2021-08-12
+*/
+class PttGpiod : public Ptt
 {
-  PttDummy::Factory dummy_ptt_factory;
-  PttSerialPin::Factory serial_ptt_factory;
-  PttGpio::Factory gpio_ptt_factory;
-  PttPty::Factory pty_ptt_factory;
-#ifdef HAS_HIDRAW_SUPPORT
-  PttHidraw::Factory hidraw_ptt_factory;
-#endif
-#ifdef HAS_GPIOD_SUPPORT
-  PttGpiod::Factory gpiod_ptt_factory;
-#endif
+  public:
+    struct Factory : public PttFactory<PttGpiod>
+    {
+      Factory(void) : PttFactory<PttGpiod>("GPIOD") {}
+    };
 
-  string ptt_type;
-  if (!cfg.getValue(name, "PTT_TYPE", ptt_type) || ptt_type.empty())
-  {
-    cerr << "*** ERROR: PTT_TYPE not specified for transmitter "
-         << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
-    return 0;
-  }
+    /**
+     * @brief   Default constructor
+     */
+    PttGpiod(void);
 
-  if (ptt_type == "NONE")
-  {
-    ptt_type = "Dummy";
-  }
-  
-  Ptt *ptt = createNamedObject(ptt_type);
-  if (ptt == 0)
-  {
-    cerr << "*** ERROR: Unknown PTT_TYPE \"" << ptt_type << "\" specified for "
-         << "transmitter " << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
-  }
-  
-  return ptt;
-} /* PttFactoryBase::createNamedPtt */
+    /**
+     * @brief   Destructor
+     */
+    ~PttGpiod(void);
 
+    /**
+     * @brief   Initialize the PTT hardware
+     * @param   cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @returns Returns \em true on success or else \em false
+     */
+    virtual bool initialize(Async::Config &cfg, const std::string name);
 
+    /**
+     * @brief   Set the state of the PTT, TX on or off
+     * @param   tx_on Set to \em true to turn the transmitter on
+     * @returns Returns \em true on success or else \em false
+     */
+    virtual bool setTxOn(bool tx_on);
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
+  private:
+    struct gpiod_chip*  m_chip  = nullptr;
+    struct gpiod_line*  m_line  = nullptr;
+
+};  /* class PttGpiod */
 
 
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
+#endif /* PTT_GPIOD_INCLUDED */
 
 
 /*
  * This file has not been truncated
  */
-
