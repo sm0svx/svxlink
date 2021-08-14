@@ -1,12 +1,12 @@
 /**
-@file	 Ptt.cpp
-@brief   Base class for PTT hw control
+@file    PttGpiod.cpp
+@brief   A PTT hardware controller using a pin in a GPIO port
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-01-26
+@date    2021-08-13
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,16 +24,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <cstring>
+#include <cerrno>
 #include <iostream>
-#include <cassert>
+#include <sstream>
 
 
 /****************************************************************************
@@ -50,16 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Ptt.h"
-#include "PttSerialPin.h"
-#include "PttGpio.h"
-#include "PttPty.h"
-#ifdef HAS_HIDRAW_SUPPORT
-#include "PttHidraw.h"
-#endif
-#ifdef HAS_GPIOD_SUPPORT
 #include "PttGpiod.h"
-#endif
 
 
 
@@ -68,9 +59,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Namespaces to use
  *
  ****************************************************************************/
-
-using namespace std;
-using namespace Async;
 
 
 
@@ -87,20 +75,6 @@ using namespace Async;
  * Local class definitions
  *
  ****************************************************************************/
-
-namespace {
-  class PttDummy : public Ptt
-  {
-    public:
-      struct Factory : public PttFactory<PttDummy>
-      {
-        Factory(void) : PttFactory<PttDummy>("Dummy") {}
-      };
-
-      virtual bool initialize(Config &cfg, const string name) { return true; }
-      virtual bool setTxOn(bool tx_on) { return true; }
-  };
-};
 
 
 
@@ -120,7 +94,6 @@ namespace {
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -135,43 +108,109 @@ namespace {
  *
  ****************************************************************************/
 
-Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
+PttGpiod::PttGpiod(void)
 {
-  PttDummy::Factory dummy_ptt_factory;
-  PttSerialPin::Factory serial_ptt_factory;
-  PttGpio::Factory gpio_ptt_factory;
-  PttPty::Factory pty_ptt_factory;
-#ifdef HAS_HIDRAW_SUPPORT
-  PttHidraw::Factory hidraw_ptt_factory;
-#endif
-#ifdef HAS_GPIOD_SUPPORT
-  PttGpiod::Factory gpiod_ptt_factory;
-#endif
+} /* PttGpiod::PttGpiod */
 
-  string ptt_type;
-  if (!cfg.getValue(name, "PTT_TYPE", ptt_type) || ptt_type.empty())
+
+PttGpiod::~PttGpiod(void)
+{
+  if (m_line != nullptr)
   {
-    cerr << "*** ERROR: PTT_TYPE not specified for transmitter "
-         << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
-    return 0;
+    gpiod_line_release(m_line);
+    m_line = nullptr;
   }
 
-  if (ptt_type == "NONE")
+  if (m_chip != nullptr)
   {
-    ptt_type = "Dummy";
+    gpiod_chip_close(m_chip);
+    m_chip = nullptr;
   }
-  
-  Ptt *ptt = createNamedObject(ptt_type);
-  if (ptt == 0)
+} /* PttGpiod::~PttGpiod */
+
+
+bool PttGpiod::initialize(Async::Config &cfg, const std::string name)
+{
+  std::string chip("gpiochip0");
+  cfg.getValue(name, "PTT_GPIOD_CHIP", chip);
+
+  struct gpiod_line_request_config req_cfg;
+  req_cfg.consumer = "SvxLink";
+  req_cfg.request_type = GPIOD_LINE_REQUEST_DIRECTION_OUTPUT;
+  req_cfg.flags = 0;
+
+  std::string line;
+  if (!cfg.getValue(name, "PTT_GPIOD_LINE", line) || line.empty())
   {
-    cerr << "*** ERROR: Unknown PTT_TYPE \"" << ptt_type << "\" specified for "
-         << "transmitter " << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
+    std::cerr << "*** ERROR: Config variable " << name
+              << "/PTT_GPIOD_LINE not set or an illegal value was specified"
+              << std::endl;
+    return false;
   }
-  
-  return ptt;
-} /* PttFactoryBase::createNamedPtt */
+  bool active_low = false;
+  if (line[0] == '!')
+  {
+    active_low = true;
+    line.erase(0, 1);
+    req_cfg.flags |= GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW;
+  }
+
+  m_chip = gpiod_chip_open_lookup(chip.c_str());
+  if (m_chip == nullptr)
+  {
+    std::cerr << "*** ERROR: Open GPIOD chip \"" << chip
+              << "\" failed for TX " << name << ": "
+              << std::strerror(errno) << std::endl;
+    return false;
+  }
+
+  int line_num = -1;
+  std::istringstream is(line);
+  is >> line_num;
+  if (!is.fail() && is.eof())
+  {
+    m_line = gpiod_chip_get_line(m_chip, line_num);
+  }
+  else
+  {
+    m_line = gpiod_chip_find_line(m_chip, line.c_str());
+  }
+  if (!m_line)
+  {
+    std::cerr << "*** ERROR: Get GPIOD line \"" << line_num
+              << "\" failed for TX " << name << ": "
+              << std::strerror(errno) << std::endl;
+    return false;
+  }
+
+  int ret = gpiod_line_request(m_line, &req_cfg, active_low ? 1 : 0);
+  if (ret < 0)
+  {
+    std::cerr << "*** ERROR: Set GPIOD line \"" << line_num
+              << "\" to output failed for TX " << name << ": "
+              << std::strerror(errno) << std::endl;
+    return false;
+  }
+
+  return true;
+} /* PttGpiod::initialize */
+
+
+bool PttGpiod::setTxOn(bool tx_on)
+{
+  //cerr << "### PttGpiod::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
+
+  int ret = gpiod_line_set_value(m_line, tx_on ? 1 : 0);
+  if (ret < 0)
+  {
+    std::cerr << "*** WARNING: PttGpiod::setTxOn: "
+                 "gpiod_line_set_value failed: "
+              << std::strerror(errno) << std::endl;
+    return false;
+  }
+
+  return true;
+} /* PttGpiod::setTxOn */
 
 
 
@@ -194,4 +233,3 @@ Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
 /*
  * This file has not been truncated
  */
-

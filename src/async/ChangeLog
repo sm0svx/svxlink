@@ -1,4 +1,4 @@
- 1.6.1 -- ?? ??? 2020
+ 1.6.1 -- ?? ??? 2021
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
@@ -38,6 +38,11 @@
   used without converting them to string first.
 
 * The Async::Serial class now support all extended baudrates.
+
+* AudioDeviceUDP can now write zeros to the UDP connection on underflow. That
+  is, when the "audio device" is open but there is no audio to write zeros
+  will be written instead. Enable this behavior by setting the environment
+  variable ASYNC_AUDIO_UDP_ZEROFILL=1.
 
 
 

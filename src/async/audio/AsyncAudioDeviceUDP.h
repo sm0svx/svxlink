@@ -199,7 +199,8 @@ class AudioDeviceUDP : public Async::AudioDevice
     IpAddress           ip_addr;
     uint16_t            port;
     Async::Timer        *pace_timer;
-    
+    bool                zerofill_on_underflow;
+
     void audioReadHandler(const Async::IpAddress &ip, uint16_t port,
                           void *buf, int count);
     void audioWriteHandler(void);

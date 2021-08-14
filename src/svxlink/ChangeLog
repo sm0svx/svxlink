@@ -161,6 +161,19 @@
   setConfigValue function, to change behavior at runtime. See example in
   ReflectorLogic.tcl.
 
+* Bugfix in ReflectorLogic: It was possible to activate a temporary TG monitor
+  on a TG that was configured to be permanent. When the temporary monitor
+  timed out the TG was removed from the monitoring list completely.
+
+* Add support for PTT and squelch via the gpiod library. Accessing GPIO pins
+  via the sysfs interface is deprecated.
+  When PTT_TYPE is set to GPIOD there are two new configuration variables
+  available to set GPIOD up, PTT_GPIOD_CHIP and PTT_GPIOD_LINE.
+  When SQL_DET is set to GPIOD there are two new configuration variables
+  available to set GPIOD up, SQL_GPIOD_CHIP, SQL_GPIOD_LINE. If SvxLink is
+  built with libgpiod >= 1.5 SQL_GPIOD_BIAS will also be available to set
+  PULLUP/PULLDOWN for a GPIO input (squelch) pin.
+
 
 
  1.7.0 -- 01 Sep 2019

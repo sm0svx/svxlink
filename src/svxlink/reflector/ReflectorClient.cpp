@@ -527,15 +527,18 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
     sendError("Illegal MsgTgMonitor protocol message received");
     return;
   }
-  std::set<uint32_t> tgs = msg.tgs();
-  for (auto it=tgs.begin(); it!=tgs.end(); ++it)
+  auto tgs = msg.tgs();
+  auto it = tgs.cbegin();
+  while (it != tgs.end())
   {
     if (!TGHandler::instance()->allowTgSelection(this, *it))
     {
       std::cout << m_callsign << ": Not allowed to monitor TG #"
                 << *it << std::endl;
-      tgs.erase(it);
+      tgs.erase(it++);
+      continue;
     }
+    ++it;
   }
   cout << m_callsign << ": Monitor TG#: [ ";
   std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
