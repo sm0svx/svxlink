@@ -1,4 +1,4 @@
-.TH REMOTETRX 1 "SEPTEMBER 2019" Linux "User Manuals"
+.TH REMOTETRX 1 "AUGUST 2021" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -86,17 +86,25 @@ during remotetrx server startup when using OSS audio.
 ASYNC_AUDIO_ALSA_ZEROFILL
 Set this environment variable to 0 to stop the Alsa audio code from writing
 zeros to the audio device when there is no audio to write available.
+ASYNC_AUDIO_UDP_ZEROFILL
+Set this environment variable to 1 to enable the UDP audio code to write zeros
+to the UDP connection when there is no audio to write available.
 .TP
 HOME
 Used to find the per user configuration file.
 .
 .SH AUTHOR
 .
-Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
 .
 .SH REPORTING BUGS
 .
-SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
 .
 .SH "SEE ALSO"
 .

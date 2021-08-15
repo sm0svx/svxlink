@@ -539,9 +539,8 @@ void MainWindow::initEchoLink(void)
   Dispatcher *disp = Dispatcher::instance();
   if (disp == 0)
   {
-    //FIXME: Better error handling!
     fprintf(stderr, "Could not initialize network listen ports\n");
-    exit(1);
+    return;
   }
   disp->incomingConnection.connect(
       mem_fun(*this, &MainWindow::incomingConnection));
