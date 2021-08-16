@@ -61,6 +61,22 @@ else (RTLSDR_FOUND)
   )
 endif (RTLSDR_FOUND)
 
+# Find GPIOD
+find_package(GPIOD)
+if (GPIOD_FOUND)
+  set(LIBS ${LIBS} ${GPIOD_LIBRARIES})
+  include_directories(${GPIOD_INCLUDE_DIRS})
+  add_definitions(${GPIOD_DEFINITIONS} -DHAS_GPIOD_SUPPORT)
+  set(LIBSRC ${LIBSRC} PttGpiod.cpp SquelchGpiod.cpp)
+else (GPIOD_FOUND)
+  message(
+    "--   The gpiod library is an optional dependency.\n"
+    "--   Accessing GPIO pins using GPIOD will be unavailable.\n"
+    "--   Access through the deprecated sysfs interface will still\n"
+    "--   work though."
+  )
+endif (GPIOD_FOUND)
+
 # Find jsoncpp library
 #find_package(jsoncpp REQUIRED)
 #get_target_property(JSONCPP_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)

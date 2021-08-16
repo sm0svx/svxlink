@@ -18,3 +18,6 @@ PIDFILE=/run/svxlink.pid
 
 # Disable Alsa zerofill if set to 0 (see manual page)
 #ASYNC_AUDIO_ALSA_ZEROFILL=1
+
+# Enable UDP zerofill if set to 1 (see manual page)
+#ASYNC_AUDIO_UDP_ZEROFILL=0
