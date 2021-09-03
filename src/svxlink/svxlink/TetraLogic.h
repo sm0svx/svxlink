@@ -364,7 +364,8 @@ class TetraLogic : public Logic
     int last_sdsinstance;
     bool inTransmission;
     bool cmgs_received;
-    
+    bool share_userinfo;
+
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
     void sendPei(std::string cmd);
