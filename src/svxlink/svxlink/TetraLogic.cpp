@@ -197,7 +197,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   peiBreakCommandTimer(3000, Timer::TYPE_ONESHOT, false),
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
   own_lon(0.0), endCmd(""), new_sds(false), inTransmission(false),
-  cmgs_received(true), share_userinfo(true)
+  cmgs_received(true), share_userinfo(true), current_cci(0)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));      
   peiActivityTimer.expired.connect(mem_fun(*this, 
@@ -628,13 +628,16 @@ void TetraLogic::transmitterStateChange(bool is_transmitting)
     }
     else 
     {
-      cmd = "AT+CTXD=1,1";
+      cmd = "AT+CTXD=";
+      cmd += std::to_string(current_cci);
+      cmd += ",1";
       sendPei(cmd);
     }
   }
   else
   {
-    cmd = "AT+CUTXC=1";
+    cmd = "AT+CUTXC=";
+    cmd += std::to_string(current_cci);
     sendPei(cmd);
   }
   
@@ -827,14 +830,14 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
     case SDS:
       handleSds(m_message);
       break;
-      
+
     case ACK_SDS:
       break;
 
     case TEXT_SDS:
       handleSdsMsg(m_message);
       break;
-      
+
     case SIMPLE_TEXT_SDS:
     case STATE_SDS:
       handleSdsMsg(m_message);
@@ -851,7 +854,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       // sds state send be MS
       handleCmgs(m_message);
       break;
-      
+
     case TX_DEMAND:
       break;
 
@@ -860,6 +863,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
       break;
 
     case CALL_CONNECT:
+      current_cci = handleCci(m_message);
       break;
 
     case OP_MODE:
@@ -869,11 +873,11 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
     case CTGS:
       handleCtgs(m_message);
       break;
-      
+
     case CTDGR:
       cout << handleCtdgr(m_message);
       break;
-      
+
     case CLVL:
       handleClvl(m_message);
       break;
@@ -905,7 +909,7 @@ void TetraLogic::initGroupCall(int gc_gssi)
   cmd = "ATD";
   cmd += to_string(gc_gssi);
   sendPei(cmd);
-  
+
   stringstream ss;
   ss << "init_group_call " << to_string(gc_gssi);
   processEvent(ss.str());
@@ -2028,6 +2032,18 @@ void TetraLogic::sendWelcomeSds(string tsi, short r4s)
     queueSds(t_sds);
   }
 } /* TetraLogic::sendWelcomeSds */
+
+
+int TetraLogic::handleCci(std::string m_message)
+{
+  size_t f = m_message.find("+CTCC: ");
+  if (f != string::npos)
+  {
+    m_message.erase(0,7);
+    return getNextVal(m_message);
+  }
+  return 0;
+} /* TetraLogic::handleCci */
 
 
 void TetraLogic::sendAprs(string call, string aprsmessage)
