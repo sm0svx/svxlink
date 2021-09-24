@@ -718,6 +718,47 @@ std::string getISSI(std::string tsi)
 } /* getISSI */
 
 
+bool splitTsi(std::string tsi, int &mcc, int &mnc, int &issi)
+{
+  bool ret = false;
+  size_t len = tsi.length();
+
+  if (len < 9)
+  {
+    issi = atoi(tsi.c_str());
+    mcc = 0;
+    mnc = 0;
+    ret = true;
+  }
+  else
+  {
+    issi = atoi(tsi.substr(len-8,8).c_str());
+    std::string t = tsi.substr(0, len-8);
+
+    if (t.length() == 7)
+    {
+      mcc = atoi(t.substr(0,3).c_str());
+      mnc = atoi(t.substr(3,4).c_str());
+      ret = true;
+    }
+    else if (t.length() == 8)
+    {
+      mcc = atoi(t.substr(0,3).c_str());
+      mnc = atoi(t.substr(3,5).c_str());
+      ret = true;
+    }
+    else if (t.length() == 9)
+    {
+      mcc = atoi(t.substr(0,4).c_str());
+      mnc = atoi(t.substr(4,5).c_str());
+      ret = true;
+    }
+    else ret = false;
+  }
+  return ret;  
+} /* splitTsi */
+
+
 unsigned int hex2int(std::string sds)
 {
   unsigned int t;

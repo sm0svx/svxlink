@@ -269,6 +269,7 @@ class TetraLogic : public Logic
       std::string call;
       std::string name;
       std::string comment;
+      std::string location;
       float lat;
       float lon;
       std::string state;
@@ -365,7 +366,10 @@ class TetraLogic : public Logic
     bool inTransmission;
     bool cmgs_received;
     bool share_userinfo;
+    Json::Value m_user_info;
     int current_cci;
+    int dmnc;
+    int dmcc;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
@@ -409,6 +413,7 @@ class TetraLogic : public Logic
     void onDapnetMessage(std::string, std::string message);
     void sendAprs(std::string call, std::string aprsmessage);
     bool checkIfDapmessage(std::string message);
+    std::string joinList(std::list<std::string> members);
 
 };  /* class TetraLogic */
 

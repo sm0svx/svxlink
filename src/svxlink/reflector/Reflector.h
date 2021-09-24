@@ -224,6 +224,7 @@ class Reflector : public sigc::trackable
       std::string issi;
       std::string call;
       std::string name;
+      std::string location;
       std::string comment;
       float lat;
       float lon;

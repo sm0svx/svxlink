@@ -263,13 +263,13 @@ void Reflector::updateUserdata(Json::Value user_arr)
     m_user.issi = t_userdata.get("tsi", "").asString();
     m_user.name = t_userdata.get("name","").asString();
     m_user.call = t_userdata.get("call","").asString();
+    m_user.location = t_userdata.get("location","").asString();
     m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
     m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
     m_user.comment = t_userdata.get("comment","").asString();
-    if (t_userdata.get("last_activity","").asString().length() > 0)
+    if (t_userdata.get("last_activity","").asUInt() > 0)
     {
-      m_user.last_activity = (time_t) strtol(
-          t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+      m_user.last_activity = (time_t) t_userdata.get("last_activity","").asUInt();
     }
 
     std::map<std::string, User>::iterator iu;
@@ -280,6 +280,7 @@ void Reflector::updateUserdata(Json::Value user_arr)
       iu->second.aprs_sym = m_user.aprs_sym;
       iu->second.aprs_tab = m_user.aprs_tab;
       iu->second.comment = m_user.comment;
+      iu->second.location = m_user.location;
       if (m_user.last_activity)
       {
         iu->second.last_activity = m_user.last_activity;
@@ -288,8 +289,8 @@ void Reflector::updateUserdata(Json::Value user_arr)
       if (debug)
       {
         cout << "UPDATE: call=" << m_user.call << ", issi=" << m_user.issi 
-          << ", name=" << m_user.name << " (" << m_user.comment << ")" 
-          << endl;
+          << ", name=" << m_user.name << ", location=" << m_user.location 
+          << " (" << m_user.comment << ")" << endl;
       }
     }
     else
@@ -298,8 +299,8 @@ void Reflector::updateUserdata(Json::Value user_arr)
       if (debug)
       {
         cout << "New user: call=" << m_user.call << ", issi=" << m_user.issi 
-             << ", name=" << m_user.name << " ("   << m_user.comment << ")"
-             << endl;
+             << ", name=" << m_user.name << ", location=" << m_user.location 
+             << " ("   << m_user.comment << ")" << endl;
       }
     }
   }
@@ -908,11 +909,11 @@ bool Reflector::getUserData(void)
     m_user.issi = t_userdata.get("tsi", "").asString();
     m_user.name = t_userdata.get("name","").asString();
     m_user.call = t_userdata.get("call","").asString();
+    m_user.location = t_userdata.get("location","").asString();
     m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
     m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
     m_user.comment = t_userdata.get("comment","").asString();
-    m_user.last_activity = (time_t) strtol(
-          t_userdata.get("last_activity","").asString().c_str(), NULL, 10);
+    m_user.last_activity = (time_t) t_userdata.get("last_activity","").asUInt();
     userdata[m_user.issi] = m_user;
   }
   cout << "+++ " << cfg_root.size() << " users loaded from '" 
@@ -933,15 +934,11 @@ void Reflector::writeUserData(std::map<std::string, User> userdata)
     t_userinfo["tsi"] = iu->second.issi;
     t_userinfo["call"] = iu->second.call;
     t_userinfo["name"] = iu->second.name;
+    t_userinfo["location"] = iu->second.location;
     t_userinfo["sym"] = iu->second.aprs_sym;
     t_userinfo["tab"] = iu->second.aprs_tab;
     t_userinfo["comment"] = iu->second.comment;
-    if (iu->second.last_activity)
-    {
-      stringstream la;
-      la << iu->second.last_activity;
-      t_userinfo["last_activity"] = la.str();
-    }
+    t_userinfo["last_activity"] = static_cast<uint32_t>(iu->second.last_activity);
     event.append(t_userinfo);
   }
 
