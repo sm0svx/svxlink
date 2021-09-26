@@ -1,0 +1,6 @@
+[
+  { "tsi" : "0901163832620055", "name" : "Adi", "call" : "DL1HRC-1", "location" : "Leuna", "symbol" : "\\r", "comment" : "SvxLink Sysop" },
+  { "tsi" : "0901163830023402", "name" : "Adi", "call" : "DL1HRC-2", "location" : "Leuna", "symbol" : "\\r", "comment" : "SvxLink Sysop" },
+  { "tsi" : "0901163830023403", "name" : "Adi", "call" : "DL1HRC-3", "location" : "Leuna", "symbol" : "\\E", "comment" : "SvxLink Sysop" },
+  { "tsi" : "0901163830023404", "name" : "Adi", "call" : "DL1HRC-4", "location" : "Leuna", "symbol" : "\\r", "comment" : "SvxLink Sysop" }
+]

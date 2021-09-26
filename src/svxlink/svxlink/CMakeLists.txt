@@ -98,6 +98,9 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
+install_if_not_exists(${CMAKE_CURRENT_SOURCE_DIR}/tetra_users.json
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
 install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})
 install_if_not_exists(tetra_users.json ${SVX_SYSCONF_INSTALL_DIR})
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
