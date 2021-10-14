@@ -50,7 +50,7 @@ group usually exist but if not, look for the 'groupadd' command.
 SvxLink use the CMake build system. The basic pattern for building using CMake
 looks like this:
 
-  git clone https://github.com/svxlink/svxlink.git
+  git clone https://github.com/dl1hrc/svxlink.git
   cd svxlink
   git checkout svxlink-usrp
   cd svxlink/src
