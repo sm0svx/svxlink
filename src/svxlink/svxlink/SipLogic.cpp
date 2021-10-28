@@ -785,12 +785,15 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
     return;
   }
 
-  if (regexec(accept_incoming_regex, caller.c_str(), 0, 0, 0) == 0
-    && m_autoanswer)
+  if (regexec(accept_incoming_regex, caller.c_str(), 0, 0, 0) == 0)
   {
     prm.statusCode = (pjsip_status_code)200;
     registerCall(call);
-    call->answer(prm);
+
+    if (m_autoanswer)
+    {
+      call->answer(prm);
+    }
   }
 } /* SipLogic::onIncomingCall */
 
@@ -1051,6 +1054,20 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
       {
         hangupCalls(calls);
         return;
+      }
+
+      // Answer incoming call by "CA"
+      if (buffer[1] == 'A')
+      {
+        if (!calls.empty())
+        {
+          pj::CallOpParam prm;
+          prm.opt.audioCount = 1;
+          prm.opt.videoCount = 0;
+          prm.statusCode = (pjsip_status_code)200;
+          std::vector<sip::_Call *>::iterator call = calls.begin();
+          (*call)->answer(prm);
+        }
       }
 
         // calling a party with "C12345#"
