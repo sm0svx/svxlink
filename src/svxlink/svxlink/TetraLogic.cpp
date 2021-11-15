@@ -2251,7 +2251,7 @@ bool TetraLogic::checkIfDapmessage(std::string message)
   string destcall = "";
   if (dapnetclient)
   {
-    if (rmatch(message, "^DAP:[0-9A-Za-z]{3,8}:"))
+    if (rmatch(message, "^(dap|DAP):[0-9A-Za-z]{3,8}:"))
     {
       message.erase(0,4);
       destcall = message.substr(0, message.find(":"));

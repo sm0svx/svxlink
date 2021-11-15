@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v31032021"
+#define DAPNETVERSION "v15112021"
 
 #define INVALID 0
 
