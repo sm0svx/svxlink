@@ -26,7 +26,7 @@ or "-devel".
 * *libgcrypt*: Cryptographic functions (Required)
 * *libasound*: Alsa sound system support (Recommended)
 * *libgsm*: GSM audio codec (Required)
-* *lijsoncpp*: For json file support (Required)
+* *libjsoncpp*: For json file support (Required)
 * *libspeex*: The Speex audio codec (Optional)
 * *librtlsdr*: Support for RTL2832U DVB-T/SDR USB dongles (Optional)
 * *libqt*: Version 4. Framework for graphical applications (Optional)
