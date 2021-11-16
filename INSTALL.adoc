@@ -26,9 +26,11 @@ or "-devel".
 * *libgcrypt*: Cryptographic functions (Required)
 * *libasound*: Alsa sound system support (Recommended)
 * *libgsm*: GSM audio codec (Required)
+* *libjsoncpp*: For json file support (Required)
 * *libspeex*: The Speex audio codec (Optional)
 * *librtlsdr*: Support for RTL2832U DVB-T/SDR USB dongles (Optional)
 * *libqt*: Version 4. Framework for graphical applications (Optional)
+* *libgpiod*: For gpio support at RaspberryPi’s (Optional)
 
 There also are some runtime dependencies which normally is needed to run a
 SvxLink system.
