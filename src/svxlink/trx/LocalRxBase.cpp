@@ -521,6 +521,16 @@ bool LocalRxBase::initialize(void)
 
     // Filter out the voice band, removing high- and subaudible frequencies,
     // for example CTCSS.
+    // RX VoiceBandFilter	
+string filterdesc;
+if (cfg().getValue(name(),"RX_AUDIO_FILTER",filterdesc))
+{
+    AudioFilter *voiceband_filter = new AudioFilter(filterdesc);
+    prev_src->registerSink(voiceband_filter, true);
+    prev_src = voiceband_filter;
+}
+else
+{
 #if (INTERNAL_SAMPLE_RATE == 16000)
   AudioFilter *voiceband_filter = new AudioFilter("BpCh12/-0.1/300-5000");
 #else
@@ -615,6 +625,8 @@ bool LocalRxBase::initialize(void)
     prev_src->registerSink(limit, true);
     prev_src = limit;
   }
+  else
+  {
 
     // Clip audio to limit its amplitude
   AudioClipper *clipper = new AudioClipper;
