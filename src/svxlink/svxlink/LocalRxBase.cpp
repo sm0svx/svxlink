@@ -521,7 +521,7 @@ bool LocalRxBase::initialize(void)
 
     // Filter out the voice band, removing high- and subaudible frequencies,
     // for example CTCSS.
-    // RX VoiceBandFilter	
+    // Änderung RX VoiceBndFilter 
 string filterdesc;
 if (cfg().getValue(name(),"RX_AUDIO_FILTER",filterdesc))
 {
@@ -618,9 +618,9 @@ else
   {
     AudioCompressor *limit = new AudioCompressor;
     limit->setThreshold(limiter_thresh);
-    limit->setRatio(0.1);
-    limit->setAttack(2);
-    limit->setDecay(20);
+    limit->setRatio(0.05);
+    limit->setAttack(0.1);
+    limit->setDecay(50);
     limit->setOutputGain(1);
     prev_src->registerSink(limit, true);
     prev_src = limit;
@@ -642,7 +642,7 @@ else
 #endif
   prev_src->registerSink(splatter_filter, true);
   prev_src = splatter_filter;
-  
+  }
     // Set the previous audio pipe object to handle audio distribution for
     // the LocalRxBase class
   setHandler(prev_src);
