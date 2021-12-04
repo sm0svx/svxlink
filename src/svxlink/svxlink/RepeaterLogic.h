@@ -85,7 +85,7 @@ namespace Async
  ****************************************************************************/
 
 class Module;
-  
+
 
 /****************************************************************************
  *
@@ -126,32 +126,32 @@ class RepeaterLogic : public Logic
      * @param 	name The name of this logic
      */
     RepeaterLogic(Async::Config& cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     ~RepeaterLogic(void);
-  
+
     /**
      * @brief 	Initialize this logic
      * @return	Returns \em true on success or \em false on failure
      */
     bool initialize(void);
-    
+
     /**
      * @brief 	Process an event
      * @param 	event Event string
      * @param 	module The calling module or 0 if it's a core event
      */
     virtual void processEvent(const std::string& event, const Module *module=0);
-    
+
     /**
      * @brief 	Called when a module is activated
      * @param 	module The module to activate
      * @return	Returns \em true if the activation went well or \em false if not
      */
     virtual bool activateModule(Module *module);
-    
+
     /**
      * @brief   Set the node to offline or online
      * @param   online Set to \em true to set the node online
@@ -183,7 +183,7 @@ class RepeaterLogic : public Logic
     {
       SQL_FLANK_OPEN, SQL_FLANK_CLOSE
     } SqlFlank;
-    
+
     bool      	    repeater_is_up;
     Async::Timer    up_timer;
     Async::Timer    idle_sound_timer;
@@ -204,7 +204,10 @@ class RepeaterLogic : public Logic
     std::string     open_reason;
     int		    ident_nag_min_time;
     Async::Timer    ident_nag_timer;
-    
+    Async::Timer    sql_flap_block_timer;
+    int             sql_flap_block_time;
+    bool            repeater_up_blocked;
+
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up, std::string reason);
@@ -214,6 +217,7 @@ class RepeaterLogic : public Logic
     void openOnSqlTimerExpired(Async::Timer *t);
     void activateOnOpenOrClose(SqlFlank flank);
     void identNag(Async::Timer *t);
+    void blocktimeExpired(Async::Timer *t);
 
 };  /* class RepeaterLogic */
 
@@ -228,3 +232,4 @@ class RepeaterLogic : public Logic
  * This file has not been truncated
  */
 
+
