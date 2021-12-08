@@ -85,8 +85,12 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "v14072021"
- 
+#define USRPVERSION "v22112021"
+
+#define LOGERROR 0
+#define LOGWARN 1
+#define LOGINFO 2
+#define LOGDEBUG 3
 
 /****************************************************************************
  *
@@ -133,11 +137,15 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
     m_selected_tg(0), udp_seq(0), 
     stored_samples(0), m_callsign("N0CALL"), ident(false), 
     m_dmrid(0), m_rptid(0), m_selected_cc(0), m_selected_ts(1), 
-    preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0)
+    preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0),
+    debug(LOGERROR), share_userinfo(true), 
+    m_delay_timer(5000, Timer::TYPE_ONESHOT, false)
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
   timerclear(&m_last_talker_timestamp);
+  m_delay_timer.expired.connect(
+      mem_fun(*this, &UsrpLogic::onDelayTimeout));
 } /* UsrpLogic::UsrpLogic */
 
 
@@ -165,6 +173,8 @@ bool UsrpLogic::initialize(void)
     return false;
   }
 
+  cfg().getValue(name(),"DEBUG", debug);
+  
   m_usrp_port = 41234;
   cfg().getValue(name(), "USRP_TX_PORT", m_usrp_port);
 
@@ -340,12 +350,97 @@ bool UsrpLogic::initialize(void)
 
   r_buf = new int16_t[USRP_AUDIO_FRAME_LEN*2];
 
+  cfg().getValue(name(),"SHARE_USERINFO", share_userinfo);
+  
+  // reads information from /etc/svxlink/dv_users.json
+  std::string user_info_file;
+  if (cfg().getValue(name(), "DV_USER_INFOFILE", user_info_file))
+  {
+    cout << user_info_file << endl;
+    std::ifstream user_info_is(user_info_file.c_str(), std::ios::in);
+    if (user_info_is.good())
+    {
+      try
+      {
+        if (!(user_info_is >> m_user_info))
+        {
+          std::cerr << "*** ERROR: Failure while reading user information file "
+                       "\"" << user_info_file << "\""
+                    << std::endl;
+          return false;
+        }
+      }
+      catch (const Json::Exception& e)
+      {
+        std::cerr << "*** ERROR: Failure while reading user information "
+                     "file \"" << user_info_file << "\": "
+                  << e.what()
+                  << std::endl;
+        return false;
+      }
+    }
+    else
+    {
+      std::cerr << "*** ERROR: Could not open user information file "
+                   "\"" << user_info_file << "\""
+                << std::endl;
+      return false;
+    }
+
+    User m_user;
+    for (Json::Value::ArrayIndex i = 0; i < m_user_info.size(); i++)
+    {
+      Json::Value& t_userdata = m_user_info[i];
+      m_user.id = t_userdata.get("id", "").asString();
+      if (m_user.id.length() < 1)
+      {
+        cout << "*** ERROR: The TSI must have more than 1 digit.\n" 
+          << "\" Check dataset " << i + 1 << " in \"" << user_info_file
+          << "\"" << endl;
+        return false;
+      }
+      m_user.name = t_userdata.get("name","").asString();
+      m_user.mode = t_userdata.get("mode","").asString();
+      m_user.call = t_userdata.get("call","").asString();
+      m_user.location = t_userdata.get("location","").asString();
+      if (t_userdata.get("symbol","").asString().length() != 2)
+      {
+        cout << "*** ERROR: Aprs symbol in \"" << user_info_file 
+           << "\" dataset " << i + 1 << " is not correct, must have 2 digits!"
+           << endl;
+        return false;
+      }
+      else 
+      {
+        m_user.aprs_sym = t_userdata.get("symbol","").asString()[0];
+        m_user.aprs_tab = t_userdata.get("symbol","").asString()[1];
+      }
+      m_user.comment = t_userdata.get("comment","").asString();
+      struct tm mtime = {0}; // set default date/time 31.12.1899
+      m_user.last_activity = mktime(&mtime);
+      m_user.sent_last_sds = mktime(&mtime);
+      userdata[m_user.id] = m_user;
+      if (debug >= LOGINFO)
+      {
+        cout << "id=" << m_user.id << ",call=" << m_user.call << ",name=" 
+             << m_user.name << ",mode=" << m_user.mode << ",location=" 
+             << m_user.location << ",comment=" << m_user.comment << endl;
+      }
+    }
+  }
+  
+    // receive interlogic messages
+  publishStateEvent.connect(
+          mem_fun(*this, &UsrpLogic::onPublishStateEvent));
+  
   if (!LogicBase::initialize())
   {
     cout << "*** ERROR: Initializing Logic " << name() << endl;
     return false;
   }
 
+  m_delay_timer.setEnable(true);
+  
   return true;
 } /* UsrpLogic::initialize */
 
@@ -490,21 +585,31 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       sp.write(reinterpret_cast<const char*>(buf), count);
       std::string metadata = sp.str().substr(USRP_HEADER_LEN, count - USRP_HEADER_LEN);
 
+      uint32_t ti = time(NULL);
+      Json::Reader reader;
+      Json::Value value;
+      Json::Value event(Json::arrayValue);
+      Json::Value userinfo(Json::objectValue);
+      userinfo["last_activity"] = ti;
+      userinfo["gwcallsign"] = m_callsign;
+      
       if ((found = metadata.find("INFO:MSG:")) != string::npos)
       {
-        handleSettingsMsg(metadata.erase(0, metadata.find_last_of(" ") + 1));
-        return;
+        string infomessage = metadata.erase(0, metadata.find_last_of(" ") + 1);
+        handleSettingsMsg(infomessage);
+        userinfo["mode"] = infomessage;
       }
       else if ((found = metadata.find("INFO:{")) != string::npos)
       {
         metadata.erase(0,5); // remove "INFO:"
-        Json::Reader reader;
-        Json::Value value;
         if (reader.parse(metadata,value))
         {
           m_last_call = value["digital"]["call"].asString();
           m_last_tg = atoi(value["digital"]["tg"].asString().c_str());
           m_last_dmrid = atoi(value["digital"]["rpt"].asString().c_str());
+          userinfo["callsign"] = m_last_call;
+          userinfo["tg"] = m_last_tg;
+          userinfo["gateway"] = m_last_dmrid;
         }
       }
       else if ((found = metadata.find("INFO:")) != string::npos)
@@ -512,6 +617,8 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         metadata.erase(0,5); // to do
         return;
       }
+      event.append(userinfo);
+      publishInfo("DvUsers:info", event);
     }
 
     stringstream ss;
@@ -695,6 +802,13 @@ void UsrpLogic::flushTimeout(Async::Timer *t)
 } /* UsrpLogic::flushTimeout */
 
 
+void UsrpLogic::onDelayTimeout(Async::Timer *t)
+{
+  // send userinfo to reflector
+  sendUserInfo();
+} /* UsrpLogic::onDelayTimeout */
+
+
 void UsrpLogic::handleTimerTick(Async::Timer *t)
 {
   if (timerisset(&m_last_talker_timestamp))
@@ -851,6 +965,105 @@ void UsrpLogic::handlePlayDtmf(const std::string& digit, int amp,
   setIdle(false);
   LinkManager::instance()->playDtmf(this, digit, amp, duration);
 } /* UsrpLogic::handlePlayDtmf */
+
+
+// receive interlogic messages here
+void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
+{
+  //cout << "UsrpLogic::onPublishStateEvent - event_name: " << event_name 
+  //      << ", message: " << msg << endl;
+
+  // if it is not allowed to handle information about users then all userinfo traffic 
+  // will be ignored
+  if (!share_userinfo) return;
+
+  Json::Value user_arr;
+  Json::Reader reader;
+  bool b = reader.parse(msg, user_arr);
+  if (!b)
+  {
+    if (debug >= LOGERROR)
+    {
+      cout << "*** Error: parsing StateEvent message (" 
+           << reader.getFormattedErrorMessages() << ")" << endl;
+    }
+    return;
+  }
+
+  if (event_name == "DvUsers:info")
+  {
+    if (debug >= LOGINFO)
+    {
+      cout << "Download userdata from Reflector (DvUsers:info):" << endl;
+    }
+    for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+    {
+      User m_user;
+      Json::Value& t_userdata = user_arr[i];
+      m_user.id = t_userdata.get("id", "").asString();
+      m_user.mode = t_userdata.get("mode","").asString();
+      m_user.name = t_userdata.get("name","").asString();
+      m_user.call = t_userdata.get("call","").asString();
+      m_user.location = t_userdata.get("location","").asString();
+      m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+      m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+      m_user.comment = t_userdata.get("comment","").asString();
+      m_user.last_activity = t_userdata.get("last_activity","").asUInt();
+
+      userdata[m_user.id] = m_user;
+      if (debug >= LOGINFO)
+      {
+        cout << "id:" << m_user.id << ",call=" << m_user.call << ",name=" 
+             << m_user.name << ",location=" << m_user.location 
+             << ", comment=" << m_user.comment << endl;
+      }
+    }
+  }
+} /* UsrpLogic::onPublishStateEvent */
+
+
+void UsrpLogic::sendUserInfo(void)
+{
+
+  // read infos of Dv users configured in svxlink.conf
+  Json::Value event(Json::arrayValue);
+
+  for (std::map<std::string, User>::iterator iu = userdata.begin(); 
+       iu!=userdata.end(); iu++)
+  {
+    Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["id"] = iu->second.id;
+    t_userinfo["mode"] = iu->second.mode;
+    t_userinfo["call"] = iu->second.call;
+    t_userinfo["name"] = iu->second.name;
+    t_userinfo["tab"] = iu->second.aprs_tab;
+    t_userinfo["sym"] = iu->second.aprs_sym;
+    t_userinfo["comment"] = iu->second.comment;
+    t_userinfo["location"] = iu->second.location;
+    t_userinfo["last_activity"] = 0;
+    event.append(t_userinfo);
+  }
+  publishInfo("DvUsers:info", event);
+} /* UsrpLogic::sendUserInfo */
+
+
+void UsrpLogic::publishInfo(std::string type, Json::Value event)
+{
+  // if it is not allowed to handle information about users then all userinfo traffic 
+  // will be ignored
+  if (!share_userinfo) return;
+
+   // sending own Dv user information to the reflectorlogic network
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::stringstream os;
+  writer->write(event, &os);
+  delete writer;
+  publishStateEvent(type, os.str());
+} /* UsrpLogic::publishInfo */
+
 
 /*
  * This file has not been truncated

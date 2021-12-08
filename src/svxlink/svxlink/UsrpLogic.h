@@ -159,6 +159,25 @@ class UsrpLogic : public LogicBase
     };
     
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
+    
+         // contain user data
+    struct User {
+      std::string id;
+      std::string mode;
+      std::string call;
+      std::string name;
+      std::string comment;
+      std::string location;
+      float lat;
+      float lon;
+      std::string state;
+      short reasonforsending;
+      char aprs_sym;
+      char aprs_tab;
+      time_t last_activity = 0;
+      time_t sent_last_sds = 0;
+    };
+    std::map<std::string, User> userdata;
   
     std::string                       m_usrp_host;
     uint16_t                          m_usrp_port;
@@ -192,6 +211,10 @@ class UsrpLogic : public LogicBase
     uint32_t                          m_last_tg;
     std::string                       m_last_call;
     uint32_t                          m_last_dmrid;
+    short                             debug;
+    Json::Value                       m_user_info;
+    bool                              share_userinfo;
+    Async::Timer                      m_delay_timer;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
@@ -210,6 +233,7 @@ class UsrpLogic : public LogicBase
     void sendInfoJson(void);
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
+    void onDelayTimeout(Async::Timer *t);
     void handleTimerTick(Async::Timer *t);
     bool setAudioCodec(void);
     void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
@@ -225,7 +249,10 @@ class UsrpLogic : public LogicBase
     void handlePlayTone(int fq, int amp, int duration);
     void handlePlayDtmf(const std::string& digit, int amp,
                                     int duration);
-
+    void onPublishStateEvent(const std::string &event_name, const std::string &msg);
+    void sendUserInfo(void);
+    void publishInfo(std::string type, Json::Value event);
+    
 };  /* class UsrpLogic */
 
 
