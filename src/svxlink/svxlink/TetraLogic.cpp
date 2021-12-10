@@ -128,7 +128,7 @@ using namespace SvxLink;
 #define LOGINFO 2
 #define LOGDEBUG 3
 
-#define TETRA_LOGIC_VERSION "24092021"
+#define TETRA_LOGIC_VERSION "10122021"
 
 /****************************************************************************
  *
@@ -677,6 +677,17 @@ bool TetraLogic::initialize(void)
        << ">>> Adi/DL1HRC <dl1hrc@gmx.de> or use the groups.io mailing list" 
        << endl;
 
+  // Test/Debug entries for bug detection, normally comment out
+  /*std::string sds = "0A0BA7D5B95BC50AFFE16";
+  LipInfo li;
+  handleLipSds(sds, li);
+  cout << "Lipinfo from Carsten: " << sds << endl;
+  cout << "Result, lat=" << dec2nmea_lat(li.latitude) << ", lon="
+       << dec2nmea_lon(li.longitude) << ", pos error=" << li.positionerror
+       << ", horizontalvel=" << li.horizontalvelocity << ", directionoftravel="
+       << li.directionoftravel << ", reasonforsending="
+       << li.reasonforsending << endl;
+  */
   return isok;
 
 } /* TetraLogic::initialize */
@@ -1966,7 +1977,7 @@ int TetraLogic::handleMessage(std::string mesg)
   mre["^02"]                                      = SIMPLE_TEXT_SDS;
   mre["^03"]                                      = SIMPLE_LIP_SDS;
   mre["^04"]                                      = WAP_PROTOCOL;
-  mre["^0A[0-9A-F]{20}"]                          = LIP_SDS;
+  mre["^0A[0-9A-F]{19}"]                          = LIP_SDS;
   mre["^[8-9A-F][0-9A-F]{3}$"]                    = STATE_SDS;
   mre["^8210[0-9A-F]{4}"]                         = ACK_SDS;
   mre["^8[23][0-9A-F]{3,}"]                       = TEXT_SDS;

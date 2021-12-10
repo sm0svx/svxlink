@@ -452,8 +452,24 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
   int t_velo;
   int t_dot;
 
-  // 0A0088BD4247F737FFE810 - short position report PDU
-  // 0A4E73DDA841F55809493CC081 - long position report PDU
+  /* 0A0088BD4247F737FFE810 - short position report PDU
+     0A4E73DDA841F55809493CC081 - long position report PDU
+
+     There is a small problem with the PEI answer, the length of
+     SDS is specified as 84 bits
+     +CTSDSR: 12,2269001,0,9999,0,84
+     0A112853A9FF4D4FFFE810 <- 22 digits
+     but 22 chars are 88 bits long, so the output in the first part
+     of the PEI response is incorrect (84 != 88). Could it well be
+     a cps problem in the Motorola MS?
+
+     0A112853A9FF4D4FFFE810 - from YO9ION (Motorola MTP6650+MTM800E)
+
+     In N5UWU's PEI response, the last character (0) is missing and the
+     length of 21 chars corresponds to the specified bit length of 84 bits.
+
+     0A0BA7D5B95BC50AFFE16 - from N5UWU (Sepura SEG3900 and STP9240)
+  */
   if (in.substr(0,2) == "0A") // LIP
   {
     // check that is a shor position report
