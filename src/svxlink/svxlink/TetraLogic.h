@@ -297,7 +297,6 @@ class TetraLogic : public Logic
     short  debug;
     std::string aprspath;
     bool talkgroup_up;
-    std::string infosds;
 
     typedef enum
     {
@@ -370,6 +369,7 @@ class TetraLogic : public Logic
     int current_cci;
     int dmnc;
     int dmcc;
+    std::string infosds;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);

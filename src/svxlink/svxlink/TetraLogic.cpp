@@ -200,7 +200,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
   own_lon(0.0), endCmd(""), new_sds(false), inTransmission(false),
   cmgs_received(true), share_userinfo(true), current_cci(0), dmnc(0),
-  dmcc(0)
+  dmcc(0), infosds("")
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));      
   peiActivityTimer.expired.connect(mem_fun(*this, 
@@ -307,12 +307,7 @@ bool TetraLogic::initialize(void)
   dmnc = atoi(mnc.c_str());
   
   // Welcome message to new users
-  if (!cfg().getValue(name(), "INFO_SDS", infosds))
-  {
-    infosds = "Welcome TETRA-User@";
-    infosds += callsign(); 
-  }
-
+  cfg().getValue(name(), "INFO_SDS", infosds);
   cfg().getValue(name(), "DEBUG", debug);
 
   if (!cfg().getValue(name(), "PORT", port))
@@ -1116,24 +1111,12 @@ void TetraLogic::handleCallBegin(std::string message)
   std::map<std::string, User>::iterator iu = userdata.find(o_tsi);
   if (iu == userdata.end())
   {
-    userdata[o_tsi].call = "NoCall";
-    userdata[o_tsi].name = "NoName";
-    userdata[o_tsi].comment = "NN";
-    userdata[o_tsi].aprs_sym = t_aprs_sym;
-    userdata[o_tsi].aprs_tab = t_aprs_tab;
     Sds t_sds;
-
     t_sds.direction = OUTGOING;
     t_sds.message = infosds;
     t_sds.tsi = o_tsi;
     t_sds.type = TEXT;
-    t_sds.remark = "Welcome Sds to newuser";
-    if (debug >= LOGINFO)
-    {
-      cout << "Sending info Sds to new user: " << t_sds.tsi << " \"" 
-           << infosds << "\"" << endl;
-    }
-    queueSds(t_sds);
+    firstContact(t_sds);
     return;
   }
 
@@ -1214,17 +1197,20 @@ void TetraLogic::firstContact(Sds tsds)
   userdata[tsds.tsi].aprs_tab = t_aprs_tab;
   userdata[tsds.tsi].last_activity = time(NULL);
 
-  tsds.direction = OUTGOING;
-  tsds.message = infosds;
-  tsds.type = TEXT;
-  tsds.remark = "Welcome Sds to newuser";
-  if (debug >= LOGINFO)
+  if (infosds.length() > 0)
   {
-    cout << "Sending info Sds to new user " << tsds.tsi << " \"" 
-         << infosds << "\"" << endl;
+    tsds.direction = OUTGOING;
+    tsds.message = infosds;
+    tsds.type = TEXT;
+    tsds.remark = "Welcome Sds to a new user";
+    if (debug >= LOGINFO)
+    {
+      cout << "Sending info Sds to new user " << tsds.tsi << " \""
+           << infosds << "\"" << endl;
+    }
+    queueSds(tsds);
   }
-  queueSds(tsds);
-} /* TetraLogic::checkFirstContact */
+} /* TetraLogic::firstContact */
 
 
 /*

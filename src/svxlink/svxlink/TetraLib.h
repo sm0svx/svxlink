@@ -456,7 +456,7 @@ void handleLipSds(std::string in, LipInfo &lipinfo)
      0A4E73DDA841F55809493CC081 - long position report PDU
 
      There is a small problem with the PEI answer, the length of
-     SDS is specified as 84 bits
+     SDS is specified as 84 bits:
      +CTSDSR: 12,2269001,0,9999,0,84
      0A112853A9FF4D4FFFE810 <- 22 digits
      but 22 chars are 88 bits long, so the output in the first part
