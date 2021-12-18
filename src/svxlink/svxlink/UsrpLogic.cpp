@@ -85,7 +85,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "v22112021"
+#define USRPVERSION "v18122021"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -583,7 +583,8 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       size_t found;
       stringstream sp;
       sp.write(reinterpret_cast<const char*>(buf), count);
-      std::string metadata = sp.str().substr(USRP_HEADER_LEN, count - USRP_HEADER_LEN);
+      std::string metadata = sp.str().substr(USRP_HEADER_LEN, 
+                                count-USRP_HEADER_LEN);
 
       uint32_t ti = time(NULL);
       Json::Reader reader;
@@ -601,14 +602,38 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       }
       else if ((found = metadata.find("INFO:{")) != string::npos)
       {
+        /*
+        INFO:{"ab":{"version":"1.6.2","date":"Wed.Mar.31.13:52:10.EDT.2021"},
+            "dv3000":{"ip":"127.0.0.1","port":"2460","use_serial":"false"},
+            "use_fallback":"true",
+            "use_emulator":"true",
+            "mute":"OFF",
+            "usrp":
+              {
+                "ip":"127.0.0.1","rx_port":"14321","tx_port":"14321",
+                "ping":"10",
+                "to_pcm":{"shape":"AUDIO_USE_AGC","gain":"4.00"},
+                "to_ambe":{"shape":"AUDIO_USE_GAIN","gain":"0.35"}
+              },
+              "tlv":{"ip":"127.0.0.1","tx_port":"0","rx_port":"0",
+                        "ambe_size":"72","ambe_mode":"NXDN"},
+              "digital": {"gw":"1234567","rpt":"123456789","tg":"7",
+                        "ts":"2","cc":"1","call":"N0CALL"},
+              "last_tune":"7"
+            }
+        */
         metadata.erase(0,5); // remove "INFO:"
         if (reader.parse(metadata,value))
         {
           m_last_call = value["digital"]["call"].asString();
           m_last_tg = atoi(value["digital"]["tg"].asString().c_str());
           m_last_dmrid = atoi(value["digital"]["rpt"].asString().c_str());
+          m_last_ts =  atoi(value["digital"]["ts"].asString().c_str());
+          m_last_cc =  atoi(value["digital"]["cc"].asString().c_str());
+          m_last_mode = value["digital"]["ambe_mode"].asString();
           userinfo["callsign"] = m_last_call;
           userinfo["tg"] = m_last_tg;
+          userinfo["mode"] = m_last_mode;
           userinfo["gateway"] = m_last_dmrid;
         }
       }
@@ -973,8 +998,8 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
   //cout << "UsrpLogic::onPublishStateEvent - event_name: " << event_name 
   //      << ", message: " << msg << endl;
 
-  // if it is not allowed to handle information about users then all userinfo traffic 
-  // will be ignored
+  // if it is not allowed to handle information about users then all userinfo
+  // traffic will be ignored
   if (!share_userinfo) return;
 
   Json::Value user_arr;

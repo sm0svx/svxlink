@@ -215,6 +215,9 @@ class UsrpLogic : public LogicBase
     Json::Value                       m_user_info;
     bool                              share_userinfo;
     Async::Timer                      m_delay_timer;
+    uint8_t                           m_last_ts;
+    uint8_t                           m_last_cc;
+    std::string                       m_last_mode;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
