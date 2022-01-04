@@ -1,31 +1,30 @@
-
-USRP protocol used to send via UDP analog audio (2021.05.11)
+USRP protocol used to send via UDP analog audio (2021.07.14)
 
 The USRP was implemented in Allstar (in 2010, KA1RBI) and used by various hamradio applications like
-MMDVMHost, USRP2M17, Analog_Bridge, Analog_Reflector etc
+MMDVMHost, USRP2M17, Analog_Bridge, Analog_Reflector, etc
 
 UDP USRP FRAME:
-==============
+===============
 USRP Header (32 bytes) + DATA
 
 Typical sequence for send audio:
 
 USRP_HEADER (Type_Frame=2, PTT=0) + DATA (The DATA in first byte contain TLV_TAGS: 0x08 (TLV_TAG_SET_INFO) 
                                            and contain MetaDATA (see below))
-USRP_HEADER (Type_Frame=0, PTT=1) + DATA (Audio)
+USRP_HEADER (Type_Frame=0, PTT=1) + DATA (Audio 320 bytes) 
 ....
-USRP_HEADER (Type_Frame=0, PTT=0)
+USRP_HEADER (Type_Frame=0, PTT=0) + DATA (last Audio or empty buffer 320 bytes) 
 
 
 The first frame type = 2 (USRP_TYPE_TEXT) with MetaData is not obligatory and can be omitted, but it can be useful when,
-for example, we want to send information about the callsign source from the analogue to
+for example, we want to send information about the callsign source from the analog to
 for example M17 or callsign and its DMR ID to DMR.
 
 At current in USRP header are used only the following information:
    USRP string in 0-3 bytes
    Sequence number (4-7 bytes)
    PTT status  (15 byte) 1 = ON , 0 = OFF
-   Type of Frame (20 byte) 0 Audio data, 2 MetaData
+   Type of Frame (20 byte) 0 Audio data, 1 DTMF, 2 MetaData 
 
 The rest of the information in USRP header should be set to 0
 
@@ -42,24 +41,47 @@ Bytes  Value            Notes
 28-31  Reserved?        Set to 0 (not used)
 
 
+Minimum use USRP protocol is:
 
-Below short descirption type of UDP USRP frames 
+Received side
+-------------
+Two types of frames are we received
+
+- USRP_TYPE_TEXT with set TVL_TAG_SET_INFO (0x08) bit where we get information about source callsign and DmrID
+   and Talk Group
+- USRP_TYPE_VOICE is used to receive stream audio wherein USRP Header is information about KEYUP status (PTT)
+  which allow track start an audio and stop audio stream received
+  
+Transmitting side
+-----------------
+Two types of frames are we received
+
+- USRP_TYPE_TEXT with set TVL_TAG_SET_INFO (0x08) bit where we send information about source callsign and DmrID
+   and Talk Group. DmrID and Talk Group make sense when we have a link to DMR DV
+- USRP_TYPE_VOICE used to send audio stream where in USRP Header in information about KEYUP status (PTT)
+  which allow track start an audio and stop audio stream received
 
 
-UDP frame with Audio stream (see example 1)
+
+Below short description type of UDP USRP frames 
+-----------------------------------------------
+
+DATA contain Audio stream (see example 1)
 ===========================================
 In byte 20 of the USRP HEADER, frame type 0 (USRP_TYPE_VOICE) 
 In byte 15 of the USRP HEADER, status PTT: 1 ON, 0 OFF (last frame)
-The DATA contain AUDIO stream.
+The DATA contains an AUDIO stream.
 Audio signed 16-bit little-endian PCM audio at 8000 samples/sec, 160 samples per packet.
 
 The PTT status in the USRP of the header can be used to control PTT or 
 SQL, or information about start and end transmission in an application that is receiving data via USRP.
 
-UDP frame with MetaData (see example 2)
-=======================================
+
+
+1. DATA = MetaData  with Callsign, DmrId, Talk Group (see example 2)
+===================================================================
 In byte 20 of the USRP HEADER, frame type 1 (USRP_TYPE_TEXT) 
-The DATA in first byte contain TLV_TAGS: 0x08 (TLV_TAG_SET_INFO)
+The DATA in the first byte contains TLV_TAGS: 0x08 (TLV_TAG_SET_INFO)
 The next bytes contain MetaData:
 
 TLVLenght,dmrID, repeaterID, tg, ts, cc, callsign, 0
@@ -75,23 +97,26 @@ Callsing         Put the callisgn
 End of MetData   Set 0
 
 Note:
-For most applications with USRP protocol, it is enough to send in MetaDat 
-only callsign and in the case of DMR network, 
+For most applications with USRP protocol, it is enough to send in MetaData 
+only callsign and in the case of DMR and P25 network, 
 additionally DMR ID for the given callsign
+
 The Analog Bridge v1.6.2 set in field CALLSIGN information like:
  {"call":"N3ABC","name":"Club station"}
-if is connected with Analog Refelctor.
+if our application is connected with Analog Refelctor via BRIDGE mode.
 
 
-UDP frame tune Talk Group on Analog Bridge (see example 3)
+
+2. DATA = MetaData tune Talk Group on Analog Bridge (see example 3)
 ==========================================================
 In byte 20 of the USRP HEADER, frame type 1 (USRP_TYPE_DTMF) 
-The DATA contains a string where the first character 
-is 3 followed by the Talk Group number. For example, we want 
-to set the TG # 10260 string in DATA: 310260 
+The DATA contains a string where is Talk Group number. 
+For example, we want to set the TG # 26021 string in DATA in
+bytes is:  3236 3032 3100
+2 is 32, 6 is 36, etc
 
 
-Frame with switch DV mode on Analog Bridge (see example 4)
+3. DATA = MetaData switch DV mode on Analog Bridge (see example 4)
 ==========================================================
 In byte 20 of the USRP HEADER, frame type 1 (USRP_TYPE_DTMF) 
 The DATA contains a string where the first character 
@@ -100,17 +125,18 @@ For example, we want to set mode DMR string in DATA: *DMR
 Available DV Mode Names: DMR, YSF, P25, NXDN, DSTAR
 
 
-UDP frame send request INFO to Analog Bridge (see example 5)
-============================================================
+4. DATA = MetaData send request INFO to Analog Bridge (see example 5)
+=================================================================
 In byte 20 of the USRP HEADER, frame type 2 (USRP_TYPE_TEXT) 
 The DATA contains a string INFO
 
 
-UDP frame received from Analog Bridge with INFO in JSON format (see example 6)
+5. DATA = MetaData received from Analog Bridge with INFO in JSON format (see example 6)
 ==============================================================================
 In byte 20 of the USRP HEADER, frame type 2 (USRP_TYPE_TEXT) 
-The DATA contains a string INFO: and next status Analog
-Bridge in JSON format
+The DATA contains a string  INFO: 
+and next status Analog Bridge in JSON format
+The length frame is bigger than 320 bytes
 
 
 Example 1
@@ -273,10 +299,11 @@ TLV_TAG_FILE_XFER   = 11
 
 
 Information base on:
-he above information about the USRP protocol is based on an analysis of dump 
+The above information about the USRP protocol is based on an analysis of the dump 
 frames  from applications that use USRP as well and from links
 
 https://github.com/AllStarLink/ASL-Asterisk/blob/develop/asterisk/channels/chan_usrp.h
 https://github.com/AllStarLink/ASL-Asterisk/blob/develop/asterisk/channels/chan_usrp.c
 https://github.com/DVSwitch/MMDVM_Bridge/blob/master/dvswitch.sh
 https://github.com/DVSwitch/USRP_Client/blob/master/pyUC.py
+
