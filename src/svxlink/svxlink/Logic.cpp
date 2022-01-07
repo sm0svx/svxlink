@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -690,10 +690,10 @@ bool Logic::initialize(void)
   for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
        it != ctcss_to_tg.end(); ++it)
   {
-    int bw = 4;
+    int bw = 2;
     if (it->first > 300)
     {
-      bw = 50;
+      bw = 25;
     }
     if (rx().addToneDetector(it->first, bw, 10, 1000))
     {

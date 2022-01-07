@@ -10,7 +10,7 @@ the SvxLink core is running. It can also be a DDR (Digital Drop Receiver).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -733,9 +733,11 @@ bool LocalRxBase::addToneDetector(float fq, int bw, float thresh,
 {
   //printf("Adding tone detector with fq=%d  bw=%d  req_dur=%d\n",
   //    	 fq, bw, required_duration);
-  ToneDetector *det = new ToneDetector(fq, bw, required_duration);
+  ToneDetector *det = new ToneDetector(fq, 2*bw, required_duration);
   assert(det != 0);
   det->setPeakThresh(thresh);
+  det->setDetectOverlapPercent(75);
+  det->setDetectToneFrequencyTolerancePercent(50.0f * bw / fq);
   det->detected.connect(sigc::mem_fun(*this, &LocalRxBase::onToneDetected));
   
   tone_dets->addSink(det, true);

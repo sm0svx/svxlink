@@ -206,7 +206,7 @@ void start_squelch_open_measurement(FdWatch *w)
 } /* start_squelch_open_measurement */
 
 
-void ctcss_snr_updated(float snr)
+void ctcss_snr_updated(float snr, float fq)
 {
   ctcss_snr_sum += snr;
   ctcss_snr_cnt += 1;

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -128,8 +128,7 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void)
-      : m_splitter(0), m_active_det(0), m_ctcss_snr_offset(0.0f) {}
+    explicit SquelchCtcss(void) {}
 
     /**
      * @brief 	Destructor
@@ -173,10 +172,11 @@ class SquelchCtcss : public Squelch
 		  << "config variables instead.\n";
       }
 
-      if (cfg.getValue(rx_name, "CTCSS_OPEN_THRESH", open_thresh))
+      cfg.getValue(rx_name, "CTCSS_OPEN_THRESH", open_thresh);
+      cfg.getValue(rx_name, "CTCSS_CLOSE_THRESH", close_thresh);
+      if (close_thresh > open_thresh)
       {
-	close_thresh = open_thresh;
-	cfg.getValue(rx_name, "CTCSS_CLOSE_THRESH", close_thresh);
+        close_thresh = open_thresh;
       }
 
       open_thresh += m_ctcss_snr_offset;
@@ -220,10 +220,7 @@ class SquelchCtcss : public Squelch
         ToneDetector *det = new ToneDetector(ctcss_fq, 8.0f);
         det->activated.connect(sigc::bind(
             sigc::mem_fun(*this, &SquelchCtcss::checkSignalDetected), det));
-        if (it == ctcss_fqs.begin())
-        {
-          det->snrUpdated.connect(snrUpdated.make_slot());
-        }
+        det->snrUpdated.connect(sigc::bind(snrUpdated.make_slot(), ctcss_fq));
         Async::AudioSink *sink = det;
 
         m_dets.push_back(det);
@@ -268,6 +265,38 @@ class SquelchCtcss : public Squelch
             break;
           }
 
+          case 4:
+          {
+            std::cout << "### CTCSS mode 4: Overlap + Estimated SNR + "
+                         "tone frequency 0.75% tolerance (experimental)\n";
+
+            static const float OVERLAP_PERCENT    = 75.0f;
+            static const float TONE_FQ_TOLERANCE  = 0.75f;
+            static const bool  USE_WINDOWING      = false;
+
+            det->setDetectBw(16.0f);
+            det->setDetectOverlapPercent(OVERLAP_PERCENT);
+            det->setDetectDelay(100);
+            det->setDetectToneFrequencyTolerancePercent(TONE_FQ_TOLERANCE);
+            det->setDetectUseWindowing(USE_WINDOWING);
+            det->setDetectPeakThresh(0.0f);
+            det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+
+            det->setUndetectBw(8.0f);
+            det->setUndetectOverlapPercent(OVERLAP_PERCENT);
+            det->setUndetectDelay(100);
+            det->setUndetectUseWindowing(USE_WINDOWING);
+            det->setUndetectPeakThresh(0.0f);
+            det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+
+              // Set up CTCSS band pass filter
+            Async::AudioFilter *filter =
+              new Async::AudioFilter(filter_spec.str());
+            filter->registerSink(det, true);
+            sink = filter;
+            break;
+          }
+
           case 2:
           default:
           {
@@ -298,13 +327,13 @@ class SquelchCtcss : public Squelch
         m_splitter->addSink(sink, true);
       }
 
-      bool debug = false;
-      cfg.getValue(rx_name, "CTCSS_DEBUG", debug);
-
-      if (debug)
+      cfg.getValue(rx_name, "CTCSS_DEBUG", m_debug);
+      if (m_debug)
       {
-        m_dets.front()->snrUpdated.connect(
-            sigc::mem_fun(*this, &SquelchCtcss::printSnr));
+        m_dbg_timer = std::unique_ptr<Async::Timer>(
+            new Async::Timer(100, Async::Timer::TYPE_PERIODIC));
+        m_dbg_timer->expired.connect(
+            sigc::hide(sigc::mem_fun(*this, &SquelchCtcss::printDebug)));
       }
 
       return Squelch::initialize(cfg, rx_name);
@@ -341,12 +370,13 @@ class SquelchCtcss : public Squelch
     /**
      * @brief  A signal that is emitted when the tone SNR has been recalculated
      * @param  snr The current SNR
+     * @param  fq  The CTCSS frequency
      *
      * This signal will be emitted as soon as a new SNR value for the CTCSS
      * tone has been calculated. The signal will only be emitted when
      * CTCSS_MODE is set to 2 or 3.
      */
-    sigc::signal<void, float> snrUpdated;
+    sigc::signal<void, float, float> snrUpdated;
 
   protected:
     /**
@@ -375,19 +405,32 @@ class SquelchCtcss : public Squelch
   private:
     typedef std::vector<ToneDetector*> DetList;
 
-    DetList                 m_dets;
-    Async::AudioSplitter *  m_splitter;
-    ToneDetector *          m_active_det;
-    float                   m_ctcss_snr_offset;
+    DetList                       m_dets;
+    Async::AudioSplitter*         m_splitter          = nullptr;
+    ToneDetector*                 m_active_det        = nullptr;
+    float                         m_ctcss_snr_offset  = 0.0f;
+    bool                          m_debug             = false;
+    std::unique_ptr<Async::Timer> m_dbg_timer         = nullptr;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
 
     void checkSignalDetected(bool is_detected, ToneDetector *det)
     {
+      if (m_debug)
+      {
+        printDebug();
+      }
       std::ostringstream ss;
-      ss << std::setprecision(1) << std::fixed << det->toneFq()
-         << ":" << static_cast<int>(std::roundf(det->lastSnr()));
+      ss << std::setprecision(1) << std::fixed << det->toneFq();
+      if (det->toneFqEstimate() > 0.0f)
+      {
+        float fq_err = det->toneFqEstimate() - det->toneFq();
+        fq_err = 100.0 * fq_err / det->toneFq();
+        ss << std::showpos << fq_err;
+      }
+      ss << ":" << static_cast<int>(
+            std::roundf(det->lastSnr() - m_ctcss_snr_offset));
       if (is_detected)
       {
         if (m_active_det == 0)
@@ -401,12 +444,26 @@ class SquelchCtcss : public Squelch
         if (m_active_det == det)
         {
           m_active_det = 0;
+          //for (const auto& d : m_dets)
+          //{
+          //  if (d->isActivated())
+          //  {
+          //    //std::cout << "### ANOTHER TONE ALREADY ACTIVE" << std::endl;
+          //    m_active_det = d;
+          //    //setSignalDetected(false, ss.str());
+          //    ss.str(std::string());
+          //    ss << std::setprecision(1) << std::fixed << d->toneFq()
+          //       << ":" << static_cast<int>(std::roundf(d->lastSnr()));
+          //    setSignalDetected(true, ss.str());
+          //    return;
+          //  }
+          //}
           setSignalDetected(false, ss.str());
         }
       }
     }
 
-    void printSnr(float level)
+    void printDebug(void)
     {
       std::ostringstream os;
       os << rxName() << ": ";
@@ -414,7 +471,12 @@ class SquelchCtcss : public Squelch
       {
         float snr = det->lastSnr() - m_ctcss_snr_offset;
         os << std::setw(4) << static_cast<int>(roundf(snr))
-          << ":" << std::fixed << std::setprecision(1) << det->toneFq();
+           << ":" << std::fixed << std::setprecision(1) << det->toneFq();
+        if (det->toneFqEstimate() > 0.0)
+        {
+          float fq_err = det->toneFqEstimate() - det->toneFq();
+          os << std::showpos << fq_err;
+        }
       }
       std::cout << os.str() << std::endl;
     }

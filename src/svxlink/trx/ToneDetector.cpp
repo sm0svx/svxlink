@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2011  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2022  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include <iomanip>
 
 
 /****************************************************************************
@@ -87,31 +88,55 @@ using namespace Async;
 
 struct ToneDetector::DetectorParams
 {
-  float		      bw;
-  int		      stable_count_thresh;
-  int		      block_len;
-  float		      peak_thresh;
-  int		      period_block_len;
-  float		      phase_offset;
-  float		      phase_mean_thresh;
-  float		      phase_var_thresh;
-  float		      phase_actual_fq;
-  Goertzel	      center;
-  Goertzel	      lower;
-  Goertzel	      upper;
+  float               bw                      = 0.0f;
+  int                 detect_delay_ms         = -1;
+  int                 stable_count_thresh     = DEFAULT_STABLE_COUNT_THRESH;
+  size_t              block_len               = 0;
+  float               overlap_percent         = DEFAULT_OVERLAP_PERCENT;
+  std::vector<float>  overlap_buf;
+  size_t              overlap_buf_size        = 0;
+  float               freq_tol_hz             = DEFAULT_FREQ_TOL_HZ;
+  float               block_len_radians       = 0.0f;
+  std::complex<float> prev_res_cmplx          = 0;
+  float               prev_phase              = 0.0f;
+  float               peak_thresh             = DEFAULT_PEAK_THRESH;
+  int                 period_block_len        = 0;
+  float               phase_offset            = 0.0f;
+  float               phase_mean_thresh       = DEFAULT_PHASE_MEAN_THRESH;
+  float               phase_var_thresh        = DEFAULT_PHASE_VAR_THRESH;
+  float               phase_actual_fq         = 0.0f;
+  Goertzel            center;
+  Goertzel            lower;
+  Goertzel            upper;
   std::vector<float>  window_table;
-  bool		      use_windowing;
-  float		      peak_to_tot_pwr_thresh;
-  float		      snr_thresh;
-  float		      passband_bw;
-};
+  bool                use_windowing           = DEFAULT_USE_WINDOWING;
+  float               peak_to_tot_pwr_thresh  = DEFAULT_PEAK_TO_TOT_PWR_THRESH;
+  float               snr_thresh              = DEFAULT_SNR_THRESH;
+  float               passband_bw             = 0.0f;
+}; /* struct ToneDetector::DetectorParams */
 
 
 /****************************************************************************
  *
- * Prototypes
+ * Prototypes and local functions
  *
  ****************************************************************************/
+
+namespace
+{
+  inline double wrapToPi(double x)
+  {
+    if (x > M_PI)
+    {
+      x -= 2*M_PI * std::trunc((x+M_PI)/(2*M_PI));
+    }
+    else if (x < -M_PI)
+    {
+      x -= 2*M_PI * std::trunc((x-M_PI)/(2*M_PI));
+    }
+    return x;
+  } /* wrapToPi */
+}; /* Anonymous namespace */
 
 
 
@@ -139,25 +164,11 @@ struct ToneDetector::DetectorParams
  ****************************************************************************/
 
 ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
-  : tone_fq(tone_hz), samples_left(0), is_activated(false),
+  : tone_fq(tone_hz), buf_pos(0), is_activated(false),
     last_active(false), stable_count(0), phase_check_left(-1),
-    par(0), last_snr(0.0f)
+    par(nullptr), last_snr(0.0f), tone_fq_est(0.0f)
 {
   det_par = new DetectorParams;
-  det_par->bw = width_hz;
-  det_par->stable_count_thresh = DEFAULT_STABLE_COUNT_THRESH;
-  det_par->block_len = 0;
-  det_par->peak_thresh = DEFAULT_PEAK_THRESH;
-  det_par->period_block_len = 0;
-  det_par->phase_offset = 0.0f;
-  det_par->phase_mean_thresh = DEFAULT_PHASE_MEAN_THRESH;
-  det_par->phase_var_thresh = DEFAULT_PHASE_VAR_THRESH;
-  det_par->phase_actual_fq = 0.0f;
-  det_par->use_windowing = DEFAULT_USE_WINDOWING;
-  det_par->peak_to_tot_pwr_thresh = 0.0f;
-  det_par->snr_thresh = 0.0f;
-  det_par->passband_bw = 0.0f;
-
   setDetectBw(width_hz);
 
     // Calculate the block length of one period of the tone to detect.
@@ -203,40 +214,69 @@ ToneDetector::~ToneDetector(void)
 } /* ToneDetector::~ToneDetector */
 
 
+void ToneDetector::setDetectToneFrequencyTolerancePercent(
+    float freq_tol_percent)
+{
+  setToneFrequencyTolerancePercent(det_par, freq_tol_percent);
+} /* ToneDetector::setDetectToneFrequencyTolerance */
+
+
+void ToneDetector::setUndetectToneFrequencyTolerancePercent(
+    float freq_tol_percent)
+{
+  setToneFrequencyTolerancePercent(undet_par, freq_tol_percent);
+} /* ToneDetector::setUndetectToneFrequencyTolerance */
+
+
+void ToneDetector::setDetectOverlapPercent(float overlap_percent)
+{
+  det_par->overlap_percent = overlap_percent;
+  setOverlapLength(det_par, det_par->block_len * overlap_percent / 100.0f);
+} /* ToneDetector::setDetectOverlapPercent */
+
+
+void ToneDetector::setUndetectOverlapPercent(float overlap_percent)
+{
+  undet_par->overlap_percent = overlap_percent;
+  setOverlapLength(undet_par, undet_par->block_len * overlap_percent / 100.0f);
+} /* ToneDetector::setUndetectOverlapPercent */
+
+
+void ToneDetector::setDetectOverlapLength(size_t overlap)
+{
+  det_par->overlap_percent = 0.0f;
+  setOverlapLength(det_par, overlap);
+} /* ToneDetector::setDetectOverlapLength */
+
+
+void ToneDetector::setUndetectOverlapLength(size_t overlap)
+{
+  undet_par->overlap_percent = 0.0f;
+  setOverlapLength(undet_par, overlap);
+} /* ToneDetector::setUndetectOverlapLength */
+
+
 void ToneDetector::reset(void)
 {
   setActivated(false);
   last_active = false;
   stable_count = 0;
-  samples_left = par->block_len;
-
-    // Point to the first windowing table entry
+  buf_pos = 0;
+  tone_fq_est = 0.0f;
+  passband_energy = 0.0f;
   win = par->window_table.begin();
-
-    // Reset Goertzel filters
   par->center.reset();
   par->lower.reset();
   par->upper.reset();
-
-    // Reset phase check state variables
+  par->overlap_buf.clear();
+  par->prev_res_cmplx = 0;
   phaseCheckReset();
-
-    // Reset the passband energy
-  passband_energy = 0.0f;
 } /* ToneDetector::reset */
 
 
 void ToneDetector::setDetectDelay(int delay_ms)
 {
-  if (delay_ms > 0)
-  {
-    det_par->stable_count_thresh = static_cast<int>(
-	ceil(delay_ms * INTERNAL_SAMPLE_RATE / (det_par->block_len * 1000.0)));
-  }
-  else
-  {
-    det_par->stable_count_thresh = DEFAULT_STABLE_COUNT_THRESH;
-  }
+  setDelay(det_par, delay_ms);
 } /* ToneDetector::setDetectDelay */
 
 
@@ -248,23 +288,13 @@ void ToneDetector::setDetectStableCountThresh(int count)
 
 int ToneDetector::detectDelay(void) const
 {
-  return det_par->stable_count_thresh * det_par->block_len *
-         1000 / INTERNAL_SAMPLE_RATE;
+  return delay(det_par);
 } /* ToneDetector::detectDelay */
 
 
 void ToneDetector::setUndetectDelay(int delay_ms)
 {
-  if (delay_ms > 0)
-  {
-    undet_par->stable_count_thresh = static_cast<int>(
-	ceil(delay_ms * INTERNAL_SAMPLE_RATE /
-	     (undet_par->block_len * 1000.0)));
-  }
-  else
-  {
-    undet_par->stable_count_thresh = DEFAULT_STABLE_COUNT_THRESH;
-  }
+  setDelay(undet_par, delay_ms);
 } /* ToneDetector::setUndetectDelay */
 
 
@@ -276,60 +306,19 @@ void ToneDetector::setUndetectStableCountThresh(int count)
 
 int ToneDetector::undetectDelay(void) const
 {
-  return undet_par->stable_count_thresh * undet_par->block_len *
-         1000 / INTERNAL_SAMPLE_RATE;
+  return delay(undet_par);
 } /* ToneDetector::undetectDelay */
 
 
 void ToneDetector::setDetectBw(float bw_hz)
 {
-  det_par->bw = bw_hz;
-
-    // Adjust block length to minimize the DFT error
-  det_par->block_len = lrintf(INTERNAL_SAMPLE_RATE * 
-		              ceilf(tone_fq / bw_hz) / tone_fq);
-
-  det_par->window_table.clear();
-  if (det_par->use_windowing)
-  {
-      // Set up Hamming window coefficients
-    for (int i = 0; i < det_par->block_len; i++)
-    {
-      det_par->window_table.push_back(
-          0.54 - 0.46 * cosf(2.0f * M_PI * i / (det_par->block_len - 1)));
-    }
-  }
-
-  det_par->center.initialize(tone_fq, INTERNAL_SAMPLE_RATE);
-  det_par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
-  det_par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
-  
+  setBw(det_par, bw_hz);
 } /* ToneDetector::setDetectBw */
 
 
 void ToneDetector::setUndetectBw(float bw_hz)
 {
-  undet_par->bw = bw_hz;
-
-    // Adjust block length to minimize the DFT error
-  undet_par->block_len = lrintf(INTERNAL_SAMPLE_RATE * 
-		               ceilf(tone_fq / bw_hz) / tone_fq);
-
-  undet_par->window_table.clear();
-  if (undet_par->use_windowing)
-  {
-      // Set up Hamming window coefficients
-    for (int i = 0; i < undet_par->block_len; i++)
-    {
-      undet_par->window_table.push_back(
-          0.54 - 0.46 * cosf(2.0f * M_PI * i / (undet_par->block_len - 1)));
-    }
-  }
-
-  undet_par->center.initialize(tone_fq, INTERNAL_SAMPLE_RATE);
-  undet_par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
-  undet_par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
-
+  setBw(undet_par, bw_hz);
 } /* ToneDetector::setUndetectBw */
 
 
@@ -455,17 +444,39 @@ void ToneDetector::setUndetectUseWindowing(bool enable)
 
 int ToneDetector::writeSamples(const float *buf, int len)
 {
-  for (int i = 0;  i < len;  i++)
+  const float *end = buf + len;
+  while (buf != end)
   {
-    float famp = *(buf++);
+    float famp;
+    if (buf_pos < par->overlap_buf.size())
+    {
+      famp = par->overlap_buf.at(buf_pos);
+    }
+    else
+    {
+      famp = *buf++;
+    }
+    const size_t non_overlap_len = par->block_len - par->overlap_buf_size;
+    if (buf_pos >= non_overlap_len)
+    {
+      const size_t insert_pos = buf_pos - non_overlap_len;
+      if (insert_pos < par->overlap_buf.size())
+      {
+        par->overlap_buf[insert_pos] = famp;
+      }
+      else
+      {
+        par->overlap_buf.push_back(famp);
+      }
+    }
+
+    passband_energy += static_cast<double>(famp) * famp;
 
       // First apply the Hamming window, if enabled
     if (par->use_windowing)
     {
       famp *= *(win++);
     }
-
-    passband_energy += static_cast<double>(famp) * famp;
 
       // Run the recursive Goertzel stage for the center frequency
     par->center.calc(famp);
@@ -483,7 +494,7 @@ int ToneDetector::writeSamples(const float *buf, int len)
       phase_check_left = par->period_block_len;
     }
 
-    if (--samples_left == 0)
+    if (++buf_pos >= par->block_len)
     {
       postProcess();
     }
@@ -540,9 +551,20 @@ void ToneDetector::phaseCheck(void)
 void ToneDetector::postProcess(void)
 {
   bool active = true;
+  float bw = static_cast<float>(INTERNAL_SAMPLE_RATE) / par->block_len;
+  float det_bw = bw;
+  float win_comp_energy = 1.0f;
+
+    // Compensate for power loss due to windowing if necessary
+  if (par->use_windowing)
+  {
+    det_bw *= 1.3631;
+    win_comp_energy = 1.835f * 1.835f;
+  }
 
     // Calculate the magnitude for the center bin
-  float res_center = par->center.magnitudeSquared();
+  const std::complex<float> res_cmplx = par->center.result();
+  float res_center = win_comp_energy * Goertzel::magnitudeSquared(res_cmplx);
 
     // Now determine if the tone is active or not. We start by checking
     // if the tone energy exceed the energy threshold. This check
@@ -554,12 +576,12 @@ void ToneDetector::postProcess(void)
   {
       // Check if the center fq is above the lower fq bin by the peak threshold.
       // This is part of the "neighbour bin SNR" check.
-    float res_lower = par->lower.magnitudeSquared();
+    float res_lower = win_comp_energy * par->lower.magnitudeSquared();
     active = active && (res_center > (res_lower * par->peak_thresh));
 
       // Check if the center fq is above the upper fq bin by the peak threshold.
       // This is part of the "neighbour bin SNR" check.
-    float res_upper = par->upper.magnitudeSquared();
+    float res_upper = win_comp_energy * par->upper.magnitudeSquared();
     active = active && (res_center > (res_upper * par->peak_thresh));
   }
 
@@ -590,8 +612,15 @@ void ToneDetector::postProcess(void)
     float Ppassband = passband_energy / par->block_len;
     
       // Estimate the mean noise floor over the whole passband
-    float Pnoise = (Ppassband - Ptone) / ((par->passband_bw-par->bw) / par->bw);
+    float Pnoise = (Ppassband - Ptone) / ((par->passband_bw-det_bw) / det_bw);
     
+    //std::cout << "### Ppasspand=" << Ppassband
+    //          << " Ptone=" << Ptone
+    //          << " Pnoise=" << Pnoise
+    //          << " rel=" << (Ptone / Ppassband)
+    //          << " rel2=" << (res_center / passband_energy)
+    //          << std::endl;
+
       // Calculate the signal to noise ratio.
       // Pnoise may turn negative, probably due to rounding errors, so we
       // arbitrarily set the SNR to a constant in that case. This typically
@@ -638,6 +667,26 @@ void ToneDetector::postProcess(void)
                         (phase_variance < par->phase_var_thresh));
   }
 
+  if (par->freq_tol_hz > 0.0f)
+  {
+    const double phase_err =
+      wrapToPi(std::arg(res_cmplx * std::conj(par->prev_res_cmplx)) -
+          par->block_len_radians);
+    par->prev_res_cmplx = res_cmplx;
+    const double freq_err =
+      INTERNAL_SAMPLE_RATE * phase_err /
+      (2*M_PI * (par->block_len - par->overlap_buf_size));
+    tone_fq_est = tone_fq + freq_err;
+    active = active && (abs(freq_err) < par->freq_tol_hz);
+    //std::cout << "### freq_tol[" << toneFq() << "]:"
+    //          << std::showpos << std::fixed << std::setprecision(3)
+    //          << " phase_err=" << phase_err
+    //          << " freq_err=" << freq_err
+    //          << " est=" << tone_fq_est
+    //          << std::endl;
+    //active = false;
+  }
+
     // If the detector is stable in the active or inactive state, the
     // stable counter is increaed. Otherwise it is reset.
   if (active == last_active)
@@ -659,12 +708,14 @@ void ToneDetector::postProcess(void)
     {
       detected(tone_fq);
     }
+    tone_fq_est = 0.0f;
   }
 
     // Point to the first windowing table entry
   win = par->window_table.begin();
-    // Reload sample counter
-  samples_left = par->block_len;
+
+    // Reset sample counter
+  buf_pos = 0;
 
   par->center.reset();
   par->lower.reset();
@@ -677,9 +728,137 @@ void ToneDetector::postProcess(void)
 
 void ToneDetector::setActivated(bool activated)
 {
+  //std::cout << "### activate[" << toneFq() << "]=" << activated << std::endl;
   is_activated = activated;
-  par = is_activated ? undet_par : det_par;
+  if (activated)
+  {
+    undet_par->prev_phase = det_par->prev_phase;
+    undet_par->prev_res_cmplx = det_par->prev_res_cmplx;
+    par = undet_par;
+  }
+  else
+  {
+    det_par->prev_phase = undet_par->prev_phase;
+    det_par->prev_res_cmplx = undet_par->prev_res_cmplx;
+    par = det_par;
+  }
+  par->overlap_buf.clear();
 } /* ToneDetector::setActivated */
+
+
+void ToneDetector::setToneFrequencyTolerancePercent(
+    ToneDetector::DetectorParams* par,
+    float freq_tol_percent)
+{
+  par->freq_tol_hz = toneFq() * freq_tol_percent / 100.0f;
+
+    // Calculate the theoretical angle difference in radians between two DFT
+    // blocks
+  par->block_len_radians =
+    par->block_len * 2*M_PI * toneFq() / INTERNAL_SAMPLE_RATE;
+  if (par->overlap_buf_size > 0)
+  {
+    const float olap_ratio =
+      static_cast<float>(par->block_len) / par->overlap_buf_size;
+    const float bw =
+      static_cast<float>(INTERNAL_SAMPLE_RATE) / par->block_len;
+    par->block_len_radians +=
+      2*M_PI / olap_ratio * (olap_ratio - fmod(toneFq() / bw, olap_ratio));
+  }
+  par->block_len_radians = wrapToPi(par->block_len_radians);
+} /* ToneDetector::setToneFrequencyTolerance */
+
+
+void ToneDetector::setDelay(ToneDetector::DetectorParams* par, int delay_ms)
+{
+  //std::cout << "### ToneDetector::setDelay: delay_ms=" << delay_ms
+  //          << std::endl;
+  par->detect_delay_ms = delay_ms;
+  if (delay_ms > 0)
+  {
+    size_t block_cnt = 1;
+    size_t delay_cnt = delay_ms * INTERNAL_SAMPLE_RATE / 1000;
+    if (delay_cnt > par->block_len)
+    {
+      block_cnt += 1 + (delay_cnt - par->block_len) /
+                   (par->block_len - par->overlap_buf_size);
+    }
+    par->stable_count_thresh = block_cnt;
+    //std::cout << "### ToneDetector::setDelay:"
+    //          << " fq=" << toneFq()
+    //          << " delay_cnt=" << delay_cnt
+    //          << " delay_ms=" << delay_ms
+    //          << " block_len=" << par->block_len
+    //          << " block_cnt=" << block_cnt
+    //          << " delay()=" << delay(par)
+    //          << std::endl;
+  }
+  else if (delay_ms == 0)
+  {
+    par->stable_count_thresh = DEFAULT_STABLE_COUNT_THRESH;
+  }
+} /* ToneDetector::setDelay */
+
+
+int ToneDetector::delay(ToneDetector::DetectorParams* par) const
+{
+  size_t samp_cnt = par->block_len;
+  samp_cnt += (par->stable_count_thresh - 1) *
+              (par->block_len - par->overlap_buf_size);
+  return samp_cnt * 1000 / INTERNAL_SAMPLE_RATE;
+} /* ToneDetector::delay */
+
+
+void ToneDetector::setOverlapPercent(ToneDetector::DetectorParams* par,
+                                     float overlap_percent)
+{
+  setOverlapLength(par, par->block_len * overlap_percent / 100.0f);
+} /* ToneDetector::setOverlapPercent */
+
+
+void ToneDetector::setOverlapLength(ToneDetector::DetectorParams* par,
+                                    size_t overlap)
+{
+  par->overlap_buf_size = overlap;
+  if (overlap >= par->overlap_buf.size())
+  {
+    par->overlap_buf.reserve(overlap);
+  }
+  else
+  {
+    par->overlap_buf.resize(overlap);
+  }
+  setDelay(par, par->detect_delay_ms);
+} /* ToneDetector::setOverlapLength */
+
+
+void ToneDetector::setBw(ToneDetector::DetectorParams* par, float bw_hz)
+{
+  par->bw = bw_hz;
+
+    // Adjust block length to minimize the DFT error
+  par->block_len = lrintf(INTERNAL_SAMPLE_RATE *
+                          ceilf(tone_fq / bw_hz) / tone_fq);
+
+  par->window_table.clear();
+  if (par->use_windowing)
+  {
+      // Set up Hamming window coefficients
+    for (size_t i = 0; i < par->block_len; i++)
+    {
+      //float a0 = 0.54;
+      float a0 = 25.0 / 46.0;
+      par->window_table.push_back(
+          a0 - (1.0f - a0) * cosf(2.0f * M_PI * i / (par->block_len - 1)));
+    }
+  }
+
+  par->center.initialize(tone_fq, INTERNAL_SAMPLE_RATE);
+  par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
+  par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
+
+  setOverlapPercent(par, par->overlap_percent);
+} /* ToneDetector::setBw */
 
 
 /*
