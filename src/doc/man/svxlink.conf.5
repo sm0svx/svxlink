@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "APRIL 2021" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JANUARY 2022" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1303,7 +1303,7 @@ ones to choose from:
 .IP \(bu 4
 .BR "0 (Default)"
 Will choose the detection mode that is the default in the software. At the
-moment this is the "Estimated SNR" mode.
+moment this is mode 2, "Estimated SNR".
 .IP \(bu 4
 .BR "1 (Neighbor bins)"
 This detection mode will use three narrow frequency bands (~8Hz) to do the
@@ -1329,6 +1329,17 @@ other detection modes. The mean detection time will be something like 150ms.
 The detection bandwidth is very narrow and very sharp so that no adjacent
 tones will trigger the detector. The price to pay for these improvements is
 that is it a bit less sensitive.
+.IP \(bu 4
+.BR "4 (Overlap+Estimated SNR+Frequency estimation)"
+This is an improvement of the mode 3 detector which use another method for
+extracting the phase information from the signal. This phase information can be
+used to calculate an estimation of the tone frequency. The accuracy is like
+tenths of a Herz. Like the mode 3 detector, this detector is faster and more
+selective. With its 0.75% frequency tolerance, it will not trigger on adjacent
+CTCSS tones. However, the "undetect" algorithm does not use the frequency
+estimation so the squelch may be held open by an adjacent tone if already in
+active state. One downside is that it is a bit more CPU hungry due to using 75%
+overlap in the frequency analysis, thus processing each sample three times.
 .RE
 .TP
 .B CTCSS_FQ

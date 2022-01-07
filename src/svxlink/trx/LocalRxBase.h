@@ -10,7 +10,7 @@ the SvxLink core is running. It can also be a DDR (Digital Drop Receiver).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -189,12 +189,13 @@ class LocalRxBase : public Rx
     /**
      * @brief  A signal that is emitted when the CTCSS tone SNR has changed
      * @param  snr The current SNR
+     * @param  fq  The CTCSS frequency
      *
      * This signal will be emitted as soon as a new SNR value for the CTCSS
      * tone has been calculated. The signal will only be emitted when
-     * CTCSS_MODE is set to 2 or 3.
+     * CTCSS_MODE is set to 2, 3 or 4.
      */
-    sigc::signal<void, float> ctcssSnrUpdated;
+    sigc::signal<void, float, float> ctcssSnrUpdated;
     
 
     virtual void setSql(bool is_open);

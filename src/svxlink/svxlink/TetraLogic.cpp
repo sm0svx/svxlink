@@ -128,7 +128,7 @@ using namespace SvxLink;
 #define LOGINFO 2
 #define LOGDEBUG 3
 
-#define TETRA_LOGIC_VERSION "10122021"
+#define TETRA_LOGIC_VERSION "07012022"
 
 /****************************************************************************
  *

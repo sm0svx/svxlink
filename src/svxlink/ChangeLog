@@ -1,5 +1,6 @@
  1.8.0 -- ?? ??? ????
 ----------------------
+
 * A new Logic "TetraLogic" has been introduced to control a Tetra radio over
   the PEI. For more information take a look into the manual page
 
@@ -174,10 +175,21 @@
   built with libgpiod >= 1.5 SQL_GPIOD_BIAS will also be available to set
   PULLUP/PULLDOWN for a GPIO input (squelch) pin.
 
+* New CTCSS tone detector, mode 4, added. This detector is faster and more
+  selective. It probably also is more resilient to interference. Have a look
+  at the svxlink.conf (5) manual page under CTCSS_MODE for more information.
+
+* Tone detectors for 1750 Hz tone burst, CTCSS repeater activation,
+  CTCSS_TO_TG etc now use frequency estimation in addition to energy detection
+  for better selectivity.
+
+* Improved squelch state logging with more details about the detection.
+
 
 
  1.7.0 -- 01 Sep 2019
 ----------------------
+
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
   switched to https only. Read documentation and/or README in directory 
   modules/metarinfo for changes.
