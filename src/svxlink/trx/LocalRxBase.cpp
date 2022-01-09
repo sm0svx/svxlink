@@ -395,7 +395,7 @@ bool LocalRxBase::initialize(void)
   }
   
     // Create a splitter to distribute full bandwidth audio to all consumers
-  AudioSplitter *fullband_splitter = new AudioSplitter;
+  fullband_splitter = new AudioSplitter;
   prev_src->registerSink(fullband_splitter, true);
   prev_src = fullband_splitter;
 
@@ -773,6 +773,17 @@ void LocalRxBase::reset(void)
   }
 } /* LocalRxBase::reset */
 
+
+void LocalRxBase::registerFullbandSink(Async::AudioSink* sink)
+{
+  fullband_splitter->addSink(sink);
+} /* LocalRxBase::registerFullbandSink */
+
+
+void LocalRxBase::unregisterFullbandSink(Async::AudioSink* sink)
+{
+  fullband_splitter->removeSink(sink);
+} /* LocalRxBase::unregisterFullbandSink */
 
 
 /****************************************************************************

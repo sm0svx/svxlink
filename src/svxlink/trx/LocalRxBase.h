@@ -187,6 +187,32 @@ class LocalRxBase : public Rx
     virtual void reset(void);
 
     /**
+     * @brief   Register a fullband (unfiltered) audio sink
+     * @param   sink The sink to register
+     *
+     * Use this function to register a sink for handling fullband audio, that
+     * is receiver audio that is not filtered. This can be used to get access
+     * to audio outside of the voice band, in theory 0 to 8000 Hz.
+     */
+    void registerFullbandSink(Async::AudioSink* sink);
+
+    /**
+     * @brief   Unregister a fullband (unfiltered) audio sink
+     * @param   sink The sink to unregister
+     *
+     * Use this function to unregister a sink for handling fullband audio.
+     * See the documentation for the registerFullbandSink() function for more
+     * information.
+     */
+    void unregisterFullbandSink(Async::AudioSink* sink);
+
+    /**
+     * @bried   Get the squelch detector associated with this receiver
+     * @returns Returns a pointer to the squelch detector or nullptr if none
+     */
+    Squelch* squelchDetector(void) { return squelch_det; }
+
+    /**
      * @brief  A signal that is emitted when the CTCSS tone SNR has changed
      * @param  snr The current SNR
      * @param  fq  The CTCSS frequency
@@ -255,6 +281,7 @@ class LocalRxBase : public Rx
     HdlcDeframer *              ob_afsk_deframer;
     HdlcDeframer *              ib_afsk_deframer;
     bool                        audio_dev_keep_open;
+    Async::AudioSplitter *      fullband_splitter;
 
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);

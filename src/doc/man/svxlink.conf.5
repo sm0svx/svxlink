@@ -951,7 +951,7 @@ The CTCSS squelch detector checks for the presence of a tone with the specified
 frequency. The tone frequency is specified using the CTCSS_FQ config variable.
 The thresholds are specified using the CTCSS_OPEN_THRESH and CTCSS_CLOSE_THRESH
 config variables. Other config variables that effect the CTCSS squelch is:
-CTCSS_MODE, CTCSS_SNR_OFFSET, CTCSS_BPF_LOW, CTCSS_BPF_HIGH.
+CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH.
 
 The SERIAL squelch detector use a pin in a serial port to detect if the squelch
 is open. This squelch detector can be used if the receiver have an external
@@ -1125,36 +1125,45 @@ frequency range (67.0 to 254.1Hz) need to be reasonable flat. When choosing
 tones, try to select tones that are close to each other. However, selecting
 tones too close may cause both to trigger. Also do not select tones that are a
 multiple of another tone since overtones may trigger the wrong one.
-
-If multiple tones are configured when running siglevdetcal, the first one will
-be used for the calibration.
 .TP
 .B CTCSS_OPEN_THRESH
 If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config
 variable sets the required tone level to indicate squelch open. The value is
-some kind of estimated signal to noise dB value. If using CTCSS mode 2 or 3 it
-is helpful to set up the CTCSS_SNR_OFFSET config variable. This will make the
-SNR estimation pretty good. Default threshold is 15dB.
+some kind of estimated signal to noise dB value. If using CTCSS mode 2, 3 or 4
+it is helpful to set up the CTCSS_SNR_OFFSETS config variable. This will make
+the SNR estimation pretty good. Default threshold is 15dB.
 .TP
 .B CTCSS_CLOSE_THRESH
 If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config
 variable sets the required tone level to indicate squelch close. The value is
-some kind of estimated signal to noise dB value. If using CTCSS mode 2 or 3 it
-is helpful to set up the CTCSS_SNR_OFFSET config variable. This will make the
-SNR estimation pretty good. Default threshold is 9dB.
+some kind of estimated signal to noise dB value. If using CTCSS mode 2, 3 or 4
+it is helpful to set up the CTCSS_SNR_OFFSETS config variable. This will make
+the SNR estimation pretty good. Default threshold is 9dB.
 .TP
 .B CTCSS_SNR_OFFSET
-This config variable is used when CTCSS_MODE is set to 0, 2 or 3. It will
-adjust the estimated SNR value so that it becomes very close to a real SNR
+This configuration variable should not be used unless you know why you use it.
+Using CTCSS_SNR_OFFSETS is often more appropriate.
+.TP
+.B CTCSS_SNR_OFFSETS
+This config variable is used when CTCSS_MODE is set to 0, 2, 3 or 4. It will
+adjust the estimated SNR values so that they become very close to a real SNR
 value. This value will have to be adjusted if CTCSS_FQ, CTCSS_MODE,
 CTCSS_BPF_LOW or CTCSS_BPF_HIGH changes.
+
 Use the siglevdetcal utility to find out what to set this config variable to.
 There is no requirement to set this config variable up. The downside is that
 you will then need to experiment more with the CTCSS_OPEN_THRESH and
-CTCSS_CLOSE_THRESH config variables to find the correct squelch level.
+CTCSS_CLOSE_THRESH config variables to find the correct squelch level. If using
+multiple CTCSS frequencies it may not be possible to find good threshold values
+due to uneven frequency characteristics for the receiver.
+
+The format for this config variable is a comma separated list of
+frequency:offset pairs. The CTCSS_SNR_OFFSET variable may be used as a form of
+fallback value that is used if a specific tone frequency in use is missing from
+this list.
 .TP
 .B CTCSS_BPF_LOW
-When CTCSS_MODE is set to 0, 2 or 3, this config variable will set the low
+When CTCSS_MODE is set to 0, 2, 3 or 4, this config variable will set the low
 cutoff frequency for the passband filter. It normally should not have to be
 adjusted but could improve the detector if some interference falls within the
 passband (e.g. mains hum). Note however that the more narrow you make the
@@ -1163,13 +1172,13 @@ increasing the open/close thresholds or by setting up SQL_DELAY and
 SQL_HANGTIME. Default is 60Hz.
 .TP
 .B CTCSS_BPF_HIGH
-When CTCSS_MODE is set to 0, 2 or 3, this config variable will set the high
+When CTCSS_MODE is set to 0, 2, 3 or 4, this config variable will set the high
 cutoff frequency for the passband filter. It normally should not have to be
 adjusted but could improve the detector if some interference falls within the
-passband. Note however that the more narrow you make the
-passband, the less stable the detector will be. You may need to compensate by
-increasing the open/close thresholds or by setting up SQL_DELAY and
-SQL_HANGTIME. Default is 270Hz.
+passband. Note however that the more narrow you make the passband, the less
+stable the detector will be. You may need to compensate by increasing the
+open/close thresholds or by setting up SQL_DELAY and SQL_HANGTIME. Default is
+270Hz.
 .TP
 .B CTCSS_DEBUG
 Set this to 1 to enable continuously printing SNR values for the CTCSS tone
@@ -1277,7 +1286,7 @@ Below is a simple example of how to set up a combined squelch.
   [Rx1:CTCSS]
   SQL_DET=CTCSS
   CTCSS_FQ=77.0
-  CTCSS_SNR_OFFSET=-3.22
+  CTCSS_SNR_OFFSETS=77.0:-3.22
 
   [Rx1:SIGLEV]
   SQL_DET=SIGLEV
@@ -2729,7 +2738,7 @@ Before starting the siglevdetcal application, pull the PTT cable since the PTT
 might get triggered during the calibration procedure.
 
 The siglevdetcal utility will also measure the CTCSS tone SNR offset so that
-the CTCSS_SNR_OFFSET config variable can be set up to a proper value.
+the CTCSS_SNR_OFFSETS config variable can be set up to a proper value.
 
 If the siglevdetcal application cannot be used for some reason, the manual
 procedure below might be used. This procedure will only work for a

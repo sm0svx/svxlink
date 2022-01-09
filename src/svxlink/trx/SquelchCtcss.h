@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <vector>
 #include <cmath>
+#include <map>
 
 
 /****************************************************************************
@@ -158,9 +159,11 @@ class SquelchCtcss : public Squelch
 
       int ctcss_mode = 0;
       cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
-      
-      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", m_ctcss_snr_offset);
-      
+
+      float ctcss_snr_offset = 0.0f;
+      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", ctcss_snr_offset);
+      cfg.getValue(rx_name, "CTCSS_SNR_OFFSETS", m_ctcss_snr_offsets);
+
       float open_thresh = 15.0f;
       float close_thresh = 9.0f;
       if (cfg.getValue(rx_name, "CTCSS_THRESH", open_thresh))
@@ -179,9 +182,21 @@ class SquelchCtcss : public Squelch
         close_thresh = open_thresh;
       }
 
-      open_thresh += m_ctcss_snr_offset;
-      close_thresh += m_ctcss_snr_offset;
-      
+      std::map<float, float> open_threshs;
+      std::map<float, float> close_threshs;
+      for (auto ctcss_fq : ctcss_fqs)
+      {
+        if (m_ctcss_snr_offsets.count(ctcss_fq) == 0)
+        {
+          m_ctcss_snr_offsets[ctcss_fq] = ctcss_snr_offset;
+        }
+        //std::cout << "### f=" << ctcss_fq
+        //          << " offset=" << m_ctcss_snr_offsets[ctcss_fq]
+        //          << std::endl;
+        open_threshs[ctcss_fq] = open_thresh + m_ctcss_snr_offsets[ctcss_fq];
+        close_threshs[ctcss_fq] = close_thresh + m_ctcss_snr_offsets[ctcss_fq];
+      }
+
       unsigned bpf_low = 60;
       cfg.getValue(rx_name, "CTCSS_BPF_LOW", bpf_low);
       if ((bpf_low < 50) || (bpf_low > 300))
@@ -233,8 +248,8 @@ class SquelchCtcss : public Squelch
           case 1:
           {
             //std::cout << "### CTCSS mode: Neighbour bins\n";
-            det->setDetectPeakThresh(open_thresh);
-            det->setUndetectPeakThresh(close_thresh);
+            det->setDetectPeakThresh(open_threshs[ctcss_fq]);
+            det->setUndetectPeakThresh(close_threshs[ctcss_fq]);
             break;
           }
 
@@ -245,7 +260,7 @@ class SquelchCtcss : public Squelch
             det->setDetectBw(16.0f);
             det->setDetectPeakThresh(0.0f);
             //det->setDetectPeakToTotPwrThresh(0.6f);
-            det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+            det->setDetectSnrThresh(open_threshs[ctcss_fq], bpf_high - bpf_low);
             det->setDetectStableCountThresh(1);
             det->setDetectPhaseBwThresh(2.0f, 2.0f);
 
@@ -253,7 +268,7 @@ class SquelchCtcss : public Squelch
             det->setUndetectUseWindowing(false);
             det->setUndetectPeakThresh(0.0f);
             //det->setUndetectPeakToTotPwrThresh(0.3f);
-            det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+            det->setUndetectSnrThresh(close_threshs[ctcss_fq], bpf_high - bpf_low);
             det->setUndetectStableCountThresh(2);
             //det->setUndetectPhaseBwThresh(4.0f, 16.0f);
 
@@ -280,14 +295,14 @@ class SquelchCtcss : public Squelch
             det->setDetectToneFrequencyTolerancePercent(TONE_FQ_TOLERANCE);
             det->setDetectUseWindowing(USE_WINDOWING);
             det->setDetectPeakThresh(0.0f);
-            det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+            det->setDetectSnrThresh(open_threshs[ctcss_fq], bpf_high - bpf_low);
 
             det->setUndetectBw(8.0f);
             det->setUndetectOverlapPercent(OVERLAP_PERCENT);
             det->setUndetectDelay(100);
             det->setUndetectUseWindowing(USE_WINDOWING);
             det->setUndetectPeakThresh(0.0f);
-            det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+            det->setUndetectSnrThresh(close_threshs[ctcss_fq], bpf_high - bpf_low);
 
               // Set up CTCSS band pass filter
             Async::AudioFilter *filter =
@@ -305,14 +320,14 @@ class SquelchCtcss : public Squelch
             det->setDetectUseWindowing(false);
             det->setDetectPeakThresh(0.0f);
             //det->setDetectPeakToTotPwrThresh(0.6f);
-            det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+            det->setDetectSnrThresh(open_threshs[ctcss_fq], bpf_high - bpf_low);
             det->setDetectStableCountThresh(1);
 
             //det->setUndetectBw(8.0f);
             det->setUndetectUseWindowing(false);
             det->setUndetectPeakThresh(0.0f);
             //det->setUndetectPeakToTotPwrThresh(0.3f);
-            det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+            det->setUndetectSnrThresh(close_threshs[ctcss_fq], bpf_high - bpf_low);
             det->setUndetectStableCountThresh(2);
 
               // Set up CTCSS band pass filter
@@ -408,7 +423,7 @@ class SquelchCtcss : public Squelch
     DetList                       m_dets;
     Async::AudioSplitter*         m_splitter          = nullptr;
     ToneDetector*                 m_active_det        = nullptr;
-    float                         m_ctcss_snr_offset  = 0.0f;
+    std::map<float, float>        m_ctcss_snr_offsets;
     bool                          m_debug             = false;
     std::unique_ptr<Async::Timer> m_dbg_timer         = nullptr;
 
@@ -430,7 +445,7 @@ class SquelchCtcss : public Squelch
         ss << std::showpos << fq_err;
       }
       ss << ":" << static_cast<int>(
-            std::roundf(det->lastSnr() - m_ctcss_snr_offset));
+            std::roundf(det->lastSnr() - m_ctcss_snr_offsets[det->toneFq()]));
       if (is_detected)
       {
         if (m_active_det == 0)
@@ -466,16 +481,17 @@ class SquelchCtcss : public Squelch
     void printDebug(void)
     {
       std::ostringstream os;
-      os << rxName() << ": ";
+      os << rxName() << ":";
       for (auto det : m_dets)
       {
-        float snr = det->lastSnr() - m_ctcss_snr_offset;
+        float snr = det->lastSnr() - m_ctcss_snr_offsets[det->toneFq()];
         os << std::setw(4) << static_cast<int>(roundf(snr))
-           << ":" << std::fixed << std::setprecision(1) << det->toneFq();
+           << ":" << std::fixed << std::setprecision(1) << std::noshowpos
+           << det->toneFq();
         if (det->toneFqEstimate() > 0.0)
         {
           float fq_err = det->toneFqEstimate() - det->toneFq();
-          os << std::showpos << fq_err;
+          os << std::showpos << std::setw(5) << fq_err;
         }
       }
       std::cout << os.str() << std::endl;
