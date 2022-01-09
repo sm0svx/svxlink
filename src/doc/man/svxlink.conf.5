@@ -823,6 +823,21 @@ commands to the PTY is as simple as doing a
 after starting SvxLink. The device works bidirectional, received dtmf characters
 (from local application) are output via this interface.
 Example: SIP_CTRL_PTY=/dev/shm/dtmf_ctrl
+.TP
+.B SIP_PREAMP
+The incoming signal from the Sip network will be amplified by the specified
+number of dB. This can be used as a last measure if the input audio level
+can't be set high enough on the analogue side. A value of 6dB will double
+the signal level. Note that this is a digital amplification. Hence it will
+reduce the dynamic range of the signal so usage should be avoided if possible.
+It's always better to correct the audio level before sampling it.
+.TP
+.B SIP_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level from Sip network for overmodulating
+stations. Try values from -6 to -12 if the incoming Sip audio is to high. Set
+to 0 to deactivate it.
 .
 .SS QSO Recorder Section
 .

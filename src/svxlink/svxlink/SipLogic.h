@@ -202,6 +202,7 @@ class SipLogic : public LogicBase
     bool                      startup_finished;
     Async::AudioSelector      *selector;
     bool                      semi_duplex;
+    float                     sip_preamp_gain;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
