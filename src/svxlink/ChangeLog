@@ -1,5 +1,6 @@
  1.8.0 -- ?? ??? ????
 ----------------------
+
 * MetarInformation, more flexible airport announcement at the beginning of a
   Metar
 
@@ -172,10 +173,30 @@
   built with libgpiod >= 1.5 SQL_GPIOD_BIAS will also be available to set
   PULLUP/PULLDOWN for a GPIO input (squelch) pin.
 
+* New CTCSS tone detector, mode 4, added. This detector is faster and more
+  selective. It probably also is more resilient to interference. Have a look
+  at the svxlink.conf (5) manual page under CTCSS_MODE for more information.
+
+* Tone detectors for 1750 Hz tone burst, CTCSS repeater activation,
+  CTCSS_TO_TG etc now use frequency estimation in addition to energy detection
+  for better selectivity.
+
+* Improved squelch state logging with more details about the detection.
+
+* New CTCSS configuration variable CTCSS_SNR_OFFSETS (note the plural S) which
+  replace the old variable with a similar name. The new variable take a comma
+  separated list of frequency:offset pairs to support the use of multiple
+  CTCSS tone frequencies. The siglevdetcal utility has also been modified to
+  output the new variable format. If you are using just one CTCSS frequency
+  with a previously calibrated offet value you can keep using that. The older
+  configuration variable will not be removed and it still work in the same
+  way.
+
 
 
  1.7.0 -- 01 Sep 2019
 ----------------------
+
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
   switched to https only. Read documentation and/or README in directory 
   modules/metarinfo for changes.

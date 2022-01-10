@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -285,7 +285,7 @@ bool RepeaterLogic::initialize(void)
   
   if (required_1750_duration > 0)
   {
-    if (!rx().addToneDetector(1750, 50, 10, required_1750_duration))
+    if (!rx().addToneDetector(1750, 25, 10, required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection in logic "
            << name() << "\n";
@@ -294,7 +294,7 @@ bool RepeaterLogic::initialize(void)
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
   {
-    if (!rx().addToneDetector(open_on_ctcss_fq, 4, 10, open_on_ctcss_duration))
+    if (!rx().addToneDetector(open_on_ctcss_fq, 2, 10, open_on_ctcss_duration))
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection in logic "
            << name() << "\n";

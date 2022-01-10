@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2011  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2022  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -136,6 +136,75 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     float toneFq(void) const { return tone_fq; }
 
     /**
+     * @brief  Return the estimated detection frequency
+     * @return Returns the estimated detection frequency in Hz
+     *
+     * This function will return the estimated tone frequency for the
+     * algorithms that use frequency estimation as a detection method.
+     */
+    float toneFqEstimate() const { return tone_fq_est; }
+
+    /**
+     * @brief   Set the tone detection frequency tolerance in percent
+     * @param   freq_tol_percent The +/-% frequency offset to accept
+     *
+     * Use this function to set the tone detection frequency tolerance in
+     * percent. The estimated tone frequency must be within
+     * (-fc*tol/100, +fc*tol/100) to be detected.
+     */
+    void setDetectToneFrequencyTolerancePercent(float freq_tol_percent);
+
+    /**
+     * @brief   Set the tone undetection frequency tolerance in percent
+     * @param   freq_tol_percent The +/-% frequency offset to accept
+     *
+     * Use this function to set the tone undetection frequency tolerance in
+     * percent. The estimated tone frequency must be within
+     * (-fc*tol/100, +fc*tol/100) to still be detected.
+     */
+    void setUndetectToneFrequencyTolerancePercent(float freq_tol_percent);
+
+    /**
+     * @brief   Set the detection overlap in percent
+     * @param   overlap_percent The overlap in percent
+     *
+     * Use this function to set how much, in percent, each processing block
+     * should overlap. Overlap is used to get a more fine grained resolution in
+     * detection time.
+     */
+    void setDetectOverlapPercent(float overlap_percent);
+
+    /**
+     * @brief   Set the undetection overlap in percent
+     * @param   overlap_percent The overlap in percent
+     *
+     * Use this function to set how much, in percent, each processing block
+     * should overlap. Overlap is used to get a more fine grained resolution in
+     * undetection time.
+     */
+    void setUndetectOverlapPercent(float overlap_percent);
+
+    /**
+     * @brief   Set the detection overlap in in samples
+     * @param   overlap The number of samples to overlap
+     *
+     * Use this function to set how much, in samples, each processing block
+     * should overlap. Overlap is used to get a more fine grained resolution in
+     * detection time.
+     */
+    void setDetectOverlapLength(size_t overlap);
+
+    /**
+     * @brief   Set the undetection overlap in in samples
+     * @param   overlap The number of samples to overlap
+     *
+     * Use this function to set how much, in samples, each processing block
+     * should overlap. Overlap is used to get a more fine grained resolution in
+     * detection time.
+     */
+    void setUndetectOverlapLength(size_t overlap);
+
+    /**
      * @brief  Set the detection delay
      * @param  delay_ms The number of milliseconds to delay a detection
      *
@@ -145,6 +214,8 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * row that must give a positive result before the tone is reported
      * as active. The length of one block depends on the chosen detector
      * bandwidth.
+     * Setting a delay of 0 will reset the delay to the default defined by
+     * DEFAULT_STABLE_COUNT_THRESH. Setting a negative delay is a noop.
      */ 
     void setDetectDelay(int delay_ms);
 
@@ -385,7 +456,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * @param  enable Set to \em true to enable or \em false to disable
      *
      * A windowing function will help decrease the artificial noise
-     * introduced (spectral leakage) when processing a continous signal
+     * introduced (spectral leakage) when processing a continuous signal
      * in blocks. However, it will also increase the bandwidth of the
      * detector by quite a bit.
      * This function will choose if a Hamming window should be applied when
@@ -399,7 +470,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * @param  enable Set to \em true to enable or \em false to disable
      *
      * A windowing function will help decrease the artificial noise
-     * introduced (spectral leakage) when processing a continous signal
+     * introduced (spectral leakage) when processing a continuous signal
      * in blocks. However, it will also increase the bandwidth of the
      * detector by quite a bit.
      * This function will choose if a Hamming window should be applied when
@@ -471,15 +542,19 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
   private:
     struct DetectorParams;
 
-    static CONSTEXPR bool   DEFAULT_USE_WINDOWING	= true;
-    static CONSTEXPR float  DEFAULT_TONE_ENERGY_THRESH	= 0.1f;
-    static CONSTEXPR float  DEFAULT_PEAK_THRESH		= 10.0;
-    static CONSTEXPR float  DEFAULT_PHASE_MEAN_THRESH	= 0.0f;
-    static CONSTEXPR float  DEFAULT_PHASE_VAR_THRESH	= 0.0f;
-    static CONSTEXPR int    DEFAULT_STABLE_COUNT_THRESH	= 3;
+    static CONSTEXPR bool   DEFAULT_USE_WINDOWING           = true;
+    static CONSTEXPR float  DEFAULT_TONE_ENERGY_THRESH      = 0.1f;
+    static CONSTEXPR float  DEFAULT_PEAK_THRESH             = 10.0;
+    static CONSTEXPR float  DEFAULT_PHASE_MEAN_THRESH       = 0.0f;
+    static CONSTEXPR float  DEFAULT_PHASE_VAR_THRESH        = 0.0f;
+    static CONSTEXPR int    DEFAULT_STABLE_COUNT_THRESH     = 3;
+    static CONSTEXPR float  DEFAULT_OVERLAP_PERCENT         = 0.0f;
+    static CONSTEXPR float  DEFAULT_FREQ_TOL_HZ             = 0.0f;
+    static CONSTEXPR float  DEFAULT_PEAK_TO_TOT_PWR_THRESH  = 0.0f;
+    static CONSTEXPR float  DEFAULT_SNR_THRESH              = 0.0f;
 
-    float               tone_fq;
-    int                 samples_left;
+    const float         tone_fq;
+    size_t              buf_pos;
     bool                is_activated;
     bool                last_active;
     int                 stable_count;
@@ -491,6 +566,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     DetectorParams	*par;
     double		passband_energy;
     float               last_snr;
+    float               tone_fq_est;
 
     std::vector<float>::const_iterator win;
 
@@ -498,6 +574,13 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     void phaseCheck(void);
     void postProcess(void);
     void setActivated(bool activated);
+    void setToneFrequencyTolerancePercent(DetectorParams* par,
+                                          float freq_tol_percent);
+    void setDelay(DetectorParams* par, int delay_ms);
+    int delay(DetectorParams* par) const;
+    void setOverlapPercent(DetectorParams* par, float overlap_percent);
+    void setOverlapLength(ToneDetector::DetectorParams* par, size_t overlap);
+    void setBw(DetectorParams* par, float bw_hz);
 
 };  /* class ToneDetector */
 
