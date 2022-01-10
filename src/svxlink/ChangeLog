@@ -185,6 +185,15 @@
 
 * Improved squelch state logging with more details about the detection.
 
+* New CTCSS configuration variable CTCSS_SNR_OFFSETS (note the plural S) which
+  replace the old variable with a similar name. The new variable take a comma
+  separated list of frequency:offset pairs to support the use of multiple
+  CTCSS tone frequencies. The siglevdetcal utility has also been modified to
+  output the new variable format. If you are using just one CTCSS frequency
+  with a previously calibrated offet value you can keep using that. The older
+  configuration variable will not be removed and it still work in the same
+  way.
+
 
 
  1.7.0 -- 01 Sep 2019
