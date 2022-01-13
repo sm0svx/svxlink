@@ -280,6 +280,22 @@ proc remote_greeting {} {
   playSilence 200;
 }
 
+
+#
+# Executed when an incoming call has ben picked 
+#
+proc incoming_call_answered {} {
+}
+
+
+#
+# Executed when a call(s) has been hangup by a rf user
+# by dtmf
+#
+proc call_hangup_by_user {} {
+}
+
+
 # end of namespace
 }
 

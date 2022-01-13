@@ -1098,6 +1098,7 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
       if (buffer[1] == '#')
       {
         hangupCalls(calls);
+        processEvent("call_hangup_by_user");
         return;
       }
 
@@ -1112,7 +1113,9 @@ void SipLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
           prm.statusCode = (pjsip_status_code)200;
           std::vector<sip::_Call *>::iterator call = calls.begin();
           (*call)->answer(prm);
+          processEvent("incoming_call_answered");
         }
+        return;
       }
 
         // calling a party with "C12345#"
