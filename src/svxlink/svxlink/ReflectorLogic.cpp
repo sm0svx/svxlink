@@ -139,7 +139,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
     m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true),
-    m_qsy_pending_timer(-1)
+    m_qsy_pending_timer(-1), m_verbose(true)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -179,6 +179,8 @@ ReflectorLogic::~ReflectorLogic(void)
 
 bool ReflectorLogic::initialize(void)
 {
+  cfg().getValue(name(), "VERBOSE", m_verbose);
+
   if (!cfg().getValue(name(), "HOST", m_reflector_host))
   {
     cerr << "*** ERROR: " << name() << "/HOST missing in configuration" << endl;
@@ -1057,7 +1059,10 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Node joined: " << msg.callsign() << endl;
+  if (m_verbose)
+  {
+    std::cout << name() << ": Node joined: " << msg.callsign() << std::endl;
+  }
 } /* ReflectorLogic::handleMsgNodeJoined */
 
 
@@ -1070,7 +1075,10 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Node left: " << msg.callsign() << endl;
+  if (m_verbose)
+  {
+    std::cout << name() << ": Node left: " << msg.callsign() << std::endl;
+  }
 } /* ReflectorLogic::handleMsgNodeLeft */
 
 
