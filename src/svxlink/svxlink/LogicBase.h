@@ -318,7 +318,7 @@ class LogicBase : public sigc::trackable
      * This function is used by a logic implementation to set which talk group
      * that local traffic is received on.
      */
-    void setReceivedTg(uint32_t tg)
+    virtual void setReceivedTg(uint32_t tg)
     {
       m_received_tg = tg;
       receivedTgUpdated(tg);

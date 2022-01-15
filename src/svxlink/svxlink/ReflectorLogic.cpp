@@ -1559,10 +1559,6 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   //     << is_active << "  is_idle=" << is_idle << endl;
   if (is_idle)
   {
-    if ((m_logic_con_in_valve != 0) && (m_selected_tg > 0))
-    {
-      m_logic_con_in_valve->setOpen(true);
-    }
     if (m_qsy_pending_timer.isEnabled())
     {
       std::ostringstream os;
@@ -1576,6 +1572,10 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   }
   else
   {
+    if ((m_logic_con_in_valve != 0) && (m_selected_tg > 0))
+    {
+      m_logic_con_in_valve->setOpen(true);
+    }
     if (m_tg_select_timeout_cnt == 0) // No TG currently selected
     {
       if (m_default_tg > 0)
