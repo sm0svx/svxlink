@@ -134,7 +134,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
     sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
-    ident_nag_min_time(2000), ident_nag_timer(-1)
+    ident_nag_min_time(2000), ident_nag_timer(-1), delayed_tg_activation(0)
 {
   up_timer.expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
   open_on_sql_timer.expired.connect(
@@ -450,6 +450,19 @@ void RepeaterLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
 } /* RepeaterLogic::dtmfCtrlPtyCmdReceived */
 
 
+void RepeaterLogic::setReceivedTg(uint32_t tg)
+{
+  if (repeater_is_up || !activate_on_sql_close)
+  {
+    Logic::setReceivedTg(tg);
+  }
+  else
+  {
+    delayed_tg_activation = tg;
+  }
+} /* RepeaterLogic::setReceivedTg */
+
+
 #if 0
 bool RepeaterLogic::getIdleState(void) const
 {
@@ -642,6 +655,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
       {
       	activate_on_sql_close = false;
       	setUp(true, open_reason);
+        Logic::setReceivedTg(delayed_tg_activation);
+        delayed_tg_activation = 0;
       }
     }
   }

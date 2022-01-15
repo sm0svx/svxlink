@@ -485,13 +485,15 @@ class SquelchCtcss : public Squelch
       for (auto det : m_dets)
       {
         float snr = det->lastSnr() - m_ctcss_snr_offsets[det->toneFq()];
-        os << std::setw(4) << static_cast<int>(roundf(snr))
-           << ":" << std::fixed << std::setprecision(1) << std::noshowpos
+        char stat = det->isActivated() ? '*' : ':';
+        os << std::showpos << std::setfill(' ')
+           << std::setw(4) << static_cast<int>(roundf(snr))
+           << stat << std::fixed << std::setprecision(1) << std::noshowpos
            << det->toneFq();
         if (det->toneFqEstimate() > 0.0)
         {
           float fq_err = det->toneFqEstimate() - det->toneFq();
-          os << std::showpos << std::setw(5) << fq_err;
+          os << std::showpos << std::setfill('_') << std::setw(5) << fq_err;
         }
       }
       std::cout << os.str() << std::endl;

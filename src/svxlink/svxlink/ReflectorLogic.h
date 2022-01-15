@@ -256,6 +256,7 @@ class ReflectorLogic : public LogicBase
     int                               m_tmp_monitor_timeout;
     bool                              m_use_prio;
     Async::Timer                      m_qsy_pending_timer;
+    bool                              m_verbose;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
