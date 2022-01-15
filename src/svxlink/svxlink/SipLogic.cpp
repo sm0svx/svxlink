@@ -1072,7 +1072,6 @@ void SipLogic::hangupCall(sip::_Call *call)
     if (*it == call)
     {
       (*it)->hangup(prm);
-      calls.erase(it);
       break;
     }
   }
@@ -1163,6 +1162,16 @@ std::string SipLogic::getCallerNumber(std::string uri)
 
 void SipLogic::callTimeout(Async::Timer *t)
 {
+
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
+       it != calls.end(); it++)
+  {
+    if (!(*it)->hasMedia())
+    {
+      hangupCall(*it);
+    }
+  }
+
   stringstream ss;
   ss << "call_timeout";
   processEvent(ss.str());

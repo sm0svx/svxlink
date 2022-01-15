@@ -144,7 +144,7 @@ proc pickup_call {caller} {
 #
 proc calling {caller} {
   playSilence 500;
-  playMsg "SipLogic" "calling";
+  playMsg "SipLogic" "outgoing_phonecall";
   playSilence 100;
   spellNumber [getCallerNumber $caller];
 }

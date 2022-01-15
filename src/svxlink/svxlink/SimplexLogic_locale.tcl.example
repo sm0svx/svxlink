@@ -24,10 +24,17 @@ proc dtmf_digit_received {digit duration} {
   variable stored_digits;
   puts "DTMF digit \"$digit\" detected with duration $duration ms";
 
+  set len [string length $stored_digits];
+  if {$len > 20} {
+    set stored_digits "";
+  }
+
   if {$digit == "#"} {
-    set port [open "/tmp/sip_ctrl" w+];
-      puts $port $stored_digits;
-    close $port;
+    if {$len > 5 || $stored_digits == "CA"} {
+      set port [open "/tmp/sip_ctrl" w+];
+        puts $port $stored_digits;
+      close $port;
+    }
     set stored_digits "";
   } else {
     set stored_digits "$stored_digits$digit";
