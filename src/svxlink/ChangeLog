@@ -191,6 +191,11 @@
   configuration variable will not be removed and it still work in the same
   way.
 
+* ReflectorLogic: New config variable VERBOSE that choose if printouts from
+  the reflector logic should be verbose or not. At the moment the only
+  difference is that reflector join/leave messages will be suppressed if
+  VERBOSE=0.
+
 
 
  1.7.0 -- 01 Sep 2019
