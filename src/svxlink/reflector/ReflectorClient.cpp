@@ -512,6 +512,8 @@ void ReflectorClient::handleSelectTG(std::istream& is)
       // FIXME: Notify the client that the TG selection was not allowed
       std::cout << m_callsign << ": Not allowed to use TG #"
                 << msg.tg() << std::endl;
+      TGHandler::instance()->switchTo(this, 0);
+      m_current_tg = 0;
     }
   }
 } /* ReflectorClient::handleSelectTG */
