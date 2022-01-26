@@ -128,7 +128,7 @@ using namespace SvxLink;
 #define LOGINFO 2
 #define LOGDEBUG 3
 
-#define TETRA_LOGIC_VERSION "07012022"
+#define TETRA_LOGIC_VERSION "25012022"
 
 /****************************************************************************
  *
@@ -1529,7 +1529,7 @@ std::string TetraLogic::handleSimpleTextSds(std::string m_message)
 void TetraLogic::handleTxGrant(std::string txgrant)
 {
   stringstream ss;
-  squelchOpen(true);  // open Squelch
+  //squelchOpen(true);  // open Squelch
   ss << "tx_grant";
   processEvent(ss.str());
 } /* TetraLogic::handleTxGrant */
