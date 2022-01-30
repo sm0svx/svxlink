@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpServer.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncApplication.h>
+#include <AsyncPty.h>
 #include <common.h>
 
 
@@ -123,7 +124,7 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0)
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), ctrl_pty(0)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -147,7 +148,8 @@ Reflector::~Reflector(void)
     delete (*it).second;
   }
   m_client_map.clear();
-
+  delete ctrl_pty;
+  ctrl_pty = 0;
   delete TGHandler::instance();
 } /* Reflector::~Reflector */
 
@@ -230,6 +232,23 @@ bool Reflector::initialize(Async::Config &cfg)
         sigc::mem_fun(*this, &Reflector::httpClientConnected));
     m_http_server->clientDisconnected.connect(
         sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
+  }
+
+    // the pty path: change params by pty commands
+  string pty_path;
+  m_cfg->getValue("GLOBAL", "CTRL_PTY", pty_path);
+  if (!pty_path.empty())
+  {
+    ctrl_pty = new Pty(pty_path);
+    if (!ctrl_pty->open())
+    {
+      cerr << "*** ERROR: Could not open ctrl PTY "
+           << pty_path << " as specified in configuration variable "
+           << "GLOBAL/" << "CTRL_PTY" << endl;
+      return false;
+    }
+    ctrl_pty->dataReceived.connect(
+        mem_fun(*this, &Reflector::ctrlPtyReceived));
   }
 
   return true;
@@ -791,6 +810,36 @@ uint32_t Reflector::nextRandomQsyTg(void)
   return 0;
 } /* Reflector::nextRandomQsyTg */
 
+
+void Reflector::ctrlPtyReceived(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  std::string injmessage = "";
+  int t;
+  
+  for (size_t i=0; i<count-1; i++)
+  {
+    injmessage += *buffer++;
+  }
+
+  size_t f = injmessage.find("SQL_TIMEOUT_BLOCKTIME=");
+  if (f != std::string::npos)
+  {
+    t = atoi(injmessage.erase(f,22+f).c_str());
+    TGHandler::instance()->setSqlTimeoutBlocktime(t);
+    cout << "+++ new value for SQL_TIMEOUT_BLOCKTIME="
+         << t << endl;
+    return;
+  }
+  
+  f = injmessage.find("SQL_TIMEOUT=");
+  if (f != std::string::npos)
+  {
+    t = atoi(injmessage.erase(f,12+f).c_str());
+    TGHandler::instance()->setSqlTimeout(t);
+    cout << "+++ new value for SQL_TIMEOUT=" << t << endl;
+  }
+} /* Reflector::ctrlPtyReceived */
 
 /*
  * This file has not been truncated
