@@ -88,6 +88,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
+#define PJSIP_VERSION "30012022"
 
 
 /****************************************************************************
@@ -303,12 +304,7 @@ SipLogic::~SipLogic(void)
   msg_handler = 0;
   delete selector;
   selector = 0;
-  for (std::vector<sip::_Call *>::iterator it=calls.begin();
-          it != calls.end(); it++)
-  {
-    calls.erase(it);
-    *it = 0;
-  }
+  calls.clear();
   if (accept_incoming_regex != 0)
   {
     regfree(accept_incoming_regex);
@@ -749,6 +745,12 @@ bool SipLogic::initialize(void)
 
   processEvent("startup");
 
+  cout << ">>> Started SvxLink with special SipLogic extension (v"
+       << PJSIP_VERSION << ")" << endl;
+  cout << ">>> No guarantee! Please send a bug report to\n"
+       << ">>> Adi/DL1HRC <dl1hrc@gmx.de> or use the groups.io mailing list"
+       << endl;
+
   // enable the execution of external tcl procedures since it handles start infor-
   // mation (registrations, ...) too. The sip-startup procedure must beeing
   // completely finished before the tcl procedures could be started
@@ -969,62 +971,51 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 {
   stringstream ss;
   pj::CallInfo ci = call->getInfo();
-
   std::string caller = getCallerNumber(ci.remoteUri);
 
-  for (std::vector<sip::_Call *>::iterator it=calls.begin();
-          it != calls.end(); it++)
+    // incoming call
+  if (ci.state == PJSIP_INV_STATE_INCOMING)
   {
-    if (*it == call)
-    {
-       // call disconnected
-      if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
-      {
-        cout << name()
-             << ": Call hangup (" << caller << "), duration "
-             << (*it)->getInfo().totalDuration.sec << "."
-             << (*it)->getInfo().totalDuration.msec << " secs" << endl;
-        m_out_src->allSamplesFlushed();
-        calls.erase(it);
-        if (calls.empty())
-        {
-          m_outto_sip->setOpen(false);
-          m_infrom_sip->setOpen(false);
-          //onSquelchOpen(false);
-        }
-        ss << "hangup_call " << caller << " "
-           << (*it)->getInfo().totalDuration.sec << "."
-           << (*it)->getInfo().totalDuration.msec;
-        processEvent(ss.str());
-      }
-
-       // incoming call
-      if (ci.state == PJSIP_INV_STATE_INCOMING)
-      {
-        ss << "incoming_call " << caller;
-        processEvent(ss.str());
-      }
-
-       // connecting
-      if (ci.state == PJSIP_INV_STATE_CONNECTING)
-      {
-        ss << "pickup_call " << caller;
-        processEvent(ss.str());
-        m_call_timeout_timer.setEnable(false);
-        m_call_timeout_timer.reset();
-      }
-
-       // calling
-      if (ci.state == PJSIP_INV_STATE_CALLING)
-      {
-        ss << "outgoing_call " << caller;
-        processEvent(ss.str());
-        cout << name() << ": Calling" << endl;
-      }
-
-      break;
-    }
+    ss << "incoming_call " << caller;
   }
+  else if (ci.state == PJSIP_INV_STATE_CONNECTING) // connecting
+  {
+    ss << "pickup_call " << caller;
+    m_call_timeout_timer.setEnable(false);
+    m_call_timeout_timer.reset();
+  }
+  else if (ci.state == PJSIP_INV_STATE_CALLING)     // calling
+  {
+    ss << "outgoing_call " << caller;
+    cout << name() << ": Calling" << endl;
+  }
+  else if (ci.state == PJSIP_INV_STATE_CONFIRMED)
+  {
+    ss << "call_state_confirmed " << caller;
+  }
+  else if (ci.state == PJSIP_INV_STATE_DISCONNECTED)    // call disconnected
+  {
+    cout << name()
+         << ": Call hangup (" << caller << "), duration "
+         << ci.totalDuration.sec << "."
+         << ci.totalDuration.msec << " secs" << endl;
+    m_out_src->allSamplesFlushed();
+
+    if (calls.empty())
+    {
+      m_outto_sip->setOpen(false);
+      m_infrom_sip->setOpen(false);
+      //onSquelchOpen(false);
+    }
+    ss << "hangup_call " << caller << " "
+       << ci.totalDuration.sec << "."
+       << ci.totalDuration.msec;
+  }
+  else
+  {
+    cout << "unknown_callstate " << ci.state;
+  }
+  processEvent(ss.str());
 } /* SipLogic::onCallState */
 
 

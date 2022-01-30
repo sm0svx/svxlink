@@ -284,7 +284,7 @@ proc remote_greeting {} {
 #
 # Executed when an incoming call has ben picked 
 #
-proc incoming_call_answered {} {
+proc incoming_call_answered {caller} {
 }
 
 
@@ -292,9 +292,22 @@ proc incoming_call_answered {} {
 # Executed when a call(s) has been hangup by a rf user
 # by dtmf
 #
-proc call_hangup_by_user {} {
+proc call_hangup_by_user {caller} {
 }
 
+
+#
+#
+#
+proc call_state_confirmed {caller} {
+}
+
+
+#
+# Executed at unknown callstate 
+#
+proc unknown_callstate {caller} {
+}
 
 # end of namespace
 }
