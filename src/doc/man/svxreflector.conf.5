@@ -140,6 +140,19 @@ the risk of some client overwhelming the reflector with requests causing
 disturbances in the reflector operation.
 
 Example: HTTP_SRV_PORT=8080
+.TP
+.B CTRL_PTY
+Define a path for a pseudo tty device to change parameters of the svxreflector 
+on runtime. The idea behind is that e.g. SQL_TIMEOUT can be changed from 300 to
+1200 seconds if a broadcast (qst) is sent without restarting the svxreflector.
+The device may be defined as CTRL_PTY=/tmp/ctrl_pty
+To change the value you may send a command to the device like this:
+
+echo "SQL_TIMEOUT_BLOCKTIME" > /tmp/ctrl_pty
+You can change this parameters where xxx stands for the time in seconds.
+SQL_TIMEOUT_BLOCKTIME=xxx
+or
+SQL_TIMEOUT=xxx
 .
 .SS USERS and PASSWORDS sections
 .

@@ -72,6 +72,7 @@ namespace Async
 {
   class UdpSocket;
   class Config;
+  class Pty;
 };
 
 class ReflectorMsg;
@@ -198,6 +199,7 @@ class Reflector : public sigc::trackable
     uint32_t                                        m_random_qsy_hi;
     uint32_t                                        m_random_qsy_tg;
     Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
+    Async::Pty                                      *ctrl_pty;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
@@ -215,6 +217,7 @@ class Reflector : public sigc::trackable
         Async::HttpServerConnection::DisconnectReason reason);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
+    void ctrlPtyReceived(const void *buf, size_t count);
 
 };  /* class Reflector */
 
