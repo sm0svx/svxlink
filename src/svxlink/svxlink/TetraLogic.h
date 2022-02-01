@@ -370,6 +370,7 @@ class TetraLogic : public Logic
     int dmnc;
     int dmcc;
     std::string infosds;
+    bool is_tx;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);

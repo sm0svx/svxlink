@@ -200,7 +200,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
   own_lon(0.0), endCmd(""), new_sds(false), inTransmission(false),
   cmgs_received(true), share_userinfo(true), current_cci(0), dmnc(0),
-  dmcc(0), infosds("")
+  dmcc(0), infosds(""), is_tx(false)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));      
   peiActivityTimer.expired.connect(mem_fun(*this, 
@@ -719,6 +719,7 @@ void TetraLogic::remoteCmdReceived(LogicBase* src_logic, const std::string& cmd)
 void TetraLogic::transmitterStateChange(bool is_transmitting)
 {
   std::string cmd;
+  is_tx = is_transmitting;
 
   if (is_transmitting) 
   {
@@ -1528,8 +1529,11 @@ std::string TetraLogic::handleSimpleTextSds(std::string m_message)
 */
 void TetraLogic::handleTxGrant(std::string txgrant)
 {
+  if (!is_tx)
+  {
+    squelchOpen(true);
+  }
   stringstream ss;
-  //squelchOpen(true);  // open Squelch
   ss << "tx_grant";
   processEvent(ss.str());
 } /* TetraLogic::handleTxGrant */
@@ -1628,7 +1632,6 @@ void TetraLogic::handleCallReleased(std::string message)
 
   if (tetra_modem_sql->isOpen())
   {
-    squelchOpen(false);  // close Squelch
     ss << "out_of_range " << getNextVal(message);
   }
   else
@@ -1636,6 +1639,7 @@ void TetraLogic::handleCallReleased(std::string message)
     ss << "call_end \"" << DisconnectCause[getNextVal(message)] << "\"";
   }
   processEvent(ss.str());
+  squelchOpen(false);  // close Squelch
 
   // send call/qso end to aprs network
   std::string m_aprsmesg = aprspath;    
@@ -2199,6 +2203,7 @@ void TetraLogic::sendWelcomeSds(string tsi, short r4s)
  */
 int TetraLogic::handleCci(std::string m_message)
 {
+  squelchOpen(true);
   size_t f = m_message.find("+CTCC: ");
   if (f != string::npos)
   {
