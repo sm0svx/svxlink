@@ -1534,7 +1534,6 @@ void TetraLogic::handleTxGrant(std::string txgrant)
     squelchOpen(true);
   }
   stringstream ss;
-  //squelchOpen(true);  // open Squelch
   ss << "tx_grant";
   processEvent(ss.str());
 } /* TetraLogic::handleTxGrant */
@@ -2204,6 +2203,7 @@ void TetraLogic::sendWelcomeSds(string tsi, short r4s)
  */
 int TetraLogic::handleCci(std::string m_message)
 {
+  squelchOpen(true);
   size_t f = m_message.find("+CTCC: ");
   if (f != string::npos)
   {
