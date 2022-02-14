@@ -200,7 +200,7 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
   own_lon(0.0), endCmd(""), new_sds(false), inTransmission(false),
   cmgs_received(true), share_userinfo(true), current_cci(0), dmnc(0),
-  dmcc(0), infosds("")
+  dmcc(0), infosds(""), is_tx(false)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));      
   peiActivityTimer.expired.connect(mem_fun(*this, 
@@ -719,8 +719,9 @@ void TetraLogic::remoteCmdReceived(LogicBase* src_logic, const std::string& cmd)
 void TetraLogic::transmitterStateChange(bool is_transmitting)
 {
   std::string cmd;
+  is_tx = is_transmitting;
 
-  if (is_transmitting) 
+  if (is_transmitting)
   {
     if (!talkgroup_up)
     {
@@ -933,7 +934,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
     case SDS:
       handleSds(m_message);
       break;
-      
+
     case ACK_SDS:
       break;
 
@@ -1012,7 +1013,7 @@ void TetraLogic::initGroupCall(int gc_gssi)
   cmd = "ATD";
   cmd += to_string(gc_gssi);
   sendPei(cmd);
-  
+
   stringstream ss;
   ss << "init_group_call " << to_string(gc_gssi);
   processEvent(ss.str());
@@ -1038,7 +1039,7 @@ void TetraLogic::handleCallBegin(std::string message)
 {
   //                   +CTICN:   1,    0,    0,    4,    1002,       1,     1,     0,   1,    1,   0,    1000,       1
   std::string reg = "\\+CTICN: [0-9],[0-9],[0-9],[0-9],[0-9]{1,17},[0-9],[0-9],[0-9],[0-9],[0-9],[0-9],[0-9]{1,17},[0-9]";
-  
+
   if (!rmatch(message, reg))
   {
     if (debug >= LOGWARN)
@@ -1046,7 +1047,7 @@ void TetraLogic::handleCallBegin(std::string message)
       cout << "*** Wrong +CTICN response (wrong format)" << endl;
     }
     return;
-  } 
+  }
   squelchOpen(true);  // open the Squelch
 
   Callinfo t_ci;
@@ -1528,6 +1529,10 @@ std::string TetraLogic::handleSimpleTextSds(std::string m_message)
 */
 void TetraLogic::handleTxGrant(std::string txgrant)
 {
+  if (!is_tx)
+  {
+    squelchOpen(true);
+  }
   stringstream ss;
   //squelchOpen(true);  // open Squelch
   ss << "tx_grant";
@@ -1628,7 +1633,6 @@ void TetraLogic::handleCallReleased(std::string message)
 
   if (tetra_modem_sql->isOpen())
   {
-    squelchOpen(false);  // close Squelch
     ss << "out_of_range " << getNextVal(message);
   }
   else
@@ -1636,6 +1640,7 @@ void TetraLogic::handleCallReleased(std::string message)
     ss << "call_end \"" << DisconnectCause[getNextVal(message)] << "\"";
   }
   processEvent(ss.str());
+  squelchOpen(false);  // close Squelch
 
   // send call/qso end to aprs network
   std::string m_aprsmesg = aprspath;    
