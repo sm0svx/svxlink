@@ -204,6 +204,11 @@ class Logic : public LogicBase
     virtual Async::AudioSink *logicConIn(void);
     virtual Async::AudioSource *logicConOut(void);
 
+    virtual void remoteCmdReceived(LogicBase* src_logic,
+                                   const std::string& cmd);
+    virtual void remoteReceivedTgUpdated(LogicBase *src_logic, uint32_t tg);
+
+
     CmdParser *cmdParser(void) { return &cmd_parser; }
 
   protected:
