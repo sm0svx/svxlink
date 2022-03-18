@@ -127,7 +127,7 @@ Timer::Timer(int timeout_ms, Type type, bool enabled)
 
 Timer::~Timer(void)
 {
-  expired.clear();
+  //expired.clear();
   setEnable(false);
 } /* Timer::~Timer */
 

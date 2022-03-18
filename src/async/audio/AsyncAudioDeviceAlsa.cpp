@@ -116,7 +116,7 @@ class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
   
     ~AlsaWatch()
     {
-      activity.clear();
+      //activity.clear();
       std::list<FdWatch*>::const_iterator cii;
       for(cii = watch_list.begin(); cii != watch_list.end(); ++cii)
       {
