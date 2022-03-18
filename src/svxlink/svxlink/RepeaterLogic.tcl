@@ -422,6 +422,28 @@ proc config_updated {tag value} {
 }
 
 
+#
+# Executed when a DTMF command is received from another linked logic core
+#
+#   logic -- The name of the logic core
+#   cmd   -- The received command
+#
+proc remote_cmd_received {logic cmd} {
+  Logic::remote_cmd_received "$logic" "$cmd"
+}
+
+
+#
+# Executed when a talkgroup is received from another linked logic core
+#
+#   logic -- The name of the logic core
+#   tg    -- The received talkgroup
+#
+proc remote_received_tg_updated {logic tg} {
+  Logic::remote_received_tg_updated "$logic" "$tg"
+}
+
+
 # end of namespace
 }
 
