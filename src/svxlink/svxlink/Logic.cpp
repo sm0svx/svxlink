@@ -990,6 +990,25 @@ Async::AudioSource *Logic::logicConOut(void)
 } /* Logic::logicConOut */
 
 
+void Logic::remoteCmdReceived(LogicBase* src_logic, const std::string& cmd)
+{
+  stringstream ss;
+  ss << "remote_cmd_received ";
+  ss << src_logic->name() << " ";
+  ss << cmd;
+  processEvent(ss.str());
+} /* Logic::remoteCmdReceived */
+
+
+void Logic::remoteReceivedTgUpdated(LogicBase *src_logic, uint32_t tg)
+{
+  stringstream ss;
+  ss << "remote_received_tg_updated ";
+  ss << src_logic->name() << " ";
+  ss << tg;
+  processEvent(ss.str());
+} /* Logic::remoteReceivedTgUpdated */
+
 
 /****************************************************************************
  *

@@ -687,6 +687,32 @@ proc config_updated {tag value} {
 }
 
 
+#
+# Executed when a DTMF command is received from another linked logic core
+#
+#   logic -- The name of the logic core
+#   cmd   -- The received command
+#
+proc remote_cmd_received {logic cmd} {
+  #puts "Remote command received from logic $logic: $cmd"
+  #playDtmf "$cmd" "500" "50"
+}
+
+
+#
+# Executed when a talkgroup is received from another linked logic core
+#
+#   logic -- The name of the logic core
+#   tg    -- The received talkgroup
+#
+proc remote_received_tg_updated {logic tg} {
+  #puts "Remote TG received from logic $logic: $tg"
+  #if {$tg > 0} {
+  #  playDtmf "1$tg" "500" "50"
+  #}
+}
+
+
 ##############################################################################
 #
 # Main program
