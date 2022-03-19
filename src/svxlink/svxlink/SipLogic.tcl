@@ -292,7 +292,7 @@ proc incoming_call_answered {caller} {
 # Executed when a call(s) has been hangup by a rf user
 # by dtmf
 #
-proc call_hangup_by_user {caller} {
+proc call_hangup_by_user {} {
 }
 
 
