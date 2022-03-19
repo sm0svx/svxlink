@@ -223,6 +223,7 @@ class SipLogic : public LogicBase
     void callTimeout(Async::Timer *t=0);
     void flushTimeout(Async::Timer *t=0);
     void onSquelchOpen(bool is_open);
+    void unregisterCall(sip::_Call *call);
 
 };  /* class SipLogic */
 

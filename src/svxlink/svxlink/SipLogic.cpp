@@ -1001,15 +1001,18 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
          << ci.totalDuration.msec << " secs" << endl;
     m_out_src->allSamplesFlushed();
 
-    if (calls.empty())
-    {
-      m_outto_sip->setOpen(false);
-      m_infrom_sip->setOpen(false);
-      //onSquelchOpen(false);
-    }
+    unregisterCall(call);
     ss << "hangup_call " << caller << " "
        << ci.totalDuration.sec << "."
        << ci.totalDuration.msec;
+  }
+  else if (ci.state == PJSIP_INV_STATE_EARLY)
+  {
+    ss << "pjsip_state_early " << caller;
+  }
+  else if (ci.state == PJSIP_INV_STATE_NULL)
+  {
+    ss << "pjsip_state_null " << caller;
   }
   else
   {
@@ -1234,6 +1237,26 @@ void SipLogic::initCall(const string& remote)
   makeCall(acc, remote);
 } /* SipLogic::initCall */
 
+
+void SipLogic::unregisterCall(sip::_Call *call)
+{
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
+         it != calls.end(); it++)
+  {
+    if (*it == call)
+    {
+      calls.erase(it);
+      break;
+    }
+  }
+
+  if (calls.empty())
+  {
+    m_outto_sip->setOpen(false);
+    m_infrom_sip->setOpen(false);
+    squelch_det->reset();
+  }
+} /* SipLogic::unregisterCall */
 
 /*
  * This file has not been truncated
