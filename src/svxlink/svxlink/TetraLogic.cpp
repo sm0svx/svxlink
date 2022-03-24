@@ -1038,7 +1038,7 @@ TETRA Incoming Call Notification +CTICN
 void TetraLogic::handleCallBegin(std::string message)
 {
   //                   +CTICN:   1,    0,    0,    4,    1002,       1,     1,     0,   1,    1,   0,    1000,       1
-  std::string reg = "\\+CTICN: [0-9],[0-9],[0-9],[0-9],[0-9]{1,17},[0-9],[0-9],[0-9],[0-9],[0-9],[0-9],[0-9]{1,17},[0-9]";
+  std::string reg = "\\+CTICN: [0-9]{1,3},[0-9],[0-9],[0-9],[0-9]{1,17},[0-9],[0-9],[0-9],[0-9],[0-9],[0-9],[0-9]{1,17},[0-9]";
 
   if (!rmatch(message, reg))
   {
