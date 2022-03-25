@@ -160,6 +160,8 @@ class TGHandler : public sigc::trackable
 
     bool allowTgSelection(ReflectorClient *client, uint32_t tg);
 
+    bool showActivity(uint32_t tg);
+
     sigc::signal<void, uint32_t,
       ReflectorClient*, ReflectorClient*> talkerUpdated;
 

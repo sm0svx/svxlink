@@ -650,7 +650,12 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     //node["addr"] = client->remoteHost().toString();
     node["protoVer"]["majorVer"] = client->protoVer().majorVer();
     node["protoVer"]["minorVer"] = client->protoVer().minorVer();
-    node["tg"] = client->currentTG();
+    auto tg = client->currentTG();
+    if (!TGHandler::instance()->showActivity(tg))
+    {
+      tg = 0;
+    }
+    node["tg"] = tg;
     Json::Value tgs = Json::Value(Json::arrayValue);
     const std::set<uint32_t>& monitored_tgs = client->monitoredTGs();
     for (std::set<uint32_t>::const_iterator mtg_it=monitored_tgs.begin();
