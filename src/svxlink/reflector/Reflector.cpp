@@ -656,6 +656,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
       tg = 0;
     }
     node["tg"] = tg;
+    node["restrictedTG"] = TGHandler::instance()->isRestricted(tg);
     Json::Value tgs = Json::Value(Json::arrayValue);
     const std::set<uint32_t>& monitored_tgs = client->monitoredTGs();
     for (std::set<uint32_t>::const_iterator mtg_it=monitored_tgs.begin();
