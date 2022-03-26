@@ -665,8 +665,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
       tgs.append(*mtg_it);
     }
     node["monitoredTGs"] = tgs;
-    bool is_talker =
-      TGHandler::instance()->talkerForTG(client->currentTG()) == client;
+    bool is_talker = TGHandler::instance()->talkerForTG(tg) == client;
     node["isTalker"] = is_talker;
 
     if (node.isMember("qth") && node["qth"].isArray())
