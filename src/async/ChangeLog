@@ -1,4 +1,4 @@
- 1.6.1 -- ?? ??? 2022
+ 1.7.0 -- ?? ??? 2022
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
@@ -39,6 +39,8 @@
 
 * The Async::Serial class now support all extended baudrates.
 
+* Rewritten the DNS resolver with support for more resource record types.
+
 * AudioDeviceUDP can now write zeros to the UDP connection on underflow. That
   is, when the "audio device" is open but there is no audio to write zeros
   will be written instead. Enable this behavior by setting the environment
@@ -49,6 +51,13 @@
   configuration variable with a list of values on the form
   VARNAME=88.5:-1,136.5:1. It is also possible to use other key/value
   separators.
+
+* New class Async::StateMachine used to build Hierarchial Finate State
+  Machines.
+
+* New class Async::TcpPrioClient for handling pools of servers to connect to.
+  The pool members can be specified using DNS SRV records or locally using the
+  HOSTS configuration variable.
 
 
 

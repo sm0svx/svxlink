@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -154,6 +154,17 @@ class FramedTcpConnection : public TcpConnection
     virtual ~FramedTcpConnection(void);
 
     /**
+     * @brief   Move assignmnt operator
+     * @param   other_base The object to move from
+     * @return  Returns this object
+     *
+     * The move operator move the state of a specified TcpFramedConnection
+     * object into this object. After the move, the state of the other object
+     * will be the same as if it had just been default constructed.
+     */
+    virtual TcpConnection& operator=(TcpConnection&& other_base) override;
+
+    /**
      * @brief   Set the maximum frame size
      * @param   frame_size The maximum frame size in bytes
      *
@@ -162,15 +173,6 @@ class FramedTcpConnection : public TcpConnection
      * issued. The default maximum frame size is DEFAULT_MAX_FRAME_SIZE.
      */
     void setMaxFrameSize(uint32_t frame_size) { m_max_frame_size = frame_size; }
-
-    /**
-     * @brief 	Disconnect from the remote host
-     *
-     * Call this function to disconnect from the remote host. If already
-     * disconnected, nothing will be done. The disconnected signal is not
-     * emitted when this function is called
-     */
-    virtual void disconnect(void);
 
     /**
      * @brief 	Send a frame on the TCP connection
@@ -183,7 +185,7 @@ class FramedTcpConnection : public TcpConnection
      * There is no inbetween so this function will always return either the
      * given count or -1 on error.
      */
-    virtual int write(const void *buf, int count);
+    virtual int write(const void *buf, int count) override;
 
     /**
      * @brief 	A signal that is emitted when a connection has been terminated
@@ -208,13 +210,21 @@ class FramedTcpConnection : public TcpConnection
     sigc::signal<void, bool> sendBufferFull;
 
     /**
+     * @brief   Disconnect from the remote peer
+     *
+     * This function is used internally to close the connection to the remote
+     * peer.
+     */
+    virtual void closeConnection(void) override;
+
+    /**
      * @brief 	Called when a connection has been terminated
      * @param 	reason  The reason for the disconnect
      *
      * This function will be called when the connection has been terminated.
      * The default action for this function is to emit the disconnected signal.
      */
-    virtual void onDisconnected(DisconnectReason reason);
+    virtual void onDisconnected(DisconnectReason reason) override;
 
     /**
      * @brief 	Called when data has been received on the connection
@@ -230,7 +240,13 @@ class FramedTcpConnection : public TcpConnection
      * will be appended to the old data.
      * The default action for this function is to emit the dataReceived signal.
      */
-    virtual int onDataReceived(void *buf, int count);
+    virtual int onDataReceived(void *buf, int count) override;
+
+    virtual void emitDisconnected(DisconnectReason reason) override
+    {
+      TcpConnection::emitDisconnected(reason);
+      disconnected(this, reason);
+    }
 
   private:
     static const uint32_t DEFAULT_MAX_FRAME_SIZE = 1024 * 1024; // 1MB

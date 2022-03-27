@@ -9,7 +9,7 @@
  *
  * \verbatim
  * Async - A library for programming event driven applications
- * Copyright (C) 2003  Tobias Blomberg
+ * Copyright (C) 2003-2022 Tobias Blomberg
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -220,7 +220,7 @@ class CppApplication : public Application
     void addTimer(Timer *timer);
     void addTimerP(Timer *timer, const struct timespec& current);
     void delTimer(Timer *timer);    
-    DnsLookupWorker *newDnsLookupWorker(const std::string& label);
+    DnsLookupWorker *newDnsLookupWorker(const DnsLookup& lookup);
     void handleUnixSignal(void);
     
 };  /* class CppApplication */
