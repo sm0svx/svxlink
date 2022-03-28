@@ -287,6 +287,25 @@ bool TGHandler::allowTgSelection(ReflectorClient *client, uint32_t tg)
 } /* TGHandler::allowTgSelection */
 
 
+bool TGHandler::showActivity(uint32_t tg) const
+{
+  std::ostringstream ss;
+  ss << "TG#" << tg;
+  bool show_activity = true;
+  m_cfg->getValue(ss.str(), "SHOW_ACTIVITY", show_activity);
+  return show_activity;
+} /* TGHandler::showActivity */
+
+
+bool TGHandler::isRestricted(uint32_t tg) const
+{
+  std::ostringstream ss;
+  ss << "TG#" << tg;
+  std::string allow;
+  return m_cfg->getValue(ss.str(), "ALLOW", allow);
+} /* TGHandler::isRestricted */
+
+
 /****************************************************************************
  *
  * Protected member functions

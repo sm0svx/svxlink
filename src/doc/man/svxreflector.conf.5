@@ -182,6 +182,7 @@ talkgroup. Those parameters are placed in a configuration section named
   [TG#9999]
   AUTO_QSY_AFTER=300
   ALLOW=S[A-M]\\\\d.*|LA8PV
+  SHOW_ACTIVITY=0
 
 The following configuration variables are valid in a talkgroup configuration
 section.
@@ -203,6 +204,10 @@ for ECMAScript with the exception that the backslash special patterns (e.g.
 An example that match most Swedish callsigns and a specific Norwegian one is
 "S[A-M]\\\\d.*|LA8PV". That expression will for example match LA8PV, SM0SVX,
 SK3W, SA7ABC etc.
+.TP
+.B SHOW_ACTIVITY
+If set to 0, do not indicate in the http status message when the talkgroup is
+in use by a node. Default is 1 = show activity.
 .
 .SH FILES
 .

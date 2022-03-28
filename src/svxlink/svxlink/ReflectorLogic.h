@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioDecoder.h>
 #include <AsyncAudioEncoder.h>
-#include <AsyncTcpClient.h>
+#include <AsyncTcpPrioClient.h>
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
@@ -201,7 +201,7 @@ class ReflectorLogic : public LogicBase
       STATE_EXPECT_SERVER_INFO, STATE_CONNECTED
     } ConState;
 
-    typedef Async::TcpClient<Async::FramedTcpConnection> FramedTcpClient;
+    typedef Async::TcpPrioClient<Async::FramedTcpConnection> FramedTcpClient;
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
 
     static const unsigned DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET  = 15;
@@ -212,8 +212,7 @@ class ReflectorLogic : public LogicBase
     static const int      DEFAULT_TMP_MONITOR_TIMEOUT         = 3600;
 
     std::string                       m_reflector_host;
-    uint16_t                          m_reflector_port;
-    FramedTcpClient*                  m_con;
+    FramedTcpClient                   m_con;
     unsigned                          m_msg_type;
     Async::UdpSocket*                 m_udp_sock;
     uint32_t                          m_client_id;

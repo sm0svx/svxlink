@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -135,12 +135,27 @@ HttpServerConnection::~HttpServerConnection(void)
 } /* HttpServerConnection::~HttpServerConnection */
 
 
-void HttpServerConnection::disconnect(void)
+TcpConnection& HttpServerConnection::operator=(TcpConnection&& other_base)
 {
-  //cout << "### HttpServerConnection::disconnect\n";
-  disconnectCleanup();
-  TcpConnection::disconnect();
-} /* HttpServerConnection::disconnect */
+  //std::cout << "### HttpServerConnection::operator=(TcpConnection&&)"
+  //          << std::endl;
+
+  this->TcpConnection::operator=(std::move(other_base));
+  auto& other = dynamic_cast<HttpServerConnection&>(other_base);
+
+  m_state = other.m_state;
+  other.m_state = STATE_DISCONNECTED;
+
+  m_row = std::move(other.m_row);
+  other.m_row.clear();
+
+  m_req = std::move(other.m_req);
+
+  m_chunked = other.m_chunked;
+  other.m_chunked = false;
+
+  return *this;
+} /* HttpServerConnection::operator=(TcpConnection&&) */
 
 
 //int HttpServerConnection::write(const void *buf, int count)
@@ -238,6 +253,14 @@ bool HttpServerConnection::write(const char* buf, int len)
  * Protected member functions
  *
  ****************************************************************************/
+
+void HttpServerConnection::closeConnection(void)
+{
+  //std::cout << "### HttpServerConnection::closeConnection" << std::endl;
+  disconnectCleanup();
+  TcpConnection::closeConnection();
+} /* HttpServerConnection::closeConnection */
+
 
 void HttpServerConnection::onDisconnected(DisconnectReason reason)
 {
@@ -394,8 +417,8 @@ void HttpServerConnection::handleHeader(void)
 
 void HttpServerConnection::onSendBufferFull(bool is_full)
 {
-  cout << "### HttpServerConnection::onSendBufferFull: is_full="
-       << is_full << "\n";
+  //cout << "### HttpServerConnection::onSendBufferFull: is_full="
+  //     << is_full << "\n";
   //if (!is_full)
   //{
   //  while (!m_txq.empty())
@@ -424,11 +447,8 @@ void HttpServerConnection::disconnectCleanup(void)
 {
   //std::cout << "### HttpServerConnection::disconnectCleanup" << std::endl;
   m_state = STATE_DISCONNECTED;
-  //for (TxQueue::iterator it = m_txq.begin(); it != m_txq.end(); ++it)
-  //{
-  //  delete *it;
-  //}
-  //m_txq.clear();
+  m_row.clear();
+  m_req.clear();
 } /* HttpServerConnection::disconnectCleanup */
 
 

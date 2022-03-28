@@ -9,7 +9,7 @@ application that use the Async classes in a Qt application.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2010 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -94,6 +94,8 @@ namespace Async
  * Defines & typedefs
  *
  ****************************************************************************/
+
+class DnsLookup;
 
 /*
  *----------------------------------------------------------------------------
@@ -204,8 +206,8 @@ class QtApplication : public QApplication, public Application
     void delFdWatch(FdWatch *fd_watch);
     void addTimer(Timer *timer);
     void delTimer(Timer *timer);
-    DnsLookupWorker *newDnsLookupWorker(const std::string& label);
-    
+    DnsLookupWorker *newDnsLookupWorker(const DnsLookup& lookup);
+
   private slots:
     void rdFdActivity(int socket);
     void wrFdActivity(int socket);

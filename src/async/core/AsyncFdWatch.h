@@ -9,7 +9,7 @@ file descriptor, a signal is emitted.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -151,7 +151,18 @@ class FdWatch : public sigc::trackable
      * @brief Destructor
      */
     ~FdWatch(void);
-    
+
+    /**
+     * @brief   Assignment move operator
+     * @param   other The object to move data from
+     * @return  Returns a reference to this object
+     *
+     * The move operator move the state of a specified FdWatch object into this
+     * object. After the move, the state of the other object will be the same
+     * as if it had just been default constructed.
+     */
+    FdWatch& operator=(FdWatch&& other);
+
     /**
      * @brief Return the file descriptor being watched
      * @return Returns the file descriptor
@@ -184,7 +195,8 @@ class FdWatch : public sigc::trackable
      *
      * This function can be used at any time to change the file descriptor or
      * type of watch. If the watch was disabled it will stay disabled until
-     * explicitly being enabled.
+     * explicitly being enabled. If fd < 0 the watch will be disabled if it was
+     * enabled.
      */
     void setFd(int fd, FdWatchType type);
 

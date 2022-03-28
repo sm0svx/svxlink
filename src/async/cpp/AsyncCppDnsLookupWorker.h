@@ -1,6 +1,6 @@
 /**
 @file	 AsyncCppDnsLookupWorker.h
-@brief   Contains a class to execute DNS queries in the pure C++ environment
+@brief   Contains a class to execute DNS queries in the Posix environment
 @author  Tobias Blomberg
 @date	 2003-04-17
 
@@ -10,7 +10,7 @@ used by Async::CppApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,11 +41,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
-#include <pthread.h>
-#include <netdb.h>
+#include <arpa/nameser.h>
 
 #include <string>
-#include <vector>
+#include <sstream>
+#include <future>
 
 
 /****************************************************************************
@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -83,10 +84,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
 
-class Timer;
-class FdWatch;
-  
-  
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+
+
 /****************************************************************************
  *
  * Defines & typedefs
@@ -110,7 +115,7 @@ class FdWatch;
  ****************************************************************************/
 
 /**
-@brief	DNS lookup worker for the Cpp variant of the async environment
+@brief	DNS lookup worker for the Cpp (Posix) variant of the async environment
 @author Tobias Blomberg
 @date   2003-03-23
 
@@ -123,47 +128,50 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
   public:
     /**
      * @brief 	Constructor
-     * @param 	label The label (hostname) to lookup
+     * @param 	dns The lookup object
      */
-    CppDnsLookupWorker(const std::string& label);
-  
+    CppDnsLookupWorker(const DnsLookup& dns);
+
     /**
      * @brief 	Destructor
      */
     ~CppDnsLookupWorker(void);
-  
+
     /**
-     * @brief   Called by the DnsLookup class to start the lookup
+     * @brief   Move assignment operator
+     * @param   other The other object to move data from
+     * @return  Returns this object
+     */
+    virtual DnsLookupWorker& operator=(DnsLookupWorker&& other_base);
+
+  protected:
+    /**
+     * @brief   Called by the DnsLookupWorker class to start the lookup
      * @return  Return \em true on success or else \em false
      */
     virtual bool doLookup(void);
 
     /**
-     * @brief 	Return the addresses for the host in the query
-     * @return	Returns an stl vector which contains all the addresses
-     *	      	associated with the hostname in the query.
-     *
-     * Use this function to retrieve all the IP-addresses associated with
-     * the hostname in the query.
+     * @brief   Called by the DnsLookupWorker class to abort a pending lookup
+     * @return  Return \em true on success or else \em false
      */
-    virtual std::vector<IpAddress> addresses(void) { return the_addresses; }
-    
-    
-  protected:
-    
-  private:
-    std::string	      	    label;
-    std::vector<IpAddress>  the_addresses;
-    pthread_t 	      	    worker_thread;
-    int       	      	    notifier_rd;
-    int       	      	    notifier_wr;
-    Async::FdWatch    	    *notifier_watch;
-    bool      	      	    done;
-    struct addrinfo    	    *result;
-  
-    static void *workerFunc(void *);
+    virtual void abortLookup(void);
 
-    void onTimeout(Timer *t);
+  private:
+    struct ThreadContext
+    {
+      std::string         label;
+      DnsLookup::Type     type                = DnsLookup::Type::A;
+      int                 notifier_wr         = -1;
+      unsigned char       answer[NS_PACKETSZ];
+      int                 anslen              = 0;
+      std::ostringstream  thread_cerr;
+    };
+
+    Async::FdWatch              m_notifier_watch;
+    std::future<ThreadContext>  m_result;
+
+    static ThreadContext workerFunc(ThreadContext ctx);
     void notificationReceived(FdWatch *w);
 
 };  /* class CppDnsLookupWorker */
