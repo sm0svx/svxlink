@@ -1,6 +1,6 @@
 /**
 @file	 AsyncCppDnsLookupWorker.cpp
-@brief   Contains a class to execute DNS queries in the pure C++ environment
+@brief   Contains a class to execute DNS queries in the Posix environment
 @author  Tobias Blomberg
 @date	 2003-04-17
 
@@ -10,7 +10,7 @@ used by Async::CppApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,10 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-
 /****************************************************************************
  *
  * System Includes
@@ -39,16 +35,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <unistd.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>
 #include <arpa/inet.h>
-#include <sys/time.h>
 #include <errno.h>
-#include <cstdlib>
-#include <cstdio>
+#include <netdb.h>
+
 #include <cassert>
 #include <cstring>
-#include <algorithm>
 
 
 /****************************************************************************
@@ -57,8 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTimer.h>
-#include <AsyncFdWatch.h>
+#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -77,7 +71,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace std;
 using namespace Async;
 
 
@@ -130,75 +123,34 @@ using namespace Async;
  ****************************************************************************/
 
 
-CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
-  : label(label), worker_thread(0), notifier_rd(-1), notifier_wr(-1),
-    notifier_watch(0), done(false), result(0)
+CppDnsLookupWorker::CppDnsLookupWorker(const DnsLookup& dns)
+  : DnsLookupWorker(dns)
 {
+  m_notifier_watch.activity.connect(
+      sigc::mem_fun(*this, &CppDnsLookupWorker::notificationReceived));
 } /* CppDnsLookupWorker::CppDnsLookupWorker */
 
 
 CppDnsLookupWorker::~CppDnsLookupWorker(void)
 {
-  if (worker_thread != 0)
-  {
-    if (!done)
-    {
-      int ret = pthread_cancel(worker_thread);
-      if (ret != 0)
-      {
-        cerr << "*** WARNING: pthread_cancel: " << strerror(ret) << endl;
-      }
-    }
- 
-    int ret = pthread_join(worker_thread, NULL);
-    if (ret != 0)
-    {
-      cerr << "*** WARNING: pthread_join: " << strerror(ret) << endl;
-    }
-  }
-  
-  if (result != 0)
-  {
-    freeaddrinfo(result);
-  }
-  
-  delete notifier_watch;
-  if (notifier_rd != -1)
-  {
-    close(notifier_rd);
-  }
-  if (notifier_wr != -1)
-  {
-    close(notifier_wr);
-  }
+  abortLookup();
 } /* CppDnsLookupWorker::~CppDnsLookupWorker */
 
 
-bool CppDnsLookupWorker::doLookup(void)
+DnsLookupWorker& CppDnsLookupWorker::operator=(DnsLookupWorker&& other_base)
 {
-  int fd[2];
-  if (pipe(fd) != 0)
-  {
-    cerr << "*** ERROR: Could not create pipe: " << strerror(errno) << endl;
-    return false;
-  }
-  notifier_rd = fd[0];
-  notifier_wr = fd[1];
-  notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
-  notifier_watch->activity.connect(
-      	  mem_fun(*this, &CppDnsLookupWorker::notificationReceived));
-  int ret = pthread_create(&worker_thread, NULL, workerFunc, this);
-  if (ret != 0)
-  {
-    cerr << "*** ERROR: pthread_create: " << strerror(ret) << endl;
-    return false;
-  }
+  this->DnsLookupWorker::operator=(std::move(other_base));
+  auto& other = static_cast<CppDnsLookupWorker&>(other_base);
 
-  return true;
-  
-} /* CppDnsLookupWorker::doLookup */
+  abortLookup();
 
+  m_result = std::move(other.m_result);
+  assert(!other.m_result.valid());
 
+  m_notifier_watch = std::move(other.m_notifier_watch);
+
+  return *this;
+} /* CppDnsLookupWorker::operator=(DnsLookupWorker&&) */
 
 
 /****************************************************************************
@@ -207,7 +159,62 @@ bool CppDnsLookupWorker::doLookup(void)
  *
  ****************************************************************************/
 
+bool CppDnsLookupWorker::doLookup(void)
+{
+    // A lookup is already running
+  if (m_result.valid())
+  {
+    return true;
+  }
 
+  setLookupFailed(false);
+
+  struct in_addr inp;
+  if (inet_aton(dns().label().c_str(), &inp) == 1)
+  {
+    addResourceRecord(
+        new DnsResourceRecordA(dns().label(), 1, IpAddress(inp)));
+    workerDone();
+    return true;
+  }
+
+  int fd[2];
+  if (pipe(fd) != 0)
+  {
+    char errbuf[256];
+    strerror_r(errno, errbuf, sizeof(errbuf));
+    std::cerr << "*** ERROR: Could not create pipe: " << errbuf << std::endl;
+    setLookupFailed();
+    return false;
+  }
+  m_notifier_watch.setFd(fd[0], FdWatch::FD_WATCH_RD);
+  m_notifier_watch.setEnabled(true);
+
+  ThreadContext ctx;
+  ctx.label = dns().label();
+  ctx.type = dns().type();
+  ctx.notifier_wr = fd[1];
+  ctx.anslen = 0;
+  ctx.thread_cerr.clear();
+  m_result = std::move(std::async(std::launch::async, workerFunc,
+        std::move(ctx)));
+
+  return true;
+
+} /* CppDnsLookupWorker::doLookup */
+
+
+void CppDnsLookupWorker::abortLookup(void)
+{
+  m_result = std::move(std::future<ThreadContext>());
+
+  int fd = m_notifier_watch.fd();
+  if (fd >= 0)
+  {
+    m_notifier_watch.setFd(-1, FdWatch::FD_WATCH_RD);
+    close(fd);
+  }
+} /* CppDnsLookupWorker::abortLookup */
 
 
 /****************************************************************************
@@ -216,43 +223,78 @@ bool CppDnsLookupWorker::doLookup(void)
  *
  ****************************************************************************/
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    CppDnsLookupWorker::workerFunc
  * Purpose:   This is the function that do the actual DNS lookup. It is
- *    	      started as a separate thread since gethostbyname is a
+ *    	      started as a separate thread since res_nsearch is a
  *    	      blocking function.
- * Input:     w - Thread user data. This is the actual CppDnsLookupWorker
- *    	      	  object
- * Output:    the_addresses will be filled in with all IP addresses
- *    	      associated with the name.
+ * Input:     ctx - A context containing query and result parameters
+ * Output:    The answer and anslen variables in the ThreadContext will be
+ *            filled in with the lookup result. The context will be returned
+ *            from this function.
  * Author:    Tobias Blomberg
- * Created:   2005-04-12
+ * Created:   2021-07-14
  * Remarks:   
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void *CppDnsLookupWorker::workerFunc(void *w)
+CppDnsLookupWorker::ThreadContext CppDnsLookupWorker::workerFunc(
+    CppDnsLookupWorker::ThreadContext ctx)
 {
-  CppDnsLookupWorker *worker = reinterpret_cast<CppDnsLookupWorker *>(w);
+  std::ostream& th_cerr = ctx.thread_cerr;
 
-  struct addrinfo hints;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_INET;
-  int ret = getaddrinfo(worker->label.c_str(), NULL, &hints, &worker->result);
-  if (ret != 0)
+  struct __res_state state;
+  int ret = res_ninit(&state);
+  if (ret != -1)
   {
-    cerr << "*** WARNING: Could not look up host \"" << worker->label
-         << "\": " << gai_strerror(ret) << endl;
+    state.options = RES_DEFAULT;
+
+    int qtype = 0;
+    switch (ctx.type)
+    {
+      case DnsLookup::Type::A:
+        qtype = ns_t_a;
+        break;
+      case DnsLookup::Type::PTR:
+        qtype = ns_t_ptr;
+        break;
+      case DnsLookup::Type::CNAME:
+        qtype = ns_t_cname;
+        break;
+      case DnsLookup::Type::SRV:
+        qtype = ns_t_srv;
+        break;
+      default:
+        assert(0);
+    }
+
+    const char *dname = ctx.label.c_str();
+    ctx.anslen = res_nsearch(&state, dname, ns_c_in, qtype,
+                             ctx.answer, NS_PACKETSZ);
+    if (ctx.anslen == -1)
+    {
+      th_cerr << "*** ERROR: Name resolver failure -- res_nsearch: "
+              << hstrerror(h_errno) << std::endl;
+    }
+
+      // FIXME: Valgrind complain about leaked memory in the resolver library
+      //        when a lookup fails. It seems to be a one time leak though so it
+      //        does not grow with every failed lookup. But even so, it seems
+      //        that res_close is not cleaning up properly.
+      //        Glibc 2.33-18 on Fedora 34.
+    res_nclose(&state);
   }
-  
-  ret = write(worker->notifier_wr, "D", 1);
-  assert(ret == 1);
-  
-  worker->done = true;
-  return NULL;
-  
+  else
+  {
+    th_cerr << "*** ERROR: Name resolver failure -- res_ninit: "
+            << hstrerror(h_errno) << std::endl;
+  }
+
+  close(ctx.notifier_wr);
+  ctx.notifier_wr = -1;
+
+  return std::move(ctx);
 } /* CppDnsLookupWorker::workerFunc */
 
 
@@ -260,7 +302,8 @@ void *CppDnsLookupWorker::workerFunc(void *w)
  *----------------------------------------------------------------------------
  * Method:    CppDnsLookupWorker::notificationReceived
  * Purpose:   When the DNS lookup thread is done, this function will be
- *    	      called to notify the user of the result.
+ *            called to parse the result and notify the user that an answer
+ *            is available.
  * Input:     w - The file watch object (notification pipe)
  * Output:    None
  * Author:    Tobias Blomberg
@@ -271,32 +314,155 @@ void *CppDnsLookupWorker::workerFunc(void *w)
  */
 void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 {
-  w->setEnabled(false);
+  char buf[1];
+  int cnt = read(w->fd(), buf, sizeof(buf));
+  assert(cnt == 0);
+  close(w->fd());
+  w->setFd(-1, FdWatch::FD_WATCH_RD);
 
-  int ret = pthread_join(worker_thread, NULL);
-  if (ret != 0)
+  const ThreadContext& ctx(m_result.get());
+
+  const std::string& thread_errstr = ctx.thread_cerr.str();
+  if (!thread_errstr.empty())
   {
-    cerr << "*** WARNING: pthread_join: " << strerror(ret) << endl;
+    std::cerr << thread_errstr;
+    setLookupFailed();
   }
-  worker_thread = 0;
 
-  if (result != 0)
+  if (ctx.anslen == -1)
   {
-    struct addrinfo *entry;
-    for (entry = result; entry != 0; entry = entry->ai_next)
+    workerDone();
+    return;
+  }
+
+  char errbuf[256];
+  ns_msg msg;
+  int ret = ns_initparse(ctx.answer, ctx.anslen, &msg);
+  if (ret == -1)
+  {
+    strerror_r(ret, errbuf, sizeof(errbuf));
+    std::cerr << "*** WARNING: ns_initparse failed: " << errbuf << std::endl;
+    setLookupFailed();
+    workerDone();
+    return;
+  }
+
+  uint16_t msg_cnt = ns_msg_count(msg, ns_s_an);
+  if (msg_cnt == 0)
+  {
+    setLookupFailed();
+  }
+  for (uint16_t rrnum=0; rrnum<msg_cnt; ++rrnum)
+  {
+    ns_rr rr;
+    ret = ns_parserr(&msg, ns_s_an, rrnum, &rr);
+    if (ret == -1)
     {
-      //printf("ai_family=%d ai_socktype=%d ai_protocol=%d\n",
-      //       entry->ai_family, entry->ai_socktype, entry->ai_protocol);
-      IpAddress ip_addr(
-          reinterpret_cast<struct sockaddr_in*>(entry->ai_addr)->sin_addr);
-      if (find(the_addresses.begin(), the_addresses.end(), ip_addr) ==
-          the_addresses.end())
+      strerror_r(errno, errbuf, sizeof(errbuf));
+      std::cerr << "*** WARNING: DNS lookup failure in ns_parserr: "
+                << errbuf << std::endl;
+      setLookupFailed();
+      continue;
+    }
+    const char *name = ns_rr_name(rr);
+    uint16_t rr_class = ns_rr_class(rr);
+    if (rr_class != ns_c_in)
+    {
+      std::cerr << "*** WARNING: Wrong RR class in DNS answer: "
+                << rr_class << std::endl;
+      setLookupFailed();
+      continue;
+    }
+    uint32_t ttl = ns_rr_ttl(rr);
+    uint16_t type = ns_rr_type(rr);
+    const unsigned char *cp = ns_rr_rdata(rr);
+    switch (type)
+    {
+      case ns_t_a:
       {
-        the_addresses.push_back(ip_addr);
+        struct in_addr in_addr;
+        uint32_t ip = ns_get32(cp);
+        in_addr.s_addr = ntohl(ip);
+        addResourceRecord(
+            new DnsResourceRecordA(name, ttl, IpAddress(in_addr)));
+        break;
       }
+
+      case ns_t_ptr:
+      {
+        char exp_dn[NS_MAXDNAME+1];
+        ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
+                                 exp_dn, NS_MAXDNAME);
+        if (ret == -1)
+        {
+          strerror_r(errno, errbuf, sizeof(errbuf));
+          std::cerr << "*** WARNING: DNS lookup failure in "
+                       "ns_name_uncompress: " << errbuf << std::endl;
+          setLookupFailed();
+          continue;
+        }
+        size_t exp_dn_len = strlen(exp_dn);
+        exp_dn[exp_dn_len] = '.';
+        exp_dn[exp_dn_len+1] = 0;
+        addResourceRecord(new DnsResourceRecordPTR(name, ttl, exp_dn));
+        break;
+      }
+
+      case ns_t_cname:
+      {
+        char exp_dn[NS_MAXDNAME+1];
+        ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
+            exp_dn, NS_MAXDNAME);
+        if (ret == -1)
+        {
+          strerror_r(errno, errbuf, sizeof(errbuf));
+          std::cerr << "*** WARNING: DNS lookup failure in "
+                       "ns_name_uncompress" << errbuf << std::endl;
+          setLookupFailed();
+          continue;
+        }
+        size_t exp_dn_len = strlen(exp_dn);
+        exp_dn[exp_dn_len] = '.';
+        exp_dn[exp_dn_len+1] = 0;
+        addResourceRecord(new DnsResourceRecordCNAME(name, ttl, exp_dn));
+        break;
+      }
+
+      case ns_t_srv:
+      {
+        unsigned int prio = ns_get16(cp);
+        cp += NS_INT16SZ;
+        unsigned int weight = ns_get16(cp);
+        cp += NS_INT16SZ;
+        unsigned int port = ns_get16(cp);
+        cp += NS_INT16SZ;
+        char exp_dn[NS_MAXDNAME+1];
+        ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
+            exp_dn, NS_MAXDNAME);
+        if (ret == -1)
+        {
+          strerror_r(errno, errbuf, sizeof(errbuf));
+          std::cerr << "*** WARNING: DNS lookup failure in "
+                       "ns_name_uncompress: " << errbuf << std::endl;
+          setLookupFailed();
+          continue;
+        }
+        size_t exp_dn_len = strlen(exp_dn);
+        exp_dn[exp_dn_len] = '.';
+        exp_dn[exp_dn_len+1] = 0;
+        addResourceRecord(
+            new DnsResourceRecordSRV(name, ttl, prio, weight, port, exp_dn));
+        break;
+      }
+
+      default:
+        std::cerr << "*** WARNING: Unsupported RR type, " << type
+                  << ", received in DNS query for " << name << std::endl;
+        setLookupFailed();
+        break;
     }
   }
-  resultsReady();
+  workerDone();
 } /* CppDnsLookupWorker::notificationReceived */
 
 

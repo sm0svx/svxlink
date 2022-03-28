@@ -86,8 +86,12 @@ IDLE_SOUND_INTERVAL=3000
 
 [ReflectorLogic]
 TYPE=Reflector
-HOST=reflector.example.com
-#PORT=5300
+#DNS_DOMAIN=example.com
+HOSTS=reflector-primary.example.org,reflector-secondary.example.org:5301
+#HOST_PORT=5300
+#HOST_PRIO=100
+#HOST_PRIO_INC=1
+#HOST_WEIGHT=10
 CALLSIGN="MYCALL"
 AUTH_KEY="Change this key now!"
 #JITTER_BUFFER_DELAY=0

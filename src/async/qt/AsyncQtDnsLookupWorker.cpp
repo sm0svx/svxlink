@@ -10,7 +10,7 @@ used by Async::QtApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2010 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,9 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /****************************************************************************
  *
  * System Includes
@@ -46,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncDnsResourceRecord.h>
+#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -57,7 +56,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncQtDnsLookupWorker.h"
 
 
-
 /****************************************************************************
  *
  * Namespaces to use
@@ -66,7 +64,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-
 
 
 /****************************************************************************
@@ -101,7 +98,6 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -116,55 +112,50 @@ using namespace Async;
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-QtDnsLookupWorker::QtDnsLookupWorker(const string& label)
-  : lookup_id(-1)
+QtDnsLookupWorker::QtDnsLookupWorker(const DnsLookup& dns)
+  : DnsLookupWorker(dns)
 {
-  lookup_id = QHostInfo::lookupHost(label.c_str(), this,
-				    SLOT(onResultsReady(QHostInfo)));
 } /* QtDnsLookupWorker::QtDnsLookupWorker */
 
 
 QtDnsLookupWorker::~QtDnsLookupWorker(void)
 {
-  if (lookup_id != -1)
-  {
-    QHostInfo::abortHostLookup(lookup_id);
-  }
+  abortLookup();
 } /* QtDnsLookupWorker::~QtDnsLookupWorker */
 
 
-vector<IpAddress> QtDnsLookupWorker::addresses(void)
+DnsLookupWorker& QtDnsLookupWorker::operator=(DnsLookupWorker&& other_base)
 {
-  vector<IpAddress> addr_list;
-  
-  QList<QHostAddress> list = host_info.addresses();
-  QList<QHostAddress>::Iterator it = list.begin();
-  while(it != list.end())
-  {
-    if ((*it).protocol() == QAbstractSocket::IPv4Protocol)
-    {
-      addr_list.push_back(IpAddress((*it).toString().toStdString()));
-    }
-    ++it;
-  }
-  
-  return addr_list;
-  
-} /* QtDnsLookupWorker::addresses */
+  this->DnsLookupWorker::operator=(std::move(other_base));
 
+  auto& other = static_cast<QtDnsLookupWorker&>(other_base);
+
+  other.abortLookup();
+  m_lookup_id = -1;
+
+  doLookup();
+
+  return *this;
+} /* QtDnsLookupWorker::operator=(DnsLookupWorker&&) */
+
+
+bool QtDnsLookupWorker::doLookup(void)
+{
+  assert(dns().type() == DnsLookup::Type::A);
+  m_lookup_id = QHostInfo::lookupHost(dns().label().c_str(), this,
+                                      SLOT(onResultsReady(QHostInfo)));
+  return true;
+} /* QtDnsLookupWorker::doLookup */
+
+
+void QtDnsLookupWorker::abortLookup(void)
+{
+  if (m_lookup_id != -1)
+  {
+    QHostInfo::abortHostLookup(m_lookup_id);
+    m_lookup_id = -1;
+  }
+} /* QtDnsLookupWorker::abortLookup */
 
 
 /****************************************************************************
@@ -183,14 +174,33 @@ vector<IpAddress> QtDnsLookupWorker::addresses(void)
 
 void QtDnsLookupWorker::onResultsReady(const QHostInfo &info)
 {
-  lookup_id = -1;
-  host_info = info;
-  resultsReady();
-} /* QtDnsLookupWorker::onResultsReady */
+  m_lookup_id = -1;
 
+  if (info.error() != QHostInfo::NoError)
+  {
+    std::cerr << "*** ERROR: DNS lookup error: "
+              << info.errorString().toStdString()
+              << std::endl;
+    workerDone();
+    return;
+  }
+
+  QList<QHostAddress> list = info.addresses();
+  QList<QHostAddress>::Iterator it = list.begin();
+  while (it != list.end())
+  {
+    if ((*it).protocol() == QAbstractSocket::IPv4Protocol)
+    {
+      IpAddress ip((*it).toString().toStdString());
+      addResourceRecord(new DnsResourceRecordA(dns().label(), 1, ip));
+    }
+    ++it;
+  }
+
+  workerDone();
+} /* QtDnsLookupWorker::onResultsReady */
 
 
 /*
  * This file has not been truncated
  */
-

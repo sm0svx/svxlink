@@ -15,6 +15,9 @@ endforeach(incfile)
 find_package(Threads)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
+# Find libresolv for real?
+set(LIBS ${LIBS} resolv)
+
 # Set up additional defines
 # FIXME: Do we need this?
 add_definitions(-D_REENTRANT)

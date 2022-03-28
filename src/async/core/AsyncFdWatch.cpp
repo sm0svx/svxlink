@@ -9,7 +9,7 @@ file descriptor, a signal is emitted.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cassert>
+//#include <iostream>
 
 
 /****************************************************************************
@@ -135,6 +136,22 @@ FdWatch::~FdWatch(void)
 } /* FdWatch::~FdWatch */
 
 
+FdWatch& FdWatch::operator=(FdWatch&& other)
+{
+  //std::cout << "### FdWatch::operator=(FdWatch&&): other.fd()="
+  //          << other.fd() << std::endl;
+  bool other_was_enabled = other.m_enabled;
+  setEnabled(false);
+  other.setEnabled(false);
+  m_fd = other.m_fd;
+  other.m_fd = -1;
+  m_type = other.m_type;
+  other.m_type = FD_WATCH_RD;
+  setEnabled(other_was_enabled);
+  return *this;
+} /* FdWatch::operator=(FdWatch&&) */
+
+
 void FdWatch::setEnabled(bool enabled)
 {
   if (!m_enabled && enabled)
@@ -157,7 +174,10 @@ void FdWatch::setFd(int fd, FdWatchType type)
   setEnabled(false);
   m_fd = fd;
   m_type = type;
-  setEnabled(was_enabled);
+  if (m_fd >= 0)
+  {
+    setEnabled(was_enabled);
+  }
 } /* FdWatch::setFd */
 
 
