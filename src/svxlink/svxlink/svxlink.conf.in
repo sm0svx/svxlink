@@ -164,7 +164,7 @@ DAPNET_RUBRIC_REGISTRATION=RicRegistration
 
 [Ric2ISSI]
 # RIC=ISSI
-1234=23401
+1234=23401,23405,34344
 
 [RicRegistration]
 # RIC=Rubric1,Rubric2,Rubric54   (in decimal)

@@ -167,7 +167,7 @@ class DapNetClient : public Async::TcpClient<>
     std::string                dapnet_server;
     int                        dapnet_port;
     std::string                dapnet_key;
-    std::map<int, std::string> ric2issi;
+    std::map<int, std::vector<std::string> >     ric2issi;
     std::map<int, std::string> ric2rubrics;
     std::string                dapmessage;
     std::string                callsign;

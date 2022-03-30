@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v15112021"
+#define DAPNETVERSION "v30032022"
 
 #define INVALID 0
 
@@ -176,30 +176,42 @@ bool DapNetClient::initialize(void)
     if (cfg.getValue(name, "DAPNET_RIC2ISSI", ric_section))
     {
       list<string> dn2ric_list = cfg.listSection(ric_section);
-      
+      std::vector<string> issiList;
       for (slit=dn2ric_list.begin(); slit!=dn2ric_list.end(); slit++)
       {
         cfg.getValue(ric_section, *slit, value);
-        if (value.length() > 8)
+        if (rmatch(value, "[^0-9,]"))
         {
-          cout << "*** ERROR: Issi (" << value << " ) must have " 
-               << "8 digits or less, for RIC " << *slit 
-               << " in section [" << ric_section << "]" << endl;
+          cout << "*** ERROR: Config line in section [" << ric_section
+               << "] for RIC " << *slit << " contains invalid characters. Only"
+               << " the numbers 0-9 and comma are allowed." << endl;
+          isok = false;
+        }
+
+        size_t listlen = SvxLink::splitStr(issiList, value, ",");
+        if (listlen < 1)
+        {
+          cout << "*** ERROR: ISSI expected in section [" << ric_section
+               << "] for RIC " << *slit << endl;
+          isok = false;
         }
         else
         {
-          ric2issi[atoi((*slit).c_str())] = value;
-          if (debug >= LOGINFO) cout << "RIC:" << *slit << "=ISSI:" << value << endl;
+          ric2issi[atoi((*slit).c_str())] = issiList;
+          if (debug >= LOGINFO)
+          {
+            cout << "RIC:" << *slit << "=ISSI:" << value << endl;
+          }
         }
       }
     }
     else
     {
-      cout << "*** ERROR: You need a section DAPNET_RIC2ISSI=[xxx] in " 
+      cout << "*** ERROR: You need a section DAPNET_RIC2ISSI=[xxx] in "
            << name << endl;
       isok = false;
     }
- 
+
     // RIC=Rubric1,Rubric2,Rubric22
     if (cfg.getValue(name, "DAPNET_RUBRIC_REGISTRATION", ric_section))
     {
@@ -209,7 +221,10 @@ bool DapNetClient::initialize(void)
       {
         cfg.getValue(ric_section, *slit, value);
         ric2rubrics[atoi((*slit).c_str())] = value;
-        if (debug >= LOGINFO) cout << "RIC:" << *slit << "=rubrics:" << value << endl;
+        if (debug >= LOGINFO)
+        {
+          cout << "RIC:" << *slit << "=rubrics:" << value << endl;
+        }
       }
     }
     
@@ -566,20 +581,23 @@ void DapNetClient::handleDapText(std::string msg)
        if (debug >=LOGDEBUG) cout << "---" << t_mesg << endl;
     }
 
-    std::map<int, string>::iterator iu = ric2issi.find(ric);
+    std::vector<string>::iterator il;
+    std::map<int, std::vector<string> >::iterator iu = ric2issi.find(ric);
     if (iu != ric2issi.end())
     {
-      if (debug >= LOGINFO)
+      for(il = (iu->second).begin(); il != (iu->second).end(); il++)
       {
-        cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet " 
-             << "to Tetra (RIC:" << ric << "->ISSI:" << iu->second << ")" 
-            << endl;
+        if (debug >= LOGINFO)
+        {
+          cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet "
+               << "to Tetra (RIC:" << ric << "->ISSI:" << *il << endl;
+        }
+        dapnetMessageReceived(*il, t_mesg);
       }
-      dapnetMessageReceived(iu->second, t_mesg);
     }
 
     // look into ric2rubric-section
-    // RIC    =   Rubric
+    // RIC    =  Rubric
     // 12345  =  1024,1028,199 <-rubriclist
     StrList rubricList;
     std::map<int, string>::iterator it;
@@ -597,7 +615,15 @@ void DapNetClient::handleDapText(std::string msg)
           iu = ric2issi.find(it->first);
           if (iu != ric2issi.end())
           {
-            dapnetMessageReceived(iu->second, t_mesg);
+            for(il = (iu->second).begin(); il != (iu->second).end(); il++)
+            {
+              if (debug >= LOGINFO)
+              {
+                cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet "
+                 << "to Tetra (RIC:" << ric << "->ISSI:" << *il << endl;
+              }
+              dapnetMessageReceived(*il, t_mesg);
+            }
           }
         }
       }

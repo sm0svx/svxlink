@@ -354,7 +354,9 @@ std::string sdsStatus[] {
   "0 - Incoming message stored and unread",
   "1 - Incoming message stored and read",
   "2 - Outgoing message stored and unsent",
-  "3 - Outgoing message stored and sent"
+  "3 - Outgoing message stored and sent",
+  "4 - Outgoing message successfully sent",
+  "5 - Outgoing message transmission failed"
 };
 
 std::string GrUnsolic[] {
