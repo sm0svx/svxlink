@@ -1228,7 +1228,6 @@ void TetraLogic::firstContact(Sds tsds)
 */
 void TetraLogic::handleSdsMsg(std::string sds)
 {
-
   Sds t_sds;
   stringstream ss, sstcl;
   std::string sds_txt;
@@ -1246,6 +1245,7 @@ void TetraLogic::handleSdsMsg(std::string sds)
   if (iu == userdata.end())
   {
     firstContact(t_sds);
+    return;
   }
 
   // update last activity of sender
@@ -1282,7 +1282,6 @@ void TetraLogic::handleSdsMsg(std::string sds)
          << " "
          << calcBearing(own_lat, own_lon, lipinfo.latitude, lipinfo.longitude);
       processEvent(sstcl.str());
-
       sdsinfo["lat"] = lipinfo.latitude;
       sdsinfo["lon"] = lipinfo.longitude;
       sdsinfo["reasonforsending"] = lipinfo.reasonforsending;
@@ -2136,7 +2135,7 @@ bool TetraLogic::checkSds(void)
   // if message is sent -> get next available sds message
   if (pending_sds.tod != 0 || (pending_sds.tod == 0 && pending_sds.tos == 0))
   {
-    // find the next SDS thatwas still not send
+    // find the next SDS that was still not send
     for (it=sdsQueue.begin(); it!=sdsQueue.end(); it++)
     {
       if (it->second.tos == 0 && it->second.direction == OUTGOING 
