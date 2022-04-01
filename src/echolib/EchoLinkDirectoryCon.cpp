@@ -263,7 +263,7 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
   vector<DnsLookup*>::iterator it;
   for (it = dns_lookups.begin(); it != dns_lookups.end(); ++it)
   {
-    if (!(*it)->resultsAreReady())
+    if ((*it)->isPending())
     {
       return;
     }
