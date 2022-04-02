@@ -136,14 +136,14 @@ using namespace Async;
  ****************************************************************************/
 
 UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0), 
+  : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
     m_dec(0), m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_enc(0), m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
-    m_selected_tg(0), udp_seq(0), 
-    stored_samples(0), m_callsign("N0CALL"), ident(false), 
-    m_dmrid(0), m_rptid(0), m_selected_cc(0), m_selected_ts(1), 
+    m_selected_tg(0), udp_seq(0),
+    stored_samples(0), m_callsign("N0CALL"), ident(false),
+    m_dmrid(0), m_rptid(0), m_selected_cc(0), m_selected_ts(1),
     preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0),
-    debug(LOGERROR), share_userinfo(true), 
+    debug(LOGERROR), share_userinfo(true),
     m_delay_timer(5000, Timer::TYPE_ONESHOT, false)
 {
   m_flush_timeout_timer.expired.connect(
@@ -173,13 +173,13 @@ bool UsrpLogic::initialize(void)
 {
   if (!cfg().getValue(name(), "USRP_HOST", m_usrp_host))
   {
-    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" 
+    cerr << "*** ERROR: " << name() << "/HOST missing in configuration"
          << endl;
     return false;
   }
 
   cfg().getValue(name(),"DEBUG", debug);
-  
+
   m_usrp_port = 41234;
   cfg().getValue(name(), "USRP_TX_PORT", m_usrp_port);
 
@@ -189,7 +189,7 @@ bool UsrpLogic::initialize(void)
   m_udp_rxsock = new UdpSocket(m_usrp_rx_port);
   m_udp_rxsock->dataReceived.connect(
        mem_fun(*this, &UsrpLogic::udpDatagramReceived));
-  
+
   if (!cfg().getValue(name(), "CALL", m_callsign))
   {
     cout << "*** ERROR: No " << name() << "/CALL= configured" << endl;
@@ -202,11 +202,11 @@ bool UsrpLogic::initialize(void)
          << " should have 6 digits maximum." << endl;
     return false;
   }
-  
+
   if (!cfg().getValue(name(), "DMRID", m_dmrid))
   {
     m_dmrid = 0;
-    cout << "+++ WARNING: No " << name() << "/DMRID= configured, " 
+    cout << "+++ WARNING: No " << name() << "/DMRID= configured, "
          << "using " << m_dmrid << endl;
   }
 
@@ -220,16 +220,16 @@ bool UsrpLogic::initialize(void)
     m_selected_tg = 0;
   }
 
-  string in;  
+  string in;
   if (!cfg().getValue(name(), "DEFAULT_CC", in))
   {
     m_selected_cc = 0x01;
   }
-  else 
+  else
   {
     m_selected_cc = atoi(in.c_str()) & 0xff;
   }
-  
+
   if (!cfg().getValue(name(), "DEFAULT_TS", in))
   {
     m_selected_ts = 0x01;
@@ -238,7 +238,7 @@ bool UsrpLogic::initialize(void)
   {
     m_selected_ts = atoi(in.c_str()) & 0xff;
   }
-  
+
   string event_handler_str;
   if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
   {
@@ -246,7 +246,7 @@ bool UsrpLogic::initialize(void)
          << "/EVENT_HANDLER not set\n";
     return false;
   }
-  
+
   m_event_handler = new EventHandler(event_handler_str, name());
   if (LinkManager::hasInstance())
   {
@@ -263,7 +263,7 @@ bool UsrpLogic::initialize(void)
       sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   m_event_handler->setVariable("logic_name", name().c_str());
   m_event_handler->processEvent("namespace eval Logic {}");
-  
+
   if (!m_event_handler->initialize())
   {
     return false;
@@ -294,7 +294,7 @@ bool UsrpLogic::initialize(void)
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
-  
+
   std::string audio_to_usrp;
   if (cfg().getValue(name(), "FILTER_TO_USRP", audio_to_usrp))
   {
@@ -302,7 +302,7 @@ bool UsrpLogic::initialize(void)
     prev_src->registerSink(usrp_out_filt, true);
     prev_src = usrp_out_filt;
   }
-  
+
   // Add a limiter to smoothly limit the audio before hard clipping it
   double local_limiter_thresh = DEFAULT_LOCALLIMITER_THRESH;
   cfg().getValue(name(), "LOCAL_LIMITER_THRESH", local_limiter_thresh);
@@ -332,7 +332,7 @@ bool UsrpLogic::initialize(void)
 #endif
   prev_src->registerSink(local_splatter_filter, true);
   prev_src = local_splatter_filter;
-  
+
   m_enc_endpoint = prev_src;
 
   /* section for the net audio incoming from usrp */
@@ -359,7 +359,7 @@ bool UsrpLogic::initialize(void)
     prev_src->registerSink(usrp_in_filt, true);
     prev_src = usrp_in_filt;
   }
-  
+
    // If a net_preamp was configured, create it
   cfg().getValue(name(), "NET_PREAMP", net_preamp_gain);
   if (net_preamp_gain != 0)
@@ -369,8 +369,8 @@ bool UsrpLogic::initialize(void)
     prev_src->registerSink(net_preamp, true);
     prev_src = net_preamp;
   }
-  
-  
+
+
   /* Limiter that controls audio from USRP -> local */
   // Add a limiter to smoothly limit the audio before hard clipping it
   double net_limiter_thresh = DEFAULT_NETLIMITER_THRESH;
@@ -401,7 +401,7 @@ bool UsrpLogic::initialize(void)
 #endif
   prev_src->registerSink(net_splatter_filter, true);
   prev_src = net_splatter_filter;
- 
+
   if (INTERNAL_SAMPLE_RATE == 16000)
   {
      // Interpolate sample rate to 16kHz
@@ -420,7 +420,7 @@ bool UsrpLogic::initialize(void)
   r_buf = new int16_t[USRP_AUDIO_FRAME_LEN*2];
 
   cfg().getValue(name(),"SHARE_USERINFO", share_userinfo);
-  
+
   // reads information from /etc/svxlink/dv_users.json
   std::string user_info_file;
   if (cfg().getValue(name(), "DV_USER_INFOFILE", user_info_file))
@@ -463,7 +463,7 @@ bool UsrpLogic::initialize(void)
       m_user.id = t_userdata.get("id", "").asString();
       if (m_user.id.length() < 1)
       {
-        cout << "*** ERROR: The TSI must have more than 1 digit.\n" 
+        cout << "*** ERROR: The TSI must have more than 1 digit.\n"
           << "\" Check dataset " << i + 1 << " in \"" << user_info_file
           << "\"" << endl;
         return false;
@@ -491,17 +491,17 @@ bool UsrpLogic::initialize(void)
       userdata[m_user.id] = m_user;
       if (debug >= LOGINFO)
       {
-        cout << "id=" << m_user.id << ",call=" << m_user.call << ",name=" 
-             << m_user.name << ",mode=" << m_user.mode << ",location=" 
+        cout << "id=" << m_user.id << ",call=" << m_user.call << ",name="
+             << m_user.name << ",mode=" << m_user.mode << ",location="
              << m_user.location << ",comment=" << m_user.comment << endl;
       }
     }
   }
-  
+
     // receive interlogic messages
   publishStateEvent.connect(
           mem_fun(*this, &UsrpLogic::onPublishStateEvent));
-  
+
   if (!LogicBase::initialize())
   {
     cout << "*** ERROR: Initializing Logic " << name() << endl;
@@ -509,7 +509,7 @@ bool UsrpLogic::initialize(void)
   }
 
   m_delay_timer.setEnable(true);
-  
+
   return true;
 } /* UsrpLogic::initialize */
 
@@ -579,7 +579,7 @@ void UsrpLogic::flushEncodedAudio(void)
 void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  //cout << "incoming packet from " << addr.toString() << ", len=" << count 
+  //cout << "incoming packet from " << addr.toString() << ", len=" << count
   //     << endl;
   stringstream si;
   si.write(reinterpret_cast<const char*>(buf), count);
@@ -594,7 +594,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
   uint32_t utype = usrp.type();
 
-   // if we receive a fram USRP_TYPE_VOICE and keyup is true 
+   // if we receive a fram USRP_TYPE_VOICE and keyup is true
    // then  handle it as incoming audio
   if (utype == USRP_TYPE_VOICE)
   {
@@ -602,7 +602,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     {
       handleStreamStop();  // this was an audio stop frame
     }
-    else 
+    else
     {
       stringstream si;
       si.write(reinterpret_cast<const char*>(buf), count);
@@ -662,7 +662,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       Json::Value userinfo(Json::objectValue);
       userinfo["last_activity"] = ti;
       userinfo["gwcallsign"] = m_callsign;
-      
+
       if ((found = metadata.find("INFO:MSG:")) != string::npos)
       {
         string infomessage = metadata.erase(0, metadata.find_last_of(" ") + 1);
@@ -746,7 +746,7 @@ void UsrpLogic::handleStreamStop(void)
   checkIdle();
   m_enc->allEncodedSamplesFlushed();
   timerclear(&m_last_talker_timestamp);
-  
+
   stringstream ss;
   ss << "talker_stop " << m_last_tg << " " << m_last_call;
   processEvent(ss.str());
@@ -756,14 +756,14 @@ void UsrpLogic::handleStreamStop(void)
 void UsrpLogic::sendInfoJson(void)
 {
   stringstream ss;
-  ss << "{\"ab\":{\"version\":\"" 
+  ss << "{\"ab\":{\"version\":\""
   << USRPSOFT << "," << USRPVERSION << "\"},"
   << "\"digital\":{\"gw\":\""
   << m_dmrid << "\",\"rpt\":\""
-  << m_rptid << "\",\"tg\":\"" 
-  << m_selected_tg << "\",\"ts\":\"" 
-  << m_selected_ts << "\",\"cc\":\"" 
-  << m_selected_cc <<  "\",\"call\":\"" 
+  << m_rptid << "\",\"tg\":\""
+  << m_selected_tg << "\",\"ts\":\""
+  << m_selected_ts << "\",\"cc\":\""
+  << m_selected_cc <<  "\",\"call\":\""
   << m_callsign << "\"}}";
 
   cout << ss.str() << endl;
@@ -785,11 +785,11 @@ void UsrpLogic::handleMetaData(std::string metadata)
   bool b = reader.parse(metadata, user_arr);
   if (!b)
   {
-    cout << "*** Error: parsing StateEvent message (" 
+    cout << "*** Error: parsing StateEvent message ("
          << reader.getFormattedErrorMessages() << ")" << endl;
     return;
   }
-  
+
   stringstream ss;
   for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
   {
@@ -797,7 +797,7 @@ void UsrpLogic::handleMetaData(std::string metadata)
     ss << t_userdata.get("digital","").asString();
   }
   cout << "+++ Metadata received: " << ss.str() << endl;
-  
+
 } /* UsrpLogic::handleMetaData */
 
 
@@ -834,7 +834,7 @@ void UsrpLogic::sendStopMsg(void)
   }
   sendUdpMessage(os);
   ident = false;
-  
+
   stringstream ss;
   ss << "transmission_stop " << m_selected_tg;
   processEvent(ss.str());
@@ -864,7 +864,7 @@ void UsrpLogic::sendMetaMsg(void)
 
   sendUdpMessage(os);
   ident = true;
-  
+
   stringstream ss;
   ss << "transmission_start " << m_selected_tg;
   processEvent(ss.str());
@@ -1018,7 +1018,7 @@ void UsrpLogic::switchMode(uint8_t mode)
   }
 
   sendUdpMessage(os);
-  
+
   stringstream ss;
   ss << "switch_to_mode " << selected_mode[mode];
   processEvent(ss.str());
@@ -1064,7 +1064,7 @@ void UsrpLogic::handlePlayDtmf(const std::string& digit, int amp,
 // receive interlogic messages here
 void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
 {
-  //cout << "UsrpLogic::onPublishStateEvent - event_name: " << event_name 
+  //cout << "UsrpLogic::onPublishStateEvent - event_name: " << event_name
   //      << ", message: " << msg << endl;
 
   // if it is not allowed to handle information about users then all userinfo
@@ -1107,7 +1107,7 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
       userdata[m_user.id] = m_user;
       if (debug >= LOGINFO)
       {
-        cout << "id:" << m_user.id << ",call=" << m_user.call << ",name=" 
+        cout << "id:" << m_user.id << ",call=" << m_user.call << ",name="
              << m_user.name << ",location=" << m_user.location 
              << ", comment=" << m_user.comment << endl;
       }
