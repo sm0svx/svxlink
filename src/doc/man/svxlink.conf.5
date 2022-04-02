@@ -759,6 +759,22 @@ by the specified number of dB. This processed audio is sent to the usrp server.
 .B NET_PREAMP
 The signal received from Usrp network will be amplified/reduced by the 
 number of dB. This processed audio is sent to connected logics.
+.TP
+.B NET_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter from the net site. The audio 
+limiter really is a compressor with a very steep compression ratio like 10:1. 
+The limiter is used to help keeping down the audio level to not overmodulate 
+the local connected logics.A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.TP
+.B LOCAL_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter from the local site to Usrp 
+network. The audio limiter really is a compressor with a very steep compression 
+ratio like 10:1. The limiter is used to help keeping down the audio level to 
+not overmodulate the remote connected usrp nodes. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
 .
 .SS QSO Recorder Section
 .
