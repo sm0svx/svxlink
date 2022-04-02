@@ -9,7 +9,7 @@ application that use the Async classes.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ namespace Async
 
 class Timer;
 class FdWatch;
+class DnsLookup;
 class DnsLookupWorker;
 
 
@@ -197,7 +198,7 @@ class Application : public sigc::trackable
     virtual void delFdWatch(FdWatch *fd_watch) = 0;
     virtual void addTimer(Timer *timer) = 0;
     virtual void delTimer(Timer *timer) = 0;
-    virtual DnsLookupWorker *newDnsLookupWorker(const std::string& label) = 0;
+    virtual DnsLookupWorker *newDnsLookupWorker(const DnsLookup& lookup) = 0;
     
 };  /* class Application */
 

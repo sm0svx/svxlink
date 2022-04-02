@@ -200,6 +200,11 @@
   remote_received_tg_updated can now be used in a logic core to act on
   commands and talkgroup activations from another logic core.
 
+* ReflectorLogic: Client side redundancy added by using DNS SRV records or a
+  locally specified list of hosts. Renamed configuration variables:
+  HOST -> HOSTS, PORT -> HOST_PORT. New configuration variables:
+  DNS_DOMAIN, HOST_PRIO, HOST_PRIO_INC, HOST_WEIGHT.
+
 
 
  1.7.0 -- 01 Sep 2019

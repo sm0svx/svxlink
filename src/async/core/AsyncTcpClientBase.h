@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -50,6 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTcpConnection.h>
+#include <AsyncFdWatch.h>
+#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -83,8 +85,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class FdWatch;
-class DnsLookup;
 class IpAddress;
 
 
@@ -118,7 +118,7 @@ class IpAddress;
 This is a base class for creating TCP client connections. It should notmally
 not be used direclt but rather the TcpClient class should be used.
 */
-class TcpClientBase
+class TcpClientBase : virtual public sigc::trackable
 {
   public:
     /**
@@ -162,13 +162,35 @@ class TcpClientBase
     /**
      * @brief 	Destructor
      */
-    ~TcpClientBase(void);
+    virtual ~TcpClientBase(void);
+
+    /**
+     * @brief   Move assignmnt operator
+     * @param   other The object to move from
+     * @return  Returns this object
+     */
+    virtual TcpClientBase& operator=(TcpClientBase&& other);
+
+    /**
+     * @brief   Get the name of the remote host as given to connect()
+     * @return  Returns the name of the remote host
+     *
+     * This function return the name of the remote host as it was given to the
+     * connect call.
+     */
+    const std::string& remoteHostName(void) const { return remote_host; }
 
     /**
      * @brief   Bind to the interface having the specified IP address
      * @param   bind_ip The IP address of the interface to bind to
      */
-    void bind(const IpAddress& bind_ip);
+    void setBindIp(const IpAddress& bind_ip);
+
+    /**
+     * @brief   Get the bind IP address
+     * @return  Returns the bind IP address
+     */
+    const IpAddress& bindIp(void) const { return bind_ip; }
 
     /**
      * @brief 	Connect to the remote host
@@ -211,7 +233,7 @@ class TcpClientBase
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    void disconnect(void);
+    virtual void disconnect(void) = 0;
 
     /**
      * @brief   Check if the connection is idle
@@ -221,19 +243,45 @@ class TcpClientBase
      */
     bool isIdle(void) const { return (sock == -1); }
 
+    TcpConnection* conObj(void) { return con; }
+
     /**
      * @brief 	A signal that is emitted when a connection has been established
      */
     sigc::signal<void>       	      	  connected;
 
   protected:
+    /**
+     * @brief   Disconnect from the remote peer
+     *
+     * This function is used internally to close the connection to the remote
+     * peer.
+     */
+    virtual void closeConnection(void);
+
+    /**
+     * @brief   Called when the connection has been established to the server
+     *
+     * This function may be overridden by inheriting classes to get informed of
+     * when a connection has been established. The overriding function should
+     * normally call this function.
+     */
+    virtual void connectionEstablished(void)
+    {
+      emitConnected();
+    }
+
+    virtual void emitConnected(void)
+    {
+      connected();
+    }
 
   private:
     TcpConnection *   con;
-    DnsLookup *       dns;
+    DnsLookup         dns;
     std::string       remote_host;
     int       	      sock;
-    FdWatch *         wr_watch;
+    FdWatch           wr_watch;
     Async::IpAddress  bind_ip;
 
     void dnsResultsReady(DnsLookup& dns_lookup);

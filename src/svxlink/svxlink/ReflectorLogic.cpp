@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 
 
 /****************************************************************************
@@ -44,7 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
@@ -120,9 +120,9 @@ using namespace Async;
  ****************************************************************************/
 
 ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_con(0), m_msg_type(0), m_udp_sock(0),
+  : LogicBase(cfg, name), m_msg_type(0), m_udp_sock(0),
     m_logic_con_in(0), m_logic_con_out(0),
-    m_reconnect_timer(20000, Timer::TYPE_ONESHOT, false),
+    m_reconnect_timer(60000, Timer::TYPE_ONESHOT, false),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
@@ -157,11 +157,20 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
         sigc::mem_fun(*this, &ReflectorLogic::checkTmpMonitorTimeout)));
   m_qsy_pending_timer.expired.connect(sigc::hide(
         sigc::mem_fun(*this, &ReflectorLogic::qsyPendingTimeout)));
+
+  m_con.connected.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::onConnected));
+  m_con.disconnected.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::onDisconnected));
+  m_con.frameReceived.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::onFrameReceived));
+  m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
 } /* ReflectorLogic::ReflectorLogic */
 
 
 ReflectorLogic::~ReflectorLogic(void)
 {
+  disconnect();
   delete m_event_handler;
   m_event_handler = 0;
   delete m_udp_sock;
@@ -172,8 +181,8 @@ ReflectorLogic::~ReflectorLogic(void)
   m_enc = 0;
   delete m_dec;
   m_dec = 0;
-  delete m_con;
-  m_con = 0;
+  delete m_logic_con_in_valve;
+  m_logic_con_in_valve = 0;
 } /* ReflectorLogic::~ReflectorLogic */
 
 
@@ -181,16 +190,57 @@ bool ReflectorLogic::initialize(void)
 {
   cfg().getValue(name(), "VERBOSE", m_verbose);
 
-  if (!cfg().getValue(name(), "HOST", m_reflector_host) ||
-      m_reflector_host.empty())
+  std::vector<std::string> hosts;
+  if (cfg().getValue(name(), "HOST", hosts))
   {
-    std::cerr << "*** ERROR: " << name()
-              << "/HOST missing in configuration or is empty" << std::endl;
-    return false;
+    std::cout << "*** WARNING: The " << name()
+              << "/HOST configuration variable is deprecated. "
+                 "Use HOSTS instead." << std::endl;
+  }
+  cfg().getValue(name(), "HOSTS", hosts);
+  std::string srv_domain;
+  cfg().getValue(name(), "DNS_DOMAIN", srv_domain);
+  if (srv_domain.empty() && hosts.empty())
+  {
+    std::cerr << "*** ERROR: At least one of HOSTS or DNS_DOMAIN must be "
+                 "specified in " << name() << std::endl;
+     return false;
   }
 
-  m_reflector_port = 5300;
-  cfg().getValue(name(), "PORT", m_reflector_port);
+  if (!srv_domain.empty())
+  {
+    m_con.setService("svxreflector", "tcp", srv_domain);
+  }
+  if (!hosts.empty())
+  {
+    uint16_t reflector_port = 5300;
+    if (cfg().getValue(name(), "PORT", reflector_port))
+    {
+      std::cout << "*** WARNING: The " << name()
+                << "/PORT configuration variable is deprecated. "
+                   "Use HOST_PORT instead." << std::endl;
+    }
+    cfg().getValue(name(), "HOST_PORT", reflector_port);
+    DnsResourceRecordSRV::Prio prio = 100;
+    cfg().getValue(name(), "HOST_PRIO", prio);
+    DnsResourceRecordSRV::Prio prio_inc = 1;
+    cfg().getValue(name(), "HOST_PRIO_INC", prio_inc);
+    DnsResourceRecordSRV::Weight weight = 100 / hosts.size();
+    cfg().getValue(name(), "HOST_WEIGHT", weight);
+    for (const auto& host_spec : hosts)
+    {
+      std::string host = host_spec;
+      uint16_t port = reflector_port;
+      auto colon = host.find(':');
+      if (colon != std::string::npos)
+      {
+        host = host_spec.substr(0, colon);
+        port = atoi(host_spec.substr(colon+1).c_str());
+      }
+      m_con.addStaticSRVRecord(0, prio, weight, port, host);
+      prio += prio_inc;
+    }
+  }
 
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign) || m_callsign.empty())
   {
@@ -712,8 +762,10 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
 
 void ReflectorLogic::onConnected(void)
 {
-  cout << name() << ": Connection established to " << m_con->remoteHost() << ":"
-       << m_con->remotePort() << endl;
+  std::cout << name() << ": Connection established to "
+            << m_con.remoteHost() << ":" << m_con.remotePort()
+            << " (" << (m_con.isPrimary() ? "primary" : "secondary") << ")"
+            << std::endl;
   sendMsg(MsgProtoVer());
   m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
@@ -724,18 +776,18 @@ void ReflectorLogic::onConnected(void)
   m_next_udp_rx_seq = 0;
   timerclear(&m_last_talker_timestamp);
   m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
-  m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
 } /* ReflectorLogic::onConnected */
 
 
 void ReflectorLogic::onDisconnected(TcpConnection *con,
                                     TcpConnection::DisconnectReason reason)
 {
-  cout << name() << ": Disconnected from " << m_con->remoteHost() << ":"
-       << m_con->remotePort() << ": "
+  cout << name() << ": Disconnected from " << m_con.remoteHost() << ":"
+       << m_con.remotePort() << ": "
        << TcpConnection::disconnectReasonStr(reason) << endl;
-  m_reconnect_timer.setTimeout(1000 + std::rand() % 5000);
-  m_reconnect_timer.setEnable(true);
+  //m_reconnect_timer.setTimeout(1000 + std::rand() % 5000);
+  m_reconnect_timer.setEnable(reason == TcpConnection::DR_ORDERED_DISCONNECT);
   delete m_udp_sock;
   m_udp_sock = 0;
   m_next_udp_tx_seq = 0;
@@ -902,7 +954,7 @@ void ReflectorLogic::handleMsgAuthOk(void)
   }
   cout << name() << ": Authentication OK" << endl;
   m_con_state = STATE_EXPECT_SERVER_INFO;
-  m_con->setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
+  m_con.setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
 } /* ReflectorLogic::handleMsgAuthOk */
 
 
@@ -1222,7 +1274,7 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
     disconnect();
     return;
   }
-  if (m_con->write(ss.str().data(), ss.str().size()) == -1)
+  if (m_con.write(ss.str().data(), ss.str().size()) == -1)
   {
     disconnect();
   }
@@ -1264,18 +1316,18 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  if (addr != m_con->remoteHost())
+  if (addr != m_con.remoteHost())
   {
     cout << "*** WARNING[" << name()
          << "]: UDP packet received from wrong source address "
-         << addr << ". Should be " << m_con->remoteHost() << "." << endl;
+         << addr << ". Should be " << m_con.remoteHost() << "." << endl;
     return;
   }
-  if (port != m_con->remotePort())
+  if (port != m_con.remotePort())
   {
     cout << "*** WARNING[" << name()
          << "]: UDP packet received with wrong source port number "
-         << port << ". Should be " << m_con->remotePort() << "." << endl;
+         << port << ". Should be " << m_con.remotePort() << "." << endl;
     return;
   }
 
@@ -1384,7 +1436,7 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
          << "]: Failed to pack reflector TCP message\n";
     return;
   }
-  m_udp_sock->write(m_con->remoteHost(), m_con->remotePort(),
+  m_udp_sock->write(m_con.remoteHost(), m_con.remotePort(),
                     ss.str().data(), ss.str().size());
 } /* ReflectorLogic::sendUdpMsg */
 
@@ -1393,35 +1445,23 @@ void ReflectorLogic::connect(void)
 {
   if (!isConnected())
   {
-    cout << name() << ": Connecting to " << m_reflector_host << ":"
-         << m_reflector_port << endl;
     m_reconnect_timer.setEnable(false);
-    m_con = new TcpClient<FramedTcpConnection>(m_reflector_host,
-                                               m_reflector_port);
-    m_con->connected.connect(
-        mem_fun(*this, &ReflectorLogic::onConnected));
-    m_con->disconnected.connect(
-        mem_fun(*this, &ReflectorLogic::onDisconnected));
-    m_con->frameReceived.connect(
-        mem_fun(*this, &ReflectorLogic::onFrameReceived));
-    m_con->connect();
+    std::cout << name() << ": Connecting to service " << m_con.service()
+              << std::endl;
+    m_con.connect();
   }
 } /* ReflectorLogic::connect */
 
 
 void ReflectorLogic::disconnect(void)
 {
-  if (m_con != 0)
+  bool was_connected = m_con.isConnected();
+  m_con.disconnect();
+  if (was_connected)
   {
-    if (m_con->isConnected())
-    {
-      m_con->disconnect();
-      onDisconnected(m_con, TcpConnection::DR_ORDERED_DISCONNECT);
-    }
-    delete m_con;
-    m_con = 0;
-    m_con_state = STATE_DISCONNECTED;
+    onDisconnected(&m_con, TcpConnection::DR_ORDERED_DISCONNECT);
   }
+  m_con_state = STATE_DISCONNECTED;
 } /* ReflectorLogic::disconnect */
 
 
@@ -1434,7 +1474,7 @@ void ReflectorLogic::reconnect(void)
 
 bool ReflectorLogic::isConnected(void) const
 {
-  return (m_con != 0) && m_con->isConnected();
+  return m_con.isConnected();
 } /* ReflectorLogic::isConnected */
 
 

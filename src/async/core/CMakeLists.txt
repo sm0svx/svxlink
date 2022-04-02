@@ -5,7 +5,8 @@ set(EXPINC AsyncApplication.h AsyncFdWatch.h AsyncTimer.h AsyncIpAddress.h
            AsyncTcpConnection.h AsyncConfig.h AsyncSerial.h AsyncFileReader.h
            AsyncAtTimer.h AsyncExec.h AsyncPty.h AsyncPtyStreamBuf.h AsyncMsg.h
            AsyncFramedTcpConnection.h AsyncTcpClientBase.h AsyncTcpServerBase.h
-           AsyncHttpServerConnection.h AsyncFactory.h)
+           AsyncHttpServerConnection.h AsyncFactory.h AsyncDnsResourceRecord.h
+           AsyncTcpPrioClientBase.h AsyncTcpPrioClient.h AsyncStateMachine.h)
 
 set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClientBase.cpp
@@ -13,7 +14,8 @@ set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncTcpConnection.cpp AsyncConfig.cpp AsyncSerial.cpp
            AsyncSerialDevice.cpp AsyncFileReader.cpp
            AsyncAtTimer.cpp AsyncExec.cpp AsyncPty.cpp AsyncPtyStreamBuf.cpp
-           AsyncFramedTcpConnection.cpp AsyncHttpServerConnection.cpp)
+           AsyncFramedTcpConnection.cpp AsyncHttpServerConnection.cpp
+           AsyncTcpPrioClientBase.cpp)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})

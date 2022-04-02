@@ -11,13 +11,21 @@ URL = "http://localhost:8080/status"
 if len(sys.argv) > 1:
     URL = sys.argv[1]
 
+def print_error(stdscr, msg):
+    stdscr.erase()
+    stdscr.addstr(0, 0, msg)
+    stdscr.refresh()
+
 def draw_status(stdscr):
     # Get SvxReflector status
-    r = requests.get(url = URL)
+    try:
+        r = requests.get(url = URL)
+    except requests.exceptions.ConnectionError as e:
+        print_error(stdscr, '*** ERROR: ' + str(e))
+        return
+
     if r.status_code != 200:
-        stdscr.erase()
-        stdscr.addstr(0, 0, '*** ERROR: Could not get ' + URL)
-        stdscr.refresh()
+        print_error(stdscr, '*** ERROR: Could not get ' + URL)
         return
 
     # Extract data in JSON format
@@ -27,7 +35,7 @@ def draw_status(stdscr):
     rows, columns = stdscr.getmaxyx()
 
     # Row format for all table rows
-    row_fmt = "%-9s | %7s | %15s | %3s | %s"
+    row_fmt = "%-9s | %8s | %15s | %3s | %s"
 
     # Print header line
     header = row_fmt % ("Callsign", "TG#", "RX", "Lev", "Monitored TGs")
@@ -43,6 +51,8 @@ def draw_status(stdscr):
         node = data['nodes'][callsign]
         monitored_tgs = " ".join(str(tg) for tg in node['monitoredTGs'])
         tg = str(node['tg'])
+        if 'restrictedTG' in node and bool(node['restrictedTG']):
+            tg = "*" + tg
         rx_name = ''
         siglev = ''
         if 'qth' in node and isinstance(node['qth'], list):
@@ -60,11 +70,11 @@ def draw_status(stdscr):
         attrs = curses.color_pair(2)
         if node['isTalker']:
             attrs = curses.color_pair(1)
-        stdscr.addnstr(line, 0, row_fmt % (callsign, tg, rx_name, siglev, monitored_tgs), int(columns), attrs)
+        stdscr.addnstr(line, 0, row_fmt % (callsign, tg, rx_name, siglev, monitored_tgs), int(columns)-1, attrs)
         stdscr.clrtoeol()
-        line = line + 1
-        if line >= int(rows):
+        if line >= rows-1:
             break
+        line = line + 1
     stdscr.clrtobot()
     stdscr.refresh()
 

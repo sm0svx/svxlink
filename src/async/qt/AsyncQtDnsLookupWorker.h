@@ -10,7 +10,7 @@ used by Async::QtApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2010 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -86,6 +86,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class DnsLookup;
 
 
 /****************************************************************************
@@ -118,31 +119,38 @@ class QtDnsLookupWorker : public QObject, public DnsLookupWorker
   public:
     /**
      * @brief 	Constructor
-     * @param 	label The label (hostname) to lookup
+     * @param 	dns The lookup object
      */
-    QtDnsLookupWorker(const std::string& label);
+    QtDnsLookupWorker(const DnsLookup& dns);
   
     /**
      * @brief 	Destructor
      */
     virtual ~QtDnsLookupWorker(void);
-  
+
     /**
-     * @brief 	Return the addresses for the host in the query
-     * @return	Returns an stl vector which contains all the addresses
-     *	      	associated with the hostname in the query.
-     *
-     * Use this function to retrieve all the IP-addresses associated with
-     * the hostname in the query.
+     * @brief   Move assignment operator
+     * @param   other The other object to move data from
+     * @return  Returns this object
      */
-    std::vector<IpAddress> addresses(void);
-    
+    virtual DnsLookupWorker& operator=(DnsLookupWorker&& other_base);
+
   protected:
-    
+    /**
+     * @brief   Called by the DnsLookupWorker class to start the lookup
+     * @return  Return \em true on success or else \em false
+     */
+    virtual bool doLookup(void);
+
+    /**
+     * @brief   Called by the DnsLookupWorker class to abort a pending lookup
+     * @return  Return \em true on success or else \em false
+     */
+    virtual void abortLookup(void);
+
   private:
-    int lookup_id;
-    QHostInfo host_info;
-    
+    int                     m_lookup_id = -1;
+
   private slots:
     void onResultsReady(const QHostInfo &info);
     

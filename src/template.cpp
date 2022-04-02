@@ -2,13 +2,13 @@
 @file   MyNamespaceTemplate.cpp
 @brief  A_brief_description_for_this_file
 @author Tobias Blomberg / SM0SVX
-@date   2021-
+@date   2022-
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Template.h"
+#include "MyNamespaceTemplate.h"
 
 
 /****************************************************************************
