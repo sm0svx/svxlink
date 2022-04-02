@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
     sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
-    ident_nag_min_time(2000), ident_nag_timer(-1)
+    ident_nag_min_time(2000), ident_nag_timer(-1), delayed_tg_activation(0)
 {
   up_timer.expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
   open_on_sql_timer.expired.connect(
@@ -285,7 +285,7 @@ bool RepeaterLogic::initialize(void)
   
   if (required_1750_duration > 0)
   {
-    if (!rx().addToneDetector(1750, 50, 10, required_1750_duration))
+    if (!rx().addToneDetector(1750, 25, 10, required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection in logic "
            << name() << "\n";
@@ -294,7 +294,7 @@ bool RepeaterLogic::initialize(void)
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
   {
-    if (!rx().addToneDetector(open_on_ctcss_fq, 4, 10, open_on_ctcss_duration))
+    if (!rx().addToneDetector(open_on_ctcss_fq, 2, 10, open_on_ctcss_duration))
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection in logic "
            << name() << "\n";
@@ -448,6 +448,19 @@ void RepeaterLogic::dtmfCtrlPtyCmdReceived(const void *buf, size_t count)
   }
   Logic::dtmfCtrlPtyCmdReceived(buf, count);
 } /* RepeaterLogic::dtmfCtrlPtyCmdReceived */
+
+
+void RepeaterLogic::setReceivedTg(uint32_t tg)
+{
+  if (repeater_is_up || !activate_on_sql_close)
+  {
+    Logic::setReceivedTg(tg);
+  }
+  else
+  {
+    delayed_tg_activation = tg;
+  }
+} /* RepeaterLogic::setReceivedTg */
 
 
 #if 0
@@ -642,6 +655,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
       {
       	activate_on_sql_close = false;
       	setUp(true, open_reason);
+        Logic::setReceivedTg(delayed_tg_activation);
+        delayed_tg_activation = 0;
       }
     }
   }

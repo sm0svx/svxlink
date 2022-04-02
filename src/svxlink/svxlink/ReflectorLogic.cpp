@@ -139,7 +139,7 @@ ReflectorLogic::ReflectorLogic(Async::Config& cfg, const std::string& name)
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
     m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true),
-    m_qsy_pending_timer(-1)
+    m_qsy_pending_timer(-1), m_verbose(true)
 {
   m_reconnect_timer.expired.connect(
       sigc::hide(mem_fun(*this, &ReflectorLogic::reconnect)));
@@ -179,26 +179,30 @@ ReflectorLogic::~ReflectorLogic(void)
 
 bool ReflectorLogic::initialize(void)
 {
-  if (!cfg().getValue(name(), "HOST", m_reflector_host))
+  cfg().getValue(name(), "VERBOSE", m_verbose);
+
+  if (!cfg().getValue(name(), "HOST", m_reflector_host) ||
+      m_reflector_host.empty())
   {
-    cerr << "*** ERROR: " << name() << "/HOST missing in configuration" << endl;
+    std::cerr << "*** ERROR: " << name()
+              << "/HOST missing in configuration or is empty" << std::endl;
     return false;
   }
 
   m_reflector_port = 5300;
   cfg().getValue(name(), "PORT", m_reflector_port);
 
-  if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
+  if (!cfg().getValue(name(), "CALLSIGN", m_callsign) || m_callsign.empty())
   {
-    cerr << "*** ERROR: " << name() << "/CALLSIGN missing in configuration"
-         << endl;
+    std::cerr << "*** ERROR: " << name()
+              << "/CALLSIGN missing in configuration or is empty" << std::endl;
     return false;
   }
 
-  if (!cfg().getValue(name(), "AUTH_KEY", m_auth_key))
+  if (!cfg().getValue(name(), "AUTH_KEY", m_auth_key) || m_auth_key.empty())
   {
-    cerr << "*** ERROR: " << name() << "/AUTH_KEY missing in configuration"
-         << endl;
+    std::cerr << "*** ERROR: " << name()
+              << "/AUTH_KEY missing in configuration or is empty" << std::endl;
     return false;
   }
   if (m_auth_key == "Change this key now!")
@@ -209,10 +213,11 @@ bool ReflectorLogic::initialize(void)
   }
 
   string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str) ||
+      event_handler_str.empty())
   {
-    cerr << "*** ERROR: Config variable " << name()
-         << "/EVENT_HANDLER not set\n";
+    std::cerr << "*** ERROR: Config variable " << name()
+              << "/EVENT_HANDLER not set or empty" << std::endl;
     return false;
   }
 
@@ -1075,7 +1080,10 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Node joined: " << msg.callsign() << endl;
+  if (m_verbose)
+  {
+    std::cout << name() << ": Node joined: " << msg.callsign() << std::endl;
+  }
 } /* ReflectorLogic::handleMsgNodeJoined */
 
 
@@ -1088,7 +1096,10 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Node left: " << msg.callsign() << endl;
+  if (m_verbose)
+  {
+    std::cout << name() << ": Node left: " << msg.callsign() << std::endl;
+  }
 } /* ReflectorLogic::handleMsgNodeLeft */
 
 
@@ -1569,10 +1580,6 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   //     << is_active << "  is_idle=" << is_idle << endl;
   if (is_idle)
   {
-    if ((m_logic_con_in_valve != 0) && (m_selected_tg > 0))
-    {
-      m_logic_con_in_valve->setOpen(true);
-    }
     if (m_qsy_pending_timer.isEnabled())
     {
       std::ostringstream os;
@@ -1586,6 +1593,10 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   }
   else
   {
+    if ((m_logic_con_in_valve != 0) && (m_selected_tg > 0))
+    {
+      m_logic_con_in_valve->setOpen(true);
+    }
     if (m_tg_select_timeout_cnt == 0) // No TG currently selected
     {
       if (m_default_tg > 0)

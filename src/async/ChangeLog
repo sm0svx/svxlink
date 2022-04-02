@@ -1,4 +1,4 @@
- 1.6.1 -- ?? ??? 2021
+ 1.6.1 -- ?? ??? 2022
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
@@ -43,6 +43,12 @@
   is, when the "audio device" is open but there is no audio to write zeros
   will be written instead. Enable this behavior by setting the environment
   variable ASYNC_AUDIO_UDP_ZEROFILL=1.
+
+* The Config class now also accept associative containers for getValue. This
+  for example make it possible to use a std::map<float,float> to read a
+  configuration variable with a list of values on the form
+  VARNAME=88.5:-1,136.5:1. It is also possible to use other key/value
+  separators.
 
 
 

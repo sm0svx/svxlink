@@ -176,7 +176,7 @@ class RepeaterLogic : public Logic
     virtual void allMsgsWritten(void);
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
-
+    virtual void setReceivedTg(uint32_t tg);
 
   private:
     typedef enum
@@ -204,7 +204,8 @@ class RepeaterLogic : public Logic
     std::string     open_reason;
     int		    ident_nag_min_time;
     Async::Timer    ident_nag_timer;
-    
+    uint32_t        delayed_tg_activation;
+
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up, std::string reason);

@@ -325,6 +325,7 @@ class Config
         return true;
       }
       std::stringstream ssval(str_val);
+      ssval.imbue(std::locale(ssval.getloc(), new csv_whitespace));
       while (!ssval.eof())
       {
         Key tmp;
@@ -338,6 +339,77 @@ class Config
           return false;
         }
         c.insert(tmp);
+      }
+      return true;
+    } /* Config::getValue */
+
+    /**
+     * @brief   Get value of given config variable into associative container
+     * @param   section    The name of the section where the configuration
+     *                     variable is located
+     * @param   tag        The name of the configuration variable to get
+     * @param   c          The value is returned in this argument.
+     *                     Successful completion overwrites previous contents
+     * @param   sep        The character used to separate key and value
+     * @param   missing_ok If set to \em true, return \em true if the
+     *                     configuration variable is missing
+     * @return  Returns \em true on success or else \em false on failure.
+     *
+     * This function is used to get the value of a configuraiton variable.  The
+     * config variable is read into an associative container (e.g. std::map or
+     * std::multimap).  It's a template function meaning that it can take any
+     * key and value type that supports the operator>> function.
+     * Normally a missing configuration variable is seen as an error and the
+     * function returns \em false. If the missing_ok parameter is set to \em
+     * true, this function returns \em true for a missing variable but still
+     * returns \em false if an illegal value is specified.
+     */
+    template <template <typename, typename, typename, typename> class Container,
+              class Key, class T, class Compare=std::less<Key>,
+              class Allocator=std::allocator<std::pair<const Key, T>>>
+    bool getValue(const std::string& section, const std::string& tag,
+                  Container<Key, T, Compare, Allocator>& c,
+                  char sep = ':', bool missing_ok = false) const
+    {
+      std::string str_val;
+      if (!getValue(section, tag, str_val))
+      {
+        return missing_ok;
+      }
+      if (str_val.empty())
+      {
+        c.clear();
+        return true;
+      }
+      std::stringstream ssval(str_val);
+      ssval.imbue(std::locale(ssval.getloc(), new csv_whitespace));
+      while (!ssval.eof())
+      {
+        std::string entry;
+        ssval >> entry;
+        std::string::size_type seppos = entry.find(sep);
+        if (seppos == std::string::npos)
+        {
+          return false;
+        }
+        std::string keystr(entry.substr(0, seppos));
+        std::string valuestr(entry.substr(seppos+1));
+        Key key;
+        T value;
+        if (!setValueFromString(key, keystr) ||
+           !setValueFromString(value, valuestr))
+        {
+          return false;
+        }
+        if(!ssval.eof())
+        {
+          ssval >> std::ws;
+        }
+        if (ssval.fail())
+        {
+          return false;
+        }
+        c.insert(std::pair<Key, T>(key, value));
       }
       return true;
     } /* Config::getValue */
@@ -487,7 +559,19 @@ class Config
     char *parseValue(char *value);
     char *translateEscapedChars(char *val);
 
-};  /* class Config */
+    template <class T>
+    bool setValueFromString(T& val, const std::string &str) const
+    {
+      std::istringstream ss(str);
+      ss >> std::noskipws >> val;
+      if(!ss.eof())
+      {
+        ss >> std::ws;
+      }
+      return !ss.fail() && ss.eof();
+    }
+
+}; /* class Config */
 
 
 } /* namespace */

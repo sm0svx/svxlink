@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -307,7 +307,7 @@ class Goertzel
      * @param  res The complex result as returned by the "result" function
      * @return Returns the phase of the DFT
      */
-    float phase(const std::complex<float> &res) { return std::arg(res); }
+    static float phase(const std::complex<float> &res) { return std::arg(res); }
 
     /**
      * @brief  Calculate the phase
@@ -337,7 +337,7 @@ class Goertzel
      * and not the phase, the magnitudeSquared function without argument is
      * more efficient.
      */
-    float magnitudeSquared(const std::complex<float> &res)
+    static float magnitudeSquared(const std::complex<float> &res)
     {
       return std::norm(res);
     }
