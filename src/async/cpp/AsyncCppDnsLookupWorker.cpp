@@ -169,15 +169,6 @@ bool CppDnsLookupWorker::doLookup(void)
 
   setLookupFailed(false);
 
-  struct in_addr inp;
-  if (inet_aton(dns().label().c_str(), &inp) == 1)
-  {
-    addResourceRecord(
-        new DnsResourceRecordA(dns().label(), 1, IpAddress(inp)));
-    workerDone();
-    return true;
-  }
-
   int fd[2];
   if (pipe(fd) != 0)
   {
@@ -206,7 +197,16 @@ bool CppDnsLookupWorker::doLookup(void)
 
 void CppDnsLookupWorker::abortLookup(void)
 {
-  m_result = std::move(std::future<ThreadContext>());
+  if (m_result.valid())
+  {
+    const ThreadContext& ctx(m_result.get());
+
+    if (ctx.addrinfo != nullptr)
+    {
+      freeaddrinfo(ctx.addrinfo);
+    }
+    //m_result = std::move(std::future<ThreadContext>());
+  }
 
   int fd = m_notifier_watch.fd();
   if (fd >= 0)
@@ -244,51 +244,101 @@ CppDnsLookupWorker::ThreadContext CppDnsLookupWorker::workerFunc(
 {
   std::ostream& th_cerr = ctx.thread_cerr;
 
-  struct __res_state state;
-  int ret = res_ninit(&state);
-  if (ret != -1)
+  int qtype = 0;
+  switch (ctx.type)
   {
-    state.options = RES_DEFAULT;
-
-    int qtype = 0;
-    switch (ctx.type)
+    case DnsLookup::Type::A:
     {
-      case DnsLookup::Type::A:
-        qtype = ns_t_a;
-        break;
-      case DnsLookup::Type::PTR:
-        qtype = ns_t_ptr;
-        break;
-      case DnsLookup::Type::CNAME:
-        qtype = ns_t_cname;
-        break;
-      case DnsLookup::Type::SRV:
-        qtype = ns_t_srv;
-        break;
-      default:
-        assert(0);
+      struct addrinfo hints = {0};
+      hints.ai_family = AF_INET;
+      int ret = getaddrinfo(ctx.label.c_str(), NULL, &hints, &ctx.addrinfo);
+      if (ret != 0)
+      {
+        th_cerr << "*** WARNING[getaddrinfo]: Could not look up host \""
+                << ctx.label << "\": " << gai_strerror(ret) << std::endl;
+      }
+      else if (ctx.addrinfo == nullptr)
+      {
+        th_cerr << "*** WARNING[getaddrinfo]: No address info returned "
+                   "for host \"" << ctx.label << "\"" << std::endl;
+      }
+      break;
     }
-
-    const char *dname = ctx.label.c_str();
-    ctx.anslen = res_nsearch(&state, dname, ns_c_in, qtype,
-                             ctx.answer, NS_PACKETSZ);
-    if (ctx.anslen == -1)
+    case DnsLookup::Type::PTR:
     {
-      th_cerr << "*** ERROR: Name resolver failure -- res_nsearch: "
+      IpAddress ip_addr;
+      size_t arpa_domain_pos = ctx.label.find(".in-addr.arpa");
+      if (arpa_domain_pos != std::string::npos)
+      {
+        ip_addr.setIpFromString(ctx.label.substr(0, arpa_domain_pos));
+        struct in_addr addr = ip_addr.ip4Addr();
+        addr.s_addr = htonl(addr.s_addr);
+        ip_addr.setIp(addr);
+      }
+      else
+      {
+        ip_addr.setIpFromString(ctx.label);
+      }
+      if (!ip_addr.isEmpty())
+      {
+        struct sockaddr_in in_addr = {0};
+        in_addr.sin_family = AF_INET;
+        in_addr.sin_addr = ip_addr.ip4Addr();
+        int ret = getnameinfo(reinterpret_cast<struct sockaddr*>(&in_addr),
+                              sizeof(in_addr),
+                              ctx.host, sizeof(ctx.host),
+                              NULL, 0, NI_NAMEREQD);
+        if (ret != 0)
+        {
+          th_cerr << "*** WARNING[getnameinfo]: Could not look up IP \""
+                  << ctx.label << "\": " << gai_strerror(ret) << std::endl;
+        }
+      }
+      else
+      {
+        th_cerr << "*** WARNING: Failed to parse PTR label \""
+                << ctx.label << "\"" << std::endl;
+      }
+      break;
+    }
+    case DnsLookup::Type::CNAME:
+      qtype = ns_t_cname;
+      break;
+    case DnsLookup::Type::SRV:
+      qtype = ns_t_srv;
+      break;
+    default:
+      assert(0);
+  }
+
+  if (qtype != 0)
+  {
+    struct __res_state state;
+    int ret = res_ninit(&state);
+    if (ret != -1)
+    {
+      state.options = RES_DEFAULT;
+      const char *dname = ctx.label.c_str();
+      ctx.anslen = res_nsearch(&state, dname, ns_c_in, qtype,
+                               ctx.answer, NS_PACKETSZ);
+      if (ctx.anslen == -1)
+      {
+        th_cerr << "*** ERROR: Name resolver failure -- res_nsearch: "
+                << hstrerror(h_errno) << std::endl;
+      }
+
+        // FIXME: Valgrind complain about leaked memory in the resolver library
+        //        when a lookup fails. It seems to be a one time leak though so it
+        //        does not grow with every failed lookup. But even so, it seems
+        //        that res_close is not cleaning up properly.
+        //        Glibc 2.33-18 on Fedora 34.
+      res_nclose(&state);
+    }
+    else
+    {
+      th_cerr << "*** ERROR: Name resolver failure -- res_ninit: "
               << hstrerror(h_errno) << std::endl;
     }
-
-      // FIXME: Valgrind complain about leaked memory in the resolver library
-      //        when a lookup fails. It seems to be a one time leak though so it
-      //        does not grow with every failed lookup. But even so, it seems
-      //        that res_close is not cleaning up properly.
-      //        Glibc 2.33-18 on Fedora 34.
-    res_nclose(&state);
-  }
-  else
-  {
-    th_cerr << "*** ERROR: Name resolver failure -- res_ninit: "
-            << hstrerror(h_errno) << std::endl;
   }
 
   close(ctx.notifier_wr);
@@ -329,137 +379,173 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
     setLookupFailed();
   }
 
-  if (ctx.anslen == -1)
+  if (ctx.type == DnsResourceRecord::Type::A)
   {
-    workerDone();
-    return;
+    if (ctx.addrinfo != nullptr)
+    {
+      struct addrinfo *entry;
+      std::vector<IpAddress> the_addresses;
+      for (entry = ctx.addrinfo; entry != 0; entry = entry->ai_next)
+      {
+        IpAddress ip_addr(
+            reinterpret_cast<struct sockaddr_in*>(entry->ai_addr)->sin_addr);
+        //std::cout << "### ai_family=" << entry->ai_family
+        //          << "  ai_socktype=" << entry->ai_socktype
+        //          << "  ai_protocol=" << entry->ai_protocol
+        //          << "  ip=" << ip_addr << std::endl;
+        if (find(the_addresses.begin(), the_addresses.end(), ip_addr) ==
+            the_addresses.end())
+        {
+          the_addresses.push_back(ip_addr);
+          addResourceRecord(
+              new DnsResourceRecordA(ctx.label, 0, ip_addr));
+        }
+      }
+      freeaddrinfo(ctx.addrinfo);
+    }
   }
+  else if (ctx.type == DnsResourceRecord::Type::PTR)
+  {
+    if (ctx.host[0] != '\0')
+    {
+      addResourceRecord(
+          new DnsResourceRecordPTR(ctx.label, 0, ctx.host));
+    }
+  }
+  else
+  {
+    if (ctx.anslen == -1)
+    {
+      workerDone();
+      return;
+    }
 
-  char errbuf[256];
-  ns_msg msg;
-  int ret = ns_initparse(ctx.answer, ctx.anslen, &msg);
-  if (ret == -1)
-  {
-    strerror_r(ret, errbuf, sizeof(errbuf));
-    std::cerr << "*** WARNING: ns_initparse failed: " << errbuf << std::endl;
-    setLookupFailed();
-    workerDone();
-    return;
-  }
-
-  uint16_t msg_cnt = ns_msg_count(msg, ns_s_an);
-  if (msg_cnt == 0)
-  {
-    setLookupFailed();
-  }
-  for (uint16_t rrnum=0; rrnum<msg_cnt; ++rrnum)
-  {
-    ns_rr rr;
-    ret = ns_parserr(&msg, ns_s_an, rrnum, &rr);
+    char errbuf[256];
+    ns_msg msg;
+    int ret = ns_initparse(ctx.answer, ctx.anslen, &msg);
     if (ret == -1)
     {
-      strerror_r(errno, errbuf, sizeof(errbuf));
-      std::cerr << "*** WARNING: DNS lookup failure in ns_parserr: "
-                << errbuf << std::endl;
+      strerror_r(ret, errbuf, sizeof(errbuf));
+      std::cerr << "*** WARNING: ns_initparse failed: " << errbuf << std::endl;
       setLookupFailed();
-      continue;
+      workerDone();
+      return;
     }
-    const char *name = ns_rr_name(rr);
-    uint16_t rr_class = ns_rr_class(rr);
-    if (rr_class != ns_c_in)
+
+    uint16_t msg_cnt = ns_msg_count(msg, ns_s_an);
+    if (msg_cnt == 0)
     {
-      std::cerr << "*** WARNING: Wrong RR class in DNS answer: "
-                << rr_class << std::endl;
       setLookupFailed();
-      continue;
     }
-    uint32_t ttl = ns_rr_ttl(rr);
-    uint16_t type = ns_rr_type(rr);
-    const unsigned char *cp = ns_rr_rdata(rr);
-    switch (type)
+    for (uint16_t rrnum=0; rrnum<msg_cnt; ++rrnum)
     {
-      case ns_t_a:
+      ns_rr rr;
+      ret = ns_parserr(&msg, ns_s_an, rrnum, &rr);
+      if (ret == -1)
       {
-        struct in_addr in_addr;
-        uint32_t ip = ns_get32(cp);
-        in_addr.s_addr = ntohl(ip);
-        addResourceRecord(
-            new DnsResourceRecordA(name, ttl, IpAddress(in_addr)));
-        break;
-      }
-
-      case ns_t_ptr:
-      {
-        char exp_dn[NS_MAXDNAME+1];
-        ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
-                                 exp_dn, NS_MAXDNAME);
-        if (ret == -1)
-        {
-          strerror_r(errno, errbuf, sizeof(errbuf));
-          std::cerr << "*** WARNING: DNS lookup failure in "
-                       "ns_name_uncompress: " << errbuf << std::endl;
-          setLookupFailed();
-          continue;
-        }
-        size_t exp_dn_len = strlen(exp_dn);
-        exp_dn[exp_dn_len] = '.';
-        exp_dn[exp_dn_len+1] = 0;
-        addResourceRecord(new DnsResourceRecordPTR(name, ttl, exp_dn));
-        break;
-      }
-
-      case ns_t_cname:
-      {
-        char exp_dn[NS_MAXDNAME+1];
-        ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
-            exp_dn, NS_MAXDNAME);
-        if (ret == -1)
-        {
-          strerror_r(errno, errbuf, sizeof(errbuf));
-          std::cerr << "*** WARNING: DNS lookup failure in "
-                       "ns_name_uncompress" << errbuf << std::endl;
-          setLookupFailed();
-          continue;
-        }
-        size_t exp_dn_len = strlen(exp_dn);
-        exp_dn[exp_dn_len] = '.';
-        exp_dn[exp_dn_len+1] = 0;
-        addResourceRecord(new DnsResourceRecordCNAME(name, ttl, exp_dn));
-        break;
-      }
-
-      case ns_t_srv:
-      {
-        unsigned int prio = ns_get16(cp);
-        cp += NS_INT16SZ;
-        unsigned int weight = ns_get16(cp);
-        cp += NS_INT16SZ;
-        unsigned int port = ns_get16(cp);
-        cp += NS_INT16SZ;
-        char exp_dn[NS_MAXDNAME+1];
-        ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
-            exp_dn, NS_MAXDNAME);
-        if (ret == -1)
-        {
-          strerror_r(errno, errbuf, sizeof(errbuf));
-          std::cerr << "*** WARNING: DNS lookup failure in "
-                       "ns_name_uncompress: " << errbuf << std::endl;
-          setLookupFailed();
-          continue;
-        }
-        size_t exp_dn_len = strlen(exp_dn);
-        exp_dn[exp_dn_len] = '.';
-        exp_dn[exp_dn_len+1] = 0;
-        addResourceRecord(
-            new DnsResourceRecordSRV(name, ttl, prio, weight, port, exp_dn));
-        break;
-      }
-
-      default:
-        std::cerr << "*** WARNING: Unsupported RR type, " << type
-                  << ", received in DNS query for " << name << std::endl;
+        strerror_r(errno, errbuf, sizeof(errbuf));
+        std::cerr << "*** WARNING: DNS lookup failure in ns_parserr: "
+                  << errbuf << std::endl;
         setLookupFailed();
-        break;
+        continue;
+      }
+      const char *name = ns_rr_name(rr);
+      uint16_t rr_class = ns_rr_class(rr);
+      if (rr_class != ns_c_in)
+      {
+        std::cerr << "*** WARNING: Wrong RR class in DNS answer: "
+                  << rr_class << std::endl;
+        setLookupFailed();
+        continue;
+      }
+      uint32_t ttl = ns_rr_ttl(rr);
+      uint16_t type = ns_rr_type(rr);
+      const unsigned char *cp = ns_rr_rdata(rr);
+      switch (type)
+      {
+        case ns_t_a:
+        {
+          struct in_addr in_addr;
+          uint32_t ip = ns_get32(cp);
+          in_addr.s_addr = ntohl(ip);
+          addResourceRecord(
+              new DnsResourceRecordA(name, ttl, IpAddress(in_addr)));
+          break;
+        }
+
+        case ns_t_ptr:
+        {
+          char exp_dn[NS_MAXDNAME+1];
+          ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
+                                   exp_dn, NS_MAXDNAME);
+          if (ret == -1)
+          {
+            strerror_r(errno, errbuf, sizeof(errbuf));
+            std::cerr << "*** WARNING: DNS lookup failure in "
+                         "ns_name_uncompress: " << errbuf << std::endl;
+            setLookupFailed();
+            continue;
+          }
+          size_t exp_dn_len = strlen(exp_dn);
+          exp_dn[exp_dn_len] = '.';
+          exp_dn[exp_dn_len+1] = 0;
+          addResourceRecord(new DnsResourceRecordPTR(name, ttl, exp_dn));
+          break;
+        }
+
+        case ns_t_cname:
+        {
+          char exp_dn[NS_MAXDNAME+1];
+          ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
+              exp_dn, NS_MAXDNAME);
+          if (ret == -1)
+          {
+            strerror_r(errno, errbuf, sizeof(errbuf));
+            std::cerr << "*** WARNING: DNS lookup failure in "
+                         "ns_name_uncompress" << errbuf << std::endl;
+            setLookupFailed();
+            continue;
+          }
+          size_t exp_dn_len = strlen(exp_dn);
+          exp_dn[exp_dn_len] = '.';
+          exp_dn[exp_dn_len+1] = 0;
+          addResourceRecord(new DnsResourceRecordCNAME(name, ttl, exp_dn));
+          break;
+        }
+
+        case ns_t_srv:
+        {
+          unsigned int prio = ns_get16(cp);
+          cp += NS_INT16SZ;
+          unsigned int weight = ns_get16(cp);
+          cp += NS_INT16SZ;
+          unsigned int port = ns_get16(cp);
+          cp += NS_INT16SZ;
+          char exp_dn[NS_MAXDNAME+1];
+          ret = ns_name_uncompress(ns_msg_base(msg), ns_msg_end(msg), cp,
+              exp_dn, NS_MAXDNAME);
+          if (ret == -1)
+          {
+            strerror_r(errno, errbuf, sizeof(errbuf));
+            std::cerr << "*** WARNING: DNS lookup failure in "
+                         "ns_name_uncompress: " << errbuf << std::endl;
+            setLookupFailed();
+            continue;
+          }
+          size_t exp_dn_len = strlen(exp_dn);
+          exp_dn[exp_dn_len] = '.';
+          exp_dn[exp_dn_len+1] = 0;
+          addResourceRecord(
+              new DnsResourceRecordSRV(name, ttl, prio, weight, port, exp_dn));
+          break;
+        }
+
+        default:
+          std::cerr << "*** WARNING: Unsupported RR type, " << type
+                    << ", received in DNS query for " << name << std::endl;
+          setLookupFailed();
+          break;
+      }
     }
   }
   workerDone();

@@ -310,6 +310,14 @@ class DnsLookupWorker
      */
     virtual void abortLookup(void) = 0;
 
+    /**
+     * @brief   Add a new resource record to the result list
+     * @param   rr A new resource record
+     *
+     * The lookup worker use this function to add resource records to the
+     * result list. The resource record will be owned by this class so must not
+     * be deleted by the caller.
+     */
     void addResourceRecord(DnsResourceRecord* rr)
     {
       if (rr->type() == DnsResourceRecordSRV::staticType())
@@ -324,6 +332,9 @@ class DnsLookupWorker
       }
     }
 
+    /**
+     * @brief   Called by the lookup worker when done
+     */
     void workerDone(void)
     {
       m_lookup_pending = false;
@@ -404,6 +415,10 @@ class DnsLookupWorker
       resultsReady();
     }
 
+    /**
+     * @brief   Called by the lookup worker to mark the lookup as failed
+     * @param   failed Set to \em false to clear the failure state
+     */
     void setLookupFailed(bool failed=true) { m_lookup_failed = failed; }
 
   private:
