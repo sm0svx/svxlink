@@ -125,8 +125,6 @@ DnsLookup::DnsLookup(void)
   m_worker = Application::app().newDnsLookupWorker(*this);
   m_worker->resultsReady.connect(
       sigc::mem_fun(*this, &DnsLookup::onResultsReady));
-  //std::cout << "### DnsLookup::DnsLookup: isPending()="
-  //          << isPending() << std::endl;
 } /* DnsLookup::DnsLookup */
 
 
