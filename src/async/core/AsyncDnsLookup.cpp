@@ -10,7 +10,7 @@ for usage instructions.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2013  Tobias Blomberg
+Copyright (C) 2003-2022  Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cassert>
 
 
 /****************************************************************************
@@ -58,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncApplication.h"
 #include "AsyncDnsLookupWorker.h"
 #include "AsyncDnsLookup.h"
+#include "AsyncDnsResourceRecord.h"
 
 
 
@@ -120,39 +120,129 @@ using namespace Async;
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-DnsLookup::DnsLookup(const string& label)
-  : m_worker(0), m_label(label), m_results_ready(false)
+DnsLookup::DnsLookup(void)
 {
-  m_worker = Application::app().newDnsLookupWorker(label);
-  m_worker->resultsReady.connect(mem_fun(*this, &DnsLookup::onResultsReady));
-  m_worker->doLookup();
+  m_worker = Application::app().newDnsLookupWorker(*this);
+  m_worker->resultsReady.connect(
+      sigc::mem_fun(*this, &DnsLookup::onResultsReady));
+} /* DnsLookup::DnsLookup */
+
+
+DnsLookup::DnsLookup(const string& label, DnsLookup::Type type)
+  : DnsLookup()
+{
+  lookup(label, type);
 } /* DnsLookup::DnsLookup */
 
 
 DnsLookup::~DnsLookup(void)
 {
   delete m_worker;
+  m_worker = 0;
 } /* DnsLookup::~DnsLookup */
+
+
+DnsLookup& DnsLookup::operator=(DnsLookup&& other)
+{
+  //std::cout << "### DnsLookup::operator=(&&)" << std::endl;
+
+  m_label = other.m_label;
+  other.m_label.clear();
+
+  m_type = other.m_type;
+  other.m_type = Type::A;
+
+  *m_worker = std::move(*other.m_worker);
+
+  m_static_rrs = std::move(other.m_static_rrs);
+  other.m_static_rrs.clear();
+
+  return *this;
+} /* DnsLookup::operator=(DnsLookup&&) */
+
+
+void DnsLookup::setLookupParams(const std::string& label, Type type)
+{
+  if ((label != m_label) || (type != m_type))
+  {
+    abort();
+    m_worker->clearResourceRecords();
+    m_label = label;
+    m_type = type;
+  }
+} /* DnsLookup::setLookupParams */
+
+
+bool DnsLookup::lookup(const std::string& label, Type type)
+{
+  //std::cout << "### DnsLookup::lookup: label=" << label << std::endl;
+  setLookupParams(label, type);
+  return lookup();
+} /* DnsLookup::lookup */
+
+
+bool DnsLookup::lookup(void)
+{
+  m_worker->lookup();
+  return true;
+} /* DnsLookup::lookup */
+
+
+void DnsLookup::abort(void)
+{
+  m_worker->abort();
+} /* DnsLookup::abort */
+
+
+bool DnsLookup::isPending(void) const
+{
+  return m_worker->lookupPending();
+} /* DnsLookup::isPending */
+
+
+bool DnsLookup::lookupFailed(void) const
+{
+  return m_worker->lookupFailed();
+} /* DnsLookup::lookupFailed */
+
+
+bool DnsLookup::resultsAreReady(void) const
+{
+  return !isPending() && !m_worker->resourceRecords().empty();
+} /* DnsLookup::resultsAreReady */
+
+
+bool DnsLookup::recordsValid(void) const
+{
+  return m_worker->recordsValid();
+} /* DnsLookup::recordsValid */
+
+
+void DnsLookup::clear(void)
+{
+  abort();
+  m_worker->clearResourceRecords();
+} /* DnsLookup::clear */
+
+
+void DnsLookup::addStaticResourceRecord(DnsResourceRecord* rr)
+{
+  m_static_rrs.push_back(std::unique_ptr<DnsResourceRecord>(rr));
+} /* DnsLookup::addStaticResourceRecord */
 
 
 vector<IpAddress> DnsLookup::addresses(void)
 {
-  return m_worker->addresses();
+  vector<IpAddress> addrs;
+  for (const auto& rr : resourceRecordsP())
+  {
+    if (rr->type() == Type::A)
+    {
+      addrs.push_back(static_cast<const DnsResourceRecordA*>(rr)->ip());
+    }
+  }
+  return addrs;
 } /* DnsLookup::addresses */
-
 
 
 /****************************************************************************
@@ -169,24 +259,16 @@ vector<IpAddress> DnsLookup::addresses(void)
  *
  ****************************************************************************/
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void DnsLookup::onResultsReady(void)
 {
-  m_results_ready = true;
   resultsReady(*this);
 } /* DnsLookup::onResultsReady */
 
+
+const DnsLookup::RRListP& DnsLookup::resourceRecordsP(void) const
+{
+  return m_worker->resourceRecords();
+} /* DnsLookup::resourceRecordsP */
 
 
 /*

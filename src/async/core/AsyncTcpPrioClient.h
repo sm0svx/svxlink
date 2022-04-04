@@ -1,15 +1,12 @@
 /**
-@file	 AsyncTcpClient.h
-@brief   Contains a class for creating TCP client connections
-@author  Tobias Blomberg
-@date	 2003-04-12
-
-This file contains a class that make it easy to create a new TCP connection
-to a remote host. See usage instructions in the class definition.
+@file   AsyncTcpPrioClient.h
+@brief  A_brief_description_for_this_file
+@author Tobias Blomberg / SM0SVX
+@date   2021-06-27
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,14 +24,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AsyncTcpClient_demo.cpp
-An example of how to use the Async::TcpClient class
+/** @example AsyncTcpPrioClient_demo.cpp
+An example of how to use the Async::TcpPrioClient class
 */
 
-
-
-#ifndef ASYNC_TCP_CLIENT_INCLUDED
-#define ASYNC_TCP_CLIENT_INCLUDED
+#ifndef ASYNC_TCP_PRIO_CLIENT_INCLUDED
+#define ASYNC_TCP_PRIO_CLIENT_INCLUDED
 
 
 /****************************************************************************
@@ -43,10 +38,7 @@ An example of how to use the Async::TcpClient class
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-#include <stdint.h>
-
-#include <string>
+#include <cassert>
 
 
 /****************************************************************************
@@ -55,7 +47,11 @@ An example of how to use the Async::TcpClient class
  *
  ****************************************************************************/
 
-#include <AsyncTcpClientBase.h>
+#include <AsyncTcpClient.h>
+#include <AsyncTcpPrioClientBase.h>
+#include <AsyncDnsLookup.h>
+#include <AsyncTimer.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -83,15 +79,13 @@ An example of how to use the Async::TcpClient class
 namespace Async
 {
 
+
 /****************************************************************************
  *
  * Forward declarations of classes inside of the declared namespace
  *
  ****************************************************************************/
 
-class FdWatch;
-class DnsLookup;
-class IpAddress;
 
 
 /****************************************************************************
@@ -117,18 +111,16 @@ class IpAddress;
  ****************************************************************************/
 
 /**
-@brief	A class for creating a TCP client connection
-@author Tobias Blomberg
-@date   2003-04-12
+@brief  A_brief_class_description
+@author Tobias Blomberg / SM0SVX
+@date   2021-06-27
 
-This class is used to create a TCP client connection. All details of how to
-create the connection is hidden inside the class. This make it very easy to
-create and use the connections. An example usage is shown below.
+A_detailed_class_description
 
-\include AsyncTcpClient_demo.cpp
+\include AsyncTcpPrioClient_demo.cpp
 */
 template <typename ConT=TcpConnection>
-class TcpClient : public ConT, public TcpClientBase
+class TcpPrioClient : public ConT, public TcpPrioClientBase
 {
   public:
     /**
@@ -141,47 +133,26 @@ class TcpClient : public ConT, public TcpClientBase
      * When using this variant of the constructor the connect method which
      * take host and port must be used.
      */
-    explicit TcpClient(size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
-      : ConT(recv_buf_len), TcpClientBase(this)
+    explicit TcpPrioClient(size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
+      : ConT(recv_buf_len), TcpPrioClientBase(this)
     {
+      initialize();
     }
-    
+
     /**
-     * @brief 	Constructor
-     * @param 	remote_host   The hostname of the remote host
-     * @param 	remote_port   The port on the remote host to connect to
-     * @param 	recv_buf_len  The length of the receiver buffer to use
-     *
-     * The object will be constructed and variables will be initialized but
-     * no connection will be created until the connect function
-     * (see @ref TcpClient::connect) is called.
+     * @brief   Disallow copy construction
      */
-    TcpClient(const std::string& remote_host, uint16_t remote_port,
-              size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
-      : ConT(recv_buf_len), TcpClientBase(this, remote_host, remote_port)
-    {
-    }
-    
+    TcpPrioClient(const TcpPrioClient&) = delete;
+
     /**
-     * @brief 	Constructor
-     * @param 	remote_ip     The IP address of the remote host
-     * @param 	remote_port   The port on the remote host to connect to
-     * @param 	recv_buf_len  The length of the receiver buffer to use
-     *
-     * The object will be constructed and variables will be initialized but
-     * no connection will be created until the connect function
-     * (see @ref TcpClient::connect) is called.
+     * @brief   Disallow copy assignment
      */
-    TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
-              size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
-      : ConT(recv_buf_len), TcpClientBase(this, remote_ip, remote_port)
-    {
-    }
-    
+    TcpPrioClient& operator=(const TcpPrioClient&) = delete;
+
     /**
-     * @brief 	Destructor
+     * @brief   Destructor
      */
-    ~TcpClient(void) {}
+    virtual ~TcpPrioClient(void) {}
 
     /**
      * @brief 	Disconnect from the remote host
@@ -190,18 +161,25 @@ class TcpClient : public ConT, public TcpClientBase
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    virtual void disconnect(void) { closeConnection(); }
+    virtual void disconnect(void)
+    {
+      //std::cout << "### TcpPrioClient::disconnect" << std::endl;
+      TcpPrioClientBase::disconnect();
+    }
 
     /**
-     * @brief   Check if the connection is idle
-     * @return  Returns \em true if the connection is idle
+     * @brief   Mark connection as failed
      *
-     * A connection being idle means that it is not connected nor connecting.
+     * The application can use this function to mark a connection as failed so
+     * that when a reconnect is performed, the next server will be tried. If a
+     * connect is classified as successful, the same host will be tried again
+     * on reconnect.
      */
-    bool isIdle(void) const
-    {
-      return TcpClientBase::isIdle() && ConT::isIdle();
-    }
+    //void markAsFailedConnect(void)
+    //{
+    //  //std::cout << "### TcpPrioClient::markAsFailedConnect" << std::endl;
+    //  m_successful_connect = false;
+    //}
 
   protected:
     /**
@@ -213,21 +191,60 @@ class TcpClient : public ConT, public TcpClientBase
     virtual void closeConnection(void)
     {
       ConT::closeConnection();
-      TcpClientBase::closeConnection();
+      TcpPrioClientBase::closeConnection();
+    }
+
+    /**
+     * @brief   Called when a connection has been terminated
+     * @param   reason  The reason for the disconnect
+     *
+     * This function will be called when the connection has been terminated.
+     */
+    virtual void onDisconnected(TcpConnection::DisconnectReason reason)
+    {
+      //std::cout << "### TcpPrioClient::onDisconnected:"
+      //          //<< " m_successful_connect=" << m_successful_connect
+      //          << std::endl;
+      ConT::onDisconnected(reason);
+      TcpPrioClientBase::onDisconnected(reason);
+    }
+
+    /**
+     * @brief   Allocate a new TcpClient object
+     * @return  Returns a new TcpClient object
+     *
+     * This function is used to allocate a new TcpClient object.  That object
+     * is used when in the background trying to connect to a higher prioritized
+     * server. Note that the object should be a "normal" TcpClient and not a
+     * TcpPrioClient.
+     */
+    virtual TcpClientBase *newTcpClient(void)
+    {
+      return new TcpClient<ConT>;
+    }
+
+    virtual void emitDisconnected(TcpConnection::DisconnectReason reason)
+    {
+      ConT::emitDisconnected(reason);
     }
 
   private:
+    //bool                      m_successful_connect  = false;
 
-};  /* class TcpClient */
+    TcpPrioClient<ConT>& operator=(TcpClient<ConT>&& other)
+    {
+      //std::cout << "### TcpPrioClient::operator=(TcpClient<ConT>&&)" << std::endl;
+      *static_cast<TcpClientBase*>(this) =
+        std::move(*static_cast<TcpClientBase*>(&other));
+      return *this;
+    }
+};  /* class TcpPrioClient */
 
 
-} /* namespace */
+} /* namespace Async */
 
-#endif /* ASYNC_TCP_CLIENT_INCLUDED */
-
-
+#endif /* ASYNC_TCP_PRIO_CLIENT_INCLUDED */
 
 /*
  * This file has not been truncated
  */
-

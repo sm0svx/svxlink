@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JANUARY 2022" Linux "File Formats"
+.TH SVXLINK.CONF 5 "MARS 2022" Linux "File Formats"
 .
 .SH NAME
 .
@@ -605,12 +605,41 @@ will be achieved by entering the command 91888#.
 The type for a reflector logic core is always
 .BR Reflector .
 .TP
-.B HOST
-The hostname or IP address of the reflector server.
+.B DNS_DOMAIN
+The domain of the SvxReflector server to connect to. To make this work, the DNS
+domain have to be configured with SRV records for all reflector servers serving
+that domain. For example, if the domain is example.org, there must be one or
+more SRV entries in the DNS with the name _svxreflector._tcp.example.org. Each
+SRV record contain information about hostname, port, priority and weight. The
+priority determine in which order SvxLink will try to connect to the servers.
+The weight is used to give different servers with the same priority a
+probability for how often it will be selected.
 .TP
-.B PORT
-The TCP/UDP port number used by the server. The client do not need to open any
-ports in the firewall. Default: 5300.
+.B HOSTS
+A comma separated list of hostname:port pairs of the reflector servers. IP
+address also work. If port is not specified the value of HOST_PORT will be used
+as a default. If DNS_DOMAIN is also specified, the values in the HOSTS list
+will be added to the list looked up in the DNS. The order of the entries depend
+on HOST_PRIO, HOST_PRIO_INC and HOST_WEIGHT.
+.TP
+.B HOST_PRIO
+The priority value to use for entries in the HOSTS list. The priority determine
+in which order SvxLink will try to connect to the specified servers. See also
+HOST_PRIO_INC. Default: 100.
+.TP
+.B HOST_PRIO_INC
+The value with which to increase the priority value for each entry in the HOSTS
+list. The first value will be the one specified by HOST_PRIO. Default: 1.
+.TP
+.B HOST_WEIGHT
+The weight value will determine how often a server will be selected in
+comparison to servers with the same priority. This variable is only useful when
+one want to set the weight in relation to other SRV records looked up in the
+DNS. The weight values for entries in the HOSTS list will always be the same.
+.TP
+.B HOST_PORT
+The default TCP/UDP port number used by the reflector server. The client do not
+need to open any ports in the firewall. Default: 5300.
 .TP
 .B CALLSIGN
 The callsign of this node. The callsign also serves as the username when

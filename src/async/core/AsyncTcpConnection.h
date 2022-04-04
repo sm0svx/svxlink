@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncIpAddress.h>
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -85,7 +86,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class FdWatch;
 class IpAddress;
 
 
@@ -120,7 +120,7 @@ This class is used to handle an existing TCP connection. It is not meant to
 be used directly but could be. It it mainly created to handle connections
 for Async::TcpClient and Async::TcpServer.
 */
-class TcpConnection : public sigc::trackable
+class TcpConnection : virtual public sigc::trackable
 {
   public:
     /**
@@ -133,7 +133,9 @@ class TcpConnection : public sigc::trackable
       DR_SYSTEM_ERROR,	       ///< A system error occured (check errno)
       DR_RECV_BUFFER_OVERFLOW, ///< Receiver buffer overflow
       DR_ORDERED_DISCONNECT,   ///< Disconnect ordered locally
-      DR_PROTOCOL_ERROR        ///< Protocol error
+      DR_PROTOCOL_ERROR,       ///< Protocol error
+      DR_SWITCH_PEER,          ///< A better peer was found so reconnecting
+      DR_BAD_STATE             ///< The connection ended up in a bad state
     } DisconnectReason;
     
     /**
@@ -167,7 +169,18 @@ class TcpConnection : public sigc::trackable
      * @brief 	Destructor
      */
     virtual ~TcpConnection(void);
-    
+
+    /**
+     * @brief   Move assignmnt operator
+     * @param   other The object to move from
+     * @return  Returns this object
+     *
+     * The move operator move the state of a specified TcpConnection object
+     * into this object. After the move, the state of the other object will be
+     * the same as if it had just been default constructed.
+     */
+    virtual TcpConnection& operator=(TcpConnection&& other);
+
     /**
      * @brief   Set a new receive buffer size
      * @param   recv_buf_len The new receive buffer size in bytes
@@ -186,7 +199,7 @@ class TcpConnection : public sigc::trackable
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    virtual void disconnect(void);
+    virtual void disconnect(void) { closeConnection(); }
     
     /**
      * @brief 	Write data to the TCP connection
@@ -290,7 +303,15 @@ class TcpConnection : public sigc::trackable
      * in use. If it is -1 it has not been set.
      */
     int socket(void) const { return sock; }
-    
+
+    /**
+     * @brief   Disconnect from the remote peer
+     *
+     * This function is used internally to close the connection to the remote
+     * peer.
+     */
+    virtual void closeConnection(void);
+
     /**
      * @brief 	Called when a connection has been terminated
      * @param 	reason  The reason for the disconnect
@@ -300,6 +321,7 @@ class TcpConnection : public sigc::trackable
      */
     virtual void onDisconnected(DisconnectReason reason)
     {
+      //std::cout << "### TcpConnection::onDisconnected" << std::endl;
       disconnected(this, reason);
     }
 
@@ -321,7 +343,12 @@ class TcpConnection : public sigc::trackable
     {
       return dataReceived(this, buf, count);
     }
-    
+
+    virtual void emitDisconnected(DisconnectReason reason)
+    {
+      disconnected(this, reason);
+    }
+
   private:
     friend class TcpClientBase;
 
@@ -329,8 +356,8 @@ class TcpConnection : public sigc::trackable
     uint16_t  remote_port;
     size_t    recv_buf_len;
     int       sock;
-    FdWatch * rd_watch;
-    FdWatch * wr_watch;
+    FdWatch   rd_watch;
+    FdWatch   wr_watch;
     char *    recv_buf;
     size_t    recv_buf_cnt;
     

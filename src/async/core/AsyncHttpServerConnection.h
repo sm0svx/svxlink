@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -150,6 +150,18 @@ class HttpServerConnection : public TcpConnection
         headers.clear();
         ver_major = 0;
         ver_minor = 0;
+        headers.clear();
+      }
+
+      Request& operator=(Request&& other)
+      {
+        method = std::move(other.method);
+        target = std::move(other.target);
+        ver_major = other.ver_major;
+        ver_minor = other.ver_minor;
+        headers = std::move(other.headers);
+        other.clear();
+        return *this;
       }
     };
 
@@ -222,13 +234,15 @@ class HttpServerConnection : public TcpConnection
     virtual ~HttpServerConnection(void);
 
     /**
-     * @brief   Disconnect from the remote host
+     * @brief   Move assignmnt operator
+     * @param   other_base The object to move from
+     * @return  Returns this object
      *
-     * Call this function to disconnect from the remote host. If already
-     * disconnected, nothing will be done. The disconnected signal is not
-     * emitted when this function is called
+     * The move operator move the state of a specified TcpFramedConnection
+     * object into this object. After the move, the state of the other object
+     * will be the same as if it had just been default constructed.
      */
-    virtual void disconnect(void);
+    virtual TcpConnection& operator=(TcpConnection&& other_base) override;
 
     /**
      * @brief   Send data with chunked transfer encoding
@@ -279,12 +293,20 @@ class HttpServerConnection : public TcpConnection
     sigc::signal<void, bool> sendBufferFull;
 
     /**
+     * @brief   Disconnect from the remote peer
+     *
+     * This function is used internally to close the connection to the remote
+     * peer.
+     */
+    virtual void closeConnection(void) override;
+
+    /**
      * @brief   Called when a connection has been terminated
      * @param   reason  The reason for the disconnect
      *
      * This function will be called when the connection has been terminated.
      */
-    virtual void onDisconnected(DisconnectReason reason);
+    virtual void onDisconnected(DisconnectReason reason) override;
 
     /**
      * @brief   Called when data has been received on the connection
@@ -299,35 +321,20 @@ class HttpServerConnection : public TcpConnection
      * and presented again to the slot when more data arrives. The new data
      * will be appended to the old data.
      */
-    virtual int onDataReceived(void *buf, int count);
+    virtual int onDataReceived(void *buf, int count) override;
+
+    virtual void emitDisconnected(DisconnectReason reason) override
+    {
+      TcpConnection::emitDisconnected(reason);
+      disconnected(this, reason);
+    }
 
   private:
     enum State {
       STATE_DISCONNECTED, STATE_EXPECT_START_LINE, STATE_EXPECT_HEADER,
       STATE_EXPECT_PAYLOAD, STATE_REQ_COMPLETE
     };
-    //struct QueueItem
-    //{
-    //  char* m_buf;
-    //  int   m_size;
-    //  int   m_pos;
 
-    //  QueueItem(const void* buf, int count)
-    //    : m_buf(0), m_size(4+count), m_pos(0)
-    //  {
-    //    m_buf = new char[4+count];
-    //    char *ptr = m_buf;
-    //    *ptr++ = static_cast<uint32_t>(count) >> 24;
-    //    *ptr++ = (static_cast<uint32_t>(count) >> 16) & 0xff;
-    //    *ptr++ = (static_cast<uint32_t>(count) >> 8) & 0xff;
-    //    *ptr++ = (static_cast<uint32_t>(count)) & 0xff;
-    //    std::memcpy(ptr, buf, count);
-    //  }
-    //  ~QueueItem(void) { delete [] m_buf; }
-    //};
-    //typedef std::deque<QueueItem*> TxQueue;
-
-    //TxQueue               m_txq;
     State                   m_state;
     std::string             m_row;
     Request                 m_req;

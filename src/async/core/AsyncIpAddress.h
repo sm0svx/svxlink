@@ -9,7 +9,7 @@ Rigt now it can only handle IPv4 addresses.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2022 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -176,7 +176,13 @@ class IpAddress
      * @return  The IP address string
      */
     std::string toString(void) const;
-    
+
+    /**
+     * @brief   Set the IP address
+     * @param   addr The IP address to set
+     */
+    void setIp(const Ip4Addr& addr) { m_addr = addr; }
+
     /**
      * @brief   Set the IP address from a string
      * @param   str The string to parse (e.g. "192.168.0.1")
