@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <sstream>
 #include <future>
+#include <netdb.h>
 
 
 /****************************************************************************
@@ -165,6 +166,8 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
       int                 notifier_wr         = -1;
       unsigned char       answer[NS_PACKETSZ];
       int                 anslen              = 0;
+      struct addrinfo*    addrinfo            = nullptr;
+      char                host[NI_MAXHOST]    = {0};
       std::ostringstream  thread_cerr;
     };
 
