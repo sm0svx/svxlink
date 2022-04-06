@@ -1041,8 +1041,11 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
 void SipLogic::onMessageInfo(sip::_Call *call, pj::OnInstantMessageParam &prm)
 {
   std::string body = prm.msgBody;
-  std::string message = prm.rdata;
+  SipRxData message = prm.rdata;
   std::string contactUri = prm.contactUri;
+  stringstream ss;
+  ss << "text_message_received " << message.wholeMsg;
+  processEvent(ss.str());
   // ToDO
 } /* SipLogic::onMessageInfo */
 
