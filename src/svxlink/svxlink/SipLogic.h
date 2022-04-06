@@ -203,6 +203,7 @@ class SipLogic : public LogicBase
     Async::AudioSelector      *selector;
     bool                      semi_duplex;
     float                     sip_preamp_gain;
+    std::string               m_autoconnect;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -212,6 +213,7 @@ class SipLogic : public LogicBase
     bool setAudioCodec(const std::string& codec_name);
     void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
+    void onMessageInfo(sip::_Call *call, pj::OnInstantMessageParam &prm);
     void hangupCalls(std::vector<sip::_Call *> calls);
     void hangupCall(sip::_Call *call);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
