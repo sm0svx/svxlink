@@ -88,7 +88,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "02042022"
+#define PJSIP_VERSION "10042022"
 
 
 /****************************************************************************
@@ -124,7 +124,7 @@ namespace sip {
       {
         onMessage(this, prm);
       }
-      
+
       /**
        * This structure contains parameters for Call::onDtmfDigit() callback.
          string pj::OnDtmfDigitParam::digit
@@ -141,7 +141,7 @@ namespace sip {
        * This structure contains parameters for Call::onCallState() callback.
        **/
       sigc::signal<void, sip::_Call*, pj::OnCallStateParam&> onCall;
-      
+
       /**
        * This structure contains parameters for Call::onMessage() callback
        **/
