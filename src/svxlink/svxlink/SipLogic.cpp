@@ -709,6 +709,8 @@ bool SipLogic::initialize(void)
   event_handler = new EventHandler(event_handler_str, name());
   event_handler->setVariable("is_core_event_handler", "1");
   event_handler->setVariable("logic_name", name().c_str());
+  event_handler->setVariable("sip_ctrl_pty", dtmf_ctrl_pty_path);
+
   event_handler->playFile.connect(mem_fun(*this, &SipLogic::playFile));
   event_handler->playSilence.connect(mem_fun(*this, &SipLogic::playSilence));
   event_handler->playTone.connect(mem_fun(*this, &SipLogic::playTone));
