@@ -312,7 +312,7 @@ class TcpPrioClientBase : public TcpClientBase
      * when a connection has been established. The overriding function should
      * normally call this function.
      */
-    virtual void connectionEstablished(void);
+    virtual void connectionEstablished(void) override;
 
     /**
      * @brief   Called when a connection has been terminated

@@ -176,9 +176,17 @@ class TcpClientBase : virtual public sigc::trackable
      * @return  Returns the name of the remote host
      *
      * This function return the name of the remote host as it was given to the
-     * connect call.
+     * connect call. If an IP address was used the text representation of that
+     * will be returned.
      */
-    const std::string& remoteHostName(void) const { return remote_host; }
+    std::string remoteHostName(void) const
+    {
+      if (!dns.label().empty())
+      {
+        return dns.label();
+      }
+      return con->remoteHost().toString();
+    }
 
     /**
      * @brief   Bind to the interface having the specified IP address
@@ -200,7 +208,7 @@ class TcpClientBase : virtual public sigc::trackable
      * This function will initiate a connection to the remote host. The
      * connection must not be written to before the connected signal
      * (see @ref TcpClient::connected) has been emitted. If the connection is
-     * already established or pending, nothing will be done.
+     * already established or pending, an assertion will be raised.
      */
     void connect(const std::string &remote_host, uint16_t remote_port);
 
@@ -212,7 +220,7 @@ class TcpClientBase : virtual public sigc::trackable
      * This function will initiate a connection to the remote host. The
      * connection must not be written to before the connected signal
      * (see @ref TcpClient::connected) has been emitted. If the connection is
-     * already established or pending, nothing will be done.
+     * already established or pending, an assertion will be raised.
      */
     void connect(const Async::IpAddress& remote_ip, uint16_t remote_port);
 
@@ -222,7 +230,7 @@ class TcpClientBase : virtual public sigc::trackable
      * This function will initiate a connection to the remote host. The
      * connection must not be written to before the connected signal
      * (see @ref TcpClient::connected) has been emitted. If the connection is
-     * already established or pending, nothing will be done.
+     * already established or pending, an assertion will be raised.
      */
     void connect(void);
 
@@ -241,8 +249,12 @@ class TcpClientBase : virtual public sigc::trackable
      *
      * A connection being idle means that it is not connected nor connecting.
      */
-    bool isIdle(void) const { return (sock == -1); }
+    bool isIdle(void) const { return !dns.isPending() && (sock == -1); }
 
+    /**
+     * @brief   Return the connection object for this client connection
+     * @return  Returns the connection object
+     */
     TcpConnection* conObj(void) { return con; }
 
     /**
@@ -279,7 +291,6 @@ class TcpClientBase : virtual public sigc::trackable
   private:
     TcpConnection *   con;
     DnsLookup         dns;
-    std::string       remote_host;
     int       	      sock;
     FdWatch           wr_watch;
     Async::IpAddress  bind_ip;
