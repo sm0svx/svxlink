@@ -190,7 +190,7 @@ class TcpClient : public ConT, public TcpClientBase
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    virtual void disconnect(void) { closeConnection(); }
+    virtual void disconnect(void) override { closeConnection(); }
 
     /**
      * @brief   Check if the connection is idle
@@ -210,7 +210,7 @@ class TcpClient : public ConT, public TcpClientBase
      * This function is used internally to close the connection to the remote
      * peer.
      */
-    virtual void closeConnection(void)
+    virtual void closeConnection(void) override
     {
       ConT::closeConnection();
       TcpClientBase::closeConnection();

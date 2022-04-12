@@ -206,7 +206,7 @@ class FramedTcpConnection : public TcpConnection
                  std::vector<uint8_t>&> frameReceived;
 
   protected:
-    sigc::signal<int, FramedTcpConnection *, void *, int> dataReceived;
+    sigc::signal<int, TcpConnection*, void*, int> dataReceived;
     sigc::signal<void, bool> sendBufferFull;
 
     /**
@@ -242,10 +242,14 @@ class FramedTcpConnection : public TcpConnection
      */
     virtual int onDataReceived(void *buf, int count) override;
 
+    /**
+     * @brief   Emit the disconnected signal
+     * @param   reason The reason for the disconnection
+     */
     virtual void emitDisconnected(DisconnectReason reason) override
     {
-      TcpConnection::emitDisconnected(reason);
       disconnected(this, reason);
+      TcpConnection::emitDisconnected(reason);
     }
 
   private:
