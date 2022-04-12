@@ -127,6 +127,8 @@ HttpServerConnection::HttpServerConnection(
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
     m_state(STATE_EXPECT_START_LINE), m_chunked(false)
 {
+  TcpConnection::sendBufferFull.connect(
+      sigc::mem_fun(*this, &HttpServerConnection::onSendBufferFull));
 } /* HttpServerConnection::HttpServerConnection */
 
 
@@ -203,10 +205,9 @@ bool HttpServerConnection::write(const Response& res)
 {
   std::ostringstream os;
   os << "HTTP/1.1 " << res.code() << " " << codeToString(res.code()) << "\r\n";
-  for (std::map<std::string, std::string>::const_iterator it=res.headers().begin();
-       it!=res.headers().end(); ++it)
+  for (const auto& header : res.headers())
   {
-    os << (*it).first << ": " << (*it).second << "\r\n";
+    os << header.first << ": " << header.second << "\r\n";
   }
   if (m_chunked)
   {
@@ -256,7 +257,6 @@ bool HttpServerConnection::write(const char* buf, int len)
 
 void HttpServerConnection::closeConnection(void)
 {
-  //std::cout << "### HttpServerConnection::closeConnection" << std::endl;
   disconnectCleanup();
   TcpConnection::closeConnection();
 } /* HttpServerConnection::closeConnection */
@@ -264,10 +264,8 @@ void HttpServerConnection::closeConnection(void)
 
 void HttpServerConnection::onDisconnected(DisconnectReason reason)
 {
-  //cout << "### HttpServerConnection::onDisconnected: "
-  //     << TcpConnection::disconnectReasonStr(reason) << "\n";
   disconnectCleanup();
-  disconnected(this, reason);
+  TcpConnection::onDisconnected(reason);
 } /* HttpServerConnection::onDisconnected */
 
 

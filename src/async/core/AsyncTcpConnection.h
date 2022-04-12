@@ -235,7 +235,6 @@ class TcpConnection : virtual public sigc::trackable
      * @return  Returns \em true if the connection is idle
      *
      * A connection being idle means that it is not connected
-     * NOTE: This function is overridden in Async::TcpClient.
      */
     bool isIdle(void) const { return sock == -1; }
     
@@ -321,8 +320,7 @@ class TcpConnection : virtual public sigc::trackable
      */
     virtual void onDisconnected(DisconnectReason reason)
     {
-      //std::cout << "### TcpConnection::onDisconnected" << std::endl;
-      disconnected(this, reason);
+      emitDisconnected(reason);
     }
 
     /**
@@ -344,6 +342,10 @@ class TcpConnection : virtual public sigc::trackable
       return dataReceived(this, buf, count);
     }
 
+    /**
+     * @brief   Emit the disconnected signal
+     * @param   reason The reason for the disconnection
+     */
     virtual void emitDisconnected(DisconnectReason reason)
     {
       disconnected(this, reason);

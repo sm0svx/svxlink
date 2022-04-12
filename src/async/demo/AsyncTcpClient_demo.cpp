@@ -2,7 +2,6 @@
 #include <AsyncCppApplication.h>
 #include <AsyncTcpClient.h>
 
-using namespace std;
 using namespace Async;
 
 class MyClass : public sigc::trackable
@@ -10,38 +9,41 @@ class MyClass : public sigc::trackable
   public:
     MyClass(void)
     {
-      con = new TcpClient<>("www.linux.org", 80);
-      con->connected.connect(mem_fun(*this, &MyClass::onConnected));
-      con->disconnected.connect(mem_fun(*this, &MyClass::onDisconnected));
-      con->dataReceived.connect(mem_fun(*this, &MyClass::onDataReceived));
-      con->connect();
-    }
-    
-    ~MyClass(void)
-    {
-      delete con;
+      con.connected.connect(mem_fun(*this, &MyClass::onConnected));
+      con.disconnected.connect(mem_fun(*this, &MyClass::onDisconnected));
+      con.dataReceived.connect(mem_fun(*this, &MyClass::onDataReceived));
+      con.connect("www.svxlink.org", 80);
     }
 
   private:
-    TcpClient<>* con;
-    
+    TcpClient<> con;
+
     void onConnected(void)
     {
-      cout << "Connection established to " << con->remoteHost() << "...\n";
-      con->write("GET /\n", 6);
+      std::cout << "--- Connection established to " << con.remoteHost()
+                << std::endl;
+      std::string req(
+          "GET / HTTP/1.0\r\n"
+          "Host: " + con.remoteHostName() + "\r\n"
+          "\r\n");
+      std::cout << "--- Sending request:\n" << req << std::endl;
+      con.write(req.data(), req.size());
     }
-    
-    void onDisconnected(TcpConnection *con, TcpClient<>::DisconnectReason reason)
+
+    void onDisconnected(TcpConnection *, TcpClient<>::DisconnectReason reason)
     {
-      cout << "Disconnected from " << con->remoteHost() << "...\n";
+      std::cout << "--- Disconnected from " << con.remoteHost() << ": "
+                << TcpConnection::disconnectReasonStr(reason)
+                << std::endl;
       Application::app().quit();
     }
-    
-    int onDataReceived(TcpConnection *con, void *buf, int count)
+
+    int onDataReceived(TcpConnection *, void *buf, int count)
     {
-      char *str = static_cast<char *>(buf);
-      string html(str, str+count);
-      cout << html;
+      std::cout << "--- Data received:" << std::endl;
+      const char *str = static_cast<char *>(buf);
+      std::string html(str, str+count);
+      std::cout << html;
       return count;
     }
 };

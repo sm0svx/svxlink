@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,8 +36,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
-#include <iostream>
+#include <arpa/inet.h>
 #include <stdio.h>
+
+#include <iostream>
 #include <algorithm>
 #include <cassert>
 
@@ -50,7 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncFdWatch.h>
 #include <AsyncApplication.h>
-#include <AsyncFramedTcpConnection.h>
 
 
 /****************************************************************************
@@ -95,9 +96,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace {
-void delete_connection(TcpConnection *con);
-};
 
 
 /****************************************************************************
@@ -105,7 +103,6 @@ void delete_connection(TcpConnection *con);
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -305,7 +302,7 @@ void TcpServerBase::removeConnection(TcpConnection *con)
   it = find(tcpConnectionList.begin(), tcpConnectionList.end(), con);
   assert(it != tcpConnectionList.end());
   tcpConnectionList.erase(it);
-  Application::app().runTask(sigc::bind(sigc::ptr_fun(&delete_connection), con));
+  Application::app().runTask([=]{ delete con; });
 } /* TcpServerBase::onDisconnected */
 
 
@@ -379,11 +376,6 @@ void TcpServerBase::onConnection(FdWatch *watch)
   createConnection(client_sock, IpAddress(client.sin_addr),
                    ntohs(client.sin_port));
 } /* TcpServerBase::onConnection */
-
-
-namespace {
-  void delete_connection(TcpConnection *con) { delete con; }
-};
 
 
 /*

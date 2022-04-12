@@ -127,6 +127,8 @@ FramedTcpConnection::FramedTcpConnection(
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
     m_max_frame_size(DEFAULT_MAX_FRAME_SIZE), m_size_received(false)
 {
+  TcpConnection::sendBufferFull.connect(
+      sigc::mem_fun(*this, &FramedTcpConnection::onSendBufferFull));
 } /* FramedTcpConnection::FramedTcpConnection */
 
 
@@ -221,7 +223,6 @@ int FramedTcpConnection::write(const void *buf, int count)
 
 void FramedTcpConnection::closeConnection(void)
 {
-  //cout << "### FramedTcpConnection::closeConnection\n";
   disconnectCleanup();
   TcpConnection::closeConnection();
 } /* FramedTcpConnection::closeConnection */
@@ -229,11 +230,8 @@ void FramedTcpConnection::closeConnection(void)
 
 void FramedTcpConnection::onDisconnected(DisconnectReason reason)
 {
-  //cout << "### FramedTcpConnection::onDisconnected: "
-  //     << TcpConnection::disconnectReasonStr(reason) << "\n";
   disconnectCleanup();
   TcpConnection::onDisconnected(reason);
-  disconnected(this, reason);
 } /* FramedTcpConnection::onDisconnected */
 
 
@@ -257,7 +255,7 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       if (m_frame_size > m_max_frame_size)
       {
         closeConnection();
-        disconnected(this, DR_PROTOCOL_ERROR);
+        onDisconnected(DR_PROTOCOL_ERROR);
         return orig_count - count;
       }
       m_frame.clear();

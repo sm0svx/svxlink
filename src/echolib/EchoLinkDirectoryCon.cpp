@@ -218,7 +218,7 @@ bool DirectoryCon::isIdle(void) const
   Proxy *proxy = Proxy::instance();
   if (proxy == 0)
   {
-    return is_ready && !client->isConnected();
+    return is_ready && client->isIdle();
   }
   else
   {
