@@ -157,7 +157,17 @@ class NetTrxTcpClient : public Async::TcpClient<>
      * @brief Get the reason for the last disconnect
      */
     DiscReason disconnectReason(void) const { return disc_reason; }
-    
+
+    /**
+     * @brief 	Connect to the remote host
+     *
+     * This function will initiate a connection to the remote host. The
+     * connection must not be written to before the connected signal
+     * (see @ref TcpClient::connected) has been emitted. If the connection is
+     * already established or pending, nothing will happen.
+     */
+    void connect(void);
+
     /**
      * @brief A signal that is emitted when the connection to the remote side
      *        is ready for operation
