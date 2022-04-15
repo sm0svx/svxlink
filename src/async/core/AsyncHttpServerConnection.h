@@ -323,10 +323,14 @@ class HttpServerConnection : public TcpConnection
      */
     virtual int onDataReceived(void *buf, int count) override;
 
+    /**
+     * @brief   Emit the disconnected signal
+     * @param   reason The reason for the disconnection
+     */
     virtual void emitDisconnected(DisconnectReason reason) override
     {
-      TcpConnection::emitDisconnected(reason);
       disconnected(this, reason);
+      TcpConnection::emitDisconnected(reason);
     }
 
   private:

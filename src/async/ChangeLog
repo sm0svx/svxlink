@@ -52,12 +52,15 @@
   VARNAME=88.5:-1,136.5:1. It is also possible to use other key/value
   separators.
 
-* New class Async::StateMachine used to build Hierarchial Finate State
+* New class Async::StateMachine used to build Hierarchical Finite State
   Machines.
 
 * New class Async::TcpPrioClient for handling pools of servers to connect to.
   The pool members can be specified using DNS SRV records or locally using the
   HOSTS configuration variable.
+
+* Slightly changed semantics of the TcpClient::connect functions. It's now
+  not allowed to call the connect function if already connected.
 
 
 

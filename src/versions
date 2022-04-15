@@ -5,16 +5,16 @@ PROJECT=master
 QTEL=1.2.4.99.5
 
 # Version for the EchoLib library
-LIBECHOLIB=1.3.3.99.1
+LIBECHOLIB=1.3.3.99.2
 
 # Version for the Async library
-LIBASYNC=1.6.99.19
+LIBASYNC=1.6.99.21
 
 # SvxLink versions
-SVXLINK=1.7.99.64
+SVXLINK=1.7.99.67
 MODULE_HELP=1.0.0
 MODULE_PARROT=1.1.1
-MODULE_ECHO_LINK=1.5.99.2
+MODULE_ECHO_LINK=1.5.99.3
 MODULE_TCL=1.0.1
 MODULE_PROPAGATION_MONITOR=1.0.1
 MODULE_TCL_VOICE_MAIL=1.0.2
@@ -25,7 +25,7 @@ MODULE_FRN=1.1.0
 MODULE_TRX=1.0.0
 
 # Version for the RemoteTrx application
-REMOTE_TRX=1.3.99.8
+REMOTE_TRX=1.3.99.9
 
 # Version for the signal level calibration utility
 SIGLEV_DET_CAL=1.0.7.99.5
@@ -37,7 +37,7 @@ DEVCAL=1.0.2.99.6
 SVXSERVER=0.0.6
 
 # Version for SvxReflector
-SVXREFLECTOR=1.99.14
+SVXREFLECTOR=1.99.15
 
 # Version for Usrp support
 USRPSUPPORT=0.0.1.2

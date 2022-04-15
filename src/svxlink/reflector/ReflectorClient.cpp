@@ -656,12 +656,15 @@ void ReflectorClient::handleStateEvent(std::istream& is)
  //      << std::endl;
   
   Json::Value eventmessage;
-  Json::Reader reader;
-  bool b = reader.parse(msg.msg(), eventmessage);
-  if (!b)
+  Json::CharReaderBuilder rbuilder;
+  std::unique_ptr<Json::CharReader> const reader(rbuilder.newCharReader());
+  std::string jsonReaderError;
+
+  if (!reader->parse(msg.msg().c_str(), msg.msg().c_str() + msg.msg().size(),
+              &eventmessage, &jsonReaderError))
   {
     cout << "*** Error: parsing StateEvent message (" 
-         << reader.getFormattedErrorMessages() << ")" << endl;
+         << jsonReaderError << ")" << endl;
     return;
   }
 

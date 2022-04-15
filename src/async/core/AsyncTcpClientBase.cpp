@@ -135,13 +135,16 @@ TcpClientBase::TcpClientBase(TcpConnection *con)
 
 TcpClientBase::TcpClientBase(TcpConnection *con, const string& remote_host,
                              uint16_t remote_port)
-  : con(con), remote_host(remote_host), sock(-1)
+  : con(con), sock(-1)
 {
   IpAddress ip_addr(remote_host);
   if (!ip_addr.isEmpty())
   {
     con->setRemoteAddr(ip_addr);
-    this->remote_host = ip_addr.toString();
+  }
+  else
+  {
+    dns.setLookupParams(remote_host);
   }
   con->setRemotePort(remote_port);
   wr_watch.activity.connect(mem_fun(*this, &TcpClientBase::connectHandler));
@@ -151,7 +154,7 @@ TcpClientBase::TcpClientBase(TcpConnection *con, const string& remote_host,
 
 TcpClientBase::TcpClientBase(TcpConnection *con, const IpAddress& remote_ip,
                              uint16_t remote_port)
-  : con(con), remote_host(remote_ip.toString()), sock(-1)
+  : con(con), sock(-1)
 {
   con->setRemoteAddr(remote_ip);
   con->setRemotePort(remote_port);
@@ -173,9 +176,6 @@ TcpClientBase& TcpClientBase::operator=(TcpClientBase&& other)
 
   dns = std::move(other.dns);
 
-  remote_host = other.remote_host;
-  other.remote_host.clear();
-
   sock = other.sock;
   other.sock = -1;
 
@@ -196,12 +196,17 @@ void TcpClientBase::setBindIp(const IpAddress& bind_ip)
 
 void TcpClientBase::connect(const string &remote_host, uint16_t remote_port)
 {
-  this->remote_host = remote_host;
+  assert(isIdle() && con->isIdle());
+
   IpAddress ip_addr(remote_host);
   if (!ip_addr.isEmpty())
   {
     con->setRemoteAddr(ip_addr);
-    this->remote_host = ip_addr.toString();
+    dns.setLookupParams("");
+  }
+  else
+  {
+    dns.setLookupParams(remote_host);
   }
   con->setRemotePort(remote_port);
   connect();
@@ -210,33 +215,22 @@ void TcpClientBase::connect(const string &remote_host, uint16_t remote_port)
 
 void TcpClientBase::connect(const IpAddress& remote_ip, uint16_t remote_port)
 {
+  assert(isIdle() && con->isIdle());
+
   con->setRemoteAddr(remote_ip);
-  remote_host = remote_ip.toString();
   con->setRemotePort(remote_port);
+  dns.setLookupParams("");
   connect();
 } /* TcpClientBase::connect */
 
 
 void TcpClientBase::connect(void)
 {
-  //std::cout << "### TcpClientBase::connect:"
-  //  << " dns.isPending()=" << dns.isPending()
-  //  << " sock=" << sock
-  //  << " con->socket()=" << con->socket()
-  //  << std::endl;
+  assert(isIdle() && con->isIdle());
 
-    // Do nothing if DNS lookup is pending, connection is pending or if the
-    // connection is already established
-  if (dns.isPending() || (sock != -1) || (con->socket() != -1))
+  if (!dns.label().empty())
   {
-    return;
-  }
-
-  if (con->remoteHost().isEmpty() ||
-      (remote_host != con->remoteHost().toString()))
-  {
-    assert(!remote_host.empty());
-    dns.lookup(remote_host);
+    dns.lookup();
   }
   else
   {
@@ -244,6 +238,13 @@ void TcpClientBase::connect(void)
   }
 } /* TcpClientBase::connect */
 
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
 
 void TcpClientBase::closeConnection(void)
 {
@@ -262,40 +263,33 @@ void TcpClientBase::closeConnection(void)
 
 /****************************************************************************
  *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
  * Private member functions
  *
  ****************************************************************************/
 
 void TcpClientBase::dnsResultsReady(DnsLookup& dns_lookup)
 {
-  //std::cout << "### TcpClientBase::dnsResultsReady" << std::endl;
-  vector<IpAddress> result = dns.addresses();
-
-  if (result.empty() || result[0].isEmpty())
+  for (const auto& addr : dns.addresses())
   {
-    closeConnection();
-    con->onDisconnected(TcpConnection::DR_HOST_NOT_FOUND);
-    return;
+    if (!addr.isEmpty())
+    {
+      con->setRemoteAddr(addr);
+      connectToRemote();
+      return;
+    }
   }
-  
-  con->setRemoteAddr(result[0]);
-  
-  connectToRemote();
+
+  closeConnection();
+  con->onDisconnected(TcpConnection::DR_HOST_NOT_FOUND);
 } /* TcpClientBase::dnsResultsReady */
 
 
 void TcpClientBase::connectToRemote(void)
 {
   assert(sock == -1);
-  
+  assert(!con->remoteHost().isEmpty());
+  assert(con->remotePort() > 0);
+
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;

@@ -425,8 +425,9 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
     int ret = ns_initparse(ctx.answer, ctx.anslen, &msg);
     if (ret == -1)
     {
-      strerror_r(ret, errbuf, sizeof(errbuf));
-      std::cerr << "*** WARNING: ns_initparse failed: " << errbuf << std::endl;
+      strerror_r(errno, errbuf, sizeof(errbuf));
+      std::cerr << "*** WARNING: ns_initparse failed (anslen="
+                << ctx.anslen << "): " << errbuf << std::endl;
       setLookupFailed();
       workerDone();
       return;

@@ -269,7 +269,8 @@ class TcpPrioClientBase::Machine
 
       void emitConnected(void)
       {
-        client->emitConnected();
+        //client->emitConnected();
+        client->TcpClientBase::connectionEstablished();
       }
 
       bool isIdle(void) const
@@ -277,7 +278,7 @@ class TcpPrioClientBase::Machine
         return client->isIdle();
       }
 
-      const std::string& remoteHostName(void) const
+      std::string remoteHostName(void) const
       {
         return client->remoteHostName();
       }

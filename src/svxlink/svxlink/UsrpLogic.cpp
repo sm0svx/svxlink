@@ -656,7 +656,9 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                 count-USRP_HEADER_LEN);
 
       uint32_t ti = time(NULL);
-      Json::Reader reader;
+      Json::CharReaderBuilder rbuilder;
+      std::unique_ptr<Json::CharReader> const reader(rbuilder.newCharReader());
+      std::string jsonReaderError;
       Json::Value value;
       Json::Value event(Json::arrayValue);
       Json::Value userinfo(Json::objectValue);
@@ -692,7 +694,14 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
             }
         */
         metadata.erase(0,5); // remove "INFO:"
-        if (reader.parse(metadata,value))
+        if (!reader->parse(metadata.c_str(), metadata.c_str() + metadata.size(), 
+              &value, &jsonReaderError))
+        {
+          cout << "*** ERROR: Failed to parse json: " 
+               << jsonReaderError << endl;
+          return;
+        }
+        else
         {
           m_last_call = value["digital"]["call"].asString();
           m_last_tg = atoi(value["digital"]["tg"].asString().c_str());
@@ -781,12 +790,15 @@ void UsrpLogic::handleSettingsMsg(std::string infomsg)
 void UsrpLogic::handleMetaData(std::string metadata)
 {
   Json::Value user_arr;
-  Json::Reader reader;
-  bool b = reader.parse(metadata, user_arr);
-  if (!b)
+  Json::CharReaderBuilder rbuilder;
+  std::unique_ptr<Json::CharReader> const reader(rbuilder.newCharReader());
+  std::string jsonReaderError;
+
+  if (!reader->parse(metadata.c_str(), metadata.c_str() + metadata.size(), 
+       &user_arr, &jsonReaderError))
   {
     cout << "*** Error: parsing StateEvent message ("
-         << reader.getFormattedErrorMessages() << ")" << endl;
+         << jsonReaderError << ")" << endl;
     return;
   }
 
@@ -1072,14 +1084,17 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
   if (!share_userinfo) return;
 
   Json::Value user_arr;
-  Json::Reader reader;
-  bool b = reader.parse(msg, user_arr);
-  if (!b)
+  Json::CharReaderBuilder rbuilder;
+  std::unique_ptr<Json::CharReader> const reader(rbuilder.newCharReader());
+  std::string jsonReaderError;
+  
+  if (!reader->parse(msg.c_str(), msg.c_str() + msg.size(), &user_arr,
+                 &jsonReaderError))
   {
     if (debug >= LOGERROR)
     {
       cout << "*** Error: parsing StateEvent message (" 
-           << reader.getFormattedErrorMessages() << ")" << endl;
+           << jsonReaderError << ")" << endl;
     }
     return;
   }
