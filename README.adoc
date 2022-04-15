@@ -1,3 +1,21 @@
+pjSipLogic
+
+Provides a Sip client to connect to a Sip server like Asterisk, Allstar or a simple dsl router with Sip functionality.
+
+Requirements:
+- pjsip in version 2.10(!) from https://www.pjsip.org/ with later versions I get linker errors
+- install pjsip first befor continue with SvxLink:
+  wget https://github.com/pjsip/pjproject/archive/2.10.tar.gz
+  tar -xzvf 2.10.tar.gz
+  cd project-2.10
+  ./configure --disable-libwebrtc --disable-video
+  make dep;make
+  sudo make install
+
+Documentation:
+- manpage svxlink.conf.5
+- German pdf is available here: https://github.com/dl1hrc/documentation
+
 SvxLink
 =======
 
