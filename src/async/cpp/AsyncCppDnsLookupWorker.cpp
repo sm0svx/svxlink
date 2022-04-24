@@ -181,14 +181,13 @@ bool CppDnsLookupWorker::doLookup(void)
   m_notifier_watch.setFd(fd[0], FdWatch::FD_WATCH_RD);
   m_notifier_watch.setEnabled(true);
 
-  ThreadContext ctx;
-  ctx.label = dns().label();
-  ctx.type = dns().type();
-  ctx.notifier_wr = fd[1];
-  ctx.anslen = 0;
-  ctx.thread_cerr.clear();
-  m_result = std::move(std::async(std::launch::async, workerFunc,
-        std::move(ctx)));
+  m_ctx = std::unique_ptr<ThreadContext>(new ThreadContext);
+  m_ctx->label = dns().label();
+  m_ctx->type = dns().type();
+  m_ctx->notifier_wr = fd[1];
+  m_ctx->anslen = 0;
+  m_ctx->thread_cerr.clear();
+  m_result = std::async(std::launch::async, workerFunc, std::ref(*m_ctx));
 
   return true;
 
@@ -199,13 +198,7 @@ void CppDnsLookupWorker::abortLookup(void)
 {
   if (m_result.valid())
   {
-    const ThreadContext& ctx(m_result.get());
-
-    if (ctx.addrinfo != nullptr)
-    {
-      freeaddrinfo(ctx.addrinfo);
-    }
-    //m_result = std::move(std::future<ThreadContext>());
+    m_result.get();
   }
 
   int fd = m_notifier_watch.fd();
@@ -214,6 +207,8 @@ void CppDnsLookupWorker::abortLookup(void)
     m_notifier_watch.setFd(-1, FdWatch::FD_WATCH_RD);
     close(fd);
   }
+
+  m_ctx.reset();
 } /* CppDnsLookupWorker::abortLookup */
 
 
@@ -239,8 +234,7 @@ void CppDnsLookupWorker::abortLookup(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-CppDnsLookupWorker::ThreadContext CppDnsLookupWorker::workerFunc(
-    CppDnsLookupWorker::ThreadContext ctx)
+void CppDnsLookupWorker::workerFunc(CppDnsLookupWorker::ThreadContext& ctx)
 {
   std::ostream& th_cerr = ctx.thread_cerr;
 
@@ -343,8 +337,6 @@ CppDnsLookupWorker::ThreadContext CppDnsLookupWorker::workerFunc(
 
   close(ctx.notifier_wr);
   ctx.notifier_wr = -1;
-
-  return std::move(ctx);
 } /* CppDnsLookupWorker::workerFunc */
 
 
@@ -370,22 +362,22 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   close(w->fd());
   w->setFd(-1, FdWatch::FD_WATCH_RD);
 
-  const ThreadContext& ctx(m_result.get());
+  m_result.get();
 
-  const std::string& thread_errstr = ctx.thread_cerr.str();
+  const std::string& thread_errstr = m_ctx->thread_cerr.str();
   if (!thread_errstr.empty())
   {
     std::cerr << thread_errstr;
     setLookupFailed();
   }
 
-  if (ctx.type == DnsResourceRecord::Type::A)
+  if (m_ctx->type == DnsResourceRecord::Type::A)
   {
-    if (ctx.addrinfo != nullptr)
+    if (m_ctx->addrinfo != nullptr)
     {
       struct addrinfo *entry;
       std::vector<IpAddress> the_addresses;
-      for (entry = ctx.addrinfo; entry != 0; entry = entry->ai_next)
+      for (entry = m_ctx->addrinfo; entry != 0; entry = entry->ai_next)
       {
         IpAddress ip_addr(
             reinterpret_cast<struct sockaddr_in*>(entry->ai_addr)->sin_addr);
@@ -398,23 +390,23 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
         {
           the_addresses.push_back(ip_addr);
           addResourceRecord(
-              new DnsResourceRecordA(ctx.label, 0, ip_addr));
+              new DnsResourceRecordA(m_ctx->label, 0, ip_addr));
         }
       }
-      freeaddrinfo(ctx.addrinfo);
+      m_ctx.reset();
     }
   }
-  else if (ctx.type == DnsResourceRecord::Type::PTR)
+  else if (m_ctx->type == DnsResourceRecord::Type::PTR)
   {
-    if (ctx.host[0] != '\0')
+    if (m_ctx->host[0] != '\0')
     {
       addResourceRecord(
-          new DnsResourceRecordPTR(ctx.label, 0, ctx.host));
+          new DnsResourceRecordPTR(m_ctx->label, 0, m_ctx->host));
     }
   }
   else
   {
-    if (ctx.anslen == -1)
+    if (m_ctx->anslen == -1)
     {
       workerDone();
       return;
@@ -422,12 +414,12 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 
     char errbuf[256];
     ns_msg msg;
-    int ret = ns_initparse(ctx.answer, ctx.anslen, &msg);
+    int ret = ns_initparse(m_ctx->answer, m_ctx->anslen, &msg);
     if (ret == -1)
     {
       strerror_r(errno, errbuf, sizeof(errbuf));
       std::cerr << "*** WARNING: ns_initparse failed (anslen="
-                << ctx.anslen << "): " << errbuf << std::endl;
+                << m_ctx->anslen << "): " << errbuf << std::endl;
       setLookupFailed();
       workerDone();
       return;
