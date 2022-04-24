@@ -137,6 +137,8 @@ class AtTimer : public sigc::trackable
   public:
     /**
      * @brief   Default constructor
+     *
+     * After default construction the timer will be disabled.
      */
     AtTimer(void);
 
@@ -146,7 +148,7 @@ class AtTimer : public sigc::trackable
      * @param   do_start Set to \em true (default) if the timer should start
      *                   upon creation
      */
-    AtTimer(struct tm &tm, bool do_start=true);
+    explicit AtTimer(struct tm &tm, bool do_start=true);
   
     /**
      * @brief 	Destructor
@@ -202,9 +204,9 @@ class AtTimer : public sigc::trackable
   protected:
     
   private:
-    Timer           m_timer;
+    Timer           m_timer         {-1};
     struct timeval  m_expire_at;
-    int             m_expire_offset;
+    int             m_expire_offset {0};
 
     AtTimer(const AtTimer&);
     AtTimer& operator=(const AtTimer&);
