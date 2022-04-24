@@ -117,7 +117,6 @@ using namespace Async;
  ****************************************************************************/
 
 AtTimer::AtTimer(void)
-  : m_expire_offset(0)
 {
   timerclear(&m_expire_at);
   m_timer.expired.connect(mem_fun(*this, &AtTimer::onTimerExpired));
@@ -125,7 +124,6 @@ AtTimer::AtTimer(void)
 
 
 AtTimer::AtTimer(struct tm &tm, bool do_start)
-  : m_expire_offset(0)
 {
   timerclear(&m_expire_at);
   m_timer.expired.connect(mem_fun(*this, &AtTimer::onTimerExpired));
