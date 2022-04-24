@@ -49,6 +49,7 @@ An example of how to use the StateMachine class
  ****************************************************************************/
 
 #include <AsyncTimer.h>
+#include <AsyncAtTimer.h>
 
 
 /****************************************************************************
@@ -173,6 +174,13 @@ class StateMachine
             static_cast<StateTopBaseT*>(m_state)->timeoutEvent();
             clearTimeout();
           });
+      m_at_timer.expired.connect(
+          [&](AtTimer*)
+          {
+            assert(m_state != nullptr);
+            static_cast<StateTopBaseT*>(m_state)->timeoutAtEvent();
+            clearTimeoutAt();
+          });
     }
 
     /**
@@ -287,13 +295,28 @@ class StateMachine
      *
      * Use this function to set a timeout to occur after the specified number
      * of milliseconds. The timeoutEvent will be issued after the time has
-     * expired. The timeout will be automatically cleared when an exit from a
-     * state occur.
+     * expired.
      */
     void setTimeout(int timeout_ms)
     {
       m_timer.setTimeout(timeout_ms);
       m_timer.setEnable(true);
+    }
+
+    /**
+     * @brief   Set a timeout after which the timeoutAtEvent is issued
+     * @param   tm            The absolute time when the timeout should occur
+     * @param   expire_offset A millisecond offset for the timer expiration
+     *
+     * Use this function to set a timeout to occur at the specified absolute
+     * time, plus or minus the offset value. The time is specified in local
+     * time. The timeoutAtEvent will be issued after the time has expired.
+     */
+    void setTimeoutAt(struct tm& tm, int expire_offset=0)
+    {
+      m_at_timer.setTimeout(tm);
+      m_at_timer.setExpireOffset(expire_offset);
+      m_at_timer.start();
     }
 
     /**
@@ -307,10 +330,22 @@ class StateMachine
       m_timer.setEnable(false);
     }
 
+    /**
+     * @brief   Clear a pending absolute time timeout
+     *
+     * Use this function to immediately cancel a running absolute time timeout
+     * timer. See \ref setTimeoutAt for more information.
+     */
+    void clearTimeoutAt(void)
+    {
+      m_at_timer.stop();
+    }
+
   private:
-    StateTopT*  m_state = nullptr;
-    ContextT*   m_ctx   = nullptr;
-    Timer       m_timer = -1;
+    StateTopT*  m_state     = nullptr;
+    ContextT*   m_ctx       = nullptr;
+    Timer       m_timer     = -1;
+    AtTimer     m_at_timer;
 }; /* StateMachine */
 
 
@@ -380,7 +415,6 @@ class StateBase : public ParentT
     {
       if (dynamic_cast<T*>(to) == nullptr)
       {
-        ParentT::clearTimeout();
         dynamic_cast<T*>(this)->exit();
         ParentT::exitHandler(to);
       }
@@ -438,6 +472,11 @@ class StateBase : public ParentT
     virtual void timeoutEvent(void) override
     {
       assert(!"Async::StateBase: Unhandled timeoutEvent");
+    }
+
+    virtual void timeoutAtEvent(void) override
+    {
+      assert(!"Async::StateBase: Unhandled timeoutAtEvent");
     }
 
 }; /* StateBase */
@@ -508,10 +547,23 @@ class StateTopBase
      *
      * Use this function to set a timeout to occur after the specified number
      * of milliseconds. The timeoutEvent will be issued after the time has
-     * expired. The timeout will be automatically cleared when an exit from a
-     * state occur.
+     * expired.
      */
     void setTimeout(int timeout_ms) { m_sm->setTimeout(timeout_ms); }
+
+    /**
+     * @brief   Set a timeout after which the timeoutAtEvent is issued
+     * @param   tm            The absolute time when the timeout should occur
+     * @param   expire_offset A millisecond offset for the timer expiration
+     *
+     * Use this function to set a timeout to occur at the specified absolute
+     * time, plus or minus the offset value. The time is specified in local
+     * time. The timeoutAtEvent will be issued after the time has expired.
+     */
+    void setTimeoutAt(struct tm& tm, int expire_offset=0)
+    {
+      m_sm->setTimeoutAt(tm, expire_offset);
+    }
 
     /**
      * @brief   Clear a pending timeout
@@ -520,6 +572,14 @@ class StateTopBase
      * \ref setTimeout for more information.
      */
     void clearTimeout(void) { m_sm->clearTimeout(); }
+
+    /**
+     * @brief   Clear a pending absolute time timeout
+     *
+     * Use this function to immediately cancel a running absolute time timeout
+     * timer. See \ref setTimeoutAt for more information.
+     */
+    void clearTimeoutAt(void) { m_sm->clearTimeoutAt(); }
 
     /**
      * @brief   Get the typeid for this state
@@ -555,6 +615,19 @@ class StateTopBase
      * the function called.
      */
     virtual void timeoutEvent(void) = 0;
+
+    /**
+     * @brief   Event function called when an absolute time timeout occurs
+     *
+     * This event function will be called when an absolute time timeout,
+     * previously set up using the setTimeoutAt function, has occurred.
+     *
+     * As all event functions this is a virtual function which work like any
+     * other virtual function in C++. The state which is furtherest down in the
+     * hierarchy, which have the timeoutAtEvent function implemented, will have
+     * the function called.
+     */
+    virtual void timeoutAtEvent(void) = 0;
 
   private:
     StateMachineT* m_sm;
