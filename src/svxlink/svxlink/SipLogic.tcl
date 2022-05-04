@@ -276,7 +276,7 @@ proc remote_reject_call {} {
 # ToDo: Sends a greeting message to the caller via Sip
 #
 proc remote_greeting {} {
-  playMsg "welcome";
+  playMsg "SipLogic" "welcome";
   playSilence 200;
 }
 
@@ -307,6 +307,28 @@ proc call_state_confirmed {caller} {
 # Executed at unknown callstate 
 #
 proc unknown_callstate {caller} {
+}
+
+
+#
+# Executed on imcoming sip message from a connected party
+#
+proc text_message_received {uri message} {
+  puts "Message from $uri received:";
+  puts "$message";
+}
+
+
+#
+#
+#
+#
+# Executed on imcoming sip message from a not connected party over
+# the registered account
+#
+proc account_text_message_received {uri message} {
+  puts "Message from $uri received:";
+  puts "$message";
 }
 
 # end of namespace

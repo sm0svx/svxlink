@@ -209,6 +209,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   output_sel->enableAutoSelect(sink_handler, 0);
   output_sel->addSource(msg_pacer);
   output_sel->enableAutoSelect(msg_pacer, 10);
+
   AudioSource *prev_src = output_sel;
 
 #if INTERNAL_SAMPLE_RATE == 16000

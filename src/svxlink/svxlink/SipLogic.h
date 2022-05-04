@@ -153,31 +153,27 @@ class SipLogic : public LogicBase
      * @brief 	Get the audio pipe source used for reading audio from this logic
      * @return	Returns an audio pipe source object
      */
-    virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
+    virtual Async::AudioSelector *logicConOut(void) { return m_logic_con_out; }
 
     pj_status_t mediaPortGetFrame(pjmedia_port *med_port, pjmedia_frame *put_frame);
     pj_status_t mediaPortPutFrame(pjmedia_port *med_port, pjmedia_frame *put_frame);
 
-    virtual void playFile(const std::string& path);
-    virtual void playSilence(int length);
-    virtual void playTone(int fq, int amp, int len);
-    virtual void playDtmf(const std::string& digits, int amp, int len);    
-    virtual void initCall(const std::string& remote);
-
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
 
-    void processEvent(const std::string& event);
+    void processLogicEvent(const std::string& event);
+    void processSipEvent(const std::string& event);
 
 
   protected:
 
     virtual void allMsgsWritten(void);
+    virtual void initCall(const std::string& remote);
     void checkIdle(void);
 
   private:
     std::string               m_sipserver;
     Async::AudioPassthrough*  m_logic_con_in;
-    Async::AudioSource*       m_logic_con_out;
+    Async::AudioSelector*       m_logic_con_out;
     Async::AudioPassthrough*  m_out_src;
     Async::AudioValve*        m_outto_sip;
     Async::AudioValve*        m_infrom_sip;
@@ -196,14 +192,17 @@ class SipLogic : public LogicBase
     regex_t                   *reject_incoming_regex;
     regex_t   	         	  *accept_outgoing_regex;
     regex_t                   *reject_outgoing_regex;
-    MsgHandler                *msg_handler;
-    EventHandler              *event_handler;
+    MsgHandler                *logic_msg_handler;
+    EventHandler              *logic_event_handler;
     bool                      report_events_as_idle;
     bool                      startup_finished;
-    Async::AudioSelector      *selector;
+    Async::AudioSelector      *logicselector;
     bool                      semi_duplex;
     float                     sip_preamp_gain;
     std::string               m_autoconnect;
+    EventHandler              *sip_event_handler;
+    MsgHandler                *sip_msg_handler;
+    Async::AudioSelector      *sipselector;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -214,6 +213,7 @@ class SipLogic : public LogicBase
     void onDtmfDigit(sip::_Call *call, pj::OnDtmfDigitParam &prm);
     void onCallState(sip::_Call *call, pj::OnCallStateParam &prm);
     void onMessageInfo(sip::_Call *call, pj::OnInstantMessageParam &prm);
+    void onMessage(sip::_Account *acc, pj::OnInstantMessageParam &imprm);
     void hangupCalls(std::vector<sip::_Call *> calls);
     void hangupCall(sip::_Call *call);
     void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
@@ -226,6 +226,15 @@ class SipLogic : public LogicBase
     void flushTimeout(Async::Timer *t=0);
     void onSquelchOpen(bool is_open);
     void unregisterCall(sip::_Call *call);
+
+    void playLogicFile(const std::string& path);
+    void playLogicSilence(int length);
+    void playLogicTone(int fq, int amp, int len);
+    void playLogicDtmf(const std::string& digits, int amp, int len);
+    void playSipFile(const std::string& path);
+    void playSipSilence(int length);
+    void playSipTone(int fq, int amp, int len);
+    void playSipDtmf(const std::string& digits, int amp, int len);
 
 };  /* class SipLogic */
 
