@@ -169,12 +169,22 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
       struct addrinfo*    addrinfo            = nullptr;
       char                host[NI_MAXHOST]    = {0};
       std::ostringstream  thread_cerr;
+
+      ~ThreadContext(void)
+      {
+        if (addrinfo != nullptr)
+        {
+          freeaddrinfo(addrinfo);
+          addrinfo = nullptr;
+        }
+      }
     };
 
-    Async::FdWatch              m_notifier_watch;
-    std::future<ThreadContext>  m_result;
+    Async::FdWatch                  m_notifier_watch;
+    std::future<void>               m_result;
+    std::unique_ptr<ThreadContext>  m_ctx;
 
-    static ThreadContext workerFunc(ThreadContext ctx);
+    static void workerFunc(ThreadContext& ctx);
     void notificationReceived(FdWatch *w);
 
 };  /* class CppDnsLookupWorker */
