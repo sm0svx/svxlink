@@ -311,7 +311,21 @@ proc unknown_callstate {caller} {
 
 
 #
-# Executed on imcoming sip message from a connected party
+# Executed if a PJSIP_INV_STATE_EARLY event occurred
+#
+proc pjsip_state_early {caller} {
+}
+
+
+#
+# Executed if a PJSIP_INV_STATE_NULL event occurred
+#
+proc pjsip_state_null {caller} {
+}
+
+
+#
+# Executed on incoming sip message from a connected party
 #
 proc text_message_received {uri message} {
   puts "Message from $uri received:";
@@ -319,16 +333,20 @@ proc text_message_received {uri message} {
 }
 
 
-#
-#
-#
-#
 # Executed on imcoming sip message from a not connected party over
 # the registered account
 #
 proc account_text_message_received {uri message} {
   puts "Message from $uri received:";
   puts "$message";
+}
+
+
+#
+# Executed if a call is registered
+#
+#
+proc call_registered {caller} {
 }
 
 # end of namespace

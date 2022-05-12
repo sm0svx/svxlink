@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -173,7 +173,7 @@ class SipLogic : public LogicBase
   private:
     std::string               m_sipserver;
     Async::AudioPassthrough*  m_logic_con_in;
-    Async::AudioSelector*       m_logic_con_out;
+    Async::AudioSelector*     m_logic_con_out;
     Async::AudioPassthrough*  m_out_src;
     Async::AudioValve*        m_outto_sip;
     Async::AudioValve*        m_infrom_sip;

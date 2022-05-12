@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "04052022"
+#define PJSIP_VERSION "12052022"
 
 
 /****************************************************************************
@@ -300,8 +300,8 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     accept_outgoing_regex(0), reject_outgoing_regex(0),
     logic_msg_handler(0), logic_event_handler(0), report_events_as_idle(false),
     startup_finished(false), logicselector(0), semi_duplex(false),
-    sip_preamp_gain(0), m_autoconnect(""), sip_event_handler(0), sip_msg_handler(0),
-    sipselector(0)
+    sip_preamp_gain(0), m_autoconnect(""), sip_event_handler(0), 
+    sip_msg_handler(0), sipselector(0)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -828,6 +828,18 @@ bool SipLogic::initialize(void)
  *
  ****************************************************************************/
 
+void SipLogic::initCall(const string& remote)
+{
+  makeCall(acc, remote);
+} /* SipLogic::initCall */
+
+
+void SipLogic::allMsgsWritten(void)
+{
+  //cout << "SipLogic::allMsgsWritten\n";
+} /* SipLogic::allMsgsWritten */
+
+
 void SipLogic::checkIdle(void)
 {
   //setIdle(getIdleState());
@@ -914,6 +926,13 @@ void SipLogic::registerCall(sip::_Call *call)
   call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
   call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
   call->onMessage.connect(mem_fun(*this, &SipLogic::onMessageInfo));
+  
+  pj::CallInfo ci = call->getInfo();
+  std::string caller = getCallerNumber(ci.remoteUri);
+  
+  stringstream ss;
+  ss << "call_registered " << caller;
+  processLogicEvent(ss.str());
 } /* SipLogic::registerCall */
 
 
@@ -1283,12 +1302,6 @@ void SipLogic::onSquelchOpen(bool is_open)
 } /* SipLogic::onSquelchOpen */
 
 
-void SipLogic::allMsgsWritten(void)
-{
-  //cout << "SipLogic::allMsgsWritten\n";
-} /* SipLogic::allMsgsWritten */
-
-
 void SipLogic::processLogicEvent(const string& event)
 {
   if (!startup_finished) return;
@@ -1361,12 +1374,6 @@ void SipLogic::playSipDtmf(const std::string& digits, int amp, int len)
     sip_msg_handler->playSilence(50, report_events_as_idle);
   }
 } /* SipLogic::playSipDtmf */
-
-
-void SipLogic::initCall(const string& remote)
-{
-  makeCall(acc, remote);
-} /* SipLogic::initCall */
 
 
 void SipLogic::unregisterCall(sip::_Call *call)
