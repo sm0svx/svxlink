@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v30032022"
+#define DAPNETVERSION "v19052022"
 
 #define INVALID 0
 
@@ -92,6 +92,7 @@ using namespace SvxLink;
 #define LOGWARN 1
 #define LOGINFO 2
 #define LOGDEBUG 3
+#define LOGTRACE 4
 
 /****************************************************************************
  *
@@ -198,10 +199,7 @@ bool DapNetClient::initialize(void)
         else
         {
           ric2issi[atoi((*slit).c_str())] = issiList;
-          if (debug >= LOGINFO)
-          {
-            cout << "RIC:" << *slit << "=ISSI:" << value << endl;
-          }
+          dapnetLogmessage(LOGINFO, "RIC:" + *slit + "=ISSI:" + value);
         }
       }
     }
@@ -221,10 +219,7 @@ bool DapNetClient::initialize(void)
       {
         cfg.getValue(ric_section, *slit, value);
         ric2rubrics[atoi((*slit).c_str())] = value;
-        if (debug >= LOGINFO)
-        {
-          cout << "RIC:" << *slit << "=rubrics:" << value << endl;
-        }
+        dapnetLogmessage(LOGINFO, "RIC:" + *slit + "=rubrics:" + value);
       }
     }
     
@@ -262,7 +257,7 @@ bool DapNetClient::initialize(void)
     cfg.getValue(name, "DAPNET_WEBPATH", dapnet_webpath);
     if (!cfg.getValue(name, "DAPNET_TXGROUP", txgroup))
     {
-      cout << "+++ Warning: DAPNET_TXGROUP not set, take 'dl-all'." << endl;
+      dapnetLogmessage(LOGWARN, "+++ DAPNET_TXGROUP not set, take 'dl-all'.");
       txgroup = "dl-all";
     }
     dapwebcon = new TcpClient<>(dapnet_webhost, dapnet_webport);
@@ -284,6 +279,8 @@ bool DapNetClient::sendDapMessage(std::string call, std::string message)
   destcall = call;
   destmessage = message;
   
+  dapnetLogmessage(LOGTRACE, "DapNetClient::sendDapMessage: destcall="
+        + destcall + ", message=" + destmessage);
   dapwebcon->connect();
   return true;
 } /* DapNetClient::sendDapMessage */
@@ -305,12 +302,16 @@ bool DapNetClient::sendDapMessage(std::string call, std::string message)
 
 void DapNetClient::onDapnetConnected(void)
 {
-  stringstream ss;
   transform(callsign.begin(), callsign.end(), callsign.begin(), ::tolower);
-  cout << "DAPNET connection established to " << dapcon->remoteHost() << "\n";
-  ss << "[" << DAPNETSOFT << " " << DAPNETVERSION << " " << callsign <<  " " 
+  stringstream log;
+  log << "DAPNET connection established to " << dapcon->remoteHost() << ":"
+      << dapcon->remotePort();
+  dapnetLogmessage(LOGINFO, log.str());
+    
+  stringstream ss;
+  ss << "[" << DAPNETSOFT << " " << DAPNETVERSION << " " << callsign <<  " "
      << dapnet_key << "]\r\n";
-  if (debug >= LOGINFO) cout << ss.str() << endl;
+  dapnetLogmessage(LOGDEBUG, ss.str());
   dapcon->write(ss.str().c_str(), ss.str().length());
   reconnect_timer->setEnable(false);
 } /* DapNetClient::onDapnetConnected */
@@ -319,8 +320,9 @@ void DapNetClient::onDapnetConnected(void)
 void DapNetClient::onDapnetDisconnected(TcpConnection *con, 
                 TcpClient<>::DisconnectReason reason)
 {
-  cout << "Disconnected from Dapnetserver " << con->remoteHost() 
-       << ":" << reason << "\n";
+  stringstream ss;
+  ss << "Disconnected from Dapnetserver " << con->remoteHost() << ":" << reason;
+  dapnetLogmessage(LOGINFO, ss.str());
   reconnect_timer->reset();
   reconnect_timer->setEnable(true);
 } /* DapNetClient::onDapnetDisconnected */
@@ -359,8 +361,8 @@ void DapNetClient::reconnectDapnetServer(Timer *t)
 
 void DapNetClient::onDapwebConnected(void)
 {
-  cout << "connected to Dapnet " << dapnet_webhost <<":" 
-       << dapnet_webport << endl;
+  dapnetLogmessage(LOGINFO, "connected to Dapnet " + dapnet_webhost
+      + ":" + to_string(dapnet_webport));
   
   string auth = dapnet_username;
   auth += ":";
@@ -386,11 +388,7 @@ void DapNetClient::onDapwebConnected(void)
      << "Content-Length: " << clen << "\r\n\r\n" 
      << content.str();
   
-  if (debug >= LOGDEBUG)
-  {
-    cout << ss.str() << endl;
-  }
-
+  dapnetLogmessage(LOGDEBUG, ss.str());
   dapwebcon->write(ss.str().c_str(), ss.str().length());
 } /* DapNetClient::onDapwebConnected */
 
@@ -450,11 +448,8 @@ char* DapNetClient::encodeBase64(const char input_str[], int len_str)
 void DapNetClient::onDapwebDisconnected(TcpConnection *con, 
                 TcpClient<>::DisconnectReason reason)
 {
-  if (debug >= LOGDEBUG)
-  {
-    cout << "+++ disconnected from Dapnetweb, reason=" << reason 
-         << endl;
-  }
+  dapnetLogmessage(LOGDEBUG, "+++ disconnected from Dapnetweb, reason="
+                   + reason);
 } /* DapNetClient::onDapwebDisconnected */
 
 
@@ -463,10 +458,7 @@ int DapNetClient::onDapwebDataReceived(TcpConnection *con, void *buf,
 {
   char *str = static_cast<char *>(buf);
   string message(str, str+count);
-  if (debug >= LOGINFO)
-  {
-    cout << "From DAPNET:" << message << endl;
-  }
+  dapnetLogmessage(LOGINFO, "From DAPNET:" + message);
   return count;
 } /* DapNetClient::onDapwebDataReceived */
 
@@ -505,7 +497,7 @@ void DapNetClient::handleDapMessage(std::string dapmessage)
       break;
 
     default:
-      if (debug >= LOGERROR) cout << "+++ unknown DAPNET message" << dapmessage << endl;
+      dapnetLogmessage(LOGINFO, "+++ unknown DAPNET message:" + dapmessage);
       break;
   }
 } /* DapNetClient::handleDapMessage*/
@@ -526,13 +518,10 @@ void DapNetClient::handleTimeSync(std::string msg)
 
 void DapNetClient::handleDapType4(std::string msg)
 {
-  if (debug >= LOGINFO)
+  msg.erase(0,2);  // erase "4:"
+  for (string::iterator ts = msg.begin(); ts!= msg.end(); ++ts)
   {
-    msg.erase(0,2);  // erase "4:"
-    for (string::iterator ts = msg.begin(); ts!= msg.end(); ++ts)
-    {
-      cout << "+++ DAPNET: registered at time slot " << *ts << endl;
-    }
+    dapnetLogmessage(LOGINFO, "+++ DAPNET: registered at time slot " + *ts);
   }
 } /* DapNetClient::handleDapType4 */
 
@@ -574,11 +563,11 @@ void DapNetClient::handleDapText(std::string msg)
 
     if (ric == 4512 || ric == 4520)
     {
-      if (debug >=LOGDEBUG) cout << "---" << rot1code(t_mesg) << endl; 
+      dapnetLogmessage(LOGDEBUG, "---" + rot1code(t_mesg)); 
     }
     else
     {
-       if (debug >=LOGDEBUG) cout << "---" << t_mesg << endl;
+      dapnetLogmessage(LOGDEBUG, "---" + t_mesg);
     }
 
     std::vector<string>::iterator il;
@@ -587,11 +576,9 @@ void DapNetClient::handleDapText(std::string msg)
     {
       for(il = (iu->second).begin(); il != (iu->second).end(); il++)
       {
-        if (debug >= LOGINFO)
-        {
-          cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet "
-               << "to Tetra (RIC:" << ric << "->ISSI:" << *il << endl;
-        }
+        dapnetLogmessage(LOGINFO, "+++ Forwarding message \"" + t_mesg
+           + "\" from DAPnet to Tetra (RIC:" + to_string(ric) + "->ISSI:"
+           + *il);
         dapnetMessageReceived(*il, t_mesg);
       }
     }
@@ -617,11 +604,9 @@ void DapNetClient::handleDapText(std::string msg)
           {
             for(il = (iu->second).begin(); il != (iu->second).end(); il++)
             {
-              if (debug >= LOGINFO)
-              {
-                cout << "+++ Forwarding message \"" << t_mesg << "\" from DAPnet "
-                 << "to Tetra (RIC:" << ric << "->ISSI:" << *il << endl;
-              }
+              dapnetLogmessage(LOGINFO, "+++ Forwarding message \"" + t_mesg
+                + "\" from DAPnet to Tetra (RIC:" + to_string(ric)
+                + "->ISSI:" + *il);
               dapnetMessageReceived(*il, t_mesg);
             }
           }

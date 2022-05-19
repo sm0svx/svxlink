@@ -147,7 +147,13 @@ class DapNetClient : public Async::TcpClient<>
      * @param msg The received message
      */
     sigc::signal<void, std::string, std::string> dapnetMessageReceived;
-    
+
+    /**
+     * @brief A signal that is emitted when a log message is send
+     * @param msg The received message
+     */
+    sigc::signal<void, uint8_t, std::string> dapnetLogmessage;
+
     /**
      *
      *

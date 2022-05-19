@@ -414,6 +414,7 @@ class TetraLogic : public Logic
     void onPublishStateEvent(const std::string &event_name, const std::string &msg);
     void publishInfo(std::string type, Json::Value event);
     void onDapnetMessage(std::string, std::string message);
+    void onDapnetLogmessage(uint8_t type, std::string message);
     void sendAprs(std::string call, std::string aprsmessage);
     bool checkIfDapmessage(std::string message);
     std::string joinList(std::list<std::string> members);

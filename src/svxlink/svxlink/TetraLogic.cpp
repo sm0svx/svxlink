@@ -632,6 +632,8 @@ bool TetraLogic::initialize(void)
     dapnetclient = new DapNetClient(cfg(), name());
     dapnetclient->dapnetMessageReceived.connect(mem_fun(*this,
                     &TetraLogic::onDapnetMessage));
+    dapnetclient->dapnetLogmessage.connect(mem_fun(*this,
+                    &TetraLogic::onDapnetLogmessage));
     if (!dapnetclient->initialize())
     {
       cerr << "*** ERROR: initializing DAPNET client" << endl;
@@ -2223,6 +2225,12 @@ void TetraLogic::onDapnetMessage(string tsi, string message)
   t_sds.type = TEXT;
   queueSds(t_sds);
 } /* TetraLogic::onDapnetMessage */
+
+
+void TetraLogic::onDapnetLogmessage(uint8_t type, std::string message)
+{
+  log(type, message);
+} /* TetraLogic::onDapnetLogmessage */
 
 
 bool TetraLogic::checkIfDapmessage(std::string message)
