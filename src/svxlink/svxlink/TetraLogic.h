@@ -417,6 +417,7 @@ class TetraLogic : public Logic
     void sendAprs(std::string call, std::string aprsmessage);
     bool checkIfDapmessage(std::string message);
     std::string joinList(std::list<std::string> members);
+    void log(uint8_t type, std::string logmessage);
 
 };  /* class TetraLogic */
 
