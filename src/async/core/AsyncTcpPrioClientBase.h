@@ -170,30 +170,6 @@ class TcpPrioClientBase : public TcpClientBase
     void setReconnectRandomizePercent(unsigned p);
 
     /**
-     * @brief   Minimum time between background reconnects
-     * @param   t Time in milliseconds
-     */
-    void setBgConnectMinTime(unsigned t);
-
-    /**
-     * @brief   Maximum time between background reconnects
-     * @param   t Time in milliseconds
-     */
-    void setBgConnectMaxTime(unsigned t);
-
-    /**
-     * @brief   Percent to increase background reconnect time with each try
-     * @param   p Percent
-     */
-    void setBgConnectBackoffPercent(unsigned p);
-
-    /**
-     * @brief   Percent to randomize background reconnect time
-     * @param   p Percent
-     */
-    void setBgConnectRandomizePercent(unsigned p);
-
-    /**
      * @brief   Use a DNS service resource record for connections
      * @param   srv_name    The name of the service
      * @param   srv_proto   The protocol for the service (e.g. tcp or udp)

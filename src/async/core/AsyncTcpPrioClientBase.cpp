@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 #include <cassert>
 
 
@@ -132,23 +133,6 @@ class TcpPrioClientBase::Machine
       ctx.connect_retry_wait.setRandomizePercent(p);
     }
 
-    void setBgConnectMinTime(unsigned t)
-    {
-      ctx.bg_connect_retry_wait.setMinTime(t);
-    }
-    void setBgConnectMaxTime(unsigned t)
-    {
-      ctx.bg_connect_retry_wait.setMaxTime(t);
-    }
-    void setBgConnectBackoffPercent(unsigned p)
-    {
-      ctx.bg_connect_retry_wait.setBackoffPercent(p);
-    }
-    void setBgConnectRandomizePercent(unsigned p)
-    {
-      ctx.bg_connect_retry_wait.setRandomizePercent(p);
-    }
-
     void setLookupParams(const std::string& label, DnsLookup::Type type)
     {
       ctx.dns.setLookupParams(label, DnsLookup::Type::SRV);
@@ -228,7 +212,7 @@ class TcpPrioClientBase::Machine
         operator Time() { return time(); }
 
       private:
-        Time    m_min_time  = 2000;
+        Time    m_min_time  = 1000;
         Time    m_max_time  = 20000;
         Percent m_backoff   = 50;
         Percent m_randomize = 10;
@@ -247,7 +231,6 @@ class TcpPrioClientBase::Machine
       DnsSRVList                      rrs;
       DnsSRVList::iterator            next_rr                 = rrs.end();
       BackoffTime                     connect_retry_wait;
-      BackoffTime                     bg_connect_retry_wait;
 
       Context(TcpPrioClientBase *client)
         : client(client), bg_con(client->newTcpClient()) {}
@@ -443,6 +426,11 @@ class TcpPrioClientBase::Machine
         setTimeout(ctx().connect_retry_wait);
       }
 
+      void exit(void) noexcept
+      {
+        clearTimeout();
+      }
+
       virtual void timeoutEvent(void) noexcept override
       {
         DEBUG_EVENT;
@@ -493,12 +481,7 @@ class TcpPrioClientBase::Machine
       : Async::StateBase<StateConnected, StateConnectedLowerPrio>
     {
       static constexpr auto NAME = "ConnectedLowerPrio";
-      void entry(void) noexcept
-      {
-        DEBUG_EVENT;
-        ctx().bg_connect_retry_wait.reset();
-      }
-    }; /* StateConnecting */
+    }; /* StateConnectedLowerPrio */
 
 
     struct StateConnectedLowerPrioIdle
@@ -508,10 +491,23 @@ class TcpPrioClientBase::Machine
 
       void entry(void) noexcept
       {
-        setTimeout(ctx().bg_connect_retry_wait.time());
+        struct timeval tv;
+        auto err = gettimeofday(&tv, NULL);
+        assert(err == 0);
+        struct tm tm;
+        time_t timeout_at = tv.tv_sec + 60;
+        auto tm_ret = localtime_r(&timeout_at, &tm);
+        assert(tm_ret == &tm);
+        tm.tm_sec = 0;
+        setTimeoutAt(tm, std::rand() % 500);
       }
 
-      virtual void timeoutEvent(void) noexcept override
+      void exit(void) noexcept
+      {
+        clearTimeoutAt();
+      }
+
+      virtual void timeoutAtEvent(void) noexcept override
       {
         DEBUG_EVENT;
         setState<StateConnectedLowerPrioSRVLookup>();
@@ -680,30 +676,6 @@ void TcpPrioClientBase::setReconnectBackoffPercent(unsigned p)
 void TcpPrioClientBase::setReconnectRandomizePercent(unsigned p)
 {
   m_machine->setReconnectRandomizePercent(p);
-}
-
-
-void TcpPrioClientBase::setBgConnectMinTime(unsigned t)
-{
-  m_machine->setBgConnectMinTime(t);
-}
-
-
-void TcpPrioClientBase::setBgConnectMaxTime(unsigned t)
-{
-  m_machine->setBgConnectMaxTime(t);
-}
-
-
-void TcpPrioClientBase::setBgConnectBackoffPercent(unsigned p)
-{
-  m_machine->setBgConnectBackoffPercent(p);
-}
-
-
-void TcpPrioClientBase::setBgConnectRandomizePercent(unsigned p)
-{
-  m_machine->setBgConnectRandomizePercent(p);
 }
 
 

@@ -40,6 +40,22 @@ if {$logic_name != [namespace tail [namespace current]]} {
 
 
 #
+# A helper function for announcing a talkgroup.
+# If there is an audio clip matching the name talk_group-<tg> it will be played
+# instead of spelling the digits. Look at the documentation for playMsg for
+# more information on where to put the audio clip.
+#
+#   tg - The talkgroup to announce
+#
+proc say_talkgroup {tg} {
+  if [playMsg "Core" "talk_group-$tg" 0] {
+  } else {
+    spellNumber $tg
+  }
+}
+
+
+#
 # Executed when an unknown command is received
 #   cmd - The command string
 #
@@ -69,11 +85,11 @@ proc report_tg_status {} {
     set prev_announce_time [clock seconds]
     set prev_announce_tg $selected_tg
     playMsg "Core" "talk_group"
-    spellNumber $selected_tg
+    say_talkgroup $selected_tg
   } else {
     playMsg "Core" "previous"
     playMsg "Core" "talk_group"
-    spellNumber $previous_tg
+    say_talkgroup $previous_tg
   }
 }
 
@@ -116,7 +132,7 @@ proc tg_local_activation {new_tg old_tg} {
     set prev_announce_tg $new_tg
     playSilence 100
     playMsg "Core" "talk_group"
-    spellNumber $new_tg
+    say_talkgroup $new_tg
   }
 }
 
@@ -143,7 +159,7 @@ proc tg_remote_activation {new_tg old_tg} {
     set prev_announce_tg $new_tg
     playSilence 100
     playMsg "Core" "talk_group"
-    spellNumber $new_tg
+    say_talkgroup $new_tg
   }
 }
 
@@ -175,7 +191,7 @@ proc tg_command_activation {new_tg old_tg} {
   set prev_announce_tg $new_tg
   playSilence 100
   playMsg "Core" "talk_group"
-  spellNumber $new_tg
+  say_talkgroup $new_tg
 }
 
 
@@ -195,7 +211,7 @@ proc tg_default_activation {new_tg old_tg} {
   #  set prev_announce_tg $new_tg
   #  playSilence 100
   #  playMsg "Core" "talk_group"
-  #  spellNumber $new_tg
+  #  say_talkgroup $new_tg
   #}
 }
 
@@ -216,7 +232,7 @@ proc tg_qsy {new_tg old_tg} {
   playSilence 100
   playMsg "Core" "qsy"
   #playMsg "Core" "talk_group"
-  spellNumber $new_tg
+  say_talkgroup $new_tg
 }
 
 
@@ -254,7 +270,7 @@ proc tg_qsy_failed {} {
 proc tg_qsy_pending {tg} {
   playSilence 100
   playMsg "Core" "qsy"
-  spellNumber $tg
+  say_talkgroup $tg
   playMsg "Core" "pending"
 }
 
@@ -269,7 +285,7 @@ proc tg_qsy_ignored {tg} {
   playSilence 100
   if {!$qsy_pending_active} {
     playMsg "Core" "qsy"
-    spellNumber $tg
+    say_talkgroup $tg
   }
   playMsg "Core" "ignored"
   playSilence 500
@@ -337,7 +353,7 @@ proc tmp_monitor_add {tg} {
   #puts "### tmp_monitor_add: $tg"
   playSilence 100
   playMsg "Core" "monitor"
-  spellNumber $tg
+  say_talkgroup $tg
 }
 
 
