@@ -143,7 +143,7 @@ class RtlSdr : public sigc::trackable
     virtual ~RtlSdr(void);
   
     /**
-     * @brief 	Enable printing of distorsion warnings
+     * @brief 	Enable printing of distortion warnings
      * @param 	enable Set to \em true to enable printing
      */
     void enableDistPrint(bool enable);
