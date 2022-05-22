@@ -18,17 +18,43 @@
 # EchoLink, Help, Parrot etc. If a sound is not found in the specified context,
 # a search in the "Default" context is done.
 #
-proc playMsg {context msg} {
+# It's also possible to have local overrides by putting files under a "local"
+# directory either directly under the "sounds" directory or under the language
+# pack directory. For example if context is "Core" and the language is set to
+# "en_US" the following paths will be searched:
+#
+#   .../sounds/en_US/local/Core/
+#   .../sounds/local/Core/
+#   .../sounds/en_US/Core/
+#   .../sounds/en_US/local/Default/
+#   .../sounds/local/Default/
+#   .../sounds/en_US/Default/
+#
+#   context   - The context to look for the sound files in (e.g Default,
+#               Parrot etc).
+#   msg       - The basename of the file to play
+#   warn      - Set to 0 to not print a warning if no sound clip was found
+#
+proc playMsg {context msg {warn 1}} {
   global basedir
   global langdir
 
-  set candidates [glob -nocomplain "$langdir/$context/$msg.{wav,raw,gsm}" \
-                                   "$langdir/Default/$msg.{wav,raw,gsm}"];
-  if { [llength $candidates] > 0 } {
+  set candidates [glob -nocomplain \
+      "$langdir/local/$context/$msg.{wav,raw,gsm}" \
+      "$basedir/sounds/local/$context/$msg.{wav,raw,gsm}" \
+      "$langdir/$context/$msg.{wav,raw,gsm}" \
+      "$langdir/local/Default/$msg.{wav,raw,gsm}" \
+      "$basedir/sounds/local/Default/$msg.{wav,raw,gsm}" \
+      "$langdir/Default/$msg.{wav,raw,gsm}"];
+  if {[llength $candidates] > 0} {
     playFile [lindex $candidates 0];
   } else {
-    puts "*** WARNING: Could not find audio clip \"$msg\" in context \"$context\"";
+    if {$warn} {
+      puts "*** WARNING: Could not find audio clip \"$msg\" in context \"$context\"";
+    }
+    return 0
   }
+  return 1
 }
 
 

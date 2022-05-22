@@ -481,7 +481,7 @@ class TcpPrioClientBase::Machine
       : Async::StateBase<StateConnected, StateConnectedLowerPrio>
     {
       static constexpr auto NAME = "ConnectedLowerPrio";
-    }; /* StateConnecting */
+    }; /* StateConnectedLowerPrio */
 
 
     struct StateConnectedLowerPrioIdle

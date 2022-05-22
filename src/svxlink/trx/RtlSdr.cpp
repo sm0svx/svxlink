@@ -300,7 +300,7 @@ void RtlSdr::handleIq(const complex<uint8_t> *samples, int samp_count)
   {
     if (dist_print_cnt == static_cast<int>(samp_rate))
     {
-      cout << "*** WARNING: Distorsion detected on Rtl tuner "
+      cout << "*** WARNING: Distortion detected on Rtl tuner "
            << displayName() << ". Lower the RF gain\n";
     }
     dist_print_cnt -= samp_count;
@@ -423,7 +423,7 @@ int RtlSdr::dataReceived(Async::TcpConnection *con, void *buf, int count)
   {
     if (dist_print_cnt == static_cast<int>(samp_rate))
     {
-      cout << "*** WARNING: Distorsion detected on RtlSdr tuner "
+      cout << "*** WARNING: Distortion detected on RtlSdr tuner "
            << con->remoteHost() << ":" << con->remotePort() << ". "
            << "Lower the RF gain\n";
     }

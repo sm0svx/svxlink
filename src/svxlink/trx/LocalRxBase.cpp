@@ -136,7 +136,7 @@ class PeakMeter : public AudioPassthrough
       if (i < ret)
       {
       	cout << name
-	     << ": Distorsion detected! Please lower the input volume!\n";
+	     << ": Distortion detected! Please lower the input volume!\n";
       }
       
       return ret;
