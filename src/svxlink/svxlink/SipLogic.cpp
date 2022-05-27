@@ -310,29 +310,9 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
 
 SipLogic::~SipLogic(void)
 {
-  delete m_logic_con_in;
-  m_logic_con_in = 0;
-  delete m_out_src;
-  m_out_src = 0;
-  delete acc;
-  acc = 0;
-  delete dtmf_ctrl_pty;
-  dtmf_ctrl_pty = 0;
-  delete media;
-  media = 0;
-  delete m_ar;
-  m_ar = 0;
-  delete logic_event_handler;
-  logic_event_handler = 0;
-  delete sip_event_handler;
-  sip_event_handler = 0;
-  delete logic_msg_handler;
-  logic_msg_handler = 0;
-  delete sip_msg_handler;
-  sip_msg_handler = 0;
-  delete logicselector;
-  logicselector = 0;
-  calls.clear();
+  startup_finished = false;
+  hangupAllCalls();   calls.clear();
+  m_call_timeout_timer.setEnable(false);
   if (accept_incoming_regex != 0)
   {
     regfree(accept_incoming_regex);
@@ -357,6 +337,17 @@ SipLogic::~SipLogic(void)
     delete reject_outgoing_regex;
     reject_outgoing_regex = 0;
   }
+  delete media;           media = 0;
+  delete acc;             acc = 0;
+  delete m_logic_con_in;  m_logic_con_in = 0;
+  delete m_out_src;       m_out_src = 0;
+  delete dtmf_ctrl_pty;   dtmf_ctrl_pty = 0;
+  delete m_ar;            m_ar = 0;
+  delete logic_event_handler;  logic_event_handler = 0;
+  delete sip_event_handler;    sip_event_handler = 0;
+  delete logic_msg_handler;    logic_msg_handler = 0;
+  delete sip_msg_handler;      sip_msg_handler = 0;
+  delete logicselector;        logicselector = 0;
 } /* SipLogic::~SipLogic */
 
 
@@ -813,9 +804,9 @@ bool SipLogic::initialize(void)
        << ">>> Adi/DL1HRC <dl1hrc@gmx.de> or use the groups.io mailing list"
        << endl;
 
-  // enable the execution of external tcl procedures since it handles start infor-
-  // mation (registrations, ...) too. The sip-startup procedure must beeing
-  // completely finished before the tcl procedures could be started
+  // enable the execution of external tcl procedures since it handles start
+  // information (registrations, ...) too. The sip-startup procedure must
+  // beeing completely finished before the tcl procedures could be started
   startup_finished = true;
 
   return true;
@@ -921,7 +912,6 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 
 void SipLogic::registerCall(sip::_Call *call)
 {
-  calls.push_back(call);
   call->onDtmf.connect(mem_fun(*this, &SipLogic::onDtmfDigit));
   call->onMedia.connect(mem_fun(*this, &SipLogic::onMediaState));
   call->onCall.connect(mem_fun(*this, &SipLogic::onCallState));
@@ -931,8 +921,9 @@ void SipLogic::registerCall(sip::_Call *call)
   std::string caller = getCallerNumber(ci.remoteUri);
   
   stringstream ss;
-  ss << "call_registered " << caller;
+  ss << "call_registered \"" << caller << "\"";
   processLogicEvent(ss.str());
+  calls.push_back(call);
 } /* SipLogic::registerCall */
 
 
@@ -1031,7 +1022,7 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
  */
 pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
-
+  int pos = 0;
   int count = frame->size / 2 / PJMEDIA_PIA_CCNT(&port->info);
 
   if (count > 0)
@@ -1039,11 +1030,14 @@ pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame
     pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
     frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
     float* smpl = new float[count+1]();
-    for (int i=0; i < count; i++)
+    for (int i=pos; i < count; i++)
     {
       smpl[i] = (float) (samples[i] / 32768.0);
     }
-    m_out_src->writeSamples(smpl, count);
+    do {
+      int ret = m_out_src->writeSamples(smpl + pos, count - pos);
+      pos += ret;
+    } while (pos < count);
   }
 
   return PJ_SUCCESS;
@@ -1078,11 +1072,14 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
   }
   else if (ci.state == PJSIP_INV_STATE_DISCONNECTED)    // call disconnected
   {
+    if (!startup_finished) return;
     cout << name()
          << ": Call hangup (" << caller << "), duration "
          << ci.totalDuration.sec << "."
          << ci.totalDuration.msec << " secs" << endl;
-    m_out_src->allSamplesFlushed();
+
+    m_outto_sip->setOpen(false);
+    m_infrom_sip->setOpen(false);
 
     unregisterCall(call);
     ss << "hangup_call " << caller << " "
@@ -1153,6 +1150,17 @@ void SipLogic::onRegState(sip::_Account *acc, pj::OnRegStateParam &prm)
      << ai.regIsActive << " " << prm.code;
   processLogicEvent(ss.str());
 } /* SipLogic::onRegState */
+
+
+void SipLogic::hangupAllCalls(void)
+{
+  CallOpParam prm(true);
+  for (std::vector<sip::_Call *>::iterator it=calls.begin();
+       it != calls.end(); it++)
+  {
+    (*it)->hangup(prm);
+  }  
+} /* SipLogic::hangupAllCalls */
 
 
 // hangup all calls

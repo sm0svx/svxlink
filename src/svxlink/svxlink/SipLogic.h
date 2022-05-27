@@ -226,6 +226,7 @@ class SipLogic : public LogicBase
     void flushTimeout(Async::Timer *t=0);
     void onSquelchOpen(bool is_open);
     void unregisterCall(sip::_Call *call);
+    void hangupAllCalls(void);
 
     void playLogicFile(const std::string& path);
     void playLogicSilence(int length);
