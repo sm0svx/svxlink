@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioCompressor.h>
 #include <AsyncAudioAmp.h>
 #include <AsyncAudioFilter.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -88,7 +89,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "30052022"
+#define PJSIP_VERSION "03062022"
 
 
 /****************************************************************************
@@ -532,6 +533,30 @@ bool SipLogic::initialize(void)
     return false;
   }
 
+  // set Tg's depending on the incoming sip phone number
+  std::string phonenumbers_to_tg;
+  if (cfg().getValue(name(), "PHONENUMBERS_TO_TG", phonenumbers_to_tg))
+  {
+    vector<string> nrlist;
+    SvxLink::splitStr(nrlist, phonenumbers_to_tg, ",");
+    for (vector<string>::const_iterator nr_it = nrlist.begin();
+       nr_it != nrlist.end(); nr_it++)
+    {
+      size_t pos;
+      if ((pos = (*nr_it).find(':')) != string::npos)
+      {
+        std::string r = (*nr_it).substr(0, pos);
+        uint32_t t = atoi((*nr_it).substr(pos+1, (*nr_it).length()-pos).c_str());
+        phoneNrTgVec[r] = t;
+      }
+      else
+      {
+        cout << "+++ WARNING: Wrong format in param " << name()
+             << "/PHONENUMBERS_TO_TG, ignoring." << endl;
+      }
+    }
+  }
+
    // create SipEndpoint - init library
   try {
     pj::EpConfig ep_cfg;
@@ -886,6 +911,17 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 
   std::string caller = getCallerNumber(ci.remoteUri);
 
+  for (std::map<std::string, uint32_t>::const_iterator it = phoneNrTgVec.begin();
+      it != phoneNrTgVec.end(); it++)
+  {
+    size_t pos;
+    if ((pos = caller.find(it->first)) == 0)
+    {
+      uint32_t tg = it->second;
+      setReceivedTg(tg);
+    }
+  }
+
   stringstream ss;
   ss << "ringing \"" << caller << "\"";
   processLogicEvent(ss.str());
@@ -1085,6 +1121,8 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
     ss << "hangup_call " << caller << " "
        << ci.totalDuration.sec << "."
        << ci.totalDuration.msec;
+
+    setReceivedTg(0);
 
     // if no one is connected anymore, call out to autoconnect party
     if (calls.empty() && m_autoconnect.length() > 0)

@@ -870,6 +870,16 @@ a compressor with a very steep compression ratio like 10:1. The limiter is
 used to help keeping down the audio level from Sip network for overmodulating
 stations. Try values from -6 to -12 if the incoming Sip audio is to high. Set
 to 0 to deactivate it.
+.TP
+.B PHONENUMBER_TO_TG
+Comma-separated list of assignments of phonenumber(full||substring):Talkgroup.
+When a phone call is received, the call is assigned to the defined TG according
+to the recognized number. This can be used to prevent the transfer of an SIP
+call to a network or to carry out a country-specific assignment. The number
+format transmitted must match the configuration (+49 != 0049). Whole SIP
+numbers as well as parts of phone numbers can be configured, with the
+evaluation taking place on the left-hand side.
+Example: PHONENUMBER_TO_TG=0049:262,0034:214,0043:232,0049123454543:991
 .
 .SS QSO Recorder Section
 .

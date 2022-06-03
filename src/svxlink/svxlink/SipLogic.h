@@ -203,6 +203,7 @@ class SipLogic : public LogicBase
     EventHandler              *sip_event_handler;
     MsgHandler                *sip_msg_handler;
     Async::AudioSelector      *sipselector;
+    std::map<std::string, uint32_t> phoneNrTgVec;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
