@@ -89,7 +89,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "03062022"
+#define PJSIP_VERSION "06062022"
 
 
 /****************************************************************************
@@ -885,6 +885,22 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 
   ss << "calling \"" << dest_uri << "\"";
   processLogicEvent(ss.str());
+  
+  for (std::map<std::string, uint32_t>::const_iterator it = phoneNrTgVec.begin();
+    it != phoneNrTgVec.end(); it++)
+  {
+    size_t pos;
+    if ((pos = caller.find(it->first)) == 0)
+    {
+      uint32_t tg = it->second;
+      if (m_siploglevel >= 3)
+      {
+        cout << name() << ", setting new TG=" << tg
+             << " due to configuration (PHONENUMBERS_TO_TG)" << endl;
+      }
+      setReceivedTg(tg);
+    }
+  }
 
   CallOpParam prm(true);
   prm.opt.audioCount = 1;
