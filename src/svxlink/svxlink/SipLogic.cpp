@@ -302,7 +302,7 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
     logic_msg_handler(0), logic_event_handler(0), report_events_as_idle(false),
     startup_finished(false), logicselector(0), semi_duplex(false),
     sip_preamp_gain(0), m_autoconnect(""), sip_event_handler(0), 
-    sip_msg_handler(0), sipselector(0)
+    sip_msg_handler(0), sipselector(0), m_siploglevel(0)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -446,7 +446,6 @@ bool SipLogic::initialize(void)
   std::string m_callername("SvxLink");
   cfg().getValue(name(), "CALLERNAME", m_callername);
 
-  uint16_t  m_siploglevel = 3;
   cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel); // 0-6
   if (m_siploglevel < 0 || m_siploglevel > 6) m_siploglevel = 3;
 

@@ -204,6 +204,7 @@ class SipLogic : public LogicBase
     MsgHandler                *sip_msg_handler;
     Async::AudioSelector      *sipselector;
     std::map<std::string, uint32_t> phoneNrTgVec;
+    uint16_t                  m_siploglevel;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
