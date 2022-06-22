@@ -67,8 +67,6 @@ proc check_if_time_for_qst {} {
   set items [split $weeksofmonth ","];
   set acttime [clock format $systime -format %H%M];
 
-  puts "Actuelle Zeit: $acttime";
-
   foreach dom $items {
     if {$dom * 7 >= $dayofmonth && ($dom - 1) * 7 <= $dayofmonth} {
       if {$dayofqst == $dayofweek} {
