@@ -75,7 +75,7 @@ using namespace Async;
  * Defines & typedefs
  *
  ****************************************************************************/
-#define ANNOUNCELOGIC_VERSION "14062022"
+#define ANNOUNCELOGIC_VERSION "22062022"
 
 
 

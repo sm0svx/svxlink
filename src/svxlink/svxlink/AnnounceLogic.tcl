@@ -333,7 +333,7 @@ proc remote_received_tg_updated {logic tg} {
 #
 # Executed when the pre broadcast notification is played
 #
-proc announce_prenotigication {} {
+proc announce_prenotification {} {
   puts "Playing pre broadcast notification";
   playMsg "AnnounceLogic" "prenotify";
 }
