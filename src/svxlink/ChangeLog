@@ -1477,7 +1477,7 @@
   the input volume. It is enabled by setting the PEAK_METER variable in
   the receiver configuration section. Start SvxLink and open the squelch on
   the receiver so that only noise is available on the input. Adjust the input
-  volume until you see messages printed about distorsion. Then lower the
+  volume until you see messages printed about distortion. Then lower the
   volume until there are no more messages.
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
