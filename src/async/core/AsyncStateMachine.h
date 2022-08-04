@@ -171,15 +171,15 @@ class StateMachine
           [&](Timer*)
           {
             assert(m_state != nullptr);
-            static_cast<StateTopBaseT*>(m_state)->timeoutEvent();
             clearTimeout();
+            static_cast<StateTopBaseT*>(m_state)->timeoutEvent();
           });
       m_at_timer.expired.connect(
           [&](AtTimer*)
           {
             assert(m_state != nullptr);
-            static_cast<StateTopBaseT*>(m_state)->timeoutAtEvent();
             clearTimeoutAt();
+            static_cast<StateTopBaseT*>(m_state)->timeoutAtEvent();
           });
     }
 
@@ -299,6 +299,10 @@ class StateMachine
      */
     void setTimeout(int timeout_ms)
     {
+#ifdef ASYNC_STATE_MACHINE_DEBUG
+      std::cout << "### StateMachine: setTimeout(" << timeout_ms << ")"
+                << std::endl;
+#endif
       m_timer.setTimeout(timeout_ms);
       m_timer.setEnable(true);
     }
@@ -327,6 +331,9 @@ class StateMachine
      */
     void clearTimeout(void)
     {
+#ifdef ASYNC_STATE_MACHINE_DEBUG
+      std::cout << "### StateMachine: clearTimeout()" << std::endl;
+#endif
       m_timer.setEnable(false);
     }
 
