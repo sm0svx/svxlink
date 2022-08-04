@@ -71,6 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace std::placeholders;
 
 
 
@@ -387,7 +388,7 @@ void WbRxRtlSdr::rtlReadyStateChanged(void)
     vector<float> tuner_gains;
     tuner_gains.assign(int_tuner_gains.begin(), int_tuner_gains.end());
     transform(tuner_gains.begin(), tuner_gains.end(),
-        tuner_gains.begin(), bind2nd(divides<float>(),10.0));
+        tuner_gains.begin(), std::bind(divides<float>(), _1, 10.0));
     cout << "\tValid tuner gains : ";
     copy(tuner_gains.begin(), tuner_gains.end(),
         ostream_iterator<float>(cout, " "));

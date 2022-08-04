@@ -83,6 +83,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace std::placeholders;
 using namespace Async;
 
 
@@ -501,7 +502,7 @@ int main(int argc, const char *argv[])
 
   vector<float> mod_idxs(mod_fqs.size());
   transform(mod_fqs.begin(), mod_fqs.end(), mod_idxs.begin(),
-      bind1st(divides<float>(), caldev));
+      std::bind(divides<float>(), caldev, _1));
   float mod_level = 100.0 * caldev / (maxdev * pow(10.0, headroom_db / 20.0));
   cout << "--- Modulation frequencies [Hz] : ";
   copy(mod_fqs.begin(), mod_fqs.end(), ostream_iterator<float>(cout, " "));
