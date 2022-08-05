@@ -1,3 +1,16 @@
+# C++ source files needed to build SvxLink
+set(SVXLINK_SRCS
+  MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
+  EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
+  DtmfDigitHandler.cpp ReflectorLogic.cpp
+  )
+
+# TCL event handler files to install in the events.d subdirectory
+set(SVXLINK_TCL_EVENT_FILES
+  RepeaterLogic.tcl SimplexLogic.tcl ReflectorLogic.tcl Module.tcl Logic.tcl
+  CW.tcl SelCall.tcl locale.tcl
+  )
+
 # Find the popt library
 find_package(Popt REQUIRED)
 set(LIBS ${LIBS} ${POPT_LIBRARIES})
@@ -11,10 +24,26 @@ include_directories(${GSM_INCLUDE_DIR})
 
 # Find the pjsip library
 pkg_check_modules(PJSIP "libpjproject")
-add_definitions(${PJSIP_CFLAGS})
-set(LIBS ${LIBS} ${PJSIP_LIBRARIES})
-include_directories(${PJSIP_INCLUDE_DIRS})
-add_definitions("-DPJSIP_MAJOR=${PJSIP_VERSION_MAJOR}")
+message(
+  "--   The pjproject libraries are used for the EXPERIMENTAL logic core\n"
+  "--   SipLogic.\n"
+  )
+if(PJSIP_FOUND)
+  add_definitions(${PJSIP_CFLAGS})
+  set(LIBS ${LIBS} ${PJSIP_LIBRARIES})
+  include_directories(${PJSIP_INCLUDE_DIRS})
+  add_definitions("-DPJSIP_MAJOR=${PJSIP_VERSION_MAJOR}")
+  set(SVXLINK_SRCS ${SVXLINK_SRCS} SipLogic.cpp)
+  set(SVXLINK_TCL_EVENT_FILES ${SVXLINK_TCL_EVENT_FILES} SipLogic.tcl)
+else (PJSIP_FOUND)
+  message(
+    "--   The pjproject libraries are an optional dependency.\n"
+    "--   Without it you will be missing support for setting up SIP\n"
+    "--   connections using the SipLogic logic core.\n"
+    "--   SvxLink will work just fine without it though if SIP support\n"
+    "--   is not needed.\n"
+  )
+endif(PJSIP_FOUND)
 
 # Find the TCL library
 if(TCL_LIBRARY)
@@ -68,13 +97,8 @@ set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 set(LIBS trx locationinfo asynccpp asyncaudio asynccore svxmisc ${LIBS})
 
 # Build the executable
-add_executable(svxlink
-  MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
-  EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
-  DtmfDigitHandler.cpp ReflectorLogic.cpp SipLogic.cpp
-  ${VERSION_DEPENDS}
-)
-target_link_libraries(svxlink ${LIBS} ${PJSIP_LIBRARIES})
+add_executable(svxlink ${SVXLINK_SRCS} ${VERSION_DEPENDS})
+target_link_libraries(svxlink ${LIBS})
 set_target_properties(svxlink PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
@@ -107,8 +131,7 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   )
 install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
-install(FILES RepeaterLogic.tcl SimplexLogic.tcl ReflectorLogic.tcl Module.tcl
-  Logic.tcl CW.tcl SelCall.tcl locale.tcl SipLogic.tcl
+install(FILES ${SVXLINK_TCL_EVENT_FILES}
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
   )
 install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up
