@@ -151,7 +151,6 @@ EventHandler::EventHandler(const string& event_script, const string& logic_name)
   Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
   Tcl_CreateCommand(interp, "setConfigValue", setConfigValueHandler,
                     this, NULL);
-  Tcl_CreateCommand(interp, "initCall", initCallHandler, this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -189,6 +188,16 @@ bool EventHandler::initialize(void)
   return true;
   
 } /* EventHandler::initialize */
+
+
+void EventHandler::addCommand(const std::string& name, CommandHandler f)
+{
+  Tcl_CreateCommand(interp, name.c_str(), genericCommandHandler,
+      new CommandHandler(f),
+      [](ClientData cdata) {
+        delete static_cast<CommandHandler*>(cdata);
+      });
+} /* EventHandler::addCommand */
 
 
 void EventHandler::setVariable(const string& name, const string& value)
@@ -465,24 +474,21 @@ int EventHandler::setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
 } /* EventHandler::setConfigValueHandler */
 
 
-int EventHandler::initCallHandler(ClientData cdata, Tcl_Interp *irp, int argc,
-                           const char *argv[])
+int EventHandler::genericCommandHandler(ClientData cdata, Tcl_Interp *irp,
+                                        int argc, const char *argv[])
 {
-  if(argc != 2)
+  const auto& func = *static_cast<CommandHandler*>(cdata);
+  std::string msg = func(argc, argv);
+  if (!msg.empty())
   {
-    static char msg[] = "Usage: initCall: <phone number>";
-    Tcl_SetResult(irp, msg, TCL_STATIC);
+    auto msg_alloc_len = msg.size()+1;
+    char* msg_copy = Tcl_Alloc(msg_alloc_len);
+    memcpy(msg_copy, msg.c_str(), msg_alloc_len);
+    Tcl_SetResult(irp, msg_copy, TCL_DYNAMIC);
     return TCL_ERROR;
   }
-  //cout << "EventHandler::playFile: " << argv[1] << endl;
-
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  string phonenumber(argv[1]);
-  self->initCall(phonenumber);
-
   return TCL_OK;
-}
-
+} /* EventHandler::genericCommandHandler */
 
 
 /*

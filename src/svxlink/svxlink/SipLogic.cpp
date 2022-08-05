@@ -749,7 +749,10 @@ bool SipLogic::initialize(void)
   logic_event_handler->playSilence.connect(mem_fun(*this, &SipLogic::playLogicSilence));
   logic_event_handler->playTone.connect(mem_fun(*this, &SipLogic::playLogicTone));
   logic_event_handler->playDtmf.connect(mem_fun(*this, &SipLogic::playLogicDtmf));
-  logic_event_handler->initCall.connect(mem_fun(*this, &SipLogic::initCall));
+  using namespace std::placeholders;
+  logic_event_handler->addCommand("initCall",
+      std::bind(&SipLogic::initCallHandler, this, _1, _2));
+
   logic_event_handler->processEvent("namespace eval " + name() + " {}");
 
   if (!logic_event_handler->initialize())
@@ -843,10 +846,17 @@ bool SipLogic::initialize(void)
  *
  ****************************************************************************/
 
-void SipLogic::initCall(const string& remote)
+std::string SipLogic::initCallHandler(int argc, const char* argv[])
 {
-  makeCall(acc, remote);
-} /* SipLogic::initCall */
+  if (argc != 2)
+  {
+    return std::string("Usage: initCall: <phone number>");
+  }
+  std::string phonenumber(argv[1]);
+  //std::cout << "### initCall(" << phonenumber << ")" << std::endl;
+  makeCall(acc, phonenumber);
+  return std::string();
+} /* SipLogic::initCallHandler */
 
 
 void SipLogic::allMsgsWritten(void)

@@ -167,7 +167,7 @@ class SipLogic : public LogicBase
   protected:
 
     virtual void allMsgsWritten(void);
-    virtual void initCall(const std::string& remote);
+    std::string initCallHandler(int argc, const char* argv[]);
     void checkIdle(void);
 
   private:
