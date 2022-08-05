@@ -464,7 +464,8 @@ bool SipLogic::initialize(void)
     value = "^.*$";
   }
   accept_incoming_regex = new regex_t;
-  size_t err_size;
+  size_t err_size = 0;
+  ((void)(err_size)); // Suppress warning about unused variable
   int err = regcomp(accept_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
@@ -1062,7 +1063,7 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
     }
   }
 
-  free(smpl);
+  delete [] smpl;
 
   /*
     The pjsip framework requests 768 samples on every call. The SvxLink
@@ -1101,7 +1102,7 @@ pj_status_t SipLogic::mediaPortPutFrame(pjmedia_port *port, pjmedia_frame *frame
       int ret = m_out_src->writeSamples(smpl + pos, count - pos);
       pos += ret;
     } while (pos < count);
-    free(smpl);
+    delete [] smpl;
   }
 
   return PJ_SUCCESS;
