@@ -205,6 +205,9 @@
   HOST -> HOSTS, PORT -> HOST_PORT. New configuration variables:
   DNS_DOMAIN, HOST_PRIO, HOST_PRIO_INC, HOST_WEIGHT.
 
+* New contribution from DL1HRC: SipLogic. The build is enabled by using the
+  -DWITH_CONTRIB_SIP_LOGIC=ON CMake command line option.
+
 
 
  1.7.0 -- 01 Sep 2019
@@ -213,8 +216,6 @@
 * MetarInfo now supports secure http (https) since aviationweather.gov has 
   switched to https only. Read documentation and/or README in directory 
   modules/metarinfo for changes.
-
-* The new SipLogic has been introduced
 
 * Now possible to set the roger sound to be always on in the SimplexLogic, even
   when no module is active. Use the RGR_SOUND_ALWAYS configuration variable to

@@ -22,28 +22,8 @@ find_package(GSM REQUIRED)
 set(LIBS ${LIBS} ${GSM_LIBRARY})
 include_directories(${GSM_INCLUDE_DIR})
 
-# Find the pjsip library
-pkg_check_modules(PJSIP "libpjproject")
-message(
-  "--   The pjproject libraries are used for the EXPERIMENTAL logic core\n"
-  "--   SipLogic.\n"
-  )
-if(PJSIP_FOUND)
-  add_definitions(${PJSIP_CFLAGS})
-  set(LIBS ${LIBS} ${PJSIP_LIBRARIES})
-  include_directories(${PJSIP_INCLUDE_DIRS})
-  add_definitions("-DPJSIP_MAJOR=${PJSIP_VERSION_MAJOR}")
-  set(SVXLINK_SRCS ${SVXLINK_SRCS} SipLogic.cpp)
-  set(SVXLINK_TCL_EVENT_FILES ${SVXLINK_TCL_EVENT_FILES} SipLogic.tcl)
-else (PJSIP_FOUND)
-  message(
-    "--   The pjproject libraries are an optional dependency.\n"
-    "--   Without it you will be missing support for setting up SIP\n"
-    "--   connections using the SipLogic logic core.\n"
-    "--   SvxLink will work just fine without it though if SIP support\n"
-    "--   is not needed.\n"
-  )
-endif(PJSIP_FOUND)
+# Include contributed parts
+add_subdirectory(contrib)
 
 # Find the TCL library
 if(TCL_LIBRARY)
@@ -126,15 +106,6 @@ install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
-if(PJSIP_FOUND)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SipLogic.conf.in
-    ${CMAKE_CURRENT_BINARY_DIR}/SipLogic.conf
-    @ONLY
-    )
-  install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/SipLogic.conf
-    ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d
-    )
-endif(PJSIP_FOUND)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
