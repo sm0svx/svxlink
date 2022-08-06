@@ -130,10 +130,10 @@ proc setAmplitude {new_amplitude} {
 # Load the values from the config file
 #
 proc loadDefaults {} {
-  variable CFG_CW_AMP
-  variable CFG_CW_CPM
-  variable CFG_CW_WPM
-  variable CFG_CW_PITCH
+  variable ::Logic::CFG_CW_AMP
+  variable ::Logic::CFG_CW_CPM
+  variable ::Logic::CFG_CW_WPM
+  variable ::Logic::CFG_CW_PITCH
 
   if [info exists CFG_CW_AMP] {
     setAmplitude $CFG_CW_AMP

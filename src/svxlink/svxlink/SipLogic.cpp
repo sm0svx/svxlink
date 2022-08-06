@@ -756,6 +756,16 @@ bool SipLogic::initialize(void)
 
   logic_event_handler->processEvent("namespace eval " + name() + " {}");
 
+    // Make logic configuration variables available in TCL event handlers
+  logic_event_handler->processEvent("namespace eval Logic {}");
+  for (const auto& varname : cfg().listSection(name()))
+  {
+    std::string var = "Logic::CFG_" + varname;
+    std::string value;
+    cfg().getValue(name(), varname, value);
+    logic_event_handler->setVariable(var, value);
+  }
+
   if (!logic_event_handler->initialize())
   {
     cout << name() << ":*** ERROR initializing Logic eventhandler in SipLogic."
@@ -777,6 +787,16 @@ bool SipLogic::initialize(void)
   sip_event_handler->playTone.connect(mem_fun(*this, &SipLogic::playSipTone));
   sip_event_handler->playDtmf.connect(mem_fun(*this, &SipLogic::playSipDtmf));
   sip_event_handler->processEvent("namespace eval " + name() + " {}");
+
+    // Make logic configuration variables available in TCL event handlers
+  sip_event_handler->processEvent("namespace eval Logic {}");
+  for (const auto& varname : cfg().listSection(name()))
+  {
+    std::string var = "Logic::CFG_" + varname;
+    std::string value;
+    cfg().getValue(name(), varname, value);
+    sip_event_handler->setVariable(var, value);
+  }
 
   if (!sip_event_handler->initialize())
   {
