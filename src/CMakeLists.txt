@@ -294,6 +294,7 @@ message(STATUS "SvxLink user = ${SVXLINK_USER}")
 message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
 # Add directories to build
+add_subdirectory(doc)
 add_subdirectory(include)
 add_subdirectory(async)
 add_subdirectory(misc)
@@ -303,7 +304,6 @@ add_subdirectory(svxlink)
 if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
-add_subdirectory(doc)
 
 # Experimental CPack package building
 set(CPACK_SET_DESTDIR "ON")
