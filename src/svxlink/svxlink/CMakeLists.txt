@@ -126,6 +126,15 @@ install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
+if(PJSIP_FOUND)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SipLogic.conf.in
+    ${CMAKE_CURRENT_BINARY_DIR}/SipLogic.conf
+    @ONLY
+    )
+  install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/SipLogic.conf
+    ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d
+    )
+endif(PJSIP_FOUND)
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
