@@ -85,8 +85,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
 #include "ReflectorLogic.h"
-#ifdef PJSIP_MAJOR
-#include "SipLogic.h"
+#ifdef WITH_CONTRIB_SIP_LOGIC
+#include "contrib/SipLogic/SipLogic.h"
 #endif
 #include "LinkManager.h"
 
@@ -758,7 +758,7 @@ static void initialize_logics(Config &cfg)
     {
       logic = new ReflectorLogic(cfg, logic_name);
     }
-#ifdef PJSIP_MAJOR
+#ifdef WITH_CONTRIB_SIP_LOGIC
     else if (logic_type == "Sip")
     {
       logic = new SipLogic(cfg, logic_name);

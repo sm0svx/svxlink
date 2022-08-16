@@ -24,6 +24,7 @@ include_directories(${GSM_INCLUDE_DIR})
 
 # Include contributed parts
 add_subdirectory(contrib)
+add_definitions(${SVXLINK_DEFINES})
 
 # Find the TCL library
 if(TCL_LIBRARY)
