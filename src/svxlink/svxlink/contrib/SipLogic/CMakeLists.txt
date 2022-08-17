@@ -5,7 +5,7 @@ message(
   )
 if(PJSIP_FOUND)
   add_definitions(${PJSIP_CFLAGS})
-  set(LIBS ${LIBS} ${PJSIP_LIBRARIES} PARENT_SCOPE)
+  set(LIBS ${LIBS} ${PJSIP_STATIC_LIBRARIES} PARENT_SCOPE)
   include_directories(${PJSIP_INCLUDE_DIRS})
   add_definitions("-DPJSIP_MAJOR=${PJSIP_VERSION_MAJOR}")
   set(SVXLINK_SRCS ${SVXLINK_SRCS}
