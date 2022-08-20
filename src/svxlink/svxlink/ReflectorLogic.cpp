@@ -759,6 +759,7 @@ void ReflectorLogic::onConnected(void)
   timerclear(&m_last_talker_timestamp);
   m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
   m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  processEvent("reflector_connection_status_update 1");
 } /* ReflectorLogic::onConnected */
 
 
@@ -786,6 +787,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
     timerclear(&m_last_talker_timestamp);
   }
   m_con_state = STATE_DISCONNECTED;
+  processEvent("reflector_connection_status_update 0");
 } /* ReflectorLogic::onDisconnected */
 
 
