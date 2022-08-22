@@ -113,7 +113,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioEncoderSpeex::AudioEncoderSpeex(void)
+AudioEncoderSpeex::AudioEncoderSpeex(const Options &options)
   : buf_len(0), frames_per_packet(4), frame_cnt(0)
 {
   speex_bits_init(&bits);
@@ -125,14 +125,18 @@ AudioEncoderSpeex::AudioEncoderSpeex(void)
   speex_encoder_ctl(enc_state, SPEEX_GET_FRAME_SIZE, &frame_size);
   sample_buf = new float[frame_size];
   
-  //setQuality(10);
-  //setComplexity(10);
-  //setBitrate(8000);
-  //enableVbr(true);
-  //setVbrQuality(10);
-  //setAbr(8000);
-  //setVbrMaxBitrate(32000);
-  //enableHighpass(false);
+  setQuality(10);
+  setComplexity(10);
+  setBitrate(8000);
+  enableVbr(true);
+  setVbrQuality(10);
+  setAbr(8000);
+  
+  Options::const_iterator it;
+  for (it=options.begin(); it!=options.end(); it++)
+  {
+    setOption((*it).first,(*it).second);  
+  }
 } /* AsyncAudioEncoderSpeex::AsyncAudioEncoderSpeex */
 
 

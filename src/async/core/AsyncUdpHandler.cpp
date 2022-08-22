@@ -1,12 +1,15 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
+@file	 AsyncUdpHandler.cpp
+@brief   An internal class used by Async::Serial
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@date	 2005-03-10
+
+This is an internal class that is used by the Async::Serial class. It should
+never be used directly by the user of the Async lib.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,6 +35,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <cstdio>
 
 
 /****************************************************************************
@@ -40,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -48,21 +57,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderDummy.h"
-#include "AsyncAudioDecoderNull.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
-#include "AsyncAudioDecoderOpus.h"
-#endif
-#include "AsyncAudioDecoderAmbe.h"
+#include "AsyncUdpSocket.h"
+#include "AsyncUdpHandler.h"
 
-#include <iostream>
+
 
 /****************************************************************************
  *
@@ -114,6 +112,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
+map<uint16_t, UdpSocket *> UdpHandler::dev_map;
 
 
 /****************************************************************************
@@ -122,65 +121,73 @@ using namespace Async;
  *
  ****************************************************************************/
 
-bool AudioDecoder::isAvailable(const std::string &name)
+UdpHandler::UdpHandler(const uint16_t &port, const IpAddress &ip_addr)
+  : portnr(port), ip_addr(ip_addr), use_count(0)
 {
-  return (name == "NULL") || (name == "RAW") || (name == "S16") ||
-         (name == "GSM") || (name == "AMBE") ||
-#ifdef SPEEX_MAJOR
-         (name == "SPEEX") ||
-#endif
-#ifdef OPUS_MAJOR
-         (name == "OPUS") ||
-#endif
-         (name == "DUMMY");
-} /* AudioDecoder::isAvailable */
+
+} /* UdpHandler::UdpHandler */
 
 
-AudioDecoder *AudioDecoder::create(const std::string &name, 
-            const std::map<std::string,std::string> &options)
+UdpHandler::~UdpHandler(void)
 {
-  if (name == "NULL")
+} /* UdpHandler::~UdpHandler */
+
+/*
+ *------------------------------------------------------------------------
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
+ *------------------------------------------------------------------------
+ */
+UdpSocket *UdpHandler::open(void)
+{
+  Async::UdpSocket *udp_sock = 0;
+
+  if (dev_map.count(portnr) == 0)
   {
-    return new AudioDecoderNull;
+    udp_sock = new UdpSocket(portnr);
+    udp_sock->dataReceived.connect(mem_fun(*this, &UdpHandler::udpDataReceived));
   }
-  else if (name == "DUMMY")
+  udp_sock = dev_map[portnr];
+
+  return udp_sock;
+} /* UdpHandler::instance */
+
+
+bool UdpHandler::close(UdpHandler *dev)
+{
+  bool success = true;
+
+  if (--dev->use_count == 0)
   {
-    return new AudioDecoderDummy;
+    dev_map.erase(dev->portnr);
+    //success = dev->closePort();
+    delete dev;
   }
-  else if (name == "RAW")
-  {
-    return new AudioDecoderRaw;
-  }
-  else if (name == "S16")
-  {
-    return new AudioDecoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-    else if (name == "AMBE")
-  {
-    return AudioDecoderAmbe::create(options);
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex(options);
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus(options);
-  }
-#endif
-  else
-  {
-    return 0;
-  }
+
+  return success;
+
+} /* UdpHandler::close */
+
+
+bool UdpHandler::write(const IpAddress& remote_ip, int remote_port, const void *buf,
+	int count)
+{
+
+  return true;
 }
 
+
+void UdpHandler::udpDataReceived(const Async::IpAddress& ip_addr, uint16_t port, void *data, int len)
+{
+ // int t;
+ // return t;
+} /* UdpHandler::onDataReceived */
 
 /****************************************************************************
  *
@@ -189,12 +196,27 @@ AudioDecoder *AudioDecoder::create(const std::string &name,
  ****************************************************************************/
 
 
+/*
+ *------------------------------------------------------------------------
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
+ *------------------------------------------------------------------------
+ */
+
+
 
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
+
 
 
 

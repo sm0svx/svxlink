@@ -748,6 +748,42 @@ variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
 .
+.SS RewindLogic section
+.
+.TP
+.B TYPE
+The type for a rewind logic core is always
+.BR Rewind .
+.TP
+.B HOST
+The hostname or IP address of the rewind/brandmaster server.
+.TP
+.B PORT
+The UDP port number used by the server. The client do not need to open any
+ports in the firewall. Default: 54005.
+.TP
+.B AUTH_KEY
+The authentication key, or password, used when authenticating to the
+Rewind server.
+.TP
+.B CALLSIGN
+The callsign of your station where you have running the Rewind logic.
+.TP
+.B ID
+The DMR ID assigend to the callsign by https://register.ham-digital.org
+.TP
+.B TALKGROUPS
+Comma separated list of talkgroups you want to register.
+.TP
+.B AMBE_TYPE
+Define the way here to access the analog<->dmr converter. May be TTY 
+or AMBESERVER.
+If AMBE_TYPE=TTY you have to provide a DV3k USB stick locally connected
+to AMBE_TTY_DEVICE=/dev/ttyUSBx and AMBE_TTY_BAUDRATE=(460800|230400).
+IF AMBE_TTY_TYPE=AMBESERVER you must configure a server that run a ambeserver
+running on AMBE_AMBESERVER_HOST=1.2.3.4 listening on AMBE_AMBESERVER_PORT=2604.
+.TP
+.
 .SS QSO Recorder Section
 .
 The QSO recorder is used to record all received audio to files on disk. All
