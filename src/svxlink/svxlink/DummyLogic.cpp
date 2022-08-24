@@ -1,8 +1,8 @@
 /**
-@file    DummyLogic.h
+@file	 DummyLogic.h
 @brief   A simple dummy logic core that does not do anything
 @author  Tobias Blomberg / SM0SVX
-@date    2017-02-10
+@date	 2017-02-10
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,10 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef DUMMY_LOGIC_INCLUDED
-#define DUMMY_LOGIC_INCLUDED
-
-
 /****************************************************************************
  *
  * System Includes
@@ -42,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioDebugger.h>
 
 
 /****************************************************************************
@@ -50,33 +47,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LogicBase.h"
+#include "DummyLogic.h"
 
 
 /****************************************************************************
  *
- * Forward declarations
+ * Namespaces to use
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+//using namespace MyNamespace;
 
 
 /****************************************************************************
@@ -89,7 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /****************************************************************************
  *
- * Exported Global Variables
+ * Static class variables
  *
  ****************************************************************************/
 
@@ -97,71 +77,74 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /****************************************************************************
  *
- * Class definitions
+ * Exported Global functions
  *
  ****************************************************************************/
 
-/**
-@brief  A simple dummy logic core that does not do anything
-@author Tobias Blomberg / SM0SVX
-@date   2017-02-10
+extern "C" {
+  LogicBase* construct(void) { return new DummyLogic; }
+}
 
-The dummy logic core is just an example of the simplest possible logic core. It
-does not do anything but printing debug info when receiving audio from another
-logic core. It's primary purpose is to serve as a start for writing new logic
-cores.
-*/
-class DummyLogic : public LogicBase
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+namespace {
+
+
+/****************************************************************************
+ *
+ * Local functions
+ *
+ ****************************************************************************/
+
+
+
+}; /* End of anonymous namespace */
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+DummyLogic::DummyLogic(void)
 {
-  public:
-    /**
-     * @brief 	Default constructor
-     */
-    DummyLogic(void);
-
-    /**
-     * @brief   Initialize this logic
-     * @param   cfgobj      A previously initialized config object
-     * @param   logic_name  The name of the logic core
-     * @return  Returns \em true on success or \em false on failure
-     */
-    virtual bool initialize(Async::Config& cfgobj,
-                            const std::string& logic_name) override;
-
-    /**
-     * @brief   Get the audio pipe sink used for writing audio into this logic
-     * @return  Returns an audio pipe sink object
-     */
-    virtual Async::AudioSink *logicConIn(void) override
-    {
-      return m_logic_con_in;
-    }
-
-    /**
-     * @brief   Get the audio pipe source used for reading audio from this logic
-     * @return  Returns an audio pipe source object
-     */
-    virtual Async::AudioSource *logicConOut(void) override
-    {
-      return m_logic_con_out;
-    }
-
-  protected:
-    /**
-     * @brief   Destructor
-     */
-    virtual ~DummyLogic(void) override;
-
-  private:
-    Async::AudioDebugger *m_logic_con_in  = nullptr;
-    Async::AudioDebugger *m_logic_con_out = nullptr;
-
-};  /* class DummyLogic */
+  m_logic_con_in = new Async::AudioDebugger;
+  m_logic_con_in->setName("DummyLogicIn");
+  m_logic_con_out = new Async::AudioDebugger;
+  m_logic_con_out->setName("DummyLogicOut");
+} /* DummyLogic::DummyLogic */
 
 
-//} /* namespace */
+bool DummyLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
+{
+  return LogicBase::initialize(cfgobj, logic_name);
+} /* DummyLogic::initialize */
 
-#endif /* DUMMY_LOGIC_INCLUDED */
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+DummyLogic::~DummyLogic(void)
+{
+  delete m_logic_con_in;
+  delete m_logic_con_out;
+} /* DummyLogic::~DummyLogic */
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
 
 
 /*

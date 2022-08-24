@@ -1,14 +1,18 @@
 # C++ source files needed to build SvxLink
 set(SVXLINK_SRCS
-  MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
-  EventHandler.cpp LinkManager.cpp CmdParser.cpp QsoRecorder.cpp svxlink.cpp
-  DtmfDigitHandler.cpp ReflectorLogic.cpp
+  svxlink.cpp MsgHandler.cpp Module.cpp Logic.cpp EventHandler.cpp
+  LinkManager.cpp CmdParser.cpp QsoRecorder.cpp DtmfDigitHandler.cpp
   )
 
 # TCL event handler files to install in the events.d subdirectory
 set(SVXLINK_TCL_EVENT_FILES
   RepeaterLogic.tcl SimplexLogic.tcl ReflectorLogic.tcl Module.tcl Logic.tcl
   CW.tcl SelCall.tcl locale.tcl
+  )
+
+# Logic core plugins to build
+set(SVXLINK_LOGIC_CORES
+  Dummy Simplex Repeater Reflector
   )
 
 # Find the popt library
@@ -24,7 +28,6 @@ include_directories(${GSM_INCLUDE_DIR})
 
 # Include contributed parts
 add_subdirectory(contrib)
-add_definitions(${SVXLINK_DEFINES})
 
 # Find the TCL library
 if(TCL_LIBRARY)
@@ -84,6 +87,14 @@ set_target_properties(svxlink PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
+# Build logic plugins
+foreach(logic_name ${SVXLINK_LOGIC_CORES})
+  add_library(${logic_name}Logic MODULE ${logic_name}Logic.cpp)
+  set_target_properties(${logic_name}Logic PROPERTIES PREFIX "")
+  set_property(TARGET ${logic_name}Logic PROPERTY NO_SONAME 1)
+  #target_link_libraries(${logic_name}Logic ${LIBS})
+endforeach()
+
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
@@ -121,3 +132,6 @@ install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up
 install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_down
   DESTINATION ${SBIN_INSTALL_DIR}
   )
+foreach(logic_name ${SVXLINK_LOGIC_CORES})
+  install(TARGETS ${logic_name}Logic DESTINATION ${SVX_LOGIC_CORE_INSTALL_DIR})
+endforeach()

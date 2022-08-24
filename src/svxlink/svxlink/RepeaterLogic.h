@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -121,23 +121,19 @@ class RepeaterLogic : public Logic
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param 	cfg A previously initialized config object
-     * @param 	name The name of this logic
+     * @brief 	Default constructor
      */
-    RepeaterLogic(Async::Config& cfg, const std::string& name);
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~RepeaterLogic(void);
-  
+    RepeaterLogic(void);
+
     /**
      * @brief 	Initialize this logic
+     * @param 	cfgobj      A previously initialized config object
+     * @param 	plugin_name The name of this logic
      * @return	Returns \em true on success or \em false on failure
      */
-    bool initialize(void);
-    
+    virtual bool initialize(Async::Config& cfgobj,
+                            const std::string& logic_name) override;
+
     /**
      * @brief 	Process an event
      * @param 	event Event string
@@ -173,6 +169,11 @@ class RepeaterLogic : public Logic
 
 
   protected:
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~RepeaterLogic(void) override {};
+
     virtual void allMsgsWritten(void);
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual void dtmfCtrlPtyCmdReceived(const void *buf, size_t count);
