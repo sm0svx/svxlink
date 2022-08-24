@@ -109,6 +109,16 @@ using namespace Async;
 
 
 
+/****************************************************************************
+ *
+ * Exported Global functions
+ *
+ ****************************************************************************/
+
+extern "C" {
+  LogicBase* construct(void) { return new RepeaterLogic; }
+}
+
 
 /****************************************************************************
  *
@@ -125,8 +135,8 @@ using namespace Async;
  ****************************************************************************/
 
 
-RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
-  : Logic(cfg, name), repeater_is_up(false),
+RepeaterLogic::RepeaterLogic(void)
+  : repeater_is_up(false),
     up_timer(30000, Timer::TYPE_ONESHOT, false),
     idle_sound_timer(-1, Timer::TYPE_PERIODIC),
     open_on_sql_after_rpt_close(0), open_on_dtmf('?'),
@@ -147,14 +157,9 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
 } /* RepeaterLogic::RepeaterLogic */
 
 
-RepeaterLogic::~RepeaterLogic(void)
+bool RepeaterLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 {
-} /* RepeaterLogic::~RepeaterLogic */
-
-
-bool RepeaterLogic::initialize(void)
-{
-  if (!Logic::initialize())
+  if (!Logic::initialize(cfgobj, logic_name))
   {
     return false;
   }
