@@ -280,6 +280,17 @@ namespace sip {
 
 /****************************************************************************
  *
+ * Exported Global functions
+ *
+ ****************************************************************************/
+
+extern "C" {
+  LogicBase* construct(void) { return new SipLogic; }
+}
+
+
+/****************************************************************************
+ *
  * Local Global Variables
  *
  ****************************************************************************/
@@ -292,8 +303,8 @@ namespace sip {
  *
  ****************************************************************************/
 
-SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_logic_con_out(0),
+SipLogic::SipLogic(void)
+  : m_logic_con_out(0),
     m_outto_sip(0), m_infrom_sip(0), m_autoanswer(false),
     m_sip_port(5060), dtmf_ctrl_pty(0),
     m_call_timeout_timer(45000, Timer::TYPE_ONESHOT, false),
@@ -309,51 +320,21 @@ SipLogic::SipLogic(Async::Config& cfg, const std::string& name)
 } /* SipLogic::SipLogic */
 
 
-SipLogic::~SipLogic(void)
+bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 {
-  startup_finished = false;
-  hangupAllCalls();   calls.clear();
-  m_call_timeout_timer.setEnable(false);
-  if (accept_incoming_regex != 0)
-  {
-    regfree(accept_incoming_regex);
-    delete accept_incoming_regex;
-    accept_incoming_regex = 0;
-  }
-  if (reject_incoming_regex != 0)
-  {
-    regfree(reject_incoming_regex);
-    delete reject_incoming_regex;
-    reject_incoming_regex = 0;
-  }
-  if (accept_outgoing_regex != 0)
-  {
-    regfree(accept_outgoing_regex);
-    delete accept_outgoing_regex;
-    accept_outgoing_regex = 0;
-  }
-  if (reject_outgoing_regex != 0)
-  {
-    regfree(reject_outgoing_regex);
-    delete reject_outgoing_regex;
-    reject_outgoing_regex = 0;
-  }
-  delete media;           media = 0;
-  delete acc;             acc = 0;
-  delete m_logic_con_in;  m_logic_con_in = 0;
-  delete m_out_src;       m_out_src = 0;
-  delete dtmf_ctrl_pty;   dtmf_ctrl_pty = 0;
-  delete m_ar;            m_ar = 0;
-  delete logic_event_handler;  logic_event_handler = 0;
-  delete sip_event_handler;    sip_event_handler = 0;
-  delete logic_msg_handler;    logic_msg_handler = 0;
-  delete sip_msg_handler;      sip_msg_handler = 0;
-  delete logicselector;        logicselector = 0;
-} /* SipLogic::~SipLogic */
+   // Create the AudioSelector for Sip and message audio streams
+  m_logic_con_out = new Async::AudioSelector;
 
+   // Handler for audio stream from logic to sip
+  m_logic_con_in = new Async::AudioPassthrough;
 
-bool SipLogic::initialize(void)
-{
+   // Init this LogicBase
+  if (!LogicBase::initialize(cfgobj, logic_name))
+  {
+    cout << name() << ":*** ERROR initializing SipLogic." << endl;
+    return false;
+  }
+
   std::string m_username;
   if (!cfg().getValue(name(), "USERNAME", m_username))
   {
@@ -719,8 +700,7 @@ bool SipLogic::initialize(void)
     cout << name() << ": Semiduplexmode, no Sql used for Sip." << endl;
   }
 
-   // Create the AudioSelector for Sip and message audio streams
-  m_logic_con_out = new Async::AudioSelector;
+   // Attach the AudioSelector for Sip and message audio streams
   m_logic_con_out->addSource(prev_src);
   m_logic_con_out->enableAutoSelect(prev_src, 0);
   m_logic_con_out->setFlushWait(prev_src, false);
@@ -804,10 +784,7 @@ bool SipLogic::initialize(void)
          << endl;
     return false;
   }
-  
-   // handler for audio stream from logic to sip
-  m_logic_con_in = new Async::AudioPassthrough;
-  
+
     // Create the message handler for announcements
   sip_msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   sip_msg_handler->allMsgsWritten.connect(mem_fun(*this, &SipLogic::allMsgsWritten));
@@ -830,13 +807,6 @@ bool SipLogic::initialize(void)
    // when connected
   m_ar = new AudioReader;
   m_ar->registerSource(m_outto_sip);
-
-   // init this Logic
-  if (!LogicBase::initialize())
-  {
-    cout << name() << ":*** ERROR initializing SipLogic." << endl;
-    return false;
-  }
 
    // auto create an outgoing call
   if (m_autoconnect.length() > 0)
@@ -866,6 +836,49 @@ bool SipLogic::initialize(void)
  * Protected member functions
  *
  ****************************************************************************/
+
+SipLogic::~SipLogic(void)
+{
+  startup_finished = false;
+  hangupAllCalls();   calls.clear();
+  m_call_timeout_timer.setEnable(false);
+  if (accept_incoming_regex != 0)
+  {
+    regfree(accept_incoming_regex);
+    delete accept_incoming_regex;
+    accept_incoming_regex = 0;
+  }
+  if (reject_incoming_regex != 0)
+  {
+    regfree(reject_incoming_regex);
+    delete reject_incoming_regex;
+    reject_incoming_regex = 0;
+  }
+  if (accept_outgoing_regex != 0)
+  {
+    regfree(accept_outgoing_regex);
+    delete accept_outgoing_regex;
+    accept_outgoing_regex = 0;
+  }
+  if (reject_outgoing_regex != 0)
+  {
+    regfree(reject_outgoing_regex);
+    delete reject_outgoing_regex;
+    reject_outgoing_regex = 0;
+  }
+  delete media;           media = 0;
+  delete acc;             acc = 0;
+  delete m_logic_con_in;  m_logic_con_in = 0;
+  delete m_out_src;       m_out_src = 0;
+  delete dtmf_ctrl_pty;   dtmf_ctrl_pty = 0;
+  delete m_ar;            m_ar = 0;
+  delete logic_event_handler;  logic_event_handler = 0;
+  delete sip_event_handler;    sip_event_handler = 0;
+  delete logic_msg_handler;    logic_msg_handler = 0;
+  delete sip_msg_handler;      sip_msg_handler = 0;
+  delete logicselector;        logicselector = 0;
+} /* SipLogic::~SipLogic */
+
 
 std::string SipLogic::initCallHandler(int argc, const char* argv[])
 {

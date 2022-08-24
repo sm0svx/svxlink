@@ -126,22 +126,18 @@ class SipLogic : public LogicBase
 {
   public:
     /**
-     * @brief 	Constructor
-     * @param   cfg A previously initialized configuration object
-     * @param   name The name of the logic core
+     * @brief 	Default constructor
      */
-    SipLogic(Async::Config& cfg, const std::string& name);
-
-    /**
-     * @brief 	Destructor
-     */
-    ~SipLogic(void);
+    SipLogic(void);
 
     /**
      * @brief 	Initialize the logic core
+     * @param   cfgobj      A previously initialized configuration object
+     * @param   logic_name  The name of the logic core
      * @return	Returns \em true on success or \em false on failure
      */
-    virtual bool initialize(void);
+    virtual bool initialize(Async::Config& cfgobj,
+                            const std::string& logic_name) override;
 
     /**
      * @brief 	Get the audio pipe sink used for writing audio into this logic
@@ -165,6 +161,10 @@ class SipLogic : public LogicBase
 
 
   protected:
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~SipLogic(void) override;
 
     virtual void allMsgsWritten(void);
     std::string initCallHandler(int argc, const char* argv[]);
