@@ -1,0 +1,279 @@
+.TH MODULEECHOLINK.CONF 5 "APRIL 2021" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleEchoLink.conf \- Configuration file for the SvxLink server EchoLink module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the EchoLink module.
+.P
+The EchoLink module is used to connect to other EchoLink stations.
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink EchoLink module understands.
+.
+.SS ModuleEchoLink
+.
+.TP
+.B ALLOW_IP
+Use this variable very carefully. Connections originating from the given subnet
+will not be checked against the EchoLink directory server. A typical use of this
+is if you want to connect to your own svxlink server and both the server and you
+are behind a IP masquerading firewall. 
+.TP
+.B DROP_ALL_INCOMING
+Silently drop all incoming connections.  No message will be sent to the remote
+station notifying about the drop. The connection will just be ignored and there
+will be no notification in the application log.
+.TP
+.B DROP_INCOMING
+Drop all incoming connections where the remote callsign match this regular
+expression. No message will be sent to the remote station notifying about the
+drop. The connection will just be ignored.
+For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B REJECT_INCOMING
+Reject all incoming connections where the remote callsign match this regular
+expression. A message will be sent to the remote station indicating that the
+connection was rejected.
+The DROP_INCOMING directive will be evaluated before REJECT_INCOMING.
+For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B ACCEPT_INCOMING
+Only accept incoming connections where the remote callsign match this regular
+expression. If the callsign doesn't match, a message will be sent to the
+remote station indicating that the connection was rejected.
+The DROP_INCOMING and REJECT_INCOMING directives will be evaluated before
+ACCEPT_INCOMING.
+For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B REJECT_OUTGOING
+Reject all outgoing connections where the remote callsign match this regular
+expression. For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B REJECT_CONF
+When this is set to 1, reject all incoming connections where the name
+of the remote station ends in the word CONF. A message will be sent
+to the remote station indicating that the connection was rejected.
+This blocks connects from stations that are in conference mode.
+When a station enters conference mode after connecting, and transmits
+towards us, it will be disconnected as well.
+.TP
+.B CHECK_NR_CONNECTS
+If a station connects to often it can be blocked for a configurable time
+span. Example:
+CHECK_NR_CONNECTS=3,300,120
+If a station connects more than 3 times with less than 300 seconds in between
+each connect, that station will be rejected for 120 minutes.
+.TP
+.B ACCEPT_OUTGOING
+Only accept outgoing connections where the remote callsign match this regular
+expression. The REJECT_OUTGOING directive will be evaluated before
+ACCEPT_OUTGOING. For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B SERVERS
+A space separated list of IP addresses or names of the EchoLink directory
+servers to use. The specified servers will be tried in order until one is
+found that works. SvxLink will then stick to that server. If that server fail,
+SvxLink will again try the next server in the list and when the end of the list
+has been reached, the search start from the beginning again.
+Hostnames that resolve to multiple IP addresses, like servers.echolink.org,
+will also be correctly handled so that all returned IP addresses will be tried
+if necessary.
+.TP
+.B CALLSIGN
+The callsign to use to login to the EchoLink directory server. 
+.TP
+.B SYSOPNAME
+The name of the person or club that is responsible for this system. 
+.TP
+.B PASSWORD
+The EchoLink directory server password to use. 
+.TP
+.B LOCATION
+The location of the station. Note: In the default configuration file the value
+of this configuration variable starts with "[Svx]". This is of course not
+necessary but it's fun to see which other stations are running SvxLink. 
+.TP
+.B PROXY_SERVER
+If set, connect to the given EchoLink proxy server host. All EchoLink
+connections, both incoming and outgoing, will then go through the proxy.
+.TP
+.B PROXY_PORT
+Set the TCP port used for connecing to an EchoLink proxy server. Default is
+8100.
+.TP
+.B PROXY_PASSWORD
+Set the EchoLink proxy password used when connecting to an EchoLink proxy
+server. Use the password PUBLIC for public proxy servers.
+.TP
+.B BIND_ADDR
+This configuration variable can be set to bind the EchoLink network sockets to
+a specific IP-address/interface. This may be needed if the computer is fitted
+with more than one ethernet interface and EchoLink should only be used on one
+of them.
+
+Example: BIND_ADDR=192.168.0.1
+.TP
+.B MAX_QSOS
+The maximum number of stations that can participate in a conference QSO on this
+node. If more stations try to connect, the connect request will be rejected. 
+.TP
+.B USE_GSM_ONLY
+On smaller systems with a less powerful CPU it is a good idea to prevent
+SvxLink from switching into the Speex codec when another SvxLink station is
+connecting via EchoLink.
+If this param is set to 1 SvxLink remains in the default codec (GSM).
+.TP
+.B DEFAULT_LANG
+Set the language to use for announcements sent to remote EchoLink stations.
+If not set, it will be the same as the one chosen for the logic core. The
+reason for setting this up may be that you want one language for the core
+and another language for annoncements sent to remote EchoLink stations.
+.TP
+.B MAX_CONNECTIONS
+When more stations than specified in MAX_QSOS try to connect, a connection will
+temporarily be established long enough to play a message telling the remote
+station that the connection was rejected. The connection is then immediately
+terminated. If the number of connections exceeds MAX_CONNECTIONS, the connect
+request is just ignored. This variable is typically set to MAX_QSOS+1 or more if
+using a large number for MAX_QSOS. 
+.TP
+.B LINK_IDLE_TIMEOUT
+The number of seconds that a connection is idle before disconnection will occur.
+This is to prevent a link to stay open if someone forget to disconnect. Disable
+this feature by setting this config variable to zero (or comment it out). 
+.TP
+.B AUTOCON_ECHOLINK_ID
+Set this variable to an EchoLink ID that you want to automatically connect to.
+SvxLink will autoconnect only when no other station is connected.
+.TP
+.B AUTOCON_TIME
+Set this to the time in seconds that you want in between autoconnect tries.
+.TP
+.B DESCRIPTION
+A longer description that is sent to remote stations upon connection. This
+description should typically include detailed station information like QTH,
+transceiver frequency/power, antenna, CTCSS tone frequency etc.
+.TP
+.B COMMAND_PTY
+Specify the path to a PTY that can be used to control the EchoLink module from
+the operating system. Commands: "KILL" will disconnect the current talker,
+"DISC callsign" will disconnect the station with the given callsign. Commands
+can be issued using a simple echo command from the shell.
+.TP
+.B REMOTE_RGR_SOUND
+Set this to 1 to enable sending of a roger sound (beep) to remote Echolink
+stations when the squelch closes on the local node. It's disabled by default.
+.
+.SH REGULAR EXPRESSIONS
+.
+Regular expressions are used in the DROP, REJECT and ACCEPT configuration
+variables. A regular expression can be quite complex and the syntax is
+fully described in the
+.BR regex (7)
+manual page. This is just a quick tutorial for the most important features.
+.TP
+.B ^
+match the beginning of a string.
+.TP
+.B $
+match the end of a string.
+.TP
+.B .
+match one character.
+.TP
+.B *
+match the previous expression zero or more times.
+.TP
+.B |
+match the expression before OR after the |.
+.TP
+.B \\\\
+escape the following character. Note that backslash is also parsed by the
+SvxLink configuration parser so a backslash must actually be typed as two.
+For example to include a * in the matching pattern it must be escaped as
+\\\\*.
+.TP
+.B ()
+grouping an expression.
+.TP
+.B []
+match any of the characters inside of the brackets.
+.P
+Some examples:
+.TP
+.B ^(AB1CDE|BA5CBA-L)$
+Match AB1CDE or BA5CBA-L.
+.TP
+.B ^(AB1CDE-[LR])$
+Match AB1CDE-L or AB1CDR-R.
+.TP
+.B ^(AB1.*)$
+Match all callsigns starting with AB1.
+.TP
+.B ^(\\\\\\\\*.*\\\\\\\\*)$
+Match all conference "callsigns". We need to escape the star character since
+it would otherwise be parsed by the regular expression parser. We also need
+two backslah characters so that the SvxLink configuration reader doesn't
+parse it as an escape sequence.
+.P
+The matches in SvxLink are case insensitive so "sm3" and "SM3" are the same.
+SvxLink use extended regular expressions (see
+.BR regex (7)
+). You almost always want to start the regular expression with "^(" and end
+it with ")$" so that the whole callsign will be used in the match.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModuleEchoLink.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleEchoLink.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)

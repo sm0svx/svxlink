@@ -1,0 +1,6 @@
+This module is used to send voice messages to other ham radio operators.
+
+You need to ask your sysop for a personal login ID and password before starting to use this service.
+
+Context menus will guide you through playing and recording messages. Abort an operation by sending an empty command.
+

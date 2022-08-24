@@ -1,0 +1,286 @@
+.TH REMOTETRX.CONF 5 "APRIL 2021" Linux "File Formats"
+.
+.SH NAME
+.
+remotetrx.conf \- Configuration file for the SvxLink remote transceiver server
+.
+.SH DESCRIPTION
+.
+.B remotetrx
+is the SvxLink remote transceiver server. This man-page describe the
+configuration file format for it.
+.P
+The RemoteTrx application can handle more than one transceiver at a time. You
+may for example want to handle both a 2m and a 70cm receiver on a site. One
+sound card is sufficient for doing this since the left channel can be used for
+one receiver and the right channel can be used for the other receiver.
+The GLOBAL/TRXS configuration variable is used to tell the RemoteTrx
+application which transceivers to set up. Each transceiver have an uplink that
+is used to interface to the main SvxLink server. The most common type is the net
+uplink which link to the main SvxLink server over the Internet using TCP/IP.
+It is also possible to have an uplink via RF but the functionality is then
+limited.
+.P
+The term "uplink" might be a bit confusing for some people. In this case it does
+not refer to any specific direction in which the data or audio is flowing. It's
+just the name for the link up to the main SvxLink server.
+.P
+RemoteTrx look for configuration files in a number of places. First it tries to
+find a user specific configuration file. It will look for a user specific
+configuration file in two places:
+.BR $HOME/.svxlink/remotetrx.conf .
+If no user specific configuration file can be found, remotetrx will look
+for the system wide configuration file
+.BR /etc/svxlink/remotetrx.conf .
+The
+.B --config
+command line option may also be used to specify an arbitrary configuration file.
+.
+.SH FILE FORMAT
+.
+The configuration file is in the famous INI-file format. A generic example of
+how such a file might look like is shown below.
+
+  [SECTION1]
+  VALUE1=1
+  VALUE2="TWO "
+  VAULE3="Multi "
+         "line"
+  
+  [SECTION2]
+  VALUE1=2
+
+This is a simple format that contain name=value pairs that belong to a section.
+In written text, a specific configuration variable can be referred to as
+SECTION1/VALUE2 meaning "configuration variable VALUE2 in section SECTION1".
+.P
+The same variable name can exist in two different sections. For example VALUE1
+in section SECTION1 have the value 1 and VALUE1 in section SECTION2 have the
+value 2. Values containing spaces at the beginning or end of the line must be
+surrounded by citation characters (see SECTION1/VALUE2). Likewise with a multi
+line value (see SECTION1/VALUE3).
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that remotetrx
+understands. The configuration variables are described section for section.
+.
+.SS GLOBAL
+.
+The GLOBAL section contains application global configuration data.
+.TP
+.B TRXS
+This configuration variable specify a comma separated list of transceiver
+configuration sections.
+.TP
+.B CFG_DIR
+Specify the path to a directory that contain additional configuration files.
+If a relative path is specified, the path will be relative to the directory
+where the main configuration file is at. All files in the specified directory
+will be read as additional configuration. Filenames starting with a dot are
+ignored.
+.TP
+.B TIMESTAMP_FORMAT
+This variable specifies the format of the timestamp that is written in front of
+each row in the log file. The format string is in the same format as specified
+in the
+.BR strftime (3)
+manual page. The default is "%c" which is described as: "the preferred date and
+time representation for the current locale". The environment variables LC_TIME,
+LC_ALL and LANG will affect how this time format will look. For example, setting
+LC_TIME="sv_SE.UTF8" will give you swedish timestamp representation. Other
+examples of format specifiers are:
+.RS
+.IP \(bu 4
+.BR %d " - The day of the month as a decimal number (range 01 to 31)"
+.IP \(bu 4
+.BR %b " - The abbreviated month name according to the current locale"
+.IP \(bu 4
+.BR %Y " - The year as a decimal number including the century"
+.IP \(bu 4
+.BR %H " - The hour as a decimal number using a 24-hour clock (range 00 to 23)"
+.IP \(bu 4
+.BR %M " - The minute as a decimal number (range 00 to 59)"
+.IP \(bu 4
+.BR %S " - The second as a decimal number (range 00 to 61)"
+.P
+So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
+"29 Nov 2005 22:31:59".
+.RE
+.TP
+.B CARD_SAMPLE_RATE
+This configuration variable determines the sampling rate used for audio
+input/output. SvxLink always work with a sampling rate of 16kHz internally but
+there still are som benefits from using a higher sampling rate. On some sound
+cards the filters look pretty bad at 16kHz and the amplitude response will not
+be uniform which among other things can cause problems for the software DTMF
+decoder.
+
+Some sound cards also sound very bad at 16kHz due to insufficient
+anti-alias filtering or resampling effects. These, often cheeper, sound cards
+sound OK at 48kHz.
+
+The downside of choosing a higher sampling rate is that it puts a little bit
+more load on the CPU so if you have a very slow machine (<300MHz), it might not
+have the computational power to handle it.
+
+Supported sampling rates are: 16000 and 48000.
+.TP
+.B CARD_CHANNELS
+Use this configuration variable to specify how many channels to use when
+opening a sound card. For normal sound cards the only practical values to use
+are 1 for mono and 2 for stereo. The latter is the default.
+
+When using the sound card in stereo mode it is possible to use the left and
+right channels independenly to drive two transceivers. When using the sound
+card in mono mode, both left and right channels transmit/receive the same
+audio.
+.
+.SS Network uplink transceiver section
+.
+The network uplink transceiver section is used to specify the configuration for a
+network link to the main SvxLink server. In the default configuration file there
+is a network uplink transceiver section called
+.BR NetUpLinkTrx .
+.TP
+.B TYPE
+Always "Net" for a network uplink transceiver configuration section.
+.TP
+.B RX
+Point out the receiver configuration section to use. Set to NONE if no RX is
+used. A receiver is configured in the exact same way as in the SvxLink server.
+Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a receiver.
+.TP
+.B TX
+Point out the transmitter configuration section to use. Set to NONE if no TX is
+used. A transmitter is configured in the exact same way as in the SvxLink
+server. Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a transmitter.
+.TP
+.B LISTEN_PORT
+The TCP port to listen on. Make sure to choose a unique port for each
+network uplink transceiver configuration. The default is 5210.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use to athenticate incoming
+connections. The same key have to be specified in the client configuration.
+If no key is specified, all logins will be unauthenticated. A good
+authentication key should be 20 characters long.
+The key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
+.TP
+.B MUTE_TX_ON_RX
+If set to a value >= 0, will stop the transmitter from transmitting when the
+squelch is open. The value represents a delay, in milliseconds, after the
+squelch has closed, that the transmitter will be muted. For example, if set
+to 1000, the transmitter will be muted one second after the squelch has closed.
+The default is not to mute the transmitter when the squelch is open.
+.TP
+.B FALLBACK_REPEATER
+This function is useful if running RemoteTrx as both RX and TX for a repeater.
+If the connection to the SvxLink base station is lost due to network errors, the
+RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
+the connection has been established again. Set to 1 to enable this function
+or set to 0 to disable it. Default is 0.
+.
+.SS RF uplink transceiver section
+.
+The RF uplink transceiver configuration section is used to specify the
+configuration for an RF link to the main SvxLink server.  It can for example be
+used to link remote receivers coming in on the Internet to a site that do not
+have access to the Internet.  In the default configuration file there is an RF
+uplink transceiver section called
+.BR RfUpLinkTrx .
+The section name could be anything. It should match what is specified in the
+TRXS configuration variable in the GLOBAL section.
+.TP
+.B TYPE
+Always "RF" for an RF uplink transceiver configuration section.
+.TP
+.B RX
+Point out the receiver configuration section to use. Set to NONE if no RX is
+used. A receiver is configured in the exact same way as in the SvxLink server.
+Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a receiver.
+.TP
+.B TX
+Point out the transmitter configuration section to use. Set to NONE if no TX is
+used. A transmitter is configured in the exact same way as in the SvxLink
+server. Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a transmitter.
+.TP
+.B UPLINK_TX
+Point out the uplink transmitter configuration section to use. The configuration
+for an uplink transmitter looks exactly the same as for any other transmitter.
+In the default configuration file there is an uplink transmitter configuration
+section called
+.BR UplinkTx .
+If there is no uplink transmitter, specify NONE.
+.TP
+.B UPLINK_RX
+Point out the uplink receiver configuration section to use. The configuration
+for an uplink receiver looks exactly the same as for any other receiver.
+In the default configuration file there is an uplink receiver configuration
+section called
+.BR UplinkRx .
+If there is no uplink receiver, specify NONE.
+.TP
+.B MUTE_UPLINK_RX_ON_TX
+Specify if the link receiver should be muted or not when the link transmitter is
+transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
+.TP
+.B LOOP_RX_TO_TX
+Set to 1 to loop incoming RX audio (not link RX) directly to the TX (not link
+TX). You figure out when to use it. Default is 0.
+.TP
+.B DETECT_1750
+Set up the receiver(s) specified in the RX configuration variable to detect a
+1750Hz tone burst. The detection will be relayed on the uplink transmitter if
+the setup have the capability to do so. Set this configuration variable to the
+number of milliseconds that the 1750Hz tone must be present before reporting
+it. Detection is disabled by default.
+.TP
+.B DETECT_CTCSS
+Set up the receiver(s) specified in the RX configuration variable to detect the
+given CTCSS tone(s). The detection will be relayed on the uplink transmitter if
+the setup have the capability to do so. Set this configuration variable to a
+space separated list of tone_fq:tone_duration pairs, where tone_fq is the CTCSS
+tone frequency and tone_duration is the number of milliseconds that the CTCSS
+tone must be present before reporting it.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/remotetrx.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/remotetrx.d/*
+Additional configuration files.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR svxlink.conf (1),
+.BR remotetrx (1),
+.BR siglevdetcal (1)

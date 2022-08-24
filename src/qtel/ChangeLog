@@ -1,0 +1,427 @@
+ 1.2.5 -- ?? ??? ????
+----------------------
+
+* Bugfix: When a faulty bind address had been set up, Qtel just exited with a
+  bit cryptic error message. Now it starts up with the possibility to use the
+  configuration dialog to fix the problem.
+
+
+
+ 1.2.4 -- 06 Jan 2017
+----------------------
+
+* Bugfix: Qtel translations were not installed.
+
+
+
+ 1.2.3 -- 30 Dec 2017
+----------------------
+
+* Support for Qt5 added. Patch contributed by Richard Neese.
+
+* Updated Turkish translation. Patch contributed by TA3CP.
+
+
+
+ 1.2.2 -- 22 Nov 2015
+----------------------
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* Updated Hungarian translation by HG0MV.
+
+* Now possible to bind the communication to a specific network interface.
+
+* Updated Japanese translation by JH1PGO / Masao
+
+* Updated Spanish translation by Gustavo - LU8WFY
+
+* Updated Ukrainian translation by UR3QJW / Volodymyr
+
+
+
+ 1.2.1 -- 30 jun 2014
+----------------------
+
+* Updated Ukrainian translation.
+
+
+
+ 1.2.0 -- 29 Jul 2013
+----------------------
+
+* Updated language translations: Russian (UR3QJW / Volodymyr),
+  Japanese (JH1PGO / Masao).
+
+* Added support for EchoLink proxy.
+
+* Now possible to configure multiple servers for the directory server. The
+  servers will be tried in order until a working one is found. Servers are
+  specified as a space separated list. Host names that resolve to multiple IP
+  addresses, like servers.echolink.org, will also be correctly handled so that
+  each resolved IP address will be tried in order until a working one is found.
+
+
+
+ 1.1.0 -- 06 Jun 2013
+----------------------
+
+* Qtel now support 16k internal sample rate.
+
+* The sound card sample rate can now be set in the configuration dialog.
+
+* The "100% CPU load after incoming connect" bug in Qtel has been resolved.
+
+
+
+ 1.0.0 -- 08 Mar 2013
+----------------------
+
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+
+
+ 0.12.0 -- 05 Nov 2011
+-----------------------
+
+* Now possible to specify the mic and speaker audio devices separately.
+
+* Qtel have now been ported to Qt4. One thing you will notice is that
+  the configuration will be lost. Otherwise everything should be
+  pretty much the same.
+
+* Bugfix: Incoming audio stopped being played back when a new incoming
+  connection was received.
+
+* Added French translation contributed by Patrick / F1SMF.
+
+
+
+ 0.11.3 -- 14 May 2011
+-----------------------
+
+* Added Ukrainian translation contributed by Ihor / UR3LCM.
+
+* Added Russian translation contributed by Volodymyr / UR3QJW.
+
+* Info/chat window split in two separate windows.
+  Contribution by Ihor / UR3LCM.
+
+* The charater encoding for chat messages is now possible to
+  set in the settings dialog. (UR3LCM and SM0SVX).
+
+* The VOX is now disabled by default.
+
+* The default audio device now is alsa:default.
+
+* Added Hungarian translation contributed by Molnár / HG7JUV.
+
+* Added support for using the Speex audio codec over EchoLink connections.
+  This will only, at the moment, work when conneting to other SvxLink
+  applications. For all other connections, the GSM audio codec is used.
+
+* Added a manual page for Qtel written by Michael Vorleiter.
+
+* Added Japanese translation contributed by JH1PGO / Masao.
+
+
+
+ 0.11.2 -- 26 Apr 2009
+-----------------------
+
+* Added a German translation contributed by Adi / DL1HRC.
+
+* Added a Spanish translation contributed by Adi / DL1HRC.
+
+* Added a Italian translation contributed by Adi / DL1HRC.
+
+* Patch from Stuart Longland: Remove DC offset from VOX calculations.
+
+
+
+ 0.11.1 -- 30 Jul 2008
+-----------------------
+
+* Added a new menu "Station" from where it is possible to connect to a
+  specified remote host (IP or hostname).
+
+* Now saving VOX parameters when closing the communications dialog.
+
+* Bugfix: At first startup of Qtel, the window was very small.
+
+
+
+ 0.11.0 -- 18 May 2008
+-----------------------
+
+* Qtel is now adapted to work with the new audio pipe infrastructure.
+  Nothing of this is visible to the user. It's just another way to
+  handle audio internally.
+
+* VOX implemented. Patch from Stuart Longland. At the moment, it only works
+  if full duplex is configured under the sound card settings.
+
+
+
+ 0.10.1 -- 02 Jan 2008
+-----------------------
+
+* Now compile under CentOS 5.0, Fedora 8, Ubuntu 7.10 and Gentoo.
+
+* Fixes for 64 bit platforms.
+
+* Fixed some warnings that appeared with gcc 4.2.
+
+
+
+ 0.10.0 -- 15 Apr 2007
+-----------------------
+
+* Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
+
+* Added a desktop menu configuration file. For example under Fedora/KDE,
+  Qtel can be found under the "Internet" menu.
+
+
+
+ 0.9.2 -- 02 Dec 2005
+----------------------
+
+* Bugfix: The audio output to the speaker could stop suddenly. The audio
+  came back when pressing and releasing the PTT.
+
+
+
+ 0.9.1 -- 09 Oct 2005
+----------------------
+
+* Fixed a compilation problem that appeared under Slackware 10.0.
+
+
+
+ 0.9.0 -- 25 Mar 2005
+----------------------
+
+* Added an alert sound for incoming connections.
+
+* Added some splitters to the GUI.
+
+* Corrected a bug which caused the station list not to update at
+  Qtel startup.
+
+
+
+ 0.8.0 -- 26 Sep 2004
+----------------------
+
+* Now showing node id instead of IP address in the main window.
+
+* The callsign and password is now always converted into upper case
+  in the settings and when adding bookmarks.
+
+* Added a tab in the settings dialog for sound configuration.
+
+* Now possible to operate Qtel in full duplex.
+
+
+
+ 0.7.4 -- 27 May 2004
+----------------------
+
+* Added some prebuffering on incoming audio to avoid choppy playback.
+
+
+
+ 0.7.2 -- 04 Apr 2004
+----------------------
+
+* Adapted for changes in the async library.
+
+
+
+ 0.7.1 -- 18 Nov 2003
+----------------------
+
+* Bugfix in AsyncAudioIO.cpp: Wrong usage of SNDCTL_DSP_SETTRIGGER. Output
+  was not enabled.
+
+
+
+ 0.7.0 -- 10 May 2003
+----------------------
+
+* Ctrl/focus/PTT bug fixed. Focus is now set to the PTT button when pressed
+  with the mouse.
+
+* Connected double-click and ENTER in the incoming connections view to Accept.
+
+* Outgoing chat data is now shown in the chat window
+
+* Connect sound added
+
+* Bugfix in EchoLinkDirectory.cpp: The refresh timer was not handled correctly
+
+* The length of the callsign and location (description) fields in the settings
+  window are now limited.
+
+* The station selection in each view is now remembered
+
+
+
+ 0.6.0 -- 04 May 2003
+----------------------
+
+* Bugfix: Fixed a crash when a connect packet was received on a disconnected
+  EchoLink::Qso object.
+
+* The Async API has now been documented.
+
+* Bugfix: The application no longer hangs if multiple connection windows are
+  opened. The sound device is now opened in non-blocking mode.
+
+* The Async::TcpClient class is now non-blocking
+
+* The EchoLink::Directory object now automatically refresh the registration
+
+* The EchoLib API has now been documented
+
+* Added a copyright notice (GPL) to all source files in the project
+
+* Now possible to set the UDP port base to something other than the default
+  in EchoLib
+
+* The name of the remote station is now shown in the connection dialog
+
+* Keyboard accelerators can now be translated to work with other languages
+
+* A couple of more keyboard accelerators added: Ctrl+B (toggle busy status)
+  and F5 (refresh station list).
+
+* Stripping trailing spaces from the description field
+
+* Converting the callsign to upper case in EchoLink::Directory
+
+
+
+ 0.5.0 -- 27 Apr 2003
+----------------------
+
+* Bugfix: Right click menu was shown in empty areas in the station view.
+
+* Added a time field to the incoming connections list view
+
+* The StationData class is now in the EchoLink namespace
+
+* Cleaned up the StationData class
+
+* Audio handling separated from echolib
+
+* Async class for UDP "connections" added
+
+* RX/TX indicators added
+
+* Included the GSM codec source
+
+* Added a license file (The GNU General Public License - GPL)
+
+* Added a lock feature for the PTT. Press the Ctrl key at the same time as
+  the PTT to lock it.
+
+* Added settings for list refresh interval and "start as busy"
+
+* Now updating settings, for example in EchoLink::Directory, when the settings
+  dialog closes.
+  
+
+
+ 0.4.0 -- 22 Apr 2003
+----------------------
+
+* Bugfix in ILinkDispatcher::handleCtrlInput: Fixed bad handling of strtok_r
+  buffer.
+
+* Bugfix in ILink::ctrlSockDisconnected: State machine hanged if the directory
+  server host was not found or any other error occured that lead to a
+  disconnect.
+
+* Changed the name of the ILink class to EchoLink::Directory
+
+* The ilink_test application now work again
+
+* Changed the frag size and frag count in the AudioIO class. A large frag
+  size (11) caused the CPU usage to go up to 80% (?!) in full duplex mode.
+  The frag size is now set to 8 (=256 samples).
+
+* Name of the ILinkCon class changed to EchoLink::Qso
+
+* The ComDialogs are now updated when a station list update from the directory
+  server comes in.
+
+* Incoming connections are now handled.
+
+* Bookmarks section implemented
+
+* Window size is now saved on exit
+
+
+
+ 0.3.0 -- 12 Apr 2003
+---------------------
+
+* When any other key than space is pressed in the ComDialog when the PTT button
+  has focus, the input focus go to the chat entry field. When ENTER is pressed,
+  focus goes back to the PTT button.
+
+* Rewritten the ILink object to use asyncronous communications
+
+* All Async classes are now in the "Async" namespace.
+
+* Added some icons.
+
+* The config dialog now works when used from the MainWindow
+
+* Bugfix: No crash on connection failure anymore
+
+
+
+ 0.2.0 -- 7 Apr 2003
+---------------------
+
+* Increased the station to station connection timeout time from 20 to 50
+  seconds.
+
+* The "Server Messages" window is now cleared every time a new message from
+  the server is received.
+  
+* Added a directory menu.
+
+* Manual refresh of the station list in the directory menu
+
+* Set station status (busy/online) in the directory menu
+
+* Refreshing call list from directory server
+
+* Station status updates every five minutes
+
+
+
+ 0.1.0 -- 6 Apr 2003
+---------------------
+
+* Status updates from ILinkCon.
+
+* Status updates are used in the Gui to disable/enable buttons
+
+* Focus is set to the PTT button on connect
+
+* Added support for different languages
+
+* Cleaned up the menus
+
+* Removed the toolbar
+
+* Cleaned up tab order
+
+* Removed some debug printouts
+

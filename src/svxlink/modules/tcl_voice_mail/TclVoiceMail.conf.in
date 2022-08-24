@@ -1,0 +1,61 @@
+###############################################################################
+#
+# TclVoiceMail configuration
+#
+###############################################################################
+
+#
+# The user list.
+# Format: set users(userid) "call=callsign pass=password email=mail_address";
+#   userid   - A three digit code that identifies the user
+#   callsign - The callsign of the user
+#   password - The users password. One to seven digits.
+#   email    - The e-mail address to send a text message to when a new voice
+#              mail have arrived. This is optional.
+#
+set users(001) "call=SM0AAA pass=123 email=sm0aaa@some.domain";
+set users(002) "call=SM0BBB pass=456";
+
+#
+# The directory where the voice mails are stored
+#
+set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
+
+#
+# Maximum recording times in milliseconds
+#
+set max_subj_time 10000
+set max_mesg_time 120000
+
+
+#
+# These settings are used when sending e-mail to users when a new voice mail
+# has been recorded for that user.
+#   mail_smtp_url  - The SMTP server to use
+#   mail_from_addr - The used from-address
+#   mail_from_name - The displayed name of the sender
+#   mai_subj       - The subject of the message
+#   mail_msg       - The message body
+#
+set mail_smtp_url "smtp://127.0.0.1:25";
+set mail_from_addr "mycall@some.domain";
+set mail_from_name "SvxLink Voice Mail";
+set mail_subj "SvxLink: New voice mail received";
+set mail_msg {Hi!
+
+You have received a new voice mail at SvxLink node $Logic::CFG_CALLSIGN
+from [id2var $userid call].
+
+To listen to your voice mail, follow these steps:
+
+1. Activate the voice mail module using DTMF $CFG_ID#
+2. Login by using DTMF $rec_rcpt[id2var $rec_rcpt pass]#
+3. Listen to your message using 1#
+
+73 de MYCALL / MyName};
+
+
+
+#
+# This file has not been truncated
+#

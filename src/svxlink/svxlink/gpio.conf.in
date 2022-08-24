@@ -1,0 +1,34 @@
+###############################################################################
+#
+# Configuration file for the SvxLink server GPIO Pins
+#
+###############################################################################
+
+# GPIO system pin path
+# RPi/odroid/nanopi/pine64 = /sys/class/gpio, orangpi = /sys/class/gpio_sw
+GPIO_PATH=/sys/class/gpio
+
+# Space separated list of GPIO pins that point IN and have an
+# Active HIGH state (3.3v = ON, 0v = OFF)
+GPIO_IN_HIGH=""
+
+# Space separated list of GPIO pins that point IN and have an
+# Active LOW state (0v = ON, 3.3v = OFF)
+GPIO_IN_LOW=""
+
+# Space separated list of GPIO pins that point OUT and have an
+# Active HIGH state (3.3v = ON, 0v = OFF)
+GPIO_OUT_HIGH=""
+
+# Space separated list of GPIO pins that point OUT and have an
+# Active LOW state (0v = ON, 3.3v = OFF)
+GPIO_OUT_LOW=""
+
+# User that should own the GPIO device files
+GPIO_USER="@SVXLINK_USER@"
+
+# Group for the GPIO device files
+GPIO_GROUP="@SVXLINK_GROUP@"
+
+# File access mode for the GPIO device files
+GPIO_MODE="0664"

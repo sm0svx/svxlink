@@ -1,0 +1,91 @@
+.TH SVXLINK 1 "AUGUST 2021" Linux "User Manuals"
+.
+.SH NAME
+.
+svxlink \- A general purpose voice services system for ham radio use
+.
+.SH SYNOPSIS
+.
+.BI "svxlink [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. The 
+SvxLink project contains multiple applications and this man-page
+describe the SvxLink server.
+.
+.SH OPTIONS
+.
+.TP
+.B --help
+Print a help message and exit.
+.TP
+.B --daemon
+Start the SvxLink server as a daemon.
+.TP
+.B --runasuser
+Start the SvxLink server as the specified user. The switch to the new user
+will happen after the log and pid files has been opened.
+.TP
+.BI "--logfile=" "log file"
+Specify a log file to put all output into. Both stdout and stderr will be redirected to
+the log file.
+.TP
+.BI "--pidfile=" "pid file"
+Specify a pid file to write the process ID into.
+.TP
+.BI "--config=" "configuration file"
+Specify which configuration file to use.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file. See
+.BR svxlink.conf (5)
+for further details.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file. See
+.BR svxlink.conf (5)
+for further details.
+.TP
+.I /etc/svxlink/svxlink.d/*
+Additional configuration files. Typically one configuration file per module.
+.
+.SH ENVIRONMENT
+.
+.TP
+ASYNC_AUDIO_NOTRIGGER
+Set this environment variable to 1 if you get an error about
+.B ioctl: Broken pipe
+during startup of the SvxLink server when using OSS audio.
+.TP
+ASYNC_AUDIO_ALSA_ZEROFILL
+Set this environment variable to 0 to stop the Alsa audio code from writing
+zeros to the audio device when there is no audio to write available.
+ASYNC_AUDIO_UDP_ZEROFILL
+Set this environment variable to 1 to enable the UDP audio code to write zeros
+to the UDP connection when there is no audio to write available.
+.TP
+HOME
+Used to find the per user configuration file.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5),
+.BR remotetrx (1)

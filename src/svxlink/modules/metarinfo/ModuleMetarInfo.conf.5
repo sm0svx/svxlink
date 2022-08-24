@@ -1,0 +1,84 @@
+.TH MODULEMETARINFO.CONF 5 "APRIL 2006" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleMetarInfo.conf \- Configuration file for the SvxLink server MetarInfo module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the MetarInfo module.
+.P
+The MetarInfo module gives out the latest weather information (METARs) from 
+airports requested by the ICAO-code. For further information refer to 
+http://de.wikipedia.org/wiki/METAR or http://www.icao.int/
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink MetarInfo module understands.
+.
+.SS ModuleMetarInfo
+.
+.TP
+.B TIMEOUT
+The time in seconds after this module will be left if action is done.
+.TP
+.B LONGMESSAGES
+If set some parameters will given out in the long form, e.g. NOSIG as "no
+significant change" instead of "nosig".
+.TP
+.B STARTDEFAULT
+The ICAO-code for this Metar is given out automatically after the module has
+been activated.
+.TP
+.B DEBUG
+Gives out some debug information.
+.TP
+.B TYPE
+The format type of getting weather information. Valid values are XML and TXT
+.TP
+.B LINK
+The path on the weather server, e.g. data/observations/metar/stations
+.TP
+.B SERVER
+The hostame of the weather server, e.g. http://tgftp.nws.noaa.gov
+You have to include the protocol type, e.g. http:// oder https://
+.TP
+.B AIRPORTS
+Comma separated list of ICAO shortcuts to preconfigure some weatherstations 
+of your interest. You can request the Metars in the order of configuration, e.g.
+AIRPORTS=EDDP,ESSB,KLAX
+If the module has been activated send 1# to get the Metar for EDDP, 2# for ESSB, 3# 
+for KLAX and so on.
+.
+.SH FILES
+.
+.TP
+.I /etc/svxlink.conf
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+Per user configuration file.
+.TP
+.I /etc/svxlink.d/ModuleMetarInfo.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleMetarInfo.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)

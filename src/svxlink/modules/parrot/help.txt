@@ -1,0 +1,7 @@
+The parrot module plays back everything you say. This can be used as a simplex
+repeater or just to hear how you sound to the other stations.
+
+It also tells you the DTMF digits you press. As always, end all DTMF
+strings with the number sign.
+
+Exit the module by sending just the number sign.

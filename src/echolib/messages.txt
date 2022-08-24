@@ -1,0 +1,43 @@
+@@@<0a>
+6<0a>
+.<0a>Incorrect password         [     ]<0a>0000<0a>127.0.0.1<0a>
+.<0a>See View => Server Message [     ]<0a>0000<0a>127.0.0.1<0a>
+ <0a>INCORRECT PASSWORD                   <0a>    <0a>127.0.0.1<0a>
+ <0a>                                     <0a>    <0a>127.0.0.1<0a>
+ <0a>Please check the password            <0a>    <0a>127.0.0.1<0a>
+ <0a>and try again. If you have           <0a>    <0a>127.0.0.1<0a>
+ <0a>forgotten it, see the Support        <0a>    <0a>127.0.0.1<0a>
+ <0a>section at www.echolink.org.         <0a>    <0a>127.0.0.1<0a>
++++
+
+@@@<0a>
+11<0a>
+.<0a>Callsign is being validated[     ]<0a>0000<0a>127.0.0.1<0a>
+.<0a>See View => Server Message [     ]<0a>0000<0a>127.0.0.1<0a>
+ <0a>To ensure security, your             <0a>    <0a>127.0.0.1<0a>
+ <0a>callsign is being validated.         <0a>    <0a>127.0.0.1<0a>
+ <0a>                                     <0a>    <0a>127.0.0.1<0a>
+ <0a>This process can take less           <0a>    <0a>127.0.0.1<0a>
+ <0a>than an hour, or up to a day.        <0a>    <0a>127.0.0.1<0a>
+ <0a>                                     <0a>    <0a>127.0.0.1<0a>
+ <0a>All requests are reviewed            <0a>    <0a>127.0.0.1<0a>
+ <0a>individually.                        <0a>    <0a>127.0.0.1<0a>
+ <0a>                                     <0a>    <0a>127.0.0.1<0a>
+ <0a>See the Support section at           <0a>    <0a>127.0.0.1<0a>
+ <0a>www.echolink.org for more info.      <0a>    <0a>127.0.0.1<0a>
++++
+
+@@@<0a>
+2039<0a>
+*ECSEA*<0a>Panama City, Fl. [0/8]     [ON 16:08]<0a>172277<0a>24.214.38.68<0a>
+IW2LXR<0a>Vittorio Milano            [ON 23:07]<0a>29136<0a>219.113.182.123<0a>
+.
+. [snip]
+.
+K6IRF-R<0a>Claremont, CA              [ON 13:49]<0a>13887<0a>216.117.200.62<0a>
+KC5LOS-L<0a>Beeville, TX               [ON 15:08]<0a>62280<0a>67.67.253.16<0a>
+ <0a>EchoLink Server v1.5.962             <0a>    <0a>127.0.0.1<0a>
+ <0a>                                     <0a>    <0a>127.0.0.1<0a>
+ <0a>NAEAST: Atlanta, GA USA              <0a>    <0a>127.0.0.1<0a>
++++
+

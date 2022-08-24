@@ -1,0 +1,10 @@
+Denna modul används för att skicka röstmeddelanden till andra radioamatörer.
+
+Du måste fråga din systemoperatör efter ett användar-ID och lösenord innan
+du kan börja använda denna tjänst.
+
+Menyer guidar dig genom inspelning och avlyssning av meddelanden. Avbryt en
+operation genom att sända ett tomt kommando, dvs en ensam fyrkant.
+
+Avaktivera modulen med en ensam fyrkant då ingen annan operation pågår.
+

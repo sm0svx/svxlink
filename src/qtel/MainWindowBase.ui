@@ -1,0 +1,483 @@
+<ui version="4.0">
+ <class>MainWindowBase</class>
+ <widget class="QMainWindow" name="MainWindowBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>877</width>
+    <height>501</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Qtel - the Qt EchoLink Client</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="qtel.qrc">
+    <normaloff>:/icons/images/online_icon.xpm</normaloff>:/icons/images/online_icon.xpm</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout">
+    <property name="spacing">
+     <number>6</number>
+    </property>
+    <property name="margin">
+     <number>9</number>
+    </property>
+    <item>
+     <widget class="QSplitter" name="vsplitter">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <widget class="QSplitter" name="hsplitter">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QListWidget" name="station_view_selector">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
+        </property>
+        <item>
+         <property name="text">
+          <string>Bookmarks</string>
+         </property>
+         <property name="icon">
+          <iconset resource="qtel.qrc">
+           <normaloff>:/icons/images/bookmarks.png</normaloff>:/icons/images/bookmarks.png</iconset>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Conferences</string>
+         </property>
+         <property name="icon">
+          <iconset resource="qtel.qrc">
+           <normaloff>:/icons/images/conference.xpm</normaloff>:/icons/images/conference.xpm</iconset>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Links</string>
+         </property>
+         <property name="icon">
+          <iconset resource="qtel.qrc">
+           <normaloff>:/icons/images/link.xpm</normaloff>:/icons/images/link.xpm</iconset>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Repeaters</string>
+         </property>
+         <property name="icon">
+          <iconset resource="qtel.qrc">
+           <normaloff>:/icons/images/repeater.xpm</normaloff>:/icons/images/repeater.xpm</iconset>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Stations</string>
+         </property>
+         <property name="icon">
+          <iconset resource="qtel.qrc">
+           <normaloff>:/icons/images/online_icon.xpm</normaloff>:/icons/images/online_icon.xpm</iconset>
+         </property>
+        </item>
+       </widget>
+       <widget class="QTreeView" name="station_view">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::ActionsContextMenu</enum>
+        </property>
+        <property name="rootIsDecorated">
+         <bool>false</bool>
+        </property>
+        <property name="itemsExpandable">
+         <bool>false</bool>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="allColumnsShowFocus">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="layout1">
+       <layout class="QHBoxLayout">
+        <property name="spacing">
+         <number>6</number>
+        </property>
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Messages</string>
+          </property>
+          <layout class="QHBoxLayout">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="margin">
+            <number>9</number>
+           </property>
+           <item>
+            <widget class="QTextBrowser" name="server_msg_view">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="title">
+           <string>Incoming Connections</string>
+          </property>
+          <layout class="QGridLayout">
+           <property name="margin">
+            <number>9</number>
+           </property>
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <item row="0" column="0" rowspan="3">
+            <widget class="QTreeWidget" name="incoming_con_view">
+             <column>
+              <property name="text">
+               <string>Callsign</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Name</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Time</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QPushButton" name="incoming_accept_button">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Accept</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="incoming_clear_button">
+             <property name="text">
+              <string>Clear</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <spacer>
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Expanding</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>877</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="fileQuitAction"/>
+   </widget>
+   <widget class="QMenu" name="menuDirectory">
+    <property name="title">
+     <string>&amp;Directory</string>
+    </property>
+    <addaction name="directoryBusyAction"/>
+    <addaction name="directoryRefreshAction"/>
+   </widget>
+   <widget class="QMenu" name="menuStation">
+    <property name="title">
+     <string>&amp;Station</string>
+    </property>
+    <addaction name="connectionConnectToSelectedAction"/>
+    <addaction name="connectionConnectToIpAction"/>
+    <addaction name="separator"/>
+    <addaction name="addNamedStationToBookmarksAction"/>
+    <addaction name="addSelectedToBookmarksAction"/>
+    <addaction name="removeSelectedFromBookmarksAction"/>
+   </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>S&amp;ettings</string>
+    </property>
+    <addaction name="settingsConfigureAction"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="helpAboutAction"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuDirectory"/>
+   <addaction name="menuStation"/>
+   <addaction name="menuSettings"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="connectionConnectToSelectedAction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff/>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Connect to &amp;selected...</string>
+   </property>
+   <property name="iconText">
+    <string>Connect to selected...</string>
+   </property>
+   <property name="statusTip">
+    <string>Connect to the selected station</string>
+   </property>
+  </action>
+  <action name="connectionConnectToIpAction">
+   <property name="icon">
+    <iconset>
+     <normaloff/>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Connect to &amp;IP...</string>
+   </property>
+   <property name="iconText">
+    <string>Connect to IP...</string>
+   </property>
+   <property name="statusTip">
+    <string>Connect to local station using IP address or hostname</string>
+   </property>
+  </action>
+  <action name="settingsConfigureAction">
+   <property name="icon">
+    <iconset resource="qtel.qrc">
+     <normaloff>:/icons/images/configure.png</normaloff>:/icons/images/configure.png</iconset>
+   </property>
+   <property name="text">
+    <string>Qtel &amp;Settings...</string>
+   </property>
+   <property name="iconText">
+    <string>Qtel Settings...</string>
+   </property>
+   <property name="statusTip">
+    <string>Open the Qtel settings dialog</string>
+   </property>
+  </action>
+  <action name="directoryRefreshAction">
+   <property name="icon">
+    <iconset resource="qtel.qrc">
+     <normaloff>:/icons/images/view-refresh.png</normaloff>:/icons/images/view-refresh.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Refresh</string>
+   </property>
+   <property name="iconText">
+    <string>Refresh</string>
+   </property>
+   <property name="toolTip">
+    <string>Refresh station list</string>
+   </property>
+   <property name="statusTip">
+    <string>Immediately refresh the station list</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="directoryBusyAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="qtel.qrc">
+     <normaloff>:/icons/images/busy_icon.xpm</normaloff>:/icons/images/busy_icon.xpm</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Busy</string>
+   </property>
+   <property name="iconText">
+    <string>Busy</string>
+   </property>
+   <property name="toolTip">
+    <string>View as busy</string>
+   </property>
+   <property name="statusTip">
+    <string>View as busy in directory server</string>
+   </property>
+  </action>
+  <action name="addSelectedToBookmarksAction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff/>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Add Selected To &amp;Bookmarks</string>
+   </property>
+   <property name="toolTip">
+    <string>Add the selected station in the station list to the bookmarks menu</string>
+   </property>
+   <property name="statusTip">
+    <string>Add selected station to the bookmarks</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
+   </property>
+  </action>
+  <action name="removeSelectedFromBookmarksAction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff/>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Remove Selected From Bookmarks</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove the selected station from the bookmarks list</string>
+   </property>
+   <property name="statusTip">
+    <string>Remove the selected station from the bookmarks</string>
+   </property>
+  </action>
+  <action name="addNamedStationToBookmarksAction">
+   <property name="icon">
+    <iconset>
+     <normaloff/>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Add &amp;Named Station To Bookmarks</string>
+   </property>
+   <property name="statusTip">
+    <string>Add a station to the bookmarks by entering a callsign</string>
+   </property>
+  </action>
+  <action name="helpAboutAction">
+   <property name="text">
+    <string>&amp;About...</string>
+   </property>
+   <property name="iconText">
+    <string>About</string>
+   </property>
+   <property name="toolTip">
+    <string>About Qtel</string>
+   </property>
+   <property name="statusTip">
+    <string>Show the about dialog</string>
+   </property>
+   <property name="shortcut">
+    <string/>
+   </property>
+  </action>
+  <action name="fileQuitAction">
+   <property name="icon">
+    <iconset resource="qtel.qrc">
+     <normaloff>:/icons/images/exit.png</normaloff>:/icons/images/exit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="iconText">
+    <string>Quit</string>
+   </property>
+   <property name="toolTip">
+    <string>Quit</string>
+   </property>
+   <property name="statusTip">
+    <string>Quit the Qtel application</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="qtel.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>fileQuitAction</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>354</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

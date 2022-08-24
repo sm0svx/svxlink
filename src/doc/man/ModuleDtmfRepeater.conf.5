@@ -1,0 +1,78 @@
+.TH MODULEDTMFREPEATER.CONF 5 "APRIL 2021" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleDtmfRepeater.conf \- Configuration file for the SvxLink server DTMF
+Repeater module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the DTMF Repeater module.
+.P
+The DTMF Repeater module retransmits all received DTMF digits. This can be used
+to control remote systems that is also DTMF controlled. The DTMF muting feature
+should be used on a repeater to not retransmit the received DTMF audio.
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+The amplitude, tone length and tone spacing of the generated DTMF digits is
+configured in the configuration section for the LocalTx that is actually
+transmitting the DTMF. Have a look at the documentation for the
+.B DTMF_TONE_*
+configuration variables for a full explanation.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink DtmfRepeater module understands.
+.
+.SS ModuleDtmfRepeater
+.
+.TP
+.B REPEAT_DELAY
+Specify a time, in milliseconds, that the DTMF Repeater module will wait after
+digit reception and squelch close before retransmitting received DTMF digits.
+If zero or not specified, SvxLink will try to send the digits as soon as they
+are received. 
+
+This variable does not apply when DTMF digits are sent in non-activated mode.
+Digits will then be retransmitted as soon as possible.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModuleDtmfRepeater.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleDtmfRepeater.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)

@@ -1,0 +1,68 @@
+{
+  "callsign"   : "MYCALL",
+  "name"       : "My Repeater System",
+  "input_freq" : 432600000,
+  "output_freq": 434600000,
+  "ctcss_in"   : 0,
+  "ctcss_out"  : 88.5,
+  "echolink_id": 123456,
+  "uri"        : {
+    "homepage"             : "http://www.svxlink.org/",
+    "signalEventStream"    : "http://localhost:1535/json",
+    "signalWebsocketStream": "ws://localhost:1535/ws/pi2nos",
+    "audiostream"          : "http://localhost:8000/mycall"
+  },
+  "antennalist"  : ["Dummy"],
+  "antenna"      : {
+    "Dummy": {
+      "name"       : "Dummy antenna",
+      "description": "Just a random antenna",
+      "location"   : {
+        "lon": 5.164326284803233,
+        "lat": 52.24249959861779,
+        "alt": 196
+      }
+    }
+  },
+  "rxlist"         : [
+    "Rx1",
+    "Dailyminutes"
+  ],
+  "rx": {
+    "Rx1" : {
+      "name"       : "First RX",
+      "description": "RTL dongle",
+      "make"       : "Unknown",
+      "model"      : "Unknown",
+      "infoUrl"    : "https://rtl-sdr.com/",
+      "antenna"    : "Dummy",
+      "type"       : "radio"
+    },
+    "Dailyminutes" : {
+      "name"       : "Daily Minutes",
+      "description": "Dialy Minutes, daily at 19:00 hours.",
+      "type"       : "virtual"
+    }
+  },
+  "txlist"         : [
+    "Tx1",
+    "Tx_Stream"
+  ],
+  "tx": {
+    "Tx1": {
+      "name"       : "Speaker left",
+      "description": "Built in speaker",
+      "make"       : "Unknown",
+      "model"      : "Unknown",
+      "infoUrl"    : "http://www.google.com/",
+      "antenna"    : "Dummy",
+      "type"       : "radio"
+    },
+    "Tx_Stream"    : {
+      "name"       : "Audiostream",
+      "description": "Web audio stream",
+      "type"       : "audiostream",
+      "uri"        : "audiostream"
+    }
+  }
+}

@@ -1,0 +1,550 @@
+ 1.7.0 -- ?? ??? 2022
+----------------------
+
+* ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
+
+* Config::getValue() for vectors now tokenize on comma in addition to
+  whitespace.
+
+* Improved implementation for SvxLink::SepPair to work better with streaming.
+
+* Config: Add support for calling getValue on keyed containers, like std::set
+  and std::multiset.
+
+* Msg: Add support for std::set variable in messages.
+
+* New member function AudioSelector::selectedSource() used to find out which
+  source that are currently selected.
+
+* AudioSelector::autoSelectEnabled() can now be called with a constant source.
+
+* Add a signal to the Config class so that one can subscribe to changes in the
+  configuration.
+
+* Chunked mode added to the Async::HttpServerConnection.
+
+* Fix small memory deallocation bug in Async::AudioEncoderOpus.
+
+* New template class Async::Factory for creating object factories.
+
+* Added an AudioContainer framework.
+
+* The Config::valueUpdated signal is now only emitted if the value is changed.
+
+* The Pty::setLineBuffered method can now be used to enable line buffered mode
+  where incoming chars are buffered until a <CR> or <LF> is received.
+
+* Templated function Async::Config::setValue() so that generic types can be
+  used without converting them to string first.
+
+* The Async::Serial class now support all extended baudrates.
+
+* Rewritten the DNS resolver with support for more resource record types.
+
+* AudioDeviceUDP can now write zeros to the UDP connection on underflow. That
+  is, when the "audio device" is open but there is no audio to write zeros
+  will be written instead. Enable this behavior by setting the environment
+  variable ASYNC_AUDIO_UDP_ZEROFILL=1.
+
+* The Config class now also accept associative containers for getValue. This
+  for example make it possible to use a std::map<float,float> to read a
+  configuration variable with a list of values on the form
+  VARNAME=88.5:-1,136.5:1. It is also possible to use other key/value
+  separators.
+
+* New class Async::StateMachine used to build Hierarchical Finite State
+  Machines.
+
+* New class Async::TcpPrioClient for handling pools of servers to connect to.
+  The pool members can be specified using DNS SRV records or locally using the
+  HOSTS configuration variable.
+
+* Slightly changed semantics of the TcpClient::connect functions. It's now
+  not allowed to call the connect function if already connected.
+
+
+
+ 1.6.0 -- 01 Sep 2019
+----------------------
+
+* New class Async::AudioFsf, an implementation of a frequency sampling filter.
+
+* Add method Async::Config::listSections() making it possible to list all
+  configuration sections.
+
+* Small optimization in the Async::CppApplication main loop.
+
+* AudioDeviceAlsa can now write zeros to the audio device on underflow. That
+  is, when the audio device is open but there is no audio to write zeros will
+  be written instead. Enable this behavior by setting the environment variable
+  ASYNC_AUDIO_ALSA_ZEROFILL=1.
+
+
+
+ 1.5.0 -- 30 Dec 2017
+----------------------
+
+* Support for Qt5 added. Patch contributed by Richard Neese.
+
+* Bugfix in AsyncCppDnsLookupWorker: Lookup could hang due to mutex
+  locking issues. Patch by Steve/DH1DM.
+
+* Bugfix in AsyncTcpClient: An assertion error could occur if the connect
+  method was called twice.
+
+* Bugfix in AsyncTcpServer: Fix memory leak
+
+* UdpSocket: The dataReceived signal now also provide the remote UDP port
+  number
+
+* Bugfix in AsyncAudioDeviceAlsa/AsyncAudioIO: Assertion for some sound
+  boards in Async::Timer::setEnable due to the
+  AudioDeviceAlsa::samplesToWrite function returning a negative value.
+
+* Now possible to ask the AudioEncoder and AudioDecoder if a codec is
+  supported or not.
+
+* AudioSelector bugfix: The output was not flushed when disconnecting
+  the active source. This hung the audio stream. In the process of fixing
+  that bug the AudioSelector was to a large part rewritten. The new
+  implementation also made it possible to implement seamless switches (no
+  flush when switching between two active streams).
+
+* AudioProcessor bugfix: State could get corrupted due to double call of
+  sample output function.
+
+* TcpClient: DNS lookup is now done on every reconnect.
+
+* AudioDeviceAlsa: Relaxed assertion for snd_pcm_readi so that fewer frames
+  than requested may be returned.
+
+
+
+ 1.4.0 -- 22 Nov 2015
+----------------------
+
+* New class Async::Pty used to communicate over UNIX 98 PTY:s.
+
+* Bugfix in Async::CppApplication: The max_desc variable used in the call to
+  pselect was not correctly set up in some cases after a removal of a file
+  descriptor watch.
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* The AudioSplitter now also is a source itself so that it can be used to
+  pipe audio through to the next stage in the pipe instead of having to
+  use addSink to register all sinks. This make the splitter easier to
+  handle in an audio pipe where there is a main path and you just want
+  to split off a branch.
+
+* The NULL audio codec now encode and decode a sample count which is used
+  by the decoder to write the correct number of samples to its audio sink.
+  All written samples will be zero-samples.
+
+* Bugfix in Async::AudioRecorder: If a write error occurred, the audio pipe
+  could be blocked indefinitely. Error handling was improved all over. There
+  now is a "errorOccurred" signal and a "errorMsg" function.
+
+* Bugfix in Async::AudioEncoder{Opus,Speex,Gsm}: Applications using the Opus,
+  Speex or Gsm audio encoders could crash due to some dangerous coding.
+
+* Async::Config: Removed error message printed on open failure. Printing an
+  error message must be done by the caller.
+
+* Async::Timer: Now possible to create a timer object that is disabled from
+  the beginning.
+
+* Async::Application: New function runTask which can be used to delay
+  execution of a function until control is returned to the Async main loop.
+
+* New class Async::AudioGenerator that can generate sine and square waves.
+
+* Now possible to create an Async::FdWatch without an associated file
+  descriptor and then set it later using the new setFd function.
+
+
+
+ 1.3.1 -- 02 Apr 2015
+----------------------
+
+* New functions Async::TcpClient::idIdle and Async::TcpConnection::idle
+
+
+
+ 1.3.0 -- 02 Aug 2014
+----------------------
+
+* Fixed Async::AudioDeviceUDP so that audio output is paced instead of writing
+  as fast as possible.
+
+* Added a NULL audio encoder and decoder that can be used when one does not
+  want audio to be sent at all.
+
+* Added the ability to bind TCP client and server sockets to a specific
+  IP-address.
+
+* Serial port settings are now not restored unless they have been explicitly
+  changed using the Serial::setParams function.
+
+* The serial port TX/RX buffers are now only flushed if explicitly specified
+  in the open call.
+
+* The IpAddress class now have an input stream operator.
+
+* Bugfix in Async::{AudioSelector,DnsLookup,AudioSplitter}: Important code had
+  been placed within assert statements. By default CMake set compiler options
+  that remove all assert statements when compiling in release mode. This
+  caused some things to stop working when compiling for release.
+
+* Now possible to change the buffer size of a TCP connection using
+  TcpConnection::setRecvBufLen.
+
+
+
+ 1.2.1 -- 30 Jun 2014
+----------------------
+
+* Some sound hardware cause an Alsa failure which SvxLink previously handled
+  as a fatal error (assert) and aborted the application. A warning is now
+  printed instead and the sound device is closed and reopened.
+
+* Support added for Opus version < 1.0.
+
+* Bugfix for Async::Config::getValue. The std::ws operator set the fail bit on
+  FreeBSD at end of string. This caused some config options to not be read
+  correctly.
+
+
+
+ 1.2.0 -- 01 Dec 2013
+----------------------
+
+* The Async::AudioRecorder class now have some added features. In addition to
+  the hard filesize limit there now is a soft limit at which the file will be
+  closed when the audio source call flushSamples. A signal will be emitted
+  when either of the limits are hit. Also, begin and end timestamps now are
+  available.
+
+* The Async::AudioFilter setOutputGain method now take a dB value as argument.
+
+* Added support for the Opus audio codec.
+
+* New class Async::Exec for executing external programs.
+
+
+
+ 1.1.1 -- 29 Jul 2013
+----------------------
+
+* Fixed some include directives for Async::CppApplication.
+
+* The Async::TcpClient class now always do a name lookup before trying to
+  connect. Previously, when the old lookup was cached, IP addresses that
+  changed over time was not handled.
+
+
+
+ 1.1.0 -- 06 Jun 2013
+----------------------
+
+* New class AtTimer to set a timer that expires at the specified time of day.
+
+* Now using clock_gettime instead of gettimeofday to get the time for timers
+  since the former provides monotonically increasing time which the
+  latter don't.
+
+* Async::DnsLookup: New method resultsAreReady with which it is possible
+  to check if the DNS lookup is done or if it's still pending.
+
+* Fixed a buffer overflow bug in the AudioInterpolator.
+
+* Async::TcpClient: Added two new constructors, one which take an IpAddress
+  object instead of a host name which is good if you already have the IP
+  address. The other only take an optional buffer size. The hostname or ip
+  address is given later to the new connect method.
+
+* There now is an overloaded Config::getValue function which can take a
+  container, like an std::vector, to read in a number of space separated values
+  from a configuration variable.
+
+
+
+ 1.0.0 -- 08 Mar 2013
+-----------------------
+
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+* Now possible to bind a UDP socket to a given interface.
+
+* New "audio device" which read and write audio from a UDP socket.
+  This can for example be used to stream audio to/from GNU Radio.
+
+* Now possible to set config variables in memory using the Config::setValue
+  function. It is not possible to write the change back to the config
+  file though.
+
+* New class FileReader to read a file in non blocking mode. Contributed
+  by Steve / DH1DM.
+
+
+
+ 0.18.2 -- 27 Nov 2011
+-----------------------
+
+* Bugfix in Async::AudioDeviceAlsa: There were problems when reopening
+  the audio device in another mode, like when going from WR to RDWR.
+  In some cases the audio output would hang.
+
+
+
+ 0.18.1 -- 05 Nov 2011
+-----------------------
+
+* Bugfix in Async::AudioDelayLine: Calling "clear" while a "mute" was in
+  effect would cancel the mute.
+
+* New methods IpAddress::isEmpty() and IpAddress::clear().
+
+* Bugfix in the OSS code: The audio device would not open when not using stdout
+  as the logging output due to an obscure bug in the OSS code. When not using
+  stdout, the audio device would open with fd 0, which was interpreted as and
+  error.
+
+
+
+ 0.18.0 -- 14 May 2011
+-----------------------
+
+* The Async::AudioRecorder can now auto detect the file format from the
+  filename extension.
+
+* Improved audio device handling which makes it easier to add support for
+  different kinds of audio subsystems.
+
+* Added support for the ALSA audio subsystem.
+
+* Bugfix in AudioFifo: The clear method did not work properly. Under some
+  circumstances, allSamplesFlushed was not called which caused problems
+  upstream.
+
+* Bugfix in AudioDelayLine: Mute and clear did not do the right thing
+  with the buffer pointer so it didn't behave properly.
+
+* The AudioDelayLine now fade in and out when muting and clearing to
+  avoid creating pops in the audio stream.
+
+
+
+ 0.17.0 -- 26 Apr 2009
+-----------------------
+
+* The Async internal sample rate is now configurable by a compile time
+  define (INTERNAL_SAMPLE_RATE in makefile.cfg).
+
+* Added the Async::AudioStreamStateDetector contributed by Steve / DH1DM.
+
+* Implemented an audio codec framework that is meant to be used when
+  streaming audio over a network.
+
+* Bugfixes in Async::AudioPacer: Using a prebuf size of zero millisecods
+  did not work. DH1DM: Fixed a buffer calculation error. Gaps could be
+  introduced in some situations.
+
+* Moved the audio recorder class from the SvxLink server application
+  to Async (Async::AudioRecorder).
+
+* The AudioRecorder can now write WAV files.
+
+* Bugfix in AudioFilter: Filters was not properly created under som locales,
+  like german (de_DE).
+
+
+
+ 0.16.1 -- 30 Jul 2008
+-----------------------
+
+* Bugfix and rewrite of the sound card code (AudioIO and AudioDevice classes).
+
+* Bugfix and rewrite of the Async::AudioPacer class.
+
+* Bugfix in Async::Timer: At destruction of a timer, a check was not made
+  to see if it really existed.
+
+* Bugfix in Async::CppDnsLookupWorker: The DNS code had a bug which showed
+  itself under Ubuntu. A local variable was called "h_addr" which is defined
+  in netdb.h as "h_addr_list[0]".
+
+
+
+ 0.16.0 -- 18 May 2008
+-----------------------
+
+* Lots of changes to adapt everything to the audio pipe infrastructure.
+
+* Decreased buffers to improve audio latency.
+
+* New method: AudioSplitter::enableSink make it possible to enable/disable
+  branches in the splitter.
+
+* Cleanup: Removed obsolete files and fixed files with wrong names.
+
+* New method AudioFifo::enableBuffering: Use this method to enable/disable
+  the buffering in the fifo. When disabled, this will effectively just make
+  it a passthrough.
+
+* Now possible to open left/right stereo channels as separate mono
+  channels.
+
+* Now possible to set sample rate, block size, channels and buffer size for
+  a sound card.
+
+* Made Async::CppDnsLookupWorker thread safe.
+
+
+
+ 0.15.0 -- 02 Jan 2008
+-----------------------
+
+* Now compile under CentOS 5.0, Fedora 8, Ubuntu 7.10 and Gentoo.
+
+* Inserting repeated audio fragments if incoming audio pase is too slow.
+  Good when using two sound cards with slightly different sampling rate.
+
+* Fixes for 64 bit platforms.
+
+
+
+ 0.14.0 -- 15 Apr 2007
+-----------------------
+
+* Async::Config: Now possible to use the "open" method more than once to
+  read multiple configuration files.
+
+* It is now possible to read the sampling rate the audio device is using
+  method Async::AudioIO::sampleRate.
+
+* It is now possible to set the gain to use on an audio stream.
+
+* New method: TcpConnection::isConnected.
+
+* Now using float instead of short int to represent samples. This make it
+  easier to apply audio processing on them.
+
+* Created a new audio-lib where all the audio related classes have been put.
+
+* A lot of new audio handling classes have been added.
+
+* Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
+
+* ASYNC_AUDIO_NOTRIGGER=1 is now the default.
+
+
+
+ 0.13.0 -- 02 Dec 2005
+-----------------------
+
+* Merged Serial::InPin and Serial::OutPin to a new typedef Serial::Pin.
+  Also added PIN_NONE.
+
+* Bugfix in Config: It was not possible to specify an empty configuration
+  variable using "".
+
+* Fixed the makefile problem where it was not possible to compile SvxLink
+  when a previous "make install" had been done. It tried to link against
+  the installed libraries instead of the ones just compiled.
+
+
+
+ 0.12.1 -- 09 Oct 2005
+-----------------------
+
+* Bugfix in Async::TcpClient: In some situations sockets could be leaked
+  and functions could be called twice instead of once. This may have caused
+  crashes.
+
+
+
+ 0.12.0 -- 14 Aug 2005
+-----------------------
+
+* Bugfixes for multi open of sound device.
+
+* New method in AudioIO to clear all samples in the buffer.
+
+* Bugfix: Handling flushing when already flushed correctly.
+
+* Bugfix: CPU could go up to 100% when writing audio to the
+  sound card.
+
+* DNS lookups are now asynchronous (well, threaded anyway)
+  so no more blocking DNS lookup calls.
+
+* Start and end of sound playback is now amplitude shaped
+  to not create noise at end of playback.
+
+* Bugfix: Forgot to clean up everything when the
+  Async::TcpClient::disconnect method was called.
+
+* Added an unequality operator to the Async::IpAddress class.
+
+
+
+ 0.11.0 -- 25 Mar 2005
+-----------------------
+
+* Added some code to AsyncTcpServer to broadcast data to connected
+  clients. Contribution by SM0LCB / Ulf.
+
+* Now possible to list all tags in a config section.
+
+* The Serial class can now handle multiple users per port.
+
+* Bugfix: The AudioIO class did not handle mutiple users correctly.
+
+
+
+ 0.10.0 -- 26 Sep 2004
+----------------------
+
+* Now the AudioIO object is really checking for full duplex capablility.
+
+* Bugfix: The application would crash if the AudioIO object were deleted
+  and then recreated.
+
+* New class "Serial" for serial port usage.
+
+* Bugfix: The DnsLookup class did not delete its DnsLookupWorker object
+  and other memory handling was a mess as well. Thank you "valgrind"
+  for helping me find this!
+
+
+
+ 0.9.0 -- 27 May 2004
+----------------------
+
+* Separate reader and writer in the same application can now open the audio
+  device at the same time. The device is automatically set to full duplex
+  operation. Previously, only one AudioIO object could have the device opened
+  at a time.
+
+* Added an environment variable that make it possible to disable the use
+  of the trigger functionality when opening an audio device. This was necessary
+  to make Alsa OSS emulation work. Set ASYNC_AUDIO_NOTRIGGER=1 to disable the
+  use of the trigger functionality.
+
+* Decreased the audio buffers in the audio device to make audio playback
+  more responsive.
+
+
+
+ 0.8.0 -- 04 Apr 2004
+----------------------
+
+* Audio handling rewritten to handle a separate reader and writer within
+  the same application.
+
+* Split the async lib into core, cpp, qt and demo parts.
+
+* Earlier log entries for the async library can be found in ../qtel/ChangeLog.
+

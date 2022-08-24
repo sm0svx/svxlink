@@ -1,0 +1,127 @@
+.TH SVXSERVER.CONF 5 "JANUARI 2017" Linux "File Formats"
+.
+.SH NAME
+.
+svxserver.conf \- Configuration file for the SvxServer (reflector)
+.
+.SH DESCRIPTION
+.
+.B svxserver
+is reflector for connecting different SvxLink nodes together.
+.P
+SvxServer look for configuration files in a number of places. First it try to
+find a user specific configuration file. SvxLink will look for a user specific
+configuration file in:
+.BR $HOME/.svxlink/svxserver.conf .
+If no user specific configuration file can be found, SvxServer will look for
+the system wide configuration file
+.BR /etc/svxlink/svxserver.conf .
+The
+.B --config
+command line option may also be used to specify an arbitrary configuration file.
+.
+.SH FILE FORMAT
+.
+The configuration file is in the famous INI-file format. A generic example of how such a
+file might look like is shown below.
+
+  [SECTION1]
+  VALUE1=1
+  VALUE2="TWO "
+  VAULE3="Multi "
+         "line"
+  
+  [SECTION2]
+  VALUE1=2
+
+This is a simple format that contain name=value pairs that belong to a section. In written
+text, a specific configuration variable can be referred to as SECTION1/VALUE2 meaning
+"configuration variable VALUE2 in section SECTION1".
+.P
+The same variable name can exist in two different sections. For example VALUE1 in section
+SECTION1 have the value 1 and VALUE1 in section SECTION2 have the value 2. Values
+containing spaces at the beginning or end of the line must be surrounded by citation
+characters (see SECTION1/VALUE2). Likewise with a multi line value (see SECTION1/VALUE3).
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that SvxServer understands. The
+configuration variables are described section for section.
+.
+.SS GLOBAL
+.
+The GLOBAL section contains application global configuration data.
+.TP
+.B LISTEN_PORT
+Specify the tcp port where the SvxServer is listen on. Leaving this variable 
+unset will set the default tcp port 5210.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use for the connection between
+SvxLink and the SvxServer. The same key must be configured on the SvxLink node
+that want to be connected to the SvxServer.
+If no key is specified in the config, the login will be
+unauthenticated. A good authentication key should be 20 characters long.
+The key will never be transmitted over the network.
+If the same SvxLink is used for both Net-RX and Net-TX, the same key must be
+specified in the RX as well as in the TX configuration section. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
+.TP
+.B SQL_TIMEOUT
+Define the maximum time in seconds for a squelch to be allowed in OPEN state
+before the sql is detected as "hanging". This node will be blocked until 
+it is reconnected.
+A goot value would be about 300 seconds (5 minutes).
+.TP
+.B TIMESTAMP_FORMAT
+This variable specifies the format of the timestamp that is written in front of
+each row in the log file. The format string is in the same format as specified
+in the
+.BR strftime (3)
+manual page. The default is "%c" which is described as: "the preferred date and
+time representation for the current locale". The environment variables LC_TIME,
+LC_ALL and LANG will affect how this time format will look. For example, setting
+LC_TIME="sv_SE.UTF8" will give you swedish timestamp representation. Other
+examples of format specifiers are:
+.RS
+.IP \(bu 4
+.BR %d " - The day of the month as a decimal number (range 01 to 31)"
+.IP \(bu 4
+.BR %b " - The abbreviated month name according to the current locale"
+.IP \(bu 4
+.BR %Y " - The year as a decimal number including the century"
+.IP \(bu 4
+.BR %H " - The hour as a decimal number using a 24-hour clock (range 00 to 23)"
+.IP \(bu 4
+.BR %M " - The minute as a decimal number (range 00 to 59)"
+.IP \(bu 4
+.BR %S " - The second as a decimal number (range 00 to 61)"
+.IP \(bu 4
+.BR %f " - Fractional seconds in millisecond resolution (000-999)"
+.P
+The last one (%f) is a SvxLink specific formatting specifier.
+
+Example: TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S.%f" would give a timestamp looking
+something like: "29 Nov 2005 22:31:59.875".
+.RE
+.TP
+.B HEARTBEAT_TIMEOUT
+Define the time in seconds for the interval that the SvxServer expects a response from 
+a connected client. If the response fail the connection will classified as lost.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxserver.conf 
+The system wide configuration file.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx (1),
+.BR siglevdetcal (1),
+.BR devcal (1)

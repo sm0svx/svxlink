@@ -1,0 +1,44 @@
+- What's this?
+The PropagationMonitor module scans for e-mails from vhfdx.net once every
+minute. If a mail is found it is parsed and announced on the air.
+
+This module is a bit tricky to setup since a lot of mail routing magic
+have to work. Less experienced Linux users may get into trouble.
+You have been warned...
+
+- Setup a mail account
+You need to email the propagation alerts somewhere. The best is if you can
+setup for the emails to be directly delivered to the SvxLink computer.
+How to do that is out of scope for this document.
+
+An easier way is to register for a free account somewhere where POP can be
+used to fetch incoming emails. Then use fetchmail on your SvxLink computer
+to actually fetch them. For example, call it from a cron job.
+
+- Setup Procmail
+Each received email must be stored in a separate file for the propagation
+monitor to be able to read it. This is what Procmail do. Procmail is
+configured using the ".procmailrc" file in the home directory of the user
+that is receiving the mail. A preconfigured config file is in the SvxLink
+distribution.
+
+- SELinux issues
+As usual there are SELinux issues. If you are sure SELinux is turned off on your
+system you can skip this step but if you ever consider turning it on you should
+do this because otherwise you will get into trouble in the future.
+
+To enable Procmail to write to the spool directory we need to run a couple of
+commands as user root.
+
+semanage fcontext -a -t user_home_t "/var/spool/svxlink/propagation_monitor(/.*)?"
+restorecon -r /var/spool/svxlink/propagation_monitor
+
+This was tested on CentOS 5.
+
+- Register with VHFDX
+Register yourself on the VHFDX (www.vhfdx.info) site so that emails start
+coming. On the site you enter your geographic position and setup what type of
+propagation alerts you want to receive. Start by allowing alerts for lower
+bands like 6m and 10m to test the system. You can disable them later
+when you know it's working.
+

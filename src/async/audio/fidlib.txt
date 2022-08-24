@@ -1,0 +1,642 @@
+Fidlib: Run-time filter design and execution library
+----------------------------------------------------
+
+  Copyright (c) 2002-2004 Jim Peters <http://uazu.net/>.  This library
+  is released under the GNU Lesser General Public License (LGPL) version
+  2.1 as published by the Free Software Foundation.  See the file
+  COPYING_LIB, or visit <http://www.fsf.org/licenses/licenses.html>.
+  
+  "This library is distributed in the hope that it will be useful, 
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+  
+This library was originally designed as a backend for the 'Fiview'
+application, and to provide performance filtering services to EEG
+applications, such as those in the OpenEEG project:
+
+  http://uazu.net/fiview/
+  http://openeeg.sf.net/
+
+See Fiview for a more interactive introduction to the filters, more
+related documentation, and for the opportunity to generate even higher
+performing filters through generating C code for a single class of
+filters, compiling it, and at run-time filling in the coefficients
+using fidlib.
+
+Jim
+
+--
+ Jim Peters                  (_)/=\~/_(_)                 jim@uazu.net
+                          (_)  /=\  ~/_  (_)
+ Uazú                  (_)    /=\    ~/_    (_)                http://
+ Brighton, UK       (_) ____ /=\ ____ ~/_ ____ (_)            uazu.net
+
+------------------------------------------------------------------------
+
+0. Contents
+===========
+
+1. General notes
+1.1 Building
+1.2 Fidlib predefined filter specifications
+1.3 Fidlib extended filter specification
+
+2. Fidlib C API
+2.1 Housekeeping routines
+2.2 Filter creation
+2.3 Operations on filters
+2.4 Running the filter
+
+3. Predefined filter notes
+3.1 Filters from Dr Tony Fisher's "mkfilter"
+3.2 Filters from Robert Bristow-Johnson's "audio EQ cookbook"
+3.3 Miscellaneous filters
+
+
+------------------------------------------------------------------------
+
+1. General notes
+================
+
+1.1 Building
+------------
+
+To include this library in your application, build fidlib.c along with
+your other C files.  The fidlib.c file #includes all the other source
+files it needs.  You will also need to #include "fidlib.h" in your
+source files to get the structure and function declarations.
+
+There are three choices for the filter engine, but only one of these
+(the default) is actually useful.  The 'combined' option can be slower
+and is unstable for larger filters (this is the equivalent to the
+original 'mkfilter' method) and the JIT compiler option is no longer
+maintained as it was only slightly faster than the 'cmdlist' option.
+This leaves 'cmdlist' as the recommended and default option.  The
+'cmdlist' option should be portable to other processors as well (tested
+on ix86 and PowerPC), which the JIT option certainly wasn't.
+
+Target-specific fixes are selected according to which of the T_*
+macros is defined at build-time.  See the source.  Targets defined so
+far are:
+
+  T_LINUX
+  T_MINGW
+  T_MSVC
+
+
+1.2 Fidlib predefined filter specifications
+-------------------------------------------
+
+The filter specification string can be used to completely specify a
+predefined filter, or for fid_design() it can also be used with the
+frequency or frequency range missing, in which case default values are
+picked up from values passed directly to the routine.
+
+The spec consists of a series of letters usually followed by the order
+of the filter and then by any other parameters required, preceded by
+slashes.  For example:
+
+  LpBu4/20.4    Lowpass butterworth, 4th order, -3.01dB at 20.4Hz
+  BpBu2/3-4     Bandpass butterworth, 2nd order, from 3 to 4Hz
+  BpBu2/=3-4    Same filter, but adjusted exactly to the range given
+  BsRe/1000/10  Bandstop resonator, Q=1000, frequency 10Hz
+
+The routines fid_design() or fid_parse() are used to convert this
+spec-string into filter coefficients and a description (if required).
+
+The list of available filters can be generated with 'firun -L'.  For
+more details of the predefined filter types, see section 3 of this
+document.
+
+Note that filter frequencies should be specified in the same units as
+the sampling rate, i.e. normally in Hz.  However, all filters work
+internally with the ratio of freq/sampling_rate, so you can use a
+sampling rate of 1.0 and frequency values of 0 to 0.5 (Nyquist) if you
+prefer.
+
+The auto-adjust option, selected by prefixing the frequency or frequency
+range with '=', automatically adjusts the -3.01dB points to the given
+frequencies with a kind of binary search.  See Fiview for more details
+on this.  This might be useful with some lower-order filters where the
+-3.01dB points don't come out quite right otherwise.
+
+
+1.3 Fidlib extended filter specification
+----------------------------------------
+
+With fid_parse() and the 'fiview' and 'firun' tools it is possible to
+define filters that consist of chains of predefined filters and/or raw
+IIR/FIR filters.  It is perhaps easier to demonstrate this with
+examples before explaining the format:
+
+Just using coefficients:
+
+  0.9972 / -1 1.9955 -0.9971 x 1 -1.9985 1 / -1 1.9959 -0.9973 x 1 -1.9985 1
+
+or using a predefined filter types:
+
+  LpBe3/0.05
+
+  BpBu5/=0.05-0.08
+
+or using combinations:
+
+  0.9972 / -1 1.9955 -0.9971 x 1 -1.9985 1 x LpBe3/0.05
+
+  LpBe3/0.05 x LpBe5/0.03
+
+  BsBu10/139-147 x HsBq/0.8/-15/12000
+
+When a filter is given in terms of FIR/IIR coefficients, use 'x' to
+start an FIR list, and '/' to start an IIR list.  The first list is
+assumed to be an FIR list if no 'x' or '/' is included.  The order of
+coefficients compared to time zero is closest first to farthest last.
+So 'x 0 0 1' would be a delay of two samples.
+
+To make this clearer, the filter "x A B C" corresponds to:
+
+  y[n] == A.x[n] + B.x[n-1] + C.x[n-2]
+
+and "/ D E F" corresponds to:
+
+  D.y[n] + E.y[n-1] + F.y[n-2] == x[n]
+
+where y[] is the output, and x[] is the input.  This is the most
+symmetrical way of expressing the filters, although obviously the IIR
+expression has to be rearranged for computation.
+
+It is good to keep IIR/FIR filters in pairs because they can share
+buffers that way, allowing them to run faster.  For examples, see the
+output of the predefined filters in Fiview or with 'firun -D'.
+
+
+------------------------------------------------------------------------
+
+2. Fidlib C API
+===============
+
+2.1 Housekeeping routines
+-------------------------
+
+str= fid_version();
+
+  Return a static string containing the fidlib version number, for
+  example "0.9.9".
+
+
+void my_error_func(char *err) { ... };
+fid_set_error_handler(&my_error_func);
+
+  Setup a routine that will be called if there is a fatal error in
+  fidlib.  The string passed to the error function describes the
+  error.  You can handle the error in your own way (e.g. doing a
+  longjmp() or whatever).  If your routine returns, then fidlib will
+  follow its default fatal error procedure, i.e. dump the error to
+  'stderr' and call exit(1).
+
+
+fid_list_filters(stdout);
+okay= fid_list_filters_buf(buf, buf+sizeof(buf));
+
+  List all the known filter types to either a FILE* or to a buffer.
+  'okay' is true if the text fitted inside the buffer provided.  This
+  is the output of the 'firun -L' command.
+
+
+2.2 Filter creation
+-------------------
+
+Filters are generated from specifications of various types, resulting
+in a FidFilter object in memory.  This should be free()d when no
+longer required.
+
+
+char *p;
+FidFilter *ff;
+double rate;
+char *err;
+
+err= fid_parse(rate, &p, &ff);
+
+  This is the most general-purpose filter-creation routine.  It parses
+  an extended filter specification, possibly containing a chain of
+  several predefined and/or directly-specified FIR/IIR filters.  It
+  stops at the first comma, semicolon, or unmatched closing ")]}"
+  brace.  (This allows filter specifications to be used as part of a
+  higher level specification or configuration language).  'rate' is
+  the sampling rate.  'p' is the pointer to data to parse, and is
+  updated to point to the next character on successful return.  'ff'
+  points to the new FidFilter on successful return, which should be
+  free()d once finished with.  On success, the 'err' return is zero.
+  Otherwise 'err' contains a strdup'd error string describing the
+  problem with the filter spec, which should be free()d once reported.
+
+
+char *spec;
+double rate, freq0, freq1;
+int adj;
+char *desc;
+
+filt= fid_design(spec, rate, freq0, freq1, adj, &desc);
+
+  This routine may be changed/removed in a future version (it is here
+  to support Fiview at the moment).
+
+  Create a FidFilter based on a single predefined filter, specifying
+  sampling rate and default freq0/1 parameters (pass -ve values if
+  there is no default) and adjust flag 'adj'.  Returns a strdup'd
+  description of the filter in 'desc' if a non-zero pointer is passed.
+  This routine drops dead with a fatal error if there is any problem
+  at all with the filter spec.
+
+
+#define N_COEF <whatever>
+double coef[N_COEF], gain;
+
+gain= fid_design_coef(coef, N_COEF, spec, rate, freq0, freq1, adj);
+
+  Design a filter and dump out all the non-constant coefficients to
+  the given array.  This is a support routine for the code generated
+  by Fiview.  It allows a class of filters to be generated at
+  run-time, but using a hard-coded (Fiview-generated) filter
+  processing routine to run them, for maximum speed.  The generated
+  code picks up all the non-constant coefficients from the coef[]
+  array filled in by this routine.
+
+
+double arr[]= { ... };
+filt= fid_cv_array(arr);
+
+  Generate a filter from a list of IIR and FIR coefficients in the
+  given double-array.  Each sub-list of coefficients should take the
+  form:
+
+    'I' or 'F', <number-of-coeffs>, <coeff1>, <coeff2>, ...
+
+  Use 'I' for a list of IIR coefficients ('/ A B C ...')  or 'F' for a
+  list for FIR coefficients ('x A B C ...').  Many 'I' or 'F'
+  sub-lists may be chained, and the end of the double[] list is marked
+  with a 0.0.
+
+  The purpose of this routine is to allow pre-prepared filters to be
+  included conveniently in C source as a double array.  The returned
+  filter should be free()d once finished with.
+
+
+char *spec, *fullspec, *minspec;
+double freq0, freq1, minfreq0, minfreq1;
+int minadj;
+
+fid_rewrite_spec(spec, freq0, freq1, adj,
+		 &fullspec, &minspec, &minfreq0, &minfreq1, &minadj);
+free(fullspec);
+free(minspec);
+
+  This is a support routine for Fiview, and may be adjusted in future.
+
+  It helps with handling incomplete filter-specs, merging in default
+  values and returning the result as both a fully-specified filter
+  'fullspec', and also as a minimally-specified filter and associated
+  default values: 'minspec' plus 'minfreq0', 'minfreq1', 'minadj'.
+
+
+2.3 Operations on filters
+-------------------------
+
+filt= fid_cat(freeme, filt1, filt2, filt3, ..., NULL);
+
+  Merge a list of existing FidFilters into one FidFilter by chaining
+  them serially.  If 'freeme' is non-0, the original filters
+  'filt1'/etc are free()d once read.  The resulting filter should be
+  free()d once finished with.
+
+
+filt2= fid_flatten(filt);
+
+  Flatten a filter, merging all component FIRs into one FIR, and all
+  component IIRs into one IIR.  The resulting filter may run slightly
+  faster, but it will suffer from lower accuracy, and will be unstable
+  for higher-order filters.  This is the equivalent of the original
+  'mkfilter' filter-running code.  Really it is better to leave the
+  filter unflattened.  The new filter returned should be free()d when
+  finished with.  The original filter 'filt' is untouched.
+
+
+double resp, freq, phase;
+resp= fid_response(filt, freq);
+resp= fid_response_pha(filt, freq, &phase);
+
+  Calculate the response of the filter at the given frequency.  Note
+  that the frequency should be given as (freq/rate) in the range 0 to
+  0.5, i.e. expressed as a proportion of the sampling rate, from 0 to
+  the Nyquist frequency.  The response at that frequency is returned.
+  In the case of fid_response_pha(), the phase is also returned in
+  'phase'.  The phase is scaled to the range 0 to 1, for 0 to two-PI.
+
+
+int delay;
+delay= fid_calc_delay(filt);
+
+  Calculate the approximate signal delay that the filter introduces,
+  in samples.  This searches the impulse response for the time at
+  which 50% of the weighted filter calculations are complete.  Delays
+  longer than about 8,000,000 samples are not reported accurately.
+
+
+2.4 Running the filter
+----------------------
+
+Fidlib's filter-running code is designed to go as fast as possible in a
+general-purpose way.  Two approaches were attempted, a JIT-compiler
+approach, based on writing ix86 instructions to memory for the filter
+core, and a command-list method, switching between fragments of
+pre-generated code.  The JIT version only gave a 20% advantage and was
+non-portable, so it was abandoned.  The command-list version has been
+tested on ix86 and PowerPC and should be portable anywhere.  For really
+time-critical applications, though, to gain maximum speed for a
+particular filter type, Fiview can be used to generate a special-purpose
+routine.
+
+To run a filter with 'fidlib' requires setting up a filter-run
+instance and a buffer for each channel you wish to run through that
+filter.  A function pointer is returned that should be used to process
+each input sample through its buffer to produce an output sample.
+
+Here is an illustration of typical code:
+
+  FidRun *run;
+  FidFunc *funcp;
+  void *fbuf1, *fbuf2;
+  
+  run= fid_run_new(filt, &funcp);
+  fbuf1= fid_run_newbuf(run);
+  fbuf2= fid_run_newbuf(run);
+  while (...) {
+     out_1= funcp(fbuf1, in_1);
+     out_2= funcp(fbuf2, in_2);
+     if (restart_required) fid_run_zapbuf(fbuf1);
+     ...
+  }
+  fid_run_freebuf(fbuf2);
+  fid_run_freebuf(fbuf1);
+  fid_run_free(run);
+
+If you are running hundreds of filters in parallel, you may prefer to
+allocate your own buffer memory separately (e.g. as a large block).
+In which case, use it in this way (assuming malloc() doesn't fail):
+
+  FidRun *run;
+  FidFunc *funcp;
+  int len;
+  void *fbuf1, *fbuf2;
+
+  run= fid_run_new(filt, &funcp);
+  len= fid_run_bufsize(run);
+  fbuf1= malloc(len); fid_run_initbuf(run, fbuf1);
+  fbuf2= malloc(len); fid_run_initbuf(run, fbuf2);
+  while (...) {
+     out_1= funcp(fbuf1, in_1);
+     out_2= funcp(fbuf2, in_2);
+     if (restart_required) fid_run_zapbuf(fbuf1);
+     ...
+  }
+  free(fbuf2);
+  free(fbuf1);
+  fid_run_free(run);
+
+------------------------------------------------------------------------
+
+
+3. Predefined filter notes
+==========================
+
+The full list of filters as of fidlib 0.9.9 is as follows.  This list
+can also be generated with the fid_list_filters() call and the 'firun
+-L' command:
+
+BpRe/<value>/<freq>
+    Bandpass resonator, Q=<value> (0 means Inf), frequency <freq>
+BsRe/<value>/<freq>
+    Bandstop resonator, Q=<value> (0 means Inf), frequency <freq>
+ApRe/<value>/<freq>
+    Allpass resonator, Q=<value> (0 means Inf), frequency <freq>
+Pi/<freq>
+    Proportional-integral filter, frequency <freq>
+PiZ/<freq>
+    Proportional-integral filter, matched z-transform, frequency <freq>
+LpBe<order>/<freq>
+    Lowpass Bessel filter, order <order>, -3.01dB frequency <freq>
+HpBe<order>/<freq>
+    Highpass Bessel filter, order <order>, -3.01dB frequency <freq>
+BpBe<order>/<range>
+    Bandpass Bessel filter, order <order>, -3.01dB frequencies <range>
+BsBe<order>/<range>
+    Bandstop Bessel filter, order <order>, -3.01dB frequencies <range>
+LpBu<order>/<freq>
+    Lowpass Butterworth filter, order <order>, -3.01dB frequency <freq>
+HpBu<order>/<freq>
+    Highpass Butterworth filter, order <order>, -3.01dB frequency <freq>
+BpBu<order>/<range>
+    Bandpass Butterworth filter, order <order>, -3.01dB frequencies <range>
+BsBu<order>/<range>
+    Bandstop Butterworth filter, order <order>, -3.01dB frequencies <range>
+LpCh<order>/<value>/<freq>
+    Lowpass Chebyshev filter, order <order>, passband ripple <value>dB,
+      -3.01dB frequency <freq>
+HpCh<order>/<value>/<freq>
+    Highpass Chebyshev filter, order <order>, passband ripple <value>dB,
+      -3.01dB frequency <freq>
+BpCh<order>/<value>/<range>
+    Bandpass Chebyshev filter, order <order>, passband ripple <value>dB,
+      -3.01dB frequencies <range>
+BsCh<order>/<value>/<range>
+    Bandstop Chebyshev filter, order <order>, passband ripple <value>dB,
+      -3.01dB frequencies <range>
+LpBeZ<order>/<freq>
+    Lowpass Bessel filter, matched z-transform, order <order>, -3.01dB
+      frequency <freq>
+HpBeZ<order>/<freq>
+    Highpass Bessel filter, matched z-transform, order <order>, -3.01dB
+      frequency <freq>
+BpBeZ<order>/<range>
+    Bandpass Bessel filter, matched z-transform, order <order>, -3.01dB
+      frequencies <range>
+BsBeZ<order>/<range>
+    Bandstop Bessel filter, matched z-transform, order <order>, -3.01dB
+      frequencies <range>
+LpBuZ<order>/<freq>
+    Lowpass Butterworth filter, matched z-transform, order <order>, -3.01dB
+      frequency <freq>
+HpBuZ<order>/<freq>
+    Highpass Butterworth filter, matched z-transform, order <order>, -3.01dB
+      frequency <freq>
+BpBuZ<order>/<range>
+    Bandpass Butterworth filter, matched z-transform, order <order>, -3.01dB
+      frequencies <range>
+BsBuZ<order>/<range>
+    Bandstop Butterworth filter, matched z-transform, order <order>, -3.01dB
+      frequencies <range>
+LpChZ<order>/<value>/<freq>
+    Lowpass Chebyshev filter, matched z-transform, order <order>, passband
+      ripple <value>dB, -3.01dB frequency <freq>
+HpChZ<order>/<value>/<freq>
+    Highpass Chebyshev filter, matched z-transform, order <order>, passband
+      ripple <value>dB, -3.01dB frequency <freq>
+BpChZ<order>/<value>/<range>
+    Bandpass Chebyshev filter, matched z-transform, order <order>, passband
+      ripple <value>dB, -3.01dB frequencies <range>
+BsChZ<order>/<value>/<range>
+    Bandstop Chebyshev filter, matched z-transform, order <order>, passband
+      ripple <value>dB, -3.01dB frequencies <range>
+LpBuBe<order>/<value>/<freq>
+    Lowpass Butterworth-Bessel <value>% cross, order <order>, -3.01dB
+      frequency <freq>
+LpBq<optional-order>/<value>/<freq>
+    Lowpass biquad filter, order <order>, Q=<value>, -3.01dB frequency <freq>
+HpBq<optional-order>/<value>/<freq>
+    Highpass biquad filter, order <order>, Q=<value>, -3.01dB frequency
+      <freq>
+BpBq<optional-order>/<value>/<freq>
+    Bandpass biquad filter, order <order>, Q=<value>, centre frequency <freq>
+BsBq<optional-order>/<value>/<freq>
+    Bandstop biquad filter, order <order>, Q=<value>, centre frequency <freq>
+ApBq<optional-order>/<value>/<freq>
+    Allpass biquad filter, order <order>, Q=<value>, centre frequency <freq>
+PkBq<optional-order>/<value>/<value>/<freq>
+    Peaking biquad filter, order <order>, Q=<value>, dBgain=<value>,
+      frequency <freq>
+LsBq<optional-order>/<value>/<value>/<freq>
+    Lowpass shelving biquad filter, S=<value>, dBgain=<value>, frequency
+      <freq>
+HsBq<optional-order>/<value>/<value>/<freq>
+    Highpass shelving biquad filter, S=<value>, dBgain=<value>, frequency
+      <freq>
+LpBl/<freq>
+    Lowpass Blackman window, -3.01dB frequency <freq>
+LpHm/<freq>
+    Lowpass Hamming window, -3.01dB frequency <freq>
+LpHn/<freq>
+    Lowpass Hann window, -3.01dB frequency <freq>
+LpBa/<freq>
+    Lowpass Bartlet (triangular) window, -3.01dB frequency <freq>
+
+
+3.1 Filters from Dr Tony Fisher's "mkfilter"
+--------------------------------------------
+
+See fidmkf.h for details of the derivation of these filters from Dr
+Fisher's code.  Tony Fisher died in Feb-2000, aged 43, but his
+mkfilter code is still available and in use on his site.  See his
+pages below:
+
+  http://www-users.cs.york.ac.uk/~fisher/
+  http://www-users.cs.york.ac.uk/~fisher/tribute.html
+  http://www-users.cs.york.ac.uk/~fisher/mkfilter/
+
+Bessel: This IIR filter gives a nice domed response in frequency, and
+  also a nice domed response in time.  This is something approaching
+  the ideal balance between time-locality and frequency-locality for
+  an IIR filter.
+
+Butterworth: This IIR filter gives flat responses away from the
+  transition areas and sharp transitions, especially as the order
+  increases.  However, this sharp frequency response is paid for with
+  a wider and wider time-response.  In other words it gives sharply
+  defined frequency-locality, but less well-defined time-locality.
+
+Chebychev: This IIR filter exchanges some of the flatness in the
+  passband of the Butterworth filter for a sharper fall-off at the
+  cut-off frequency.  The resulting filter also has a less
+  well-defined time-locality (see the time response).  The amount of
+  permitted passband ripple is specified in dB, and should be
+  negative, for example: "LpCh4/-0.1/100" or "LpCh4/-1/100".
+
+All of these types come also in a matched-Z version (LpBeZ,HpBuZ,etc)
+which uses the matched-Z transform instead of the bilinear transform.
+This eliminates the FIR part of the filter for low-pass filters, making
+them pure IIR.  You really need to read what Tony Fisher has to say
+about this on his site to understand whether to use it or not.  Briefly
+he suggests this option is useful for generating Bessel filters with
+optimally linear phase response, or for generating filters that execute
+slightly faster, but the bilinear transform is otherwise superior.
+
+Resonators: These IIR filters are based on oscillators, equivalent to
+  a tuned circuit.  The <value> gives the narrowness of the resonator
+  response.  Low values give wider response and faster decay to the
+  oscillations.  Infinity can be represented using a value of '0',
+  which gives a pure oscillator -- for example: "BpRe/0/0.1".  The
+  all-pass version (ApRe) has unit response, but the phase varies with
+  frequency, changing rapidly around the resonant frequency.  These
+  are all from mkfilter -- Tony Fisher there suggests that band-stop
+  and band-pass filters made with resonators are often more efficient
+  and better-behaved than Butterworth filters.  See the mkfilter docs
+  for more info on all of this.
+
+Proportional-integral: I don't know what these are for, and they're
+  not documented on the mkfilter site either.  The IIR part, at least,
+  just totals up all the samples received (an 'integral').  I guess
+  you'll know if you want this.  This is probably the digital version
+  of some analogue op-amp technique.  Also note that they don't
+  display at all well in either mkfilter or Fiview!
+
+"LpBuBe" is an experiment of mine, producing a low-pass filter that is a
+percentage cross between a Butterworth and a Bessel filter.  Whether
+this has any practical signal-processing use, I'm not sure.
+
+
+3.2 Filters from Robert Bristow-Johnson's "audio EQ cookbook"
+-------------------------------------------------------------
+
+These filters are designed for manipulating audio -- they provide
+peaking and shelving filters in addition to more conventional
+low-pass/high-pass filters.  The filters are documented here:
+
+  http://www.harmony-central.com/Computer/Programming/Audio-EQ-Cookbook.txt
+
+Although an order may be specified for these filters, it is optional.
+Without an order, or with order == 1, the original filters from the
+document are reproduced.  If you specify an order N, then N identical
+biquad filters are placed in series.  (Actually the order is really 2N,
+as a the base biquad filters are 2nd order.)
+
+Biquad low-pass and high-pass filters: For a low-pass filter, the
+  significant Q values are Q=0.5, which is the maximum value to give no
+  overshoot in the time response, and Q=0.707, which gives the most
+  flat-topped frequency response without having a resonance 'lip'.
+
+Biquad band-pass, band-stop, all-pass and peaking filters: For these,
+  larger Q values are good -- try up to Q=10 or more.  The peaking
+  filter is designed to emphasise a frequency range.  The second value
+  in this case is the peak gain in dB.  For example: PkBq1/3/10/0.1
+
+Biquad audio shelving filters: These use a 'shelf slope' parameter
+  instead of Q.  S=1 gives the steepest slope without a lip, and lower
+  values give lower values of slope.  The second parameter is the gain
+  in the affected area in dB.
+
+
+3.3 Miscellaneous filters
+-------------------------
+
+Window functions: Bartlett, Hann, Hamming and Blackman window functions are
+  available here.  These act as FIR low-pass filters.  To understand these
+  filters better, it is good to try them in Fiview with a log display: type
+  'L5' and adjust to view the full frequency range.  Also compare these
+  filters to Bessel IIR filters (e.g. LpBe6).
+
+Note that fidlib doesn't provide a huge comprehensive list of filter
+types, just the ones that seemed useful to add, mostly oriented towards
+IIR filters, and building on Dr Tony Fisher's 'mkfilter' as a base.  You
+can construct other types of filters in coefficient form and run them
+through fidlib directly using a call to fid_cv_array().  Other filters
+may be added in future.  
+
+Note that for pure FIR filters, especially longer ones, fidlib may be
+useful for calculating their response, however they may be better
+processed using other code.  For example, you might not need to apply
+the FIR on every sample, or maybe you can use an FFT-based
+acceleration of a convolution instead of calculating it the slow way,
+sample by sample.
+
+
+------------------------------------------------------------------------

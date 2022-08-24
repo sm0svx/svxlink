@@ -1,0 +1,6 @@
+*.o
+/.config
+/bin
+/lib
+/build
+/*-build

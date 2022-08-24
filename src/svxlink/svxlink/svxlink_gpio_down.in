@@ -1,0 +1,39 @@
+#!/bin/sh
+
+##############################################################################
+#
+# GPIO teardown script for SvxLink server. Run this script to undo the GPIO
+# configuration done by the svxlink_gpio_up script.
+#
+##############################################################################
+
+# Exit on failed commands and undefined variables
+set -eu
+
+# Read configuration file
+GPIO_CONF=${GPIO_CONF-"@SVX_SYSCONF_INSTALL_DIR@/gpio.conf"}
+[ -r "${GPIO_CONF}" ] && . "${GPIO_CONF}"
+
+
+# Print warning message to stderr
+#
+#   MSG -- The message to print
+#
+warning()
+{
+  local MSG="$1"; shift
+  echo "*** WARNING: ${MSG}" 1>&2
+}
+
+
+# Unset GPIO IN/OUT pins, if used
+for pin in ${GPIO_IN_HIGH:-} ${GPIO_IN_LOW:-} \
+           ${GPIO_OUT_HIGH:-} ${GPIO_OUT_LOW:-}; do
+  if [ -e "${GPIO_PATH}/${pin}" ]; then
+    # Extract pinnumber from the full pin name (e.g. gpio4_pd0 -> 4)
+    pinnum=$(echo "${pin}" | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/')
+    if ! echo ${pinnum} > "${GPIO_PATH}/unexport"; then
+      warning "Could not undefine GPIO pin \"${pin}\""
+    fi
+  fi
+done

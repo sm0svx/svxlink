@@ -1,0 +1,114 @@
+.TH REMOTETRX 1 "AUGUST 2021" Linux "User Manuals"
+.
+.SH NAME
+.
+remotetrx \- The SvxLink remote transceiver application
+.
+.SH SYNOPSIS
+.
+.BI "remotetrx [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
+.
+.SH DESCRIPTION
+.
+.B remotetrx
+is the SvxLink remote transceiver application. It is used to connect to a
+receiver and/or transmitter and then the main SvxLink server can connect to the
+remote transceiver server via TCP/IP to get audio to/from it.
+.P
+It is also possible to link via RF instead of via TCP/IP. An example use of the
+latter would be if the repeater is placed in a remote location where there is
+no network. Then networked remote receivers can be linked up to the repeater
+via RF from a link site where network is available.
+.P
+The setup is pretty straight forward. The setup of a receiver or transmitter is
+done in the same way as in the SvxLink server so use the
+.BR svxlink.conf (5)
+manual page as a reference for that. The remotetrx specific configuration is
+described in the
+.BR remotetrx.conf (5)
+manual page.
+.P
+On the SvxLink server side you need to configure a networked
+receiver/transmitter. That is described in the
+.BR svxlink.conf (5)
+manual page in the Networked Receiver/Transmitter Section. If using multiple
+receivers you also want to configure a voter and make proper calibration of the
+signal level detector on each receiver.
+.
+.SH OPTIONS
+.
+.TP
+.B --help
+Print a help message and exit.
+.TP
+.B --daemon
+Start the SvxLink remote receiver server as a daemon.
+.TP
+.B --runasuser
+Start RemoteTrx as the specified user. The switch to the new user
+will happen after the log and pid files has been opened.
+.TP
+.BI "--logfile=" "log file"
+Specify a log file to put all output into. Both stdout and stderr will be
+redirected to the log file.
+.TP
+.BI "--pidfile=" "pid file"
+Specify a pid file to write the process ID into.
+.TP
+.BI "--config=" "configuration file"
+Specify which configuration file to use.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
+The system wide configuration file. See
+.BR remotetrx.conf (5)
+for further details.
+.TP
+.IR ~/.svxlink/remotetrx.conf
+Per user configuration file. See
+.BR remotetrx.conf (5)
+for further details.
+.TP
+.I /etc/svxlink/remotetrx.d/*
+Additional configuration files. This directory is setup by the CFG_DIR
+configuration variable.
+.
+.SH ENVIRONMENT
+.
+.TP
+ASYNC_AUDIO_NOTRIGGER
+Set this environment variable to 1 if you get an error about
+.B ioctl: Broken pipe
+during remotetrx server startup when using OSS audio.
+.TP
+ASYNC_AUDIO_ALSA_ZEROFILL
+Set this environment variable to 0 to stop the Alsa audio code from writing
+zeros to the audio device when there is no audio to write available.
+ASYNC_AUDIO_UDP_ZEROFILL
+Set this environment variable to 1 to enable the UDP audio code to write zeros
+to the UDP connection when there is no audio to write available.
+.TP
+HOME
+Used to find the per user configuration file.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx.conf (5),
+.BR svxlink.conf (5),
+.BR siglevdetcal (1)

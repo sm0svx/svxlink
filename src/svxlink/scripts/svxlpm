@@ -1,0 +1,269 @@
+#!/usr/bin/env python2
+
+import os
+import sys
+import requests
+import re
+import shutil
+import tarfile
+from pprint import pprint
+
+github_owner = 'sm0svx'
+baseurl = 'https://api.github.com'
+sample_rate = '16k'
+tmpdir = os.getenv('TMPDIR', os.path.join(os.sep, 'tmp'))
+destdir = os.path.join(os.sep, 'usr', 'share', 'svxlink', 'sounds')
+#destdir = '/tmp/share'
+
+
+def get_url(url, stream=False):
+    response = requests.get(url, stream=stream)
+    if response is None:
+        print "*** ERROR: Could not get URL:", url
+        print "           The request did not return a response object"
+        sys.exit(1)
+    if response.status_code != 200:
+        print "*** ERROR: Could not retrieve URL:", url
+        print "           Status code =", response.status_code
+        info = response.json()
+        if 'message' in info:
+            print "          ", info['message']
+        if 'documentation_url' in info:
+            print "           See:", info['documentation_url']
+        sys.exit(1)
+    return response
+
+
+def download_file(url, path):
+    response = get_url(url, stream=True)
+
+    sys.stdout.write("--- Downloading " + os.path.basename(path) + ":\n")
+    with open(path, 'wb') as f:
+        total_length = response.headers.get('content-length')
+        if total_length is None: # no content length header
+            f.write(response.content)
+        else:
+            dl = 0
+            total_length = int(total_length)
+            for data in response.iter_content(chunk_size=4096):
+                dl += len(data)
+                f.write(data)
+                done = int(50 * dl / total_length)
+                sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )    
+                sys.stdout.flush()
+        sys.stdout.write("\n")
+
+
+def get_json(path):
+    url = "%s%s" % (baseurl, path)
+    response = get_url(url)
+    return response.json()
+
+
+def get_repos():
+    print "--- Getting repos for owner '" + github_owner + "'..."
+    return get_json("/users/%s/repos" % github_owner)
+
+
+def get_releases(reponame):
+    print "--- Getting releases for repo '" + reponame + "'..."
+    return get_json("/repos/%s/%s/releases" % (github_owner, reponame))
+
+
+def get_langpacks():
+    langpack_re = re.compile('svxlink-sounds-([^-]+)-([^-]+)')
+    langpacks = {}
+    repos = get_repos()
+    for repo in repos:
+        #print repo['name']
+        rematch = langpack_re.match(repo['name'])
+        if rematch is not None:
+            lang = rematch.group(1)
+            voice = rematch.group(2)
+            for rel in get_releases(repo['name']):
+                version = rel['tag_name']
+                summary = rel['name']
+                langpack = None
+                #print "%s: %s" % (version, summary)
+                assets = rel['assets']
+                if assets is None:
+                    continue
+                for asset in assets:
+                    filename = asset['name']
+                    fname_match = re.match('svxlink-sounds-[^-]+-[^-]+-([^-]+k)-', filename)
+                    if fname_match is None:
+                        continue
+                    samprate = fname_match.group(1)
+                    if asset['content_type'] == 'application/x-bzip2' or \
+                       asset['content_type'] == 'application/x-bzip':
+                        #print "  %s: %s %s" % (asset['name'], asset['content_type'], asset['browser_download_url'])
+                        langpack = {
+                                'lang': lang,
+                                'voice': voice,
+                                'version': version,
+                                'name': repo['name'],
+                                'summary': summary,
+                                'filename': filename,
+                                'url': asset['browser_download_url'],
+                                }
+                        if lang not in langpacks:
+                            langpacks[lang] = {}
+                        if voice not in langpacks[lang]:
+                            langpacks[lang][voice] = {}
+                        if samprate not in langpacks[lang][voice]:
+                            langpacks[lang][voice][samprate] = {}
+                        langpacks[lang][voice][samprate][version] = langpack
+    return langpacks
+
+
+def list_langpacks(langpacks):
+    lang_field_width = 6
+    voice_field_width = 10
+    releases_field_width = 70 - lang_field_width - voice_field_width
+    fmt = "%%-%ds %%-%ds" % (lang_field_width, voice_field_width)
+    sys.stdout.write((fmt + " %s\n") % ("Lang", "Voice", "Releases"))
+    sys.stdout.write("%s %s %s\n" % (
+        '-' * lang_field_width,
+        '-' * voice_field_width,
+        '-' * releases_field_width
+        ))
+    for lang in langpacks:
+        for voice in langpacks[lang]:
+            if sample_rate not in langpacks[lang][voice]:
+                continue
+            releases = langpacks[lang][voice][sample_rate]
+            sys.stdout.write(fmt % (lang, voice))
+            if len(releases) > 0:
+                for version in releases:
+                    sys.stdout.write(" %s" % version)
+            else:
+                sys.stdout.write(" No releases")
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+
+
+def choose_entry(prompt, entries):
+    while True:
+        try:
+            index = 0
+            for entry in entries:
+                index += 1
+                print "%d. %s" % (index, entry)
+            index = int(raw_input(prompt + ' (or 0 to exit): '))
+            if index == 0:
+                sys.exit(0)
+            elif index < 0:
+                print 'list index out of range'
+                continue
+            print
+            return entries[index-1]
+        except Exception as e:
+            print e
+
+
+print "SvxLink Language Pack Manager"
+print
+
+if not os.path.exists(destdir):
+    print "*** ERROR: Destination directory does not exist: " + destdir
+    sys.exit(1)
+if not os.access(destdir, os.R_OK | os.W_OK | os.X_OK):
+    print "*** ERROR: Destination directory is not writable: " + destdir
+    sys.exit(1)
+
+langpacks = get_langpacks()
+#langpacks = {
+#    u'en_US': {
+#        u'heather': {
+#            '16k': {
+#                '14.08': {
+#                    'lang': u'en_US',
+#                    'voice': u'heather',
+#                    'rate': u'16k',
+#                    'version': u'14.08',
+#                    'name': u'svxlink-sounds-en_US-heather',
+#                    'summary': u'Sound clips for SvxLink Server version 14.08',
+#                    'filename': u'svxlink-sounds-en_US-heather-16k-13.12.tar.bz2',
+#                    'url': u'https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/14.08/svxlink-sounds-en_US-heather-16k-13.12.tar.bz2'
+#                },
+#                '13.12.1': {
+#                    'lang': u'en_US',
+#                    'voice': u'heather',
+#                    'rate': u'16k',
+#                    'version': u'13.12.1',
+#                    'name': u'svxlink-sounds-en_US-heather',
+#                    'summary': u'Sound clips for SvxLink Server version 13.12.1',
+#                    'filename': u'svxlink-sounds-en_US-heather-16k-13.12.tar.bz2',
+#                    'url': u'https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/13.12.1/svxlink-sounds-en_US-heather-16k-13.12.tar.bz2'
+#                }
+#            },
+#            '8k': {
+#                '14.08': {
+#                    'lang': u'en_US',
+#                    'voice': u'heather',
+#                    'rate': u'8k',
+#                    'version': u'14.08',
+#                    'name': u'svxlink-sounds-en_US-heather',
+#                    'summary': u'Sound clips for SvxLink Server version 14.08',
+#                    'filename': u'svxlink-sounds-en_US-heather-8k-13.12.tar.bz2',
+#                    'url': u'https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/14.08/svxlink-sounds-en_US-heather-8k-13.12.tar.bz2'
+#                },
+#                '13.12.1': {
+#                    'lang': u'en_US',
+#                    'voice': u'heather',
+#                    'rate': u'8k',
+#                    'version': u'13.12.1',
+#                    'name': u'svxlink-sounds-en_US-heather',
+#                    'summary': u'Sound clips for SvxLink Server version 13.12.1',
+#                    'filename': u'svxlink-sounds-en_US-heather-8k-13.12.tar.bz2',
+#                    'url': u'https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/13.12.1/svxlink-sounds-en_US-heather-8k-13.12.tar.bz2'
+#                }
+#            }
+#        }
+#    },
+#    u'sv_SE': {
+#        u'elin': {
+#            '16k': {
+#                '14.08': {
+#                    'lang': u'sv_SE',
+#                    'voice': u'elin',
+#                    'rate': u'16k',
+#                    'version': u'14.08',
+#                    'name': u'svxlink-sounds-sv_SE-elin',
+#                    'summary': u'Swedish sound clips for SvxLink Server version 14.08',
+#                    'filename': u'svxlink-sounds-sv_SE-elin-16k-13.12.tar.bz2',
+#                    'url': u'https://github.com/sm0svx/svxlink-sounds-sv_SE-elin/releases/download/14.08/svxlink-sounds-ev_SE-elin-16k-13.12.tar.bz2'
+#                }
+#            }
+#        }
+#    }
+#}
+#pprint(langpacks)
+
+print
+list_langpacks(langpacks)
+
+print
+lang = choose_entry('Choose language', langpacks.keys())
+voice = choose_entry('Choose voice', langpacks[lang].keys())
+samprate = choose_entry('Choose sample rate', langpacks[lang][voice].keys())
+version = choose_entry('Choose release version', langpacks[lang][voice][samprate].keys())
+
+langpack = langpacks[lang][voice][samprate][version]
+#pprint(langpack)
+
+full_path = os.path.join(tmpdir, langpack['filename'])
+download_file(langpack['url'], full_path)
+
+os.chdir(destdir)
+langpackdir = lang + "-" + voice + "-" + samprate
+if os.path.exists(lang):
+    os.remove(lang)
+if os.path.exists(langpackdir):
+    shutil.rmtree(langpackdir)
+print "--- Unpacking language pack..."
+#os.system('tar xjf ' + full_path)
+with tarfile.open(full_path, 'r:bz2') as f:
+    f.extractall()
+os.symlink(langpackdir, lang)
+

@@ -1,0 +1,87 @@
+#!/bin/sh
+# Start the eventsource daemon
+
+### BEGIN INIT INFO
+# Provides:        eventsource
+# Required-Start:  svxlink
+# Required-Stop:   
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: Start eventsource daemon
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+. /lib/lsb/init-functions
+
+PROG="eventsource"
+DAEMON=/usr/local/bin/$PROG.pl
+PIDFILE=/var/run/$PROG.pid
+LOGFILE=/var/log/$PROG
+RUNASUSER=svxlink
+
+test -x $DAEMON || exit 5
+
+if [ -r /etc/default/$PROG ]; then
+	. /etc/default/$PROG
+fi
+
+UGID=$(getent passwd $RUNASUSER | cut -f 3,4 -d:) || true
+
+case "$1" in
+    start)
+	log_daemon_msg "Starting eventsource daemon" "eventsource"
+
+	## Check about pid file
+	if [ -e $PIDFILE ]; then
+	    if $0 status > /dev/null ; then
+		log_failure_msg "$PROG is already started; not starting"
+		return
+	    else
+		log_progress_msg "[Removing stale PID file $PIDFILE]"
+		rm -f $PIDFILE
+	    fi
+	fi
+	
+	## Start the daemon
+	start-stop-daemon --start --pidfile $PIDFILE --make-pidfile --startas $DAEMON --chuid $RUNASUSER --background
+	status=$?
+
+	log_end_msg $status
+        ;;
+
+    stop)
+	log_daemon_msg "Stopping eventsource daemon" "eventsource"
+
+	## Stopping the daemon
+  	start-stop-daemon --stop --pidfile $PIDFILE
+
+	log_end_msg $?
+	rm -f $PIDFILE
+        ;;
+
+    restart|force-reload)
+	$0 stop && sleep 2 && $0 start
+  	;;
+
+    try-restart)
+	if $0 status >/dev/null; then
+	    $0 restart
+	else
+	    exit 0
+	fi
+	;;
+
+    reload)
+	exit 3
+	;;
+
+    status)
+	status_of_proc $DAEMON "eventsource daemon"
+	;;
+
+    *)
+	echo "Usage: $0 {start|stop|restart|try-restart|force-reload|status}"
+	exit 2
+	;;
+esac

@@ -1,0 +1,30 @@
+# This is the configuration file for procmail that is used to
+# extract received propagation alerts into separate files.
+# This is used by the PropagationMonitor SvxLink module.
+
+# Store received propagation alerts here
+MAILDIR=@SVX_SPOOL_INSTALL_DIR@/propagation_monitor
+
+# Log for procmail activity
+#LOGFILE=$MAILDIR/procmail.log
+
+# Enable more verbose logging. Good for debugging your procmailrc.
+#VERBOSE=yes
+
+# Put e-mails from the DXrobot (gooddx.net) in the folder below
+:0
+* ^From.*DXrobot
+dxrobot
+
+# Put e-mails from DXMAPS (dxmaps.com) in the folder below
+:0
+* ^From.*DXMAPS
+vhfdx
+
+# Send all other, non matching e-mails, to user root.
+# Replace "!root" with "/dev/null" to throw non-matching
+# e-mails away instead or comment both lines below out
+# to just let non-matching e-mails pass through.
+:0
+!root
+

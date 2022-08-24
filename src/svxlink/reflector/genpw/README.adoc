@@ -1,0 +1,103 @@
+= SvxReflector Password Generator
+:toc2:
+
+== Introduction
+This is a simple web utility used to safely generate a password for a SvxLink
+node to log in to the SvxReflector. The utility offer random generated
+passwords to a client which can then be picked up by the reflector sysop to be
+configured in the reflector configuration file. The generated password is
+protected in transit by using a SSL/TLS encrypted connection.
+
+
+== Installation
+This utility should be installed on a webserver where the SvxReflector sysop
+have shell access. It does not have to be the same server as where the
+SvxReflector server is running.
+
+The Apache webserver must be installed as a prerequisite. That setup is not
+described in this documentation. The webserver also need to be set up with a
+valid SSL/TLS server certificate.
+
+It is of course possible to use other web servers but this is not described in
+this document.
+
+In short, the installation is done by installing a couple of dependencies and
+then copy the genpw files in place.
+
+[source,bash]
+----
+apt update
+apt install libapache2-mod-wsgi-py3 python3-flask
+mkdir -p /var/www/genpw/db
+cp genpw.* /var/www/genpw/
+cp getpw.py /usr/local/bin/
+useradd -rU svxlink
+chown svxlink:svxlink /var/www/genpw/db
+chmod 2770 /var/www/genpw/db
+usermod -aG sysop1 svxlink
+usermod -aG sysop2 svxlink
+----
+
+
+== Apache Config Example
+When all genpw files have been put in place by following the instructions above
+Apache must be configured with something like the example below.
+
+[source,apache]
+----
+<IfModule mod_ssl.c>
+    <VirtualHost *:443>
+        # ...
+        # Other setup
+        # ...
+
+        # Make sure that SSL/TLS encryption is enabled/required
+        SSLEngine on
+        SSLCertificateFile      /etc/ssl/certs/example.org.crt
+        SSLCertificateKeyFile   /etc/ssl/private/example.org.key
+        SSLCertificateChainFile /etc/ssl/certs/example.org-intermediate.pem
+        SSLProtocol -all +TLSv1.2 +TLSv1.3
+
+        WSGIDaemonProcess genpw user=svxlink group=svxlink threads=1 home=/var/www/genpw
+        WSGIScriptAlias /genpw /var/www/genpw/genpw.wsgi
+
+        <Directory /var/www/genpw>
+            WSGIProcessGroup genpw
+            WSGIApplicationGroup %{GLOBAL}
+            Order deny,allow
+            Allow from all
+        </Directory>
+    </VirtualHost>
+</IfModule>
+----
+
+[source,bash]
+----
+systemctl restart apache2
+----
+
+
+== Usage
+Send a URL to the SvxLink node sysop that look something like the one below.
+
+  https://www.example.com/genpw?callsign=SM0XYZ
+
+A new password will be generated each time the link is clicked. After the
+SvxLink node sysop have clicked on the link to generate a password he should
+send back the timestamp to the SvxReflector sysop in order for him to verify
+that the password with the correct timestamp is used.
+
+The SvxLink node sysop must not reload the page after generating a password
+that is then used to configure the SvxLink node. Since the SvxReflector sysop
+only see the latest generated password it will then be overwritten and thus
+wrong.
+
+The SvxReflector node sysop will run the getpw.py script on the webserver to retrieve the password to configure.
+
+  $ getpw.py SM0XYZ
+  SM0XYZ: "{"remote_addr": "11.22.33.44", "ts": "2021-02-14T19:51:30.291Z", "password": "!_2>4kGUHM7vorUctVJFaxZ!<!dzln"}"
+
+The password will be removed from the database when accessed once.
+
+It is also possible to list all callsigns in the database by running the script
+above with no arguments.

@@ -1,0 +1,19 @@
+{
+  "comment": [
+    "This is a public list of repeaters offering topology information",
+    "in the repeater-info.json format, e.g. for use in signal level display",
+    "To have your repeater added to this list send mail to PE1CHL"
+  ],
+  "repeaterlist": [
+    "MYCALL",
+    "MYCALL2"
+  ],
+  "info": {
+    "MYCALL": {
+      "uri": "http://localhost:1336/repeater-info.json"
+    },
+    "MYCALL2": {
+      "uri": "http://localhost:1338/repeater-info.json"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+The EchoLink module is used to connect to other EchoLink stations. To connect to
+another station, just enter a node number ended with the number sign. To
+disconnect, press the number sign.
+
+Subcommands are:
+1  - List connected stations.
+2  - Play own node ID.
+31 - Connect to random link or repeater.
+32 - Connect to random conference.
+4  - Reconnect to the last disconnected station.
+50 - Deactivate listen only
+51 - Activate listen only
+
+To exit the module, press the number sign when not connected.

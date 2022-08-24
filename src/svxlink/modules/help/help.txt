@@ -1,0 +1,9 @@
+This is the SvixLink system. It is a multi purpose voice services system for ham
+radio use. The system is controlled by DTMF commands. All commands consists of
+one or more digits ended with the number sign.
+
+Pressing the star key will make the system identify itself.
+
+The system is divided into several modules which has its own purpose. You
+activate a module by sending its module i d ended with the number sign. Most
+modules will play their help message if sending command 0 when its activated.

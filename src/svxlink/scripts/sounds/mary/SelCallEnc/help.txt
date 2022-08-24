@@ -1,0 +1,6 @@
+The sel call encoder module is used to transmit selective calling tone
+sequences. To send a sel call sequence, send a DTMF command where the first
+two digits represent the sel call standard to use and where the rest of the
+digits are the actual sequence of digits to send.
+
+Available standards are:

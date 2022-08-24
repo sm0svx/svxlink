@@ -1,0 +1,73 @@
+.TH MODULEPARROT.CONF 5 "APRIL 2021" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleParrot.conf \- Configuration file for the SvxLink server Parrot module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the Parrot module.
+.P
+The Parrot module record audio as long as the squelch is open and then plays it
+back. This can be used as a simplex repeater or for tests. It also plays back
+(spelling the digits) the DTMF digits it receives.
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink Parrot module understands.
+.
+.SS ModuleParrot
+.
+.TP
+.B FIFO_LEN
+The length, in seconds, of the FIFO (First In First Out) audio buffer where
+audio is recorded to. When the squelch has been opened for longer than the time
+specified here, the oldest audio in the buffer will be thrown away.
+.TP
+.B REPEAT_DELAY
+Specify a time, in milliseconds, that the parrot module will wait after squelch
+close before playing back the recorded message. This is mostly a way to prevent
+the parrot module to start sending if the squlech momentarily closes on weak
+signals.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModuleParrot.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleParrot.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)

@@ -1,0 +1,99 @@
+#!/bin/bash -e
+
+SYSMAN_SERVER=sysman.freeradionetwork.eu
+#SYSMAN_SERVER=localhost
+REG_PORT=10025
+
+shopt -s extglob
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <FRN module config file>"
+  exit 1
+fi
+CFG_FILE="$1"
+
+# Read the FRN module config file
+if [[ ! -r "$CFG_FILE" ]]; then
+  echo "*** ERROR: Could not read the FRN configuration file: $CFG_FILE"
+  exit 1
+fi
+source <(grep -v "^\[" < $CFG_FILE)
+
+# Check syntax of configuration variables
+if ! [[ "$CALLSIGN_AND_USER" =~ ^.+,\ .+$ ]]; then
+  echo "*** ERROR: CALLSIGN_AND_USER not set or malformed." \
+       "Should be \"Callsign, Name\""
+  exit 1
+fi
+if ! [[ "$EMAIL_ADDRESS" =~ ^.+@.+$ ]]; then
+  echo "*** ERROR: EMAIL_ADDRESS not set or malformed." \
+       "Should be \"user@example.org\""
+  exit 1
+fi
+if ! [[ "$BAND_AND_CHANNEL" =~ ^PC\ Only$ || \
+        "$BAND_AND_CHANNEL" =~ ^Crosslink$ ||
+        "$BAND_AND_CHANNEL" =~ ^[0-9]+\.[0-9]+(AM|FM|DIG)(\ (CTC[0-9.]+|DSC[0-9]+|NONE))?$ ]]; then
+  echo "*** ERROR: BAND_AND_CHANNEL not set or malformed." \
+       "Should be \"PC Only\", \"Crosslink\" or ..."
+  exit 1
+fi
+if [[ -z "$COUNTRY" ]]; then
+  echo "*** ERROR: COUNTRY not set."
+  exit 1
+fi
+if ! [[ "$CITY_CITY_PART" =~ ^.+\ -\ .+$ ]]; then
+  echo "*** ERROR: CITY_CITY_PART not set or malformed." \
+       "Should be \"city - city_part\""
+  exit 1
+fi
+
+echo "--- About to register using the following information ---"
+echo "Callsign and user: ${CALLSIGN_AND_USER}"
+echo "E-mail address: ${EMAIL_ADDRESS}"
+echo "Band and channel: ${BAND_AND_CHANNEL}"
+echo "Description: ${DESCRIPTION}"
+echo "Country: ${COUNTRY}"
+echo "City and city part: ${CITY_CITY_PART}"
+echo
+
+ANS=""
+until [[ "$ANS" =~ ^[yYnN] ]]; do
+  read -p "OK [Y/N]? " ANS
+done
+
+if [[ "$ANS" =~ ^[yY] ]]; then
+  REG_CMD="IG:<ON>${CALLSIGN_AND_USER}</ON><EA>${EMAIL_ADDRESS}</EA><BC>${BAND_AND_CHANNEL}</BC><DS>${DESCRIPTION}</DS><NN>${COUNTRY}</NN><CT>${CITY_CITY_PART}</CT>"
+
+  echo "Registering..."
+  if ! exec 100<>/dev/tcp/${SYSMAN_SERVER}/${REG_PORT}; then
+    echo "*** ERROR: Could not connect to system manager"
+    exit 1
+  fi
+  echo "$REG_CMD" >&100
+  if ! read -u 100 -t 30 ANS; then
+    echo "*** ERROR: Could not read answer from system manager"
+    exit 1
+  fi
+  # Remove trailing whitespace
+  ANS=${ANS%%*([[:space:]])}
+  echo -e "==$ANS=="
+  case "$ANS" in
+    OK)
+      echo "Registration succeeded. An email will be sent to the email" \
+           "address you specified."
+      ;;
+    NU)
+      echo "*** ERROR: Registration failed. A user with the chosen username" \
+           "already exist."
+      exit 1
+      ;;
+    *)
+      echo "*** ERROR: Registration failed with error code \"$ANS\""
+      exit 1
+      ;;
+  esac
+else
+  echo "Aborted!"
+fi
+
+exit 0

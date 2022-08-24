@@ -1,0 +1,11 @@
+Detta är SvxLink, ett generellt system för olika typer av rösttjänster.
+Systemet kontrolleras med DTMF. Alla kommandon består av en eller flera
+siffor. Kommandon avslutas alltid med en fyrkant.
+
+Om du trycker en ensam stjärna kommer systemet att identifiera sig och läsa
+upp lite statusinformation.
+
+Systemet är indelat i flera olika moduler. Du aktiverar en modul genom att
+knappa in dess modul-ID avslutat med fyrkant. De flesta moduler spelar upp
+ett hjälpmeddelande då modulen är aktiverad och kommando 0 skickas.
+

@@ -1,0 +1,9 @@
+With Metar information you are able to request worldwide weatherinformation from I C A O
+weatherstations provided by the american N O A A weather service.
+
+To get a list of predefined stations send 0 1 followed by the number sign.
+
+Please aks your local s v x link sysop to add stations of your interest or use one of the 2 search
+functions.
+
+Send a single number sign to leave the module.

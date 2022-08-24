@@ -1,0 +1,67 @@
+{
+  "nodeLocation": "MyTownOrArea",
+  "hidden": false,
+  "sysop": "CALL1 CALL2",
+  "toneToTalkgroup": {"136.5": 0, "88.5": 999, "123.0": 9990},
+  "qth": [
+    {
+      "name": "My QTH Name",
+      "pos": {
+        "lat": 60.12345,
+        "long": 17.12345,
+        "loc": "AA88BB"
+      },
+      "rx": {
+        "A": {
+          "name": "Rx1",
+          "freq": 433.450,
+          "sqlType": "CTCSS",
+          "ctcssFreq": [136.5,88.5,123.0],
+          "ant": [
+            {
+              "comment": "Yagi south",
+              "height": 50,
+              "dir": 180
+            },
+            {
+              "comment": "Yagi north",
+              "height": 50,
+              "dir": 0
+            }
+          ]
+        },
+        "B": {
+          "name": "Rx2",
+          "freq": 145.500,
+          "sqlType": "COS",
+          "ant": [
+            {
+              "comment": "Diamond X310 Omni",
+              "height": 10
+            }
+          ]
+        }
+      },
+      "tx": {
+        "A": {
+          "name": "Tx1",
+          "freq": 433.450,
+          "pwr": 20,
+          "ctcssFreq": 136.5,
+          "ant": [
+            {
+              "comment": "Yagi south",
+              "height": 50,
+              "dir": 180
+            },
+            {
+              "comment": "Yagi north",
+              "height": 50,
+              "dir": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
