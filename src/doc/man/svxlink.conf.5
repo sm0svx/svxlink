@@ -155,7 +155,11 @@ configuration information for linking logics together (see Logic Linking).
 .
 A logic core is what define how SvxLink should behave on the RF channel. The
 SvxLink server can handle more than one logic core and so can be connected to
-more than one transceiver. The configuration variables below are common to all
+more than one transceiver. When configured, a logic core is loaded at runtime
+as a plugin. See the LOGIC_CORE_PATH configuration variable for more
+information on how SvxLink find the logic core plugins.
+.P
+The configuration variables below are common to all
 logic types. Configuration variables that are specific to a certain logic core
 type are described below in a section of its own.
 .TP
