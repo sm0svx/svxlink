@@ -26,9 +26,6 @@ find_package(GSM REQUIRED)
 set(LIBS ${LIBS} ${GSM_LIBRARY})
 include_directories(${GSM_INCLUDE_DIR})
 
-# Include contributed parts
-add_subdirectory(contrib)
-
 # Find the TCL library
 if(TCL_LIBRARY)
   set(TCL_LIBRARY_CACHED TRUE)
@@ -135,3 +132,6 @@ install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_down
 foreach(logic_name ${SVXLINK_LOGIC_CORES})
   install(TARGETS ${logic_name}Logic DESTINATION ${SVX_LOGIC_CORE_INSTALL_DIR})
 endforeach()
+
+# Include contributed parts
+add_subdirectory(contrib)
