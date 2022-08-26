@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2018  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2022  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -141,31 +141,31 @@ class DtmfDigitHandler;
  ****************************************************************************/
 
 /**
-@brief	This class implements the core logic of SvxLink
+@brief	This class implements the functions in common for RF logic cores
 @author Tobias Blomberg
 @date   2004-03-23
+
+This class is used as the base class for all logic cores that implement "RF"
+behaviour. That is, logic cores which are primarily intended to operate a radio
+channel, e.g. RepeaterLogic and SimplexLogic.
 */
 class Logic : public LogicBase
 {
   public:
 
     /**
-     * @brief 	Default constuctor
+     * @brief 	Default constructor
      */
-    Logic(Async::Config& cfg, const std::string& name);
+    Logic(void);
 
     /**
-     * @brief 	Destructor
+     * @brief   Initialize the logic core
+     * @param   cfgobj      A previously initialized configuration object
+     * @param   plugin_name The name of the logic core
+     * @return  Returns \em true on success or \em false on failure
      */
-    virtual ~Logic(void);
-
-    /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
-     */
-
-    virtual bool initialize(void);
+    virtual bool initialize(Async::Config& cfgobj,
+                            const std::string& plugin_name) override;
 
     virtual void processEvent(const std::string& event, const Module *module=0);
     void setEventVariable(const std::string& name, const std::string& value);
@@ -212,6 +212,11 @@ class Logic : public LogicBase
     CmdParser *cmdParser(void) { return &cmd_parser; }
 
   protected:
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~Logic(void) override;
+
     virtual void squelchOpen(bool is_open);
     virtual void allMsgsWritten(void);
     virtual void dtmfDigitDetected(char digit, int duration);

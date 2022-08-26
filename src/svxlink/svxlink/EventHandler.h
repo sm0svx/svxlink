@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -113,6 +113,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class EventHandler : public sigc::trackable
 {
   public:
+    using CommandHandler = std::function<std::string(int argc, const char *argv[])>;
+
     /**
      * @brief 	Constuctor
      */
@@ -128,7 +130,34 @@ class EventHandler : public sigc::trackable
      * @return	Returns \em true on success or else \em false
      */
     bool initialize(void);
-  
+
+    /**
+     * @brief   Add a custom command to the event handler
+     * @param   name  The name of the command
+     * @param   f     The handler function
+     * @return  Return empty string on success or else an error string
+     *
+     * This is an example of how to add a TCL event handler command that take
+     * one argument. The example use a lambda function but other methods
+     * compatible with std::function may be used as well.
+     *
+     *  event_handler->addCommand("demoCommand",
+     *      [&](int argc, const char* argv[])
+     *      {
+     *        if (argc != 2)
+     *        {
+     *          return std::string("Usage: demoCommand: <arg1>");
+     *        }
+     *        std::cout << "### demoCommand(" << argv[1] << ")" << std::endl;
+     *        return std::string();
+     *      });
+     *
+     * It would be executed in TCL like this:
+     *
+     *   demoCommand "hello"
+     */
+    void addCommand(const std::string& name, CommandHandler f);
+
     /**
      * @brief 	Set a TCL variable
      * @param 	name The name of the variable to set
@@ -261,7 +290,8 @@ class EventHandler : public sigc::trackable
                     int argc, const char *argv[]);
     static int setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
-
+    static int genericCommandHandler(ClientData cdata, Tcl_Interp *irp,
+                    int argc, const char *argv[]);
 };  /* class EventHandler */
 
 

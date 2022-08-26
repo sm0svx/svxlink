@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "MARS 2022" Linux "File Formats"
+.TH SVXLINK.CONF 5 "AUGUST 2022" Linux "File Formats"
 .
 .SH NAME
 .
@@ -59,6 +59,14 @@ specified, the standard search paths for library files will be used. If that
 also fails a hard-coded default will be used. What that default is depend on the
 architecture but typically on a x86_64 system it is /usr/lib64/svxlink.
 Leaving this variable unset should work in most cases.
+.TP
+.B LOGIC_CORE_PATH
+Specify where the SvxLink logic core plugins can be found. If not set, a
+hard-coded default will be used. What that default is depend on the
+architecture but typically on an x86_64 system it is /usr/lib64/svxlink.
+Leaving this variable unset should work in most cases.
+If this variable is set to empty, the standard search paths for library files
+will be used (see man 3 dlopen).
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is
@@ -147,7 +155,11 @@ configuration information for linking logics together (see Logic Linking).
 .
 A logic core is what define how SvxLink should behave on the RF channel. The
 SvxLink server can handle more than one logic core and so can be connected to
-more than one transceiver. The configuration variables below are common to all
+more than one transceiver. When configured, a logic core is loaded at runtime
+as a plugin. See the LOGIC_CORE_PATH configuration variable for more
+information on how SvxLink find the logic core plugins.
+.P
+The configuration variables below are common to all
 logic types. Configuration variables that are specific to a certain logic core
 type are described below in a section of its own.
 .TP
