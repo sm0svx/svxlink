@@ -1086,6 +1086,12 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
   pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
 
+  if (!smpl)
+  {
+    cout << "*** Race condition smpl-pointer is null\n";
+    return PJ_SUCCESS;
+  }
+
   if ((got = m_ar->readSamples(smpl, count)) > 0)
   {
     int i = 0;
