@@ -131,7 +131,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "19052022"
+#define TETRA_LOGIC_VERSION "10102022"
 
 /****************************************************************************
  *
@@ -586,7 +586,7 @@ bool TetraLogic::initialize(void)
       }
       else
       {
-        log(LOGINFO, isds + "=" + value);
+        log(LOGINFO, to_string(isds) + "=" + value);
         state_sds[isds] = value;
       }
     }
