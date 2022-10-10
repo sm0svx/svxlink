@@ -527,7 +527,7 @@ bool TetraLogic::initialize(void)
       {
         if (debug >= LOGINFO)
         {
-          cout << isds << "=" << value << endl;
+          cout << to_string(isds) << "=" << value << endl;
         }
         sds_to_command[isds] = value;
       }
