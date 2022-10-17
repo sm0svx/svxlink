@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchCombine.h"
 #include "SquelchPty.h"
 #include "SquelchOpen.h"
+#include "SquelchTetra.h"
 #ifdef HAS_HIDRAW_SUPPORT
 #include "SquelchHidraw.h"
 #endif
@@ -145,6 +146,7 @@ Squelch* createSquelch(const std::string& sql_name)
 #ifdef HAS_GPIOD_SUPPORT
   static SquelchSpecificFactory<SquelchGpiod> gpiod_factory;
 #endif
+  static SquelchSpecificFactory<SquelchTetra> tetra_factory;
 
   return SquelchFactory::createNamedObject(sql_name);
 } /* createSquelch */
