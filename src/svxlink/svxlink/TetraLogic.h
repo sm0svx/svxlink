@@ -113,40 +113,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class SquelchTetra : public Squelch
-{
-  public:
-     /// The name of this class when used by the object factory 
-  static constexpr const char* OBJNAME = "TETRA_SQL";
-
-  SquelchTetra(void) {}
-
-  ~SquelchTetra(void) {}
-
-  void setSql(bool is_open)
-  {
-    setSignalDetected(is_open);
-  }
-
-  protected:
-    /**
-     * @brief 	Process the incoming samples in the squelch detector
-     * @param 	samples A buffer containing samples
-     * @param 	count The number of samples in the buffer
-     * @return	Return the number of processed samples
-     */
-    int processSamples(const float *samples, int count)
-    {
-      return count;
-    }
-
-  private:
-    SquelchTetra(const SquelchTetra&);
-    SquelchTetra& operator=(const SquelchTetra&);
-
-}; /* SquelchTetra */
-
-
 /**
 @brief	This class implements a Tetra logic core
 @author Adi Bier
@@ -160,20 +126,16 @@ class TetraLogic : public Logic
      * @param 	cfg A previously opened configuration
      * @param 	name The configuration section name of this logic
      */
-    TetraLogic(Async::Config &cfg, const std::string &name);
-
-    /**
-     * @brief 	Destructor
-     */
-    ~TetraLogic(void);
+    TetraLogic(void);
 
     /**
      * @brief 	Initialize the Tetra logic core
      * @return	Returns \em true if the initialization was successful or else
      *	      	\em false is returned.
      */
-    bool initialize(void);
-
+    virtual bool initialize(Async::Config& cfgobj,
+                            const std::string& logic_name) override;
+    
     /**
      * @brief   is called up when a command from an other logic has been received
      */
@@ -181,6 +143,7 @@ class TetraLogic : public Logic
                                    const std::string& cmd);
 
   protected:
+    virtual ~TetraLogic(void) override  {};
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual void squelchOpen(bool is_open);
     virtual void transmitterStateChange(bool is_transmitting);
@@ -356,7 +319,7 @@ class TetraLogic : public Logic
     char t_aprs_tab;
     float proximity_warning;
     int time_between_sds;
-    SquelchTetra* tetra_modem_sql;
+//    SquelchTetra* tetra_modem_sql;
     float own_lat;
     float own_lon;
     std::string endCmd;

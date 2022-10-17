@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "10102022"
+#define TETRA_LOGIC_VERSION "13102022"
 
 /****************************************************************************
  *
@@ -174,6 +174,9 @@ class TetraLogic::Call
  *
  ****************************************************************************/
 
+extern "C" {
+  LogicBase* construct(void) { return new TetraLogic; }
+}
 
 
 /****************************************************************************
@@ -191,8 +194,8 @@ class TetraLogic::Call
  ****************************************************************************/
 
 
-TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true),
+TetraLogic::TetraLogic(void)
+  : mute_rx_on_tx(true), mute_tx_on_rx(true),
   rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
   port("/dev/ttyUSB0"), baudrate(115200), initstr(""), pei(0), sds_pty(0),
   peistream(""), debug(LOGERROR), talkgroup_up(false), sds_when_dmo_on(false),
@@ -213,36 +216,10 @@ TetraLogic::TetraLogic(Async::Config& cfg, const string& name)
 } /* TetraLogic::TetraLogic */
 
 
-TetraLogic::~TetraLogic(void)
+bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 {
-  if (endCmd.length()>0)
-  {
-    sendPei(endCmd);
-  }
-  if (LinkManager::hasInstance())
-  {
-    LinkManager::instance()->deleteLogic(this);
-  }
-  delete dapnetclient;
-  dapnetclient = 0;
-  peiComTimer = 0;
-  peiActivityTimer = 0;
-  peiBreakCommandTimer = 0;
-  //delete call;
-  delete tetra_modem_sql;
-  tetra_modem_sql = 0;
-  delete pei;
-  pei = 0;
-  delete sds_pty;
-  sds_pty = 0;
-} /* TetraLogic::~TetraLogic */
-
-
-bool TetraLogic::initialize(void)
-{
-  static SquelchSpecificFactory<SquelchTetra> tetra_modem_factory;
   bool isok = true;
-  if (!Logic::initialize())
+  if (!Logic::initialize(cfgobj, logic_name))
   {
     isok = false;
   }
@@ -602,19 +579,6 @@ bool TetraLogic::initialize(void)
     time_between_sds = atoi(value.c_str());  
   }
 
-  // create the special Tetra-squelch
-  Squelch *squelch_det = createSquelch("TETRA_SQL");
-  tetra_modem_sql = dynamic_cast<SquelchTetra*>(squelch_det);
-  if (tetra_modem_sql != nullptr)
-  {
-    log(LOGINFO, "Creating tetra specific Sql ok");
-  }
-  else
-  {
-    cout << "*** ERROR creating Tetra specific squelch" << endl;
-    isok = false;
-  }
-
   // init the Pei device
   if (!cfg().getValue(name(), "INIT_PEI", initstr))
   {
@@ -772,8 +736,9 @@ void TetraLogic::squelchOpen(bool is_open)
     return;
   }
 
-  log(LOGTRACE, "TetraLogic::squelchOpen: tetra_modem_sql->setSql(" + s + ")");
-  tetra_modem_sql->setSql(is_open);
+  // preparing dynamical TG request
+  // Logic::setReceivedTg(9);
+
   log(LOGTRACE, "TetraLogic::squelchOpen: rx().setSql(" + s + ")");
   rx().setSql(is_open);
   log(LOGTRACE, "TetraLogic::squelchOpen: Logic::squelchOpen(" + s + ")");
@@ -1630,7 +1595,7 @@ void TetraLogic::handleCallReleased(std::string message)
   message.erase(0,7);
   int cci = getNextVal(message);
 
-  if (tetra_modem_sql->isOpen())
+  if (rx().squelchIsOpen())
   {
     ss << "out_of_range " << getNextVal(message);
     log(LOGTRACE, "TetraLogic::handleCallReleased: " + ss.str());
@@ -2128,7 +2093,7 @@ bool TetraLogic::checkSds(void)
   }
 
   // now check that the MTM is clean and not in tx state
-  if (peistate != OK || inTransmission || tetra_modem_sql->isOpen()) return true;
+  if (peistate != OK || inTransmission || rx().squelchIsOpen()) return true;
 
   if (cmgs_received)
   {

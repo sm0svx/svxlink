@@ -89,7 +89,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LogicCmds.h"
 #include "Logic.h"
 #include "QsoRecorder.h"
-#include "LinkManager.h"
+//#include "LinkManager.h"
 #include "DtmfDigitHandler.h"
 
 
@@ -152,9 +152,8 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
-Logic::Logic(Config &cfg, const string& name)
-  : LogicBase(cfg, name),
-    m_rx(0),  	      	      	            m_tx(0),
+Logic::Logic(void)
+  : m_rx(0),  	      	      	            m_tx(0),
     msg_handler(0), 	      	            active_module(0),
     exec_cmd_on_sql_close_timer(-1),        rgr_sound_timer(-1),
     report_ctcss(0.0f),                     event_handler(0),
@@ -179,18 +178,9 @@ Logic::Logic(Config &cfg, const string& name)
 } /* Logic::Logic */
 
 
-Logic::~Logic(void)
+bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 {
-  cleanup();
-  delete logic_con_out;
-  delete logic_con_in;
-  delete dtmf_digit_handler;
-} /* Logic::~Logic */
-
-
-bool Logic::initialize(void)
-{
-  if (!LogicBase::initialize())
+  if (!LogicBase::initialize(cfgobj, logic_name))
   {
     return false;
   }
@@ -404,7 +394,7 @@ bool Logic::initialize(void)
   AudioSource *prev_rx_src = 0;
 
     // Create the RX object
-  cout << "Loading RX: " << rx_name << endl;
+  cout << name() << ": Loading RX \"" << rx_name << "\"" << endl;
   m_rx = RxFactory::createNamedRx(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
@@ -565,7 +555,7 @@ bool Logic::initialize(void)
   prev_tx_src = tx_audio_mixer;
 
     // Create the TX object
-  cout << "Loading TX: " << tx_name << endl;
+  std::cout << name() << ": Loading TX \"" << tx_name << "\"" << endl;
   m_tx = TxFactory::createNamedTx(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
   {
@@ -1016,6 +1006,15 @@ void Logic::remoteReceivedTgUpdated(LogicBase *src_logic, uint32_t tg)
  *
  ****************************************************************************/
 
+Logic::~Logic(void)
+{
+  cleanup();
+  delete logic_con_out;
+  delete logic_con_in;
+  delete dtmf_digit_handler;
+} /* Logic::~Logic */
+
+
 void Logic::squelchOpen(bool is_open)
 {
   if (active_module != 0)
@@ -1274,8 +1273,8 @@ void Logic::loadModules(void)
 
 void Logic::loadModule(const string& module_cfg_name)
 {
-  cout << "Loading module \"" << module_cfg_name << "\" into logic \""
-       << name() << "\"\n";
+  std::cout << name() << ": Loading module \"" << module_cfg_name << "\""
+            << std::endl;
 
   string module_path;
   cfg().getValue("GLOBAL", "MODULE_PATH", module_path);
@@ -1691,10 +1690,10 @@ void Logic::cleanup(void)
   rgr_sound_timer.setEnable(false);
   every_minute_timer.stop();
 
-  if (LinkManager::hasInstance())
-  {
-    LinkManager::instance()->deleteLogic(this);
-  }
+  //if (LinkManager::hasInstance())
+  //{
+  //  LinkManager::instance()->deleteLogic(this);
+  //}
 
   delete event_handler;               event_handler = 0;
   delete m_tx;        	      	      m_tx = 0;

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -112,25 +112,26 @@ class SimplexLogic : public Logic
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param 	cfg A previously opened configuration
-     * @param 	name The configuration section name of this logic
+     * @brief 	Default constructor
      */
-    SimplexLogic(Async::Config &cfg, const std::string &name);
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~SimplexLogic(void);
-  
+    SimplexLogic(void);
+
     /**
      * @brief 	Initialize the simplex logic core
+     * @param 	cfgobj      A previously opened configuration
+     * @param 	plugin_name The configuration section name of this logic
      * @return	Returns \em true if the initialization was successful or else
      *	      	\em false is returned.
      */
-    bool initialize(void);
+    virtual bool initialize(Async::Config &cfgobj,
+                            const std::string &logic_name) override;
 
   protected:
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~SimplexLogic(void) override {};
+
     virtual void squelchOpen(bool is_open);
     virtual void transmitterStateChange(bool is_transmitting);
     

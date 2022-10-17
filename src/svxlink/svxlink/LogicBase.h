@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2019  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2022  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncPlugin.h>
 
 
 /****************************************************************************
@@ -126,29 +127,29 @@ LogicBase is a pure virtual class so it cannot be instatiated on its own.
 
 @example DummyLogic.h
 */
-class LogicBase : public sigc::trackable
+class LogicBase : public Async::Plugin, public sigc::trackable
 {
   public:
+    // Return the name of this plugin type
+    static std::string typeName(void) { return "Logic"; }
 
     /**
-     * @brief 	Constuctor
-     * @param   cfg A previously initialized configuration object
-     * @param   name The name of the logic core
+     * @brief 	Default constructor
      */
-    LogicBase(Async::Config& cfg, const std::string& name)
-      : m_cfg(cfg), m_name(name), m_is_idle(true), m_received_tg(0) {}
+    LogicBase(void) {}
 
     /**
-     * @brief 	Destructor
+     * @brief   Initialize the logic core
+     * @param   cfgobj      A previously initialized configuration object
+     * @param   plugin_name The name of the logic core
+     * @return  Returns \em true on success or \em false on failure
      */
-    virtual ~LogicBase(void) {}
-
-    /**
-     * @brief 	Initialize the logic core
-     * @return	Returns \em true on success or \em false on failure
-     */
-    virtual bool initialize(void)
+    virtual bool initialize(Async::Config& cfgobj,
+                            const std::string& logic_name)
     {
+      m_cfg = &cfgobj;
+      m_name = logic_name;
+
       if (LinkManager::hasInstance())
       {
           // Register this logic in the link manager
@@ -164,7 +165,7 @@ class LogicBase : public sigc::trackable
      * @brief 	Get the configuration object associated with this logic core
      * @return	Returns the configuration object associated with this logic core
      */
-    Async::Config &cfg(void) const { return m_cfg; }
+    Async::Config &cfg(void) const { return *m_cfg; }
 
     /**
      * @brief 	Get the idle state of this logic core
@@ -296,6 +297,18 @@ class LogicBase : public sigc::trackable
 
   protected:
     /**
+     * @brief 	Destructor
+     */
+    virtual ~LogicBase(void) override
+    {
+      if (LinkManager::hasInstance())
+      {
+          // Unregister this logic from the link manager
+        LinkManager::instance()->deleteLogic(this);
+      }
+    }
+
+    /**
      * @brief   Used by derived classes to set the idle state of the logic core
      * @param   set_idle \em True to set to idle or \em false to set to active
      *
@@ -325,10 +338,10 @@ class LogicBase : public sigc::trackable
     }
 
   private:
-    Async::Config     	  &m_cfg;
+    Async::Config*     	  m_cfg           = nullptr;
     std::string       	  m_name;
-    bool      	      	  m_is_idle;
-    uint32_t              m_received_tg;
+    bool      	      	  m_is_idle       = true;
+    uint32_t              m_received_tg   = 0;
 
 };  /* class LogicBase */
 
