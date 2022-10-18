@@ -205,6 +205,19 @@
   HOST -> HOSTS, PORT -> HOST_PORT. New configuration variables:
   DNS_DOMAIN, HOST_PRIO, HOST_PRIO_INC, HOST_WEIGHT.
 
+* Logic cores (SimplexLogic, RepeaterLogic etc) are now implemented as plugins
+  which mean they are dynamically loaded at runtime if needed. There are
+  multiple benefits with that:
+  - Easier to accept contributed logic cores into the main source tree since
+    no core code needs changing.
+  - As long as the plugin is not loaded it can cause no harm if it contain a
+    bug.
+  - Third-party logic cores can be packaged separately. Package maintainers
+    that build contributed code are urged to put such artifacts in its own
+    package with a name like svxlink-contrib-examplelogic.
+  See man svxlink.conf and the LOGIC_CORE_PATH configuration variable for info
+  on how SvxLink find the plugins.
+
 
 
  1.7.0 -- 01 Sep 2019

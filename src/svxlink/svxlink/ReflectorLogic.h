@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -119,22 +119,18 @@ class ReflectorLogic : public LogicBase
 {
   public:
     /**
-     * @brief 	Constructor
-     * @param   cfg A previously initialized configuration object
-     * @param   name The name of the logic core
+     * @brief 	Default constructor
      */
-    ReflectorLogic(Async::Config& cfg, const std::string& name);
+    ReflectorLogic(void);
 
     /**
-     * @brief 	Destructor
+     * @brief   Initialize the logic core
+     * @param   cfgobj      A previously initialized configuration object
+     * @param   plugin_name The name of the logic core
+     * @return  Returns \em true on success or \em false on failure
      */
-    ~ReflectorLogic(void);
-
-    /**
-     * @brief 	Initialize the logic core
-     * @return	Returns \em true on success or \em false on failure
-     */
-    virtual bool initialize(void);
+    virtual bool initialize(Async::Config& cfgobj,
+                            const std::string& logic_name) override;
 
     /**
      * @brief 	Get the audio pipe sink used for writing audio into this logic
@@ -182,6 +178,10 @@ class ReflectorLogic : public LogicBase
         const std::string& data);
 
   protected:
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~ReflectorLogic(void) override;
 
   private:
     struct MonitorTgEntry

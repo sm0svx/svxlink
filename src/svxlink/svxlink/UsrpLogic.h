@@ -119,18 +119,14 @@ class UsrpLogic : public LogicBase
      * @param   cfg A previously initialized configuration object
      * @param   name The name of the logic core
      */
-    UsrpLogic(Async::Config& cfg, const std::string& name);
-
-    /**
-     * @brief 	Destructor
-     */
-    ~UsrpLogic(void);
+    UsrpLogic(void);
 
     /**
      * @brief 	Initialize the logic core
      * @return	Returns \em true on success or \em false on failure
      */
-    virtual bool initialize(void);
+    virtual bool initialize(Async::Config &cfgobj,
+                    const std::string &logic_name) override;
 
     /**
      * @brief 	Get the audio pipe sink used for writing audio into this logic
@@ -145,6 +141,11 @@ class UsrpLogic : public LogicBase
     virtual Async::AudioSource *logicConOut(void) { return m_logic_con_out; }
 
   protected:
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~UsrpLogic(void) override {};
+
 
   private:
     struct MonitorTgEntry

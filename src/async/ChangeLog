@@ -62,6 +62,8 @@
 * Slightly changed semantics of the TcpClient::connect functions. It's now
   not allowed to call the connect function if already connected.
 
+* Async::Plugin: A new class for loading code as plugins.
+
 
 
  1.6.0 -- 01 Sep 2019

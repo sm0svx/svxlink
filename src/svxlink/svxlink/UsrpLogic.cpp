@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "v07012022"
+#define USRPVERSION "v18102022"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -119,6 +119,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
+ extern "C" {
+  LogicBase* construct(void) { return new UsrpLogic; }
+}
 
 
 /****************************************************************************
@@ -135,13 +138,12 @@ using namespace Async;
  *
  ****************************************************************************/
 
-UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
-  : LogicBase(cfg, name), m_logic_con_in(0), m_logic_con_out(0),
-    m_dec(0), m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
+UsrpLogic::UsrpLogic(void)
+  : m_logic_con_in(0), m_logic_con_out(0), m_dec(0),
+    m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_enc(0), m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
-    m_selected_tg(0), udp_seq(0),
-    stored_samples(0), m_callsign("N0CALL"), ident(false),
-    m_dmrid(0), m_rptid(0), m_selected_cc(0), m_selected_ts(1),
+    m_selected_tg(0), udp_seq(0), stored_samples(0), m_callsign("N0CALL"),
+    ident(false), m_dmrid(0), m_rptid(0), m_selected_cc(0), m_selected_ts(1),
     preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0),
     debug(LOGERROR), share_userinfo(true),
     m_delay_timer(5000, Timer::TYPE_ONESHOT, false)
@@ -154,23 +156,25 @@ UsrpLogic::UsrpLogic(Async::Config& cfg, const std::string& name)
 } /* UsrpLogic::UsrpLogic */
 
 
-UsrpLogic::~UsrpLogic(void)
+bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 {
-  delete m_event_handler;
-  m_event_handler = 0;
-  delete m_udp_rxsock;
-  m_udp_rxsock = 0;
-  delete m_logic_con_in;
-  m_logic_con_in = 0;
-  delete m_enc;
-  m_enc = 0;
-  delete m_dec;
-  m_dec = 0;
-} /* UsrpLogic::~UsrpLogic */
 
+  /* section for outgoing audio to usrp net */
+  // Create logic connection incoming audio passthrough
+  m_logic_con_in = new Async::AudioStreamStateDetector;
+  m_logic_con_in->sigStreamStateChanged.connect(
+      sigc::mem_fun(*this, &UsrpLogic::onLogicConInStreamStateChanged));
 
-bool UsrpLogic::initialize(void)
-{
+  m_logic_con_out = new Async::AudioStreamStateDetector;
+  m_logic_con_out->sigStreamStateChanged.connect(
+      sigc::mem_fun(*this, &UsrpLogic::onLogicConOutStreamStateChanged));
+      
+  if (!LogicBase::initialize(cfgobj, logic_name))
+  {
+    cout << "*** ERROR: Initializing LogicBase " << name() << endl;
+    return false;
+  }
+
   if (!cfg().getValue(name(), "USRP_HOST", m_usrp_host))
   {
     cerr << "*** ERROR: " << name() << "/HOST missing in configuration"
@@ -266,14 +270,10 @@ bool UsrpLogic::initialize(void)
 
   if (!m_event_handler->initialize())
   {
+    cout << "*** ERROR: Could not initialize event handler." << endl;
     return false;
   }
 
-  /* section for outgoing audio to usrp net */
-  // Create logic connection incoming audio passthrough
-  m_logic_con_in = new Async::AudioStreamStateDetector;
-  m_logic_con_in->sigStreamStateChanged.connect(
-      sigc::mem_fun(*this, &UsrpLogic::onLogicConInStreamStateChanged));
   AudioSource *prev_src = m_logic_con_in;
 
   cfg().getValue(name(), "PREAMP", preamp_gain);
@@ -366,7 +366,6 @@ bool UsrpLogic::initialize(void)
     prev_src = net_preamp;
   }
 
-
   /* Limiter that controls audio from USRP -> local */
   // Add a limiter to smoothly limit the audio before hard clipping it
   double net_limiter_thresh = DEFAULT_NETLIMITER_THRESH;
@@ -403,9 +402,6 @@ bool UsrpLogic::initialize(void)
     prev_src = i1;
   }
 
-  m_logic_con_out = new Async::AudioStreamStateDetector;
-  m_logic_con_out->sigStreamStateChanged.connect(
-      sigc::mem_fun(*this, &UsrpLogic::onLogicConOutStreamStateChanged));
   prev_src->registerSink(m_logic_con_out, true);
   prev_src = 0;
 
@@ -493,12 +489,6 @@ bool UsrpLogic::initialize(void)
     // receive interlogic messages
   publishStateEvent.connect(
           mem_fun(*this, &UsrpLogic::onPublishStateEvent));
-
-  if (!LogicBase::initialize())
-  {
-    cout << "*** ERROR: Initializing Logic " << name() << endl;
-    return false;
-  }
 
   m_delay_timer.setEnable(true);
 
