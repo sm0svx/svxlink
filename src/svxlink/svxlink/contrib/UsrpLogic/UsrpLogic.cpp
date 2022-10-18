@@ -413,7 +413,7 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   std::string user_info_file;
   if (cfg().getValue(name(), "DV_USER_INFOFILE", user_info_file))
   {
-    cout << user_info_file << endl;
+    cout << "+++ Reading users data from \"" << user_info_file << "\"" << endl;
     std::ifstream user_info_is(user_info_file.c_str(), std::ios::in);
     if (user_info_is.good())
     {

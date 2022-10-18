@@ -1,0 +1,2980 @@
+.TH SVXLINK.CONF 5 "AUGUST 2022" Linux "File Formats"
+.
+.SH NAME
+.
+svxlink.conf \- Configuration file for the SvxLink server
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration file format.
+.P
+SvxLink look for configuration files in a number of places. First it try to
+find a user specific configuration file. SvxLink will look for a user specific
+configuration file in:
+.BR $HOME/.svxlink/svxlink.conf .
+If no user specific configuration file can be found, SvxLink will look for
+the system wide configuration file
+.BR /etc/svxlink/svxlink.conf .
+The
+.B --config
+command line option may also be used to specify an arbitrary configuration file.
+.
+.SH FILE FORMAT
+.
+The configuration file is in the famous INI-file format. A generic example of how such a
+file might look like is shown below.
+
+  [SECTION1]
+  VALUE1=1
+  VALUE2="TWO "
+  VAULE3="Multi "
+         "line"
+  
+  [SECTION2]
+  VALUE1=2
+
+This is a simple format that contain name=value pairs that belong to a section. In written
+text, a specific configuration variable can be referred to as SECTION1/VALUE2 meaning
+"configuration variable VALUE2 in section SECTION1".
+.P
+The same variable name can exist in two different sections. For example VALUE1 in section
+SECTION1 have the value 1 and VALUE1 in section SECTION2 have the value 2. Values
+containing spaces at the beginning or end of the line must be surrounded by citation
+characters (see SECTION1/VALUE2). Likewise with a multi line value (see SECTION1/VALUE3).
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that SvxLink understands. The
+configuration variables are described section for section.
+.
+.SS GLOBAL
+.
+The GLOBAL section contains application global configuration data.
+.TP
+.B MODULE_PATH
+Specify where the SvxLink modules can be found. If MODULE_PATH is not
+specified, the standard search paths for library files will be used. If that
+also fails a hard-coded default will be used. What that default is depend on the
+architecture but typically on a x86_64 system it is /usr/lib64/svxlink.
+Leaving this variable unset should work in most cases.
+.TP
+.B LOGIC_CORE_PATH
+Specify where the SvxLink logic core plugins can be found. If not set, a
+hard-coded default will be used. What that default is depend on the
+architecture but typically on an x86_64 system it is /usr/lib64/svxlink.
+Leaving this variable unset should work in most cases.
+If this variable is set to empty, the standard search paths for library files
+will be used (see man 3 dlopen).
+.TP
+.B LOGICS
+Specify a comma separated list of logic cores that should be created. The logic core is
+the thing that ties the transceiver and the voice services (modules) together. It contains
+the rules for how the radio interface should be handled. The specified name of a logic
+core must have a corresponding section specified in the config file. This is where the
+behavior of the logic core is specified.
+.TP
+.B CFG_DIR
+Specify the path to a directory that contain additional configuration files.
+If a relative path is specified, the path will be relative to the directory
+where the main configuration file is at. All files in the specified directory
+will be read as additional configuration. Filenames starting with a dot (hidden
+files) or not ending in .conf are ignored.
+.TP
+.B TIMESTAMP_FORMAT
+This variable specifies the format of the time-stamp that is written in front of
+each row in the log file. The format string is in the same format as specified
+in the
+.BR strftime (3)
+manual page. The default is "%c" which is described as: "the preferred date and
+time representation for the current locale". The environment variables LC_TIME,
+LC_ALL and LANG will affect how this time format will look. For example, setting
+LC_TIME="sv_SE.UTF8" will give you Swedish time-stamp representation. Other
+examples of format specifiers are:
+.RS
+.IP \(bu 4
+.BR %d " - The day of the month as a decimal number (range 01 to 31)"
+.IP \(bu 4
+.BR %b " - The abbreviated month name according to the current locale"
+.IP \(bu 4
+.BR %Y " - The year as a decimal number including the century"
+.IP \(bu 4
+.BR %H " - The hour as a decimal number using a 24-hour clock (range 00 to 23)"
+.IP \(bu 4
+.BR %M " - The minute as a decimal number (range 00 to 59)"
+.IP \(bu 4
+.BR %S " - The second as a decimal number (range 00 to 60)"
+.IP \(bu 4
+.BR %f " - Fractional seconds in millisecond resolution (000-999)"
+.P
+The last one (%f) is a SvxLink specific formatting specifier.
+
+Example: TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S.%f" would give a time-stamp looking
+something like: "29 Nov 2005 22:31:59.875".
+.RE
+.TP
+.B CARD_SAMPLE_RATE
+This configuration variable determines the sampling rate used for audio
+input/output. SvxLink always work with a sampling rate of 16kHz internally but
+there still are some benefits from using a higher sampling rate. On some sound
+cards the filters look pretty bad at 16kHz and the amplitude response will not
+be uniform which among other things can cause problems for the software DTMF
+decoder.
+
+Some sound cards also sound very bad at 16kHz due to insufficient
+anti-alias filtering or resampling effects. These, often cheaper, sound cards
+sound OK at 48kHz.
+
+The downside of choosing a higher sampling rate is that it puts a little bit
+more load on the CPU so if you have a very slow machine (<300MHz), it might not
+have the computational power to handle it.
+
+Supported sampling rates are: 16000 and 48000.
+.TP
+.B CARD_CHANNELS
+Use this configuration variable to specify how many channels to use when
+opening a sound card. For normal sound cards the only practical values to use
+are 1 for mono and 2 for stereo. The latter is the default.
+
+When using the sound card in stereo mode it is possible to use the left and
+right channels independently to drive two transceivers. When using the sound
+card in mono mode, both left and right channels transmit/receive the same
+audio.
+.TP
+.B LOCATION_INFO
+Enter the section name that contains information required for transferring
+positioning data to location servers. Setting this item makes the system
+visible on the EchoLink link status page and the APRS network.
+.TP
+.B LINKS
+Enter here a comma separated list of section names that contains the 
+configuration information for linking logics together (see Logic Linking).
+.
+.SS Common Logic configuration variables
+.
+A logic core is what define how SvxLink should behave on the RF channel. The
+SvxLink server can handle more than one logic core and so can be connected to
+more than one transceiver. When configured, a logic core is loaded at runtime
+as a plugin. See the LOGIC_CORE_PATH configuration variable for more
+information on how SvxLink find the logic core plugins.
+.P
+The configuration variables below are common to all
+logic types. Configuration variables that are specific to a certain logic core
+type are described below in a section of its own.
+.TP
+.B TYPE
+The type of logic core this is. The documentation for the specific logic core
+type you want to use describe what to write here.
+.TP
+.B RX
+Specify the configuration section name of the receiver to use. All configuration
+for the receiver is done in the specified configuration section.
+.TP
+.B TX
+Specify the configuration section name of the transmitter to use. All
+configuration for the transmitter is done in the specified configuration
+section.
+.TP
+.B MODULES
+Specify a comma separated list of configuration sections for the modules to
+load. This tells SvxLink which modules to actually load on startup.
+.TP
+.B CALLSIGN
+Specify the callsign that should be announced on the radio interface.
+.TP
+.B SHORT_VOICE_ID_ENABLE
+A basic toggle to enable the voice ID announcement during the short ID
+announcements.
+Set value to "1" to enable the voice option, and "0" to disable.
+.TP
+.B SHORT_CW_ID_ENABLE
+A basic toggle to enable the CW ID announcement during the short ID
+announcements.
+Set value to "1" to enable the CW option, and "0" to disable.
+.TP
+.B SHORT_ANNOUNCE_ENABLE
+A basic toggle to enable the custom announcement during the short ID
+announcements.
+Set value to "1" to enable the announcement option, and "0" to disable.
+.TP
+.B SHORT_ANNOUNCE_FILE
+The full path to a file to use for custom announcements broadcasted during a
+routine short ID.
+.TP
+.B LONG_VOICE_ID_ENABLE
+A basic toggle to enable the voice ID announcement during the long ID
+announcements.  Set value to "1" to enable the voice option, and "0" to
+disable.
+.TP
+.B LONG_CW_ID_ENABLE
+A basic toggle to enable the CW ID announcement during the long ID
+announcements.
+Set value to "1" to enable the CW option, and "0" to disable.
+.TP
+.B LONG_ANNOUNCE_ENABLE
+A basic toggle to enable the custom announcement during the long ID
+announcements.
+Set value to "1" to enable the announcement option, and "0" to disable.
+.TP
+.B LONG_ANNOUNCE_FILE
+The full path to a file to use for custom announcements broadcasted during a
+routine short ID.
+.TP
+.B CW_AMP
+Specify the amplitude of the CW that should be used during any cw traffic,
+typically announcements. The amplitude is specified in dB. Default: -6.
+.TP
+.B CW_PITCH
+Specify the pitch (frequency in Hz) of the CW that should be used during any CW
+traffic, typically announcements. Default: 800.
+.TP
+.B CW_CPM
+Specify the Characters Per Minute of the CW that should be used during any CW
+traffic, typically announcements. If both CW_WPM and CW_CPM is set, CW_CPM will
+be used. Default: 100.
+.TP
+.B CW_WPM
+Specify the Words Per Minute of the CW that should be used during any CW
+traffic, typically announcements. If both CW_WPM and CW_CPM is set, CW_CPM will
+be used. Default: 20.
+.TP
+.B PHONETIC_SPELLING
+Specify if the spelling of callsign and other words should be announced on the
+radio interface using phonetic or non-phonetic spelling.  "1" to use phonetic
+sounds (legacy default), or "0" to use non-phonetic sounds.
+Note that this option may not be available for all language packs.
+.TP
+.B TIME_FORMAT
+Specify  what format the time should be announced as, valid options are
+"12"/"24".
+NOTE: may not work for all language packs
+.TP
+.B SHORT_IDENT_INTERVAL
+The number of minutes between short identifications. The purpose of the short
+identification is to just announce that the station is on the air. Typically just the
+callsign is transmitted. For a repeater a good value is ten minutes and for a simplex node
+one time every 60 minutes is probably enough. The LONG_IDENT_INTERVAL must be an even
+multiple of the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then the
+legal values for SHORT_IDENT_INTERVAL are: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60. 
+If unset or set to 0, disable short identifications.
+.TP
+.B LONG_IDENT_INTERVAL
+The number of minutes between long identifications. The purpose of the long identification
+is to transmit some more information about the station status (new voice mails etc). The time of
+day is also transmitted. A good value here is 60 minutes. 
+If unset or set to 0, disable long identifications.
+.TP
+.B IDENT_ONLY_AFTER_TX
+This feature controls when identification is done.  By default, identification is done
+every time the SHORT_IDENT_INTERVAL expires. If this feature is enabled, identification
+will be done only if there has been a recent transmission. This feature is good for nodes
+using an RF link to provide echolink to a repeater. Often, in this situation, it is not
+desirable for the link to identify unless legally necessary. Note that
+SHORT_IDENT_INTERVAL still have to be set for this feature to work. That config variable
+will then be interpreted as the minimum number of seconds between identifications. The
+LONG_IDENT_INTERVAL will not be affected by this parameter.   
+.TP
+.B EXEC_CMD_ON_SQL_CLOSE
+Specify a time, in milliseconds, after squelch close after which entered DTMF
+digits will be executed as a command without the need to send the # character.
+To disable this feature, either comment out the configuration row or set it to
+a value less or equal to zero.
+.TP
+.B EVENT_HANDLER
+Point out the TCL event handler script to use. The TCL event handler script is
+responsible for playing the correct audio clips when an event occur.
+The default location is /usr/share/svxlink/events.tcl.
+.TP
+.B DEFAULT_LANG
+Set the default language to use for announcements. It should be set to an ISO
+code (e.g. sv_SE for Swedish). If not set, it defaults to en_US which is US English.
+.TP
+.B RGR_SOUND_DELAY
+The number of milliseconds to wait after the squelch has been closed before a roger beep
+is played. The beep can be disabled by specifying a value of \-1 or commenting out this
+line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
+a delay instead of specifying a delay here. This configuration variable should then be set
+to 0. 
+.TP
+.B REPORT_CTCSS
+If set, will report the specified CTCSS frequency upon manual identification (* pressed).
+It is possible to specify fractions using "." as decimal comma. Disable this feature by
+commenting out (#) this configuration variable. 
+.TP
+.B TX_CTCSS
+This configuration variable controls if a CTCSS tone should be transmitted.
+Use a comma separated list (no spaces!) to specify when to transmit a CTCSS
+tone. These are the possible values:
+.BR SQL_OPEN ", " LOGIC ", " MODULE ", " ANNOUNCEMENT " or " ALWAYS .
+Commenting out this configuration variable will disable CTCSS transmit.
+The tone frequency and level is configured in the transmitter configuration
+section.
+.RS
+.IP \(bu 4
+.BR SQL_OPEN
+will transmit CTCSS tone when the squelch is open. This is only useful on a
+repeater. On a simplex node it doesn't make much sense.
+.IP \(bu 4
+.BR LOGIC
+will transmit CTCSS tone when there is incoming traffic from another logic
+core.
+.IP \(bu 4
+.BR MODULE
+will transmit CTCSS tone when there is incoming traffic from a module.
+.IP \(bu 4
+.BR ANNOUNCEMENT
+will transmit CTCSS tone when an announcement is being played. Repeater idle
+sounds and roger beeps will not have tone sent with them though.
+.IP \(bu 4
+.BR ALWAYS
+will always transmit a CTCSS tone as soon as the transmitter is turned on.
+.RE
+.TP
+.B MACROS
+Point out a section that contains the macros that should be used by this logic
+core. See the section description for macros below for more information.
+.TP
+.B FX_GAIN_NORMAL
+The gain (dB) to use for audio effects and announcements when there is no other traffic.
+This gain is normally set to 0dB which means no gain or attenuation.
+.TP
+.B FX_GAIN_LOW
+The gain (dB) to use for audio effects and announcements when there is other traffic.
+This gain is normally set to something like \-12dB so that announcements and audio effects
+are attenuated when there is other traffic present.
+.TP
+.B QSO_RECORDER
+The QSO recorder is used to write all received audio to files on disk. The
+format for this configuration variable is <command>:<config section>. The
+specified command is used to activate or deactivate the QSO recorder. If the
+command for example is set to 8, 81 will activate the recorder and 80 will
+deactivate it.  The command may also be left out. It will then not be possible
+to control the QSO recorder using DTMF commands. Even if the command is left
+out the colon must always be specified.
+The config section point out a section in the configuration file that holds
+configuration for the QSO recorder.
+Have a look at the QSO Recorder Section documentation for more information.
+
+Example: QSO_RECORDER=8:QsoRecorder
+.TP
+.B SEL5_MACRO_RANGE
+Define two comma separated values here to map the Sel5 tone call to your macro
+area. E.g. if you have defined:
+SEL5_MACRO_RANGE=03400,03499
+then all incoming Sel5 tone sequences from 03400 to 03499 are mapped to the
+macros section (refer to Macros Section, next chapter). Other sequences but the
+one defined under OPEN_ON_SEL5 are ignored so it can be used to call other
+stations via the repeater without a repeater reaction.
+.TP
+.B ONLINE_CMD
+Define a DTMF command that is used to switch the node between online and
+offline mode. When in the off-state, the transmitter will not be turned on by
+any event. If a module is active when the node is brought offline, it will be
+deactivated and no module activation will be allowed in offline mode. No other
+commands than the online command will be accepted in the offline state.
+
+If the command for example is set to 998877 then 9988771 will set the node
+online and 9988770 will set it offline. If a module is active or if the
+ACTIVATE_MODULE_ON_LONG_CMD is used, the command must be prefixed with a star
+to work as expected. The star means "force core command".
+.TP
+.B ONLINE
+Set to 0 to make SvxLink start offline. Settable at runtime. Default is 1
+(online).
+.TP
+.B STATE_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that SvxLink state events is published to. The published events is in a
+simple text format using a space separated list of values. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Monitoring
+the PTY output is as simple as doing a
+.B "cat /path/to/pty"
+after starting SvxLink. See STATE PTY FORMAT for more information on the format
+of the state messages.
+
+Example: STATE_PTY=/tmp/state_pty
+.TP
+.B DTMF_CTRL_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Sending
+commands to the PTY is as simple as doing a
+.B "echo '*1#' > /path/to/pty"
+after starting SvxLink. The device works bidirectional, received dtmf characters
+(from Rf) are output via this interface.
+
+Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
+.TP
+.B CTCSS_TO_TG
+Use this variable to specify a comma separated list of pairs of tone
+frequencies and talk groups. When one of the tone frequencies is detected, the
+corresponding talk group will be indicated. This can be used for example by
+ReflectorLogic to automatically switch to a talk group when one of the specified
+tone frequencies is received. You probably also want to configure CTCSS_FQ for
+all receivers to open the squelch on the same tone frequencies.
+
+Example: CTCSS_TO_TG=127.3:9993,136.5:9995
+.
+.SS Simplex Logic Section
+.
+The Simplex Logic section contains configuration data for a simplex logic core.
+The name of the section, which in the example configuration file is
+.BR SimplexLogic ,
+must have a corresponding list item in the GLOBAL/LOGICS config variable for
+this logic core to be activated. The name "SimplexLogic" is not magic. It could
+be called what ever you like but it must match the namespace name in the
+SimplexLogic.tcl script. The configuration variables below are those that are
+specific for a simplex logic core.
+.TP
+.B TYPE
+The type for a simplex logic core is always
+.BR Simplex .
+.TP
+.B MUTE_RX_ON_TX
+Set to 1 to mute the receiver when the transmitter is transmitting (default)
+or set it to 0 to make the RX active during transmissions.
+One might want to set this to 0 if the link is operating on a split frequency.
+Then the link can accept commands even when it's transmitting.
+The normal setting is 1, to mute the RX when transmitting.
+.TP
+.B MUTE_TX_ON_RX
+Set to 1 to mute the transmitter when the squelch is open (default) or set it
+to 0 to make the TX active during squelch open.  One might want to set this to
+0 if the link is operating on a split frequency or if it's connected to some
+full duplex device.  The normal setting is 1, to mute the TX when the squelch
+is open.
+.TP
+.B RGR_SOUND_ALWAYS
+Set to 1 to always send roger sound after squelch close, even when no module is
+active.
+.TP
+.B COMMAND_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that can be used to send commands to a SvxLink logic core. SvxLink will
+create a softlink to the actual slave PTY. For that reason, SvxLink must have
+write permissions in the directory where the softlink should be created.
+Sending commands to the PTY is as simple as doing a
+.B "echo 'THE COMMAND TO EXECUTE' > /path/to/pty"
+after starting SvxLink.
+
+Valid commands:
+.RS
+.IP \(bu 4
+.BR "CFG <section> <tag> <value>" " --"
+Set a configuration variable. Only a few configuration variables support being
+set at runtime. Example: CFG RepeaterLogic ONLINE 0.
+.RE
+
+Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
+.
+.SS Repeater Logic Section
+.
+A Repeater Logic section contains configuration data for a repeater logic core.
+The name of the section, which in the example configuration file is
+.BR RepeaterLogic ,
+must have a corresponding list item in the GLOBAL/LOGICS config variable for
+this logic core to be activated. The name "RepeaterLogic" is not magic.
+It could be called what ever you like but it must match the namespace name in
+the RepeaterLogic.tcl script. The configuration variables below are those that
+are specific for a repeater logic core.
+.TP
+.B TYPE
+The type for a repeater logic core is always
+.BR Repeater .
+.TP
+.B NO_REPEAT
+Set this to 1 if you do NOT want SvxLink to play back the incoming audio. This
+can be used when the received audio is directly coupled by hardware wiring to
+the transmitter. What you win by doing this is that there is zero delay on the
+repeated audio. When the audio is routed through SvxLink there is always an
+amount of delay. What you loose by doing this is the audio processing done by
+SvxLink (e.g. filtering, DTMF muting, squelch tail elimination) and the
+ability to use remote receivers.
+.TP
+.B IDLE_TIMEOUT
+The number of seconds the repeater should have been idle before turning the 
+transmitter off.
+.TP
+.B OPEN_ON_1750
+Use this configuration variable if it should be possible to open the repeater with a
+1750Hz tone burst. Specify the number of milliseconds the tone must be asserted 
+before the repeater is opened. Make sure that the time specified is long enough for 
+the squelch to have time to open. Otherwise the repeater will open "too soon" and
+you will hear an ugly 1750Hz beep as the first thing.
+A value of 0 will disable 1750 Hz repeater opening.
+.TP
+.B OPEN_ON_CTCSS
+Use this configuration variable if it should be possible to open the repeater with 
+a CTCSS tone (PL). The syntax of the value is tone_fq:min_length. The tone 
+frequency is specified in whole Hz and the minimum tone length is specified in 
+milliseconds. For examples if a 136.5 Hz tone must be asserted for two seconds for 
+the repeater to open, the value 136:2000 should be specified.
+.TP
+.B OPEN_ON_DTMF
+Use this configuration variable if it should be possible to open the repeater with 
+a DTMF digit. Only one digit can be specified. DTMF digits pressed when the repeater 
+is down will be ignored.
+.TP
+.B OPEN_ON_SEL5
+Use this configuration variable if you want to open your repeater by using a 
+selective tone call that is often used in commercial radio networks. 
+Example: OPEN_ON_SEL5=03345 opens your repeater only if that sequence has been 
+received. You can use sequence lengths from 4 to 25.
+.TP
+.B CLOSE_ON_SEL5
+Use this configuration variable if you want to close your repeater by using a
+selective tone call that is often used in commercial radio networks.
+Example: CLOSE_ON_SEL5=03345 closes your repeater if that sequence has been
+received. You can use sequence lengths from 4 to 25.
+.TP
+.B OPEN_ON_SQL
+Use this configuration variable if it should be possible to open the repeater just by
+keeping the squelch open for a while. The value to set is the minimum number of
+milliseconds the squelch must be open for the repeater to open.
+.TP
+.B OPEN_ON_SQL_AFTER_RPT_CLOSE
+Activate the repeater on just a squelch opening if there have been no more
+than the specified number of seconds since the repeater closed.
+.TP
+.B OPEN_SQL_FLANK
+Determines if OPEN_ON_SQL and OPEN_ON_CTCSS should activate the repeater when
+the squelch open or close. If set to OPEN, the repeater will activate and start
+retransmitting audio immediately. No identification will be sent. If set to
+CLOSE, the repeater will not activate until the squelch close. An
+identification will be sent in this case.
+.TP
+.B IDLE_SOUND_INTERVAL
+When the repeater is idle, a sound is played. Specify the interval in
+milliseconds between playing the idle sound. An interval of 0 disables the idle
+sound.
+.TP
+.B SQL_FLAP_SUP_MIN_TIME
+Flapping squelch suppression is used to close the repeater down if there is
+interference on the frequency that open the squelch by short bursts.
+This configuration variable is used to specify the minimum time, in
+milliseconds, that a transmission must last to be classified as a real
+transmission. A good value is in between 500-2000ms.
+.TP
+.B SQL_FLAP_SUP_MAX_COUNT
+Flapping squelch suppression is used to close the repeater down if there is
+interference on the frequency that open the squelch by short bursts.
+This configuration variable is used to specify the maximum number of consecutive
+short squelch openings allowed before shutting the repeater down. A good value
+is in between 5-10.
+.TP
+.B ACTIVATE_MODULE_ON_LONG_CMD
+This configuration variable activate a feature that might help users not aware
+of the SvxLink command structure. The idea is to activate the specified module
+when a long enough command has been received. The typical example is an
+EchoLink user that is used to just typing in the node ID and then the
+connection should be established right away. Using this configuration variable,
+specify a minimum length and a module name. If no module is active and at least
+the specified number of digits has been entered, the given module is
+activated and the command is sent to it. To be really useful this feature
+should be used in cooperation with EXEC_CMD_ON_SQL_CLOSE.
+
+For example, if this configuration variable is set to "4:EchoLink" and the
+user types in 9999, the EchoLink module is first activated and then the
+command 9999 is sent to it, which will connect to the ECHOTEST server.
+.TP
+.B IDENT_NAG_TIMEOUT
+Tell repeater users that are not identifying to identify themselves.
+The number of seconds to wait for an identification, after the
+repeater has been activated, is set using this configuration variable.
+A valid identification is considered to be a transmission longer than the
+time set by the IDENT_NAG_MIN_TIME configuration variable. We don't know
+if it's really an identification but it's the best we can do.
+Setting it to 0 or commenting it out disables the feature.
+.TP
+.B IDENT_NAG_MIN_TIME
+This is the minimum time, in milliseconds, that a transmission must last to
+be considered as an identification. This is used as described in the
+IDENT_NAG_TIMEOUT configuration variable.
+.
+.SS ReflectorLogic
+.
+The ReflectorLogic is used to connect to an SvxReflector server. The
+SvxReflector will distribute all audio to all connected nodes. To actually send
+audio to the reflector from a logic core, set up a link between the two logics
+using LogicLinking. More than one logic core can be connected.
+.P
+SvxReflector also offer traffic separation using talk groups so that multiple
+QSOs can be ongoing through the same reflector server without interfering with
+each other.  The set of talk groups that a node monitors for activity is
+configurable so that a talk group can be automatically selected when it's
+active. After a configurable timeout the node will return to monitor all
+configured talk groups if there is no activity on the currently selected talk
+group. Which talk group to select for outgoing traffic for a node can be set to
+a default and/or selected using DTMF commands. The DTMF commands are entered
+through the logic linking definition associated with the reflector.  So if a
+command prefix of 9 have been specified for a link, selecting talk group 888
+will be achieved by entering the command 91888#.
+.TP
+.B TYPE
+The type for a reflector logic core is always
+.BR Reflector .
+.TP
+.B DNS_DOMAIN
+The domain of the SvxReflector server to connect to. To make this work, the DNS
+domain have to be configured with SRV records for all reflector servers serving
+that domain. For example, if the domain is example.org, there must be one or
+more SRV entries in the DNS with the name _svxreflector._tcp.example.org. Each
+SRV record contain information about hostname, port, priority and weight. The
+priority determine in which order SvxLink will try to connect to the servers.
+The weight is used to give different servers with the same priority a
+probability for how often it will be selected.
+.TP
+.B HOSTS
+A comma separated list of hostname:port pairs of the reflector servers. IP
+address also work. If port is not specified the value of HOST_PORT will be used
+as a default. If DNS_DOMAIN is also specified, the values in the HOSTS list
+will be added to the list looked up in the DNS. The order of the entries depend
+on HOST_PRIO, HOST_PRIO_INC and HOST_WEIGHT.
+.TP
+.B HOST_PRIO
+The priority value to use for entries in the HOSTS list. The priority determine
+in which order SvxLink will try to connect to the specified servers. See also
+HOST_PRIO_INC. Default: 100.
+.TP
+.B HOST_PRIO_INC
+The value with which to increase the priority value for each entry in the HOSTS
+list. The first value will be the one specified by HOST_PRIO. Default: 1.
+.TP
+.B HOST_WEIGHT
+The weight value will determine how often a server will be selected in
+comparison to servers with the same priority. This variable is only useful when
+one want to set the weight in relation to other SRV records looked up in the
+DNS. The weight values for entries in the HOSTS list will always be the same.
+.TP
+.B HOST_PORT
+The default TCP/UDP port number used by the reflector server. The client do not
+need to open any ports in the firewall. Default: 5300.
+.TP
+.B CALLSIGN
+The callsign of this node. The callsign also serves as the username when
+authenticating to the SvxReflector server.
+.TP
+.B AUTH_KEY
+The authentication key, or password, used when authenticating to the
+SvxReflector server.
+.TP
+.B JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. Set this configuration
+variable to the number of milliseconds to buffer before starting to process the
+audio. Default: 0.
+.TP
+.B DEFAULT_TG
+The node will select this talk group on local incoming traffic if no other
+talk group is currently selected. Default: 0 (no talk group).
+.TP
+.B MONITOR_TGS
+A comma separated list of talk groups which the node will monitor for activity
+when no other talk group is selected.
+
+It is also possible to mark talk groups as more prioritized than others by
+adding one or more plus signs after the talk group number. More plus signs mean
+higher priority. While a talk group is selected, and there are activity on a
+talk group with higher priority, the higher prio talk group will be selected
+unless there have been local activity on the node.
+
+Example:
+
+  MONITOR_TGS=112++,240,2403+,2403123
+
+will monitor the TGs for Sweden, Sweden district 3 and a specific TG #2403123.
+Traffic on talk group 2403 will be prioritized and 112 will have the highest
+priority.
+.TP
+.B TG_SELECT_TIMEOUT
+The number of seconds after which a selected talk group will be unselected. The
+node will return to talk group 0 (no talk group) and start monitoring the
+configured talk groups again. The value must be larger than zero. Default: 30
+seconds.
+.TP
+.B ANNOUNCE_REMOTE_MIN_INTERVAL
+The minimum number of seconds between announcements of the same TG for remote
+TG activations. If the same TG is remotely activated repeatedly it will not be
+announced until at least the number of seconds specified in this configuration
+variable have passed.
+.TP
+.B NODE_INFO_FILE
+The configuration file to use for sending information regarding this client to
+the reflector server. This is not a required configuration. It is mostly
+free-form JSON but the general structure should be kept so that SvxLink and
+the reflector server can fill in dynamic information about the node like signal
+strengths for receivers. Use the default node_info.json as a template. You
+can add more information rather freely but don't change the overall structure.
+.TP
+.B MUTE_FIRST_TX_LOC
+Mute the first transmission after selecting a talk group due to local activity.
+This feature is good to have enabled for a number of reasons. One reason is to
+suppress short openings of a talk group when someone just make a single
+transmission to test the local node. Another reason is for to allow someone to
+submit DTMF commands to the node without disturbing the reflector network. An
+example is that someone activates a talk group using CTCSS but then immediately
+select another talk group using DTMF. In that case no transmission will be made
+on the first talk group. This feature is enabled by default.
+.TP
+.B MUTE_FIRST_TX_REM
+Mute the first transmission after selecting a talk group due to remote
+activity. This feature can be enabled to let local node users enter DTMF
+commands without disturbing an active talk group. As an example, the local node
+monitors a talk group that is active. However, no one on the local node
+participates in the QSO and a local user want to select another talk group.
+With this feature enabled it is possible to do that without transmitting into
+the reflector network while entering DTMF commands.
+
+This feature is not enabled by default since it is a bit unintuitive. If a
+local user hear a call and want to answer that call, he must first make a short
+transmission to "open up" the local node. This is easy to forget.
+.TP
+.B TMP_MONITOR_TIMEOUT
+This configuration variable determines after how many seconds a manually added
+temporary talk group monitor will time out. Set to 0 to disable this feature.
+Default is 3600, one hour.
+.TP
+.B UDP_HEARTBEAT_INTERVAL
+The number of seconds between UDP heartbeat messages sent to the reflector
+server. This configuration variable can normally be left at the default value
+but if you get frequent disconnects due to UDP heartbeat timeout it may help to
+lower this value. Default: 15
+.TP
+.B QSY_PENDING_TIMEOUT
+Set to the number of seconds to enable following a QSY request on squelch
+activity. That is, after a remote QSY request, during the configured number of
+seconds, it will be possible to follow a QSY request by just pushing the PTT
+instead of having to use DTMF commands. Note that the timer starts when the QSY
+request is received so the time it takes to play the QSY announcement is also
+included in the timeout time. A good value is within 10 to 15 seconds.
+Default is -1 (disabled).
+.TP
+.B VERBOSE
+Set to 0 to suppress reflector leave/join printouts.
+.P
+It is also possible to set audio codec parameters using the same configuration
+variables as documented for networked receivers and transmitters. For example,
+to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
+to something lower than 9.
+.
+.SS UsrpLogic
+.
+The UsprLogic is used to connect SvxLink with a digital Hamradio network. The 
+communication is based on Udp transmission. Some Hamradio applications
+are able to accept the protocol (Asterisk, MMDVM).
+.TP
+.B TYPE
+The type for a Usrp Logic is always "Usrp"
+.TP
+.B CALL
+Specify the callsign used at this logic.
+.TP
+.B USRP_HOST
+The hostname of the Usrp server.
+.TP
+.B USRP_TX_PORT
+The Udp port used to send Udp messages to Usrp server
+.TP
+.B USRP_RX_PORT
+The Udp port used to receive Udp messages from the Usrp server.
+.TP
+.B DMRID
+The DMR-ID ssigned to the callsign.
+.TP
+.B RPTID
+The repeater ID. It's not used in most cases.
+.TP
+.B DEFAULT_TG
+The talk group. Default is 0
+.TP
+.B DEFAULT_CC
+The color code. It's not used in most cases, default is 1
+.TP
+.B DEFAULT_TS
+The time slot. It's not used in most cases, default is 1
+.TP
+.B PREAMP
+The signal (internal audio from connected logic) will be amplified/reduced 
+by the specified number of dB. This processed audio is sent to the usrp server.
+.TP
+.B NET_PREAMP
+The signal received from Usrp network will be amplified/reduced by the 
+number of dB. This processed audio is sent to connected logics.
+.TP
+.B NET_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter from the net site. The audio 
+limiter really is a compressor with a very steep compression ratio like 10:1. 
+The limiter is used to help keeping down the audio level to not overmodulate 
+the local connected logics.A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.TP
+.B LOCAL_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter from the local site to Usrp 
+network. The audio limiter really is a compressor with a very steep compression 
+ratio like 10:1. The limiter is used to help keeping down the audio level to 
+not overmodulate the remote connected usrp nodes. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.
+.SS QSO Recorder Section
+.
+The QSO recorder is used to record all received audio to files on disk. All
+audio from receivers, modules and logic links are recorded. Announcements are
+not recorded.
+.TP
+.B REC_DIR
+Use this configuration variable to specify in which directory to write the
+audio files. A good place is /var/spool/svxlink/qso_recorder.
+.TP
+.B MIN_TIME
+If the duration of the recorded content for a file is less then MIN_TIME
+milliseconds, the file will be deleted when the file is closed. Default: 0
+(empty files will be deleted).
+.TP
+.B MAX_TIME
+Setting this configuration variable will set an upper limit for the file size
+of a recording. No more than MAX_TIME seconds of content will be recorded to a
+single file. When the maximum time have been reached, the file is closed and
+another file is created. Note that it is not the maximum time that the
+recording has been active that we are setting a limit for but rather how much
+content that have been recorded to the file. If nothing is recorded, the file
+can stay open indefinitely. Default: 0 (no limit)
+.TP
+.B SOFT_TIME
+To not get abrupt breaks in recordings it is possible to set a soft break time.
+Let's say that MAX_TIME is set to 3600 seconds (one hour). If we set SOFT_TIME
+to 300 seconds (five minutes) the QSO recorder try to close the file on a
+squelch close somewhere between 55 and 60 minutes. In this way we may avoid
+getting transmissions split up between files. Default: 0 (no limit)
+.TP
+.B MAX_DIRSIZE
+Specify the maximum total size in megabytes of the files in the recording
+directory. If the limit is exceeded, the oldest files are deleted. The
+directory size is checked upon file close so the size may grow temporarily past
+the limit with at most the size of one recorded file. Only files which have a
+filename starting with "qsorec_" will be considered for deletion. If using an
+ENCODING_CMD, make sure that the "qsorec_" prefix is not removed from the
+target filename unless you really want the MAX_DIRSIZE feature to skip them.
+Default: 0 (no limit)
+.TP
+.B DEFAULT_ACTIVE
+If this configuration variable is set to 1, the QSO recorder will be activated
+by default when SvxLink start. Default: 0 (default inactive)
+.TP
+.B TIMEOUT
+If a timeout is specified, the activation state of the QSO recorder will return
+to the value specified in the DEFAULT_ACTIVE configuration variable when the
+node has been idle for the specified number of seconds. When DEFAULT_ACTIVE is
+unset or 0, if the QSO recorder is manually activated it will be automatically
+deactivated after the specified amount of time of inactivity.  When
+DEFAULT_ACTIVE is set to 1, if the QSO recorder is manually deactivated it will
+be automatically activated after the specified amount of time of inactivity.
+Default: 0 (no timeout)
+.TP
+.B QSO_TIMEOUT
+Set this configuration variable if you want to close the currently opened file
+and open a new one after each QSO. The number of seconds the node should be
+idle before closing the file should be specified. Default: 0 (no QSO timeout)
+.TP
+.B ENCODER_CMD
+Specify a command to be executed after a new wav file have been written to
+disk. This makes it possible to use an external encoder utility to encode the
+wav file to another format. Even though this configuration variable was added
+to run an external encoder it could do more complicated things with the file if
+needed. A couple of examples would be to transfer the file to another computer
+or to send a notification e-mail. If the command line get too complicated it
+may be a good idea to write a script instead.
+
+The encoder command will be run under a shell so normal shell operators like
+redirects and pipes may be used. The shell specified in the SHELL environment
+variable will be used and if not set, /bin/sh will be used. The "\-c" command
+line option will be added so the complete command will look something like:
+$SHELL \-c "$ENCODER_CMD". A number of %-codes can be included in the command.
+They have the following meaning:
+.RS
+.IP \(bu 4
+.BR %f " - The full filename with full path"
+.IP \(bu 4
+.BR %d " - The directory part (what REC_DIR is set to)"
+.IP \(bu 4
+.BR %b " - The basename, that is, the filename without path and extension"
+.IP \(bu 4
+.BR %n " - The filename without path but with extension"
+.P
+The encoder will be started in the background and it will not be stopped even
+if SvxLink exits. It will run in the background until it's done. As long as
+SvxLink is running it is monitoring the encoding processes. If a process run
+for longer than one hour it will be killed.
+
+Note that SvxLink will never remove the original recording so that have to be
+done in the encoder command. Here are a couple of examples:
+
+ ENCODER_CMD=/usr/bin/oggenc \-Q \\"%f\\" && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/lame \-\-quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/speexenc \\"%f\\" \\"%d/%b.spx\\" 2>/dev/null && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/opusenc \\"%f\\" \\"%d/%b.opus\\" 2>/dev/null && rm \\"%f\\"
+.
+.SS Macros Section
+.
+A macros section is used to declare macros that can be used by a logic core. The
+logic core points out the macros section to use by using the MACROS
+configuration variable. The name of the MACROS section can be chosen arbitrarily
+as long as it match the MACROS configuration variable in the logic core
+configuration section. There could for example exist both a
+[RepeaterLogicMacros] and a [SimplexLogicMacros] section.
+.P
+A macro is a kind of shortcut that can be used to decrease the amount of key
+presses that have to be done to connect to common EchoLink stations for example.
+On the radio side, macros are activated by pressing "D" "macro number" "#". A
+macros section can look something like the example below. Note that the module
+name is case sensitive.
+
+  [Macros]
+  1=EchoLink:9999#
+  2=EchoLink:1234567#
+  9=Parrot:0123456789#
+
+For example, pressing DTMF sequence "D1#" will activate the EchoLink module and
+connect to the EchoTest conference node.
+.
+.SS Logic Linking
+A logic linking configuration section is used to specify information for a link 
+between two or more SvxLink logic cores. Such a link can for example be used to 
+connect a local repeater to a remote repeater using a separate link transceiver.
+The link is activated/deactivated using DTMF commands and/or automatically 
+depending on your configuration.  When the link is active, all audio received
+by one logic will be transmitted by the other logic(s).
+.P
+The name of the logic linking section can be chosen freely. In the example 
+configuration file, there is a section [LinkToR4]. To use a logic linking 
+section in a logic core it must be pointed out by the LINKS configuration 
+variable in the GLOBAL section.
+Example: GLOBAL/LINKS=LinkToR4
+.TP
+.B CONNECT_LOGICS
+A comma separated list of logic specifications for the logic cores to connect
+together. Each logic specification has three parts separated by colons:
+<logic name>:<command>:<announcement name>. The "logic name" is the name of
+the logic to include in the link. To manually activate or deactivate the link
+from the just specified logic, "command" is used. The "announcement name" is
+used when announcing link related activities like activation or deactivation.
+Both "command" and "announcement name" may be left empty if no manual control
+is wanted.
+An example config line may look like this:
+
+RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
+
+It will include two logics in the link, RepeaterLogic_2m and
+RepeaterLogic_70cm. From the 2m side, the link will be activated when the user
+send command 991 and deactivated when the user send command 990. Upon
+activation, an announcement like "activating link to SK3GW" will be played
+back. From the 70cm side the command will be 941 and 940 respectively. The
+announcement when activating the link from the 70cm side will be something like
+"activating link to SK3GK".
+.TP
+.B DEFAULT_ACTIVE
+The link will be connected automatically during startup of SvxLink if this
+configuration variable is set to 1. Also, if a link is manually disconnected by
+a user it will be automatically reconnected after some time of inactivity. The
+time is specified by setting the TIMEOUT configuration variable. If the
+TIMEOUT variable is not set, no automatic reactivation will be done.
+.TP
+.B TIMEOUT
+The number of seconds after which the link will be automatically deactivated
+if there have been no activity. If 1 have been specified for DEFAULT_ACTIVE,
+this configuration variable will specify after how many seconds the link will
+be reactivated after being manually deactivated.
+.TP
+.B ACTIVATE_ON_ACTIVITY
+Enter a comma separated list of logics, which should automatically activate
+the link if there is activity (e.g. squelch open, announcements etc) in it. One
+possible application for this is for example to make the connection of a
+microphone/speaker combination (without DTMF encoder) for brief announcements
+but without having to constantly listen in.
+Example: ACTIVATE_ON_ACTIVITY=MicSpkrLogic
+.
+.SS Local Receiver Section
+.
+A local receiver section is used to specify the configuration for a receiver
+connected to the sound card. In the default configuration file there is a Local
+configuration section called
+.BR Rx1 .
+The section name could be anything. It should match the RX configuration
+variable in the logic core where the receiver is to be used. The available
+configuration variables are described below.
+.TP
+.B TYPE
+Always "Local" for a local receiver.
+.TP
+.B RX_ID
+A single character uniquely identifying this receiver. The RX identity can for
+example be used in the TCL event scripts to get different roger sounds for
+different receivers when using a receiver voter.
+.TP
+.B AUDIO_DEV
+Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
+AUDIO DEVICE SPECIFICATIONS chapter for more information.
+.TP
+.B AUDIO_CHANNEL
+Specify the audio channel to use. SvxLink can use the left/right stereo
+channels as two mono channels. Legal values are 0 or 1.
+.TP
+.B AUDIO_DEV_KEEP_OPEN
+The normal behaviour for SvxLink is to open an audio device when needed and
+close it when it does not have to be open anymore. This may cause problems in
+some applications or with some sound hardware. Set this variable to 1 to force
+SvxLink to keep the audio device open from application start to exit.
+.TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level for overmodulating stations. For a
+properly calibrated SvxLink node max FM deviation is -6dBFS. A good value to
+start with for this parameter is then -6 but try to lower it further (like -9
+to -12) if it does not affect audio quality negatively.
+.TP
+.B SQL_DET
+Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
+SERIAL, EVDEV, SIGLEV, PTY, GPIO, GPIOD, HIDRAW or COMBINE.
+
+The VOX squelch detector determines if there is a signal
+present by calculating a mean value of the sound samples. The VOX squelch
+detector behavior is adjusted with VOX_FILTER_DEPTH and VOX_THRESH. VOX is
+actually a bit of a misnomer since it's a "Voice Operated Squelch" and VOX
+actually means "Voice Operated Transmitter". However, the term VOX is widely
+understood by hams all over the world so we'll stick with it.
+
+The CTCSS squelch detector checks for the presence of a tone with the specified
+frequency. The tone frequency is specified using the CTCSS_FQ config variable.
+The thresholds are specified using the CTCSS_OPEN_THRESH and CTCSS_CLOSE_THRESH
+config variables. Other config variables that effect the CTCSS squelch is:
+CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH.
+
+The SERIAL squelch detector use a pin in a serial port to detect if the squelch
+is open. This squelch detector can be used if the receiver have an external
+hardware indicator of when the squelch is open. Specify which serial port/pin to
+use with SERIAL_PORT and SERIAL_PIN.
+
+The EVDEV squelch detector read squelch events from a /dev/input/eventX device.
+An example where this could be useful is if you have a USB audio device with
+some buttons on it. Some of these devices generate key press events, much like
+a keyboard. Specify which /dev/input device node to use using the EVDEV_DEVNAME
+config variable. Set which events that should open and close the squelch using
+the EVDEV_OPEN and EVDEV_CLOSE config variables.
+
+The GPIO squelch detector read a pin on the GPIO Port. Depending on the level
+of the pin, the squelch is switched. A HIGH (3.3V) at the pin set the squelch
+to open and a LOW (GND) level will set the squelch to closed.
+Specify which squelch pin to use with the GPIO_SQL_PIN configuration variable.
+On some devices, like the Orange Pi, you also need to set the GPIO_PATH
+configuration variable.
+
+The GPIOD squelch detector read a pin in the GPIO subsystem using the gpiod
+library. Depending on the level of the pin, the squelch is switched.  Set GPIOD
+interaction up using the following configuration variables: SQL_GPIOD_CHIP,
+SQL_GPIOD_LINE, SQL_GPIOD_BIAS.
+
+The SIGLEV squelch detector use signal level measurements to determine if the
+squelch is open or not. Which signal level detector to use is determined by the
+setting of the SIGLEV_DET configuration variable. The open and close
+thresholds are set using the SQL_SIGLEV_OPEN_THRESH and SQL_SIGLEV_CLOSE_THRESH
+configuration variables.
+If using the NOISE signal level detector note the following. The detector is
+not perfect (it's affected by speech) so you will also want to setup
+SQL_HANGTIME to prevent it from closing in the middle of a transmission. A
+value between 100-300ms is probably what you need. If using this squelch type
+in cooperation with a voter, you'll also probably need to setup SQL_DELAY to
+get correct signal level measurements. A value of about 40ms seem to be OK.
+Also, when using the NOISE signal level detector the input audio must be
+unsquelched since silence will be interpreted as a high signal strength.
+
+The PTY squelch expects a very simple protocol over a pseudo-tty device,
+created by SvxLink at runtime.  An 'O' over this pty device indicate an open
+squelch, a 'Z' is a closed squelch.  Define the slave pty using PTY_PATH (e.g.
+PTY_PATH=/tmp/sql) and SvxLink will create a link to the specified path from
+it's pseudotty slave device (/dev/pts/X). This can be used by a script to
+interface custom devices, modems or other hardware to SvxLink. Look for
+nhrcx.pl or trx_pty_ctrl.py for an example.  It is possible to specify the same
+PTY for multiple functions (e.g. DTMF, ptt etc) in both TX and RX
+configurations. This may be good if there is one script handling all functions.
+
+The HIDRAW squelch supports human interface devices (HID), USB devices
+like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
+
+The COMBINE squelch make it possible to combine multiple squelch types using a
+logical expression. The expression is set up using the SQL_COMBINE
+configuration variable.
+.TP
+.B SQL_START_DELAY
+The squelch start delay is of most use when using VOX squelch. For example, if
+the transceiver makes a noise when the transmitter is turned off, that might
+trigger the VOX and cause an infinite loop of squelch open/close transmitter
+on/off.
+Specify the number of milliseconds that the squelch should be "deaf" after
+the transmitter has been turned off. 
+.TP
+.B SQL_DELAY
+Specify a delay in milliseconds that a squelch open indication will be delayed.
+This odd feature can be of use when using a fast squelch detector in combination
+with the signal level detector. A squelch delay will allow the signal level
+detector to do its work before an indication of squelch open is sent to the
+logic core. A delay might be needed when using the voter to choose among
+multiple receivers. A normal value could be somewhere in between 20-100ms.
+.TP
+.B SQL_HANGTIME
+How long, in milliseconds, the squelch will stay open after the detector has
+indicated that it is closed. This configuration variable will affect all
+squelch detector types. Settable at runtime.
+.TP
+.B SQL_EXTENDED_HANGTIME
+At low signal strengths it can be beneficial to use a longer squelch hangtime
+so that it is less likely for the squelch to close. This configuration variable
+is unset by default. A value of 1000 milliseconds may be a good value to start
+out with. To enable the extended squelch hangtime feature, set up the
+SQL_EXTENDED_HANGTIME_THRESH variable. Settable at runtime.
+.TP
+.B SQL_EXTENDED_HANGTIME_THRESH
+At low signal strengths it can be beneficial to use a longer squelch hangtime
+so that it is less likely for the squelch to close. This configuration variable
+is unset by default. When set to a signal level it will activate the extended
+squelch hangtime feature. When the signal strength during a transmission fall
+below the set threshold, the extended hangtime will be used. Start out with a
+value between 10 to 15. The SQL_EXTENDED_HANGTIME variable is used to set how
+long the extended squelch hangtime should be. Make sure that you have
+calibrated the signal level detector before turning this feature on. Otherwise
+it will not work as expected. Settable at runtime.
+.TP
+.B SQL_TIMEOUT
+Use this configuration variable to set an upper limit, in seconds, for how
+long the squelch is allowed to be open. If the timeout value is exceeded the
+squelch is forced to closed. If the squelch close for real, everything is back
+to normal. When it opens the next time a squelch open will be signaled.
+For example, use this feature to make sure that a faulty receiver cannot block
+the system indefinitely.
+.TP
+.B VOX_FILTER_DEPTH
+The number of milliseconds to create the mean value over. A small value will make the vox
+react quicker (<200) and larger values will make it a little bit more sluggish. A small
+value is often better. 
+.TP
+.B VOX_THRESH
+The threshold that the mean value of the samples must exceed for the squelch to be
+considered open. It's hard to say what is a good value. Something around 1000 is probably
+a good value. Set it as low as possible without getting the vox to false trigger. 
+.TP
+.B CTCSS_MODE
+This configuration variable set the CTCSS detection method used. These are the
+ones to choose from:
+.RS
+.IP \(bu 4
+.BR "0 (Default)"
+Will choose the detection mode that is the default in the software. At the
+moment this is mode 2, "Estimated SNR".
+.IP \(bu 4
+.BR "1 (Neighbor bins)"
+This detection mode will use three narrow frequency bands (~8Hz) to do the
+detection. One band is centered around the tone to be detected and then there
+are one band above and one below the tone. These bands are used to estimate the
+noise floor. This is the detector that have been used in SvxLink for a long
+time. It is however rather slow with its detection time of about 450ms.
+There is no good reason to use this detector anymore but it is kept
+in case the new detector does not work for some hardware setup.
+.IP \(bu 4
+.BR "2 (Estimated SNR)"
+This is a newer detector implementation which have some improvements. The most
+notable difference is that it is faster. The mean detection time will be around
+200ms. This is the default detection mode if not specified.
+This detector will use a larger passband to estimate the noise floor
+which make it more stable. The default config use the whole CTCSS passband but
+this can be customized using the CTCSS_BPF_LOW and CTCSS_BPF_HIGH config
+variables.
+.IP \(bu 4
+.BR "3 (Estimated SNR+Phase)"
+This detector is a bit experimental. It is even faster and more narrow than the
+other detection modes. The mean detection time will be something like 150ms.
+The detection bandwidth is very narrow and very sharp so that no adjacent
+tones will trigger the detector. The price to pay for these improvements is
+that is it a bit less sensitive.
+.IP \(bu 4
+.BR "4 (Overlap+Estimated SNR+Frequency estimation)"
+This is an improvement of the mode 3 detector which use another method for
+extracting the phase information from the signal. This phase information can be
+used to calculate an estimation of the tone frequency. The accuracy is like
+tenths of a Herz. Like the mode 3 detector, this detector is faster and more
+selective. With its 0.75% frequency tolerance, it will not trigger on adjacent
+CTCSS tones. However, the "undetect" algorithm does not use the frequency
+estimation so the squelch may be held open by an adjacent tone if already in
+active state. One downside is that it is a bit more CPU hungry due to using 75%
+overlap in the frequency analysis, thus processing each sample three times.
+.RE
+.TP
+.B CTCSS_FQ
+If CTCSS (PL,subtone) squelch is used (SQL_DET is set to CTCSS), this config
+variable sets the frequency of the tone to use. The tone frequency ranges from
+67.0 to 254.1 Hz. There actually is nothing that will stop you from setting the
+frequency to something outside this range but there is no guarantee that it will
+work.
+
+If desired it is possible to specify a comma separated list of tone frequencies
+in which case the squelch will open on all the tone frequencies. Note that for
+this feature to work well the receivers frequency response in the CTCSS
+frequency range (67.0 to 254.1Hz) need to be reasonable flat. When choosing
+tones, try to select tones that are close to each other. However, selecting
+tones too close may cause both to trigger. Also do not select tones that are a
+multiple of another tone since overtones may trigger the wrong one.
+.TP
+.B CTCSS_OPEN_THRESH
+If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config
+variable sets the required tone level to indicate squelch open. The value is
+some kind of estimated signal to noise dB value. If using CTCSS mode 2, 3 or 4
+it is helpful to set up the CTCSS_SNR_OFFSETS config variable. This will make
+the SNR estimation pretty good. Default threshold is 15dB.
+.TP
+.B CTCSS_CLOSE_THRESH
+If CTCSS (PL, subtone) squelch is used (SQL_DET is set to CTCSS), this config
+variable sets the required tone level to indicate squelch close. The value is
+some kind of estimated signal to noise dB value. If using CTCSS mode 2, 3 or 4
+it is helpful to set up the CTCSS_SNR_OFFSETS config variable. This will make
+the SNR estimation pretty good. Default threshold is 9dB.
+.TP
+.B CTCSS_SNR_OFFSET
+This configuration variable should not be used unless you know why you use it.
+Using CTCSS_SNR_OFFSETS is often more appropriate.
+.TP
+.B CTCSS_SNR_OFFSETS
+This config variable is used when CTCSS_MODE is set to 0, 2, 3 or 4. It will
+adjust the estimated SNR values so that they become very close to a real SNR
+value. This value will have to be adjusted if CTCSS_FQ, CTCSS_MODE,
+CTCSS_BPF_LOW or CTCSS_BPF_HIGH changes.
+
+Use the siglevdetcal utility to find out what to set this config variable to.
+There is no requirement to set this config variable up. The downside is that
+you will then need to experiment more with the CTCSS_OPEN_THRESH and
+CTCSS_CLOSE_THRESH config variables to find the correct squelch level. If using
+multiple CTCSS frequencies it may not be possible to find good threshold values
+due to uneven frequency characteristics for the receiver.
+
+The format for this config variable is a comma separated list of
+frequency:offset pairs. The CTCSS_SNR_OFFSET variable may be used as a form of
+fallback value that is used if a specific tone frequency in use is missing from
+this list.
+.TP
+.B CTCSS_BPF_LOW
+When CTCSS_MODE is set to 0, 2, 3 or 4, this config variable will set the low
+cutoff frequency for the passband filter. It normally should not have to be
+adjusted but could improve the detector if some interference falls within the
+passband (e.g. mains hum). Note however that the more narrow you make the
+passband, the less stable the detector will be. You may need to compensate by
+increasing the open/close thresholds or by setting up SQL_DELAY and
+SQL_HANGTIME. Default is 60Hz.
+.TP
+.B CTCSS_BPF_HIGH
+When CTCSS_MODE is set to 0, 2, 3 or 4, this config variable will set the high
+cutoff frequency for the passband filter. It normally should not have to be
+adjusted but could improve the detector if some interference falls within the
+passband. Note however that the more narrow you make the passband, the less
+stable the detector will be. You may need to compensate by increasing the
+open/close thresholds or by setting up SQL_DELAY and SQL_HANGTIME. Default is
+270Hz.
+.TP
+.B CTCSS_DEBUG
+Set this to 1 to enable continuously printing SNR values for the CTCSS tone
+measurements. This is only meant to be activated temporarily while searching
+for a problem or for initial adjustment.
+.TP
+.B SERIAL_PORT
+If SQL_DET is set to SERIAL, this config variable determines which serial port should be
+used for hardware squelch input (COS - Carrier Operated Squelch).
+Note: If the same serial port is used for the PTT, make sure you specify exactly the same
+device name. Otherwise the RX and TX will not be able to share the port.
+Example: SQL_PORT=/dev/ttyS0 
+.TP
+.B SERIAL_PIN
+If SQL_DET is set to SERIAL, this config variable determines which pin in the
+serial port that should be used for hardware squelch input (COS - Carrier
+Operated Squelch). It is possible to use the DCD, CTS, DSR or RI pin. If
+inverted operation is desired, prefix the pin name with an exclamation mark
+(!).
+
+Example: SQL_PIN=!CTS
+.TP
+.B SERIAL_SET_PINS
+Set the specified serial port pins to a static state. This can be good if using
+a pin for reference voltage or if a pin have to be in a certain state to not
+interfere with the operation of some equipment. There are two pins that are
+possible to use, RTS and DTR. If prefixed with an exclamation mark (!), the
+pin will be cleared and if not it will be set.
+
+Example: SERIAL_SET_PINS=RTS!DTR will set RTS and clear DTR.
+.TP
+.B EVDEV_DEVNAME
+Specify which /dev/input device node to use for the EVDEV squelch detector.
+To find out which device node and event codes to use, install the evtest
+utility. Find a candidate device node under /dev/input/ or /dev/input/by-id/
+and try the evtest utility on it. Press some keys on the device you want to
+read events from. If you're in luck, events will be printed on the screen.
+.TP
+.B EVDEV_OPEN
+Use the evtest utility, as described above, to find out type, code and
+value for the event you want to use to open the squelch. For example if
+type is 1, code is 163 and value is 1, set this config variable to
+1,163,1.
+.TP
+.B EVDEV_CLOSE
+Use the evtest utility, as described above, to find out type, code and
+value for the event you want to use to close the squelch. For example if
+type is 1, code is 163 and value is 0, set this config variable to
+1,163,0. If you set the same type,code,value combination for both
+EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
+.TP
+.B GPIO_PATH
+Use this configuration variable to set the path to the sys control devices for
+GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
+Pi, the path is /sys/class/gpio_sw.
+.TP
+.B GPIO_SQL_PIN
+If SQL_DET is set to GPIO this configuration variable is used to choose which
+GPIO pin to use for squelch input. The most common name is gpio<number>, like
+gpio4. Some GPIO drivers use more complex names, like gpio33_pe11. If inverted
+operation is desired, prefix the pin name with an exclamation mark (!).
+
+Example: GPIO_SQL_PIN=!gpio4
+.TP
+.B SQL_GPIOD_CHIP
+The GPIO chip to use for squelch. The application tries to figure out whether
+the value is the path to the GPIO chip, its name, label or number.
+
+Example: SQL_GPIOD_CHIP=gpiochip0
+.TP
+.B SQL_GPIOD_LINE
+If GPIOD was specified in SQL_DET, set this config variable to the gpiod line
+of the GPIO pin to use. If a number is specified it is assumed to be the GPIO
+pin offset within the chip. If a pin name is specified SvxLink will try to find
+a pin with that name within the chip.
+
+Normally, the pin will be active high but if the pin specification is prefixed
+with an exclamation mark it will be active low instead.
+
+For some hardware platforms you may need to also set the SQL_GPIOD_CHIP
+configuration variable, if the pin you want to use is not on the default GPIO
+chip.
+
+Example: SQL_GPIOD_LINE=17
+.TP
+.B SQL_GPIOD_BIAS
+This config variable is only available when SvxLink has been built with
+libgpiod >= 1.5. It makes it possible to set if the squelch GPIO pin should be
+pulled up or down. If you don't know what that mean you should check the
+documentation for your hardware interface, whether it require a pull up or
+down. It's an electronics thing. In essence, a pull up will force the pin high
+if nothing is connected to it and a pull down will force it low.
+.TP
+.B SQL_COMBINE
+This configuration variable is used to set a logical expression that is used to
+combine multiple squelch types. The expression syntax consist of names for
+configuration file sections where a specific squelch type is set up and of
+the operators '| (logical or), '&' (logical and) and '!' (logical negation).
+Parts of the expression may be grouped by surrounding them with parentheses,
+effectively changing operator precedence. The normal precedence is that '&'
+bind harder to its operands than '|'. The '!' operator bind hardest.
+
+Below is a simple example of how to set up a combined squelch.
+
+  [Rx1:CTCSS]
+  SQL_DET=CTCSS
+  CTCSS_FQ=77.0
+  CTCSS_SNR_OFFSETS=77.0:-3.22
+
+  [Rx1:SIGLEV]
+  SQL_DET=SIGLEV
+  SQL_SIGLEV_RX_NAME=Rx1
+  SQL_SIGLEV_OPEN_THRESH=30
+  SQL_SIGLEV_CLOSE_THRESH=2
+
+  [Rx1]
+  ...
+  SQL_DET=COMBINE
+  SQL_COMBINE=Rx1:CTCSS | Rx1:SIGLEV
+  ...
+
+The configuration section names used above is just a convention but it is wise
+to include the name of the associated RX for better diagnostic messages.
+
+Squelch timing parameters like SQL_DELAY, SQL_HANGTIME etc may be set up in the
+receiver configuration section (Rx1 above). The parameters will not be applied
+to each subsquelch but rather to the combiner itself. It is often better to set
+up parameters in each squelch specific configuration section unless you really
+know what you are doing.
+.TP
+.B SQL_SIGLEV_RX_NAME
+When using the SIGLEV squelch type, specify the name of the receiver that
+provide the signal level. This is only useful when the squelch configuration
+is not in the same configuration section as the receiver, like when using the
+COMBINE squelch type. The default is to use the same configuration section as
+where the SIGLEV squelch is configured.
+.TP
+.B SIGLEV_DET
+Choose which type of signal level detector to use. The available choices are:
+"NONE", "NOISE", "TONE", "AFSK" or "SIM", "CONST". Depending on other
+configuration there may be more choices available. For example, if a Ddr
+receiver is used there will also be a DDR signal level detector available.  The
+signal level detector is only needed when using multiple receivers in a voter
+configuration or when using the SIGLEV squelch type.
+
+Type NONE disable the signal level detector. This may be used if no signal
+level detector is needed.
+
+Type NOISE use a bandpass filter in the range of 5 - 5.5kHz
+(CARD_SAMPLE_RATE >= 16000) or a high-pass filter at 3.5kHz
+(CARD_SAMPLE_RATE = 8000) to estimate the amount of noise present on the
+signal. If the passband contain a small amount of energy, a strong signal is
+assumed. If the passband contain more energy, a weaker signal is assumed.
+The noise detector must be calibrated for the receiver and audio levels you
+use. This is done using the SIGLEV_SLOPE and SIGLEV_OFFSET configuration
+variables. See chapter CALIBRATING THE SIGNAL LEVEL DETECTOR below for more
+information.
+
+Type TONE is not really a signal level detector but rather
+a transport mechanism for getting signal level measurements from a remote
+receiver site, linked in via RF, to the main SvxLink site.
+It is using ten tones, one for each signal level step, in the high audio
+frequency spectrum (5.5 - 6.4kHz, 100Hz step) to indicate one of ten signal
+levels.  Only the receiving part have been implemented in SvxLink at the
+moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
+signal level voltage to tone frequencies.
+Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
+corresponding signal level value in between 0 - 100.
+
+Type AFSK is like the TONE detector really a transport mechanism. Signal level
+values are transmitted using Audio Frequency Shift Keying, AFSK, over the
+receiver uplink channel from a remote receiver site. AFSK reception must have
+been enebled by setting OB_AFSK_ENABLE=1 and also optionally IB_AFSK_ENABLE=1.
+
+Type SIM is a simulated signal level detector that can be used to debug
+problems in the SvxLink software. Use the SIGLEV_MIN, SIGLEV_MAX,
+SIGLEV_DEFAULT, SIGLEV_TOGGLE_INTERVAL and SIGLEV_RAND_INTERVAL configuration
+variables to configure the simulator.
+
+Type CONST is not a detector at all. Instead it is possible to set a constant
+signal level. This can be used for audio sources that does not have the concept
+of a signal level. If configured in a receiver managed by a Voter it can be
+used to determine priority in comparison to other receivers and audio sources.
+Use the SIGLEV_CONST configuration variable to set the signal level.
+.TP
+.B HID_DEVICE
+This parameter defines the device your hidraw adapter is connected to. This 
+port is created by the linux/hidraw driver.
+e.g. HID_DEVICE=/dev/hidraw3
+.TP
+.B HID_SQL_PIN
+Define the pin your hardware squelch (from RX) is connected to. Valid values
+are VOL_UP, VOL_DN, MUTE_PLAY or MUTE_REC.
+
+Example: HID_SQL_PIN=VOL_UP
+.TP
+.B SIGLEV_SLOPE
+The slope (or gain) of the signal level detector. See chapter CALIBRATING THE
+SIGNAL LEVEL DETECTOR below for more information.
+.TP
+.B SIGLEV_OFFSET
+The offset of the signal level detector. See chapter CALIBRATING THE SIGNAL
+LEVEL DETECTOR below for more information.
+.TP
+.B SIGLEV_BOGUS_THRESH
+This configuration variable set an upper threshold for the estimated signal
+level when using the noise signal level detector.  If the estimation goes over
+the given threshold, a signal level of 0 will be reported. This can be used as
+a workaround when using a receiver with squelched audio output. When the
+squelch is closed, the receiver audio is silent. The signal level estimator
+will interpret this as a very strong signal. Setting up the bogus signal level
+threshold will counteract this behavior but a better solution is to use
+unsquelched audio if possible.
+
+By default this feature is disabled. If enabling it, start with a value
+somewhere around 120.
+.TP
+.B TONE_SIGLEV_MAP
+This configuration variable is used to map tones to signal level values when
+SIGLEV_DET=TONE. It is a comma separated list of ten values in the 0 - 100
+range. The first value map to the 5500Hz tone, the second to the 5600Hz tone
+and so on. The last value map to the 6400Hz tone.
+What levels the tones should be mapped to depends on the tone sender
+implementation. The default tone map is 10,20,30...,100.
+
+The Atmel AVR processor used by the author have a reverse mapping so
+that the first tone (5500Hz) indicate the highest signal strength and the
+last tone (6400Hz) indicate the lowest signal strength. It is also not linear
+since it's more important to have fine measurement granularity in the lower
+signal strength range. This is how the mapping look for the AVR: 
+100,84,60,50,37,32,28,23,19,8.
+.TP
+.B SQL_SIGLEV_OPEN_THRESH
+This is the squelch open threshold for the SIGLEV squelch detector.
+If using the NOISE signal level detector, make sure to first calibrate the
+signal level detector using the SIGLEV_SLOPE and SIGLEV_OFFSET configuration
+variables. The signal level detector should normally be calibrated so that full
+signal strength is 100 and no signal is 0. Depending on your background noise
+level a good value for this configuration variable is between 5 and 20.
+.TP
+.B SQL_SIGLEV_CLOSE_THRESH
+This is the squelch close threshold for the SIGLEV squelch detector.
+If using the NOISE signal level detector, make sure to first calibrate the
+signal level detector using the SIGLEV_SLOPE and SIGLEV_OFFSET configuration
+variables. The signal level detector should normally be calibrated so that full
+signal strength is 100 and no signal is 0. Depending on your background noise
+level a good value for this configuration variable is between 1 and 10.
+.TP
+.B SIGLEV_MIN
+The minimum signal level used by SIM signal level detector.
+.TP
+.B SIGLEV_MAX
+The maximum signal level used by SIM signal level detector.
+.TP
+.B SIGLEV_DEFAULT
+The default signal level set on startup by the SIM signal level detector.
+.TP
+.B SIGLEV_TOGGLE_INTERVAL
+The interval, in milliseconds, that the SIM signal level detector will use to
+toggle between the maximum and the minimum signal levels.
+.TP
+.B SIGLEV_RAND_INTERVAL
+The interval, in milliseconds, that the SIM signal level detector will use
+between randomizing a new signal level value. At each interval, the simulator
+will randomly either increase or decrease the signal level with one step.
+.TP
+.B DEEMPHASIS
+Apply a deemphasis filter on received audio. The deemphasis filter is used when
+taking audio directly from the detector in the receiver, like when using a 9k6
+packet radio connector. If not using a deemphasis filter the high frequencies
+will be amplified resulting in a very bright (tinny) sound.
+.TP
+.B SQL_TAIL_ELIM
+Squelch tail elimination is used to remove noise from the end of a received
+transmission. This is of most use when using CTCSS or SIGLEV squelch with
+unsquelched input audio. A normal value is a couple of hundred milliseconds.
+Note that the audio will be delayed by the same amount of milliseconds. This
+does not matter much for a simplex link but for a repeater the delay might be
+annoying since you risk hearing the end of your own transmission.
+.TP
+.B PREAMP
+The incoming signal will be amplified by the specified number of dB. This can be
+used as a last measure if the input audio level can't be set high enough on the
+analogue side. A value of 6dB will double the signal level. Note that this is a
+digital amplification. Hence it will reduce the dynamic range of the signal so
+usage should be avoided if possible. It's always better to correct the audio
+level before sampling it.
+.TP
+.B PEAK_METER
+This is a help to adjust the incoming audio level. If enabled it will output a
+message when distortion occurs. To adjust the audio level, first open the
+squelch. Then increase the audio level until warning messages are printed.
+Decrease the audio level until no warning messages are printed. After the
+adjustment has been done, the peak meter can be disabled. 0=disabled, 1=enabled.
+.TP
+.B DTMF_DEC_TYPE
+Specify the DTMF decoder type. Set it to
+.B INTERNAL
+to use the internal software
+DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
+it to
+.BR S54S .
+To control it over a pseudo tty device set it to
+.BR PTY .
+Setting it to PTY will install the PTY dtmf decoder. SvxLink creates a symlink
+linked to a slave pty device on runtime. The name has to be defined with
+DTMF_PTY.
+If AFSK reception is enabled using OB_AFSK_ENABLE/IB_AFSK_ENABLE, remotely
+decoded DTMF digits may be received by setting this configuration variable to
+.BR AFSK .
+.B NONE
+or commenting it out will disable DTMF detection.
+.TP
+.B DTMF_MUTING
+Mute the audio during the time when a DTMF digit is being received. Note that
+the audio will be delayed 75ms to give the DTMF detector time to do its work.
+This does not matter much on a simplex link but on a repeater it could be
+annoying since you will hear the last 75 milliseconds of your own transmission.
+To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
+variable to at least 75 milliseconds.
+Legal values for DTMF_MUTING are 0=disabled, 1=enabled.
+.TP
+.B DTMF_HANGTIME
+This configuration variable can be used if the DTMF decoder is too quick to
+indicate digit idle. That does not matter at high signal strengths but for
+weaker signals and mobile flutter it's not good at all. Each DTMF digit will
+be detected multiple times.
+Using this configuration variable, the time (ms) a tone must be missing to be
+indicated as off can be extended. Setting this value too high will cause the
+decoder to be a bit sluggish and it might consider two digits as one.
+The hang time only affect consecutive digits of the same value (e.g. 1 1).
+If a detected digit differs from the previously detected digit (e.g 1 2), the
+hang time is immediately canceled and the detected digit is considered as a
+new one. A good default value is 50-100ms.
+.TP
+.B DTMF_SERIAL
+When using an external hardware DTMF decoder this config variable is used to
+specify a serial port (e.g. /dev/ttyS0).
+.TP
+.B DTMF_PTY
+When using the PTY DTMF "decoder" this configuration variable will set the path
+to the PTY slave softlink that the external interface script use to communicate
+to SvxLink. Over this softlink a very simple communication protocol is used to
+notify SvxLink about received DTMF digits: 0-9, A-F, *, #. "E" is the same as
+"*" and "F" is the same as "#". Sending a digit tell SvxLink when it starts. To
+tell SvxLink that the digit has ended, send a space character.
+
+The PTY DTMF "decoder" can be used by an external script to interface custom
+devices, modems or other hardware to SvxLink. Look for nhrcx.pl or
+trx_pty_ctrl.py for an example.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
+
+Example: /tmp/rx1_dtmf.
+.TP
+.B DTMF_MAX_FWD_TWIST
+DTMF use two tones to encode digits 0-9, A-F. These two tones should normally
+have the sample amplitude. The difference in amplitude is called twist. Forward
+twist is when the higher frequency tone is lower in amplitude than the lower
+frequency tone. According to the standards, 8dB forward twist should be allowed.
+Some transmitters do not correctly modulate the DTMF tones to get zero twist.
+The most common situation is that the forward twist is too large. Increasing
+this configuration variable above 8dB might allow DTMF from these transmitters
+to be detected. When doing this, the DTMF detector will be more sensitive to
+noise and might cause more false triggers.
+.TP
+.B DTMF_MAX_REV_TWIST
+DTMF use two tones to encode digits 0-9, A-F. These two tones should normally
+have the sample amplitude. The difference in amplitude is called twist. Reverse
+twist is when the lower frequency tone is lower in amplitude than the higher
+frequency tone. According to the standards, 4dB reverse twist should be allowed
+but SvxLink will allow 6dB by default.  The most common reason for getting
+reverse twist is a bad de-emphasis filter or that none at all is used, like
+when taking audio directly from the FM discriminator. Have a look at the
+DEEMPHASIS configuration variable before starting to modify this configuration
+variable.
+.TP
+.B DTMF_DEBUG
+Set to 1 to continuously print software DTMF decoder decision parameters. This
+should only be used for a short while to pinpoint problems with the DTMF
+decoding since it will print one row of analysis parameters 100 times per
+second. The following parameters are printed.
+.RS
+.IP \(bu 4
+.BR pwr " - The power in the audio signal. Must be over about -50dB."
+.IP \(bu 4
+.BR q " - Quality. Should be close to 1.00 for a good detection."
+If the signal is strong but the value is low anyway, the signal probably is
+distorted for some reason. The input audio level may be too high for example.
+.IP \(bu 4
+.BR twist " - The amplitude difference between the two tones."
+Should be around 0dB, which means the tones should ideally be of the same
+strength. By default, values between -6dB to +8dB are accepted but the
+thresholds can be set using the DTMF_MAX_FWD_TWIST and DTMF_MAX_REV_TWIST
+configuration variables.
+.IP \(bu 4
+.BR rowq " - Quality of the row (low group) tone. Should be close to one."
+.IP \(bu 4
+.BR colq " - Quality of the column (high group) tone. Should be close to one."
+.IP \(bu 4
+.BR digit " - The digit mapped to the two detected tones."
+.IP \(bu 4
+.BR row3rd " - The row tone relation to its third overtone."
+Should be close to zero. If it's not, the signal is probably distorted.
+.IP \(bu 4
+.BR col3rd " - The column tone relation to its third overtone."
+Should be close to zero. If it's not, the signal is probably distorted.
+.IP \(bu 4
+.BR im " - The relation of the two tones to their intermodulation product."
+Should be close to zero. If it's not, the signal is probably distorted.
+.RE
+.TP
+.B 1750_MUTING
+Mute the audio during a call tone of 1750Hz is received. Note that
+the audio will be delayed 75ms to give the tone detector time to do its work.
+This does not matter much on a simplex link but on a repeater it could be
+annoying since you will hear the last 75 milliseconds of your own transmission.
+To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
+variable to at least 75 milliseconds.
+Legal values for 1750_MUTING are 0=disabled, 1=enabled.
+.TP
+.B SEL5_TYPE
+Define here your selective tone call system. You have the choice of the 
+following types: ZVEI1, ZVEI2, ZVEI3, PZVEI, PDZVEI, DZVEI, CCITT, EEA, CCIR1,
+CCIR2, NATEL, EURO, VDEW, AUTO-A, MODAT, PCCIR and EIA. Only one system can be
+used at the same time. Please take into consideration that some Sel5 standards
+are using the same or similar tones so it may have some unwanted effects if
+you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
+.TP
+.B SEL5_DEC_TYPE
+At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
+some external tone detectors later. To disable SEL5 tone decoding, specify
+NONE or just comment the configuration variable out.
+.TP
+.B RAW_AUDIO_UDP_DEST
+Setting this configuration variable makes it possible to stream the raw audio
+from the sound device to an UDP socket. The sample format is the one used
+internally in SvxLink, that is each sample is represented by a 32 bit float.
+The sample rate is the same as the one chosen for the audio device.
+The destination is specified as ip-address:port.
+
+Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable reception of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the transmitter section of the
+transmitting RemoteTrx. If it's set to -6dB in the transmitter configuration it
+should be set to 6dB here.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable reception of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B CTRL_PTY
+Set this configuration variable to the path of a PTY to use for controlling a
+receivers frequency and modulation. This can be used to interface a receiver to
+SvxLink using a translation script, like trx_pty_ctrl.py. To set the receive
+frequency, SvxLink will send the sequence "f<frequency>;". The frequency will
+be in Hz, e.g. f145550000; will be sent to set the receiver to 145.550MHz.
+
+To set the modulation the command is "m<modulation>;". Look at the
+documentation of the MODULATION configuration variable to see which modulations
+that are available. To set "normal" 25kHz channel spaced FM the command would
+be mFM;.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
+.
+.SS Ddr Receiver Section
+.
+A special kind of local receiver is the Digital Drop Receiver (DDR). It will
+use either the rtl_tcp utility or a direct USB connection to interface to a
+RTL2832U based DVB-T USB dongle and use that as a wide-band receiver. These USB
+dongles can be bought cheaply from an Internet shop (~$10). The radio
+performance may not be great but better than one might think. Usage as a cheap
+local coverage receiver or as a link receiver may work very well.
+
+One big advantage of using a wide-band receiver is that it is possible to
+monitor more than one narrow band channel at a time. The only limit is the CPU
+power and the bandwidth of the wide-band tuner. You probably need a Pentium4 or
+better to fulfill the CPU demands.
+
+Getting the DVB-T dongle running is out of scope for this document but what
+you absolutely need to do is to find out the frequency error on your specific
+dongle. When you have figured out what the frequency error is, set up the
+FQ_CORR configuration variable in the wide-band receiver configuration section.
+
+The rtl_tcp utility is in a package named similar to something like rtl-sdr.
+When you have the rtl-sdr stuff installed, just start rtl_tcp. No command line
+arguments are needed. Then configure a Ddr receiver in SvxLink. All
+configuration variables that are available for an ordinary local receiver is
+also available for a Ddr receiver, except the audio device related ones which
+are just ignored. The following configuration variables are available in
+addition to the ordinary ones.
+.TP
+.B FQ
+The narrow-band channel frequency to tune to.
+.TP
+.B MODULATION
+The modulation used on the channel. Legal values are: "FM" (two-way radio
+frequency modulation), "NBFM" (two-way radio narrow frequency modulation),
+"WBFM" (broadcast wide-band frequency modulation), "AM" (two-way radio amplitude
+modulation), "NBAM" (two-way radio narrow band amplitude modulation), "USB"
+(Upper Sideband), "LSB" (Lower Sideband), "CW" (Continuous Wave, e.g. Morse),
+"WBCW" (CW wide).
+.TP
+.B WBRX
+The configuration section for the wide-band receiver to connect this DDR to.
+See "wide-band Receiver Section" below.
+.TP
+.B SIGLEV_DET
+For a Ddr there also is a special signal level detector available, DDR, that
+will measure the RF power before demodulation. This is much more reliable than
+estimating the signal power through the audio which is normally done in SvxLink.
+The drawback is that the Ddr signal level is not completely comparable to the
+ordinary SvxLink signal level measurements since it have a larger dynamic
+range. Set SIGLEV_DET=DDR to activate the Ddr signal level detector.
+.
+.SS Wide-band Receiver Section
+.
+A wide-band receiver section is used to configure access to a wide-band receiver
+which can be used by a Digital Drop Receiver (DDR), described above, to handle
+multiple narrow-band channels using the same hardware. The only hardware
+supported at the moment is RTL2832U based DVB-T USB dongles. SvxLink access the
+dongle directly via USB or through the rtl_tcp utility, which make the dongle
+available on a TCP network port. The following configuration variables are
+available:
+.TP
+.B TYPE
+The type of wide-band receiver used. The only supported values right now are
+"RtlTcp" and "RtlUsb".
+.TP
+.B DEV_MATCH
+When using RtlUsb, this configuration variable is used to select the dongle to
+use if there are multiple dongles connected to the computer. When looking for
+dongles, SvxLink will try to match the string given in this configuration
+variable in different ways. First, if it's a digit, a match against the device
+index is tried. The device index is just a number, zero and up, that is given
+to a dongle when it's inserted.
+
+If the device index does not match, a match against the beginning, end or the
+whole serial number will be tried.
+
+Default: 0 (first device found)
+.TP
+.B HOST
+The name of the host that the rtl_tcp utility is running on (Default:
+localhost).
+.TP
+.B PORT
+The TCP port that rtl_tcp is listening on (Default: 1234).
+.TP
+.B SAMPLE_RATE
+The sample rate used by the dongle. Legal values are 960000 and 2400000
+(Default: 960000).
+.TP
+.B FQ_CORR
+This is probably the most important configuration variable. Most dongles are
+far off in frequency so they need to be calibrated. Calibrating the dongle can
+be done in multiple ways. The recommended way is to use the devcal utility that
+is distributed along with SvxLink. The calibration procedure is described in
+the devcal (1) manual page.
+
+The end result should be a correction value for how far off the dongle is in
+frequency counted in parts per million (PPM). That is, how many Hz per MHz is
+the tuner off by. Typical values are in the range -100 to 100.
+.TP
+.B CENTER_FQ
+The frequency, in Hz, that the wide-band tuner should be placed at. This
+configuration variable should normally be left unset since SvxLink will try to
+place the wide-band tuner to cover all set up Ddr frequencies. SvxLink will also
+try to avoid placing a Ddr on the center frequency of the wide-band spectrum
+since there is usually some noise there. Only use this configuration variable
+if you need to override the automatic placement for some reason.
+.TP
+.B XVRTR_OFFSET
+If a transverter is used, this configuration variable can be set to the
+frequency offset that the transverter introduce. The frequency set here will be
+added to the center frequency of the wide-band receiver.
+.TP
+.B GAIN
+If unset, automatic gain is used. Do not use automatic gain control if using
+the DDR signal level detector. That may mess up the measurements. Finding a
+good gain setting may be hard. Too little and you will not hear the signals you
+want to hear. Too much and the tuner will be driven into distortion. One way to
+decide the maximum usable gain is to use the PEAK_METER explained below.  When
+there are no distortion warning messages printed or just a single one now and
+then you have found the max gain. You should probably back at least one step
+down from this value. If the signals you want to receive are very strong, set
+the gain as low as possible.
+
+What gain values that are available is tuner dependent. SvxLink will print the
+available gain values when it establishes the connection to the tuner. Typical
+values are in the range -10 to 50dB.
+.TP
+.B PEAK_METER
+If PEAK_METER is set to 1, a warning will be printed every time the tuner is
+driven into distortion. If it happens too often the gain should be lowered.  At
+most, one warning per second will be printed.
+.
+.SS LocalSim Receiver Section
+.
+A simulated local receiver can be used to debug problems in the SvxLink software.
+The only thing that this very simple simulator does is to play a tone. The
+generated tone can be controlled using some configuration variables.
+.TP
+.B SIM_WAVEFORM
+Set the waveform to use; SIN=sine wave, SQUARE=square wave.
+.TP
+.B SIM_TONE_FQ
+Set the frequency of the tone in Hz.
+.TP
+.B SIM_TONE_PWR
+Set the tone power in dB. 0dB corresponds to the power in a full-scale sine
+wave.
+.
+.SS Voter Section
+.
+Receiver type "Voter" is a "receiver" that combines multiple receivers and
+selects one of them to take audio from when the squelch opens. Which receiver to
+use is selected directly after squelch open. It is possible to set up a voting
+delay which will make the voter wait a while before choosing which RX to use.
+This will give all receivers some time to report their signal strengths.
+After the initial choice have been made a periodic check is done to see if any
+of the other receivers receive a stronger signal.
+In the default configuration file there is a voter section called
+.BR Voter .
+.TP
+.B TYPE
+Always "Voter" for a voter.
+.TP
+.B RECEIVERS
+Specify a comma separated list of receivers that the voter should use.
+Optionally the receiver name may be followed by a colon and a squelch delay
+value. This can be used to adjust the voting delay for receivers that always
+are slower to open for some reason. The delay value given will be subtracted
+from the voting delay if the receiver is the first one to open.
+
+The usage of the delay value is best illustrated with an example.  Let's say we
+have three receivers where two of the receivers take at most 100ms to report
+signal level and one receiver requires 300ms. We then need to set the
+VOTING_DELAY to something like 350ms so as to be sure that all receivers get a
+chance to report their signal level measurement. If only the slow receiver
+opens there will be a total delay of 300+350=650ms. This is unnecessarily long
+since the other two receivers should have reported their signal strength way
+earlier. It's thus safe to shorten the voting delay for the slow receiver, so
+we do this: RECEIVERS=FastRx1,FastRx2,SlowRx:200. The total squelch open delay
+will now be 100+350=450ms for the fast receivers and 300+350-200=450ms for the
+slow receiver. That is, all receivers are now equally fast.
+
+Example: RECEIVERS=Rx1,Rx2:200,Rx3
+.TP
+.B VOTING_DELAY
+Specify the delay in milliseconds that the voter will wait after the first
+squelch open detection until the decision of which receiver to use is made. This
+time must be set sufficiently high to allow all receivers to calculate and
+report the signal level. Incoming audio and DTMF digits will be buffered for all
+receivers during the delay time so nothing will be lost, but of course the audio
+will be delayed the specified amount of time. This is most noticeable when using
+a repeater logic. Use the BUFFER_LENGTH configuration variable to adjust the
+buffer length.
+The default voting delay is 0.
+.TP
+.B BUFFER_LENGTH
+Use this configuration variable to adjust the length of the voting delay buffer.
+If not specified, the buffer length will be the same as the voting delay. When
+using the voter with a repeater logic, try to keep this variable at 0 to reduce
+the latency. Only increase it if you feel audio is lost in the beginning of
+transmissions.
+.TP
+.B REVOTE_INTERVAL
+This is the interval time in milliseconds with which the voter will check if
+another receiver is receiving a stronger signal. If that is the case, a
+receiver switch will be initiated.
+Default is 1000 milliseconds.
+.TP
+.B HYSTERESIS
+The hysteresis setting will prevent the voter from switching back and forth
+between two receivers that are equal in signal strength. For a switch to occur,
+the other receivers signal strength must exceed the current receivers signal
+strength by the percent specified in this configuration variable. So if the
+hysteresis is set to 50% and the received signal strength on the current
+receiver is 40, a signal strength of 40*1.5=60 is required on another receiver
+to initiate a switch. At squelch open, if the received signal strength plus
+hysteresis is larger than 100, the voting delay will be skipped.
+The default hysteresis is 50 percent.
+.TP
+.B RX_SWITCH_DELAY
+When a receiver switch is initiated by the voter, it will wait the number of
+milliseconds specified in this configuration variable before actually
+performing the switch. The switch will only occur if the other receivers
+signal strength is still higher.
+Default is 500 milliseconds.
+.TP
+.B SQL_CLOSE_REVOTE_DELAY
+The voter will wait the number of milliseconds specified in this config
+variable after a squelch close before voting in another receiver. There are two
+reasons for using this delay. The first is to prevent the voter from going into
+idle state immediately when the squelch close for a fluttery signal. If it goes
+to idle, the procedure with voting delay may cause longer dropouts than
+necessary.  The second reason to use this config variable is if different
+receivers have different hang times (explicitly or implicitly). If both a slow
+and fast receiver is receiving the same signal and the faster is currently
+chosen, when the PTT is released the slower receiver will be voted before
+closing.  This will cause a double squelch tail and double roger beep.
+Default is 500 milliseconds.
+.TP
+.B COMMAND_PTY
+Specify the path to a PTY that can be used to control the voter from
+the operating system. Available commands:
+.RS
+.IP \(bu 4
+.BR "ENABLE rx_name" " - Enable the given receiver"
+.IP \(bu 4
+.BR "MUTE rx_name" " - Mute the given receiver"
+.IP \(bu 4
+.BR "DISABLE rx_name" " - Disable the given receiver"
+.P
+The difference between MUTE and DISABLE is that in the mute state only the
+content (audio, dtmf, selcall tone detectors etc) is muted but the receiver is
+still operational. That is probably only useful if also setting VERBOSE=1 so
+that squelch open/close can be monitored in the log. That may be useful if a
+new receiver is connected to the system which you want to monitor for a while
+without having it actually participate in the voting. It may also be of use if
+a receiver misbehaves in which case it can be monitored until it stops
+misbehaving.
+
+Commands can be issued using a simple echo command from the shell. Example:
+echo "DISABLE Rx1" >/dev/shm/voter_ctrl
+.RE
+.TP
+.B VERBOSE
+Set this to 1 to enable verbose mode. In verbose mode the squelch state events
+of the satellite receivers will be printed. This can be used for fine tuning
+voter timing parameters. Default: 0 (disabled)
+.
+.SS Networked Receiver Section
+.
+A networked receiver section is used to specify the configuration for a receiver
+connected through a TCP/IP network. In the default configuration file there is a
+networked receiver configuration section called
+.BR NetRx .
+The section name could be anything. It should match the RX configuration
+variable in the logic core where the receiver is to be used. The available
+configuration variables are described below. How to use a networked receiver is
+further described in the
+.BR remotetrx (1)
+manual page.
+.TP
+.B TYPE
+Always "Net" for a networked receiver.
+.TP
+.B HOST
+The hostname or IP address of the remote receiver host.
+.TP
+.B TCP_PORT
+The TCP port that RemoteTrx listen on. The default is 5210.
+.TP
+.B LOG_DISCONNECTS_ONCE
+Set this configuration variable to 1 to suppress logging of multiple disconnect
+messages in a row, like when there is no RemoteTrx running on the other side.
+Thus, failed reconnect attempts will not be logged at all. This may be of use
+if a RemoteTrx is missing for a long time or if it's only used from time to
+time. The default is 0 which means that all reconnect attempts will be logged.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use to connect to the RemoteTrx
+server. The same key have to be specified in the RemoteTrx configuration.
+If no key is specified in the RemoteTrx config, the login will be
+unauthenticated. A good authentication key should be 20 characters long.
+If the same RemoteTrx is used for both RX and TX, the same key must be
+specified in the RX as well as in the TX configuration section.
+The key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
+.TP
+.B CODEC
+The audio codec to use when transferring audio from this remote receiver.
+Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
+(8-25kbps), OPUS (8-64kbps). These are raw bit-rate values. There will be some
+overhead added to this so the real bit-rates on the wire are a little bit
+higher. The OPUS codec is the most modern one and it also have the best
+quality for a given bit-rate.
+.TP
+.B SPEEX_ENC_FRAMES_PER_PACKET
+Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
+bit-rate configuration, the network overhead will be quite noticeable if sending
+each frame in its own packet. One way to lower the overhead is to send multiple
+frames in each network packet. The drawback with doing this is that you get
+more delay. If setting this option to something like 4 (default), the delay
+will be about 4x20=80ms.
+.TP
+.B SPEEX_ENC_QUALITY
+Speex encoder setting. Specify the encoder quality using a number between 0-10.
+Lower values give poorer quality and lower bit-rates.
+.TP
+.B SPEEX_ENC_BITRATE
+Speex encoder setting. Specify the bit-rate to use. Speex will snap to the
+nearest lower possible bit-rate. Possible values range from 2150 to 24600 bps.
+You should probably not specify quality at the same time as bit-rate. Not sure
+though...
+.TP
+.B SPEEX_ENC_COMPLEXITY
+Speex encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. The difference in SNR between
+the lowest and highest value is about 2dB. Set it as high as possible without
+overloading the CPU on the encoding computer (check CPU usage using command
+"top").
+.TP
+.B SPEEX_ENC_VBR
+Speex encoder setting. Enable (1) or disable (0) variable bit-rate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bit-rate when needed.
+.TP
+.B SPEEX_ENC_VBR_QUALITY
+Speex encoder setting. The quality (0-10) to use in variable bit-rate mode.
+.TP
+.B SPEEX_ENC_ABR
+Speex encoder setting. The average bit-rate encoding will try to keep a target
+bit-rate by continuously adjusting the quality. This configuration variable
+specify the target bit-rate and enable ABR. It also need to have VBR enabled so
+don't force it to off.
+.TP
+.B SPEEX_DEC_ENHANCER
+Speex decoder setting. Enable (1) or disable (0) the perceptual enhancer in the
+decoder.
+Perceptual enhancement is a part of the decoder which, when turned on, attempts
+to reduce the perception of the noise/distortion produced by the
+encoding/decoding process. In most cases, perceptual enhancement brings the
+sound further from the original objectively (e.g. considering only SNR), but in
+the end it still sounds better (subjective improvement).
+.TP
+.B OPUS_ENC_FRAME_SIZE
+Opus encoder setting. Specify how large, in milliseconds, each audio packet
+should be. Default: 20ms.
+.TP
+.B OPUS_ENC_COMPLEXITY
+Opus encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. Set it as high as possible
+without overloading the CPU on the encoding computer (check CPU usage using
+command "top"). Default: 10.
+.TP
+.B OPUS_ENC_BITRATE
+Opus encoder setting. This is the bit-rate that the encoder will encode for.
+Rates from about 8000 to 64000 bits per second are meaningful but the codec
+can handle from like 2500 to 512000 bps. Default: 20000bps.
+.TP
+.B OPUS_ENC_VBR
+Opus encoder setting. Enable (1) or disable (0) variable bit-rate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bit-rate when needed and decrease it when the quality can be assured with a
+lower bit-rate. The target average bit-rate is the one set by OPUS_ENC_BITRATE.
+Default: 1.
+.
+.SS Local Transmitter Section
+.
+A local transmitter section is used to specify the configuration for a local
+transmitter. In the default configuration file there is a configuration section
+called
+.BR Tx1 .
+The section name could be anything. It should match the TX configuration
+variable in the logic core where the transmitter is to be used. The available
+configuration variables are described below.
+.TP
+.B TYPE
+Always "Local" for a local transmitter.
+.TP
+.B TX_ID
+A single character ident for this transmitter. It is for example used in state
+events published by transmitters through a STATE_PTY or other state event
+consumers within SvxLink.
+.TP
+.B AUDIO_DEV
+Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
+AUDIO DEVICE SPECIFICATIONS chapter for more information.
+.TP
+.B AUDIO_CHANNEL
+Specify the audio channel to use. SvxLink can use the left/right stereo
+channels as two mono channels. Legal values are 0 or 1.
+.TP
+.B AUDIO_DEV_KEEP_OPEN
+The normal behaviour for SvxLink is to open an audio device when needed and
+close it when it does not have to be open anymore. This may cause problems in
+some applications or with some sound hardware. Set this variable to 1 to force
+SvxLink to keep the audio device open from application start to exit.
+.TP
+.B LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level to not overmodulate the transmitter.
+For a properly calibrated SvxLink node max FM deviation is -6dBFS. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.TP
+.B PTT_TYPE
+Use this configuration variable to specify which type of hardware to use to
+control the PTT.  Specify "SerialPin" for using a pin in the serial port,
+"GPIO" (sysfs=deprecated)/"GPIOD" to use a pin in a GPIO port, "PTY" if you
+want to use an external interface script via a pseudo tty port or "Hidraw" to
+use the linux/hidraw driver to support hidraw devices like CM108 sound card,
+e.g.  URI device from DMK.
+
+Set PTT_TYPE to "Dummy" or "NONE"
+to not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
+
+Use PTT_PIN to specify the pin to use for "SerialPin" or "GPIO",
+
+Use PTT_GPIOD_LINE and PTT_GPIOD_CHIP to specify the GPIO pin to use for
+"GPIOD".
+.TP
+.B PTT_PORT
+Specify the serial port that the PTT is connected to. E.g. /dev/ttyS0 for COM1.
+.TP
+.B PTT_PIN
+If PTT_TYPE is set to "SerialPin", specify the pin(s) in the serial port that
+the PTT is connected to. It is possible to specify one or two serial port pins.
+Some interface boards require that you specify two pins since one pin does not
+provide enough drive power to the circuit. A "!" in front of the pin name
+indicates inverted operation. Some of the possible values are RTS, DTRRTS,
+!DTR!RTS or even DTR!RTS.
+
+If GPIO was specified in PTT_TYPE, set the PTT_PIN config variable to the pin
+name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
+Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
+the USING GPIO section for information on how to set up the operating system.
+Normally, the pin will be active high but if the pin name is prefixed with an
+exclamation mark it will be active low instead. For some hardware platforms you
+may need to also set the GPIO_PATH configuration variable.
+.TP
+.B GPIO_PATH
+Use this configuration variable to set the path to the sys control devices for
+GPIO.  This normally is /sys/class/gpio but on some hardware, like the Orange
+Pi, the path is /sys/class/gpio_sw.
+.TP
+.B PTT_GPIOD_CHIP
+The GPIO chip to use for PTT. The application tries to figure out whether the
+value is the path to the GPIO chip, its name, label or number.
+
+Example: PTT_GPIOD_CHIP=gpiochip0
+.TP
+.B PTT_GPIOD_LINE
+If GPIOD was specified in PTT_TYPE, set this config variable to the gpiod line
+of the GPIO pin to use. If a number is specified it is assumed to be the GPIO
+pin offset within the chip. If a pin name is specified SvxLink will try to find
+a pin with that name within the chip.
+
+Normally, the pin will be active high but if the pin specification is prefixed
+with an exclamation mark it will be active low instead.
+
+For some hardware platforms you may need to also set the PTT_GPIOD_CHIP
+configuration variable, if the pin you want to use is not on the default GPIO
+chip.
+
+Example: PTT_GPIOD_LINE=17
+.TP
+.B PTT_PTY
+If PTT_TYPE is set to "PTY" this configuration variable will set the path for
+the PTY slave softlink that is used by the external script to communicate to
+SvxLink.
+
+SvxLink sends a 'T' to start transmitting and a 'R' to turn the transmitter
+off.  This can be used by an external script to interface custom devices,
+modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+DTMF etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
+.TP
+.B HID_DEVICE
+Define the device node where your hidraw device is accessible at.
+
+Example: HID_DEVICE=/dev/hidraw3
+.TP
+.B HID_PTT_PIN
+Define the pin your ptt control is connected to. Valid parameters are 
+are GPIO1,GPIO2,GPIO3,GPIO4. Note that some sound cards like SSS1621 may
+not support GPIO3 and GPIO4! You can invert the behavior with a "!" in
+front of the name. Only one value is supported.
+.TP
+.B SERIAL_SET_PINS
+Set the specified serial port pins to a static state. This can be good if using
+a pin for reference voltage or if a pin have to be in a certain state to not
+interfere with the operation of some equipment. There are two pins that are
+possible to use, RTS and DTR. If prefixed with an exclamation mark (!), the
+pin will be cleared and if not it will be set. This configuration variable can
+only be used when PTT_TYPE is set to "SerialPin".
+
+Example: SERIAL_SET_PINS=RTS!DTR will set RTS and clear DTR.
+.TP
+.B PTT_HANGTIME
+Use this configuration variable to set a PTT hangtime. This can be good
+to have on a transmitter in combination with using a tone squelch. When
+the transmitter is ordered to stop transmitting, the tone is immediately
+turned off, causing the squelch to close on the other side. Since the
+transmitter keeps transmitting for a while, no squelch tail will be heard.
+
+Another use is on a remote receiver link transmitter where you don't want the
+transmitter to turn on and off between transmissions or if the squelch close
+and open quickly due to for example mobile flutter.
+.TP
+.B TIMEOUT
+This is a feature that will prevent the transmitter from getting stuck transmitting.
+Specify the number of seconds before the transmitter is turned off. Note that this is a
+low level security mechanism that is meant to only kick in if there is a software bug in
+SvxLink. Just so that the transmitter will not transmit indefinitely. It is not meant to
+be used to keep people from talking too long. 
+.TP
+.B TX_DELAY
+The number of milliseconds (0-1000) to wait after the transmitter has been turned on until
+audio is starting to be transmitted. This can be used to compensate for slow TX reaction
+or remote stations with slow reacting squelches.
+.TP
+.B CTCSS_FQ
+The frequency in Hz of the CTCSS tone to transmit. It is possible to specify
+fractions using "." as decimal comma (e.g. 136.5). For the tone to be
+transmitted the CTCSS_LEVEL variable must also be setup and also the
+TX_CTCSS variable in the logic core configuration section.
+.TP
+.B CTCSS_LEVEL
+The level in percent (0-100) of the CTCSS tone to transmit. What level to set is
+hard to say. The FM modulation swing of the tone should be in between 500-800
+Hz. That is a bit hard to measure if you don't have the right equipment. A
+normal FM station have a maximum swing of 5kHz so if you manage to calibrate
+everything so that you get maximum swing when the sound card audio is at peak
+level, the tone level should be in between 10-16%. However, most often the audio
+settings are configured a bit higher than max since the audio seldom reaches
+maximum level. Then the level of the CTCSS tone should be reduced. The default
+in the configuration file is 9%. For the tone to be transmitted the CTCSS_FQ
+variable must also be setup and also the TX_CTCSS variable in the logic core
+configuration section.
+.TP
+.B PREEMPHASIS
+Enable this feature if you are modulating the FM modulator directly, like
+through a 9k6 packet radio input. If no preemphasis filter is applied to the
+audio, it will sound very dark when received. If you modulate the transmitter
+through the microphone input the radio will apply a preemphasis filter so this
+feature should be disabled. 0=disabled, 1=enabled.
+.TP
+.B DTMF_TONE_LENGTH
+The duration, in milliseconds, of DTMF digits transmitted on this transmitter.
+100ms is the default.
+.TP
+.B DTMF_TONE_SPACING
+The spacing, in milliseconds, between DTMF digits transmitted on this
+transmitter. 50ms is the default.
+.TP
+.B DTMF_DIGIT_PWR
+The power, in dB, of DTMF digits transmitted on this transmitter. Zero dB will
+give the same power in the generated signal as there is in a maximum amplitude
+(full scale) sine wave. \-15dB is the default.
+.TP
+.B TONE_SIGLEV_MAP
+It is possible to transmit one of ten tones along with the normal transmission
+to indicate a signal strength value to the receiver. This is of most use when
+using a local transmitter as a link transmitter in a RemoteTrx. It is not
+implemented, and probably not useful, in SvxLink Server. Another requirement is
+that SvxLink has been compiled in 16kHz mode. Otherwise this feature is
+disabled.
+
+The TONE_SIGLEV_MAP configuration variable is used to map tones to signal
+level values. It is a comma separated list of exactly ten values in the 0 - 100
+range. The first value map to the 5500Hz tone, the second to the 5600Hz tone
+and so on. The last value map to the 6400Hz tone.
+What levels the tones should be mapped to depends on the tone receiver
+implementation. Typically, if using a SvxLink application as a receiver,
+the TONE_SIGLEV_MAP should be the same in the RX configuration for that node.
+.TP
+.B TONE_SIGLEV_LEVEL
+It is possible to transmit one of ten tones along with the normal transmission
+to indicate a signal strength value to the receiver. This is of most use when
+using a local transmitter as a link transmitter in a RemoteTrx. It is not
+implemented, and probably not useful, in SvxLink Server. Another requirement is
+that SvxLink has been compiled in 16kHz mode. Otherwise this feature is
+disabled.
+
+The TONE_SIGLEV_LEVEL configuration variable is used to set the tone level.
+It is a value in the 1-100 range which indicate the output level in percent
+of the maximum possible level. The default is 10.
+.TP
+.B MASTER_GAIN
+This configuration variable can be used to fine tune or increase the audio
+gain for all transmitted sound if it's not possible to do using the normal
+sound card hardware gain controls. The gain should be given in dB and can
+be both positive and negative.
+.TP
+.B OB_AFSK_ENABLE
+Set to 1 to enable transmission of metadata like signal level measurements, DTMF
+digits and tone detections via out-of-band (OB) AFSK. The out-of-band AFSK is
+transmitted above the voice band so that it is possible to transmit AFSK bursts
+at the same time as someone is speaking. The AFSK bursts are filtered out
+before the audio is handed on to the next stage so normal users should never
+hear the AFSK bursts. The AFSK feature is typically used on a remote receiver
+uplink. The protocol used is SvxLink specific. Data is transmitted in 300Bd
+with a shift of 170Hz and a center frequency of 5500Hz. The RemoteTrx
+application have the capability to transmit this protocol.
+.TP
+.B OB_AFSK_VOICE_GAIN
+To be able to send both voice and AFSK at the same time it may be necessary to
+lower the level of the voice audio as to not overdrive the transmitter. This is
+compensated in the link receiver by amplifying the voice audio back to its
+original level. This configuration variable should thus be set to the negated
+value of the same configuration variable in the receiver section of the
+receiving node. If it's set to 6dB in the receiver configuration it
+should be set to -6dB here.
+.TP
+.B OB_AFSK_LEVEL
+The out-of-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B OB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an out-of-band packet.
+.TP
+.B IB_AFSK_ENABLE
+Set to 1 to enable transmission of an initial signal level measurement via in-band
+(IB) AFSK. This is used in cooperation with the out-of-band AFSK feature to
+quickly transfer a signal level measurement to get the squelch opened. The
+in-band AFSK is transmitted in the voice band and can thus use the higher
+baudrate of 1200Bd. Since it's only transmitted when the squelch is closed the
+end user will not hear the AFSK burst. The AFSK feature is typically used on a
+remote receiver uplink. The protocol used is SvxLink specific. Data is
+transmitted in 1200Bd with a shift of 1000Hz and a center frequency of 1700Hz.
+The RemoteTrx application have the capability to transmit this protocol.
+.TP
+.B IB_AFSK_LEVEL
+The in-band AFSK modulation level in dBFS (dB full scale). Default is -6dB.
+.TP
+.B IB_AFSK_TX_DELAY
+The number of milliseconds to send AFSK flag bytes before sending the actual
+data when transmitting an in-band packet.
+.TP
+.B CTRL_PTY
+Set this configuration variable to the path of a PTY to use for controlling a
+transmitters frequency and modulation. This can be used to interface a
+transmitter to SvxLink using a translation script, like trx_pty_ctrl.py. To set
+the transmit frequency, SvxLink will send the sequence "F<frequency>;". The
+frequency will be in Hz, e.g. F145550000; will be sent to set the receiver to
+145.550MHz.
+
+To set the modulation the command is "M<modulation>;". Look at the
+documentation of the MODULATION configuration variable to see which modulations
+are available. To set "normal" 25kHz channel spaced FM the command would be
+MFM;.
+
+It is possible to specify the same PTY for multiple functions (e.g. squelch,
+ptt etc) in both TX and RX configurations. This may be good if there is one
+script handling all functions.
+.
+.SS Networked Transmitter Section
+.
+A networked transmitter section is used to specify the configuration for a
+transmitter connected through a TCP/IP network. In the default configuration
+file there is a networked transceiver configuration section called
+.BR NetTx .
+The section name could be anything. It should match the TX configuration
+variable in the logic core where the transmitter is to be used. The available
+configuration variables are described below. How to use a networked transmitter
+is further described in the
+.BR remotetrx (1)
+manual page.
+.TP
+.B TYPE
+Always "Net" for a networked transmitter.
+.TP
+.B TX_ID
+A single character ident for this transmitter. It is for example used in state
+events published by transmitters through a STATE_PTY or other state event
+consumers within SvxLink. SvxLink cannot at this moment get the TX ident from
+the remote transmitter so it must be specified here.
+.TP
+.B HOST
+The hostname or IP address of the remote transmitter host.
+.TP
+.B TCP_PORT
+The TCP port that RemoteTrx listen on. The default is 5210.
+.TP
+.B LOG_DISCONNECTS_ONCE
+Set this configuration variable to 1 to suppress logging of multiple disconnect
+messages in a row, like when there is no RemoteTrx running on the other side.
+Thus, failed reconnect attempts will not be logged at all. This may be of use
+if a RemoteTrx is missing for a long time or if it's only used from time to
+time. The default is 0 which means that all reconnect attempts will be logged.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use to connect to the RemoteTrx
+server. The same key have to be specified in the RemoteTrx configuration.
+If no key is specified in the RemoteTrx config, the login will be
+unauthenticated. A good authentication key should be 20 characters long.
+If the same RemoteTrx is used for both RX and TX, the same key must be
+specified in the RX as well as in the TX configuration section.
+The key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
+.TP
+.B CODEC
+The audio codec to use when transferring audio to this remote transmitter.
+Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
+(8-25kbps), OPUS (8-64kbps). These are raw bit-rate values. There will be some
+overhead added to this so the real bit-rates on the wire are a little bit
+higher. The OPUS codec is the most modern one and it also have the best
+quality for a given bit-rate. There also is a NULL codec that will just throw
+away samples which can be used in special situations when the audio is sent
+through another audio path.
+.TP
+.B SPEEX_ENC_FRAMES_PER_PACKET
+Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
+bit-rate configuration, the network overhead will be quite noticeable if sending
+each frame in its own packet. One way to lower the overhead is to send multiple
+frames in each network packet. The drawback with doing this is that you get
+more delay. If setting this option to something like 4 (default), the delay
+will be about 4x20=80ms.
+.TP
+.B SPEEX_ENC_QUALITY
+Speex encoder setting. Specify the encoder quality using a number between 0-10.
+Lower values give poorer quality and lower bit-rates.
+.TP
+.B SPEEX_ENC_BITRATE
+Speex encoder setting. Specify the bit-rate to use. Speex will snap to the
+nearest lower possible bit-rate. Possible values range from 2150 to 24600 bps.
+You should probably not specify quality at the same time as bit-rate. Not sure
+though...
+.TP
+.B SPEEX_ENC_COMPLEXITY
+Speex encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. The difference in SNR between
+the lowest and highest value is about 2dB. Set it as high as possible without
+overloading the CPU on the encoding computer (check CPU usage using command
+"top").
+.TP
+.B SPEEX_ENC_VBR
+Speex encoder setting. Enable (1) or disable (0) variable bit-rate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bit-rate when needed.
+.TP
+.B SPEEX_ENC_VBR_QUALITY
+Speex encoder setting. The quality (0-10) to use in variable bit-rate mode.
+.TP
+.B SPEEX_ENC_ABR
+Speex encoder setting. The average bit-rate encoding will try to keep a target
+bit-rate by continuously adjusting the quality. This configuration variable
+specify the target bit-rate and enable ABR. It also need to have VBR enabled so
+don't force it to off.
+.TP
+.B SPEEX_DEC_ENHANCER
+Speex decoder setting. Enable (1) or disable (0) the perceptual enhancer in the
+decoder.
+Perceptual enhancement is a part of the decoder which, when turned on, attempts
+to reduce the perception of the noise/distortion produced by the
+encoding/decoding process. In most cases, perceptual enhancement brings the
+sound further from the original objectively (e.g. considering only SNR), but in
+the end it still sounds better (subjective improvement).
+.TP
+.B OPUS_ENC_FRAME_SIZE
+Opus encoder setting. Specify how large, in milliseconds, each audio packet
+should be. Default: 20ms.
+.TP
+.B OPUS_ENC_COMPLEXITY
+Opus encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. Set it as high as possible
+without overloading the CPU on the encoding computer (check CPU usage using
+command "top"). Default: 10.
+.TP
+.B OPUS_ENC_BITRATE
+Opus encoder setting. This is the bit-rate that the encoder will encode for.
+Rates from about 8000 to 64000 bits per second are meaningful but the codec
+can handle from like 2500 to 512000 bps. Default: 20000bps.
+.TP
+.B OPUS_ENC_VBR
+Opus encoder setting. Enable (1) or disable (0) variable bit-rate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bit-rate when needed and decrease it when the quality can be assured with a
+lower bit-rate. The target average bit-rate is the one set by OPUS_ENC_BITRATE.
+Default: 1.
+.
+.SS Multi Transmitter Section
+.
+A multi transmitter section is used if one wants to transmit on multiple
+transmitters simultaneously. The name of the section can be anything. Just
+point it out from another transmitter specification like the TX variable in
+a Logic core configuration.
+.TP
+.B TYPE
+Always "Multi" for a multi transmitter section.
+.TP
+.B TRANSMITTERS
+A comma separated list of transmitters.
+.
+.SS Module Section
+.
+A module section contain the configuration for a specific module. It have some general
+configuration variables and some module specific configuration variables. The general
+configuration variables are listed below.
+.TP
+.B NAME
+The name of the module. This name must match the namespace used in the TCL event handling
+script. If not set, NAME will be set to the section name. 
+.TP
+.B PLUGIN_NAME
+The base name of the plugin. For example if this configuration variable is set to Foo, the
+core will look for a plugin called ModuleFoo.so. If not set, PLUGIN_NAME will be set to
+the same value as NAME. 
+.TP
+.B ID
+Specify the module identification number. This is the number used to access the module
+from the radio interface. 
+.TP
+.B TIMEOUT
+Specify the timeout time, in seconds, after which a module will be automatically
+deactivated if there has been no activity.
+.TP
+.B MUTE_LOGIC_LINKING
+Set to 1 to mute all logic linking audio when the module is activated or 0 to
+keep logic linking unmuted at all times. Default is 1 (mute).
+.P
+Module specific configuration variables are described in the man page for that module. The
+documentation for the Parrot module can for example be found in the
+.BR ModuleParrot.conf (5)
+manual page.
+.
+.SS LocationInfo
+.
+.TP
+.B STATUS_SERVER_LIST
+Enter a space separated list of EchoLink status servers that should be used
+to send node status beacons. Your node information can be found
+on http://www.echolink.org/links.jsp.
+The format is host:port. Host - hostname or IP address, port - UDP port.
+Don't change the default unless you know what you are doing. If you don't
+want to update the EchoLink status server, comment out this configuration
+variable.
+
+Example:
+.br
+STATUS_SERVER_LIST=aprs.echolink.org:5199
+.TP
+.B APRS_SERVER_LIST
+This configuration variable specifies connection parameters for connecting
+to an APRS server network using the TCP protocol. In this case, the positioning
+information is forwarded to the worldwide APRS network. Have a look at
+http://aprs.fi/.
+
+To choose a suitable APRS server from the so called tier 2 network, have a
+look at http://www.aprs2.net/. Either choose a specific server or one of the
+regional addresses. The regional addresses bundle all APRS servers within a
+region so that a random tier 2 server is chosen within the region. There are
+five regions defined: noam.aprs2.net - North America, euro.aprs2.net - Europe,
+asia.aprs2.net - Asia, soam.aprs2.net - South America and Africa,
+aunz.aprs2.net - Australia and New Zealand.
+The format is a space separated list of host:port entries. Host - hostname
+or IP address, port - TCP port.
+
+Example:
+.br
+APRS_SERVER_LIST=euro.aprs2.net:14580
+.TP
+.B LON_POSITION
+The longitude of the station position, entered as "degrees.arcminutes.arcseconds"
+
+Example:
+.br
+LON_POSITION=09.02.20E
+.TP
+.B LAT_POSITION
+The latitude of the station position, entered as "degrees.arcminutes.arcseconds"
+
+Example:
+.br
+LAT_POSITION=51.02.22N
+.TP
+.B CALLSIGN
+Enter your callsign for the APRS network with a prefix that indicates the type 
+of station, (ER- for repeaters, EL- for links).
+
+Examples:
+.br
+CALLSIGN=EL-DL1ABC    # callsign for a link
+.br
+CALLSIGN=ER-DB0ABC    # callsign for a repeater
+.TP
+.B FREQUENCY
+The tx-frequency of the link/repeater in MHz. For repeaters, information about
+the RX/TX shift in the COMMENT configuration variable may be useful.
+
+Example:
+.br
+FREQUENCY=430.050     # tx-frequency is 430.050 MHz
+.TP
+.B TX_POWER
+The power of your transmitter in watts.
+
+Example:
+.br
+TX_POWER=10           # tx output is 10 watts
+.TP
+.B ANTENNA_GAIN
+The gain of your antenna in dBd.
+
+Example:
+.br
+ANTENNA_GAIN=5        # antenna gain is 5 dBd
+.TP
+.B ANTENNA_HEIGHT
+The height of the link-/repeater antenna in meters or feet above the terrain,
+not sealevel.
+
+Example:
+.br
+ANTENNA_HEIGHT=10m    # 10 meters above the ground
+.br
+ANTENNA_HEIGHT=90     # 90 feet
+.TP
+.B ANTENNA_DIR
+Main beam direction of the antenna in degrees. If an omni direction antenna is
+used, specify \-1 as the direction.
+
+Example:
+.br
+ANTENNA_DIR=-1        # an omni directional antenna is used
+.br
+ANTENNA_DIR=128       # main beam direction is 128 degrees
+.TP
+.B PATH
+The PATH variable controls the way of forwarding your beacon inside the APRS
+network if it is gated by a local APRS digipeater. In some cases it has to be
+changed according to local requirements. Please contact your local APRS sysop
+for further information. Changes should be made only according to the NEWn-N
+paradigm. Leave this variable untouched if you are unsure of its setting.
+No spaces or control characters are allowed. PATH has no influence on the
+propagation on non-RF networks.
+
+Examples:
+.br
+PATH=WIDE1-1
+.br
+PATH=WIDE1-1,WIDE2-2
+.TP
+.B BEACON_INTERVAL
+The interval, in minutes, with which beacons will be sent to the APRS network.
+A good value is 10 minutes. If your beacon is gated via RF, please increase
+the interval a bit to keep the APRS traffic on RF produced by the APRS RF gate
+as low as possible. Intervals shorter than 10 minutes will be changed to 10.
+
+Example:
+.br
+BEACON_INTERVAL=30    # APRS-beacons will be sent every 30 minutes.
+.TP
+.B TONE
+The CTCSS sub-audible tone that is to be used for operation over your link or
+repeater. If you don't use tone control set it to 0.
+
+Examples:
+.br
+TONE=136      # we are using a CTCSS-tone of 136.5 Hz
+.br
+TONE=0        # we don't use CTCSS sub-audible or call tones
+.br
+TONE=1750     # the link/repeater use a tone burst of 1750 Hz
+.TP
+.B STATISTICS_INTERVAL
+Defines the interval in minutes in that an aprs statistic is sent into the aprs
+network. Range: 5-60, default is 10 minutes
+.TP
+.B COMMENT
+Specify a short comment here, maybe a link to your website
+or information that could be interesting for others. The length should not
+exceed 255 characters and may not have control characters like "Carriage Return"
+(\\r) or "Line Feed" (\\n) inside. Make your comment as short as you can to
+give users with a small display (TH-D7) the chance to display the full comment
+text.
+
+Example:
+.br
+COMMENT=[svx] Running SvxLink by SM0SVX
+.TP
+.B PTY_PATH
+Specify a path to a communications PTY that can be used by external applications to
+inject APRS packets into the APRS-IS network.
+.
+.SH AUDIO DEVICE SPECIFICATIONS
+.
+The AUDIO_DEV configuration variables specify which audio device to use for
+a receiver or transmitter. SvxLink support a number of different audio
+input and output devices. The format of the configuration variable is
+"type:dev_spec". There are three different types of audio devices
+supported, "alsa", "oss" and "udp".
+
+The "alsa" type will use the specified Alsa
+device. Example: "alsa:plughw:0". Describing the format of Alsa device names
+is outside the scope for this document.
+
+The "oss" type will use the specified OSS audio device. Example "oss:/dev/dsp".
+OSS is the old sound system used by Linux. Alsa should be used when possible.
+
+The "udp" type is not really an audio device but instead will read and write
+audio from/to a UDP socket. This can be used to interface SvxLink to all
+sorts of audio sources/sinks capable of streaming raw audio through UDP. One
+example usage is to interface SvxLink with GNU Radio.
+Example: "udp:127.0.0.1:10000". Note however that the only supported format
+is raw 16 bit signed samples, two interleved channels. Sampling frequency can
+be chosen using the CARD_SAMPLE_RATE config variable as usual.
+.
+.SH USING GPIO
+.
+GPIO (General Purpose IO) is used to access hardware pins that are made
+available for example on an embedded system. Before starting to use a pin in
+SvxLink some setup need to be done in the operating system. With the standard
+distribution of SvxLink there is a pair of scripts that help with setting up
+and taking down the GPIO pins. The scripts are named svxlink_gpio_up and
+svxlink_gpio_down. The configuration file, which can be found among the other
+SvxLink configuration files (typically in /etc/svxlink), is called gpio.conf.
+.
+.SH CALIBRATING THE SIGNAL LEVEL DETECTOR
+.
+The signal level detector is used when using multiple receivers or when using
+the SIGLEV squelch. The signal level is used by a voter to choose the receiver
+with the highest signal strength. The choice is made directly after squelch
+open. For the voter to make a correct choice, the signal level detector must be
+calibrated on each receiver.
+
+To use the noise signal level detector, first set SIGLEV_DET=NOISE.
+There are two configuration variables that is used to calibrate the detector.
+They are SIGLEV_SLOPE and SIGLEV_OFFSET in a local receiver section. The slope
+is the gain of the detector and the offset is used to adjust the detector so
+that when there is no input signal, the detector will return 0. The goal is to
+adjust the detector so that when no signal is received, a value of 0 is produced
+and when full signal strength is received, a value of 100 is produced. It will
+never be exakt but that does not matter.
+
+The calibration is normally done by using the
+.BR siglevdetcal (1)
+application. To be able to do a correct calibration, it must be possible to open
+the squelch so that only noise is received. The antenna cable should be
+disconnected or a dummy load should be used.
+.B WARNING:
+Before starting the siglevdetcal application, pull the PTT cable since the PTT
+might get triggered during the calibration procedure.
+
+The siglevdetcal utility will also measure the CTCSS tone SNR offset so that
+the CTCSS_SNR_OFFSETS config variable can be set up to a proper value.
+
+If the siglevdetcal application cannot be used for some reason, the manual
+procedure below might be used. This procedure will only work for a
+receiver with unsquelched audio.
+.B Note:
+To calibrate a remote receiver it must be connected to the SvxLink server.
+Otherwise the squelch will not open.
+.RS
+.IP 1 4
+Connect a dummy load or disconnect the antenna from the transceiver. If you
+disconnect the antenna, make sure to also disconnect the PTT.
+.IP 2 4
+Set SIGLEV_SLOPE=1 and SIGLEV_OFFSET=0 and restart SvxLink.
+.IP 3 4
+Open the squelch so that there is only noise coming into SvxLink.
+.IP 4 4
+Use a second transceiver to make a short, unmodulated transmission. Release the
+PTT when the "Squelch OPEN" message is printed. Repeat this for about five times.
+.IP 5 4
+Calculate the mean diff (open level - close level) and the mean lower 
+(squelch close) value. Make sure to use at least four significant digits in your
+calculations.
+.IP 6 4
+SIGLEV_SLOPE = 100 / (mean diff)
+.IP 7 4
+SIGLEV_OFFSET = - (mean lower) * SIGLEV_SLOPE
+.IP 8 4
+After changing SIGLEV_SLOPE and SIGLEV_OFFSET, restart SvxLink and check to see
+that the squelch open value is now around 100 and the squelch close value is
+around 0.
+.
+.SH STATE PTY FORMAT
+.
+The format of the output from the state PTY is:
+.PP
+.RS 4
+<timestamp> <context>:<event name> <event data>
+
+.RS -4
+where the different parts mean:
+.PP
+.RS 4
+timestamp = <seconds since 1 jan 1970>.<milliseconds>
+.RS 0
+context = Name of context
+.RS 0
+event_name = Name of event
+.RS 0
+event data = Event specific data
+
+.RS -4
+
+The following specific events exist.
+.TP
+.B Voter:sql_state
+Report the state of all squelches and signal levels for all receivers. The
+event specific data is a JSON array containing an object for each receiver. The
+JSON data must all be on one line but is shown pretty printed below for easy
+reading. Example:
+.PP
+.RS 9
+  [
+    {
+      "name": "Rx1",
+      "id": "E",
+      "enabled": true,
+      "sql_open": true,
+      "active": true,
+      "siglev": 59
+    },
+    {
+      "name": "Rx2",
+      "id": "R",
+      "enabled": true,
+      "sql_open": true,
+      "active": false,
+      "siglev": 33
+    },
+    {
+      "name": "Rx3",
+      "id": "D",
+      "enabled": false
+    }
+  ]
+
+.RS -2
+where the different fields mean:
+.PP
+.RS 4
+name = Configuration file section name for receiver
+.RS 0
+id = The receiver ID from configuration
+.RS 0
+enabled = Set to true if the receiver is enabled
+.RS 0
+sql_open = Set to true if the squelch is open
+.RS 0
+active = Set to true if the receiver is the active one, selected by the voter
+.RS 0
+siglev = The measured signal level
+
+.RS -4
+The fields sql_open, active and siglev will be left out if enabled=false.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/*
+Additional configuration files. Typically one configuration file per module.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/sm0svx/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx (1),
+.BR siglevdetcal (1),
+.BR devcal (1)
