@@ -16,5 +16,5 @@ cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCA
 make
 make install
 
-Please not that you have to activate the Usrp files in the contrib
+Please note that you have to activate the Usrp files in the contrib
 directory by the parameter -DWITH_CONTRIB_USRP_LOGIC
