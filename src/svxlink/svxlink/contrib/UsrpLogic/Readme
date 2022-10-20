@@ -18,3 +18,7 @@ make install
 
 Please note that you have to activate the Usrp files in the contrib
 directory by the parameter -DWITH_CONTRIB_USRP_LOGIC
+The (new) config file UsrpLogic.conf reside now in /etc/svxlink/svxlink.d.
+You should remove the [UsrpLogic]-section from /etc/svxlink/svxlink.conf
+file and put this into UsrpLogic.conf instead. All Usrp-parameters for
+LINKS must remain in svxlink.conf.
