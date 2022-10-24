@@ -1,0 +1,88 @@
+[TetraLogic]
+TYPE=Tetra
+RX=Rx1
+TX=Tx1
+MODULES=ModuleHelp,ModuleParrot,ModuleEchoLink,ModuleTclVoiceMail
+CALLSIGN=MYCALL
+DEFAULT_LANG=en_US
+BAUD=115200
+PORT=/dev/ttyUSB0
+ISSI=23401
+GSSI=1
+MNC=16383
+MCC=901
+INIT_PEI=AT+CTOM=1;AT+CTSP=1,3,131;AT+CTSP=1,3,130;AT+CTSP=1,3,138;AT+CTSP=1,2,20;AT+CTSP=2,0,0;AT+CTSP=1,3,24;AT+CTSP=1,3,25;AT+CTSP=1,3,3;AT+CTSP=1,3,10;AT+CTSP=1,1,11;AT+CTSDC=0,0,0,1,1,0,1,1,0,0
+SHORT_IDENT_INTERVAL=60
+LONG_IDENT_INTERVAL=60
+#IDENT_ONLY_AFTER_TX=4
+EVENT_HANDLER=@SVX_SHARE_INSTALL_DIR@/events.tcl
+RGR_SOUND_DELAY=0
+#RGR_SOUND_ALWAYS=0
+MACROS=Macros
+FX_GAIN_NORMAL=0
+FX_GAIN_LOW=-12
+#APRSPATH=APRS,qAR,MYCALL-10:
+#ACTIVATE_MODULE_ON_LONG_CMD=4:EchoLink
+#QSO_RECORDER=8:QsoRecorder
+#ONLINE_CMD=998877
+#STATE_PTY=/var/run/svxlink/state
+#DTMF_CTRL_PTY=/dev/shm/simplex_dtmf_ctrl
+#CTCSS_TO_TG=77.0:999,123.0:9990,146.2:9992
+PROXIMITY_WARNING=3.1
+TIME_BETWEEN_SDS=3600
+INFO_SDS=Welcome new user
+TETRA_USERS=Tetra_Users
+TETRA_USER_INFOFILE=@SVX_SYSCONF_INSTALL_DIR@/tetra_users.json
+TETRA_STATUS=Tetra_Status
+SDS_ON_USERACTIVITY=SdsOnUserActivity
+SDS_TO_OTHERS_ON_ACTIVITY=DMO_ON,DMO_OFF,PROXIMITY
+SDS_TO_COMMAND=SdsToCommand
+END_CMD=ATH
+#SHARE_USERINFO=0
+DAPNET_SERVER=dapnet.afu.rwth-aachen.de
+DAPNET_PORT=43434
+DAPNET_CALLSIGN=MYCALL
+DAPNET_KEY=secret_key
+DAPNET_RIC2ISSI=Ric2ISSI
+DAPNET_RUBRIC_REGISTRATION=RicRegistration
+#DAPNET_USERNAME=username
+#DAPNET_PASSWORD=secret
+#DAPNET_WEBHOST=www.hampager.de
+#DAPNET_WEBPORT=8080
+#DAPNET_WEBPATH=/calls
+#DAPNET_TXGROUP=dl-all
+
+[Ric2ISSI]
+# RIC=ISSI
+1234=23401
+
+[RicRegistration]
+# RIC=Rubric1,Rubric2,Rubric54   (in decimal)
+1234=1024,1051
+23451=1028,1051
+
+# please move the next section to
+# @SVX_SYSCONF_INSTALL_DIR@/tetra_users.json
+[Tetra_Users]
+# ISSI = Call,Name,comment
+09011638300023401=DM0SVX,DMO-Repeater,\\r,Halle/Saale
+09011638300023404=DL1HRC,Adi,\\E,SvxLink operator
+09011638300023428=DL1HQN,Martin,\\E,Groebers
+
+[Tetra_Status]
+# status=message
+32849=not available
+32850=available
+32851=no further information
+
+[SdsOnUserActivity]
+0=Hello user you have powered on
+1=Hello user you have powered off
+2=Hello user you want to declare the state of emergency?
+3=Hello user Push-to-talk condition is detected
+4=Hello user Status
+5=Hello user TXI=on
+
+[SdsToCommand]
+33280=121
+33281=120

@@ -1,0 +1,296 @@
+.TH TETRALOGIC.CONF 5 "OCTOBER 2022" Linux "File Formats"
+.
+.SH NAME
+.
+TetraLogic.conf \- Configuration file for the TetraLogic section
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use with Tetra extensiojn.
+This man-page describe the TetraLogic configuration file format.
+.P
+If TetraLogic is compiled in into SvxLink, it looks for configuration files in 
+/etc/svxlink/svxlink.d/
+to find a specific configuration file with the name TetraLogic.conf.
+.BR /etc/svxlink/svxlink.d/TetraLogic.conf .
+.
+.SH FILE FORMAT
+.
+The configuration file is in the famous INI-file format. A generic example of how such a
+file might look like is shown below.
+
+  [SECTION1]
+  VALUE1=1
+  VALUE2="TWO "
+  VAULE3="Multi "
+         "line"
+  
+  [SECTION2]
+  VALUE1=2
+
+This is a simple format that contain name=value pairs that belong to a section. In written
+text, a specific configuration variable can be referred to as SECTION1/VALUE2 meaning
+"configuration variable VALUE2 in section SECTION1".
+.P
+The same variable name can exist in two different sections. For example VALUE1 in section
+SECTION1 have the value 1 and VALUE1 in section SECTION2 have the value 2. Values
+containing spaces at the beginning or end of the line must be surrounded by citation
+characters (see SECTION1/VALUE2). Likewise with a multi line value (see SECTION1/VALUE3).
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that SvxLink understands. The
+configuration variables are described section for section.
+.
+.SS TetraLogic
+.
+The TetraLogic is used to control a Tetra mobile device via the Pei + sound 
+card. The PEI interface is addressed as a serial device via which AT commands 
+are sent and from which responses within the logic are evaluated.
+Devices from Motorola (MTM5400/5500/800) and Sepura (SRG2200) are 
+recommended. For a full function the active data cable has to be extended by 
+the audio lines (microphone, line-in) and connected to the sound card.
+The reception of SDS messages such as status, lip and text messages is 
+currently supported.
+.TP
+.B TYPE
+The type for a tetra logic core is always
+.BR Tetra .
+.TP
+.B RX
+Specify the configuration section name of the receiver to use. All 
+configuration for the receiver is done in the specified configuration section.
+Keep in mind that the only sensible squelch type used in Rx section 
+will be SQL_DET=INTERNAL because the state of Squelch is derived from 
+AT-commands received over the PEI interface.
+.TP
+.B TX
+Specify the configuration section name of the transmitter to use. All
+configuration for the transmitter is done in the specified configuration
+section.
+.TP
+.B BAUD
+The baud rate of communication (Tetra radio) for RS232. Example:
+BAUD=115200
+.TP
+.B PORT
+The RS232 port where the Tetra radio is connected over the active 
+data cable.
+Example:
+PORT=/dev/ttyUSB0
+.TP
+.B ISSI
+The ISSI (Individual Short Subscriber Identity) of the SvxLink node. 
+Example:
+ISSI=23401
+.TP
+.B GSSI
+The GSSI (Group Short Subscriber Identity) of the SvxLink node. This 
+parameter should always be 1. Example:
+GSSI=1
+.TP
+.B MNC
+The MNC (Mobile Country Code) of the SvxLink node. This parameter should 
+always be 16383. Example:
+MNC=16383
+.TP
+.B MCC
+The MCC (Mobile Country Code) of the SvxLink node. This parameter should 
+alsways be 901. Example:
+MCC=901
+.TP
+.B APRSPATH
+If unsure comment out this parameter. Example:
+APRSPATH=APRS,qAR
+.TP
+.B PROXIMITY_WARNING
+If configured SvxLink sends a Sds to all users if one or more are in the 
+vicinity. The unit is kilometer.
+Example:
+PROXIMITY_WARNING=3.2
+.TP
+.B TIME_BETWEEN_SDS
+The minimum time between two individual messages. The unit is seconds.
+Example:
+TIME_BETWEEN_SDS=360
+.TP
+.B INIT_PEI
+The initialisation commands that are send to the Tetra radio to enable a 
+bi-drectional communication whes SvxLink is starting. Example:
+INIT_PEI=AT+CTOM=1;AT+CTSP=1,3,131;AT+CTSP=1,3,130;AT+CTSP=1,2,20
+.TP
+.B TETRA_USERS
+The section name that contain list of user information. Example:
+TETRA_USERS=Tetra_Users
+The format is:
+[Tetra_Users]
+09011638300012345=DL1ABC,NoName,/e,Testuser
+.TP
+.B TETRA_STATUS
+The section name that contain a list of status codes in decimal notation and 
+descriptions. Example:
+TETRA_STATUS=Tetra_Status
+The format is:
+[Tetra_Status]
+32768=at home
+32769=on the road
+.TP
+.B SDS_TO_COMMAND
+The section name that contain a list of status codes in decimal notation and the
+according command that will be executed when the state sds has been received. 
+The idea behind is the possibility to connect/disconntct links.
+Example:
+SDS_TO_COMMAND=SdsToCommand
+the format is:
+[SdsToCommand]
+82816=721
+82817=72
+.TP
+.B SDS_ON_USERACTIVITY
+The section name that contain a list of "Reason of Sending"="Sds-Message". If 
+a user state has changed and a Sds has been received due to this fact, a Sds 
+is send back to the user. Refer to the ETSI (TS 100 392-18-1 V1.3.1. page 70) 
+for further documentation of reason of sending etc. Leave out entries for that
+you do not want any activities. 
+Example:
+SDS_ON_USERACTIVITY=sds_on_useractivity
+The format is:
+[sds_on_useractivity]
+0=Hello User, Subscriber unit is powered ON
+1=Hello User, Subscriber unit is powered OFF
+13=Hello User, you have a car??
+.TP
+.B SDS_TO_OTHERS_ON_ACTIVITY
+If defined, Sds's will send to all other active stations if the state of one 
+member has been changed. At the moment only three options are supported: 
+DMO_ON, DMO_OFF and PROXIMITY.
+DMO_ON: a sds is send to all active station to inform that a user has changed
+it's state 
+to DMO mode.
+DMO_OFF: a sds is send to all active stations to inform that a user has 
+canceled DMO mode (e.g. switched to TMO).
+PROXIMITY: a Sds is send to all active stations to inform that a user is active
+and in the vicinity (max. 3 km away)
+Only active stations (last activity < 3600 seconds) are considered.
+Example:
+SDS_TO_OTHERS_ON_ACTIVITY=DMO_ON,PROXIMITY
+.TP
+.B INFO_SDS
+A Message that is send to a user when he register at the repeater the first 
+time.
+Example:
+INFO_SDS=Welcome user at my Tetra repeater
+.TP
+.B DEFAULT_APRS_ICON=e/
+The default Aprs icon for a station if not defined in section TETRA_USERS. It 
+must exactly have two digits, the first for the primary table, the second for 
+the symbol. The backslash must encoded like this: DEFAULT_APRS_ICON=\\e
+Example:
+DEFAULT_APRS_ICON=e/
+.TP
+.B SDS_PTY
+The pseudo tty device for sending commands to this logic. 
+The format is TSI,[RT],message
+R - it's a raw message that must be NOT encoded an send in direct way
+    The message must contain only digits 0-9 and A-F.
+T - it's a normal text message that must be encoded
+Example:
+SDS_PTY=/tmp/tetra_sds
+echo "12345,T,das ist ein Test">/tmp/tetra_sds
+echo "12345,R,43EF3E6A">/tmp/tetra_sds
+.TP
+.B DEBUG
+To give out more information for error detection. Valid values are 0 (ERROR), 
+1 (WARN), 2 (INFO) and 3 (DEBUG);
+Example:
+DEBUG=2  # enable Info logging
+.TP
+.B END_CMD
+The command that is sent last to the MS shortly before SvxLink is terminated. 
+It is intended for the case that the MS is in TX and SvxLink is stopped 
+manually. In this case dsd MS would remain in TX mode, which must be 
+prevented. However, it is not guaranteed that the execution will work if 
+SvxLink crashes due to a segmentation fault.
+Example:
+END_CMD=ATH
+.TP
+.B SHARE_USERDATA
+If enabled the node sends and receives userspecific information to/from the 
+SvxReflector, e.g. Location information, ISSI, name, APRS icons, last activity 
+and so on. This parameter is enabled by default.
+.TP
+.B DAPNET_SERVER
+The hosname of the DAPNet master, should alsways be:
+DAPNET_SERVER=dapnet.afu.rwth-aachen.de
+.TP
+.B DAPNET_PORT
+The tcp port to connect to the DAPNet master, should always be 
+DAPNET_PORT=43434
+.TP
+.B DAPNET_CALLSIGN
+The callsign which is used for the connection to the master server. 
+This DAPNET_CALLSIGN can differ from the one that was configured in the Logic 
+section as CALLSIGN, as a different one may have to be used for the DAPNET 
+login (e.g. DL1HRC -> dl1hrc1). 
+.TP
+.B DAPNET_KEY
+The key to access the DAPNet service, you have to register there to
+get one.
+.TP
+.B DAPNET_RIC2ISSI
+The section where the RIC is assigned to one or more Tetra ISSIs, e.g.:
+DAPNET_RIC2ISSI=Ric2Issi
+[Ric2Issi]
+1234=2620221
+124343=2620031,23433
+.TP
+.B DAPNET_RUBRIC_REGISTRATION
+The section where the the rubrics can be assigned to a RIC, e.g.
+DAPNET_RUBRIC_REGISTRATION=RicRegistration
+[RicRegistration]
+1234=1028,1051
+234342=1001,3232
+.TP
+.B DAPNET_USERNAME
+The username (usually the callsign) used for login on www.hampager.de.
+it is required to send messages via the website's API.
+.TP
+.B DAPNET_PASSWORD
+The password for the hampager website (API).
+.TP
+.B DAPNET_WEBHOST
+The webserver that provide the API (usually hampager.de)
+.TP
+.B DAPNET_WEBPORT
+The Tcp port to connect the DAPNET_WEBHOST (usually 8080)
+.TP
+.B DAPNET_WEBPATH
+The path where the Api for CallResource is available, 
+usually /calls
+More information can be found here:
+https://github.com/DecentralizedAmateurPagingNetwork/Core/wiki/
+.TP
+.B DAPNET_TXGROUP
+The sender group via which the message is to be sent e.g. de-all
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+Adi Bier (DL1HRC) <dl1hrc at gmx dot de>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/dl1hrc/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx (1),
+.BR siglevdetcal (1),
+.BR devcal (1)

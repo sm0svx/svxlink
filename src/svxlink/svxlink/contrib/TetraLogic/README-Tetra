@@ -27,12 +27,25 @@ Start installation as root:
 wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-tetra-contrib.sh | bash
 
 
-2) Update an existing tetra-contrib installation made by the previous script 
+2) alternatively do this:
+git clone https://github.com/dl1hrc/svxlink.git
+cd svxlink/src
+git checkout tetra-contrib
+mkdir build
+cd build
+cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DCMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_TETRA_LOGIC=ON  ..
+make
+sudo make install
+
+
+3) Update an existing tetra-contrib installation made by the previous script 
 as root:
 
 systemctl stop svxlink
 cd /home/svxlink/svxlink/src/build/
 git pull
-make install
-systemctl start svxlink
+sudo make install
+sudo systemctl restart svxlink
 
+The new configuration file TetraLogic.conf must have the [TetraLogic]-section from svxlink.conf.
+This file is now in /etc/svxlink/svxlink.d directory.

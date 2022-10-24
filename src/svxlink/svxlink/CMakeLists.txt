@@ -2,18 +2,17 @@
 set(SVXLINK_SRCS
   svxlink.cpp MsgHandler.cpp Module.cpp Logic.cpp EventHandler.cpp
   LinkManager.cpp CmdParser.cpp QsoRecorder.cpp DtmfDigitHandler.cpp
-  DapNetClient.cpp
   )
 
 # TCL event handler files to install in the events.d subdirectory
 set(SVXLINK_TCL_EVENT_FILES
   RepeaterLogic.tcl SimplexLogic.tcl ReflectorLogic.tcl Module.tcl Logic.tcl
-  CW.tcl SelCall.tcl locale.tcl TetraLogic.tcl
+  CW.tcl SelCall.tcl locale.tcl
   )
 
 # Logic core plugins to build
 set(SVXLINK_LOGIC_CORES
-  Dummy Simplex Repeater Reflector Tetra
+  Dummy Simplex Repeater Reflector
   )
 
 # Find the popt library
@@ -119,11 +118,7 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
-install_if_not_exists(${CMAKE_CURRENT_SOURCE_DIR}/tetra_users.json
-  ${SVX_SYSCONF_INSTALL_DIR}
-  )
 install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})
-install_if_not_exists(tetra_users.json ${SVX_SYSCONF_INSTALL_DIR})
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
 install(FILES ${SVXLINK_TCL_EVENT_FILES}
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
