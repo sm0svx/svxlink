@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "v18102022"
+#define USRPVERSION "v24102022"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -168,27 +168,38 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   m_logic_con_out = new Async::AudioStreamStateDetector;
   m_logic_con_out->sigStreamStateChanged.connect(
       sigc::mem_fun(*this, &UsrpLogic::onLogicConOutStreamStateChanged));
-      
+
   if (!LogicBase::initialize(cfgobj, logic_name))
   {
     cout << "*** ERROR: Initializing LogicBase " << name() << endl;
     return false;
   }
 
+  cfg().getValue(name(),"DEBUG", debug);
   if (!cfg().getValue(name(), "USRP_HOST", m_usrp_host))
   {
     cerr << "*** ERROR: " << name() << "/HOST missing in configuration"
          << endl;
     return false;
   }
-
-  cfg().getValue(name(),"DEBUG", debug);
+  if (debug > LOGERROR)
+  {
+    cout << "    USRP_HOST=" << m_usrp_host << endl;
+  }
 
   m_usrp_port = 41234;
   cfg().getValue(name(), "USRP_TX_PORT", m_usrp_port);
+  if (debug > LOGERROR)
+  {
+    cout << "    USRP_TX_PORT=" << m_usrp_port << endl;
+  }
 
   m_usrp_rx_port = 41233;
   cfg().getValue(name(), "USRP_RX_PORT", m_usrp_rx_port);
+  if (debug > LOGERROR)
+  {
+    cout << "    USRP_RX_PORT=" << m_usrp_rx_port << endl;
+  }
 
   m_udp_rxsock = new UdpSocket(m_usrp_rx_port);
   m_udp_rxsock->dataReceived.connect(
