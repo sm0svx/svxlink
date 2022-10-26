@@ -1867,8 +1867,11 @@ void ReflectorLogic::handlePlayDtmf(const std::string& digit, int amp,
 
 string ReflectorLogic::jsonToString(Json::Value eventmessage)
 {
-  Json::FastWriter jsontoString;
-  std::string message = jsontoString.write(eventmessage);
+  Json::StreamWriterBuilder builder;
+  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+  std::ostringstream ostream;
+  writer->write(eventmessage, &ostream);
+  std::string message = ostream.str();
   message.erase(std::remove_if(message.begin(), message.end(), 
                 [](unsigned char x){return std::iscntrl(x);}));
   return message;
