@@ -12,7 +12,7 @@ This branch only works if you have the following things:
 The MS is completely controlled by AT-commands over the PEI interface
 
 Installation instructions from Frédéric/F1IWQ can be found here:
-https://raw.githubusercontent.com/f1iwq2/Tetra_Link_boardIWQ/main/Doc/Download%20svxlink-tetra.pdf
+https://github.com/f1iwq2/Tetra_Link_boardIWQ/blob/main/Doc/Download%20svxlink-tetra.pdf
 
 Here are two quick-and-dirty installation/update documentation, keep 
 in mind: No configuration will be done!
