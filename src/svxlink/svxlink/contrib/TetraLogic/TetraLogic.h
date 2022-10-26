@@ -229,6 +229,8 @@ class TetraLogic : public Logic
      // contain user data
     struct User {
       std::string issi;
+      std::string idtype = "tsi";
+      std::string mode = "TETRA";
       std::string call;
       std::string name;
       std::string comment;

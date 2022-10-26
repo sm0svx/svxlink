@@ -221,8 +221,10 @@ class Reflector : public sigc::trackable
 
       // contain user data
     struct User {
-      std::string issi;
+      std::string id;
       std::string call;
+      std::string mode;
+      std::string idtype;
       std::string name;
       std::string location;
       std::string comment;

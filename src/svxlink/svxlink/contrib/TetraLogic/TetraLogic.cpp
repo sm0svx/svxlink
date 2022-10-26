@@ -131,7 +131,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "25102022"
+#define TETRA_LOGIC_VERSION "26102022"
 
 /****************************************************************************
  *
@@ -435,7 +435,9 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
         isok = false;
       }
       m_user.name = t_userdata.get("name","").asString();
+      m_user.mode = t_userdata.get("mode","TETRA").asString();
       m_user.call = t_userdata.get("call","").asString();
+      m_user.idtype = t_userdata.get("idtype","tsi").asString();
       m_user.location = t_userdata.get("location","").asString();
       if (t_userdata.get("symbol","").asString().length() != 2)
       {
@@ -820,8 +822,10 @@ void TetraLogic::sendUserInfo(void)
        iu!=userdata.end(); iu++)
   {
     Json::Value t_userinfo(Json::objectValue);
-    t_userinfo["tsi"] = iu->second.issi;
+    t_userinfo["id"] = iu->second.issi;
     t_userinfo["call"] = iu->second.call;
+    t_userinfo["idtype"] = iu->second.idtype;
+    t_userinfo["mode"] = iu->second.mode;
     t_userinfo["name"] = iu->second.name;
     t_userinfo["tab"] = iu->second.aprs_tab;
     t_userinfo["sym"] = iu->second.aprs_sym;
@@ -830,7 +834,7 @@ void TetraLogic::sendUserInfo(void)
     t_userinfo["last_activity"] = 0;
     event.append(t_userinfo);
   }
-  publishInfo("TetraUsers:info", event);
+  publishInfo("DvUsers:info", event);
 } /* TetraLogic::sendUserInfo */
 
 
@@ -1167,6 +1171,8 @@ void TetraLogic::firstContact(Sds tsds)
 {
   userdata[tsds.tsi].call = "NoCall";
   userdata[tsds.tsi].name = "NoName";
+  userdata[tsds.tsi].idtype = "tsi";
+  userdata[tsds.tsi].mode = "TETRA";
   userdata[tsds.tsi].aprs_sym = t_aprs_sym;
   userdata[tsds.tsi].aprs_tab = t_aprs_tab;
   userdata[tsds.tsi].last_activity = time(NULL);
@@ -1991,14 +1997,16 @@ void TetraLogic::onPublishStateEvent(const string &event_name, const string &msg
     return;
   }
 
-  if (event_name == "TetraUsers:info")
+  if (event_name == "DvUsers:info")
   {
-    log(LOGDEBUG, "Download userdata from Reflector (TetraUsers:info):");
+    log(LOGDEBUG, "Download userdata from Reflector (DvUsers:info):");
     for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
     {
       User m_user;
       Json::Value& t_userdata = user_arr[i];
-      m_user.issi = t_userdata.get("tsi", "").asString();
+      m_user.issi = t_userdata.get("id", "").asString();
+      m_user.idtype = t_userdata.get("idtype", "").asString();
+      m_user.mode = t_userdata.get("mode", "").asString();
       m_user.name = t_userdata.get("name","").asString();
       m_user.call = t_userdata.get("call","").asString();
       m_user.location = t_userdata.get("location","").asString();
