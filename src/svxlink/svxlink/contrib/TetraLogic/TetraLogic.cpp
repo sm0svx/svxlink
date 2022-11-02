@@ -131,7 +131,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "01112022"
+#define TETRA_LOGIC_VERSION "02112022"
 
 /****************************************************************************
  *
@@ -508,14 +508,15 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
         Json::Value& t_a = t_peiinit["commands"];
         if (debug >= LOGDEBUG)
         {
-          cout << "+++ Init commands to PEI-device:" << endl;
+          log(LOGDEBUG, "+++ Reading AT-commands to initialze PEI-device.\n\
+              Reading from file \"" + pei_init_file + "\"");
         }
         for (Json::Value::ArrayIndex j = 0; j < t_a.size(); j++)
         {
           m_cmds.push_back(t_a[j].asString());
           if (debug >= LOGDEBUG)
           {
-            cout << "    " << t_a[j].asString() << endl;
+            log(LOGDEBUG, "    " + t_a[j].asString());
           }
         }
       }
@@ -523,7 +524,7 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
   }
   else
   {
-    // init the Pei device
+      // initializes the Pei device by parameter INIT_PEI in svxlink.conf
     if (!cfg().getValue(name(), "INIT_PEI", initstr))
     {
       log(LOGWARN, "Warning: Missing parameter " + name()
@@ -531,6 +532,8 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
     }
     SvxLink::splitStr(initcmds, initstr, ";");
     m_cmds = initcmds;
+    log(LOGDEBUG, "+++ Reading AT-commands to initialze PEI-device by \
+       using the parameter svxlink.conf/INIT_PEI=");
   }
 
   // define sds messages send to user when received Sds's from him due to

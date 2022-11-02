@@ -1,0 +1,6 @@
+[
+  { "mode" : "TMO", "commands" : ["AT+CTOM=0", "AT+CTSP=1,3,131", "AT+CTSP=1,3,130", "AT+CTSP=1,3,138", "AT+CTSP=1,2,20", "AT+CTSP=2,0,0", "AT+CTSP=1,3,24", "AT+CTSP=1,3,25", "AT+CTSP=1,3,3", "AT+CTSP=1,3,10", "AT+CTSP=1,1,11", "AT+CTSDC=0,0,0,1,1,0,1,1,0,0"]},
+  { "mode" : "DMO-RPT", "commands" : ["AT+CTOM=6", "AT+CTSP=1,3,131", "AT+CTSP=1,3,130", "AT+CTSP=1,3,138", "AT+CTSP=1,2,20", "AT+CTSP=2,0,0", "AT+CTSP=1,3,24", "AT+CTSP=1,3,25", "AT+CTSP=1,3,3", "AT+CTSP=1,3,10", "AT+CTSP=1,1,11", "AT+CTSDC=0,0,0,1,1,0,1,1,0,0"]},
+  { "mode" : "DMO-MS", "commands" : ["AT+CTOM=1", "AT+CTSP=1,3,131", "AT+CTSP=1,3,130", "AT+CTSP=1,3,138", "AT+CTSP=1,2,20", "AT+CTSP=2,0,0", "AT+CTSP=1,3,24", "AT+CTSP=1,3,25", "AT+CTSP=1,3,3", "AT+CTSP=1,3,10", "AT+CTSP=1,1,11", "AT+CTSDC=0,0,0,1,1,0,1,1,0,0"]},
+  { "mode" : "GATEWAY", "commands" : ["AT+CTOM=5", "AT+CTSP=1,3,131", "AT+CTSP=1,3,130", "AT+CTSP=1,3,138", "AT+CTSP=1,2,20", "AT+CTSP=2,0,0", "AT+CTSP=1,3,24", "AT+CTSP=1,3,25", "AT+CTSP=1,3,3", "AT+CTSP=1,3,10", "AT+CTSP=1,1,11", "AT+CTSDC=0,0,0,1,1,0,1,1,0,0"]}
+]

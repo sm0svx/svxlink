@@ -1,6 +1,8 @@
  1.8.0 -- ?? ??? ????
 ----------------------
 
+* Some changes and bugfixes on "TetraLogic" done
+
 * A new Logic "TetraLogic" has been introduced to control a Tetra radio over
   the PEI. For more information take a look into the manual page
 
