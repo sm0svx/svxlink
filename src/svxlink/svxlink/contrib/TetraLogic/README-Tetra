@@ -33,7 +33,7 @@ cd svxlink/src
 git checkout tetra-contrib
 mkdir build
 cd build
-cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DCMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_TETRA_LOGIC=ON  ..
+cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DCMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_TETRA_LOGIC=ON ..
 make
 sudo make install
 
@@ -45,6 +45,7 @@ TetraLogic extension. Without this it will not work.
 
 systemctl stop svxlink
 cd /home/svxlink/svxlink/src/build/
+make clean
 git pull
 sudo make install
 sudo systemctl restart svxlink

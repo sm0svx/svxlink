@@ -20,6 +20,5 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/TetraLogic.conf.in
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/TetraLogic.conf
   ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d
 )
-install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/tetra_users.json
-  ${SVX_SYSCONF_INSTALL_DIR}
-)
+install_if_not_exists(tetra_users.json ${SVX_SYSCONF_INSTALL_DIR})
+install_if_not_exists(pei-init.json ${SVX_SYSCONF_INSTALL_DIR})

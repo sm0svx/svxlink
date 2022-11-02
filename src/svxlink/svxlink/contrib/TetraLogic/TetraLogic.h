@@ -331,6 +331,7 @@ class TetraLogic : public Logic
     bool cmgs_received;
     bool share_userinfo;
     Json::Value m_user_info;
+    Json::Value m_pei_init;
     int current_cci;
     int dmnc;
     int dmcc;

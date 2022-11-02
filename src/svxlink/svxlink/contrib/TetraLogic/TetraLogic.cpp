@@ -131,7 +131,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "26102022"
+#define TETRA_LOGIC_VERSION "01112022"
 
 /****************************************************************************
  *
@@ -318,7 +318,7 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       t_aprs_tab = value[1];
     }
   }
-
+  
   // the pty path: inject messages to send by Sds
   string sds_pty_path;
   cfg().getValue(name(), "SDS_PTY", sds_pty_path);
@@ -462,6 +462,77 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
     }
   }
 
+    // the init-pei file where init AT commands are defined
+  std::string pei_init_file;
+  if (cfg().getValue(name(), "PEI_INIT_FILE", pei_init_file))
+  {
+    std::ifstream pei_init_is(pei_init_file.c_str(), std::ios::in);
+    if (pei_init_is.good())
+    {
+      try
+      {
+        if (!(pei_init_is >> m_pei_init))
+        {
+          std::cerr << "*** ERROR: Failure while reading pei-init information file "
+                       "\"" << pei_init_file << "\""
+                    << std::endl;
+          isok = false;
+        }
+      }
+      catch (const Json::Exception& e)
+      {
+        std::cerr << "*** ERROR: Failure while reading pei-init information "
+                     "file \"" << pei_init_file << "\": "
+                  << e.what()
+                  << std::endl;
+        isok = false;
+      }
+    }
+    else
+    {
+      std::cerr << "*** ERROR: Could not open pei-init information file "
+                   "\"" << pei_init_file << "\""
+                << std::endl;
+      isok = false;
+    }
+
+     // valid: TMO, DMO-MS, DMO-REPEATER, GATEWAY
+    std::string tetra_mode = "DMO-MS";
+    cfg().getValue(name(), "TETRA_MODE", tetra_mode);
+
+    for (Json::Value::ArrayIndex i = 0; i < m_pei_init.size(); i++)
+    {
+      Json::Value& t_peiinit = m_pei_init[i];
+      if (tetra_mode == t_peiinit.get("mode","").asString())
+      {
+        Json::Value& t_a = t_peiinit["commands"];
+        if (debug >= LOGDEBUG)
+        {
+          cout << "+++ Init commands to PEI-device:" << endl;
+        }
+        for (Json::Value::ArrayIndex j = 0; j < t_a.size(); j++)
+        {
+          m_cmds.push_back(t_a[j].asString());
+          if (debug >= LOGDEBUG)
+          {
+            cout << "    " << t_a[j].asString() << endl;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    // init the Pei device
+    if (!cfg().getValue(name(), "INIT_PEI", initstr))
+    {
+      log(LOGWARN, "Warning: Missing parameter " + name()
+                   + "/INIT_PEI, using defaults");
+    }
+    SvxLink::splitStr(initcmds, initstr, ";");
+    m_cmds = initcmds;
+  }
+
   // define sds messages send to user when received Sds's from him due to
   // state changes
   std::string sds_useractivity;
@@ -580,15 +651,6 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
   {
     time_between_sds = atoi(value.c_str());  
   }
-
-  // init the Pei device
-  if (!cfg().getValue(name(), "INIT_PEI", initstr))
-  {
-    log(LOGWARN, "Warning: Missing parameter " + name()
-         + "/INIT_PEI, using defaults");
-  }
-  SvxLink::splitStr(initcmds, initstr, ";");
-  m_cmds = initcmds;
 
   cfg().getValue(name(), "END_CMD", endCmd);
 
