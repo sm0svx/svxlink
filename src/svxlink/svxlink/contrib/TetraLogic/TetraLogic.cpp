@@ -197,10 +197,10 @@ extern "C" {
 TetraLogic::TetraLogic(void)
   : mute_rx_on_tx(true), mute_tx_on_rx(true),
   rgr_sound_always(false), mcc(""), mnc(""), issi(""), gssi(1),
-  port("/dev/ttyUSB0"), baudrate(115200), initstr(""), pei(0), sds_pty(0),
-  peistream(""), debug(LOGERROR), talkgroup_up(false), sds_when_dmo_on(false),
-  sds_when_dmo_off(false), sds_when_proximity(false),
-  peiComTimer(2000, Timer::TYPE_ONESHOT, false),
+  port("/dev/ttyUSB0"), baudrate(115200), initstr("AT+CTOM=1;AT+CTSP=1,3,131"),
+  pei(0), sds_pty(0), peistream(""), debug(LOGERROR), talkgroup_up(false),
+  sds_when_dmo_on(false), sds_when_dmo_off(false),
+  sds_when_proximity(false), peiComTimer(2000, Timer::TYPE_ONESHOT, false),
   peiActivityTimer(10000, Timer::TYPE_ONESHOT, true),
   peiBreakCommandTimer(3000, Timer::TYPE_ONESHOT, false),
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
@@ -347,7 +347,7 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       << "* removed soon. Use TETRA_USER_INFOFILE=tetra_users.json in-  *\n"
       << "* stead and transfer your tetra user data into the json file. *\n"
       << "* You will find an example of tetra_users.json in             *\n"
-      << "* src/svxlink/svxlink directory                               *\n"
+      << "* /src/svxlink/svxlink.d directory                            *\n"
       << "***************************************************************\n";
     list<string> user_list = cfg().listSection(user_section);
     User m_user;
@@ -506,34 +506,34 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       if (tetra_mode == t_peiinit.get("mode","").asString())
       {
         Json::Value& t_a = t_peiinit["commands"];
-        if (debug >= LOGDEBUG)
-        {
-          log(LOGDEBUG, "+++ Reading AT-commands to initialze PEI-device.\n\
-              Reading from file \"" + pei_init_file + "\"");
-        }
+        log(LOGDEBUG, 
+        "+++ Reading AT-commands to initialze PEI-device. Reading from file" +
+        pei_init_file + "\"");
         for (Json::Value::ArrayIndex j = 0; j < t_a.size(); j++)
         {
           m_cmds.push_back(t_a[j].asString());
-          if (debug >= LOGDEBUG)
-          {
-            log(LOGDEBUG, "    " + t_a[j].asString());
-          }
+          log(LOGDEBUG, "    " + t_a[j].asString());
         }
       }
     }
   }
-  else
+    // initializes the Pei device by parameter INIT_PEI in svxlink.conf
+  else if (cfg().getValue(name(), "INIT_PEI", initstr))
   {
-      // initializes the Pei device by parameter INIT_PEI in svxlink.conf
-    if (!cfg().getValue(name(), "INIT_PEI", initstr))
-    {
-      log(LOGWARN, "Warning: Missing parameter " + name()
-                   + "/INIT_PEI, using defaults");
-    }
     SvxLink::splitStr(initcmds, initstr, ";");
     m_cmds = initcmds;
-    log(LOGDEBUG, "+++ Reading AT-commands to initialze PEI-device by \
-       using the parameter svxlink.conf/INIT_PEI=");
+    cout << "+++ WARNING: INIT_PEI is outdated and is being ignored " <<
+      "in further versions of tetra-contrib. Please change your " <<
+      "configuration and use the pei-init.json to define AT " <<
+      "initializing commands. Please also read the manual page." << endl;
+    log(LOGDEBUG, 
+      "+++ Reading AT commands by using the parameter svxlink.conf/INIT_PEI=");
+  }
+  else
+  {
+    cout << "+++ WARNING: No PEI initializing sequence defined, you " << 
+      "should configure the parameter PEI_INIT_FILE in your TetraLogic.conf " <<
+      "in svxlink.d directory. Please also read the manual page." << endl;
   }
 
   // define sds messages send to user when received Sds's from him due to
