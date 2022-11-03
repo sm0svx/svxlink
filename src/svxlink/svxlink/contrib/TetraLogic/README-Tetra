@@ -35,6 +35,8 @@ mkdir build
 cd build
 cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DCMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_TETRA_LOGIC=ON ..
 make
+# on weak systems make should be used with the "-j4 -l2" options: make -j4 -l2
+# tnx to Daniel/SP0DZ
 sudo make install
 
 Please not that the cmake-parameter "-DWITH_CONTRIB_TETRA_LOGIC=ON" enables the
