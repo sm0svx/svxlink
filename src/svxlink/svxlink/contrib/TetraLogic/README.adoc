@@ -1,9 +1,14 @@
-*
-* Adi Bier / DL1HRC
-* dl1hrc { at } gmx . de
-*
-* version 021102022
-*
+Contrib: TetraLogic
+===================
+
+----
+#
+# TetraLogic (beta)
+# Adi Bier / DL1HRC (dl1hrc [at] gmx.de)
+#
+----
+== TetraLogic ==
+Provides a Logic to connect to Tetra radios like MTM5400/ MTM 800.
 
 This branch only works if you have the following things:
 
@@ -16,18 +21,28 @@ The MS is completely controlled by AT-commands over the PEI interface
 Installation instructions from Frédéric/F1IWQ can be found here:
 https://github.com/f1iwq2/Tetra_Link_boardIWQ/blob/main/Doc/Download%20svxlink-tetra.pdf
 
-Here are quick-and-dirty installation/update documentation, keep 
-in mind: No configuration will be done!
+Here are quick-and-dirty installation/update documentation, keep in
+mind: No configuration will be done!
 
-1) first time installation (including German(!) voice announcements):
+The configuration of the Tetra part has been moved to this new file,
+normally found in /etc/svxlink/svxlink.d
+
+== First time installation ==
+including German(!) voice announcements.
 
 You may use my semi-automatic installation-script from here 
+```
 http://svxlink.ham-radio-op.net/svxlink/svxlink-tetra-contrib.sh
+```
 
 Start installation as root:
+```
 wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-tetra-contrib.sh | bash
+```
 
-2) alternatively do this:
+== Installation of SvxLink with SipLogic extension ==
+
+```
 git clone https://github.com/dl1hrc/svxlink.git
 cd svxlink/src
 git checkout tetra-contrib
@@ -38,21 +53,27 @@ make
 # on weak systems make should be used with the "-j4 -l2" options: make -j4 -l2
 # tnx to Daniel/SP0DZ
 sudo make install
+```
 
 Please not that the cmake-parameter "-DWITH_CONTRIB_TETRA_LOGIC=ON" enables the
 TetraLogic extension. Without this it will not work.
 
-
-3) Update an existing tetra-contrib installation made by the previous script:
-
+== Update an existing tetra-contrib ==
+```
 systemctl stop svxlink
 cd /home/svxlink/svxlink/src/build/
 make clean
 git pull
 sudo make install
 sudo systemctl restart svxlink
+```
 
 The new configuration file TetraLogic.conf contains the [TetraLogic]-section
 from svxlink.conf. This file is now located in /etc/svxlink/svxlink.d directory.
 Remove the [TetraLogic]-section from svxlink.conf but let the LOGICS- and LINKS
 definitions with "Tetra" untouched.
+
+== Documentation ==
+- manpage svxlink.conf.5
+- German pdf is available here: https://github.com/dl1hrc/documentation
+
