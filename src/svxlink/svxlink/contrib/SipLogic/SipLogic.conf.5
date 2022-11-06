@@ -1,4 +1,4 @@
-.TH SIPLOGIC.CONF 5 "AUGUST 2022" Linux "File Formats"
+.TH SIPLOGIC.CONF 5 "November 2022" Linux "File Formats"
 .
 .SH NAME
 .
@@ -31,6 +31,9 @@ The ip address or the hostname of the Sip communication server.
 .TP
 .B SIPPORT
 The udp port that is used for communication (normally 5060).
+.TP
+.B CALLERNAME
+The name of the station that is displayed instead of the number.
 .TP
 .B USERNAME
 The username that is used to connect to the Sip communication server.
@@ -152,6 +155,9 @@ Example: PHONENUMBER_TO_TG=0049:262,0034:214,0043:232,0049123454543:991
 .
 .SH FILES
 .
+.TP
+.IR /etc/svxlink/svxlink.d/SipLogic.conf
+The SipLogic specific configuration file.
 .TP
 .IR /etc/svxlink/svxlink.conf
 The system wide configuration file.

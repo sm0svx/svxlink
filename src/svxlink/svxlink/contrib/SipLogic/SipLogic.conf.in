@@ -4,6 +4,7 @@ DEFAULT_LANG=en_US
 SIPSERVER=reflector.example.com
 #SIPREGISTRAR=proxy.mysipnetwork.com
 SIPPORT=5060
+CALLERNAME="svxlink user <12345>"
 USERNAME=user
 PASSWORD=secret
 SIPSCHEMA=Digest
