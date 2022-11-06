@@ -40,7 +40,7 @@ Start installation as root:
 wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-tetra-contrib.sh | bash
 ```
 
-== Installation of SvxLink with SipLogic extension ==
+== Installation of SvxLink with TetraLogic extension ==
 
 ```
 git clone https://github.com/dl1hrc/svxlink.git
