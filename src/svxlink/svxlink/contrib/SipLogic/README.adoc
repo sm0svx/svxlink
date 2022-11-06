@@ -41,7 +41,7 @@ sudo make install
 ```
 
 == Installation of SvxLink with SipLogic extension ==
----
+```
 git clone https://github.com/dl1hrc/svxlink.git
 cd svxlink/src/
 mkdir build
@@ -49,7 +49,7 @@ cd build
 cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_SIP_LOGIC=ON ..
 make
 make install
-
+```
 == Documentation ==
 - manpage svxlink.conf.5
 - German pdf is available here: https://github.com/dl1hrc/documentation
