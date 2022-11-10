@@ -131,7 +131,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "02112022"
+#define TETRA_LOGIC_VERSION "10112022"
 
 /****************************************************************************
  *
@@ -206,7 +206,7 @@ TetraLogic::TetraLogic(void)
   proximity_warning(3.1), time_between_sds(3600), own_lat(0.0),
   own_lon(0.0), endCmd(""), new_sds(false), inTransmission(false),
   cmgs_received(true), share_userinfo(true), current_cci(0), dmnc(0),
-  dmcc(0), infosds(""), is_tx(false), last_sdsid(0)
+  dmcc(0), infosds(""), is_tx(false), last_sdsid(0), pei_pty_path(""), pei_pty(0)
 {
   peiComTimer.expired.connect(mem_fun(*this, &TetraLogic::onComTimeout));
   peiActivityTimer.expired.connect(mem_fun(*this,
@@ -230,7 +230,6 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
     own_lat = getDecimalDegree(LocationInfo::instance()->getCoordinate(true));
     own_lon = getDecimalDegree(LocationInfo::instance()->getCoordinate(false));
   }
-
   cfg().getValue(name(), "MUTE_RX_ON_TX", mute_rx_on_tx);
   cfg().getValue(name(), "MUTE_TX_ON_RX", mute_tx_on_rx);
   cfg().getValue(name(), "RGR_SOUND_ALWAYS", rgr_sound_always);
@@ -318,7 +317,7 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       t_aprs_tab = value[1];
     }
   }
-  
+
   // the pty path: inject messages to send by Sds
   string sds_pty_path;
   cfg().getValue(name(), "SDS_PTY", sds_pty_path);
@@ -674,9 +673,25 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
 
   cfg().getValue(name(),"SHARE_USERINFO", share_userinfo);
 
-  pei = new Serial(port);
+    // PEI pty path: inject messages to send to PEI directly
+  cfg().getValue(name(), "PEI_PTY", pei_pty_path);
+  if (!pei_pty_path.empty())
+  {
+    pei_pty = new Pty(pei_pty_path);
+    if (!pei_pty->open())
+    {
+      cerr << "*** ERROR: Could not open Pei PTY "
+           << pei_pty_path << " as specified in configuration variable "
+           << name() << "/" << "PEI_PTY" << endl;
+      isok = false;
+    }
+    pei_pty->dataReceived.connect(
+        mem_fun(*this, &TetraLogic::peiPtyReceived));
+  }
 
-  if (!pei->open(true))
+  // hadle the Pei serial port
+  pei = new Serial(port);
+  if (!pei->open())
   {
     cerr << "*** ERROR: Opening serial port " << name() << "/PORT="
          << port << endl;
@@ -697,7 +712,7 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
 
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
-
+  
   processEvent("startup");
 
   cout << ">>> Started SvxLink with special TetraLogic extension (v"
@@ -942,7 +957,7 @@ void TetraLogic::handlePeiAnswer(std::string m_message)
 
   int response = handleMessage(m_message);
 
-  log(LOGTRACE, "TetraLogic::handlePeiAnswer: reponse=" + to_string(response));
+  log(LOGTRACE, "TetraLogic::handlePeiAnswer: response=" + to_string(response));
 
   switch (response)
   {
@@ -2297,6 +2312,22 @@ void TetraLogic::log(uint8_t logtype, std::string logmessage)
     cout << logmessage << endl;
   }
 } /* TetraLogic::log */
+
+
+// Pty device that receive AT commands and send it to the "real" Pei
+void TetraLogic::peiPtyReceived(const void *buf, size_t count)
+{
+  const char *buffer = reinterpret_cast<const char*>(buf);
+  std::string in = "";
+
+  for (size_t i=0; i<count-1; i++)
+  {
+    in += *buffer++;
+  }
+  log(LOGDEBUG, "Command received by Pty device: " + in);
+
+  sendPei(in);
+} /* TetraLogic::peiPtyReceived */
 
 /*
  * This file has not been truncated

@@ -245,7 +245,7 @@ class TetraLogic : public Logic
       time_t sent_last_sds = 0;
     };
     std::map<std::string, User> userdata;
-    
+
     struct DmoRpt {
       int issi;
       std::string mni;
@@ -253,7 +253,7 @@ class TetraLogic : public Logic
       time_t last_activity;
     };
     std::map<int, DmoRpt> dmo_rep_gw;
-    
+
     std::map<int, std::string> sds_on_activity;
     std::map<unsigned int, std::string> sds_to_command;
 
@@ -284,13 +284,13 @@ class TetraLogic : public Logic
     {
       OUTGOING, INCOMING
     } SdsDirection;
-    
+
      // type of Sds
     typedef enum
     {
       STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL, RAW
     } SdsType;
-    
+
      // Sds sent state
     typedef enum
     {
@@ -304,7 +304,7 @@ class TetraLogic : public Logic
     Async::Timer peiActivityTimer;
     Async::Timer peiBreakCommandTimer;
     Call*    call;
-    
+
     struct pSds {
       int sdstype;
       int aiservice;
@@ -313,7 +313,7 @@ class TetraLogic : public Logic
       time_t last_activity;
     };
     pSds pSDS;
-    
+
     std::map<unsigned int, std::string> state_sds;
     StrList m_cmds;
     int pending_sdsid;
@@ -337,6 +337,8 @@ class TetraLogic : public Logic
     std::string infosds;
     bool is_tx;
     int last_sdsid;
+    std::string pei_pty_path;
+    Async::Pty  *pei_pty;
 
     void initPei(void);
     void onCharactersReceived(char *buf, int count);
@@ -384,7 +386,7 @@ class TetraLogic : public Logic
     bool checkIfDapmessage(std::string message);
     std::string joinList(std::list<std::string> members);
     void log(uint8_t type, std::string logmessage);
-
+    void peiPtyReceived(const void *buf, size_t count);
 };  /* class TetraLogic */
 
 
