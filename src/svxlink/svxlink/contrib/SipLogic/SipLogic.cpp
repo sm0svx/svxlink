@@ -552,11 +552,22 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     return false;
   }
 
+    // use UDP or TCP?
+  bool use_tcp = false;
+  cfg().getValue(name(), "USE_TCP", use_tcp);
+
   // Sip transport layer creation
   try {
     TransportConfig tcfg;
     tcfg.port = m_sip_port;
-    ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+    if (use_tcp)
+    {
+      ep.transportCreate(PJSIP_TRANSPORT_TCP, tcfg);
+    }
+    else
+    {
+      ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+    }
     ep.libStart();
   } catch (Error& err) {
     cout << "*** ERROR creating transport layer in "
@@ -572,6 +583,10 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   acc_cfg.idUri += m_username;
   acc_cfg.idUri += "@";
   acc_cfg.idUri += m_sipserver;
+  if (use_tcp)
+  {
+    acc_cfg.idUri += ";transport=tcp";
+  }
   acc_cfg.idUri += ">";
   acc_cfg.regConfig.registrarUri = "sip:";
   acc_cfg.regConfig.registrarUri += m_sipregistrar;
