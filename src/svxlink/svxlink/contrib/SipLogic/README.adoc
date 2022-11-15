@@ -5,8 +5,7 @@ Contrib: SipLogic
 #
 # SipLogic (beta)
 # Adi Bier / DL1HRC (dl1hrc [at] gmx.de)
-# V0.2.0 - 15.03.2019
-# V0.2.1 - 05.09.2022
+# Version 15112022
 #
 ----
 SipLogic.conf is a sample configuration for a SipLogic connected to a Fritzbox
