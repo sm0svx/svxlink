@@ -89,7 +89,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "15112022"
+#define PJSIP_VERSION "27112022"
 
 
 /****************************************************************************
@@ -944,6 +944,8 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
   ss << "calling \"" << dest_uri << "\"";
   processLogicEvent(ss.str());
   
+  cout << "+++ Outgoing call to " << dest_uri << endl;
+  
   for (std::map<std::string, uint32_t>::const_iterator it = phoneNrTgVec.begin();
     it != phoneNrTgVec.end(); it++)
   {
@@ -977,6 +979,10 @@ void SipLogic::makeCall(sip::_Account *acc, std::string dest_uri)
 
 void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 {
+
+  // todo: accept more than just one call
+  if (calls.size() > 1) return;
+
   sip::_Call *call = new sip::_Call(*acc, iprm.callId);
   pj::CallInfo ci = call->getInfo();
   pj::CallOpParam prm;
@@ -1176,7 +1182,7 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
   }
   else if (ci.state == PJSIP_INV_STATE_CONNECTING) // connecting
   {
-    ss << "pickup_call " << caller;
+    ss << "call_connected " << caller;
     m_call_timeout_timer.setEnable(false);
     m_call_timeout_timer.reset();
   }

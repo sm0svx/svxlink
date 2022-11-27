@@ -131,10 +131,10 @@ proc checkPeriodicIdentify {} {
 
 
 #
-# Executed if an incoming call is pickuped
+# Executed if an call is established
 #
-proc pickup_call {caller} {
-  puts "pickup call from: $caller";
+proc call_connected {caller} {
+  puts "call to/from: $caller established";
   playSilence 500;
 }
 
