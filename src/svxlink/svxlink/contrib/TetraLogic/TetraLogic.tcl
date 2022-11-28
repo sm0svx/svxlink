@@ -495,6 +495,18 @@ proc tetra_mode {aimode} {
 
 }
 
+
+#
+# Executed when a talkgroup is received from another linked logic core
+#
+#   logic -- The name of the logic core
+#   tg    -- The received talkgroup
+#
+proc remote_received_tg_updated {logic tg} {
+  Logic::remote_received_tg_updated "$logic" "$tg"
+}
+
+
 # end of namespace
 }
 
