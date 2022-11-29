@@ -120,19 +120,14 @@ class AnnounceLogic : public LogicBase
      * @param 	cfg A previously opened configuration
      * @param 	name The configuration section name of this logic
      */
-    AnnounceLogic(Async::Config &cfg, const std::string &name);
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~AnnounceLogic(void);
-  
+    AnnounceLogic(void);
+
     /**
      * @brief 	Initialize the Announce logic core
      * @return	Returns \em true if the initialization was successful or else
      *	      	\em false is returned.
      */
-    virtual bool initialize(void);
+    virtual bool initialize(Async::Config &cfgobj, const std::string &logic_name);
 
     /**
      * @brief 	Get the audio pipe sink used for writing audio into this logic
@@ -149,6 +144,11 @@ class AnnounceLogic : public LogicBase
 
   protected:
 
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AnnounceLogic(void) override;
+
     virtual void allMsgsWritten(void);
 
 
@@ -162,7 +162,7 @@ class AnnounceLogic : public LogicBase
     int                       pre_interval;
     int                       day_of_week;
     std::vector<std::string>  days;
-    Async::AtTimer      	  every_minute_timer;
+    Async::AtTimer            every_minute_timer;
     int                       start_prenotify_before;
     int                       hour_of_qst;
     int                       minute_of_qst;
@@ -182,7 +182,7 @@ class AnnounceLogic : public LogicBase
     void prenotification(void);
     void announceQst(void);
     bool check_week_of_month(struct tm t);
-    
+
 };  /* class AnnounceLogic */
 
 

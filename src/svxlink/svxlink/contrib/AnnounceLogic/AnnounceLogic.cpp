@@ -75,7 +75,7 @@ using namespace Async;
  * Defines & typedefs
  *
  ****************************************************************************/
-#define ANNOUNCELOGIC_VERSION "22062022"
+#define ANNOUNCELOGIC_VERSION "29112022"
 
 
 
@@ -101,6 +101,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
+extern "C" {
+  LogicBase* construct(void) { return new AnnounceLogic; }
+}
 
 
 
@@ -118,26 +121,29 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AnnounceLogic::AnnounceLogic(Async::Config& cfg, const string& name)
-  : LogicBase(cfg, name), m_logic_con_out(0), m_logic_con_in(0),
-    report_events_as_idle(false), pre_interval(5), day_of_week(1),
-    start_prenotify_before(20), cnt(0)
+AnnounceLogic::AnnounceLogic(void)
+  : m_logic_con_out(0), m_logic_con_in(0), report_events_as_idle(false),
+    pre_interval(5), day_of_week(1), start_prenotify_before(20), cnt(0)
 {
 } /* AnnounceLogic::AnnounceLogic */
 
 
-AnnounceLogic::~AnnounceLogic(void)
-{
-  delete event_handler;  event_handler = 0;
-  delete m_logic_con_in; m_logic_con_in = 0;
-  delete msg_handler;    msg_handler = 0;
-} /* AnnounceLogic::~AnnounceLogic */
 
-
-bool AnnounceLogic::initialize(void)
+bool AnnounceLogic::initialize(Async::Config& cfgobj, const string& logic_name)
 {
 
-  cout << name() << ": Version " << ANNOUNCELOGIC_VERSION << endl;
+  // outgoing audio adapter for the announcements
+  m_logic_con_out = new Async::AudioSelector;
+
+  /* dummy, not used */
+  m_logic_con_in = new Async::AudioPassthrough;
+
+   // Init this LogicBase
+  if (!LogicBase::initialize(cfgobj, logic_name))
+  {
+    cout << name() << ":*** ERROR initializing AnnounceLogic." << endl;
+    return false;
+  }
 
   string value;
   if (cfg().getValue(name(), "START_PRENOTIFICATION_MINUTES_BEFORE", value))
@@ -148,7 +154,7 @@ bool AnnounceLogic::initialize(void)
       start_prenotify_before = 60;
     }
   }
-  
+
   if (cfg().getValue(name(), "PRENOTIFICATION_INTERVAL", value))
   {
     pre_interval = atoi(value.c_str());
@@ -230,25 +236,25 @@ bool AnnounceLogic::initialize(void)
   msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(mem_fun(*this, &AnnounceLogic::allMsgsWritten));
 
-  m_logic_con_out = new Async::AudioSelector;
   m_logic_con_out->addSource(msg_handler);
   m_logic_con_out->enableAutoSelect(msg_handler, 0);
   m_logic_con_out->setFlushWait(msg_handler, false);
 
-  /* dummy, not used */
-  m_logic_con_in = new Async::AudioPassthrough;
-  
-  if (LinkManager::hasInstance())
+  if (!LinkManager::hasInstance())
   {
-    event_handler = new EventHandler(event_handler_str, name());
-    event_handler->playFile.connect(mem_fun(*this, &AnnounceLogic::playFile));
-    event_handler->playSilence.connect(mem_fun(*this, &AnnounceLogic::playSilence));
-    event_handler->playTone.connect(mem_fun(*this, &AnnounceLogic::playTone));
-    event_handler->playDtmf.connect(mem_fun(*this, &AnnounceLogic::playDtmf));
-    event_handler->setVariable("is_core_event_handler", "1");
-    event_handler->setVariable("logic_name", name().c_str());
-    event_handler->processEvent("namespace eval " + name() + " {}");
+    cerr << name() << ":*** ERROR: You have to configure and link together "
+         << "one more logi than just the AnounceLogic." << endl;
+    return false;
   }
+
+  event_handler = new EventHandler(event_handler_str, name());
+  event_handler->playFile.connect(mem_fun(*this, &AnnounceLogic::playFile));
+  event_handler->playSilence.connect(mem_fun(*this, &AnnounceLogic::playSilence));
+  event_handler->playTone.connect(mem_fun(*this, &AnnounceLogic::playTone));
+  event_handler->playDtmf.connect(mem_fun(*this, &AnnounceLogic::playDtmf));
+  event_handler->setVariable("is_core_event_handler", "1");
+  event_handler->setVariable("logic_name", name().c_str());
+  event_handler->processEvent("namespace eval " + name() + " {}");
 
   if (!event_handler->initialize())
   {
@@ -262,12 +268,8 @@ bool AnnounceLogic::initialize(void)
   every_minute_timer.start();
 
   processEvent("startup");
-
-  if (!LogicBase::initialize())
-  {
-    cout << "**** ERROR: " << name() << " unable to initialize logic." << endl;
-    return false;
-  }
+  
+  cout << name() << ": Version " << ANNOUNCELOGIC_VERSION << " started." << endl;
 
   return true;
 } /* AnnounceLogic::initialize */
@@ -279,6 +281,15 @@ bool AnnounceLogic::initialize(void)
  * Protected member functions
  *
  ****************************************************************************/
+
+AnnounceLogic::~AnnounceLogic(void)
+{
+  delete event_handler;  event_handler = 0;
+  delete m_logic_con_in; m_logic_con_in = 0;
+  delete msg_handler;    msg_handler = 0;
+} /* AnnounceLogic::~AnnounceLogic */
+
+
 
 void AnnounceLogic::allMsgsWritten(void)
 {
@@ -298,7 +309,7 @@ void AnnounceLogic::processEvent(const string& event)
   msg_handler->end();
 } /* AnnounceLogic::processEvent */
 
- 
+
 void AnnounceLogic::playFile(const string& path)
 {
   msg_handler->playFile(path, report_events_as_idle);
