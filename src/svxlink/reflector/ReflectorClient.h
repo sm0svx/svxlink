@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <json/json.h>
+#include <random>
 
 
 /****************************************************************************
@@ -110,6 +111,8 @@ the client connection.
 class ReflectorClient
 {
   public:
+    using ClientId = ReflectorUdpMsg::ClientId;
+
     typedef enum
     {
       STATE_DISCONNECTED, STATE_EXPECT_PROTO_VER, STATE_EXPECT_AUTH_RESPONSE,
@@ -236,6 +239,18 @@ class ReflectorClient
     }
 
     /**
+     * @brief   Get the client object associated with the given id
+     * @param   id The id of the client object to find
+     * @return  Return the client object associated with the given id
+     */
+    static ReflectorClient* lookup(ClientId id);
+
+    /**
+     * @brief   Remove all client objects
+     */
+    static void cleanup(void);
+
+    /**
      * @brief 	Constructor
      * @param   ref The associated Reflector object
      * @param   con The associated FramedTcpConnection object
@@ -257,7 +272,7 @@ class ReflectorClient
      * It is for example used to associate incoming audio with the correct
      * client.
      */
-    uint32_t clientId(void) const { return m_client_id; }
+    ClientId clientId(void) const { return m_client_id; }
 
     /**
      * @brief   Return the remote IP address
@@ -412,21 +427,29 @@ class ReflectorClient
     const Json::Value& nodeInfo(void) const { return m_node_info; }
 
   private:
+    using ClientIdRandomDist  = std::uniform_int_distribution<ClientId>;
+    using ClientMap           = std::map<ClientId, ReflectorClient*>;
+
     static const uint16_t MIN_MAJOR_VER = 0;
     static const uint16_t MIN_MINOR_VER = 6;
-    static uint32_t next_client_id;
 
     static const unsigned HEARTBEAT_TX_CNT_RESET      = 10;
     static const unsigned HEARTBEAT_RX_CNT_RESET      = 15;
     static const unsigned UDP_HEARTBEAT_TX_CNT_RESET  = 15;
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 120;
 
+    static const ClientId CLIENT_ID_MAX = std::numeric_limits<ClientId>::max();
+
+    static ClientMap            client_map;
+    static std::mt19937         id_gen;
+    static ClientIdRandomDist   id_dist;
+
     Async::FramedTcpConnection* m_con;
     unsigned char               m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
     ConState                    m_con_state;
     Async::Timer                m_disc_timer;
     std::string                 m_callsign;
-    uint32_t                    m_client_id;
+    ClientId                    m_client_id;
     uint16_t                    m_remote_udp_port;
     Async::Config*              m_cfg;
     uint16_t                    m_next_udp_tx_seq;
@@ -446,6 +469,8 @@ class ReflectorClient
     RxMap                       m_rx_map;
     TxMap                       m_tx_map;
     Json::Value                 m_node_info;
+
+    static ClientId newClient(ReflectorClient* client);
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);

@@ -218,6 +218,10 @@
   See man svxlink.conf and the LOGIC_CORE_PATH configuration variable for info
   on how SvxLink find the plugins.
 
+* Bugfix in SvxReflector: After 65536 client connections the warning "Incoming
+  UDP datagram from XX.XX.XX.XX:YYYYY has invalid client id ZZZZZ" was logged
+  for all new client connections.
+
 
 
  1.7.0 -- 01 Sep 2019
