@@ -1,6 +1,45 @@
+/**
+@file	 siglevdetcal.cpp
+@brief   Signal level detector calibration utility
+@author  Tobias Blomberg / SM0SVX
+@date	 2008-03-30
+
+\verbatim
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
+
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <cstdlib>
 #include <map>
+
+
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
@@ -10,11 +49,32 @@
 
 #include <LocalRxBase.h>
 
+
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
 #include "version/SIGLEV_DET_CAL.h"
+
+
+/****************************************************************************
+ *
+ * Namespaces to use
+ *
+ ****************************************************************************/
 
 using namespace std;
 using namespace sigc;
 using namespace Async;
+
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
 
 #define PROGRAM_NAME "SigLevDetCal"
 
@@ -23,6 +83,13 @@ struct CtcssMeasurement
   double sum = 0.0;
   size_t count = 0;
 };
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
 
 static const int INTERVAL = 100;
 static const int ITERATIONS = 150;
@@ -37,6 +104,12 @@ static std::map<float, CtcssMeasurement> ctcss_snr_sum;
 static std::map<float, float> ctcss_open_snr;
 static std::map<float, float> ctcss_close_snr;
 
+
+/****************************************************************************
+ *
+ * Local Functions
+ *
+ ****************************************************************************/
 
 #if 0
 void squelchOpen(bool is_open)
@@ -230,12 +303,18 @@ void ctcss_snr_updated(float snr, float fq)
 }
 
 
+/****************************************************************************
+ *
+ * MAIN
+ *
+ ****************************************************************************/
+
 int main(int argc, char **argv)
 {
   CppApplication app;
   
   cout << PROGRAM_NAME " v" SIGLEV_DET_CAL_VERSION
-          " Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you\n";
   cout << "are welcome to redistribute it in accordance with the "
