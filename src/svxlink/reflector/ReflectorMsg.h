@@ -162,12 +162,14 @@ the argument type for functions that take a UDP message as argument.
 class ReflectorUdpMsg : public Async::Msg
 {
   public:
+    using ClientId = uint16_t;
+
     /**
      * @brief 	Constuctor
      * @param 	type The message type
      * @param   client_id The client ID
      */
-    ReflectorUdpMsg(uint16_t type=0, uint16_t client_id=0, uint16_t seq=0)
+    ReflectorUdpMsg(uint16_t type=0, ClientId client_id=0, uint16_t seq=0)
       : m_type(type), m_client_id(client_id), m_seq(seq) {}
 
     /**
@@ -185,7 +187,7 @@ class ReflectorUdpMsg : public Async::Msg
      * @brief   Get the clientId
      * @return  Returns the client ID
      */
-    uint16_t clientId(void) const { return m_client_id; }
+    ClientId clientId(void) const { return m_client_id; }
 
     /**
      * @brief   Get the sequence number
@@ -196,9 +198,9 @@ class ReflectorUdpMsg : public Async::Msg
     ASYNC_MSG_MEMBERS(m_type, m_client_id, m_seq)
 
   private:
-    uint16_t m_type;
-    uint16_t m_client_id;
-    uint16_t m_seq;
+    uint16_t  m_type;
+    ClientId  m_client_id;
+    uint16_t  m_seq;
 };
 
 
@@ -475,17 +477,20 @@ connection properties.
 class MsgServerInfo : public ReflectorMsgBase<100>
 {
   public:
-    MsgServerInfo(uint32_t client_id=0,
+    using ClientId = ReflectorUdpMsg::ClientId;
+
+    MsgServerInfo(ClientId client_id=0,
                   std::vector<std::string> codecs=std::vector<std::string>())
       : m_client_id(client_id), m_codecs(codecs) {}
-    uint32_t clientId(void) const { return m_client_id; }
+    ClientId clientId(void) const { return m_client_id; }
     std::vector<std::string>& nodes(void) { return m_nodes; }
     std::vector<std::string>& codecs(void) { return m_codecs; }
 
-    ASYNC_MSG_MEMBERS(m_client_id, m_nodes, m_codecs)
+    ASYNC_MSG_MEMBERS(m_reserved, m_client_id, m_nodes, m_codecs)
 
   private:
-    uint32_t                  m_client_id;
+    uint16_t                  m_reserved = 0;
+    ClientId                  m_client_id;
     std::vector<std::string>  m_nodes;
     std::vector<std::string>  m_codecs;
 }; /* MsgServerInfo */
