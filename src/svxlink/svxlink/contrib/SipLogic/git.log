@@ -1,0 +1,1322 @@
+The following commits were squashed when merging PR #437 into master.
+
+commit 9e9d8e45d43c13c399af5f9d11a7cd8c4fe2a855
+Merge: 7aa5e4f8 a96d1e07
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Mon Jan 2 17:01:14 2023 +0100
+
+    Merge branch 'master' into dl1hrc-pjSipLogic
+
+commit 7aa5e4f807c9abb96a32c3b63a9d3acc0660a3dd
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 27 15:57:46 2022 +0100
+
+    Bugfix: Only one call is allowed now to connect. Procedure name changed from pickup_call to call_connected.
+
+commit ee24d2f250f35f93b4c5c9186668ff89ffdf6b43
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 15 11:37:47 2022 +0100
+
+    Parameter in example SipLogic.conf.in corrected to USE_TCP=1
+
+commit e898429240317eb3c9fe9f1cb037b140fb14f40c
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 15 11:32:30 2022 +0100
+
+    Version information updated
+
+commit 724fb08068e1c3bf740d7718e4fb84946383b5f7
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 15 11:27:41 2022 +0100
+
+    Parameter USE_TCP added to enable TCP as transport layer.
+
+commit 76b24475436827b2143194a43829b375bc48de82
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Sun Nov 6 18:52:44 2022 +0100
+
+    Update README.adoc
+
+commit 72b16120915ac63ad73f51873cf891385b420374
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 6 10:43:01 2022 +0100
+
+    Some adaptions to documentation (missing CALLERNAME).
+
+commit 6d468e735cd0927d015c1aa4556d99559cd32765
+Author: Adi Bier/DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Sep 19 13:50:42 2022 +0200
+
+    Bugfix in method mediaPortGetFrame: race condition if smpl-pointer is null from Peter/SA2BLV
+
+commit bc2a8f278bacc496d9290169052455e39b9c636e
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Sep 5 15:30:53 2022 +0200
+
+    Doc for the Sip part changed.
+
+commit e759e9a31907f53445670b12f3fdeb24688549cc
+Merge: 233614f9 22e17a96
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 26 06:26:53 2022 +0200
+
+    Merge branch 'master' into dl1hrc-pjSipLogic
+
+commit 233614f911990b561503cdf10e14a91063c282b2
+Merge: 9c09176d 8817430d
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Thu Aug 25 23:16:19 2022 +0200
+
+    Merge branch 'master' into dl1hrc-pjSipLogic
+
+commit 9c09176d42b12db74928f3df49a61114e574f466
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Wed Aug 24 15:49:02 2022 +0200
+
+    Make SipLogic compatible with the new plugin based logic core
+
+    In short this is required
+    - The constructor no longer take any arguments
+    - The initialize function now require the arguments that was previously
+      needed by the constructor.
+    - The cfg() functions must not be used before calling
+      LogicCore::initialize to that function was moved to the top together
+      with logic_con_in/out creating since those are required by
+      LogicCore::initialize.
+    - A C function "construct" is needed to construct the main plugin
+      object.
+
+commit 3dd49f6538b65a7062d7c6a1ff5db016f66c0778
+Merge: 719e73f7 870b618c
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Wed Aug 24 15:41:34 2022 +0200
+
+    Merge branch 'master' into dl1hrc-pjSipLogic
+
+commit 719e73f74b2bc60962ac3168bc4b56f251780a5a
+Merge: 09e3a3e5 e7e69b0e
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Sat Aug 20 15:48:39 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit 09e3a3e55a5f4d980324f66e4278bf0a44898143
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Aug 17 12:06:14 2022 +0200
+
+    Use of  makes it possible to use the newest versions of the pjsip framework.
+
+commit 2ee68f98bc5173ac59c4f37e9971d25b3310daa6
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Tue Aug 16 21:23:07 2022 +0200
+
+    Build of SipLogic was not properly activated in svxlink.cpp
+
+    - Better solution for activating contributed logics in svxlink.cpp
+    - Linking to static pjproject libraries insted of the dynamic ones
+
+commit 95cc94383f4575ea515e8ff33998d5b4ebc576c4
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Sat Aug 6 16:44:02 2022 +0200
+
+    Put SipLogic docs in it's own manual page
+
+    The SipLogic documentation was extracted fron svxlink.conf.5 and was put
+    into it's own manual page SipLogic.conf.5.
+
+commit dfd1b195c45c2b369b7b4b287dc84dfdeb71adc8
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Sat Aug 6 12:32:42 2022 +0200
+
+    Move SipLogic specific files into the new contrib directory
+
+commit 884c67ac354fe7b5525ab419af4b79894d645575
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Sat Aug 6 11:39:31 2022 +0200
+
+    Move SipLogic default config from svxlink.conf to SipLogic.conf
+
+commit f89b1360583dbc77ca169cdda6ffff62b1f72746
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Sat Aug 6 11:09:15 2022 +0200
+
+    Fix CW sending parameters default config reading regression
+
+    The CW sending code read default parameters from the logic core
+    configuration section. The configuration variables are read from the
+    ::Logic TCL namespace. Thus that namespace need to be set up in the
+    logic core, which is done now.
+
+    This fix also make all configuration variables in the SipLogic
+    configuration section available in TCL.
+
+commit 22f5314bffa9e2bdc0156427d763c3777557c6d6
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 18:53:29 2022 +0200
+
+    Fix warnings and a couple of memory deallocation errors
+
+commit 1ec6dca4635c6ade9cc7ae9e13c5a73bb9ef7ad2
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 18:33:57 2022 +0200
+
+    Add the initCall TCL function in a generic way
+
+    The EventHandler now have a function called addCommand that can be used
+    by a logic core to add TCL commands that are specific for that logic
+    core. That mean that the EventHandler does no longer have to be modified
+    to add custom TCL commands.
+
+commit a2295599636a8200a0728ee2069cad8679048eb0
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 12:32:51 2022 +0200
+
+    Move unused FindPJSIP.cmake to the contrib directory
+
+commit 286ccbf9ac6bbabf3fddba26fbc01077751320f7
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 12:25:13 2022 +0200
+
+    Move SipLogic docs from global scope to contrib scope
+
+commit 5f2d934f28bea19b31d4ef173257cfd4b3fb29ce
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 12:14:56 2022 +0200
+
+    Undo whitespace only changes
+
+commit b9767478c5c04979a7d9f2ac2e8155535d53f639
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 11:52:21 2022 +0200
+
+    Remove -O0 compiler flag setting
+
+    Setting -O0 should not be needed since it's the default for the Debug
+    build type. Also, it was only set for the C build which is just a very
+    small part of the code.
+
+commit 6bdeee8eeee8982179fb77a2e0aeb99c98f1c49f
+Author: Tobias Blomberg <sm0svx@users.noreply.github.com>
+Date:   Fri Aug 5 11:05:19 2022 +0200
+
+    Build without pjproject now possible
+
+    Enable building SvxLink without the pjproject libraries. Of course the
+    SipLogic will not be available if pjproject is missing.
+
+commit b1583ccc1f4d1117b3a98ea738feda58d0c9ace7
+Merge: 91a32aee 7ebd9ed5
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Thu Aug 4 10:05:03 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit 91a32aee52d6a1bcd5afe9dd07004349846467df
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jul 26 08:29:47 2022 +0200
+
+    Bugfix for memory hole, provided be Peter/SA2BLV
+
+commit 458c8933b559dab21b30e9a564e5fba0afd49640
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jun 8 14:08:45 2022 +0200
+
+    Bugfix: m_siploglevel is now declared in .h to be available in class
+
+commit e8e79e4bc213bf88c3d96aaaee664ef0f579fd42
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Jun 6 17:31:17 2022 +0200
+
+    Added Tg change on outgoing calls whe configured
+
+commit ec5cf3342a66feafe3a352897f9e85de5917d3d8
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jun 3 09:46:37 2022 +0200
+
+    The new parameter PHONENUMBER_TO_TG defines the comma-separated assignment of incoming SIP connections to a respective talkgroup. The format is 'PHONENUMBER_TO_TG=Sipnumber1:TG#1,Sipnumber2:TG#2,...'. Look into man page for further information.
+
+commit 05cdba7a96cf62074af1658398a7922608a983e1
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon May 30 13:28:35 2022 +0200
+
+    Version number updated
+
+commit 61f8359e3da9f9d4625dae33b7394692f9606100
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri May 27 14:42:16 2022 +0200
+
+    Handling of cleanups changed
+
+commit 9cb064d821185bbf1beff56569f3bbfa290ca016
+Merge: 752e6a9a 0a48e9ee
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Sun May 22 16:33:03 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit 752e6a9aa8b6e188431954ff469df67b2dbe291d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu May 12 10:35:09 2022 +0200
+
+    Added missing Tcl procedures, some format changes
+
+commit 798589e314d7f2aa81d080acb92cbcc4f36e6238
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Wed May 4 14:24:12 2022 +0200
+
+    Update README.adoc
+
+commit b2448e83ed0907b91c5b80418cb64e0297ae35d1
+Merge: c9340483 6cc6b0bd
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Wed May 4 14:23:18 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit c9340483cabac72e5f8e576d92450c7194f4dfb9
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed May 4 13:32:14 2022 +0200
+
+    Rebuild of audio path and bugfix. Handling of text messages handling prepared.
+
+commit 71a63ba551bb1c42dd9771c6bc7c4349bbc8e675
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Apr 21 20:40:31 2022 +0200
+
+    Version information updated
+
+commit 18148ad85aaefb544cb1adea41f8d56cafd34255
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Apr 21 20:35:43 2022 +0200
+
+    Bugfix: removed enableAutoSelect method in SipLogic since it enters an audio loop or generate echos by own announcements
+
+commit 42e428841f1cdc7dc9fdde682938333592490492
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Fri Apr 15 12:36:47 2022 +0200
+
+    Update README.adoc
+
+commit dce4d47bc59f5e58fb700fe0376dbc0403bbd203
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Fri Apr 15 09:02:27 2022 +0200
+
+    Update README.adoc
+
+commit be9df0574980fec1a29b6885164ca37411a5073c
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Fri Apr 15 08:57:06 2022 +0200
+
+    Update README.adoc
+
+commit 54d459560aaa63272bdc768779b04e0c4a3c281f
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Fri Apr 15 08:55:44 2022 +0200
+
+    Update README.adoc
+
+commit 2b86e3db01b57ef98a3ddacab872529460440728
+Merge: 991529a6 f5267f4c
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Thu Apr 14 22:07:45 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit 991529a667a21e5635644b051d06c4a333f0a7a9
+Merge: bdcfc2e1 45b2bd4b
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Wed Apr 13 19:36:40 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit bdcfc2e12a4b6feb04e86c814e565b5372af9aa0
+Merge: 35d52c00 6345dad2
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Tue Apr 12 18:35:30 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit 35d52c002744af6c5f2ac7ae07fcb0edbe8cbf93
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Apr 11 09:21:48 2022 +0200
+
+    sip_pty_pty variable added for Tcl space
+
+commit 59d883fcfba8d5274d9d8200295931a5089b63c5
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Apr 10 18:05:20 2022 +0200
+
+    Removed senseless spaces.
+
+commit 4b8943711956eea46a552f6131be67737b190e3f
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Apr 6 18:27:38 2022 +0200
+
+    Started message hadling in method onMessageInfo
+
+commit 866d615251e2af6605ae5947b00262869e4d0f00
+Merge: 1635a355 ffe67c3c
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Apr 6 18:13:24 2022 +0200
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit 1635a3557ba8503a8fb5f6e409244c1a3365a6d8
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Apr 6 18:12:24 2022 +0200
+
+    Started to implement a new method onMessageInfo for incoming text messages. Autoconnect will now try to reconnect if connection is lost for some reason.
+
+commit ffe67c3c2b8a4aaf7c931ca58d8668aa9066210c
+Merge: 8cd35c26 1114ac3c
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Mon Apr 4 07:25:14 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit 8cd35c264a0d38305119d5f0f770928c8b238b5b
+Merge: ad94e68c 1ae3b521
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Fri Apr 1 12:03:35 2022 +0200
+
+    Merge branch 'sm0svx:master' into pjSipLogic
+
+commit ad94e68cb5cb7683e1308ce984bd5b832d9b8b44
+Merge: 4c917aa8 b47fcfb0
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 28 09:08:24 2022 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 4c917aa80ef241fde3536f9f622aa39c2401d726
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Mar 19 18:08:47 2022 +0100
+
+    New method for unregistering calls
+
+commit 18900a49a19dd7853ed066f43e53999f09f05afd
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Mar 19 17:57:24 2022 +0100
+
+    Bugfix in SipLogic.tcl
+
+commit d0b01cdadd83a761302af659864c38edb3e52ca9
+Merge: f9bcb880 2b6e20e6
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Mar 18 19:25:41 2022 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit f9bcb88034a1341550284eff37d97f6aa8a705f6
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 30 13:29:16 2022 +0100
+
+    Better handling of callinfo
+
+commit c5580a55a5de7a9474d60f860298039a1301690b
+Merge: 09fd2dab 4c4218df
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 23 19:21:59 2022 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 09fd2dab2a57014370488779f649870ea89352e2
+Merge: 6b754272 df6de421
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Jan 15 22:21:25 2022 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 6b75427253f22607e52822ee2fdc453ee345d7c6
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Jan 15 22:19:09 2022 +0100
+
+    Bugfix: Outgoing phonecall was not hangup on timeout event. Changed announcement in tcl on outgoing phonecall. Better handling of dtmf digits in dialout example.
+
+commit f0947907cd5f09c29b0f3c090ce7137add24c9eb
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Jan 13 12:38:41 2022 +0100
+
+    Two tcl procedures added. Small bugfix, added a missing return in method dtmfCtrlPtyCmdReceived
+
+commit 744dd267ace166cfa01381cba553730c0c6c4e3b
+Merge: 9a7c57fe d5cd8ce8
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Jan 10 14:28:27 2022 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 9a7c57fecf40e96aba826ba8856b0db358b2c799
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 9 21:18:12 2022 +0100
+
+    Added preamplifier for the incoming Sip audiostream. Changed unclear tcl namespce definitions in CW.tcl that caused errors during startup. Documentation for two params added.
+
+commit 2bd334e5efd9a9a84c9ea4825b4b8ee9ec58757e
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Oct 28 10:42:54 2021 +0200
+
+    Add tcl-example for dial Rf->Sip, add function for pickup (CA - Call Answer)
+
+commit 7c84a90b9c47a3af601b1a728aaaa452257366e1
+Merge: 4d81e4e2 e06b87de
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Aug 15 19:24:17 2021 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 4d81e4e21c33aa9a756e5787cc3d3c095fad070f
+Merge: e5b3652b 4ee98eb7
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 29 18:43:33 2021 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit e5b3652b1d2f96b1a114b2530f308e29eaca5c6f
+Merge: 690d13cc 11bd4b3a
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 22 08:43:15 2021 +0100
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit 690d13cc9315ca84fd8dd332240d69963eff3d66
+Merge: e7eadab1 b8c077d8
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 22 08:42:56 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 11bd4b3abfeeb3c8bb26710911ff50b926014581
+Merge: 170a2767 16ef22ba
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Mar 13 19:18:59 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 170a2767c6fabd5357c032936a7bde94fa80b386
+Merge: e7eadab1 bc8cb606
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Mar 10 12:19:48 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit e7eadab1fee7085da715a4d5105ef0cd4f5c4163
+Merge: 53e24541 d978c416
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Feb 28 11:09:33 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 53e2454103b301513b2cf461ebef36f358ea1486
+Merge: b25642c1 4fa84e15
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 15 09:37:05 2021 +0100
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit b25642c19f4f6649eacf06d1cf82f5fd2caeba09
+Merge: 804ab062 9ef37930
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 15 09:35:35 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 4fa84e15cb3f7e7278a36e8952c788816c7cd989
+Merge: 804ab062 3759f8d3
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 2 08:52:44 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 804ab062365faa23e6545ba4178059beb2b3e952
+Merge: f5be2493 b22e9511
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 1 08:55:15 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit f5be2493e76c878fcbf5a4e64130c967c549ed35
+Merge: c44546fb 8138a2a0
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Jan 30 16:06:38 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit c44546fb1b4cf97cbf8190429d07cd7153bfddd1
+Merge: 57597b44 bc4914a6
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Jan 28 08:46:14 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 57597b442405b3613f0a59e4acb40a42038d010a
+Merge: 18e53f45 59872d2e
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 17 16:43:04 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 18e53f450b474f9f0d82eee1c0536f6e6db09663
+Merge: 3c64f771 1f48de9d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 17 10:23:11 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 3c64f771e43828d213c83e4f639f81e5f6a33425
+Merge: 95844de7 846baaba
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Jan 16 22:38:24 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 95844de7e3dc960dbf4b4266944da2f591147aef
+Merge: e95289a1 1716a935
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Jan 11 08:28:50 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit e95289a1faefda14a83902e6fd7ced2415cc50f0
+Merge: 623fbef6 26af258d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 10 00:35:58 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 623fbef688ee1ba18732806f3743111439eb6193
+Author: Adi Bier/DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jan 8 15:50:04 2021 +0100
+
+    Remnants of the previous merge command removed
+
+commit 26b92070a0b69459e56bcd525985ce1c1270738e
+Merge: eb18b212 3e3fb699
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jan 8 15:38:46 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit eb18b212abdebb32c0f3582e69994ca94a2dd8df
+Merge: 25b8e191 2bfa870d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jan 6 16:49:58 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 25b8e191e24ccdb9538b4f2986f9ca69b12b3fcb
+Merge: 011b176b 39954192
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Jan 4 22:27:15 2021 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 011b176b7802e64df0098dce96721d3316acb7f9
+Merge: d5e83121 3a9f1113
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Dec 22 21:52:57 2020 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit d5e8312121ccbe815a3c95f0bff9f35cf16cd5df
+Merge: 57a80f45 8be029b9
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Dec 20 14:09:03 2020 +0100
+
+    merging with upstream
+
+commit 57a80f45e494f116c3e0cc90bb58830dcdf64b33
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 29 19:21:20 2020 +0100
+
+    trying merging with upstream
+
+commit 0dade5edf4a0d75f1de1d9469990c57637cb07a9
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 29 18:38:50 2020 +0100
+
+    finally merged with master
+
+commit 2ff9684ce9bbb78ca100aeb55c282070d721e1d0
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 29 18:19:44 2020 +0100
+
+    merged: A Pty can now be set in line buffered mode
+
+commit 3738c885fb6470875011f176a6efe12cc587e849
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 29 18:07:30 2020 +0100
+
+     Extended support for changing variables at runtime
+
+commit 42d9913918245067d87573dd13b2fd2d2cae172d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Nov 29 17:28:42 2020 +0100
+
+    merged eventsource script improvements
+
+commit b911c3159c54cec9b8c64648f1b0caba2d499b33
+Merge: a6bb9578 4c85168a
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Nov 23 07:56:20 2020 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit a6bb957847098aaadac5e0b2313f24bdb8075273
+Merge: d31a9dae 078c6f4d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 3 13:56:56 2020 +0100
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit d31a9dae99e2a7f77da9fa93dba1e6086545aef4
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 3 13:48:24 2020 +0100
+
+    * SipLogic suppots now semi-duplex conversation
+    * callups for Tcl procedures (playFile, playDtmf, playTone, playSilence)
+
+commit 078c6f4d354719c917713d253e2913340ef95e6e
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Oct 23 21:04:36 2020 +0200
+
+    Bugfix: the parameter SQL_HANTIME is automatically pre-assigned with 1300 if it was not configured in svxlink.conf
+
+commit 4084e9c6261967844453b9f3a094d7a08f4e6f12
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Oct 15 14:46:48 2020 +0200
+
+    changed to pointer operation in method mediaPortGetFrame
+
+commit b8c756f520396a9bdf4b3ed1d74c4c7b4ca0ff29
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Oct 14 16:01:57 2020 +0200
+
+    * Better handling of Sip uri if the uri doesn't contain the full notation with @ and :
+    * The Sip-SQL is now initially closed with an incoming Sip connection and thus the
+      audio stream to the connected Logic is interrupted. This was not the case before
+
+    and the Tx of the connected logics was not switched off until the Sip-SQL was
+      opened and closed for the first time.
+
+commit e14e56ddabe2c80c78b718cb9ccd6d3dc6727373
+Merge: 26db331f 74f3f561
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 3 09:51:38 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 26db331f02deefebfd35a6b01bc9a22615c180ca
+Merge: 75e59377 83d80453
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jul 29 09:47:44 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 75e593776b99b5abc664be0bf8cd1326d14f74af
+Merge: 3e2460ba b38dff32
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jul 28 08:08:08 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 3e2460ba5d6bf64c255a229f6285f8cfbe61d7a1
+Merge: 253a4c32 be4d9113
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Jul 27 15:11:15 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 253a4c328d4e7ea7e710ca4260ee170beed2cd81
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jul 14 17:28:50 2020 +0200
+
+    contrib/SipLogic updated
+
+commit bdf735c8e7eba1c6ae4bce09cf03e19eb9ef7cec
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Jul 6 10:10:05 2020 +0200
+
+    Changed from remoteContact to remoteUri (CallInfo)
+
+commit f10ae6537fecea54cc845a9be646289acb93806e
+Merge: 6f57d999 7c13f03b
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Apr 21 15:44:35 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 6f57d99980b3ac5776c2f4e4e090e826fde13a64
+Merge: 69432f37 0c4977db
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Apr 20 08:38:24 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 69432f37962b81e9a810852f790862aee45bfc21
+Merge: e4a70ae4 873a4517
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Apr 4 17:49:39 2020 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit e4a70ae4ae5c9f6c48f48f5949907f1db6830aa0
+Merge: 65183ac2 92ef3e45
+Author: Adi Bier - DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jan 29 08:45:41 2020 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 65183ac23ab3373c41d02f1d13ff31b9d7b98bb6
+Merge: f3b1f417 2c20d274
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Jan 5 15:45:17 2020 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit f3b1f4178a08a73134f15e1533b08eb99995cdbd
+Merge: 11ebde85 8ff599ad
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Jan 2 15:28:16 2020 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 11ebde85e1f97cd0c0de22d5eb141fe0549042c0
+Merge: 7801696a 1d65c0c8
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Dec 27 10:40:24 2019 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 7801696a62ce5998aab22b042cdabbb1758d30c8
+Merge: b5121905 13fa24dc
+Author: Adi Bier - DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 19 11:03:30 2019 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit b5121905e077a4ab691f686c181beb86d9b3a64a
+Merge: acb9a0f6 de572b56
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 5 07:43:09 2019 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit acb9a0f66f8996a13d5860b4b0ab40cfe433761c
+Merge: 73e51ea8 a04e08a7
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Nov 5 07:40:16 2019 +0100
+
+    merged with master
+
+commit 73e51ea884d4881eb24bc8ea3723d2c40c0a372c
+Merge: cc776bf9 eb21c342
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Oct 1 08:53:22 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit cc776bf95c15c67e449441aacb63cdb848141896
+Merge: 29253f40 897f3688
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Sep 3 13:53:31 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 29253f400e6642fdd2fe3c0217c6293dd2d77ac9
+Merge: 75f96013 4eafc354
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 12 08:16:57 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 75f96013b5258c43fc8cb198617f5ef725b101d2
+Merge: a66c91c0 69e8d9c1
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Aug 8 08:35:23 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit a66c91c0dd99fc5883e3002a3296c741e25341cb
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 13:05:35 2019 +0200
+
+    additional callup of tcl procedure, small bugfix in tcl
+
+commit 24c868d8523ecf0529128ca32cf2dca973d4f2e5
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 11:35:42 2019 +0200
+
+    bugfix with message handler assignment in SipLogic class
+
+commit 377e3f1adceae091ea549e3f3cf11fc1f9085574
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 11:17:35 2019 +0200
+
+    AudioSelector added to fix problem with message handler (no audio)
+
+commit 236d2d98d453ef30d5b4c1d98907da6429bbd13b
+Merge: a1000b19 1d14ac9e
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 11:11:00 2019 +0200
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit a1000b1992bc09a26eb58781a0ec76f33ac18e5f
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 11:10:11 2019 +0200
+
+    AudioSelector added to fix problem with message handler (no audio)
+
+commit 1d14ac9e62ea95f8e6df9487285816885eae4fef
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 08:03:02 2019 +0200
+
+    added language definition
+
+commit fabd9528b45d013ee120628f5aaa9fd551e26fbf
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Aug 5 07:56:02 2019 +0200
+
+    changed namespace definition
+
+commit 9cc6981640771e7eccba2d9f9922cb8611e01d4f
+Merge: 0fa6e9c5 8a1e3435
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Aug 1 09:47:55 2019 +0200
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit 0fa6e9c59d7bb910d8b6d21a905a2122543fd463
+Merge: 776a8fd8 b592e46c
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Aug 1 09:47:07 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 8a1e3435c4280832ef6604e804ccf31d1b93907e
+Merge: 776a8fd8 aedf1db4
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jul 31 18:47:17 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 776a8fd80dce2cc8e63cd45712a55fbc3acf6390
+Merge: f34835b0 bc330ef3
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jul 31 11:07:17 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit f34835b0630f1a11ea6ae1aa201aead4ba2f218d
+Merge: 4d4a5021 8503dac2
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jul 30 14:00:23 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 4d4a5021c65a6294ceecdcd05e025fe2896a6cd0
+Merge: 048b43b4 0ea6db97
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jul 26 10:29:43 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 048b43b4f532f8ac8c48fb2e5d33b9b4a7ddbb18
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jul 19 10:06:14 2019 +0200
+
+    Some announcements adapted for better understanding
+
+commit 60cd5ee7342a805472c2fd4504c82c83c1398b93
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jul 19 07:13:52 2019 +0200
+
+    SipLogic.tcl added
+
+commit 2db89d90c1f631292748ced6b8f00f3ef98602e3
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Jul 18 17:50:44 2019 +0200
+
+    EventHandler included, SipLogic speaks/understands now Tcl, moved some output to Tcl procedures to provide it to end users
+
+commit b9850d366610c77ba90a5d4b49658e9bf4558d16
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Jul 18 17:38:51 2019 +0200
+
+    EventHandler included, SipLogic speaks/understands now Tcl, moved some output to Tcl procedures to provide it to end users
+
+commit 5a6ca2ade985aa173eb1c896014633af1844bf32
+Merge: e4caed70 81b5ffee
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Jul 17 11:09:54 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit e4caed7073a3e9232cd94c25c7541f4ed2b8af19
+Merge: 7c7577e3 6391d12e
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Jul 4 16:24:22 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 7c7577e36f1855f3300d3194c51c29eff32b880e
+Merge: 933e1886 0e72672a
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jun 25 06:34:19 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 933e18862cce05dcd79ed5f18d41302aca6b63db
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun May 12 14:53:48 2019 +0200
+
+    small doc update for SIPREGISTRAR, added param in svxlink.conf example
+
+commit 0edd5f9facc9535459e7213f2f115e7db6e0dbb7
+Merge: 165728db 6bcfb5ba
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun May 12 14:39:00 2019 +0200
+
+    Merge branch 'pjSipLogic' of https://github.com/dl1hrc/svxlink into pjSipLogic
+
+commit 165728dba94a4f89562909ba79beddeecaa97a16
+Merge: 9f8e504d ee5003a5
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun May 12 14:37:30 2019 +0200
+
+    Merge remote-tracking branch 'upstream/master' into pjSipLogic
+
+commit 6bcfb5ba71e500e7606a25b0e99783ddc0ea4f11
+Merge: 4805cb07 6cc0ee11
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu May 2 07:52:47 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 4805cb0707ef8673a167ddc810e1ee558f294e47
+Merge: 1d6bfe71 b44a3388
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Apr 18 10:26:03 2019 +0200
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 1d6bfe719e808f3b831805a118e15551f4fda6f3
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Apr 2 16:15:22 2019 +0200
+
+    bugfix with hangup command
+
+commit 1f8b45b218dee6796b617f565f0606be590e70d1
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Apr 1 18:55:01 2019 +0200
+
+    changed pty command handling, new method for registering calls
+
+commit 9aaa0f275fba7f34aca0eb719fb1bf2f9d43b251
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Mar 31 11:37:57 2019 +0200
+
+    fixed problem with param AUTOCONNECT
+
+commit 11279967b9b49c42ca2efb4eeed859476c8876b2
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Mar 30 16:28:02 2019 +0100
+
+    fix in documentation (SIP_CTRL_PTY)
+
+commit 2155721c98f7f76251fc6c93ac30d4ec05ba9ca3
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Mar 30 15:24:17 2019 +0100
+
+    Regex is now used to control incoming/outgoing calls, changed DTMF_CTRL_PTY to SIP_CTRL_PTY, documentation updated
+
+commit 9f8e504dd344d76e4211bc5c19761f7c650c2f19
+Merge: 09fc3419 e4abe459
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Mar 20 12:55:06 2019 +0100
+
+    Merge remote-tracking branch 'upstream/master' into pjSipLogic
+
+commit 09fc3419fa6ad3660f6ae03ae57c4670c650735d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Mar 20 12:54:48 2019 +0100
+
+    versions updated
+
+commit c9f77f090c4821038ada6347f1d416c2ce74a4b9
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 18 12:16:42 2019 +0100
+
+    changes signature in pjmedia_port_info_init to PJMEDIA_SIG_PORT_STREAM
+
+commit 6de99bc93d6978cb117527268ecbc13b234131b0
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Mar 15 08:21:48 2019 +0100
+
+    contrib - ALLOWED_NUMBERS added, doc updated
+
+commit 189edfa230e3c53ad6acf576d15a19db1a4e0635
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Mar 15 08:16:48 2019 +0100
+
+    new param ALLOWED_NUMBERS in svxlink.conf.in
+
+commit 4dc74cee401e60300064635ed94553b9a9f8dd35
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Mar 13 16:51:12 2019 +0100
+
+    bugfix in access management for incoming calls
+
+commit 142ce1b62727a185748828c010f9538737b4bbc7
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Mar 13 16:35:26 2019 +0100
+
+    changed log output for better formatting, simple access management for incoming calls
+
+commit ed185ad2fcf5f5850ecd751f5bb859aa17dcd38d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 11 21:16:01 2019 +0100
+
+    close audio-io device after initializing
+
+commit 881106feee30e2ac74d02a6dbb11638fab813bef
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 11 21:11:57 2019 +0100
+
+    fixed bug(?) in LocalTx - open the audio-io device during initializing
+
+commit 7c2dd72e63cf140f8cbe1bf1e3a12f1cd6e4c337
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 11 21:01:08 2019 +0100
+
+    better error handling for transport layer
+
+commit 961a98238ebbeb129397c6b8ab60ee19e0a715e1
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Mar 11 21:01:02 2019 +0100
+
+    better error handling for transport layer
+
+commit 7fbb987659c4680c6d23e3cec13a48c65a3dd69c
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Mar 1 10:07:34 2019 +0100
+
+    changed more variable definition to local definition, check media on incoming call, removed unused timers
+
+commit 42a26d6b10369999e7e46c5e1f00698976c9f410
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 19 08:29:55 2019 +0100
+
+    error handling during endpoint creation for Sip layer
+
+commit ab0eec2aa3f77f786d33c5d606d3fb79757edb54
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Feb 10 17:15:25 2019 +0100
+
+    add manual and sample config under contrib
+
+commit 02017fb5ae55f27ba1aaa8a22df2e3b966204954
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Feb 10 17:12:17 2019 +0100
+
+    removed variables from destructor that causes segfaults, changed doc and typos
+
+commit 367d3952e92c1f0d977c813194561b56bfef821c
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Feb 8 14:00:15 2019 +0100
+
+    removed AudioDecoder use two AudioValve's now, added Vox squelch for Sip audio
+
+commit 6be79456c40af487656da529f52de57ecb0247c3
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Feb 7 09:36:54 2019 +0100
+
+    now unregisterSink only if all calls has been finished,some typo in svxlink.conf.5
+
+commit bb8b83c1b5d6a047316cdb8f945d09923634ca31
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Wed Feb 6 15:55:49 2019 +0100
+
+    registerSink/unregisterSink depending on connection, some code cleanup
+
+commit 3b51fee5bc128239e150d3434c47e76a68c35d17
+Merge: b9ae299b 65c510f9
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 5 12:16:27 2019 +0100
+
+    merged with master
+
+commit b9ae299bdaac9c0461a0e0642505b4637874842f
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 5 12:11:35 2019 +0100
+
+    AudioDecimator and AudioIntegrator removed, frameTimeLen set to 48
+
+commit 65c510f9842ba4e1616369478932f925329ff38d
+Merge: 773b4357 6f09bf63
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 4 21:42:19 2019 +0100
+
+    merged with master
+
+commit 28beb4a4f04fec9c2a16afa5fd5276da6b67ca4b
+Merge: 773b4357 6f09bf63
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 4 21:08:24 2019 +0100
+
+    Merge remote-tracking branch 'sm0svx/master' into pjSipLogic
+
+commit 773b4357cc9325a569aa070ca3313e5229772aa7
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 4 20:48:44 2019 +0100
+
+    first almost working version, still need some deeper efforts in error handling
+
+commit 915efab23133ee70d52ba07d640fcf8906c16108
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Feb 1 16:34:29 2019 +0100
+
+    removed unused functions, now using AudioReader
+
+commit 85f62010d5aaf23ba7528388401b727f934a0f99
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jan 25 14:40:19 2019 +0100
+
+    removed unused decoder/encoders
+
+commit cc394a3363a050af9869b62f643fd2d8a7ba9812
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Fri Jan 11 12:28:18 2019 +0100
+
+    new buffer to handle outgoing audio stream (SvxLink<->Sip), renamed AudioMedia object, removed unused code
+
+commit 5561ec248814e88aa6c60cad893e51468fc318b8
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jan 8 12:18:26 2019 +0100
+
+    * new Logictype "SipLogic"
+
+commit 2b33568053732f453bd377c767476ce6d7c95443
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jan 8 12:16:31 2019 +0100
+
+    * Documentation for SipLogic
+
+commit f87f38612990109863666df01b4e341cee12431d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Jan 8 12:15:37 2019 +0100
+
+    * Changelog edited
+
+commit 5b088d741d0f68cb2c4c68ab4d0b491022643917
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Thu Feb 22 18:19:13 2018 +0100
+
+    * removed sigc++ signals for _AudioMedia class since there where some
+      errors
+    * more session specific debug output for audio media, copied from
+      pjsip documentation
+
+commit 87fddcef097d93709bf2cee9940f6f587afc7aff
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 16:17:44 2018 +0100
+
+    removed unused variables
+
+commit 7456a9f65187086fd55c7f303f2a9c0d28259e1a
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 16:14:57 2018 +0100
+
+    * added call timeout timer
+    * added some more comments
+    * AudioDeviceManager set to no sound (setNullDev) to use the SipLogic
+      without accessing a soundcard
+
+commit ca2e822faf55348a57aba53c41e9163199806045
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 12:19:45 2018 +0000
+
+    two more sample variables added
+
+commit 80c7c86d54e4d39e4598b598398c5f62691a77fe
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 12:19:12 2018 +0000
+
+    added conditional inclusion for pjsip environment
+
+commit f7d85306a8603a32973a8ac69a47855bfec28dc7
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 12:17:02 2018 +0000
+
+    changes according to SipLogix.cpp
+
+commit 2f8027610004bb22bcfd2b1649f773d31162b8c1
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 12:13:18 2018 +0000
+
+    * comments added in .cpp
+    * two more configuration variables (REG_TIMEOUT, CALL_TIMEOUT)
+    * putFrame, getFrame methods added to read/write the sampels from/to
+      the audio handles
+    * hangup call method implemented
+
+commit 7e9093ee0cca0b0dcda74425988f15d013d20e6d
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 12:12:40 2018 +0000
+
+    definitions added in CMakeLists.txt
+
+commit 0ad85fdf349986c7602b79638292a092d858c36c
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Tue Feb 20 12:10:03 2018 +0000
+
+    doc added for two parameters (REG_TIMEOUT, CALL_TIMEOUT)
+
+commit bb1eef16e0315254529e752c03126695d397c581
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 19 16:39:45 2018 +0000
+
+    * added doc for DTMF_CTRL_PTY
+
+commit 0cf24b9d48eadf225e533f3c3cf2973fd85d98f2
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Mon Feb 19 16:24:38 2018 +0000
+
+    * new variable DTMF_CTRL_PTY to make SipLogic controlable by external
+      applications
+    * F###... over dtmf-pty will init an outgoing call
+
+commit c1d80eb9069351f83d9fa487ee96177b59f6c6ba
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Feb 18 21:42:53 2018 +0100
+
+    * further changes with derived classes
+
+commit 71eb7b0f79b47ff5bd9adfd11827723ea2df6cff
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sun Feb 18 21:03:14 2018 +0100
+
+    * changed callback methods, now using derived class
+
+commit ebef609a4fae86ec70a91c71b9f0e82a453d1e2a
+Author: Adi Bier / DL1HRC <dl1hrc@gmx.de>
+Date:   Sat Feb 17 13:35:28 2018 +0000
+
+    - new variables: CALLERNAME, REG_TIMEOUT
+    - auto connect feature
+    - makeCall method to init an outgoing call
+    - switched onMediaState and onCallState methods since there were wrong
+
+commit d60cabc7d569b648d06d6cad08d7d074d883cda1
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Sat Feb 17 09:43:34 2018 +0100
+
+    removed some unused variables
+
+commit c6cdb0919b460d8c55cff14544d52309cf48bba8
+Author: Adi Bier <dl1hrc@gmx.de>
+Date:   Fri Feb 16 15:42:53 2018 +0100
+
+    1st version of pjSipLogic, do not use
+
