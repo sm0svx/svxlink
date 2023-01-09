@@ -295,6 +295,7 @@ class Logic : public LogicBase
     Async::Pty                      *dtmf_ctrl_pty;
     std::map<uint16_t, uint32_t>    m_ctcss_to_tg;
     Async::Pty                      *command_pty;
+    bool                            echolink_same_priority;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

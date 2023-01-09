@@ -169,7 +169,8 @@ Logic::Logic(void)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0),                       command_pty(0)
+    dtmf_ctrl_pty(0),                       command_pty(0),
+    echolink_same_priority(false)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -391,6 +392,10 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   cfg().getValue(name(), "FX_GAIN_NORMAL", fx_gain_normal);
   cfg().getValue(name(), "FX_GAIN_LOW", fx_gain_low);
 
+  if (cfg().getValue(name(), "ECHOLINK_SAME_PRIORITY", value)) {
+    echolink_same_priority = (value == "1");
+  }
+
   AudioSource *prev_rx_src = 0;
 
     // Create the RX object
@@ -470,7 +475,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 	mem_fun(*this, &Logic::logicConInStreamStateChanged));
   logic_con_in->addSink(logic_con_in_idle_det, true);
   tx_audio_selector->addSource(logic_con_in_idle_det);
-  tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 10);
+  if (echolink_same_priority) tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 10);
+  else tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 0);
 
     // Create a selector and a splitter to handle audio from modules
   audio_from_module_selector = new AudioSelector;
@@ -485,7 +491,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 	mem_fun(*this, &Logic::audioFromModuleStreamStateChanged));
   audio_from_module_splitter->addSink(audio_from_module_idle_det, true);
   tx_audio_selector->addSource(audio_from_module_idle_det);
-  tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 0);
+  if (echolink_same_priority) tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 20);
+  else tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 0);
 
     // Connect audio from modules to the inter logic audio output
   passthrough = new AudioPassthrough;

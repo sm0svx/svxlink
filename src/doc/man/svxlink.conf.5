@@ -344,6 +344,10 @@ The gain (dB) to use for audio effects and announcements when there is other tra
 This gain is normally set to something like \-12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
 .TP
+.B ECHOLINK_SAME_PRIORITY
+If set to 1, echolink will get the same priority as RF. This means that an RF opening
+cannot interrupt echolink, and vice versa.
+.TP
 .B QSO_RECORDER
 The QSO recorder is used to write all received audio to files on disk. The
 format for this configuration variable is <command>:<config section>. The
