@@ -218,6 +218,13 @@
   See man svxlink.conf and the LOGIC_CORE_PATH configuration variable for info
   on how SvxLink find the plugins.
 
+* Bugfix in SvxReflector: After 65536 client connections the warning "Incoming
+  UDP datagram from XX.XX.XX.XX:YYYYY has invalid client id ZZZZZ" was logged
+  for all new client connections.
+
+* New contribution from DL1HRC: SipLogic. The build is enabled by using the
+  -DWITH_CONTRIB_SIP_LOGIC=ON CMake command line option.
+
 
 
  1.7.0 -- 01 Sep 2019

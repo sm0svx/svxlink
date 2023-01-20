@@ -14,3 +14,5 @@ endmacro(add_contrib)
 
 add_contrib(USRP_LOGIC UsrpLogic
   "Set to ON to build and install contributed logic core UsrpLogic")
+add_contrib(SIP_LOGIC SipLogic
+  "Set to ON to build and install contributed logic core SipLogic")

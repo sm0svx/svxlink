@@ -10,7 +10,7 @@ used by Async::CppApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2023 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -172,9 +172,7 @@ bool CppDnsLookupWorker::doLookup(void)
   int fd[2];
   if (pipe(fd) != 0)
   {
-    char errbuf[256];
-    strerror_r(errno, errbuf, sizeof(errbuf));
-    std::cerr << "*** ERROR: Could not create pipe: " << errbuf << std::endl;
+    printErrno("ERROR: Could not create pipe");
     setLookupFailed();
     return false;
   }
@@ -314,7 +312,7 @@ void CppDnsLookupWorker::workerFunc(CppDnsLookupWorker::ThreadContext& ctx)
       state.options = RES_DEFAULT;
       const char *dname = ctx.label.c_str();
       ctx.anslen = res_nsearch(&state, dname, ns_c_in, qtype,
-                               ctx.answer, NS_PACKETSZ);
+                               ctx.answer, sizeof(ctx.answer));
       if (ctx.anslen == -1)
       {
         th_cerr << "*** ERROR: Name resolver failure -- res_nsearch: "
@@ -412,14 +410,13 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
       return;
     }
 
-    char errbuf[256];
     ns_msg msg;
     int ret = ns_initparse(m_ctx->answer, m_ctx->anslen, &msg);
     if (ret == -1)
     {
-      strerror_r(errno, errbuf, sizeof(errbuf));
-      std::cerr << "*** WARNING: ns_initparse failed (anslen="
-                << m_ctx->anslen << "): " << errbuf << std::endl;
+      std::stringstream ss;
+      ss << "WARNING: ns_initparse failed (anslen=" << m_ctx->anslen << ")";
+      printErrno(ss.str());
       setLookupFailed();
       workerDone();
       return;
@@ -436,9 +433,7 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
       ret = ns_parserr(&msg, ns_s_an, rrnum, &rr);
       if (ret == -1)
       {
-        strerror_r(errno, errbuf, sizeof(errbuf));
-        std::cerr << "*** WARNING: DNS lookup failure in ns_parserr: "
-                  << errbuf << std::endl;
+        printErrno("WARNING: DNS lookup failure in ns_parserr");
         setLookupFailed();
         continue;
       }
@@ -473,9 +468,7 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
                                    exp_dn, NS_MAXDNAME);
           if (ret == -1)
           {
-            strerror_r(errno, errbuf, sizeof(errbuf));
-            std::cerr << "*** WARNING: DNS lookup failure in "
-                         "ns_name_uncompress: " << errbuf << std::endl;
+            printErrno("WARNING: DNS lookup failure in ns_name_uncompress");
             setLookupFailed();
             continue;
           }
@@ -493,9 +486,7 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
               exp_dn, NS_MAXDNAME);
           if (ret == -1)
           {
-            strerror_r(errno, errbuf, sizeof(errbuf));
-            std::cerr << "*** WARNING: DNS lookup failure in "
-                         "ns_name_uncompress" << errbuf << std::endl;
+            printErrno("WARNING: DNS lookup failure in ns_name_uncompress");
             setLookupFailed();
             continue;
           }
@@ -519,9 +510,7 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
               exp_dn, NS_MAXDNAME);
           if (ret == -1)
           {
-            strerror_r(errno, errbuf, sizeof(errbuf));
-            std::cerr << "*** WARNING: DNS lookup failure in "
-                         "ns_name_uncompress: " << errbuf << std::endl;
+            printErrno("WARNING: DNS lookup failure in ns_name_uncompress");
             setLookupFailed();
             continue;
           }
@@ -544,6 +533,19 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   workerDone();
 } /* CppDnsLookupWorker::notificationReceived */
 
+
+void CppDnsLookupWorker::printErrno(const std::string& msg)
+{
+  char errbuf[1024];
+  char* errmsg = errbuf;
+#if (_POSIX_C_SOURCE >= 200112L) && ! _GNU_SOURCE
+  int ret = strerror_r(errno, errbuf, sizeof(errbuf));
+  assert(ret == 0);
+#else
+  errmsg = strerror_r(errno, errbuf, sizeof(errbuf));
+#endif
+  std::cerr << "*** " << msg << ": " << errmsg << std::endl;
+} /* CppDnsLookupWorker::printErrno */
 
 
 /*
