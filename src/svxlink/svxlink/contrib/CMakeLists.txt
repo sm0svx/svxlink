@@ -12,5 +12,5 @@ macro(add_contrib name subdir comment)
   endif(${WITH_CONTRIB_${name}})
 endmacro(add_contrib)
 
-#add_contrib(EXAMPLE_LOGIC ExampleLogic
-#  "Set to ON to build and install contributed logic core ExampleLogic")
+add_contrib(SIP_LOGIC SipLogic
+  "Set to ON to build and install contributed logic core SipLogic")
