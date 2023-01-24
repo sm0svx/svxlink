@@ -949,12 +949,8 @@ void Reflector::writeUserData(std::map<std::string, User> userdata)
 string Reflector::jsonToString(Json::Value eventmessage)
 {
   Json::StreamWriterBuilder builder;
-  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-  std::ostringstream ostream;
-  writer->write(eventmessage, &ostream);
-  std::string message = ostream.str();
-  message.erase(std::remove_if(message.begin(), message.end(), 
-                [](unsigned char x){return std::iscntrl(x);}));
+  builder["indentation"] = "";
+  std::string message = Json::writeString(builder, eventmessage);
   return message;
 } /* Reflector::jsonToString */
 

@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "v24102022"
+#define USRPVERSION "24012023"
 
 #define LOGERROR 0
 #define LOGWARN 1
