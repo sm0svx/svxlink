@@ -1,11 +1,11 @@
 /**
-@file    DummyLogic.h
-@brief   A simple dummy logic core that does not do anything
-@author  Tobias Blomberg / SM0SVX
-@date    2017-02-10
+@file   AsyncPlugin.h
+@brief  A base class for making a class into a dynamic loadable plugin
+@author Tobias Blomberg / SM0SVX
+@date   2022-08-23
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,8 +24,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef DUMMY_LOGIC_INCLUDED
-#define DUMMY_LOGIC_INCLUDED
+/** @example AsyncPlugin_demo.cpp
+An example of how to use the Async::Plugin class
+*/
+
+#ifndef ASYNC_PLUGIN_INCLUDED
+#define ASYNC_PLUGIN_INCLUDED
 
 
 /****************************************************************************
@@ -34,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <string>
 
 
 /****************************************************************************
@@ -50,7 +55,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LogicBase.h"
 
 
 /****************************************************************************
@@ -67,8 +71,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -101,68 +105,106 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-/**
-@brief  A simple dummy logic core that does not do anything
-@author Tobias Blomberg / SM0SVX
-@date   2017-02-10
+class PluginBase
+{
+};
 
-The dummy logic core is just an example of the simplest possible logic core. It
-does not do anything but printing debug info when receiving audio from another
-logic core. It's primary purpose is to serve as a start for writing new logic
-cores.
+/**
+@brief  A base class for making a class into a dynamic loadable plugin
+@author Tobias Blomberg / SM0SVX
+@date   2022-08-23
+
+A_detailed_class_description
+
+\include AsyncPlugin_demo.cpp
 */
-class DummyLogic : public LogicBase
+class Plugin : public PluginBase
 {
   public:
     /**
-     * @brief 	Default constructor
+     * @brief   Load the plugin from the specified path
+     * @param   path The file path
      */
-    DummyLogic(void);
+    static Plugin* load(const std::string& path);
 
     /**
-     * @brief   Initialize this logic
-     * @param   cfgobj      A previously initialized config object
-     * @param   logic_name  The name of the logic core
-     * @return  Returns \em true on success or \em false on failure
+     * @brief   Load the plugin from the specified path returning correct type
+     * @param   path The file path
+     *
+     * The plugin may use this function to load the plugin, check that it is of
+     * the correct type and then return a pointer to that type.
      */
-    virtual bool initialize(Async::Config& cfgobj,
-                            const std::string& logic_name) override;
-
-    /**
-     * @brief   Get the audio pipe sink used for writing audio into this logic
-     * @return  Returns an audio pipe sink object
-     */
-    virtual Async::AudioSink *logicConIn(void) override
+    template <class T>
+    static T* load(const std::string& path)
     {
-      return m_logic_con_in;
+      Plugin* p = Plugin::load(path);
+      if (p == nullptr)
+      {
+        return nullptr;
+      }
+      T* demop = dynamic_cast<T*>(p);
+      if (demop == nullptr)
+      {
+        std::cerr << "*** ERROR: Could not load plugin \"" << path
+                  << "\": Not a \"" << T::typeName() << "\" plugin"
+                  << std::endl;
+        delete p;
+      }
+      return demop;
     }
 
+    static void unload(Plugin* p);
+
     /**
-     * @brief   Get the audio pipe source used for reading audio from this logic
-     * @return  Returns an audio pipe source object
+     * @brief   Default constructor
      */
-    virtual Async::AudioSource *logicConOut(void) override
-    {
-      return m_logic_con_out;
-    }
+    Plugin(void);
+
+    /**
+     * @brief   Disallow copy construction
+     */
+    Plugin(const Plugin&) = delete;
+
+    /**
+     * @brief   Disallow copy assignment
+     */
+    Plugin& operator=(const Plugin&) = delete;
+
+    /**
+     * @brief   Retrieve the handle returned from the dlopen function
+     * @return  Returns a handle from dlopen (@see man 3 dlopen)
+     */
+    void* pluginHandle(void) const { return m_handle; }
+
+    /**
+     * @brief   Retrieve the path used to find the plugin
+     * @return  Returns the path to the plugin
+     *
+     * This function can be called to find out which path was used to load the
+     * plugin.
+     */
+    const std::string& pluginPath(void) const { return m_plugin_path; }
 
   protected:
     /**
      * @brief   Destructor
      */
-    virtual ~DummyLogic(void) override;
+    virtual ~Plugin(void);
 
   private:
-    Async::AudioDebugger *m_logic_con_in  = nullptr;
-    Async::AudioDebugger *m_logic_con_out = nullptr;
+    typedef Plugin* (*ConstructFunc)(void);
 
-};  /* class DummyLogic */
+    void*       m_handle      = nullptr;
+    std::string m_plugin_path;
+
+    void setHandle(void* handle) { m_handle = handle; }
+
+};  /* class Plugin */
 
 
-//} /* namespace */
+} /* namespace Async */
 
-#endif /* DUMMY_LOGIC_INCLUDED */
-
+#endif /* ASYNC_PLUGIN_INCLUDED */
 
 /*
  * This file has not been truncated

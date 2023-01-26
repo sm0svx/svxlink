@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -81,10 +81,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "version/SVXLINK.h"
 #include "MsgHandler.h"
-#include "DummyLogic.h"
-#include "SimplexLogic.h"
-#include "RepeaterLogic.h"
-#include "ReflectorLogic.h"
+#include "Logic.h"
 #include "LinkManager.h"
 
 
@@ -435,7 +432,7 @@ int main(int argc, char **argv)
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION
-          " Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the terms "
@@ -550,7 +547,7 @@ int main(int argc, char **argv)
   vector<LogicBase*>::iterator lit;
   for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
   {
-    delete *lit;
+    Async::Plugin::unload(*lit);
   }
   logic_vec.clear();
   
@@ -717,6 +714,9 @@ static void initialize_logics(Config &cfg)
     exit(1);
   }
 
+  std::string logic_core_path(SVX_LOGIC_CORE_INSTALL_DIR);
+  cfg.getValue("GLOBAL", "LOGIC_CORE_PATH", logic_core_path);
+
   string::iterator comma;
   string::iterator begin = logics.begin();
   do
@@ -742,37 +742,29 @@ static void initialize_logics(Config &cfg)
       	   << logic_name << "\". Skipping...\n";
       continue;
     }
-    LogicBase *logic = 0;
-    if (logic_type == "Simplex")
+    std::string logic_plugin_filename =
+      logic_core_path.empty()
+        ? logic_type + "Logic.so"
+        : logic_core_path + "/" + logic_type + "Logic.so";
+    //std::cout << "### logic_plugin_filename=" << logic_plugin_filename
+    //          << std::endl;
+    LogicBase *logic = Async::Plugin::load<LogicBase>(logic_plugin_filename);
+    if (logic != nullptr)
     {
-      logic = new SimplexLogic(cfg, logic_name);
+      std::cout << "\tFound plugin: " << logic->pluginPath() << std::endl;
+      if (!logic->initialize(cfg, logic_name))
+      {
+        Async::Plugin::unload(logic);
+        logic = nullptr;
+      }
     }
-    else if (logic_type == "Repeater")
+    if (logic == nullptr)
     {
-      logic = new RepeaterLogic(cfg, logic_name);
-    }
-    else if (logic_type == "Reflector")
-    {
-      logic = new ReflectorLogic(cfg, logic_name);
-    }
-    else if (logic_type == "Dummy")
-    {
-      logic = new DummyLogic(cfg, logic_name);
-    }
-    else
-    {
-      cerr << "*** ERROR: Unknown logic type \"" << logic_type
-           << "\" specified for logic " << logic_name << ".\n";
-      continue;
-    }
-    if ((logic == 0) || !logic->initialize())
-    {
-      cerr << "*** ERROR: Could not initialize Logic object \""
+      cerr << "*** ERROR: Could not load or initialize Logic object \""
       	   << logic_name << "\". Skipping...\n";
-      delete logic;
       continue;
     }
-    
+
     logic_vec.push_back(logic);
   } while (comma != logics.end());
   

@@ -1,6 +1,6 @@
 ##############################################################################
 # SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-# Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+# Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,11 @@ set(PROJECT_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
 
 # Where to put library files
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+# We need to force buildtime RPATH so that dlopen will find plugins in the
+# library output directory when running applications within the build tree
+# (uninstalled)
+set(CMAKE_BUILD_RPATH "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
 # Where to put executable files
 set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
@@ -171,6 +176,11 @@ if(NOT DEFINED SVX_MODULE_INSTALL_DIR)
   set(SVX_MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/svxlink)
 endif(NOT DEFINED SVX_MODULE_INSTALL_DIR)
 
+# Where to install SvxLink logic cores
+if(NOT DEFINED SVX_LOGIC_CORE_INSTALL_DIR)
+  set(SVX_LOGIC_CORE_INSTALL_DIR ${LIB_INSTALL_DIR}/svxlink)
+endif(NOT DEFINED SVX_LOGIC_CORE_INSTALL_DIR)
+
 # Clear global variables implemented using internal cache
 set(CONFIG_FILES "" CACHE INTERNAL "CONFIG_FILES")
 set(FILE_OWNER "" CACHE INTERNAL "FILE_OWNER")
@@ -294,6 +304,7 @@ message(STATUS "SvxLink user = ${SVXLINK_USER}")
 message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
 # Add directories to build
+add_subdirectory(doc)
 add_subdirectory(include)
 add_subdirectory(async)
 add_subdirectory(misc)
@@ -303,7 +314,6 @@ add_subdirectory(svxlink)
 if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
-add_subdirectory(doc)
 
 # Experimental CPack package building
 set(CPACK_SET_DESTDIR "ON")

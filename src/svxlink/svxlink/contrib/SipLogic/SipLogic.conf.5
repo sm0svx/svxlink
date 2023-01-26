@@ -1,0 +1,180 @@
+.TH SIPLOGIC.CONF 5 "November 2022" Linux "File Formats"
+.
+.SH NAME
+.
+SipLogic.conf \- SipLogic configuration file for the SvxLink server
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration file format for the SipLogic logic
+core.
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that the SipLogic
+SvxLink logic core understands. The configuration variables are described
+section for section.
+.
+.SS SipLogic
+.
+The SipLogic is used to connect to a Sip-based communication server like
+Astrisk.
+.TP
+.B TYPE
+The type for a sip logic core is always
+.BR Sip .
+.TP
+.B SIPSERVER
+The ip address or the hostname of the Sip communication server.
+.TP
+.B SIPPORT
+The udp port that is used for communication (normally 5060).
+.TP
+.B CALLERNAME
+The name of the station that is displayed instead of the number.
+.TP
+.B USERNAME
+The username that is used to connect to the Sip communication server.
+.TP
+.B PASSWORD
+The password for the USERNAME to connect to the Sip communication server.
+.TP
+.B SIPREGISTRAR
+The sip registrar or better kown as proxy (e.g. "fritz.box" for AVM Fritzboxes)
+.TP
+.B SIPSCHEMA
+The authentication scheme (e.g. "digest")
+.TP
+.B SIPEXTENSION
+The extension to used when connecting to a Sip communication server.
+.TP
+.B AUTOANSWER
+If set the call will be pickuped immediately when received.
+AUTOANSWER=(0|1)
+.TP
+.B AUTOCONNECT
+Define a party that will being connected after upon startup of SvxLink.
+AUTOCONNECT=user123@sipaccount.com
+.TP
+.B REJECT_INCOMING
+Reject all incoming phone calls where the remote number match this regular
+expression. For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B ACCEPT_INCOMING
+Only accept incoming phone calls where the remote number match this regular
+expression.
+For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B REJECT_OUTGOING
+Reject all outgoing phone calls where the remote number match this regular
+expression. For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B ACCEPT_OUTGOING
+Only accept outgoing phone calls where the remote number match this regular
+expression.
+For more information on the syntax, seek for
+.B REGULAR EXPRESSIONS
+.TP
+.B SEMI_DUPLEX (ToDo)
+If enabled no VOX squelch is used for Sip clients. That means that the audio
+stream from the SipLogic is sent continuously to the connected SvxLink nodes.
+That is only meaningful if all connected nodes are repeaters.
+SEMI_DUPLEX=(0|1)
+.TP
+.B VOX_FILTER_DEPTH
+see "Local Receiver Section"
+.TP
+.B VOX_THRESH
+see "Local Receiver Section"
+.TP
+.B SQL_START_DELAY
+see "Local Receiver Section"
+.TP
+.B SQL_DELAY
+see "Local Receiver Section"
+.TP
+.B SQL_HANGTIME
+see "Local Receiver Section"
+.TP
+.B SIP_LOGLEVEL
+The debug output of the pjsip library (0..6)
+.TP
+.B JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. Set this configuration
+variable to the number of milliseconds to buffer before starting to process the
+audio. Default: 0.
+.TP
+.B REG_TIMEOUT
+Time in seconds to renewal the registration at the sip server.
+.TP
+.B CALL_TIMEOUT
+Time in seconds after an outgoing call will be terminate when the party will not
+pickup the call.
+.TP
+.B SIP_CTRL_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that allows a dtmf control of each single SvxLink logic. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Sending
+commands to the PTY is as simple as doing a
+.B "echo 'C1#' > /path/to/pty"
+after starting SvxLink. The device works bidirectional, received dtmf characters
+(from local application) are output via this interface.
+Example: SIP_CTRL_PTY=/dev/shm/dtmf_ctrl
+.TP
+.B SIP_PREAMP
+The incoming signal from the Sip network will be amplified by the specified
+number of dB. This can be used as a last measure if the input audio level
+can't be set high enough on the analogue side. A value of 6dB will double
+the signal level. Note that this is a digital amplification. Hence it will
+reduce the dynamic range of the signal so usage should be avoided if possible.
+It's always better to correct the audio level before sampling it.
+.TP
+.B SIP_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter. The audio limiter really is
+a compressor with a very steep compression ratio like 10:1. The limiter is
+used to help keeping down the audio level from Sip network for overmodulating
+stations. Try values from -6 to -12 if the incoming Sip audio is to high. Set
+to 0 to deactivate it.
+.TP
+.B PHONENUMBER_TO_TG
+Comma-separated list of assignments of phonenumber(full||substring):Talkgroup.
+When a phone call is received, the call is assigned to the defined TG according
+to the recognized number. This can be used to prevent the transfer of an SIP
+call to a network or to carry out a country-specific assignment. The number
+format transmitted must match the configuration (+49 != 0049). Whole SIP
+numbers as well as parts of phone numbers can be configured, with the
+evaluation taking place on the left-hand side.
+Example: PHONENUMBER_TO_TG=0049:262,0034:214,0043:232,0049123454543:991
+.TP
+.B USE_TCP
+If set, TCP is used as transport layer instead of UDP (default).
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.d/SipLogic.conf
+The SipLogic specific configuration file.
+.TP
+.IR /etc/svxlink/svxlink.conf
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/*
+Additional configuration files. Typically one configuration file per module.
+.
+.SH AUTHOR
+.
+Adi Bier (DL1HRC)
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)

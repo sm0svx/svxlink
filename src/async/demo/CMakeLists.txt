@@ -6,12 +6,13 @@ set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo
              AsyncFramedTcpClient_demo AsyncAudioSelector_demo
              AsyncAudioFsf_demo AsyncHttpServer_demo AsyncFactory_demo
              AsyncAudioContainer_demo AsyncTcpPrioClient_demo
-             AsyncStateMachine_demo
+             AsyncStateMachine_demo AsyncPlugin_demo
              )
 
 set(QTPROGS AsyncQtApplication_demo)
 
 
+# Build all demo applications
 foreach(prog ${CPPPROGS})
   add_executable(${prog} ${prog}.cpp)
   target_link_libraries(${prog} ${LIBS} asynccpp asyncaudio asynccore)
@@ -44,4 +45,10 @@ if(USE_QT)
     target_link_libraries(${prog} ${LIBS} asyncaudio asynccore asyncqt)
   endforeach(prog)
 endif(USE_QT)
+
+# Build the demo plugin used by the AsyncPlugin_demo application
+add_library(DemoPlugin MODULE DemoPlugin.cpp)
+set_target_properties(DemoPlugin PROPERTIES PREFIX "")
+set_property(TARGET DemoPlugin PROPERTY NO_SONAME 1)
+#target_link_libraries(DemoPlugin ${LIBS})
 

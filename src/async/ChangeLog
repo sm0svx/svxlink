@@ -1,4 +1,4 @@
- 1.7.0 -- ?? ??? 2022
+ 1.7.0 -- ?? ??? ????
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.
@@ -61,6 +61,8 @@
 
 * Slightly changed semantics of the TcpClient::connect functions. It's now
   not allowed to call the connect function if already connected.
+
+* Async::Plugin: A new class for loading code as plugins.
 
 
 
