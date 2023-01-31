@@ -583,6 +583,40 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     }
     processEvent(os.str());
   }
+  else if (cmd[0] == '5') // add tg to monitor w/o timeout
+  {
+
+  }
+  else if (cmd[0] == '6') // remove temp tg from monitor
+  {
+    std::ostringstream os;
+    const std::string subcmd(cmd.substr(1));
+    if (!subcmd.empty())
+    {
+      istringstream is(subcmd);
+      uint32_t tg = 0;
+      if (is >> tg)
+      {
+        const MonitorTgsSet::iterator it = m_monitor_tgs.find(tg);
+        if (it != m_monitor_tgs.end())
+        {
+          m_monitor_tgs.erase(it);
+          std::cout << name() << ": Removed monitor for TG #"
+                    << tg << std::endl;
+          sendMsg(MsgTgMonitor(std::set<uint32_t>(
+                  m_monitor_tgs.begin(), m_monitor_tgs.end())));
+          // os << "removing tg from monitor: " << cmd;
+
+        }
+        else
+        {
+          std::cout << name() << ": Could not remove TG #"
+                    << tg << "from monitor - not monitored" << std::endl;  
+        }
+      }
+      // processEvent(os.str()); no tcl processing for now
+    }        
+  }
   else
   {
     processEvent(std::string("unknown_command ") + cmd);
