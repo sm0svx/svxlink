@@ -526,8 +526,16 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       processEvent(std::string("command_failed ") + cmd);
     }
   }
-  else if (cmd[0] == '4')   // Temporarily monitor talk group
-  {
+  else if (cmd[0] == '4' || cmd[0] == '5')   // Temporarily monitor talk group
+  {    
+    const int long_timeout = 0x12cc0300;  // 10 years
+    int tmp_monitor_timeout = m_tmp_monitor_timeout;
+    if (cmd[0] == '5')
+    {
+      tmp_monitor_timeout = long_timeout;
+    }
+
+
     std::ostringstream os;
     const std::string subcmd(cmd.substr(1));
     if ((m_tmp_monitor_timeout > 0) && !subcmd.empty())
@@ -544,7 +552,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
             std::cout << name() << ": Refresh temporary monitor for TG #"
                       << tg << std::endl;
               // NOTE: (*it).timeout is mutable
-            (*it).timeout = m_tmp_monitor_timeout;
+            (*it).timeout = tmp_monitor_timeout;
             os << "tmp_monitor_add " << tg;
           }
           else
@@ -560,7 +568,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           std::cout << name() << ": Add temporary monitor for TG #"
                     << tg << std::endl;
           MonitorTgEntry mte(tg);
-          mte.timeout = m_tmp_monitor_timeout;
+          mte.timeout = tmp_monitor_timeout;
           m_monitor_tgs.insert(mte);
           sendMsg(MsgTgMonitor(std::set<uint32_t>(
                   m_monitor_tgs.begin(), m_monitor_tgs.end())));
@@ -583,10 +591,6 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
     }
     processEvent(os.str());
   }
-  else if (cmd[0] == '5') // add tg to monitor w/o timeout
-  {
-
-  }
   else if (cmd[0] == '6') // remove temp tg from monitor
   {
     std::ostringstream os;
@@ -606,7 +610,6 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           sendMsg(MsgTgMonitor(std::set<uint32_t>(
                   m_monitor_tgs.begin(), m_monitor_tgs.end())));
           // os << "removing tg from monitor: " << cmd;
-
         }
         else
         {
