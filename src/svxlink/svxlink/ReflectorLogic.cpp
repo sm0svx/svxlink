@@ -601,7 +601,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
         if (it != m_monitor_tgs.end())
         {
           m_monitor_tgs.erase(it);
-          std::cout << name() << ": Removed monitor for TG #"
+          std::cout << name() << ": Temporary monitor timeout for TG #"
                     << tg << std::endl;
           sendMsg(MsgTgMonitor(std::set<uint32_t>(
                   m_monitor_tgs.begin(), m_monitor_tgs.end())));
