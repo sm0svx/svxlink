@@ -210,6 +210,7 @@ class ReflectorLogic : public LogicBase
     static const unsigned TCP_HEARTBEAT_RX_CNT_RESET          = 15;
     static const unsigned DEFAULT_TG_SELECT_TIMEOUT           = 30;
     static const int      DEFAULT_TMP_MONITOR_TIMEOUT         = 3600;
+    static const int      DEFAULT_TMP_MONITOR_TIMEOUT_LONG    = 0x12cc0300; //10 years
 
     std::string                       m_reflector_host;
     FramedTcpClient                   m_con;
@@ -253,6 +254,7 @@ class ReflectorLogic : public LogicBase
     bool                              m_mute_first_tx_rem;
     Async::Timer                      m_tmp_monitor_timer;
     int                               m_tmp_monitor_timeout;
+    int                               m_tmp_monitor_timeout_long;
     bool                              m_use_prio;
     Async::Timer                      m_qsy_pending_timer;
     bool                              m_verbose;
