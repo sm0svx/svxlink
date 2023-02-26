@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "AUGUST 2022" Linux "File Formats"
+.TH SVXLINK.CONF 5 "FEBRUARY 2023" Linux "File Formats"
 .
 .SH NAME
 .
@@ -418,6 +418,13 @@ receivers to open the squelch on the same tone frequencies. Otherwise it will
 not work.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
+.TP
+.B CTCSS_TO_TG_DELAY
+The delay for reporting detected talkgroup from when a CTCSS tone is detected.
+If the squelch close before the delay time has expired, no talkgroup will be
+reported.
+
+Example: CTCSS_TO_TG_DELAY=1000
 .
 .SS Simplex Logic Section
 .
@@ -510,8 +517,8 @@ A value of 0 will disable 1750 Hz repeater opening.
 .B OPEN_ON_CTCSS
 Use this configuration variable if it should be possible to open the repeater
 using a CTCSS tone (PL). The repeater will activate after the specified number
-of milliseconds on any of the CTCSS frequencies specified in the receiver
-configuration.
+of milliseconds on detection of any of the CTCSS frequencies specified in the
+receiver configuration.
 .TP
 .B OPEN_ON_DTMF
 Use this configuration variable if it should be possible to open the repeater with 

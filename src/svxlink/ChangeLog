@@ -232,6 +232,12 @@
   there must be a CTCSS detector configured at every frequency that is
   specified in either CTCSS_TO_TG or OPEN_ON_CTCSS.
 
+* Changed syntax for OPEN_ON_CTCSS. Only detection time is specified, no
+  frequency. All frequencied configured in the receiver configuration will be
+  used.
+
+* New configuration variable CTCSS_TO_TG_DELAY.
+
 * CTCSS_MODE=4 is now the default.
 
 
