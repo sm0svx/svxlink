@@ -280,10 +280,36 @@ class SquelchCtcss : public Squelch
             break;
           }
 
+          case 2:
+          {
+            //std::cout << "### CTCSS mode: Estimated SNR\n";
+            //det->setDetectBw(6.0f);
+            det->setDetectUseWindowing(false);
+            det->setDetectPeakThresh(0.0f);
+            //det->setDetectPeakToTotPwrThresh(0.6f);
+            det->setDetectSnrThresh(open_threshs[ctcss_fq], bpf_high - bpf_low);
+            det->setDetectStableCountThresh(1);
+
+            //det->setUndetectBw(8.0f);
+            det->setUndetectUseWindowing(false);
+            det->setUndetectPeakThresh(0.0f);
+            //det->setUndetectPeakToTotPwrThresh(0.3f);
+            det->setUndetectSnrThresh(close_threshs[ctcss_fq], bpf_high - bpf_low);
+            det->setUndetectStableCountThresh(2);
+
+              // Set up CTCSS band pass filter
+            Async::AudioFilter *filter =
+              new Async::AudioFilter(filter_spec.str());
+            filter->registerSink(det, true);
+            sink = filter;
+            break;
+          }
+
+          default:
           case 4:
           {
             std::cout << "### CTCSS mode 4: Overlap + Estimated SNR + "
-                         "tone frequency 0.75% tolerance (experimental)\n";
+                         "tone frequency 0.75% tolerance\n";
 
             static const float OVERLAP_PERCENT    = 75.0f;
             static const float TONE_FQ_TOLERANCE  = 0.75f;
@@ -303,32 +329,6 @@ class SquelchCtcss : public Squelch
             det->setUndetectUseWindowing(USE_WINDOWING);
             det->setUndetectPeakThresh(0.0f);
             det->setUndetectSnrThresh(close_threshs[ctcss_fq], bpf_high - bpf_low);
-
-              // Set up CTCSS band pass filter
-            Async::AudioFilter *filter =
-              new Async::AudioFilter(filter_spec.str());
-            filter->registerSink(det, true);
-            sink = filter;
-            break;
-          }
-
-          case 2:
-          default:
-          {
-            //std::cout << "### CTCSS mode: Estimated SNR\n";
-            //det->setDetectBw(6.0f);
-            det->setDetectUseWindowing(false);
-            det->setDetectPeakThresh(0.0f);
-            //det->setDetectPeakToTotPwrThresh(0.6f);
-            det->setDetectSnrThresh(open_threshs[ctcss_fq], bpf_high - bpf_low);
-            det->setDetectStableCountThresh(1);
-
-            //det->setUndetectBw(8.0f);
-            det->setUndetectUseWindowing(false);
-            det->setUndetectPeakThresh(0.0f);
-            //det->setUndetectPeakToTotPwrThresh(0.3f);
-            det->setUndetectSnrThresh(close_threshs[ctcss_fq], bpf_high - bpf_low);
-            det->setUndetectStableCountThresh(2);
 
               // Set up CTCSS band pass filter
             Async::AudioFilter *filter =
@@ -393,6 +393,8 @@ class SquelchCtcss : public Squelch
      */
     sigc::signal<void, float, float> snrUpdated;
 
+    sigc::signal<void, float> toneDetected;
+
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
@@ -452,6 +454,7 @@ class SquelchCtcss : public Squelch
         {
           m_active_det = det;
           setSignalDetected(true, ss.str());
+          toneDetected(det->toneFq());
         }
       }
       else

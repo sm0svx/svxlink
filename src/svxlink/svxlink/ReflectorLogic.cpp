@@ -593,11 +593,12 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
 void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
 {
   //cout << "### ReflectorLogic::remoteReceivedTgUpdated: logic="
-  //     << logic->name() << "  tg=" << tg << endl;
+  //     << logic->name() << "  tg=" << tg
+  //     << "  m_mute_first_tx_loc=" << m_mute_first_tx_loc << endl;
   if ((m_selected_tg == 0) && (tg > 0))
   {
     selectTg(tg, "tg_local_activation", !m_mute_first_tx_loc);
-    m_tg_local_activity = true;
+    m_tg_local_activity = !m_mute_first_tx_loc;
     m_use_prio = false;
   }
 } /* ReflectorLogic::remoteReceivedTgUpdated */
@@ -1629,7 +1630,7 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   }
   else
   {
-    if ((m_logic_con_in_valve != 0) && (m_selected_tg > 0))
+    if ((m_logic_con_in_valve != 0) && m_tg_local_activity)
     {
       m_logic_con_in_valve->setOpen(true);
     }
