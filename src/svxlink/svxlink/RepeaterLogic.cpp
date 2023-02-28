@@ -693,7 +693,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	setUp(true, open_reason);
         //Logic::setReceivedTg(delayed_tg_activation);
       }
-      //delayed_tg_activation = 0;
+      delayed_tg_activation = 0;
     }
   }
 } /* RepeaterLogic::squelchOpen */
