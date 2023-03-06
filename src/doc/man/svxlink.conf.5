@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "AUGUST 2022" Linux "File Formats"
+.TH SVXLINK.CONF 5 "FEBRUARY 2023" Linux "File Formats"
 .
 .SH NAME
 .
@@ -413,10 +413,18 @@ Use this variable to specify a comma separated list of pairs of tone
 frequencies and talk groups. When one of the tone frequencies is detected, the
 corresponding talk group will be indicated. This can be used for example by
 ReflectorLogic to automatically switch to a talk group when one of the specified
-tone frequencies is received. You probably also want to configure CTCSS_FQ for
-all receivers to open the squelch on the same tone frequencies.
+tone frequencies is received. You also must configure CTCSS_FQ for all
+receivers to open the squelch on the same tone frequencies. Otherwise it will
+not work.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
+.TP
+.B CTCSS_TO_TG_DELAY
+The delay for reporting detected talkgroup from when a CTCSS tone is detected.
+If the squelch close before the delay time has expired, no talkgroup will be
+reported.
+
+Example: CTCSS_TO_TG_DELAY=1000
 .
 .SS Simplex Logic Section
 .
@@ -507,11 +515,10 @@ you will hear an ugly 1750Hz beep as the first thing.
 A value of 0 will disable 1750 Hz repeater opening.
 .TP
 .B OPEN_ON_CTCSS
-Use this configuration variable if it should be possible to open the repeater with 
-a CTCSS tone (PL). The syntax of the value is tone_fq:min_length. The tone 
-frequency is specified in whole Hz and the minimum tone length is specified in 
-milliseconds. For examples if a 136.5 Hz tone must be asserted for two seconds for 
-the repeater to open, the value 136:2000 should be specified.
+Use this configuration variable if it should be possible to open the repeater
+using a CTCSS tone (PL). The repeater will activate after the specified number
+of milliseconds on detection of any of the CTCSS frequencies specified in the
+receiver configuration.
 .TP
 .B OPEN_ON_DTMF
 Use this configuration variable if it should be possible to open the repeater with 
@@ -1116,7 +1123,7 @@ ones to choose from:
 .IP \(bu 4
 .BR "0 (Default)"
 Will choose the detection mode that is the default in the software. At the
-moment this is mode 2, "Estimated SNR".
+moment this is mode 4, "Overlap+Estimated SNR+Frequency estimation".
 .IP \(bu 4
 .BR "1 (Neighbor bins)"
 This detection mode will use three narrow frequency bands (~8Hz) to do the
@@ -1152,7 +1159,8 @@ selective. With its 0.75% frequency tolerance, it will not trigger on adjacent
 CTCSS tones. However, the "undetect" algorithm does not use the frequency
 estimation so the squelch may be held open by an adjacent tone if already in
 active state. One downside is that it is a bit more CPU hungry due to using 75%
-overlap in the frequency analysis, thus processing each sample three times.
+overlap in the frequency analysis, thus processing each sample three times. The
+reason to use overlap is that the detector will be faster.
 .RE
 .TP
 .B CTCSS_FQ

@@ -169,7 +169,8 @@ Logic::Logic(void)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    dtmf_ctrl_pty(0),                       command_pty(0)
+    dtmf_ctrl_pty(0),                       command_pty(0),
+    m_ctcss_to_tg_timer(-1),                m_ctcss_to_tg_last_fq(0.0f)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -404,7 +405,15 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     cleanup();
     return false;
   }
-  rx().squelchOpen.connect(mem_fun(*this, &Logic::squelchOpen));
+  rx().squelchOpen.connect([&](bool is_open) {
+        if (!is_open)
+        {
+          //std::cout << "### Logic::[]: Disable CTCSS to TG timer"
+          //          << std::endl;
+          m_ctcss_to_tg_timer.setEnable(false);
+        }
+        squelchOpen(is_open);
+      });
   rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
@@ -669,6 +678,27 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
+  int ctcss_to_tg_delay = 1000;
+  cfg().getValue(name(), "CTCSS_TO_TG_DELAY", ctcss_to_tg_delay);
+  m_ctcss_to_tg_timer.setTimeout(ctcss_to_tg_delay);
+  m_ctcss_to_tg_timer.expired.connect([&](Async::Timer* t)
+      {
+        //std::cout << "### ctcss_to_tg_timer expired: m_ctcss_to_tg_last_fq="
+        //          << m_ctcss_to_tg_last_fq << std::endl;
+        t->setEnable(false);
+        uint16_t uint_fq = static_cast<uint16_t>(
+            round(10.0f*m_ctcss_to_tg_last_fq));
+        auto it = m_ctcss_to_tg.find(uint_fq);
+        if (it != m_ctcss_to_tg.end())
+        {
+          uint32_t tg = it->second;
+          //cout << "### Map CTCSS " << m_ctcss_to_tg_last_fq << " to TG #"
+          //     << tg << endl;
+          setReceivedTg(tg);
+        }
+        m_ctcss_to_tg_last_fq = 0.0f;
+      });
+
   typedef std::vector<SvxLink::SepPair<float, uint32_t> > CtcssToTgVec;
   CtcssToTgVec ctcss_to_tg;
   if (!cfg().getValue(name(), "CTCSS_TO_TG", ctcss_to_tg, true))
@@ -680,23 +710,18 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   for (CtcssToTgVec::const_iterator it = ctcss_to_tg.begin();
        it != ctcss_to_tg.end(); ++it)
   {
-    int bw = 2;
-    if (it->first > 300)
-    {
-      bw = 25;
-    }
-    if (rx().addToneDetector(it->first, bw, 10, 1000))
-    {
-      uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*it->first));
-      uint32_t tg = it->second;
-      m_ctcss_to_tg[uint_fq] = tg;
-    }
-    else
-    {
-      cerr << "*** WARNING: Could not setup tone detector for CTCSS "
-           << it->first << " to TG #" << it->second << " map in logic "
-           << name() << endl;
-    }
+    uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*it->first));
+    uint32_t tg = it->second;
+    m_ctcss_to_tg[uint_fq] = tg;
+    //if (it->first > 300)
+    //{
+    //  if (!rx().addToneDetector(it->first, 25, 10, 1000))
+    //  {
+    //    cerr << "*** WARNING: Could not setup tone detector for CTCSS "
+    //         << it->first << " to TG #" << it->second << " map in logic "
+    //         << name() << endl;
+    //  }
+    //}
   }
   rx().toneDetected.connect(mem_fun(*this, &Logic::detectedTone));
 
@@ -1017,6 +1042,8 @@ Logic::~Logic(void)
 
 void Logic::squelchOpen(bool is_open)
 {
+  //std::cout << "### Logic::squelchOpen: is_open=" << is_open << std::endl;
+
   if (active_module != 0)
   {
     active_module->squelchOpen(is_open);
@@ -1759,15 +1786,10 @@ void Logic::onPublishStateEvent(const string &event_name, const string &msg)
 
 void Logic::detectedTone(float fq)
 {
-  //cout << name() << ": " << fq << " Hz tone call detected" << endl;
-  uint16_t uint_fq = static_cast<uint16_t>(round(10.0f*fq));
-  std::map<uint16_t, uint32_t>::const_iterator it = m_ctcss_to_tg.find(uint_fq);
-  if (it != m_ctcss_to_tg.end())
-  {
-    uint32_t tg = it->second;
-    //cout << "### Map CTCSS " << fq << " to TG #" << tg << endl;
-    setReceivedTg(tg);
-  }
+  //std::cout << "### Logic::detectedTone[" << name() << "]: " << fq
+  //          << " Hz tone call detected" << endl;
+  m_ctcss_to_tg_last_fq = fq;
+  m_ctcss_to_tg_timer.setEnable(true);
 } /* Logic::detectedTone */
 
 
