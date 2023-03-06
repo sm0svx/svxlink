@@ -2,13 +2,13 @@
 @file   MyNamespaceTemplate.h
 @brief  A_brief_description_for_this_file
 @author Tobias Blomberg / SM0SVX
-@date   2022-
+@date   2023-
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ namespace MyNamespace
 /**
 @brief  A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2022-
+@date   2023-
 
 A_detailed_class_description
 

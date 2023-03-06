@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -111,7 +111,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
-uint32_t ReflectorClient::next_client_id = 0;
+ReflectorClient::ClientMap ReflectorClient::client_map;
+std::mt19937 ReflectorClient::id_gen(std::random_device{}());
+ReflectorClient::ClientIdRandomDist ReflectorClient::id_dist(0, CLIENT_ID_MAX);
 
 
 /****************************************************************************
@@ -119,6 +121,28 @@ uint32_t ReflectorClient::next_client_id = 0;
  * Public member functions
  *
  ****************************************************************************/
+
+ReflectorClient* ReflectorClient::lookup(ClientId id)
+{
+  auto it = client_map.find(id);
+  if (it == client_map.end())
+  {
+    return nullptr;
+  }
+  return it->second;
+} /* ReflectorClient::lookup */
+
+
+void ReflectorClient::cleanup(void)
+{
+  auto client_map_copy = client_map;
+  for (const auto& item : client_map_copy)
+  {
+    delete item.second;
+  }
+  assert(client_map.size() == 0);
+} /* ReflectorClient::cleanup */
+
 
 bool ReflectorClient::TgFilter::operator()(ReflectorClient* client) const
 {
@@ -132,7 +156,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
                                  Async::Config *cfg)
   : m_con(con), m_con_state(STATE_EXPECT_PROTO_VER),
     m_disc_timer(10000, Timer::TYPE_ONESHOT, false),
-    m_client_id(next_client_id++), m_remote_udp_port(0), m_cfg(cfg),
+    m_client_id(newClient(this)), m_remote_udp_port(0), m_cfg(cfg),
     m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC),
     m_heartbeat_tx_cnt(HEARTBEAT_TX_CNT_RESET),
@@ -183,6 +207,9 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
 
 ReflectorClient::~ReflectorClient(void)
 {
+  auto client_it = client_map.find(m_client_id);
+  assert(client_it != client_map.end());
+  client_map.erase(client_it);
   TGHandler::instance()->removeClient(this);
 } /* ReflectorClient::~ReflectorClient */
 
@@ -259,6 +286,19 @@ void ReflectorClient::setBlock(unsigned blocktime)
  * Private member functions
  *
  ****************************************************************************/
+
+ReflectorClient::ClientId ReflectorClient::newClient(ReflectorClient* client)
+{
+  assert(!(client_map.size() > CLIENT_ID_MAX));
+  ClientId id = id_dist(id_gen);
+  while (client_map.count(id) > 0)
+  {
+    id = (id < CLIENT_ID_MAX) ? id+1 : 0;
+  }
+  client_map[id] = client;
+  return id;
+} /* ReflectorClient::newClient */
+
 
 void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
                                       std::vector<uint8_t>& data)

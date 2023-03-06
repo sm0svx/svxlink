@@ -10,7 +10,7 @@ used by Async::CppApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2023 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -164,7 +164,7 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
       std::string         label;
       DnsLookup::Type     type                = DnsLookup::Type::A;
       int                 notifier_wr         = -1;
-      unsigned char       answer[NS_PACKETSZ];
+      unsigned char       answer[NS_MAXMSG];
       int                 anslen              = 0;
       struct addrinfo*    addrinfo            = nullptr;
       char                host[NI_MAXHOST]    = {0};
@@ -186,6 +186,7 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
 
     static void workerFunc(ThreadContext& ctx);
     void notificationReceived(FdWatch *w);
+    void printErrno(const std::string& msg);
 
 };  /* class CppDnsLookupWorker */
 

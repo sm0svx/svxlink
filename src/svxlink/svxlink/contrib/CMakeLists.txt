@@ -14,3 +14,5 @@ endmacro(add_contrib)
 
 add_contrib(ANNOUNCE_LOGIC AnnounceLogic
   "Set to ON to build and install contributed logic core AnnounceLogic")
+add_contrib(SIP_LOGIC SipLogic
+  "Set to ON to build and install contributed logic core SipLogic")

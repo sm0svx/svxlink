@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -718,6 +718,14 @@ bool LocalTx::initialize(void)
     }
   }
 
+  if (!audio_io->open(AudioIO::MODE_WR))
+  {
+    cerr << "*** ERROR: Could not open audio device for transmitter \""
+         << name() << "\"\n";
+    return false;
+  }
+
+  audio_io->close();
   return true;
   
 } /* LocalTx::initialize */

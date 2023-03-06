@@ -1,0 +1,55 @@
+Contrib: SipLogic
+=================
+
+----
+#
+# SipLogic (beta)
+# Adi Bier / DL1HRC (dl1hrc [at] gmx.de)
+# Version 15112022
+#
+----
+SipLogic.conf is a sample configuration for a SipLogic connected to a Fritzbox
+by AVM. Remember that a Fritzbox requires a sip login and password with
+at least 8 characters that must be different eachother. The configuration of the
+Sip part has been moved to this new file, normally found in /etc/svxlink/svxlink.d
+----
+SIP_REGISTRAR=fritz.box
+or
+SIP_REGISTRAR=ip-address of your Fritzbox
+----
+is mandatory.
+
+== pjSipLogic ==
+Provides a Sip client to connect to a Sip server like Asterisk, Allstar or a simple dsl router with Sip functionality.
+
+Requirements:
+pjsip in version 2.10 or newer from https://www.pjsip.org/
+install pjsip first before continue with SvxLink:
+```
+wget https://github.com/pjsip/pjproject/archive/2.10.tar.gz
+tar -xzvf 2.10.tar.gz
+cd project-2.10
+./configure --disable-libwebrtc --disable-video
+
+On amd64/x86_64 systems you should use 
+./configure --disable-libwebrtc --disable-video CPPFLAGS=-fPIC CXXFLAGS=-fPIC CFLAGS=-fPIC
+otherwise linking errors may occur.
+
+make dep;make
+sudo make install
+```
+
+== Installation of SvxLink with SipLogic extension ==
+```
+git clone https://github.com/dl1hrc/svxlink.git
+cd svxlink/src/
+mkdir build
+cd build
+cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_SIP_LOGIC=ON ..
+make
+make install
+```
+== Documentation ==
+- manpage svxlink.conf.5
+- German pdf is available here: https://github.com/dl1hrc/documentation
+

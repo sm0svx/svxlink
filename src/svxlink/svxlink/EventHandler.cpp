@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -188,6 +188,16 @@ bool EventHandler::initialize(void)
   return true;
   
 } /* EventHandler::initialize */
+
+
+void EventHandler::addCommand(const std::string& name, CommandHandler f)
+{
+  Tcl_CreateCommand(interp, name.c_str(), genericCommandHandler,
+      new CommandHandler(f),
+      [](ClientData cdata) {
+        delete static_cast<CommandHandler*>(cdata);
+      });
+} /* EventHandler::addCommand */
 
 
 void EventHandler::setVariable(const string& name, const string& value)
@@ -462,6 +472,23 @@ int EventHandler::setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 } /* EventHandler::setConfigValueHandler */
+
+
+int EventHandler::genericCommandHandler(ClientData cdata, Tcl_Interp *irp,
+                                        int argc, const char *argv[])
+{
+  const auto& func = *static_cast<CommandHandler*>(cdata);
+  std::string msg = func(argc, argv);
+  if (!msg.empty())
+  {
+    auto msg_alloc_len = msg.size()+1;
+    char* msg_copy = Tcl_Alloc(msg_alloc_len);
+    memcpy(msg_copy, msg.c_str(), msg_alloc_len);
+    Tcl_SetResult(irp, msg_copy, TCL_DYNAMIC);
+    return TCL_ERROR;
+  }
+  return TCL_OK;
+} /* EventHandler::genericCommandHandler */
 
 
 /*

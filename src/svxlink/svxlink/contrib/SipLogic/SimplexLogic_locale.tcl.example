@@ -1,0 +1,51 @@
+###############################################################################
+#
+# Generic Logic event handlers
+#
+###############################################################################
+
+#
+# This is the namespace in which all functions and variables below will exist.
+#
+namespace eval SimplexLogic {
+
+variable stored_digits "";
+
+#
+# Executed when a DTMF digit has been received
+#   digit     - The detected DTMF digit
+#   duration  - The duration, in milliseconds, of the digit
+#
+# Return 1 to hide the digit from further processing in SvxLink or
+# return 0 to make SvxLink continue processing as normal.
+#
+proc dtmf_digit_received {digit duration} {
+  variable port;
+  variable stored_digits;
+  puts "DTMF digit \"$digit\" detected with duration $duration ms";
+
+  set len [string length $stored_digits];
+  if {$len > 20} {
+    set stored_digits "";
+  }
+
+  if {$digit == "#"} {
+    if {$len > 5 || $stored_digits == "CA"} {
+      set port [open "/tmp/sip_ctrl" w+];
+        puts $port $stored_digits;
+      close $port;
+    }
+    set stored_digits "";
+  } else {
+    set stored_digits "$stored_digits$digit";
+  }
+  return 0;
+}
+
+
+# end of namespace
+}
+
+#
+# This file has not been truncated
+#
