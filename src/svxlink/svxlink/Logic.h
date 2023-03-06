@@ -295,6 +295,8 @@ class Logic : public LogicBase
     Async::Pty                      *dtmf_ctrl_pty;
     std::map<uint16_t, uint32_t>    m_ctcss_to_tg;
     Async::Pty                      *command_pty;
+    Async::Timer                    m_ctcss_to_tg_timer;
+    float                           m_ctcss_to_tg_last_fq;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

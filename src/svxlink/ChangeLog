@@ -225,6 +225,21 @@
 * New contribution from DL1HRC: SipLogic. The build is enabled by using the
   -DWITH_CONTRIB_SIP_LOGIC=ON CMake command line option.
 
+* The CTCSS squelch detector is now used for both OPEN_ON_CTCSS and
+  CTCSS_TO_TG. That have multiple benefits. CPU usage is lower since only one
+  detector is used instead of three in parallell. The quality of the CTCSS
+  detector is better so shorter detection times may be used. On the downside,
+  there must be a CTCSS detector configured at every frequency that is
+  specified in either CTCSS_TO_TG or OPEN_ON_CTCSS.
+
+* Changed syntax for OPEN_ON_CTCSS. Only detection time is specified, no
+  frequency. All frequencied configured in the receiver configuration will be
+  used.
+
+* New configuration variable CTCSS_TO_TG_DELAY.
+
+* CTCSS_MODE=4 is now the default.
+
 
 
  1.7.0 -- 01 Sep 2019
