@@ -91,6 +91,7 @@ class SquelchCombine::Node
     virtual std::string activityInfo(void) const = 0;
     virtual SquelchStates& squelchStates(SquelchStates& states) = 0;
     sigc::signal<void, bool> squelchOpen;
+    sigc::signal<void, float> toneDetected;
 
   private:
     std::string m_name;
@@ -126,6 +127,7 @@ class SquelchCombine::LeafNode : public SquelchCombine::Node
         return false;
       }
       m_squelch->squelchOpen.connect(squelchOpen.make_slot());
+      m_squelch->toneDetected.connect(toneDetected.make_slot());
       return true;
     }
 
@@ -187,6 +189,7 @@ class SquelchCombine::UnaryOpNode : public SquelchCombine::Node
       : Node(name), m_node(node)
     {
       m_node->squelchOpen.connect(squelchOpen.make_slot());
+      m_node->toneDetected.connect(toneDetected.make_slot());
     }
 
     virtual ~UnaryOpNode(void)
@@ -252,8 +255,10 @@ class SquelchCombine::BinaryOpNode : public SquelchCombine::Node
     {
       m_left->squelchOpen.connect(
           sigc::mem_fun(*this, &BinaryOpNode::onSquelchOpen));
+      m_left->toneDetected.connect(toneDetected.make_slot());
       m_right->squelchOpen.connect(
           sigc::mem_fun(*this, &BinaryOpNode::onSquelchOpen));
+      m_right->toneDetected.connect(toneDetected.make_slot());
     }
 
     virtual ~BinaryOpNode(void)
@@ -424,6 +429,7 @@ bool SquelchCombine::initialize(Async::Config& cfg,
 
   m_comb->squelchOpen.connect(
       sigc::mem_fun(*this, &SquelchCombine::onSquelchOpen));
+  m_comb->toneDetected.connect(toneDetected.make_slot());
 
   return m_comb->initialize(cfg) && Squelch::initialize(cfg, rx_name);
 } /* SquelchCombine::initialize */

@@ -393,8 +393,6 @@ class SquelchCtcss : public Squelch
      */
     sigc::signal<void, float, float> snrUpdated;
 
-    sigc::signal<void, float> toneDetected;
-
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
