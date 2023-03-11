@@ -238,7 +238,10 @@
 
 * New configuration variable CTCSS_TO_TG_DELAY.
 
-* CTCSS_MODE=4 is now the default.
+* CTCSS_MODE=4 now is the default.
+
+* Bugfix: CTCSS transmission did not work correctly when AUDIO_DEV_KEEP_OPEN=1
+  was specified. The tone did not turn off once it had been turned on.
 
 
 

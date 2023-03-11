@@ -37,7 +37,7 @@ proc dtmf_digit_received {digit duration} {
     }
     set stored_digits "";
   } else {
-    set stored_digits "$stored_digits$digit";
+    set stored_digits "C$stored_digits$digit";
   }
   return 0;
 }

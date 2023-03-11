@@ -26,9 +26,9 @@ Requirements:
 pjsip in version 2.10 or newer from https://www.pjsip.org/
 install pjsip first before continue with SvxLink:
 ```
-wget https://github.com/pjsip/pjproject/archive/2.10.tar.gz
-tar -xzvf 2.10.tar.gz
-cd project-2.10
+wget https://github.com/pjsip/pjproject/archive/refs/tags/2.13.tar.gz
+tar -xzvf 2.13.tar.gz
+cd project-2.13
 ./configure --disable-libwebrtc --disable-video
 
 On amd64/x86_64 systems you should use 
