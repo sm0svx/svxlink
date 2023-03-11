@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ class SineGenerator : public Async::AudioSource
   public:
     explicit SineGenerator(const string& audio_dev, int channel)
       : audio_io(audio_dev, channel), pos(0), fq(0.0), level(0.0),
-        sample_rate(0), audio_dev_keep_open(false)
+        sample_rate(0)
     {
       sample_rate = audio_io.sampleRate();
       audio_io.registerSource(this);
@@ -148,11 +148,6 @@ class SineGenerator : public Async::AudioSource
       level = level_percent / 100.0;
     }
 
-    void setKeepOpen(bool keep_open)
-    {
-      audio_dev_keep_open = keep_open;
-    }
-    
     void enable(bool enable)
     {
       if (enable == (audio_io.mode() != AudioIO::MODE_NONE))
@@ -168,7 +163,7 @@ class SineGenerator : public Async::AudioSource
           writeSamples();
         }
       }
-      else if (!audio_dev_keep_open)
+      else
       {
       	audio_io.close();
       }
@@ -195,7 +190,6 @@ class SineGenerator : public Async::AudioSource
     double    fq;
     double    level;
     int       sample_rate;
-    bool      audio_dev_keep_open;
     
     void writeSamples(void)
     {
@@ -388,8 +382,7 @@ bool LocalTx::initialize(void)
   }
 
   sine_gen = new SineGenerator(audio_dev, audio_channel);
-  sine_gen->setKeepOpen(audio_dev_keep_open);
-  
+
   if (cfg.getValue(name(), "CTCSS_FQ", value))
   {
     sine_gen->setFq(atof(value.c_str()));
@@ -725,7 +718,10 @@ bool LocalTx::initialize(void)
     return false;
   }
 
-  audio_io->close();
+  if (!audio_dev_keep_open)
+  {
+    audio_io->close();
+  }
   return true;
   
 } /* LocalTx::initialize */
