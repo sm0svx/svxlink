@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioReader.h>
+#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -205,6 +206,7 @@ class SipLogic : public LogicBase
     Async::AudioSelector      *sipselector;
     std::map<std::string, uint32_t> phoneNrTgVec;
     uint16_t                  m_siploglevel;
+    Async::DnsLookup          dns;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
@@ -229,7 +231,9 @@ class SipLogic : public LogicBase
     void onSquelchOpen(bool is_open);
     void unregisterCall(sip::_Call *call);
     void hangupAllCalls(void);
-
+    std::string getCallerUri(std::string uri);
+    bool checkCaller(std::string caller);
+    void onDnsResultsReady(Async::DnsLookup& dns_result);
     void playLogicFile(const std::string& path);
     void playLogicSilence(int length);
     void playLogicTone(int fq, int amp, int len);

@@ -429,7 +429,6 @@ bool LocalRxBase::initialize(void)
   {
     SquelchCtcss *squelch_ctcss = dynamic_cast<SquelchCtcss*>(squelch_det);
     squelch_ctcss->snrUpdated.connect(ctcssSnrUpdated.make_slot());
-    squelch_ctcss->toneDetected.connect(toneDetected.make_slot());
   }
 
   readyStateChanged.connect(mem_fun(*this, &LocalRxBase::rxReadyStateChanged));
@@ -438,6 +437,7 @@ bool LocalRxBase::initialize(void)
                          sql_extended_hangtime_thresh);
 
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRxBase::onSquelchOpen));
+  squelch_det->toneDetected.connect(toneDetected.make_slot());
   fullband_splitter->addSink(squelch_det, true);
 
   squelchOpen.connect(
