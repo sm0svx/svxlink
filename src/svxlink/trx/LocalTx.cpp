@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ class SineGenerator : public Async::AudioSource
   public:
     explicit SineGenerator(const string& audio_dev, int channel)
       : audio_io(audio_dev, channel), pos(0), fq(0.0), level(0.0),
-        sample_rate(0), audio_dev_keep_open(false)
+        sample_rate(0)
     {
       sample_rate = audio_io.sampleRate();
       audio_io.registerSource(this);
@@ -143,16 +143,11 @@ class SineGenerator : public Async::AudioSource
       fq = tone_fq;
     }
     
-    void setLevel(int level_percent)
+    void setLevel(float level_db)
     {
-      level = level_percent / 100.0;
+      level = powf(10.0f, level_db / 20.0f);
     }
 
-    void setKeepOpen(bool keep_open)
-    {
-      audio_dev_keep_open = keep_open;
-    }
-    
     void enable(bool enable)
     {
       if (enable == (audio_io.mode() != AudioIO::MODE_NONE))
@@ -168,7 +163,7 @@ class SineGenerator : public Async::AudioSource
           writeSamples();
         }
       }
-      else if (!audio_dev_keep_open)
+      else
       {
       	audio_io.close();
       }
@@ -195,7 +190,6 @@ class SineGenerator : public Async::AudioSource
     double    fq;
     double    level;
     int       sample_rate;
-    bool      audio_dev_keep_open;
     
     void writeSamples(void)
     {
@@ -388,18 +382,29 @@ bool LocalTx::initialize(void)
   }
 
   sine_gen = new SineGenerator(audio_dev, audio_channel);
-  sine_gen->setKeepOpen(audio_dev_keep_open);
-  
+
   if (cfg.getValue(name(), "CTCSS_FQ", value))
   {
     sine_gen->setFq(atof(value.c_str()));
-  }  
-  
-  if (cfg.getValue(name(), "CTCSS_LEVEL", value))
+  }
+
+  float ctcss_level = 0.0f;
+  if (cfg.getValue(name(), "CTCSS_LEVEL", ctcss_level))
   {
-    int level = atoi(value.c_str());
-    sine_gen->setLevel(level);
-    //audio_io->setGain((100.0 - level) / 100.0);
+    if (ctcss_level <= 0.0f)
+    {
+      sine_gen->setLevel(ctcss_level);
+    }
+    else
+    {
+      float ctcss_level_db = 20.0f*log10f(ctcss_level / 100.0f);
+      sine_gen->setLevel(ctcss_level_db);
+      std::cerr << "*** WARNING: Setting " << name()
+                << "/CTCSS_LEVEL in percent is deprecated. It should be set "
+                   "in dBFS instead. To get about the same level as "
+                   "configured now, set CTCSS_LEVEL="
+                << round(ctcss_level_db) << "." << std::endl;
+    }
   }
 
 #if INTERNAL_SAMPLE_RATE >= 16000
@@ -725,7 +730,10 @@ bool LocalTx::initialize(void)
     return false;
   }
 
-  audio_io->close();
+  if (!audio_dev_keep_open)
+  {
+    audio_io->close();
+  }
   return true;
   
 } /* LocalTx::initialize */

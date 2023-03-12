@@ -304,6 +304,16 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      */
     sigc::signal<void, bool> squelchOpen;
 
+    /**
+     * @brief   A signal that is emitted when a tone is detected
+     * @param   fq The frequency of the detected tone
+     *
+     * Some squelch detectors, like CTCSS, use a tone frequency to detect if
+     * the squelch is open or not. This signal may then be emitted by such a
+     * squelch detector.
+     */
+    sigc::signal<void, float> toneDetected;
+
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
