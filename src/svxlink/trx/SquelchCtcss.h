@@ -225,6 +225,8 @@ class SquelchCtcss : public Squelch
 	return false;
       }
 
+      cfg.getValue(rx_name, "CTCSS_EMIT_TONE_DETECTED", m_emit_tone_detected);
+
       m_splitter = new Async::AudioSplitter;
 
       for (FqList::const_iterator it = ctcss_fqs.begin();
@@ -421,11 +423,12 @@ class SquelchCtcss : public Squelch
     typedef std::vector<ToneDetector*> DetList;
 
     DetList                       m_dets;
-    Async::AudioSplitter*         m_splitter          = nullptr;
-    ToneDetector*                 m_active_det        = nullptr;
+    Async::AudioSplitter*         m_splitter            = nullptr;
+    ToneDetector*                 m_active_det          = nullptr;
     std::map<float, float>        m_ctcss_snr_offsets;
-    bool                          m_debug             = false;
-    std::unique_ptr<Async::Timer> m_dbg_timer         = nullptr;
+    bool                          m_debug               = false;
+    std::unique_ptr<Async::Timer> m_dbg_timer           = nullptr;
+    bool                          m_emit_tone_detected  = true;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
@@ -452,7 +455,10 @@ class SquelchCtcss : public Squelch
         {
           m_active_det = det;
           setSignalDetected(true, ss.str());
-          toneDetected(det->toneFq());
+          if (m_emit_tone_detected)
+          {
+            toneDetected(det->toneFq());
+          }
         }
       }
       else

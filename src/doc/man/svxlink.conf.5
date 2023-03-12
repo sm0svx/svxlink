@@ -1002,7 +1002,8 @@ The CTCSS squelch detector checks for the presence of a tone with the specified
 frequency. The tone frequency is specified using the CTCSS_FQ config variable.
 The thresholds are specified using the CTCSS_OPEN_THRESH and CTCSS_CLOSE_THRESH
 config variables. Other config variables that effect the CTCSS squelch is:
-CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH.
+CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH,
+CTCSS_EMIT_TONE_DETECTED.
 
 The SERIAL squelch detector use a pin in a serial port to detect if the squelch
 is open. This squelch detector can be used if the receiver have an external
@@ -1231,6 +1232,14 @@ passband. Note however that the more narrow you make the passband, the less
 stable the detector will be. You may need to compensate by increasing the
 open/close thresholds or by setting up SQL_DELAY and SQL_HANGTIME. Default is
 270Hz.
+.TP
+.B CTCSS_EMIT_TONE_DETECTED
+This configuration variable defaults to 1 which mean that a tone detected
+signal is emitted when a CTCSS tone is detected. This is required for the
+function of other features in SvxLink like CTCSS_TO_TG and OPEN_ON_CTCSS. In
+some situations it may be necessary to disable this behavior, like when using
+advanced squelch configurations where some tones are actively blocked due to
+nearby interference.
 .TP
 .B CTCSS_DEBUG
 Set this to 1 to enable continuously printing SNR values for the CTCSS tone

@@ -244,7 +244,10 @@
   was specified. The tone did not turn off once it had been turned on.
 
 * The TX configuration variable CTCSS_LEVEL is now set in dBFS instead of
-  percent. Have a look in the manual page for more information.
+  percent.
+
+* New configuration variable CTCSS_EMIT_TONE_DETECTED. May need to be set to 0
+  in some advanced squelch configurations.
 
 
 
