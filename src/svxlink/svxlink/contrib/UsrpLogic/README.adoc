@@ -26,12 +26,12 @@ including German(!) voice announcements.
 
 You may use my semi-automatic installation-script from here 
 ```
-http://svxlink.ham-radio-op.net/svxlink/svxlink-usrp-contrib.sh
+http://svxlink.ham-radio-op.net/svxlink/svxlink-usrp.sh
 ```
 
 Start installation as root:
 ```
-wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-usrp-contrib.sh | bash
+wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-usrp.sh | bash
 ```
 
 == Installation of SvxLink with UsrpLogic extension ==
