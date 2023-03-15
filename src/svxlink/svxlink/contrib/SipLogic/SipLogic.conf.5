@@ -154,7 +154,11 @@ evaluation taking place on the left-hand side.
 Example: PHONENUMBER_TO_TG=0049:262,0034:214,0043:232,0049123454543:991
 .TP
 .B USE_TCP
-If set, TCP is used as transport layer instead of UDP (default).
+If set to 1, TCP is used as transport layer instead of UDP (default).
+.TP
+.B IGNORE_REGISTRATION
+If set to 1, the SipLogic doesn't check if the incoming caller is registered
+at the own Sip server (default: false).
 .
 .SH FILES
 .
