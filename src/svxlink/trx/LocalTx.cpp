@@ -143,9 +143,9 @@ class SineGenerator : public Async::AudioSource
       fq = tone_fq;
     }
     
-    void setLevel(int level_percent)
+    void setLevel(float level_db)
     {
-      level = level_percent / 100.0;
+      level = powf(10.0f, level_db / 20.0f);
     }
 
     void enable(bool enable)
@@ -386,13 +386,25 @@ bool LocalTx::initialize(void)
   if (cfg.getValue(name(), "CTCSS_FQ", value))
   {
     sine_gen->setFq(atof(value.c_str()));
-  }  
-  
-  if (cfg.getValue(name(), "CTCSS_LEVEL", value))
+  }
+
+  float ctcss_level = 0.0f;
+  if (cfg.getValue(name(), "CTCSS_LEVEL", ctcss_level))
   {
-    int level = atoi(value.c_str());
-    sine_gen->setLevel(level);
-    //audio_io->setGain((100.0 - level) / 100.0);
+    if (ctcss_level <= 0.0f)
+    {
+      sine_gen->setLevel(ctcss_level);
+    }
+    else
+    {
+      float ctcss_level_db = 20.0f*log10f(ctcss_level / 100.0f);
+      sine_gen->setLevel(ctcss_level_db);
+      std::cerr << "*** WARNING: Setting " << name()
+                << "/CTCSS_LEVEL in percent is deprecated. It should be set "
+                   "in dBFS instead. To get about the same level as "
+                   "configured now, set CTCSS_LEVEL="
+                << round(ctcss_level_db) << "." << std::endl;
+    }
   }
 
 #if INTERNAL_SAMPLE_RATE >= 16000

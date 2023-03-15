@@ -243,6 +243,12 @@
 * Bugfix: CTCSS transmission did not work correctly when AUDIO_DEV_KEEP_OPEN=1
   was specified. The tone did not turn off once it had been turned on.
 
+* The TX configuration variable CTCSS_LEVEL is now set in dBFS instead of
+  percent.
+
+* New configuration variable CTCSS_EMIT_TONE_DETECTED. May need to be set to 0
+  in some advanced squelch configurations.
+
 
 
  1.7.0 -- 01 Sep 2019
