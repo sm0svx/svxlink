@@ -663,7 +663,11 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
     }
     std::cout << std::endl;
   }
-  dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
+	
+  if (srx->isEnabled())	
+  {	  
+    dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
+  }	  
 } /* Voter::satSquelchOpen */
 
 
