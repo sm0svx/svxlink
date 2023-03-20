@@ -90,7 +90,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "11032023"
+#define PJSIP_VERSION "14032023"
 
 
 /****************************************************************************
@@ -314,7 +314,7 @@ SipLogic::SipLogic(void)
     logic_msg_handler(0), logic_event_handler(0), report_events_as_idle(false),
     startup_finished(false), logicselector(0), semi_duplex(false),
     sip_preamp_gain(0), m_autoconnect(""), sip_event_handler(0), 
-    sip_msg_handler(0), sipselector(0), m_siploglevel(0)
+    sip_msg_handler(0), sipselector(0), m_siploglevel(0), ignore_reg(false)
 {
   m_call_timeout_timer.expired.connect(
       mem_fun(*this, &SipLogic::callTimeout));
@@ -613,6 +613,8 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   dns.setLookupParams(getCallerUri(m_sipserver));
   dns.resultsReady.connect(mem_fun(*this, &SipLogic::onDnsResultsReady));
   dns.lookup();
+
+  cfg().getValue(name(), "IGNORE_REGISTRATION", ignore_reg);
 
    // number of samples = INTERNAL_SAMPLE_RATE * frameTimeLen /1000
   media = new sip::_AudioMedia(*this, 48);
@@ -1045,13 +1047,20 @@ void SipLogic::onIncomingCall(sip::_Account *acc, pj::OnIncomingCallParam &iprm)
 
 bool SipLogic::checkCaller(std::string caller)
 {
+  if (ignore_reg)
+  {
+    cout << "Do not check the credentials due to "
+         << "configuration (IGNORE_REGISTRATION=1)" << endl;
+    return true;
+  }
+
   for (const auto& addr : dns.addresses())
   {
     if (!addr.isEmpty())
     {
-      if (addr.toString() == caller)
+      if (addr.toString() == getCallerUri(caller))
       {
-        cout << "Sipserver=" << addr.toString() << "==" << caller << ": OK!" << endl;
+        cout << "Accepting incoming call from" << caller << "." << endl;
         return true;
       }
     }
@@ -1209,7 +1218,6 @@ void SipLogic::onCallState(sip::_Call *call, pj::OnCallStateParam &prm)
   pj::CallInfo ci = call->getInfo();
   std::string caller = getCallerNumber(ci.remoteUri);
   std::string uri = getCallerUri(ci.remoteUri);
-  cout << "number= " << caller << ", uri=" << uri << endl;
 
     // incoming call
   if (ci.state == PJSIP_INV_STATE_INCOMING)
@@ -1324,7 +1332,7 @@ void SipLogic::hangupAllCalls(void)
        it != calls.end(); it++)
   {
     (*it)->hangup(prm);
-  }  
+  }
 } /* SipLogic::hangupAllCalls */
 
 
@@ -1572,10 +1580,10 @@ void SipLogic::unregisterCall(sip::_Call *call)
 
 std::string SipLogic::getCallerUri(std::string uri)
 {
-  size_t pos = uri.find('>');
+  size_t pos = uri.find('@');
   if (pos != std::string::npos)
   {
-    uri = uri.substr(0, pos);
+    uri.erase(0, pos+1);
   }
 
   pos = uri.find(':');
@@ -1584,10 +1592,10 @@ std::string SipLogic::getCallerUri(std::string uri)
     uri = uri.substr(0, pos);
   }
 
-  pos = uri.find('@');
+  pos = uri.find('>');
   if (pos != std::string::npos)
   {
-    uri = uri.substr(pos + 1, uri.length()-pos);
+    uri = uri.substr(0,pos);
   }
   return uri;
 } /* SipLogic::getCallerUri */
@@ -1595,13 +1603,6 @@ std::string SipLogic::getCallerUri(std::string uri)
 
 void SipLogic::onDnsResultsReady(Async::DnsLookup& dns_lookup)
 {
-  for (const auto& addr : dns.addresses())
-  {
-    if (!addr.isEmpty())
-    {
-      cout << "dns-result: " << addr.toString() << endl;
-    }
-  }
 } /* SipLogic::onDnsResult */
 
 
