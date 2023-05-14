@@ -310,12 +310,16 @@ class SquelchCtcss : public Squelch
           default:
           case 4:
           {
-            std::cout << "### CTCSS mode 4: Overlap + Estimated SNR + "
-                         "tone frequency 0.75% tolerance\n";
-
             static const float OVERLAP_PERCENT    = 75.0f;
             static const float TONE_FQ_TOLERANCE  = 0.75f;
             static const bool  USE_WINDOWING      = false;
+
+           //std::ostringstream ss;
+           //ss << "### CTCSS " << std::setw(5) << std::setprecision(1)
+           //   << std::fixed << det->toneFq() << " mode 4: " << OVERLAP_PERCENT
+           //   << "% overlap + Estimated SNR + tone frequency "
+           //   << std::setprecision(2) << TONE_FQ_TOLERANCE << "% tolerance";
+           //std::cout << ss.str() << std::endl;
 
             det->setDetectBw(16.0f);
             det->setDetectOverlapPercent(OVERLAP_PERCENT);

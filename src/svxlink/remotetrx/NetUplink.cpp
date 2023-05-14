@@ -230,7 +230,10 @@ bool NetUplink::initialize(void)
   tx_selector = new AudioSelector;
   tx_selector->addSource(loopback_con);
 
-  fifo = new AudioFifo(16000);
+  unsigned tx_jitter_buffer_delay = 0;
+  cfg.getValue(name, "TX_JITTER_BUFFER_DELAY", tx_jitter_buffer_delay);
+  fifo = new AudioFifo(INTERNAL_SAMPLE_RATE);
+  fifo->setPrebufSamples(tx_jitter_buffer_delay*INTERNAL_SAMPLE_RATE/1000);
   tx_selector->addSource(fifo);
   tx_selector->selectSource(fifo);
 

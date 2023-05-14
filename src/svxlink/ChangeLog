@@ -249,6 +249,9 @@
 * New configuration variable CTCSS_EMIT_TONE_DETECTED. May need to be set to 0
   in some advanced squelch configurations.
 
+* Now possible to set the jitter buffer delay on TX audio in RemoteTrx. This
+  may be useful if experiencing choppy TX audio.
+
 
 
  1.7.0 -- 01 Sep 2019
