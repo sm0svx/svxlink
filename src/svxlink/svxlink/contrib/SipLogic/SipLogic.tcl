@@ -162,7 +162,7 @@ proc outgoing_call {caller} {
 # Executed if somebody is ringing
 #
 proc ringing {caller} {
-  puts "$caller ringing";
+  puts "$caller is ringing";
   playMsg "SipLogic" "ringtone";
 }
 

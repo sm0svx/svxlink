@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "FEBRUARY 2023" Linux "File Formats"
+.TH SVXLINK.CONF 5 "MARS 2023" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1002,7 +1002,8 @@ The CTCSS squelch detector checks for the presence of a tone with the specified
 frequency. The tone frequency is specified using the CTCSS_FQ config variable.
 The thresholds are specified using the CTCSS_OPEN_THRESH and CTCSS_CLOSE_THRESH
 config variables. Other config variables that effect the CTCSS squelch is:
-CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH.
+CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH,
+CTCSS_EMIT_TONE_DETECTED.
 
 The SERIAL squelch detector use a pin in a serial port to detect if the squelch
 is open. This squelch detector can be used if the receiver have an external
@@ -1231,6 +1232,14 @@ passband. Note however that the more narrow you make the passband, the less
 stable the detector will be. You may need to compensate by increasing the
 open/close thresholds or by setting up SQL_DELAY and SQL_HANGTIME. Default is
 270Hz.
+.TP
+.B CTCSS_EMIT_TONE_DETECTED
+This configuration variable defaults to 1 which mean that a tone detected
+signal is emitted when a CTCSS tone is detected. This is required for the
+function of other features in SvxLink like CTCSS_TO_TG and OPEN_ON_CTCSS. In
+some situations it may be necessary to disable this behavior, like when using
+advanced squelch configurations where some tones are actively blocked due to
+nearby interference.
 .TP
 .B CTCSS_DEBUG
 Set this to 1 to enable continuously printing SNR values for the CTCSS tone
@@ -2273,17 +2282,25 @@ transmitted the CTCSS_LEVEL variable must also be setup and also the
 TX_CTCSS variable in the logic core configuration section.
 .TP
 .B CTCSS_LEVEL
-The level in percent (0-100) of the CTCSS tone to transmit. What level to set is
-hard to say. The FM modulation swing of the tone should be in between 500-800
-Hz. That is a bit hard to measure if you don't have the right equipment. A
-normal FM station have a maximum swing of 5kHz so if you manage to calibrate
-everything so that you get maximum swing when the sound card audio is at peak
-level, the tone level should be in between 10-16%. However, most often the audio
-settings are configured a bit higher than max since the audio seldom reaches
-maximum level. Then the level of the CTCSS tone should be reduced. The default
-in the configuration file is 9%. For the tone to be transmitted the CTCSS_FQ
-variable must also be setup and also the TX_CTCSS variable in the logic core
-configuration section.
+The level in dBFS of the CTCSS tone to transmit. A value of 0 is the highest
+level and lower (negative) values give a lower level. What level to set depend
+on multiple factors like the audio calibration settings and the low-pass
+characteristics of the hardware. Assuming an ideal audio path with a completely
+flat frequency response over the whole audio spectrum, including the CTCSS
+frequency band, and a standard audio calibration where maximum FM deviation
+corresponds to -6 dBFS, the following applies.
+
+The FM deviation of the CTCSS tone should be in between 500-800 Hz if
+using an FM channel with a maximum deviation of 5 kHz. Given that you can
+calculate what the level in dBFS should be:
+
+  Llow  = 20 * log10(500/5000) - 6 = -26
+  Lmid  = 20 * log10(650/5000) - 6 = -24
+  Lhigh = 20 * log10(800/5000) - 6 = -22
+
+The default in the configuration file is -24. For the tone to be transmitted
+the CTCSS_FQ variable must also be set up and also the TX_CTCSS variable in the
+logic core configuration section.
 .TP
 .B PREEMPHASIS
 Enable this feature if you are modulating the FM modulator directly, like

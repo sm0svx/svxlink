@@ -207,6 +207,7 @@ class SipLogic : public LogicBase
     std::map<std::string, uint32_t> phoneNrTgVec;
     uint16_t                  m_siploglevel;
     Async::DnsLookup          dns;
+    bool                      ignore_reg;
 
     SipLogic(const SipLogic&);
     SipLogic& operator=(const SipLogic&);
