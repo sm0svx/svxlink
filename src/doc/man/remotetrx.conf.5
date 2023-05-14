@@ -185,6 +185,12 @@ If the connection to the SvxLink base station is lost due to network errors, the
 RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
 the connection has been established again. Set to 1 to enable this function
 or set to 0 to disable it. Default is 0.
+.TP
+.B TX_JITTER_BUFFER_DELAY
+A jitter buffer is used to prevent gaps in the audio when the network
+connection do not provide a steady flow of data. If you experience choppy TX
+audio, set this configuration variable to the number of milliseconds to buffer
+before starting to transmit. Default: 0.
 .
 .SS RF uplink transceiver section
 .
