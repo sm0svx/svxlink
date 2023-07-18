@@ -258,6 +258,10 @@
 
 * 1750 Hz tone burst detector accuracy requirement increased to +/- 25 Hz.
 
+* Bugfix: When using "open repeater on squelch close", the squelch rx id was
+  not set up before the TCL event handler send_rgr_sound was called directly
+  after repeater open. This caused playing the wrong roger sound.
+
 
 
  1.7.0 -- 01 Sep 2019
