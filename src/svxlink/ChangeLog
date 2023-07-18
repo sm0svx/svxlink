@@ -256,6 +256,8 @@
   the voter command PTY to disable/mute/enable receivers. It's unknown if
   these bugs have also caused any other problems.
 
+* 1750 Hz tone burst detector accuracy requirement increased to +/- 25 Hz.
+
 
 
  1.7.0 -- 01 Sep 2019

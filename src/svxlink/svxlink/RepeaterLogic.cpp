@@ -309,7 +309,7 @@ bool RepeaterLogic::initialize(Async::Config& cfgobj, const std::string& logic_n
   
   if (required_1750_duration > 0)
   {
-    if (!rx().addToneDetector(1750, 25, 10, required_1750_duration))
+    if (!rx().addToneDetector(1750, 50, 10, required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection in logic "
            << name() << "\n";
