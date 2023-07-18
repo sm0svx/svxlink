@@ -132,7 +132,7 @@ class ToneDet
  ****************************************************************************/
 
 NetRx::NetRx(Config &cfg, const string& name)
-  : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
+  : Rx(cfg, name), cfg(cfg), tcp_con(0),
     log_disconnects_once(false), log_disconnect(true),
     last_signal_strength(0.0), last_sql_rx_id(Rx::ID_UNKNOWN),
     unflushed_samples(false), sql_is_open(false), audio_dec(0), fq(0),
@@ -236,6 +236,7 @@ bool NetRx::initialize(void)
 
 void NetRx::setMuteState(Rx::MuteState new_mute_state)
 {
+  auto mute_state = muteState();
   while (mute_state != new_mute_state)
   {
     assert((mute_state >= MUTE_NONE) && (mute_state <= MUTE_ALL));
@@ -271,7 +272,9 @@ void NetRx::setMuteState(Rx::MuteState new_mute_state)
       mute_state = new_mute_state;
     }
   }
-   
+
+  Rx::setMuteState(mute_state);
+
   MsgSetMuteState *msg = new MsgSetMuteState(mute_state);
   sendMsg(msg);
   
@@ -302,7 +305,7 @@ void NetRx::reset(void)
   }
   tone_detectors.clear();
   
-  mute_state = Rx::MUTE_ALL;
+  Rx::setMuteState(Rx::MUTE_ALL);
   last_signal_strength = 0;
   last_sql_rx_id = Rx::ID_UNKNOWN;
   sql_is_open = false;
@@ -363,9 +366,9 @@ void NetRx::connectionReady(bool is_ready)
     
     log_disconnect = true;
 
-    if (mute_state != Rx::MUTE_ALL)
+    if (muteState() != Rx::MUTE_ALL)
     {
-      MsgSetMuteState *msg = new MsgSetMuteState(mute_state);
+      MsgSetMuteState *msg = new MsgSetMuteState(muteState());
       sendMsg(msg);
     }
     
@@ -440,7 +443,7 @@ void NetRx::handleMsg(Msg *msg)
   {
     case MsgSquelch::TYPE:
     {
-      if (mute_state != Rx::MUTE_ALL)
+      if (muteState() != Rx::MUTE_ALL)
       {
         MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
         last_signal_strength = sql_msg->signalStrength();
@@ -468,7 +471,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgSiglevUpdate::TYPE:
     {
-      if (mute_state != Rx::MUTE_ALL)
+      if (muteState() != Rx::MUTE_ALL)
       {
         MsgSiglevUpdate *sql_msg = reinterpret_cast<MsgSiglevUpdate*>(msg);
         last_signal_strength = sql_msg->signalStrength();
@@ -481,7 +484,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgDtmf::TYPE:
     {
-      if (mute_state == Rx::MUTE_NONE)
+      if (muteState() == Rx::MUTE_NONE)
       {
       	MsgDtmf *dtmf_msg = reinterpret_cast<MsgDtmf*>(msg);
       	dtmfDigitDetected(dtmf_msg->digit(), dtmf_msg->duration());
@@ -491,7 +494,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgTone::TYPE:
     {
-      if (mute_state == Rx::MUTE_NONE)
+      if (muteState() == Rx::MUTE_NONE)
       {
 	MsgTone *tone_msg = reinterpret_cast<MsgTone*>(msg);
 	toneDetected(tone_msg->toneFq());
@@ -501,7 +504,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgAudio::TYPE:
     {
-      if ((mute_state == Rx::MUTE_NONE) && sql_is_open)
+      if ((muteState() == Rx::MUTE_NONE) && sql_is_open)
       {
 	MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
 	unflushed_samples = true;
@@ -512,7 +515,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgSel5::TYPE:
     {
-      if (mute_state == Rx::MUTE_NONE)
+      if (muteState() == Rx::MUTE_NONE)
       {
         MsgSel5 *sel5_msg = reinterpret_cast<MsgSel5*>(msg);
         selcallSequenceDetected(sel5_msg->digits());
