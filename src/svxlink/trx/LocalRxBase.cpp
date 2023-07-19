@@ -694,7 +694,7 @@ void LocalRxBase::setMuteState(MuteState new_mute_state)
           {
             audioClose();
           }
-          //squelch_det->reset();
+          squelch_det->reset();
           siglevdet->reset();
           setSquelchState(false, "MUTED");
           break;
