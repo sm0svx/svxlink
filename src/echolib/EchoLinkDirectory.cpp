@@ -635,6 +635,12 @@ int Directory::handleCallList(char *buf, int len)
 	  get_call_list.clear();
 	  com_state = CS_IDLE;
 	  read_len = 3;
+
+          std::string errmsg("INCORRECT PASSWORD");
+          if (the_message.find(errmsg.c_str(), 0, errmsg.size()) == 0)
+          {
+            error_str = the_message;
+          }
 	}
 	else
 	{

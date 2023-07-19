@@ -262,6 +262,8 @@
   not set up before the TCL event handler send_rgr_sound was called directly
   after repeater open. This caused playing the wrong roger sound.
 
+* Bugfix in ModuleEchoLink: The INCORRECT PASSWORD message was ignored.
+
 
 
  1.7.0 -- 01 Sep 2019
