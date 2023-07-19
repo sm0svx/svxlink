@@ -685,8 +685,6 @@ void RepeaterLogic::squelchOpen(bool is_open)
     }
     else
     {
-      Logic::squelchOpen(false);
-
       open_on_sql_timer.setEnable(false);
       open_on_ctcss_timer.setEnable(false);
       if (activate_on_sql_close)
@@ -696,6 +694,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
         //Logic::setReceivedTg(delayed_tg_activation);
       }
       delayed_tg_activation = 0;
+
+      Logic::squelchOpen(false);
     }
   }
 } /* RepeaterLogic::squelchOpen */
