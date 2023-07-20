@@ -252,6 +252,18 @@
 * Now possible to set the jitter buffer delay on TX audio in RemoteTrx. This
   may be useful if experiencing choppy TX audio.
 
+* Bugfix: Receiver voter muting had a couple of bugs that showed up when using
+  the voter command PTY to disable/mute/enable receivers. It's unknown if
+  these bugs have also caused any other problems.
+
+* 1750 Hz tone burst detector accuracy requirement increased to +/- 25 Hz.
+
+* Bugfix: When using "open repeater on squelch close", the squelch rx id was
+  not set up before the TCL event handler send_rgr_sound was called directly
+  after repeater open. This caused playing the wrong roger sound.
+
+* Bugfix in ModuleEchoLink: The INCORRECT PASSWORD message was ignored.
+
 
 
  1.7.0 -- 01 Sep 2019

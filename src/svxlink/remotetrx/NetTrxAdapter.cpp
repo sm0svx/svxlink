@@ -128,14 +128,15 @@ class RxAdapter : public Rx, public AudioSink
 
     /**
      * @brief 	Set the mute state for this receiver
-     * @param 	mute_state The mute state to set for this receiver
+     * @param 	new_mute_state The mute state to set for this receiver
      */
-    virtual void setMuteState(MuteState new_mute_state)
+    void setMuteState(MuteState new_mute_state) override
     {
       //cout << name() << ": RxAdapter::mute: do_mute=" << do_mute << endl;
+      Rx::setMuteState(new_mute_state);
       mute_valve.setOpen(new_mute_state == MUTE_NONE);
     }
-    
+
     /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect

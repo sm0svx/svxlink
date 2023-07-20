@@ -179,10 +179,19 @@ class Rx : public sigc::trackable, public Async::AudioSource
 
     /**
      * @brief 	Set the mute state for this receiver
-     * @param 	mute_state The mute state to set for this receiver
+     * @param 	new_mute_state The mute state to set for this receiver
      */
-    virtual void setMuteState(MuteState new_mute_state) = 0;
-    
+    virtual void setMuteState(MuteState new_mute_state)
+    {
+      m_mute_state = new_mute_state;
+    }
+
+    /**
+     * @brief   Get the mute state for this receiver
+     * @return  Returns the current mute state for this receiver
+     */
+    virtual MuteState muteState(void) const { return m_mute_state; }
+
     /**
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
@@ -321,7 +330,8 @@ class Rx : public sigc::trackable, public Async::AudioSource
     Async::Config&  m_cfg;
     Async::Timer*   m_sql_tmo_timer;
     std::string     m_sql_info;
-    
+    MuteState       m_mute_state;
+
     void sqlTimeout(Async::Timer *t);
     
 };  /* class Rx */

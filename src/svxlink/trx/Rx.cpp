@@ -216,7 +216,7 @@ std::string Rx::muteStateToString(MuteState mute_state)
 
 Rx::Rx(Config &cfg, const string& name)
   : m_name(name), m_verbose(true), m_sql_open(false), m_cfg(cfg),
-    m_sql_tmo_timer(0)
+    m_sql_tmo_timer(0), m_mute_state(MUTE_ALL)
 {
 } /* Rx::Rx */
 

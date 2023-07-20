@@ -242,6 +242,7 @@ public: \
 	static const char * _state_name() { return #S; } \
 	/* Get to your Box with this method: */ \
 	Box & box() { return *static_cast<Box *>(_box()); } \
+	const Box & box() const { return *static_cast<const Box *>(_box()); } \
 	friend class ::_VS8_Bug_101615;
 
 // Use this macro in your template class definition to give it state functionality
@@ -645,6 +646,7 @@ namespace Macho {
 
 		// This method keeps '_myStateInstance' attribute private.
 		void * _box();
+		const void * _box() const;
 
 	private:
 		// for _getInstance
@@ -1797,6 +1799,13 @@ namespace Macho {
 			// We need to know when the event handler has finished.
 			return AfterAdvice(*this);
 		}
+		const TOP * operator->() const {
+			assert(myCurrentState);
+			assert(!myPendingState);
+
+			// Const access so nothing can change
+			return static_cast<const TOP *>(& (myCurrentState->specification()) );
+		}
 
 		// Dispatch an event object to machine.
 		void dispatch(IEvent<TOP> * event, bool destroy = true) {
@@ -1952,6 +1961,10 @@ namespace Macho {
 	// This method keeps '_myStateInstance' attribute private.
 	template<class C, class P>
 	inline void * Link<C, P>::_box() {
+		return _myStateInstance.box();
+	}
+	template<class C, class P>
+	inline const void * Link<C, P>::_box() const {
 		return _myStateInstance.box();
 	}
 
