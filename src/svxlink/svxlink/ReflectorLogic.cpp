@@ -720,24 +720,6 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
     }
     sendMsg(msg);
   }
-  else if (event_name == "QsoInfo:state")
-  {
-    std::istringstream is(data);
-    Json::Value user_info;
-    is >> user_info;
-    user_info["TG"] = m_selected_tg;
-    string ud =jsonToString(user_info);
-    
-     // cout << "sende: " << event_name << "," << ud << endl;
-    MsgStateEvent msg(logic->name(), event_name, ud);
-    sendMsg(msg);
-  }
-  else if (event_name == "Sds:info" || event_name == "DvUsers:info")
-  {
-   // cout << "sende: " << event_name << "," << data << endl;
-    MsgStateEvent msg(logic->name(), event_name, data);
-    sendMsg(msg);
-  }
 } /* ReflectorLogic::remoteReceivedPublishStateEvent */
 
 
@@ -1865,18 +1847,6 @@ void ReflectorLogic::handlePlayDtmf(const std::string& digit, int amp,
   LinkManager::instance()->playDtmf(this, digit, amp, duration);
 } /* ReflectorLogic::handlePlayDtmf */
 
-
-string ReflectorLogic::jsonToString(Json::Value eventmessage)
-{
-  Json::StreamWriterBuilder builder;
-  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-  std::ostringstream ostream;
-  writer->write(eventmessage, &ostream);
-  std::string message = ostream.str();
-  message.erase(std::remove_if(message.begin(), message.end(), 
-                [](unsigned char x){return std::iscntrl(x);}));
-  return message;
-} /* ReflectorLogic::jsonToString */
 
 /*
  * This file has not been truncated
