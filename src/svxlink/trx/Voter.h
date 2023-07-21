@@ -150,10 +150,16 @@ class Voter : public Rx
 
     /**
      * @brief 	Set the mute state for this receiver
-     * @param 	mute_state The mute state to set for this receiver
+     * @param 	new_mute_state The mute state to set for this receiver
      */
-    void setMuteState(MuteState new_mute_state);
-    
+    void setMuteState(MuteState new_mute_state) override;
+
+    /**
+     * @brief   Get the mute state for this receiver
+     * @return  Returns the current mute state for this receiver
+     */
+    MuteState muteState(void) const override { return sm->muteState(); }
+
     /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
@@ -204,8 +210,6 @@ class Voter : public Rx
 
     TOPSTATE(Top)
     {
-      typedef std::list<sigc::slot<void> > SlotList;
-      
 	// Top state variables (visible to all substates)
       struct Box {
 	Box(void)
@@ -213,7 +217,7 @@ class Voter : public Rx
 	    sql_close_revote_delay(DEFAULT_SQL_CLOSE_REVOTE_DELAY),
 	    rx_switch_delay(DEFAULT_RX_SWITCH_DELAY),
 	    revote_interval(DEFAULT_REVOTE_INTERVAL), voter(0), best_srx(0),
-	    mute_state(MUTE_ALL), task_timer(0), event_timer(0)
+	    mute_state(MUTE_ALL), event_timer(0)
 	{
 	  event_timer.setEnable(false);
 	}
@@ -226,8 +230,6 @@ class Voter : public Rx
 	Voter		*voter;
 	SatRx		*best_srx;
         Rx::MuteState   mute_state;
-	Async::Timer	*task_timer;
-	SlotList	task_list;
 	Async::Timer	event_timer;
       };
 
@@ -258,7 +260,8 @@ class Voter : public Rx
 	box().revote_interval = interval_ms;
       }
       unsigned revoteInterval(void) { return box().revote_interval; }
-      
+      Rx::MuteState muteState(void) const { return box().mute_state; }
+
 	// Machine's event protocol
       virtual void timerExpired(void) { }
       virtual void setMuteState(Rx::MuteState new_mute_state);
@@ -272,9 +275,7 @@ class Voter : public Rx
       protected:
 	Voter &voter(void) { return *box().voter; }
 	SatRx *bestSrx(void) { return box().best_srx; }
-	bool muteState(void) { return box().mute_state; }
 	void runTask(sigc::slot<void> task);
-	void taskTimerExpired(Async::Timer *t);
 	void startTimer(unsigned time_ms);
 	void stopTimer(void);
 	
@@ -422,12 +423,12 @@ class Voter : public Rx
     void muteAll(Rx::MuteState mute_state) { muteAllBut(0, mute_state); }
     void unmuteAll(void);
     void resetAll(void);
-    void printSquelchState(void);
+    void publishSquelchState(void);
     SatRx *findBestRx(void) const;
     void onCommandPtyInput(const void *buf, size_t count);
     void handlePtyCommand(const std::string &full_command);
-    void setRxEnabled(const std::string &rx_name, bool do_enable,
-                      Rx::MuteState disabled_mute_state=Rx::MUTE_ALL);
+    void setRxEnabled(const std::string &rx_name,
+                      Rx::MuteState disabled_mute_state);
 
 };  /* class Voter */
 
