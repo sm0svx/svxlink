@@ -142,7 +142,6 @@ class DummyRx : public Rx
     DummyRx(Async::Config &cfg, const std::string &name) : Rx(cfg, name) {}
     virtual ~DummyRx(void) {}
     virtual bool initialize(void) { return Rx::initialize(); }
-    virtual void setMuteState(Rx::MuteState new_mute_state) {}
     virtual void reset(void) {}
     virtual void resumeOutput(void) {}
     virtual void allSamplesFlushed(void) {}

@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "MARS 2023" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JULY 2023" Linux "File Formats"
 .
 .SH NAME
 .
@@ -411,20 +411,20 @@ Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .B CTCSS_TO_TG
 Use this variable to specify a comma separated list of pairs of tone
 frequencies and talk groups. When one of the tone frequencies is detected, the
-corresponding talk group will be indicated. This can be used for example by
-ReflectorLogic to automatically switch to a talk group when one of the specified
-tone frequencies is received. You also must configure CTCSS_FQ for all
-receivers to open the squelch on the same tone frequencies. Otherwise it will
-not work.
+corresponding talk group will be associated with the received audio. This can
+be used for example by ReflectorLogic to automatically switch to a talk group
+when one of the specified tone frequencies is received. You also must configure
+CTCSS_FQ for all receivers to open the squelch on the same tone frequencies.
+Otherwise it will not work.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .TP
 .B CTCSS_TO_TG_DELAY
 The delay for reporting detected talkgroup from when a CTCSS tone is detected.
 If the squelch close before the delay time has expired, no talkgroup will be
-reported.
+reported. Default: 1000.
 
-Example: CTCSS_TO_TG_DELAY=1000
+Example: CTCSS_TO_TG_DELAY=0
 .
 .SS Simplex Logic Section
 .
@@ -2577,7 +2577,7 @@ from the radio interface.
 .TP
 .B TIMEOUT
 Specify the timeout time, in seconds, after which a module will be automatically
-deactivated if there has been no activity.
+deactivated if there has been no activity. Not including this parameter removes the timeout.
 .TP
 .B MUTE_LOGIC_LINKING
 Set to 1 to mute all logic linking audio when the module is activated or 0 to
@@ -2859,14 +2859,49 @@ event_name = Name of event
 event data = Event specific data
 
 .RS -4
-
+An event must be all on one line so there must be no line breaks. JSON event
+data in the examples below use line breaks to be easier to read.
+.PP
+Pretty printing events containing JSON formatted event data can be done using
+the following one-liner.
+.PP
+.RS 4
+.nf
+.eo
+awk '{ print "{\"name\":\"" $2 "\",\"time\":\"" strftime("%c", $1) "\",\"data\":" $3 "}"; fflush() }' /dev/shm/state_pty | jq .
+.ec
+.fi
+.PP
+.RS -4
 The following specific events exist.
+.TP
+.TP
+.B Tx:state
+Report the state for a transmitter. The event specific data is a JSON object.
+Example:
+.PP
+.RS 9
+  {
+    "id": "T",
+    "name": "Tx1",
+    "transmit": false
+  }
+
+.RS -2
+where the different fields mean:
+.PP
+.RS 4
+name = Configuration file section name for transmitter
+.RS 0
+id = The transmitter ID from configuration
+.RS 0
+transmit = Set to true if the transmitter is transmitting
+.RS -11
 .TP
 .B Voter:sql_state
 Report the state of all squelches and signal levels for all receivers. The
-event specific data is a JSON array containing an object for each receiver. The
-JSON data must all be on one line but is shown pretty printed below for easy
-reading. Example:
+event specific data is a JSON array containing an object for each
+receiver. Example:
 .PP
 .RS 9
   [
@@ -2908,9 +2943,7 @@ sql_open = Set to true if the squelch is open
 active = Set to true if the receiver is the active one, selected by the voter
 .RS 0
 siglev = The measured signal level
-
-.RS -4
-The fields sql_open, active and siglev will be left out if enabled=false.
+.RE
 .
 .SH FILES
 .
