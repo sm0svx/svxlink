@@ -75,7 +75,7 @@ using namespace Async;
  * Defines & typedefs
  *
  ****************************************************************************/
-#define ANNOUNCELOGIC_VERSION "29112022"
+#define ANNOUNCELOGIC_VERSION "24072023"
 
 
 
@@ -268,7 +268,7 @@ bool AnnounceLogic::initialize(Async::Config& cfgobj, const string& logic_name)
   every_minute_timer.start();
 
   processEvent("startup");
-  
+
   cout << name() << ": Version " << ANNOUNCELOGIC_VERSION << " started." << endl;
 
   return true;
