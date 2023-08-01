@@ -64,6 +64,9 @@
 
 * Async::Plugin: A new class for loading code as plugins.
 
+* Bugfix Async::HttpServerConnection: EOL handling failed with newer
+  compilers.
+
 
 
  1.6.0 -- 01 Sep 2019

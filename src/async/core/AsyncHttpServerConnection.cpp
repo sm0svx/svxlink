@@ -341,7 +341,7 @@ void HttpServerConnection::handleStartLine(void)
 {
   std::istringstream is(m_row);
   std::string protocol;
-  if (!(is >> m_req.method >> m_req.target >> protocol >> std::ws))
+  if (!(is >> m_req.method >> m_req.target >> protocol) || !is.eof())
   {
     std::cerr << "*** ERROR: Could not parse HTTP header" << std::endl;
     disconnect();
@@ -359,7 +359,7 @@ void HttpServerConnection::handleStartLine(void)
   is.clear();
   is.str(protocol.substr(5));
   char dot;
-  if (!(is >> m_req.ver_major >> dot >> m_req.ver_minor >> std::ws) ||
+  if (!(is >> m_req.ver_major >> dot >> m_req.ver_minor) || !is.eof() ||
       (dot != '.'))
   {
     std::cerr << "*** ERROR: Illegal protocol version specification \""
