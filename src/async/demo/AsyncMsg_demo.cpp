@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdlib.h>
+#include <cstring>
 
 
 class MsgOne : public Async::Msg
@@ -21,9 +22,11 @@ class MsgOne : public Async::Msg
     std::vector<float>            fvec;
     std::vector<std::string>      svec;
     std::map<std::string, float>  sfmap;
+    std::array<int, 8>            iarr;
+    char                          carr[8];
 
     //ASYNC_MSG_DERIVED_FROM(Msg)
-    ASYNC_MSG_MEMBERS(a, b, str, f, ivec, svec, sfmap, fvec)
+    ASYNC_MSG_MEMBERS(a, b, str, f, ivec, svec, sfmap, fvec, iarr, carr)
 };
 
 
@@ -38,7 +41,7 @@ class MsgTwo : public Async::Msg
 };
 
 
-int main()
+int main(void)
 {
   MsgOne one;
   one.a = 0xffffffffffffffff;
@@ -60,6 +63,8 @@ int main()
   one.fvec.push_back(1.2);
   one.fvec.push_back(3.4);
   one.fvec.push_back(5.6);
+  one.iarr = {1,2,3,4};
+  strcpy(one.carr, "Hello");
 
   MsgTwo mt;
   mt.one.a = 45;
@@ -101,8 +106,9 @@ int main()
     return 1;
   }
   is.close();
-  std::cout << "two.one.a=" << two.one.a << std::endl;
-  std::cout << "two.one.b=" << two.one.b << std::endl;
+  std::cout << "two.one.a=0x" << std::hex << two.one.a
+            << std::dec << std::endl;
+  std::cout << "two.one.b=" << +two.one.b << std::endl;
   std::cout << "two.one.f=" << two.one.f << std::endl;
   std::cout << "two.one.str=" << two.one.str << std::endl;
   std::cout << "two.one.ivec=";
@@ -118,12 +124,17 @@ int main()
        std::ostream_iterator<float>(std::cout, " "));
   std::cout << std::endl;
   std::cout << "two.one.sfmap:" << std::endl;
-  for (std::map<std::string, float>::const_iterator it = two.one.sfmap.begin();
-       it != two.one.sfmap.end();
-       ++it)
+  for (const auto& item : two.one.sfmap)
   {
-    std::cout << "  " << (*it).first << "=" << (*it).second << std::endl;
+    std::cout << "  " << item.first << "=" << item.second << std::endl;
   }
+  std::cout << "two.one.iarr=";
+  copy(two.one.iarr.begin(), two.one.iarr.end(),
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+  std::cout << "two.one.carr=" << two.one.carr << std::endl;
   std::cout << "two.i=" << two.i << std::endl;
-}
+
+  return 0;
+} /* main */
 
