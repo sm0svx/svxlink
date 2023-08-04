@@ -31,7 +31,6 @@ or "-devel".
 * *librtlsdr*: Support for RTL2832U DVB-T/SDR USB dongles (Optional)
 * *libgpiod*: More modern approach for GPIO support (Optional)
 * *libqt*: Version 4. Framework for graphical applications (Optional)
-* *libgpiod*: For gpio support at RaspberryPi’s (Optional)
 
 There also are some runtime dependencies which normally is needed to run a
 SvxLink system.
