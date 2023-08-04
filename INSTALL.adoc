@@ -26,8 +26,10 @@ or "-devel".
 * *libgcrypt*: Cryptographic functions (Required)
 * *libasound*: Alsa sound system support (Recommended)
 * *libgsm*: GSM audio codec (Required)
+* *libjsoncpp*: For json file support (Required)
 * *libspeex*: The Speex audio codec (Optional)
 * *librtlsdr*: Support for RTL2832U DVB-T/SDR USB dongles (Optional)
+* *libgpiod*: More modern approach for GPIO support (Optional)
 * *libqt*: Version 4. Framework for graphical applications (Optional)
 
 There also are some runtime dependencies which normally is needed to run a
@@ -56,8 +58,8 @@ looks like this:
   cmake ..
   make
   make doc
-  make install
-  ldconfig
+  sudo make install
+  sudo ldconfig
 
 This will build SvxLink and install it under /usr/local. The first argument to
 cmake point out the source directory so the build directory can be created

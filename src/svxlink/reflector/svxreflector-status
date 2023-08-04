@@ -5,6 +5,7 @@ import curses
 import time
 import sys
 import traceback
+from collections import defaultdict
 
 # API endpoint
 URL = "http://localhost:8080/status"
@@ -37,44 +38,56 @@ def draw_status(stdscr):
     # Row format for all table rows
     row_fmt = "%-9s | %8s | %15s | %3s | %s"
 
+    # Sort nodes on talkgroup
+    tg2nodes = defaultdict(list)
+    for callsign in sorted(data['nodes'].keys()):
+        node = data['nodes'][callsign]
+        tg = int(node['tg'])
+        node['callsign'] = callsign
+        tg2nodes[tg].append(node) 
+
     # Print header line
     header = row_fmt % ("Callsign", "TG#", "RX", "Lev", "Monitored TGs")
-    timestr = time.ctime()
-    nspaces = int(columns) - len(timestr) - len(header)
+    right_txt = "| %d | %s" % (len(data['nodes']), time.ctime())
+    nspaces = int(columns) - len(right_txt) - len(header)
     if nspaces > 0:
-        header = header + (' ' * nspaces) + timestr
+        header = header + (' ' * nspaces) + right_txt
     stdscr.addstr(0, 0, header, curses.color_pair(3) | curses.A_REVERSE | curses.A_BOLD)
 
     # Print all node lines
-    line = 1
-    for callsign in sorted(data['nodes'].keys()):
-        node = data['nodes'][callsign]
-        monitored_tgs = " ".join(str(tg) for tg in node['monitoredTGs'])
-        tg = str(node['tg'])
-        if 'restrictedTG' in node and bool(node['restrictedTG']):
-            tg = "*" + tg
-        rx_name = ''
-        siglev = ''
-        if 'qth' in node and isinstance(node['qth'], list):
-            for qth in node['qth']:
-                qth_name = ''
-                if 'name' in qth:
-                    qth_name = ' ' + qth['name']
-                if 'rx' in qth:
-                    for rx_id in qth['rx']:
-                        rx = qth['rx'][rx_id]
-                        if 'active' in rx and rx['active']:
-                            rx_name = rx['name'] + qth_name
-                            siglev = rx['siglev']
-        rx_name = rx_name[0:15]
-        attrs = curses.color_pair(2)
-        if node['isTalker']:
-            attrs = curses.color_pair(1)
-        stdscr.addnstr(line, 0, row_fmt % (callsign, tg, rx_name, siglev, monitored_tgs), int(columns)-1, attrs)
-        stdscr.clrtoeol()
-        if line >= rows-1:
-            break
-        line = line + 1
+    def print_node_lines():
+        line = 1
+        for tg in sorted(tg2nodes.keys(), reverse=True):
+            node_list = tg2nodes[tg]
+            for node in node_list:
+                callsign = node['callsign']
+                tg = str(node['tg'])
+                if 'restrictedTG' in node and bool(node['restrictedTG']):
+                    tg = "*" + tg
+                monitored_tgs = " ".join(str(tg) for tg in node['monitoredTGs'])
+                rx_name = ''
+                siglev = ''
+                if 'qth' in node and isinstance(node['qth'], list):
+                    for qth in node['qth']:
+                        qth_name = ''
+                        if 'name' in qth:
+                            qth_name = ' ' + qth['name']
+                        if 'rx' in qth:
+                            for rx_id in qth['rx']:
+                                rx = qth['rx'][rx_id]
+                                if 'active' in rx and rx['active']:
+                                    rx_name = rx['name'] + qth_name
+                                    siglev = rx['siglev']
+                rx_name = rx_name[0:15]
+                attrs = curses.color_pair(2)
+                if node['isTalker']:
+                    attrs = curses.color_pair(1)
+                stdscr.addnstr(line, 0, row_fmt % (callsign, tg, rx_name, siglev, monitored_tgs), int(columns)-1, attrs)
+                stdscr.clrtoeol()
+                if line >= rows-1:
+                    return
+                line = line + 1
+    print_node_lines()
     stdscr.clrtobot()
     stdscr.refresh()
 
