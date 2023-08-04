@@ -184,7 +184,6 @@ want, install the svxlink-server package.
 /usr/share/qtel/translations/qtel_sv.qm
 %attr(755,root,root) %{_bindir}/qtel
 /usr/share/icons/hicolor/128x128/apps/qtel.png
-/usr/share/icons/link.xpm
 /usr/share/applications/qtel.desktop
 /usr/share/metainfo/org.svxlink.Qtel.metainfo.xml
 
@@ -308,6 +307,7 @@ The Async library development files
 * Fri Aug 04 2023 Daniel Rusek <mail@asciiwolf.com>
 - Added AppStream metainfo into files.
 - Added png icon into files.
+- Removed xpm icon from files.
 * Wed Jul 30 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
 - Fixed a couple of things that rpmlint complained about.
 - Making use of some directory macros (_libdir, _includedir, _bindir, _sbindir).
