@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.svxlink.Qtel</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0</project_license>
+
+  <name>Qtel</name>
+  <summary>EchoLink Client</summary>
+  <description>
+    <p>
+      Qtel, the Qt EchoLink client, is a graphical application used to access the EchoLink network. EchoLink allows licensed Amateur Radio stations to communicate
+      with one another over the Internet, using streaming-audio technology. The program allows worldwide connections to be made between stations,
+      or from computer to station, greatly enhancing Amateur Radio's communications capabilities.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">qtel.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main window</caption>
+      <image>https://images.pling.com/img/00/00/01/97/97/1126532/28472-1.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://www.svxlink.org</url>
+  <url type="bugtracker">https://github.com/sm0svx/svxlink/issues</url>
+
+  <content_rating type="oars-1.1" />
+</component>

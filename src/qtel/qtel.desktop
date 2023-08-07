@@ -1,10 +1,10 @@
 [Desktop Entry]
 Name=Qtel
 GenericName=EchoLink Client
-Exec=/usr/bin/qtel
+Exec=qtel
 Terminal=false
 Categories=Application;HamRadio;Qt;Network;
 Keywords=radio;ham;ptt;
-Icon=/usr/share/icons/link.xpm
+Icon=qtel
 Comment=The Qt EchoLink Client
 Type=Application
