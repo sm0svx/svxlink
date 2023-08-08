@@ -2,13 +2,13 @@
 PROJECT=master
 
 # Version for the Qtel application
-QTEL=1.2.4.99.5
+QTEL=1.2.4.99.6
 
 # Version for the EchoLib library
 LIBECHOLIB=1.3.3.99.3
 
 # Version for the Async library
-LIBASYNC=1.6.99.25
+LIBASYNC=1.6.99.26
 
 # SvxLink versions
 SVXLINK=1.7.99.86
@@ -37,4 +37,4 @@ DEVCAL=1.0.2.99.10
 SVXSERVER=0.0.6
 
 # Version for SvxReflector
-SVXREFLECTOR=1.99.16
+SVXREFLECTOR=1.99.17

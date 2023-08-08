@@ -169,7 +169,7 @@ Summary: The QT EchoLink Client
 Version: %{QTEL}
 Release: %{QTEL_RPM_RELEASE}.%{dist}
 Group: Applications/Ham Radio
-Requires: libasync echolib
+Requires: libasync echolib hicolor-icon-theme
 
 %description -n qtel
 This package contains Qtel, the Qt EchoLink client. It is an implementation of
@@ -183,8 +183,9 @@ want, install the svxlink-server package.
 /usr/share/qtel/sounds/connect.raw
 /usr/share/qtel/translations/qtel_sv.qm
 %attr(755,root,root) %{_bindir}/qtel
-/usr/share/icons/link.xpm
+/usr/share/icons/hicolor/128x128/apps/qtel.png
 /usr/share/applications/qtel.desktop
+/usr/share/metainfo/org.svxlink.Qtel.metainfo.xml
 
 
 %package -n echolib
@@ -303,6 +304,10 @@ The Async library development files
 %{_libdir}/libasyncaudio.a
 
 %changelog
+* Fri Aug 04 2023 Daniel Rusek <mail@asciiwolf.com>
+- Added AppStream metainfo into files.
+- Added png icon into files.
+- Removed xpm icon from files.
 * Wed Jul 30 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
 - Fixed a couple of things that rpmlint complained about.
 - Making use of some directory macros (_libdir, _includedir, _bindir, _sbindir).

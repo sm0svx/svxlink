@@ -5,6 +5,11 @@
   bit cryptic error message. Now it starts up with the possibility to use the
   configuration dialog to fix the problem.
 
+* Appstream adaptions from GitHub user "AsciiWolf"
+  - Added AppStream metainfo into files.
+  - Added png icon into files.
+  - Removed xpm icon from files.
+
 
 
  1.2.4 -- 06 Jan 2017
