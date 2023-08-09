@@ -1042,7 +1042,7 @@ Logic::~Logic(void)
 
 void Logic::squelchOpen(bool is_open)
 {
-  std::cout << "### Logic::squelchOpen: is_open=" << is_open << std::endl;
+  //std::cout << "### Logic::squelchOpen: is_open=" << is_open << std::endl;
 
   if (active_module != 0)
   {
