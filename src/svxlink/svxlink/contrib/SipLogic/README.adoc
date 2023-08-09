@@ -41,7 +41,7 @@ sudo make install
 
 == Installation of SvxLink with SipLogic extension ==
 ```
-git clone https://github.com/dl1hrc/svxlink.git
+git clone https://github.com/sm0svx/svxlink.git
 cd svxlink/src/
 mkdir build
 cd build
