@@ -56,7 +56,10 @@ variable num_connected_stations 0;
 #
 proc activating_module {} {
   variable module_name;
-  Module::activating_module $module_name;
+  variable CFG_ANNOUNCE_ACTIVATING
+  if {[getVar CFG_ANNOUNCE_ACTIVATING 1]} {
+    Module::activating_module $module_name;
+  }
 }
 
 
@@ -65,7 +68,10 @@ proc activating_module {} {
 #
 proc deactivating_module {} {
   variable module_name;
-  Module::deactivating_module $module_name;
+  variable CFG_ANNOUNCE_DEACTIVATING
+  if {[getVar CFG_ANNOUNCE_DEACTIVATING 1]} {
+    Module::deactivating_module $module_name;
+  }
 }
 
 
