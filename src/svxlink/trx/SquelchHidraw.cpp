@@ -208,6 +208,10 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
     {
       cout << "CM108A";
     }
+    else if (hiddevinfo.product == 0x0012)
+    {
+      cout << "CM108B";
+    }
     else if (hiddevinfo.product == 0x000e)
     {
       cout << "CM109";
