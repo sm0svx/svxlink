@@ -182,6 +182,10 @@ the operating system. Commands: "KILL" will disconnect the current talker,
 "DISC callsign" will disconnect the station with the given callsign. Commands
 can be issued using a simple echo command from the shell.
 .TP
+.B LOCAL_RGR_SOUND
+Set this variable to 0 to disable playing a roger sound (beep) locally when the
+remote station stops talking. It's enabled by default.
+.TP
 .B REMOTE_RGR_SOUND
 Set this to 1 to enable sending of a roger sound (beep) to remote Echolink
 stations when the squelch closes on the local node. It's disabled by default.

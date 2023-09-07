@@ -125,6 +125,18 @@ proc sourceTcl {filename} {
 }
 
 
+#
+# Get a variable and if it does not exist return the default value
+#
+#   varname - The name of the variable to get
+#   default - The default value to set if the variable is undefined
+#
+proc getVar {varname default} {
+  upvar $varname var
+  expr {[info exists var] ? $var : $default}
+}
+
+
 ###############################################################################
 #
 # Main program

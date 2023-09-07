@@ -264,6 +264,17 @@
 
 * Bugfix in ModuleEchoLink: The INCORRECT PASSWORD message was ignored.
 
+* New global TCL function "getVar" than makes it easier to get the value of a
+  variable that may be non-existent. If the variable does not exist a default
+  value is returned instead.
+
+* New configuration variable LOCAL_RGR_SOUND in ModuleEchoLink that is used to
+  enable/disable the playing of a roger beep locally when the remote station
+  stops talking.
+
+* Add support for using the CM108B chip for squelch and PTT.
+  Contributed by DL1HRC.
+
 
 
  1.7.0 -- 01 Sep 2019

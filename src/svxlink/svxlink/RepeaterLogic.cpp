@@ -692,10 +692,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	activate_on_sql_close = false;
       	setUp(true, open_reason);
         //Logic::setReceivedTg(delayed_tg_activation);
+        Logic::squelchOpen(false);
       }
       delayed_tg_activation = 0;
-
-      Logic::squelchOpen(false);
     }
   }
 } /* RepeaterLogic::squelchOpen */
