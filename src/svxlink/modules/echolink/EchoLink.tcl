@@ -463,10 +463,10 @@ proc reject_outgoing_connection {call} {
 #   rx   - 1 if receiving or 0 if not
 #   call - The callsign of the remote station
 #
-#
 proc is_receiving {rx call} {
-  if {$rx == 0} {
-    playTone 1000 100 100;
+  variable CFG_LOCAL_RGR_SOUND
+  if {[getVar CFG_LOCAL_RGR_SOUND 1] && !$rx} {
+    playTone 1000 100 100
   }
 }
 
