@@ -129,32 +129,14 @@ proc setAmplitude {new_amplitude} {
 #
 # Load the values from the config file
 #
-proc loadDefaults {} {
-  variable ::Logic::CFG_CW_AMP
-  variable ::Logic::CFG_CW_CPM
-  variable ::Logic::CFG_CW_WPM
-  variable ::Logic::CFG_CW_PITCH
-
-  if [info exists CFG_CW_AMP] {
-    setAmplitude $CFG_CW_AMP
-  } else {
-    setAmplitude -6
+proc loadDefaults {{section ""}} {
+  if {$section == ""} {
+    set section $::logic_name
   }
-
-  if [info exists CFG_CW_CPM] {
-    setCpm $CFG_CW_CPM
-  } elseif [info exists CFG_CW_WPM] {
-    setWpm $CFG_CW_WPM
-  } else {
-    setCpm 100
-  }
-
-  if [info exists CFG_CW_PITCH] {
-    setPitch $CFG_CW_PITCH
-  } else {
-    setPitch 800
-  }
-
+  setAmplitude [getConfigValue $section CW_AMP -6]
+  setCpm [getConfigValue $section CW_CPM \
+          [expr 5*[getConfigValue $section CW_WPM 20]]]
+  setPitch [getConfigValue $section CW_PITCH 800]
   calculateTimings
 }
 

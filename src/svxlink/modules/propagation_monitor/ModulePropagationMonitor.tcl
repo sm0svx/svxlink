@@ -12,12 +12,8 @@
 #
 namespace eval PropagationMonitor {
 
-#
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
+# Enable lookup of commands in the logic core namespace
+namespace path ::${::logic_name}
 
 
 #
@@ -41,7 +37,7 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "$module_name" "$ev"
+  ::processEvent "${::logic_name}::$module_name" "$ev"
 }
 
 
@@ -280,8 +276,7 @@ if {![file exists $CFG_SPOOL_DIR/vhfdx/archive]} {
   file mkdir $CFG_SPOOL_DIR/vhfdx/archive
 }
 
-append func $module_name "::check_for_alerts";
-Logic::addMinuteTickSubscriber $func;
+Logic::addMinuteTickSubscriber check_for_alerts
 
 
 

@@ -13,14 +13,6 @@
 namespace eval SelCallEnc {
 
 #
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
-
-
-#
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]];
@@ -70,7 +62,7 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "$module_name" "$ev"
+  ::processEvent "${::logic_name}::${module_name}" "$ev"
 }
 
 
@@ -78,7 +70,7 @@ proc processEvent {ev} {
 # Executed when this module is being activated
 #
 proc activateInit {} {
-  #printInfo "Module activated"
+  printInfo "Module activated"
 }
 
 

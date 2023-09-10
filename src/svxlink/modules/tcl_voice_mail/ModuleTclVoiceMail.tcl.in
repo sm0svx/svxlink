@@ -15,9 +15,9 @@ namespace eval TclVoiceMail {
 #
 # Check if this module is loaded in the current logic core
 #
-if {![info exists CFG_ID]} {
-  return;
-}
+#if {![info exists CFG_ID]} {
+#  return;
+#}
 
 #
 # Extract the module name from the current namespace
@@ -55,7 +55,7 @@ set mail_smtp_url "smtp://127.0.0.1:25";
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
 set cfg_home ""
 if {[info exists ::env(HOME)]} {
-  set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
+  set cfg_home "$::env(HOME)/.svxlink/TclVoiceMail.conf";
 }
 
 
@@ -86,7 +86,7 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "$module_name" "$ev"
+  ::processEvent "${::logic_name}::${module_name}" "$ev"
 }
 
 
@@ -236,7 +236,6 @@ proc squelchOpen {is_open} {
   variable mail_subj;
   variable mail_msg;
   variable CFG_ID;
-  variable ::Logic::CFG_CALLSIGN;
   variable max_subj_time;
   variable max_mesg_time;
   

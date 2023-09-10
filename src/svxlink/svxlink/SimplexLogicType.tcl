@@ -1,13 +1,17 @@
 ###############################################################################
 #
-# AnnounceLogic event handlers
+# SimplexLogic event handlers
+#
+# This file is sourced by all simplex logics and contains the TCL code that are
+# in common to all simplex logics.
 #
 ###############################################################################
 
-# The namespace is automatically set to the logic core name so there is no need
-# to change it unless you have a good reason
 namespace eval ${::logic_name} {
 
+# Mix in ("inherit") generic logic TCL code
+sourceTcl "$basedir/events.d/Logic.tcl"
+mixin Logic
 
 # end of namespace
 }

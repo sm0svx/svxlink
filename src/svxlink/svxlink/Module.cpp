@@ -88,7 +88,7 @@ bool Module::initialize(void)
   list<string>::const_iterator cfgit;
   for (cfgit=vars.begin(); cfgit!=vars.end(); ++cfgit)
   {
-    string var = name() + "::CFG_" + *cfgit;
+    string var = logic()->name() + "::" + name() + "::CFG_" + *cfgit;
     string value;
     cfg().getValue(cfgName(), *cfgit, value);
     setEventVariable(var, value);

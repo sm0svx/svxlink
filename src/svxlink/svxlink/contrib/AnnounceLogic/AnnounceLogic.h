@@ -182,6 +182,8 @@ class AnnounceLogic : public LogicBase
     void prenotification(void);
     void announceQst(void);
     bool check_week_of_month(struct tm t);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
 
 };  /* class AnnounceLogic */
 

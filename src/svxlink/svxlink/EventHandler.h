@@ -266,6 +266,15 @@ class EventHandler : public sigc::trackable
     sigc::signal<void, const std::string&, const std::string&,
                  const std::string&> setConfigValue;
 
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to get
+     *	      	a configuration variable
+     * @param 	section The name of the configuration section
+     * @param 	tag     The name of the configureation variable
+     */
+    sigc::signal<bool, const std::string&,
+                 const std::string&, std::string&> getConfigValue;
+
   protected:
 
   private:
@@ -288,6 +297,8 @@ class EventHandler : public sigc::trackable
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
     static int injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+                    int argc, const char *argv[]);
+    static int getConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);
     static int setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
                     int argc, const char *argv[]);

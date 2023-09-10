@@ -229,6 +229,8 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
       sigc::bind(mem_fun(*msg_handler, &MsgHandler::playSilence), false));
   event_handler->playTone.connect(
       sigc::bind(mem_fun(*msg_handler, &MsgHandler::playTone), false));
+  event_handler->getConfigValue.connect(
+      sigc::mem_fun(*this, &QsoImpl::getConfigValue));
 
     // Workaround: Need to set the ID config variable and "logic_name"
     // variable to load the TCL script.
@@ -574,6 +576,13 @@ void QsoImpl::destroyMeNow(Timer *t)
   destroyMe(this);
 } /* destroyMeNow */
 
+
+bool QsoImpl::getConfigValue(const std::string& section, const std::string& tag,
+                             std::string& value)
+{
+  const Config &cfg = module->cfg();
+  return cfg.getValue(section, tag, value, true);
+} /* QsoImpl::getConfigValue */
 
 
 /*

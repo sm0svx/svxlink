@@ -312,6 +312,8 @@ class Logic : public LogicBase
                              const std::string &msg);
     void detectedTone(float fq);
     void cfgUpdated(const std::string& section, const std::string& tag);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
 
 };  /* class Logic */
 

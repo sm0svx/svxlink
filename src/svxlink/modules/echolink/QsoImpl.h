@@ -342,6 +342,8 @@ class QsoImpl
     void onStateChange(EchoLink::Qso::State state);
     void idleTimeoutCheck(Async::Timer *t);
     void destroyMeNow(Async::Timer *t);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
 
 };  /* class QsoImpl */
 

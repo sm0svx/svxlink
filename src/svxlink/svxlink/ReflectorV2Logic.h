@@ -306,6 +306,8 @@ class ReflectorLogic : public LogicBase
     void handlePlaySilence(int duration);
     void handlePlayTone(int fq, int amp, int duration);
     void handlePlayDtmf(const std::string& digit, int amp, int duration);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
 
 };  /* class ReflectorLogic */
 

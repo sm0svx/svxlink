@@ -395,16 +395,20 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     m_event_handler->playDtmf.connect(
           sigc::mem_fun(*this, &ReflectorLogic::handlePlayDtmf));
   }
+  m_event_handler->getConfigValue.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::getConfigValue));
   m_event_handler->setConfigValue.connect(
       sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
-  m_event_handler->setVariable("logic_name", name().c_str());
+  m_event_handler->setVariable("logic_name", name());
+  m_event_handler->setVariable("logic_type", type());
 
-  m_event_handler->processEvent("namespace eval Logic {}");
+  m_event_handler->processEvent(
+      std::string("namespace eval ") + name() + "::Logic {}");
   list<string> cfgvars = cfg().listSection(name());
   list<string>::const_iterator cfgit;
   for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
   {
-    string var = "Logic::CFG_" + *cfgit;
+    string var = name() + "::Logic::CFG_" + *cfgit;
     string value;
     cfg().getValue(name(), *cfgit, value);
     m_event_handler->setVariable(var, value);
@@ -1864,6 +1868,14 @@ void ReflectorLogic::handlePlayDtmf(const std::string& digit, int amp,
   setIdle(false);
   LinkManager::instance()->playDtmf(this, digit, amp, duration);
 } /* ReflectorLogic::handlePlayDtmf */
+
+
+bool ReflectorLogic::getConfigValue(const std::string& section,
+                                    const std::string& tag,
+                                    std::string& value)
+{
+  return cfg().getValue(section, tag, value, true);
+} /* ReflectorLogic::getConfigValue */
 
 
 /*

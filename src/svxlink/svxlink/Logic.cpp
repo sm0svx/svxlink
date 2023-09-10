@@ -611,6 +611,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
           mem_fun(*this, &Logic::onPublishStateEvent));
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
+  event_handler->getConfigValue.connect(
+          sigc::mem_fun(*this, &Logic::getConfigValue));
   event_handler->setConfigValue.connect(
           sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   event_handler->setVariable("mycall", m_callsign);
@@ -618,8 +620,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
-  event_handler->setVariable("is_core_event_handler", "1");
-  event_handler->setVariable("logic_name", name().c_str());
+  event_handler->setVariable("logic_name", name());
+  event_handler->setVariable("logic_type", type());
 
   updateTxCtcss(true, TX_CTCSS_ALWAYS);
 
@@ -637,12 +639,12 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   }
   event_handler->setVariable("loaded_modules", loaded_modules);
 
-  event_handler->processEvent("namespace eval Logic {}");
+  event_handler->processEvent("namespace eval " + name() + "::Logic {}");
   list<string> cfgvars = cfg().listSection(name());
   list<string>::const_iterator cfgit;
   for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
   {
-    string var = "Logic::CFG_" + *cfgit;
+    string var = name() + "::Logic::CFG_" + *cfgit;
     string value;
     cfg().getValue(name(), *cfgit, value);
     event_handler->setVariable(var, value);
@@ -739,7 +741,7 @@ void Logic::processEvent(const string& event, const Module *module)
   }
   else
   {
-    event_handler->processEvent(string(module->name()) + "::" + event);
+    event_handler->processEvent(name() + "::" + module->name() + "::" + event);
   }
   msg_handler->end();
 }
@@ -1326,7 +1328,8 @@ void Logic::loadModule(const string& module_cfg_name)
   cfg().getValue(module_cfg_name, "NAME", plugin_name);
 
     // Define the module namespace so that we can set some variables in it
-  event_handler->processEvent("namespace eval " + plugin_name + " {}");
+  event_handler->processEvent(
+      "namespace eval " + name() + "::" + plugin_name + " {}");
 
   cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
 
@@ -1816,7 +1819,7 @@ void Logic::cfgUpdated(const std::string& section, const std::string& tag)
     std::string value;
     if (cfg().getValue(name(), tag, value))
     {
-      event_handler->setVariable("Logic::CFG_" + tag, value);
+      event_handler->setVariable(name() + "::Logic::CFG_" + tag, value);
       processEvent("config_updated CFG_" + tag + " \"" + value + "\"");
     }
     if (tag == "ONLINE")
@@ -1829,6 +1832,13 @@ void Logic::cfgUpdated(const std::string& section, const std::string& tag)
     }
   }
 } /* Logic::cfgUpdated */
+
+
+bool Logic::getConfigValue(const std::string& section, const std::string& tag,
+                           std::string& value)
+{
+  return cfg().getValue(section, tag, value, true);
+} /* Logic::getConfigValue */
 
 
 /*

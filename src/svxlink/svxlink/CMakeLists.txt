@@ -7,8 +7,9 @@ set(SVXLINK_SRCS
 
 # TCL event handler files to install in the events.d subdirectory
 set(SVXLINK_TCL_EVENT_FILES
-  RepeaterLogic.tcl SimplexLogic.tcl ReflectorLogic.tcl Module.tcl Logic.tcl
-  CW.tcl SelCall.tcl locale.tcl
+  Module.tcl CW.tcl SelCall.tcl locale.tcl Logic.tcl
+  SimplexLogicType.tcl RepeaterLogicType.tcl ReflectorLogicType.tcl
+  ReflectorV2LogicType.tcl SimplexLogic.tcl RepeaterLogic.tcl ReflectorLogic.tcl
   )
 
 # Logic core plugins to build

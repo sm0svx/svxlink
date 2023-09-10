@@ -13,13 +13,6 @@
 namespace eval Tcl {
 
 #
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
-
-#
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]]
@@ -33,7 +26,7 @@ set module_name [namespace tail [namespace current]]
 #
 proc printInfo {msg} {
   variable module_name
-  puts "$module_name: $msg"
+  puts "${module_name}: ${msg}"
 }
 
 
@@ -44,7 +37,7 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "$module_name" "$ev"
+  ::processEvent "${::logic_name}::${module_name}" "${ev}"
 }
 
 
@@ -54,7 +47,7 @@ proc processEvent {ev} {
 #
 proc activateInit {} {
   printInfo "Module activated"
-  
+
 }
 
 
@@ -74,7 +67,7 @@ proc deactivateCleanup {} {
 #   duration - The duration of the received DTMF digit
 #
 proc dtmfDigitReceived {char duration} {
-  printInfo "DTMF digit $char received with duration $duration milliseconds"
+  printInfo "DTMF digit ${char} received with duration ${duration} milliseconds"
 
 }
 
@@ -86,13 +79,13 @@ proc dtmfDigitReceived {char duration} {
 #
 proc dtmfCmdReceived {cmd} {
   printInfo "DTMF command received: $cmd"
-  
+
   if {$cmd == "0"} {
     processEvent "play_help"
   } elseif {$cmd == ""} {
     deactivateModule
   } else {
-    processEvent "unknown_command $cmd"
+    processEvent "unknown_command ${cmd}"
   }
 }
 
@@ -104,8 +97,8 @@ proc dtmfCmdReceived {cmd} {
 #   cmd - The received DTMF command
 #
 proc dtmfCmdReceivedWhenIdle {cmd} {
-  printInfo "DTMF command received when idle: $cmd"
-  
+  printInfo "DTMF command received when idle: ${cmd}"
+
 }
 
 
@@ -116,8 +109,8 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
 #
 proc squelchOpen {is_open} {
   if {$is_open} {set str "OPEN"} else { set str "CLOSED"}
-  printInfo "The squelch is $str"
-  
+  printInfo "The squelch is ${str}"
+
 }
 
 
@@ -128,7 +121,7 @@ proc squelchOpen {is_open} {
 #
 proc allMsgsWritten {} {
   printInfo "allMsgsWritten called..."
-  
+
 }
 
 
