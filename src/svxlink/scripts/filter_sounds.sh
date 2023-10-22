@@ -73,8 +73,8 @@ if [ $# -lt 2 ]; then
   print_usage_and_exit
 fi
 
-SRC_DIR=$1
-DEST_DIR=$2
+SRC_DIR=${1%/}
+DEST_DIR=${2%/}
 SILENCE_LEVEL=45
 
 # Check for requird external utilities
