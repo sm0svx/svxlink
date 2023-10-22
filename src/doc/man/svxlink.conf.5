@@ -476,7 +476,13 @@ Set a configuration variable. Only a few configuration variables support being
 set at runtime. Example: CFG RepeaterLogic ONLINE 0.
 .IP \(bu 4
 .BR "EVENT <event name> [<arg> ...]" " --"
-Call an event handler (TCL function). Example: EVENT playNumber -42.5.
+Call an event handler (TCL function). It is important to specify the correct
+TCL namespace for the function to be found. If no namespace is given, the
+namespace of the current logic core will be added, e.g. "manual_identification"
+is the same as "RepeaterLogic::manual_identification" if the logic core
+namnespace is "RepeaterLogic". To call a function in the root namespace, the
+function name must be prepended with "::".
+Example: EVENT ::playNumber -42.5.
 .RE
 
 Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
