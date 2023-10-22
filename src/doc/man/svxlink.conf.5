@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "SEPTEMBER 2023" Linux "File Formats"
+.TH SVXLINK.CONF 5 "OCTOBER 2023" Linux "File Formats"
 .
 .SH NAME
 .
@@ -474,6 +474,9 @@ Valid commands:
 .BR "CFG <section> <tag> <value>" " --"
 Set a configuration variable. Only a few configuration variables support being
 set at runtime. Example: CFG RepeaterLogic ONLINE 0.
+.IP \(bu 4
+.BR "EVENT <event name> [<arg> ...]" " --"
+Call an event handler (TCL function). Example: EVENT playNumber -42.5.
 .RE
 
 Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
