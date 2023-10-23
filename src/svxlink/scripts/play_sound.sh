@@ -49,9 +49,9 @@ process()
         silence 1 0:0:0.01 $silence_front_level reverse \
 	silence 1 0:0:0.01 $silence_back_level reverse \
 	$effect \
-	norm -3
+	norm -6
   else
-    sox $format $1 $format - $effect norm -3
+    sox $format $1 $format - $effect norm -6
   fi
 }
 

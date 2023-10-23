@@ -38,11 +38,18 @@ proc spellWord {word} {
 #
 # Spell the specified number digit for digit
 #
+# This is a rather stupid function that just read out the digits one by one in
+# a given number. There is no check that it's a valid number.
+#
 proc spellNumber {number} {
   for {set i 0} {$i < [string length $number]} {set i [expr $i + 1]} {
     set ch [string index $number $i];
     if {$ch == "."} {
-      playMsg "Default" "decimal";
+      playMsg "Default" "decimal"
+    } elseif {$ch == "+"} {
+      playMsg "Default" "plus"
+    } elseif {$ch == "-"} {
+      playMsg "Default" "minus"
     } else {
       playMsg "Default" "$ch";
     }
@@ -101,7 +108,15 @@ proc playThreeDigitNumber {number} {
 
 
 #
-# Say a number as intelligent as posible. Examples:
+# Say a number as intelligently as possible.
+#
+# Any leading or trailing whitespace is ignored.
+# If a number is zero, the sign will be ignored.
+# For numbers beginning with a point, a zero is prepended.
+# Numbers >= 1000 will be split into three and two digit groups.
+# Any leading zeros will be preserved.
+#
+# Examples:
 #
 #	1	- one
 #	24	- twentyfour
@@ -109,26 +124,49 @@ proc playThreeDigitNumber {number} {
 #	1234	- twelve thirtyfour
 #	12345	- onehundred and twentythree fourtyfive
 #	136.5	- onehundred and thirtysix point five
+#	007.123	- zero zero seven point one two three
+#	.123	- zero point one two three
+#	-1	- minus one
+#	-0.0	- zero point zero
+#	+1.5	- plus one point five
 #
 proc playNumber {number} {
-  if {[regexp {(\d+)\.(\d+)?} $number -> integer fraction]} {
+  if {![regexp {^\s*([+-])?(\d*)(?:\.(\d+))?\s*$} $number \
+        -> sign integer fraction]} {
+    puts "*** ERROR\[playNumber\]: Invalid number '$number'"
+    return
+  }
+
+  if {[string length "$integer"] == 0} {
+    set integer "0"
+  }
+
+  if [expr double("$integer.$fraction") != 0.0] {
+    if {$sign == "+"} {
+      playMsg "Default" "plus"
+    } elseif  {$sign == "-"} {
+      playMsg "Default" "minus"
+    }
+  }
+
+  if {$fraction != ""} {
     playNumber $integer;
     playMsg "Default" "decimal";
     spellNumber $fraction;
     return;
   }
 
-  while {[string length $number] > 0} {
-    set len [string length $number];
+  while {[string length $integer] > 0} {
+    set len [string length $integer];
     if {$len == 1} {
-      playMsg "Default" $number;
-      set number "";
+      playMsg "Default" $integer;
+      set integer "";
     } elseif {$len % 2 == 0} {
-      playTwoDigitNumber [string range $number 0 1];
-      set number [string range $number 2 end];
+      playTwoDigitNumber [string range $integer 0 1];
+      set integer [string range $integer 2 end];
     } else {
-      playThreeDigitNumber [string range $number 0 2];
-      set number [string range $number 3 end];
+      playThreeDigitNumber [string range $integer 0 2];
+      set integer [string range $integer 3 end];
     }
   }
 }
