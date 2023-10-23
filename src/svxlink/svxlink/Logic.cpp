@@ -1156,11 +1156,33 @@ void Logic::commandPtyCmdReceived(const void *buf, size_t count)
     }
     cfg().setValue(section, tag, value);
   }
+  else if (cmd == "EVENT")
+  {
+    std::string event(std::istreambuf_iterator<char>(ss >> std::ws), {});
+    if (!ss || (event.size() == 0))
+    {
+      std::cerr << "*** ERROR: Invalid PTY command in logic "
+                << name() << ": \"" << cmdline << "\". "
+                << "Usage: EVENT <event name> [<arg> ...]"
+                << std::endl;
+      return;
+    }
+    if (event.find("::") != event.npos)
+    {
+      msg_handler->begin();
+      event_handler->processEvent(event);
+      msg_handler->end();
+    }
+    else
+    {
+      processEvent(event);
+    }
+  }
   else
   {
     std::cerr << "*** ERROR: Unknown PTY command in logic "
               << name() << ": \"" << cmdline << "\". "
-              << "Valid commands are: CFG"
+              << "Valid commands are: CFG, EVENT"
               << std::endl;
   }
 } /* Logic::commandPtyCmdReceived */

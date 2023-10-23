@@ -275,6 +275,9 @@
 * Add support for using the CM108B chip for squelch and PTT.
   Contributed by DL1HRC.
 
+* New configuration variable TG_SELECT_INHIBIT_TIMEOUT that is used to
+  separately control the TG select inhibit feature.
+
 
 
  1.7.0 -- 01 Sep 2019

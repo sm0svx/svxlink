@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JULY 2023" Linux "File Formats"
+.TH SVXLINK.CONF 5 "OCTOBER 2023" Linux "File Formats"
 .
 .SH NAME
 .
@@ -474,6 +474,15 @@ Valid commands:
 .BR "CFG <section> <tag> <value>" " --"
 Set a configuration variable. Only a few configuration variables support being
 set at runtime. Example: CFG RepeaterLogic ONLINE 0.
+.IP \(bu 4
+.BR "EVENT <event name> [<arg> ...]" " --"
+Call an event handler (TCL function). It is important to specify the correct
+TCL namespace for the function to be found. If no namespace is given, the
+namespace of the current logic core will be added, e.g. "manual_identification"
+is the same as "RepeaterLogic::manual_identification" if the logic core
+namnespace is "RepeaterLogic". To call a function in the root namespace, the
+function name must be prepended with "::".
+Example: EVENT ::playNumber -42.5.
 .RE
 
 Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
@@ -701,6 +710,18 @@ The number of seconds after which a selected talk group will be unselected. The
 node will return to talk group 0 (no talk group) and start monitoring the
 configured talk groups again. The value must be larger than zero. Default: 30
 seconds.
+.TP
+.B TG_SELECT_INHIBIT_TIMEOUT
+Talkgroup selection is inhibited when there is activity on the local frequency
+that does not activate a talkgroup. Only activation due to remote activity
+(monitoring) is inhibited. A talkgroup can be activated as usual by using any
+method for local activation. This feature make it possible to conduct a local
+QSO without being disturbed by remote reflector traffic.
+
+Use this configuration variable to set the number of seconds of inactivity
+before the node will go back to monitoring remote talkgroup activity. The
+default value is taken from TG_SELECT_TIMEOUT if this variable is not set.
+Setting a value of 0 will disable the feature entirely.
 .TP
 .B ANNOUNCE_REMOTE_MIN_INTERVAL
 The minimum number of seconds between announcements of the same TG for remote

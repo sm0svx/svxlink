@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -236,6 +236,7 @@ class ReflectorLogic : public LogicBase
     Async::AudioEncoder*              m_enc;
     uint32_t                          m_default_tg;
     unsigned                          m_tg_select_timeout;
+    unsigned                          m_tg_select_inhibit_timeout;
     Async::Timer                      m_tg_select_timer;
     unsigned                          m_tg_select_timeout_cnt;
     uint32_t                          m_selected_tg;
