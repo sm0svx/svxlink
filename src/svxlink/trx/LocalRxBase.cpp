@@ -266,7 +266,8 @@ bool LocalRxBase::initialize(void)
   
   int delay_line_len = 0;
   bool  mute_1750 = false;
-  if (cfg().getValue(name(), "1750_MUTING", mute_1750))
+  cfg().getValue(name(), "1750_MUTING", mute_1750);
+  if (mute_1750)
   {
     delay_line_len = max(delay_line_len, TONE_1750_MUTING_PRE);
   }

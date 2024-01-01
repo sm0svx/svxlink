@@ -278,6 +278,9 @@
 * New configuration variable TG_SELECT_INHIBIT_TIMEOUT that is used to
   separately control the TG select inhibit feature.
 
+* Bugfix for the 1750_MUTING configuration variable. Setting it to 0 did not
+  disable the feature. It had to be commented out.
+
 
 
  1.7.0 -- 01 Sep 2019
