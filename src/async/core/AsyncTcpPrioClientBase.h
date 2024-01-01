@@ -9,7 +9,7 @@ Async::TcpPrioClient for more information.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2024 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -268,6 +268,8 @@ class TcpPrioClientBase : public TcpClientBase
     bool isIdle(void) const;
 
     bool isPrimary(void) const;
+
+    using TcpClientBase::operator=;
 
   protected:
     /**
