@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "OCTOBER 2023" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JANUARY 2024" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1576,11 +1576,13 @@ or commenting it out will disable DTMF detection.
 .TP
 .B DTMF_MUTING
 Mute the audio during the time when a DTMF digit is being received. Note that
-the audio will be delayed 75ms to give the DTMF detector time to do its work.
+the audio will be delayed like 40-75ms, depending on the DTMF decoder used, to
+give the decoder time to do its work.
 This does not matter much on a simplex link but on a repeater it could be
-annoying since you will hear the last 75 milliseconds of your own transmission.
+annoying since you will hear the last 40-75 milliseconds of your own
+transmission.
 To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
-variable to at least 75 milliseconds.
+variable to at least 40 milliseconds.
 Legal values for DTMF_MUTING are 0=disabled, 1=enabled.
 .TP
 .B DTMF_HANGTIME
