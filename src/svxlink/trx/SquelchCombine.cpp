@@ -423,7 +423,7 @@ bool SquelchCombine::initialize(Async::Config& cfg,
     return false;
   }
 
-  std::cout << rx_name << " combined squelch structure: ";
+  std::cout << rx_name << ": Combined squelch structure is ";
   m_comb->print(std::cout);
   std::cout << std::endl;
 

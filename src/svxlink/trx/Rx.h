@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -323,14 +323,16 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     void setSquelchState(bool is_open, const std::string& info="");
 
+    void setAudioSourceHandler(Async::AudioSource* src);
+
   private:
-    std::string     m_name;
-    bool            m_verbose;
-    bool            m_sql_open;
-    Async::Config&  m_cfg;
-    Async::Timer*   m_sql_tmo_timer;
-    std::string     m_sql_info;
-    MuteState       m_mute_state;
+    std::string         m_name;
+    bool                m_verbose;
+    bool                m_sql_open;
+    Async::Config&      m_cfg;
+    Async::Timer*       m_sql_tmo_timer;
+    std::string         m_sql_info;
+    MuteState           m_mute_state;
 
     void sqlTimeout(Async::Timer *t);
     
