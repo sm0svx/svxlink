@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -166,8 +166,8 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      * function in the source have been called.
      * This function is normally only called from a connected source object.
      */
-    int writeSamples(const float *samples, int len);
-    
+    int writeSamples(const float *samples, int len) override;
+
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -176,9 +176,8 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      * sourceAllSamplesFlushed function.
      * This function is normally only called from a connected source object.
      */
-    void flushSamples(void);
-    
-    
+    void flushSamples(void) override;
+
   protected:
     
   private:
