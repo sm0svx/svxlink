@@ -2150,7 +2150,6 @@ fid_parse(double rate, char **pp, FidFilter **ffp) {
    char *rv= Alloc(INIT_LEN);
    char *rvend= rv + INIT_LEN;
    char *rvp= rv;
-   char *tmp;
 #undef INIT_LEN
    FidFilter *curr;
    int xtra= FFCSIZE(0,0);
@@ -2159,10 +2158,25 @@ fid_parse(double rate, char **pp, FidFilter **ffp) {
    char dmy;
 
 #define ERR(ptr, msg) { free(rv); *pp= ptr; *ffp= 0; return msg; }
+
+#if 0
 #define INCBUF { tmp= realloc(rv, (rvend-rv) * 2); if (!tmp) error("Out of memory"); \
  rvend= (rvend-rv) * 2 + tmp; rvp= (rvp-rv) + tmp; \
  curr= (void*)(((char*)curr) - rv + tmp); rv= tmp; }
-   
+#else
+/* Fix warning: pointer ‘rv’ used after ‘realloc’ [-Wuse-after-free] */
+#define INCBUF { \
+  int fsize= rvend - rv; \
+  int fpsize= rvp - rv; \
+  int fcsize= ((char*)curr) - rv; \
+  rv= realloc(rv, fsize * 2); \
+  if (!rv) error("Out of memory"); \
+  rvend= fsize * 2 + rv; \
+  rvp= fpsize + rv; \
+  curr= (void*)(fcsize + rv); \
+}
+#endif
+
    while (1) {
       rew= p;
       if (!grabWord(&p, buf, sizeof(buf))) {
@@ -2178,14 +2192,17 @@ fid_parse(double rate, char **pp, FidFilter **ffp) {
        case ')':
        case ']':
        case '}':
-	  // End of filter, return it
-	  tmp= realloc(rv, (rvp-rv) + xtra);
-	  if (!tmp) error("Out of memory");
-	  curr= (void*)((rvp-rv) + tmp);
-	  curr->typ= 0; curr->cbm= 0; curr->len= 0;
-	  *pp= buf[0] ? (p-1) : p;
-	  *ffp= (FidFilter*)tmp;
-	  return 0;
+	 {
+	    // End of filter, return it
+	    int fpsize = rvp - rv;
+	    rv= realloc(rv, fpsize + xtra);
+	    if (!rv) error("Out of memory");
+	    curr= (void*)(fpsize + rv);
+	    curr->typ= 0; curr->cbm= 0; curr->len= 0;
+	    *pp= buf[0] ? (p-1) : p;
+	    *ffp= (FidFilter*)rv;
+	    return 0;
+	}
        case '/':
 	  if (typ > 0) ERR(rew, strdupf("Filter syntax error; unexpected '/'"));
 	  typ= 'I';

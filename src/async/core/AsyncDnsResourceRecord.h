@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -322,7 +322,7 @@ class DnsResourceRecordCRTP : public DnsResourceRecord
      * @brief   The type of record
      * @return  Return the type of this record
      */
-    virtual const Type type(void) const { return Derived::staticType(); }
+    virtual const Type type(void) const override { return Derived::staticType(); }
 }; /* DnsResourceRecordCRTP */
 
 

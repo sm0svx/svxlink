@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "OCTOBER 2023" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JANUARY 2024" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1576,11 +1576,13 @@ or commenting it out will disable DTMF detection.
 .TP
 .B DTMF_MUTING
 Mute the audio during the time when a DTMF digit is being received. Note that
-the audio will be delayed 75ms to give the DTMF detector time to do its work.
+the audio will be delayed like 40-75ms, depending on the DTMF decoder used, to
+give the decoder time to do its work.
 This does not matter much on a simplex link but on a repeater it could be
-annoying since you will hear the last 75 milliseconds of your own transmission.
+annoying since you will hear the last 40-75 milliseconds of your own
+transmission.
 To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
-variable to at least 75 milliseconds.
+variable to at least 40 milliseconds.
 Legal values for DTMF_MUTING are 0=disabled, 1=enabled.
 .TP
 .B DTMF_HANGTIME
@@ -1752,6 +1754,35 @@ be mFM;.
 It is possible to specify the same PTY for multiple functions (e.g. squelch,
 ptt etc) in both TX and RX configurations. This may be good if there is one
 script handling all functions.
+.TP
+.B LADSPA_PLUGINS
+Used to set up one or more LADSPA plugins to process the received audio. The
+processing chain is applied just before the final stages of the receiver audio
+processing and will only affect how the audio sounds. Any digital signal
+processing done on the audio before that, like DTMF, CTCSS etc, is unaffected.
+
+LADSPA is a framework for sharing pluggable audio components and there are
+numerous plugins to choose from. Each plugin has a name ("label") and zero or
+more configuration parameters ("control input ports"). To find out which
+plugins are installed on your system, use the "listplugins" command. If you
+are missing some plugin it may be available to install using your package
+system (rpm/yum/dnf, deb/apt etc). To find out more information about a
+plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
+more about the LADSPA framework in their official documentation.
+
+In SvxLink only plugins that have exactly one audio input and one audio
+output can be used, so all stereo plugins are excluded for example.  The same
+thing is valid for input-only or output-only plugins.
+
+The analyseplugin utility will, among other things, list the ports. All ports
+that are typed as "input, control" can be used to configure the plugin. Valid
+range and a default value may also be listed. The format for the
+LADSPA_PLUGINS configuration variable in SvxLink is
+"label1:port1:port2:...:portN,label2:port1:port2:...:portN,...". Note that
+only control input ports are counted here so when applying the parameters any
+intermingled ports of other types are skipped.
+
+Example: LADSPA_PLUGINS=hpf:1000,tap_dynamics_m:4:500:15:15:13
 .
 .SS Ddr Receiver Section
 .

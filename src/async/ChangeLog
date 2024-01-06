@@ -67,6 +67,9 @@
 * Bugfix Async::HttpServerConnection: EOL handling failed with newer
   compilers.
 
+* New class Async::AudioLADSPAPlugin which enable the use of LADSPA plugins to
+  process audio.
+
 
 
  1.6.0 -- 01 Sep 2019
