@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -346,6 +346,7 @@ class HttpServerConnection : public TcpConnection
 
     HttpServerConnection(const HttpServerConnection&);
     HttpServerConnection& operator=(const HttpServerConnection&);
+    using TcpConnection::write;
     void handleStartLine(void);
     void handleHeader(void);
     void onSendBufferFull(bool is_full);

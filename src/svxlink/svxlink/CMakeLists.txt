@@ -81,6 +81,7 @@ set(LIBS trx locationinfo asynccpp asyncaudio asynccore svxmisc ${LIBS})
 add_executable(svxlink ${SVXLINK_SRCS} ${VERSION_DEPENDS})
 target_link_libraries(svxlink ${LIBS})
 set_target_properties(svxlink PROPERTIES
+  ENABLE_EXPORTS on
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 

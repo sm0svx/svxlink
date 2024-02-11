@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -324,12 +324,12 @@ void AudioSplitter::enableSink(AudioSink *sink, bool enable)
 int AudioSplitter::writeSamples(const float *samples, int len)
 {
   do_flush = false;
-  
-  if (len == 0)
+
+  if (len <= 0)
   {
     return 0;
   }
-  
+
   if (buf_len > 0)
   {
     input_stopped = true;

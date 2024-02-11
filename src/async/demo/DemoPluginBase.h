@@ -8,7 +8,7 @@ class DemoPluginBase : public Async::Plugin
     // Return the name of this plugin type
     static std::string typeName(void) { return "DemoPlugin"; }
 
-    // Pluging base class constructor
+    // Plugin base class constructor
     DemoPluginBase(void)
     {
       std::cout << "### DemoPluginBase::DemoPluginBase" << std::endl;

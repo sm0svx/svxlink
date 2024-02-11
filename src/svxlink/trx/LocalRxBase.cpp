@@ -64,6 +64,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFsf.h>
 #include <AsyncUdpSocket.h>
 #include <common.h>
+#ifdef LADSPA_VERSION
+#include <AsyncAudioLADSPAPlugin.h>
+#endif
 
 
 /****************************************************************************
@@ -266,7 +269,8 @@ bool LocalRxBase::initialize(void)
   
   int delay_line_len = 0;
   bool  mute_1750 = false;
-  if (cfg().getValue(name(), "1750_MUTING", mute_1750))
+  cfg().getValue(name(), "1750_MUTING", mute_1750);
+  if (mute_1750)
   {
     delay_line_len = max(delay_line_len, TONE_1750_MUTING_PRE);
   }
@@ -597,10 +601,64 @@ bool LocalRxBase::initialize(void)
     // elimination), create it
   if (delay_line_len > 0)
   {
+    std::cout << name() << ": Delay line (for DTMF muting etc) set to "
+              << delay_line_len << " ms" << std::endl;
     delay = new AudioDelayLine(delay_line_len);
     prev_src->registerSink(delay, true);
     prev_src = delay;
   }
+
+#ifdef LADSPA_VERSION
+  std::vector<std::string> ladspa_plugin_cfg;
+  if (cfg().getValue(name(), "LADSPA_PLUGINS", ladspa_plugin_cfg))
+  {
+    for (const auto& pcfg : ladspa_plugin_cfg)
+    {
+      std::istringstream is(pcfg);
+      std::string label;
+      std::getline(is, label, ':');
+      //std::cout << "### pcfg=" << pcfg << "  label=" << label << std::endl;
+      auto plug = new Async::AudioLADSPAPlugin(label);
+      if (!plug->initialize())
+      {
+        std::cout << "*** ERROR: Could not instantiate LADSPA plugin instance "
+                     "with label \"" << label << "\"" << std::endl;
+        return false;
+      }
+      unsigned long portno = 0;
+      LADSPA_Data val;
+      while (is >> val)
+      {
+        while ((portno < plug->portCount()) &&
+               !(plug->portIsControl(portno) && plug->portIsInput(portno)))
+        {
+          ++portno;
+        }
+        if (portno >= plug->portCount())
+        {
+          std::cerr << "*** ERROR: Too many parameters specified for LADSPA "
+                       "plugin \"" << plug->label()
+                    << "\" in configuration variable " << name()
+                    << "/LADSPA_PLUGINS." << std::endl;
+          return false;
+        }
+        plug->setControl(portno++, val);
+        char colon = 0;
+        if ((is >> colon) && (colon != ':'))
+        {
+          std::cerr << "*** ERROR: Illegal format for " << name()
+                    << "/LADSPA_PLUGINS configuration variable" << std::endl;
+          return false;
+        }
+      }
+
+      plug->print(name() + ": ");
+
+      prev_src->registerSink(plug, true);
+      prev_src = plug;
+    }
+  }
+#endif
 
     // Add a limiter to smoothly limit the audio before hard clipping it
   double limiter_thresh = DEFAULT_LIMITER_THRESH;
@@ -634,7 +692,7 @@ bool LocalRxBase::initialize(void)
   
     // Set the previous audio pipe object to handle audio distribution for
     // the LocalRxBase class
-  setHandler(prev_src);
+  setAudioSourceHandler(prev_src);
   
   cfg().getValue(name(), "AUDIO_DEV_KEEP_OPEN", audio_dev_keep_open);
 

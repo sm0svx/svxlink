@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -209,6 +209,8 @@ class FramedTcpConnection : public TcpConnection
     sigc::signal<int, TcpConnection*, void*, int> dataReceived;
     sigc::signal<void, bool> sendBufferFull;
 
+    FramedTcpConnection& operator=(const FramedTcpConnection&) = delete;
+
     /**
      * @brief   Disconnect from the remote peer
      *
@@ -282,8 +284,7 @@ class FramedTcpConnection : public TcpConnection
     std::vector<uint8_t>  m_frame;
     TxQueue               m_txq;
 
-    FramedTcpConnection(const FramedTcpConnection&);
-    FramedTcpConnection& operator=(const FramedTcpConnection&);
+    FramedTcpConnection(const FramedTcpConnection&) = delete;
     void onSendBufferFull(bool is_full);
     void disconnectCleanup(void);
 

@@ -110,6 +110,11 @@ if(OGG_FOUND AND Opus_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioContainerOpus.cpp)
 endif(OGG_FOUND AND Opus_FOUND)
 
+if(LADSPA_FOUND)
+  set(EXPINC ${EXPINC} AsyncAudioLADSPAPlugin.h)
+  set(LIBSRC ${LIBSRC} AsyncAudioLADSPAPlugin.cpp)
+endif(LADSPA_FOUND)
+
 if(USE_ALSA)
   set(LIBSRC ${LIBSRC} AsyncAudioDeviceAlsa.cpp)
   find_package(ALSA REQUIRED QUIET)

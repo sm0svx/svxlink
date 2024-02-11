@@ -20,7 +20,7 @@
 ##############################################################################
 # Project setup
 ##############################################################################
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 project(svxlink C CXX)
 #enable_testing()
 
@@ -294,6 +294,22 @@ include_directories(${SIGC2_INCLUDE_DIRS})
 add_definitions(${SIGC2_DEFINITIONS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SIGC2_CXX_FLAGS}")
 set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
+
+find_package(LADSPA)
+if(LADSPA_FOUND)
+  if(DEFINED LADSPA_VERSION_MAJOR)
+    include_directories(${LADSPA_INCLUDE_DIRS})
+    add_definitions(${LADSPA_DEFINITIONS})
+  else()
+    message(WARNING
+      "Found LADSPA but version could not be resolved. "
+      "Will proceed without LADSPA.")
+  endif()
+else(LADSPA_FOUND)
+  message("--   LADSPA is an optional dependency. The build will complete")
+  message("--   without it but support for loading LADSPA plugins will")
+  message("--   be unavailable.")
+endif(LADSPA_FOUND)
 
 # Find the chown utility
 include(FindCHOWN)

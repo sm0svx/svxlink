@@ -40,6 +40,7 @@ An example of how to use the Async::AudioContainer class
 
 #include <sigc++/sigc++.h>
 #include <cstring>
+#include <cstdint>
 
 
 /****************************************************************************

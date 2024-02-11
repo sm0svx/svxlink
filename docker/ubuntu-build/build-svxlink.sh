@@ -1,25 +1,26 @@
-#!/bin/bash -xe
+#!/bin/bash -x
+
+set -euo pipefail
+
+GIT_BRANCH=${GIT_BRANCH:-master}
 
 # Make sure that we are in the home directory
 cd
 
 # Clone or update the repo
 if [[ ! -d svxlink ]]; then
-  git clone $GIT_URL svxlink
+  git clone --branch=$GIT_BRANCH $GIT_URL svxlink
   cd svxlink
 else
   cd svxlink
-  git fetch
-  git checkout master
-  git reset --hard origin/master
+  if [[ -w . ]]; then
+    git fetch
+    git checkout $GIT_BRANCH
+    git reset --hard origin/$GIT_BRANCH
+  fi
 fi
 
-# Checkout the wanted branch
-if [ -n "$GIT_BRANCH" ]; then
-  git checkout $GIT_BRANCH
-fi
-
-# Find out how many cores we've got
+# How many cores to use during the build
 num_cores=${NUM_CORES:-1}
 
 # Create a build directory and build svxlink

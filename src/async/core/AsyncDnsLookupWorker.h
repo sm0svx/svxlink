@@ -11,7 +11,7 @@ used internally by the async library.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2024 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -322,7 +322,8 @@ class DnsLookupWorker
     {
       if (rr->type() == DnsResourceRecordSRV::staticType())
       {
-        auto srv_rr = static_cast<DnsResourceRecordSRV*>(rr);
+        auto srv_rr = dynamic_cast<DnsResourceRecordSRV*>(rr);
+        assert(srv_rr != nullptr);
         m_srv_records.insert(srv_rr);
         m_srv_weight_sum[srv_rr->prio()] += srv_rr->weight();
       }

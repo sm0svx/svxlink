@@ -11,6 +11,10 @@ set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo
 
 set(QTPROGS AsyncQtApplication_demo)
 
+if(LADSPA_FOUND)
+  set(CPPPROGS ${CPPPROGS} AsyncAudioLADSPAPlugin_demo)
+endif(LADSPA_FOUND)
+
 
 # Build all demo applications
 foreach(prog ${CPPPROGS})
