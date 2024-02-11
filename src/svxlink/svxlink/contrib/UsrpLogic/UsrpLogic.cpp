@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "24012023"
+#define USRPVERSION "11022024"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -661,6 +661,8 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       if ((found = metadata.find("INFO:MSG:")) != string::npos)
       {
         string infomessage = metadata.erase(0, metadata.find_last_of(" ") + 1);
+        infomessage.erase(remove_if(infomessage.begin(),infomessage.end(),
+               [](char c){return !(c>=32 && c <128);}), infomessage.end()); 
         handleSettingsMsg(infomessage);
         userinfo["mode"] = infomessage;
       }
@@ -850,11 +852,21 @@ void UsrpLogic::sendMetaMsg(void)
 {
   UsrpTlvMetaMsg usrp;
   usrp.setTg(m_selected_tg);
-  usrp.setCallsign(m_callsign);
-  usrp.setDmrId(m_dmrid);
   usrp.setRptId(m_rptid);
   usrp.setCC(m_selected_cc);
   usrp.setTS(m_selected_ts);
+  usrp.setTg(m_selected_tg);
+
+  if (talker.isTalking)
+  {
+    usrp.setCallsign(talker.callsign);
+    usrp.setDmrId(0);
+  }
+  else
+  {
+    usrp.setCallsign(m_callsign);
+    usrp.setDmrId(m_dmrid);
+  }
 
   if (udp_seq++ > 0x7fff) udp_seq = 0;
   usrp.setSeq(udp_seq);
@@ -1119,6 +1131,18 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
              << m_user.name << ",location=" << m_user.location 
              << ", comment=" << m_user.comment << endl;
       }
+    }
+  }
+  else if (event_name == "EchoLink:talker_state")
+  {
+    talker.callsign = user_arr.get("callsign","").asString();
+    talker.name = user_arr.get("name","").asString();
+    talker.isTalking = user_arr.get("isTalking","").asBool();
+    if (debug >= LOGINFO)
+    {
+      cout << "Get userinfo from EchoLink module("
+           << talker.callsign << "," << talker.name
+           << (talker.isTalking ? ",1" : ",0") << ")" << endl;
     }
   }
 } /* UsrpLogic::onPublishStateEvent */

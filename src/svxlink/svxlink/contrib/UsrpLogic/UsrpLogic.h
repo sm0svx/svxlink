@@ -179,7 +179,14 @@ class UsrpLogic : public LogicBase
       time_t sent_last_sds = 0;
     };
     std::map<std::string, User> userdata;
-  
+
+    struct Talker {
+      std::string name;
+      std::string callsign;
+      bool isTalking;
+    };
+    Talker talker;
+
     std::string                       m_usrp_host;
     uint16_t                          m_usrp_port;
     uint16_t                          m_usrp_rx_port;
