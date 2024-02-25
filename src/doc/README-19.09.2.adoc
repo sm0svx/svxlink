@@ -1,0 +1,4 @@
+SvxLink release 19.09.2 -- 10 Mar 2021
+--------------------------------------
+This is a hotfix release fixing a bug in the SvxReflector authentication code.
+If you are running a SvxReflector server you should upgrade immediately.
