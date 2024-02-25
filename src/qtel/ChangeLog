@@ -1,4 +1,4 @@
- 1.2.5 -- ?? ??? ????
+ 1.2.5 -- 25 Feb 2024
 ----------------------
 
 * Bugfix: When a faulty bind address had been set up, Qtel just exited with a

@@ -1,4 +1,4 @@
- 1.3.4 -- ?? ??? ????
+ 1.3.4 -- 25 Feb 2024
 ----------------------
 
 * Replace potentially dangerous function call 'localtime' with 'localtime_r'.
