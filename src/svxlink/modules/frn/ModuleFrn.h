@@ -124,7 +124,7 @@ class ModuleFrn : public Module
   public:
     ModuleFrn(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleFrn(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return SVXLINK_APP_VERSION; }
 
   private:
     void moduleCleanup();

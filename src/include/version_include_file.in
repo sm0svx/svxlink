@@ -3,6 +3,7 @@
 #ifndef @ver_name@_VERSION_INCLUDED
 #define @ver_name@_VERSION_INCLUDED
 
-#define @ver_name@_VERSION "@ver_value@"
+#define @ver_name@_APP_VERSION "@ver_value@"
+#define @ver_name@_VERSION "@ver_value@@@PROJECT_VERSION@"
 
 #endif

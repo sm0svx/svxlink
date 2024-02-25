@@ -117,7 +117,7 @@ class ModuleTcl : public Module
   public:
     ModuleTcl(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleTcl(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return SVXLINK_APP_VERSION; }
 
   protected:
     virtual void resumeOutput(void);
