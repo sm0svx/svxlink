@@ -151,7 +151,8 @@ ReflectorLogic::ReflectorLogic(void)
     m_tg_local_activity(false), m_last_qsy(0), m_logic_con_in_valve(0),
     m_mute_first_tx_loc(true), m_mute_first_tx_rem(false),
     m_tmp_monitor_timer(1000, Async::Timer::TYPE_PERIODIC),
-    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT), m_use_prio(true),
+    m_tmp_monitor_timeout(DEFAULT_TMP_MONITOR_TIMEOUT),
+    m_tmp_monitor_timeout_long(DEFAULT_TMP_MONITOR_TIMEOUT_LONG), m_use_prio(true),
     m_qsy_pending_timer(-1), m_verbose(true)
 {
   m_reconnect_timer.expired.connect(
@@ -413,6 +414,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   }
 
   cfg().getValue(name(), "TMP_MONITOR_TIMEOUT", m_tmp_monitor_timeout);
+  cfg().getValue(name(), "TMP_MONITOR_TIMEOUT_LONG", m_tmp_monitor_timeout_long);
 
   std::string node_info_file;
   if (cfg().getValue(name(), "NODE_INFO_FILE", node_info_file))
@@ -540,11 +542,18 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       processEvent(std::string("command_failed ") + cmd);
     }
   }
-  else if (cmd[0] == '4')   // Temporarily monitor talk group
-  {
+  else if (cmd[0] == '4' || cmd[0] == '5')   // Temporarily monitor talk group
+  {    
+    int monitor_timeout = m_tmp_monitor_timeout;
+    if (cmd[0] == '5')
+    {
+      monitor_timeout = m_tmp_monitor_timeout_long;
+    }
+
+
     std::ostringstream os;
     const std::string subcmd(cmd.substr(1));
-    if ((m_tmp_monitor_timeout > 0) && !subcmd.empty())
+    if ((monitor_timeout > 0) && !subcmd.empty())
     {
       istringstream is(subcmd);
       uint32_t tg = 0;
@@ -558,7 +567,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
             std::cout << name() << ": Refresh temporary monitor for TG #"
                       << tg << std::endl;
               // NOTE: (*it).timeout is mutable
-            (*it).timeout = m_tmp_monitor_timeout;
+            (*it).timeout = monitor_timeout;
             os << "tmp_monitor_add " << tg;
           }
           else
@@ -574,7 +583,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           std::cout << name() << ": Add temporary monitor for TG #"
                     << tg << std::endl;
           MonitorTgEntry mte(tg);
-          mte.timeout = m_tmp_monitor_timeout;
+          mte.timeout = monitor_timeout;
           m_monitor_tgs.insert(mte);
           sendMsg(MsgTgMonitor(std::set<uint32_t>(
                   m_monitor_tgs.begin(), m_monitor_tgs.end())));
@@ -596,6 +605,35 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       os << "command_failed " << cmd;
     }
     processEvent(os.str());
+  }
+  else if (cmd[0] == '6') // remove temp tg from monitor
+  {
+    std::ostringstream os;
+    const std::string subcmd(cmd.substr(1));
+    if (!subcmd.empty())
+    {
+      istringstream is(subcmd);
+      uint32_t tg = 0;
+      if (is >> tg)
+      {
+        const MonitorTgsSet::iterator it = m_monitor_tgs.find(tg);
+        if (it != m_monitor_tgs.end())
+        {
+          m_monitor_tgs.erase(it);
+          std::cout << name() << ": Temporary monitor timeout for TG #"
+                    << tg << std::endl;
+          sendMsg(MsgTgMonitor(std::set<uint32_t>(
+                  m_monitor_tgs.begin(), m_monitor_tgs.end())));
+          // os << "removing tg from monitor: " << cmd;
+        }
+        else
+        {
+          std::cout << name() << ": Could not remove TG #"
+                    << tg << "from monitor - not monitored" << std::endl;
+        }
+      }
+      // processEvent(os.str()); no tcl processing for now
+    }        
   }
   else
   {
