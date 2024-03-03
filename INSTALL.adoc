@@ -48,11 +48,14 @@ A common command that exist on many distributions is 'useradd'. The 'daemon'
 group usually exist but if not, look for the 'groupadd' command.
 
 
-== Build and install  ==
+== Build and install SvxLink with Usrp extension ==
 SvxLink use the CMake build system. The basic pattern for building using CMake
 looks like this:
 
-  cd path/to/svxlink/src
+  git clone https://github.com/dl1hrc/svxlink.git
+  cd svxlink
+  git checkout svxlink-usrp
+  cd src
   mkdir build
   cd build
   cmake ..

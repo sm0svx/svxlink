@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JANUARY 2024" Linux "File Formats"
+.TH SVXLINK.CONF 5 "AUGUST 2022" Linux "File Formats"
 .
 .SH NAME
 .
@@ -411,20 +411,12 @@ Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .B CTCSS_TO_TG
 Use this variable to specify a comma separated list of pairs of tone
 frequencies and talk groups. When one of the tone frequencies is detected, the
-corresponding talk group will be associated with the received audio. This can
-be used for example by ReflectorLogic to automatically switch to a talk group
-when one of the specified tone frequencies is received. You also must configure
-CTCSS_FQ for all receivers to open the squelch on the same tone frequencies.
-Otherwise it will not work.
+corresponding talk group will be indicated. This can be used for example by
+ReflectorLogic to automatically switch to a talk group when one of the specified
+tone frequencies is received. You probably also want to configure CTCSS_FQ for
+all receivers to open the squelch on the same tone frequencies.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
-.TP
-.B CTCSS_TO_TG_DELAY
-The delay for reporting detected talkgroup from when a CTCSS tone is detected.
-If the squelch close before the delay time has expired, no talkgroup will be
-reported. Default: 1000.
-
-Example: CTCSS_TO_TG_DELAY=0
 .
 .SS Simplex Logic Section
 .
@@ -474,15 +466,6 @@ Valid commands:
 .BR "CFG <section> <tag> <value>" " --"
 Set a configuration variable. Only a few configuration variables support being
 set at runtime. Example: CFG RepeaterLogic ONLINE 0.
-.IP \(bu 4
-.BR "EVENT <event name> [<arg> ...]" " --"
-Call an event handler (TCL function). It is important to specify the correct
-TCL namespace for the function to be found. If no namespace is given, the
-namespace of the current logic core will be added, e.g. "manual_identification"
-is the same as "RepeaterLogic::manual_identification" if the logic core
-namnespace is "RepeaterLogic". To call a function in the root namespace, the
-function name must be prepended with "::".
-Example: EVENT ::playNumber -42.5.
 .RE
 
 Example: COMMAND_PTY=/dev/shm/repeater_logic_ctrl
@@ -524,10 +507,11 @@ you will hear an ugly 1750Hz beep as the first thing.
 A value of 0 will disable 1750 Hz repeater opening.
 .TP
 .B OPEN_ON_CTCSS
-Use this configuration variable if it should be possible to open the repeater
-using a CTCSS tone (PL). The repeater will activate after the specified number
-of milliseconds on detection of any of the CTCSS frequencies specified in the
-receiver configuration.
+Use this configuration variable if it should be possible to open the repeater with 
+a CTCSS tone (PL). The syntax of the value is tone_fq:min_length. The tone 
+frequency is specified in whole Hz and the minimum tone length is specified in 
+milliseconds. For examples if a 136.5 Hz tone must be asserted for two seconds for 
+the repeater to open, the value 136:2000 should be specified.
 .TP
 .B OPEN_ON_DTMF
 Use this configuration variable if it should be possible to open the repeater with 
@@ -710,18 +694,6 @@ The number of seconds after which a selected talk group will be unselected. The
 node will return to talk group 0 (no talk group) and start monitoring the
 configured talk groups again. The value must be larger than zero. Default: 30
 seconds.
-.TP
-.B TG_SELECT_INHIBIT_TIMEOUT
-Talkgroup selection is inhibited when there is activity on the local frequency
-that does not activate a talkgroup. Only activation due to remote activity
-(monitoring) is inhibited. A talkgroup can be activated as usual by using any
-method for local activation. This feature make it possible to conduct a local
-QSO without being disturbed by remote reflector traffic.
-
-Use this configuration variable to set the number of seconds of inactivity
-before the node will go back to monitoring remote talkgroup activity. The
-default value is taken from TG_SELECT_TIMEOUT if this variable is not set.
-Setting a value of 0 will disable the feature entirely.
 .TP
 .B ANNOUNCE_REMOTE_MIN_INTERVAL
 The minimum number of seconds between announcements of the same TG for remote
@@ -1083,8 +1055,7 @@ The CTCSS squelch detector checks for the presence of a tone with the specified
 frequency. The tone frequency is specified using the CTCSS_FQ config variable.
 The thresholds are specified using the CTCSS_OPEN_THRESH and CTCSS_CLOSE_THRESH
 config variables. Other config variables that effect the CTCSS squelch is:
-CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH,
-CTCSS_EMIT_TONE_DETECTED.
+CTCSS_MODE, CTCSS_SNR_OFFSETS, CTCSS_BPF_LOW, CTCSS_BPF_HIGH.
 
 The SERIAL squelch detector use a pin in a serial port to detect if the squelch
 is open. This squelch detector can be used if the receiver have an external
@@ -1205,7 +1176,7 @@ ones to choose from:
 .IP \(bu 4
 .BR "0 (Default)"
 Will choose the detection mode that is the default in the software. At the
-moment this is mode 4, "Overlap+Estimated SNR+Frequency estimation".
+moment this is mode 2, "Estimated SNR".
 .IP \(bu 4
 .BR "1 (Neighbor bins)"
 This detection mode will use three narrow frequency bands (~8Hz) to do the
@@ -1241,8 +1212,7 @@ selective. With its 0.75% frequency tolerance, it will not trigger on adjacent
 CTCSS tones. However, the "undetect" algorithm does not use the frequency
 estimation so the squelch may be held open by an adjacent tone if already in
 active state. One downside is that it is a bit more CPU hungry due to using 75%
-overlap in the frequency analysis, thus processing each sample three times. The
-reason to use overlap is that the detector will be faster.
+overlap in the frequency analysis, thus processing each sample three times.
 .RE
 .TP
 .B CTCSS_FQ
@@ -1313,14 +1283,6 @@ passband. Note however that the more narrow you make the passband, the less
 stable the detector will be. You may need to compensate by increasing the
 open/close thresholds or by setting up SQL_DELAY and SQL_HANGTIME. Default is
 270Hz.
-.TP
-.B CTCSS_EMIT_TONE_DETECTED
-This configuration variable defaults to 1 which mean that a tone detected
-signal is emitted when a CTCSS tone is detected. This is required for the
-function of other features in SvxLink like CTCSS_TO_TG and OPEN_ON_CTCSS. In
-some situations it may be necessary to disable this behavior, like when using
-advanced squelch configurations where some tones are actively blocked due to
-nearby interference.
 .TP
 .B CTCSS_DEBUG
 Set this to 1 to enable continuously printing SNR values for the CTCSS tone
@@ -1636,13 +1598,11 @@ or commenting it out will disable DTMF detection.
 .TP
 .B DTMF_MUTING
 Mute the audio during the time when a DTMF digit is being received. Note that
-the audio will be delayed like 40-75ms, depending on the DTMF decoder used, to
-give the decoder time to do its work.
+the audio will be delayed 75ms to give the DTMF detector time to do its work.
 This does not matter much on a simplex link but on a repeater it could be
-annoying since you will hear the last 40-75 milliseconds of your own
-transmission.
+annoying since you will hear the last 75 milliseconds of your own transmission.
 To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
-variable to at least 40 milliseconds.
+variable to at least 75 milliseconds.
 Legal values for DTMF_MUTING are 0=disabled, 1=enabled.
 .TP
 .B DTMF_HANGTIME
@@ -1814,35 +1774,6 @@ be mFM;.
 It is possible to specify the same PTY for multiple functions (e.g. squelch,
 ptt etc) in both TX and RX configurations. This may be good if there is one
 script handling all functions.
-.TP
-.B LADSPA_PLUGINS
-Used to set up one or more LADSPA plugins to process the received audio. The
-processing chain is applied just before the final stages of the receiver audio
-processing and will only affect how the audio sounds. Any digital signal
-processing done on the audio before that, like DTMF, CTCSS etc, is unaffected.
-
-LADSPA is a framework for sharing pluggable audio components and there are
-numerous plugins to choose from. Each plugin has a name ("label") and zero or
-more configuration parameters ("control input ports"). To find out which
-plugins are installed on your system, use the "listplugins" command. If you
-are missing some plugin it may be available to install using your package
-system (rpm/yum/dnf, deb/apt etc). To find out more information about a
-plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
-more about the LADSPA framework in their official documentation.
-
-In SvxLink only plugins that have exactly one audio input and one audio
-output can be used, so all stereo plugins are excluded for example.  The same
-thing is valid for input-only or output-only plugins.
-
-The analyseplugin utility will, among other things, list the ports. All ports
-that are typed as "input, control" can be used to configure the plugin. Valid
-range and a default value may also be listed. The format for the
-LADSPA_PLUGINS configuration variable in SvxLink is
-"label1:port1:port2:...:portN,label2:port1:port2:...:portN,...". Note that
-only control input ports are counted here so when applying the parameters any
-intermingled ports of other types are skipped.
-
-Example: LADSPA_PLUGINS=hpf:1000,tap_dynamics_m:4:500:15:15:13
 .
 .SS Ddr Receiver Section
 .
@@ -2394,25 +2325,17 @@ transmitted the CTCSS_LEVEL variable must also be setup and also the
 TX_CTCSS variable in the logic core configuration section.
 .TP
 .B CTCSS_LEVEL
-The level in dBFS of the CTCSS tone to transmit. A value of 0 is the highest
-level and lower (negative) values give a lower level. What level to set depend
-on multiple factors like the audio calibration settings and the low-pass
-characteristics of the hardware. Assuming an ideal audio path with a completely
-flat frequency response over the whole audio spectrum, including the CTCSS
-frequency band, and a standard audio calibration where maximum FM deviation
-corresponds to -6 dBFS, the following applies.
-
-The FM deviation of the CTCSS tone should be in between 500-800 Hz if
-using an FM channel with a maximum deviation of 5 kHz. Given that you can
-calculate what the level in dBFS should be:
-
-  Llow  = 20 * log10(500/5000) - 6 = -26
-  Lmid  = 20 * log10(650/5000) - 6 = -24
-  Lhigh = 20 * log10(800/5000) - 6 = -22
-
-The default in the configuration file is -24. For the tone to be transmitted
-the CTCSS_FQ variable must also be set up and also the TX_CTCSS variable in the
-logic core configuration section.
+The level in percent (0-100) of the CTCSS tone to transmit. What level to set is
+hard to say. The FM modulation swing of the tone should be in between 500-800
+Hz. That is a bit hard to measure if you don't have the right equipment. A
+normal FM station have a maximum swing of 5kHz so if you manage to calibrate
+everything so that you get maximum swing when the sound card audio is at peak
+level, the tone level should be in between 10-16%. However, most often the audio
+settings are configured a bit higher than max since the audio seldom reaches
+maximum level. Then the level of the CTCSS tone should be reduced. The default
+in the configuration file is 9%. For the tone to be transmitted the CTCSS_FQ
+variable must also be setup and also the TX_CTCSS variable in the logic core
+configuration section.
 .TP
 .B PREEMPHASIS
 Enable this feature if you are modulating the FM modulator directly, like
@@ -2689,7 +2612,7 @@ from the radio interface.
 .TP
 .B TIMEOUT
 Specify the timeout time, in seconds, after which a module will be automatically
-deactivated if there has been no activity. Not including this parameter removes the timeout.
+deactivated if there has been no activity.
 .TP
 .B MUTE_LOGIC_LINKING
 Set to 1 to mute all logic linking audio when the module is activated or 0 to
@@ -2971,49 +2894,14 @@ event_name = Name of event
 event data = Event specific data
 
 .RS -4
-An event must be all on one line so there must be no line breaks. JSON event
-data in the examples below use line breaks to be easier to read.
-.PP
-Pretty printing events containing JSON formatted event data can be done using
-the following one-liner.
-.PP
-.RS 4
-.nf
-.eo
-awk '{ print "{\"name\":\"" $2 "\",\"time\":\"" strftime("%c", $1) "\",\"data\":" $3 "}"; fflush() }' /dev/shm/state_pty | jq .
-.ec
-.fi
-.PP
-.RS -4
-The following specific events exist.
-.TP
-.TP
-.B Tx:state
-Report the state for a transmitter. The event specific data is a JSON object.
-Example:
-.PP
-.RS 9
-  {
-    "id": "T",
-    "name": "Tx1",
-    "transmit": false
-  }
 
-.RS -2
-where the different fields mean:
-.PP
-.RS 4
-name = Configuration file section name for transmitter
-.RS 0
-id = The transmitter ID from configuration
-.RS 0
-transmit = Set to true if the transmitter is transmitting
-.RS -11
+The following specific events exist.
 .TP
 .B Voter:sql_state
 Report the state of all squelches and signal levels for all receivers. The
-event specific data is a JSON array containing an object for each
-receiver. Example:
+event specific data is a JSON array containing an object for each receiver. The
+JSON data must all be on one line but is shown pretty printed below for easy
+reading. Example:
 .PP
 .RS 9
   [
@@ -3055,7 +2943,9 @@ sql_open = Set to true if the squelch is open
 active = Set to true if the receiver is the active one, selected by the voter
 .RS 0
 siglev = The measured signal level
-.RE
+
+.RS -4
+The fields sql_open, active and siglev will be left out if enabled=false.
 .
 .SH FILES
 .
