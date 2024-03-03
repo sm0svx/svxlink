@@ -283,6 +283,8 @@ endfunction(install_if_not_exists)
 # Main execution starts here
 ##############################################################################
 
+add_subdirectory(include)
+
 configure_file(${CMAKE_SOURCE_DIR}/config.h.in
   ${CMAKE_BINARY_DIR}/config.h
   @ONLY
@@ -321,7 +323,6 @@ message(STATUS "SvxLink group = ${SVXLINK_GROUP}")
 
 # Add directories to build
 add_subdirectory(doc)
-add_subdirectory(include)
 add_subdirectory(async)
 add_subdirectory(misc)
 add_subdirectory(echolib)
@@ -335,26 +336,15 @@ endif(USE_QT)
 set(CPACK_SET_DESTDIR "ON")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
   "Advanced voice services system for ham radio use")
-execute_process(
-  COMMAND git describe --tags
-  COMMAND tr - .
-  COMMAND tr -d '\n'
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  OUTPUT_VARIABLE CPACK_PACKAGE_VERSION
-  ERROR_QUIET)
-if (NOT CPACK_PACKAGE_VERSION)
-  set(CPACK_PACKAGE_VERSION "${VER_PROJECT}")
-endif()
+string(REPLACE "-" "." CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 message(STATUS "Package Version = ${CPACK_PACKAGE_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION
   "The SvxLink project develops an advanced voice services system for ham radio use. It can be run on a simplex frequency or act as a repeater controller.")
 set(CPACK_PACKAGE_VENDOR "SM0SVX")
-set(CPACK_PACKAGE_CONTACT
-  "SvxLink Community <svxlink-devel@lists.sourceforge.net>")
+set(CPACK_PACKAGE_CONTACT "SvxLink Community <svxlink@groups.io>")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/../COPYRIGHT")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/../README.adoc")
 
-#set(CPACK_GENERATOR "DEB")
 if (CPACK_GENERATOR STREQUAL "DEB")
   #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsigc++-2.0-0v5, libgsm1, libpopt0, tcl, libgcrypt20, libspeex1, libasound2, libopus0, alsa-utils, vorbis-tools, libcurl4, rtl-sdr, libjsoncpp1")
   string(REPLACE " " "\n" CONFIG_FILES_NL "${CONFIG_FILES}")

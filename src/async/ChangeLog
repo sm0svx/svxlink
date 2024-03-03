@@ -1,4 +1,4 @@
- 1.7.0 -- ?? ??? ????
+ 1.7.0 -- 25 Feb 2024
 ----------------------
 
 * ASYNC_AUDIO_ALSA_ZEROFILL is now enabled by default.

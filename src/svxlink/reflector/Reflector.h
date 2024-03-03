@@ -194,6 +194,10 @@ class Reflector : public sigc::trackable
      */
     void updateQsostate(Json::Value eventmessage);
 
+    uint32_t randomQsyLo(void) const { return m_random_qsy_lo; }
+    uint32_t randomQsyHi(void) const { return m_random_qsy_hi; }
+
+
   private:
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
