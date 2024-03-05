@@ -128,7 +128,7 @@ class ModuleParrot : public Module
     ModuleParrot(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleParrot(void);
     bool initialize(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return SVXLINK_APP_VERSION; }
 
   protected:
     /**

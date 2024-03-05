@@ -117,7 +117,7 @@ class ModuleTemplate : public Module
   public:
     ModuleTemplate(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleTemplate(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return SVXLINK_APP_VERSION; }
 
   private:
     bool initialize(void);

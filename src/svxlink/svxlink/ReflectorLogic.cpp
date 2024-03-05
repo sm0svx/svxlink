@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 #include <version/SVXLINK.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -447,7 +448,8 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     }
   }
   m_node_info["sw"] = "SvxLink";
-  m_node_info["swVer"] = SVXLINK_VERSION;
+  m_node_info["swVer"] = SVXLINK_APP_VERSION;
+  m_node_info["projVer"] = PROJECT_VERSION;
 
   cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
       m_udp_heartbeat_tx_cnt_reset);

@@ -570,10 +570,11 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
   auto it = tgs.cbegin();
   while (it != tgs.end())
   {
-    if (!TGHandler::instance()->allowTgSelection(this, *it))
+    const auto& tg = *it;
+    if (!TGHandler::instance()->allowTgSelection(this, tg) || (tg == 0))
     {
       std::cout << m_callsign << ": Not allowed to monitor TG #"
-                << *it << std::endl;
+                << tg << std::endl;
       tgs.erase(it++);
       continue;
     }

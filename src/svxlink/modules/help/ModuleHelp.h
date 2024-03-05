@@ -116,7 +116,7 @@ class ModuleHelp : public Module
   public:
     ModuleHelp(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleHelp(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    const char *compiledForVersion(void) const { return SVXLINK_APP_VERSION; }
 
 
   protected:
