@@ -141,18 +141,15 @@ disturbances in the reflector operation.
 
 Example: HTTP_SRV_PORT=8080
 .TP
-.B CTRL_PTY
-Define a path for a pseudo tty device to change parameters of the svxreflector 
-on runtime. The idea behind is that e.g. SQL_TIMEOUT can be changed from 300 to
-1200 seconds if a broadcast (qst) is sent without restarting the svxreflector.
-The device may be defined as CTRL_PTY=/tmp/ctrl_pty
-To change the value you may send a command to the device like this:
+.B COMMAND_PTY
+Configure a path for a pseudo tty device to send runtime commands to the
+svxreflector. The device may be defined as COMMAND_PTY=/dev/shm/reflector_ctrl.
+To change the value of a configuration variable you may send a command to the
+device like this:
 
-echo "SQL_TIMEOUT_BLOCKTIME" > /tmp/ctrl_pty
-You can change this parameters where xxx stands for the time in seconds.
-SQL_TIMEOUT_BLOCKTIME=xxx
-or
-SQL_TIMEOUT=xxx
+  echo "CFG section varname value" > /dev/shm/reflector_ctrl
+  e.g.
+  echo "CFG GLOBAL SQL_TIMEOUT_BLOCKTIME 60" > /dev/shm/reflector_ctrl
 .
 .SS USERS and PASSWORDS sections
 .
