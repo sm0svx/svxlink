@@ -140,6 +140,16 @@ the risk of some client overwhelming the reflector with requests causing
 disturbances in the reflector operation.
 
 Example: HTTP_SRV_PORT=8080
+.TP
+.B COMMAND_PTY
+Configure a path for a pseudo tty device to send runtime commands to the
+svxreflector. The device may be defined as COMMAND_PTY=/dev/shm/reflector_ctrl.
+To change the value of a configuration variable you may send a command to the
+device like this:
+
+  echo "CFG section varname value" > /dev/shm/reflector_ctrl
+  e.g.
+  echo "CFG GLOBAL SQL_TIMEOUT_BLOCKTIME 60" > /dev/shm/reflector_ctrl
 .
 .SS USERS and PASSWORDS sections
 .

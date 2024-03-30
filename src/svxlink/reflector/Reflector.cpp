@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpServer.h>
 #include <AsyncUdpSocket.h>
 #include <AsyncApplication.h>
+#include <AsyncPty.h>
 #include <common.h>
 
 
@@ -123,7 +124,7 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0)
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), m_cmd_pty(0)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -140,6 +141,8 @@ Reflector::~Reflector(void)
   m_udp_sock = 0;
   delete m_srv;
   m_srv = 0;
+  delete m_cmd_pty;
+  m_cmd_pty = 0;
   m_client_con_map.clear();
   ReflectorClient::cleanup();
   delete TGHandler::instance();
@@ -225,6 +228,26 @@ bool Reflector::initialize(Async::Config &cfg)
     m_http_server->clientDisconnected.connect(
         sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
   }
+
+    // Path for command PTY
+  string pty_path;
+  m_cfg->getValue("GLOBAL", "COMMAND_PTY", pty_path);
+  if (!pty_path.empty())
+  {
+    m_cmd_pty = new Pty(pty_path);
+    if ((m_cmd_pty == nullptr) || !m_cmd_pty->open())
+    {
+      std::cerr << "*** ERROR: Could not open command PTY '" << pty_path
+                << "' as specified in configuration variable "
+                   "GLOBAL/COMMAND_PTY" << std::endl;
+      return false;
+    }
+    m_cmd_pty->setLineBuffered(true);
+    m_cmd_pty->dataReceived.connect(
+        mem_fun(*this, &Reflector::ctrlPtyDataReceived));
+  }
+
+  m_cfg->valueUpdated.connect(sigc::mem_fun(*this, &Reflector::cfgUpdated));
 
   return true;
 } /* Reflector::initialize */
@@ -781,6 +804,89 @@ uint32_t Reflector::nextRandomQsyTg(void)
   std::cout << "*** WARNING: No random TG available for QSY" << std::endl;
   return 0;
 } /* Reflector::nextRandomQsyTg */
+
+
+void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
+{
+  const char* ptr = reinterpret_cast<const char*>(buf);
+  const std::string cmdline(ptr, ptr + count);
+  //std::cout << "### Reflector::ctrlPtyDataReceived: " << cmdline
+  //          << std::endl;
+  std::istringstream ss(cmdline);
+  std::ostringstream errss;
+  std::string cmd;
+  if (!(ss >> cmd))
+  {
+    errss << "Invalid PTY command '" << cmdline << "'";
+    goto write_status;
+  }
+
+  if (cmd == "CFG")
+  {
+    std::string section, tag, value;
+    if (!(ss >> section >> tag >> value) || !ss.eof())
+    {
+      errss << "Invalid PTY command '" << cmdline << "'. "
+               "Usage: CFG <section> <tag> <value>";
+      goto write_status;
+    }
+    m_cfg->setValue(section, tag, value);
+  }
+  else
+  {
+    errss << "Unknown PTY command '" << cmdline
+          << "'. Valid commands are: CFG";
+  }
+
+  write_status:
+    if (!errss.str().empty())
+    {
+      std::cerr << "*** ERROR: " << errss.str() << std::endl;
+      m_cmd_pty->write(std::string("ERR:") + errss.str() + "\n");
+      return;
+    }
+    m_cmd_pty->write("OK\n");
+} /* Reflector::ctrlPtyDataReceived */
+
+
+void Reflector::cfgUpdated(const std::string& section, const std::string& tag)
+{
+  std::string value;
+  if (!m_cfg->getValue(section, tag, value))
+  {
+    std::cout << "*** ERROR: Failed to read updated configuration variable '"
+              << section << "/" << tag << "'" << std::endl;
+    return;
+  }
+
+  if (section == "GLOBAL")
+  {
+    if (tag == "SQL_TIMEOUT_BLOCKTIME")
+    {
+      unsigned t = TGHandler::instance()->sqlTimeoutBlocktime();
+      if (!SvxLink::setValueFromString(t, value))
+      {
+        std::cout << "*** ERROR: Failed to set updated configuration "
+                     "variable '" << section << "/" << tag << "'" << std::endl;
+        return;
+      }
+      TGHandler::instance()->setSqlTimeoutBlocktime(t);
+      //std::cout << "### New value for " << tag << "=" << t << std::endl;
+    }
+    else if (tag == "SQL_TIMEOUT")
+    {
+      unsigned t = TGHandler::instance()->sqlTimeout();
+      if (!SvxLink::setValueFromString(t, value))
+      {
+        std::cout << "*** ERROR: Failed to set updated configuration "
+                     "variable '" << section << "/" << tag << "'" << std::endl;
+        return;
+      }
+      TGHandler::instance()->setSqlTimeout(t);
+      //std::cout << "### New value for " << tag << "=" << t << std::endl;
+    }
+  }
+} /* Reflector::cfgUpdated */
 
 
 /*
