@@ -1,3 +1,10 @@
+ 1.7.1 -- ?? ??? ????
+----------------------
+
+* Code cleanup of Async::Pty, fixing a small memory leak.
+
+
+
  1.7.0 -- 25 Feb 2024
 ----------------------
 

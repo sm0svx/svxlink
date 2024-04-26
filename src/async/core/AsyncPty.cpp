@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncApplication.h>
 #include <AsyncFdWatch.h>
 
 
@@ -69,7 +70,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace std;
 using namespace Async;
 
 
@@ -121,12 +121,14 @@ using namespace Async;
  ****************************************************************************/
 
 Pty::Pty(const std::string &slave_link)
-  : slave_link(slave_link), master(-1), watch(0),
-    pollhup_timer(POLLHUP_CHECK_INTERVAL, Timer::TYPE_PERIODIC)
+  : m_slave_link(slave_link),
+    m_pollhup_timer(POLLHUP_CHECK_INTERVAL, Timer::TYPE_PERIODIC)
 {
-  pollhup_timer.setEnable(false);
-  pollhup_timer.expired.connect(
-      sigc::hide(mem_fun(*this, &Pty::checkIfSlaveEndOpen)));
+  m_watch.activity.connect(
+      sigc::hide(sigc::mem_fun(*this, &Pty::charactersReceived)));
+  m_pollhup_timer.setEnable(false);
+  m_pollhup_timer.expired.connect(
+      sigc::hide(sigc::mem_fun(*this, &Pty::checkIfSlaveEndOpen)));
 } /* Pty::Pty */
 
 
@@ -141,13 +143,13 @@ bool Pty::open(void)
   close();
 
     // Create the master pty
-  master = posix_openpt(O_RDWR|O_NOCTTY);
+  m_master = posix_openpt(O_RDWR|O_NOCTTY);
 
   char *slave_path = NULL;
-  if ((master < 0) ||
-      (grantpt(master) < 0) ||
-      (unlockpt(master) < 0) ||
-      (slave_path = ptsname(master)) == NULL)
+  if ((m_master < 0) ||
+      (grantpt(m_master) < 0) ||
+      (unlockpt(m_master) < 0) ||
+      (slave_path = ptsname(m_master)) == NULL)
   {
     close();
     return false;
@@ -155,29 +157,29 @@ bool Pty::open(void)
 
     // Set the PTY to RAW mode
   struct termios port_settings = {0};
-  if (tcgetattr(master, &port_settings))
+  if (tcgetattr(m_master, &port_settings))
   {
-    cerr << "*** ERROR: tcgetattr failed for PTY: "
-         << strerror(errno) << endl;
+    std::cerr << "*** ERROR: tcgetattr failed for PTY: "
+              << strerror(errno) << std::endl;
     close();
     return false;
   }
   cfmakeraw(&port_settings);
-  if (tcsetattr(master, TCSANOW, &port_settings) == -1)
+  if (tcsetattr(m_master, TCSANOW, &port_settings) == -1)
   {
-    cerr << "*** ERROR: tcsetattr failed for PTY: "
-         << strerror(errno) << endl;
+    std::cerr << "*** ERROR: tcsetattr failed for PTY: "
+              << strerror(errno) << std::endl;
     close();
     return false;
   }
 
     // Set non-blocking mode
-  int master_fd_flags = fcntl(master, F_GETFL, 0);
+  int master_fd_flags = fcntl(m_master, F_GETFL, 0);
   if ((master_fd_flags == -1) ||
-      (fcntl(master, F_SETFL, master_fd_flags|O_NONBLOCK) == -1))
+      (fcntl(m_master, F_SETFL, master_fd_flags|O_NONBLOCK) == -1))
   {
-    cerr << "*** ERROR: fcntl failed for PTY: "
-         << strerror(errno) << endl;
+    std::cerr << "*** ERROR: fcntl failed for PTY: "
+              << strerror(errno) << std::endl;
     close();
     return false;
   }
@@ -188,25 +190,30 @@ bool Pty::open(void)
   int slave = ::open(slave_path, O_RDWR|O_NOCTTY);
   if (slave == -1)
   {
-    cerr << "*** ERROR: Could not open slave PTY " << slave_path << endl;
+    std::cerr << "*** ERROR: Could not open slave PTY " << slave_path
+              << std::endl;
     close();
     return false;
   }
   ::close(slave);
 
     // Create symlink to make the access for user scripts a bit easier
-  if (!slave_link.empty())
+  if (!m_slave_link.empty())
   {
-    if (symlink(slave_path, slave_link.c_str()) == -1)
+    if (symlink(slave_path, m_slave_link.c_str()) == -1)
     {
-      cerr << "*** ERROR: Failed to create PTY slave symlink " << slave_path
-           << " -> " << slave_link << endl;
+      std::cerr << "*** ERROR: Failed to create PTY slave symlink "
+                << slave_path << " -> " << m_slave_link << std::endl;
       close();
       return false;
     }
   }
 
-  pollhup_timer.setEnable(true);
+  m_slave_path = slave_path;
+
+  m_watch.setFd(m_master, Async::FdWatch::FD_WATCH_RD);
+  m_watch.setEnabled(false);
+  m_pollhup_timer.setEnable(true);
 
   return true;
 } /* Pty::open */
@@ -214,17 +221,17 @@ bool Pty::open(void)
 
 void Pty::close(void)
 {
-  if (!slave_link.empty())
+  if (!m_slave_link.empty())
   {
-    unlink(slave_link.c_str());
+    unlink(m_slave_link.c_str());
   }
-  pollhup_timer.setEnable(false);
-  delete watch;
-  watch = 0;
-  if (master >= 0)
+  m_slave_path = "";
+  m_pollhup_timer.setEnable(false);
+  m_watch.setEnabled(false);
+  if (m_master >= 0)
   {
-    ::close(master);
-    master = -1;
+    ::close(m_master);
+    m_master = -1;
   }
 } /* Pty::close */
 
@@ -233,7 +240,7 @@ bool Pty::reopen(void)
 {
   if (!open())
   {
-    cerr << "*** ERROR: Failed to reopen the PTY\n";
+    std::cerr << "*** ERROR: Failed to reopen the PTY" << std::endl;
     return false;
   }
   return true;
@@ -246,7 +253,7 @@ ssize_t Pty::write(const void *buf, size_t count)
   {
     return count;
   }
-  return ::write(master, buf, count);
+  return ::write(m_master, buf, count);
 } /* Pty::write */
 
 
@@ -267,7 +274,6 @@ ssize_t Pty::write(const void *buf, size_t count)
 
 /**
  * @brief   Called when characters are received on the master PTY
- * @param   w The watch that triggered the event
  */
 void Pty::charactersReceived(void)
 {
@@ -278,9 +284,8 @@ void Pty::charactersReceived(void)
     // and start polling instead
   if ((revent & POLLHUP) != 0)
   {
-    delete watch;
-    watch = 0;
-    pollhup_timer.setEnable(true);
+    m_watch.setEnabled(false);
+    m_pollhup_timer.setEnable(true);
   }
 
     // If there is no data to read, bail out
@@ -290,12 +295,12 @@ void Pty::charactersReceived(void)
   }
 
   char buf[256];
-  int rd = read(master, buf, sizeof(buf));
+  int rd = ::read(m_master, buf, sizeof(buf));
   if (rd < 0)
   {
     std::cerr << "*** ERROR: Failed to read master PTY: "
-              << std::strerror(errno) << ". "
-              << "Trying to reopen the PTY.\n";
+              << std::strerror(errno) << ". Trying to reopen the PTY."
+              << std::endl;
     reopen();
     return;
   }
@@ -336,9 +341,9 @@ void Pty::charactersReceived(void)
  */
 short Pty::pollMaster(void)
 {
-  assert(master >= 0);
+  assert(m_master >= 0);
   struct pollfd fds = {0};
-  fds.fd = master;
+  fds.fd = m_master;
   fds.events = POLLIN;
   int ret = ::poll(&fds, 1, 0);
   if (ret > 0)
@@ -347,8 +352,8 @@ short Pty::pollMaster(void)
   }
   else if (ret < 0)
   {
-    cout << "*** ERROR: Failed to poll master end of PTY: "
-         << strerror(errno) << endl;
+    std::cout << "*** ERROR: Failed to poll master end of PTY: "
+              << strerror(errno) << std::endl;
     return 0;
   }
   return 0;
@@ -368,18 +373,14 @@ void Pty::checkIfSlaveEndOpen(void)
   short revents = pollMaster();
   if ((revents & POLLHUP) == 0)
   {
-    watch = new Async::FdWatch(master, Async::FdWatch::FD_WATCH_RD);
-    assert(watch != 0);
-    watch->activity.connect(
-        sigc::hide(mem_fun(*this, &Pty::charactersReceived)));
-    pollhup_timer.setEnable(false);
+    m_watch.setEnabled(true);
+    m_pollhup_timer.setEnable(false);
   }
   if ((revents & POLLIN) != 0)
   {
     charactersReceived();
   }
 } /* Pty::checkIfSlaveEndOpen */
-
 
 
 /*

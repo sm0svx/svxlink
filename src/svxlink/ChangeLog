@@ -1,3 +1,12 @@
+ 1.9.0 -- ?? ??? ????
+----------------------
+
+* Change reflector config at runtime.
+  Contribution from DL1HRC/Adi, following an idea from DJ1JAY/Jens to change
+  some SvxReflector parameters at runtime.
+
+
+
  1.8.0 -- 25 Feb 2024
 ----------------------
 
