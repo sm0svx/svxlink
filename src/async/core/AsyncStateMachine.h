@@ -216,7 +216,7 @@ class StateMachine
 
     /**
      * @brief   Get the context object
-     * @retrun  Returns a reference to the context object
+     * @return  Returns a reference to the context object
      */
     ContextT& ctx(void)
     {
