@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "30042024"
+#define USRPVERSION "30042024-1"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -719,10 +719,13 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       publishInfo("DvUsers:info", event);
     }
 
-    stringstream ss;
-    ss << "usrp_stationdata_received " << m_last_call << " "
-       << m_last_tg << " " << m_last_dmrid;
-    processEvent(ss.str());
+    if (m_last_tg > 0 && m_last_call.length() > 0)
+    {
+      stringstream ss;
+      ss << "usrp_stationdata_received " << m_last_call << " "
+         << m_last_tg << " " << m_last_dmrid;
+      processEvent(ss.str());
+    }
   }
   else
   {
@@ -1119,10 +1122,10 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
       m_user.name = t_userdata.get("name","").asString();
       m_user.call = t_userdata.get("call","").asString();
       m_user.location = t_userdata.get("location","").asString();
-      m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
-      m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+      m_user.aprs_sym = static_cast<char>(t_userdata.get("sym", 46).asInt());
+      m_user.aprs_tab = static_cast<char>(t_userdata.get("tab", 47).asInt());
       m_user.comment = t_userdata.get("comment","").asString();
-      m_user.last_activity = t_userdata.get("last_activity","").asUInt();
+      m_user.last_activity = t_userdata.get("last_activity",0).asUInt();
 
       userdata[m_user.id] = m_user;
       if (debug >= LOGINFO)
