@@ -20,7 +20,7 @@
 //
 
 #include <iostream>
-#include <cassert>
+#include <memory>
 #include <AsyncFactory.h>
 
 
@@ -42,9 +42,9 @@ class Animal
   // convenience classas defined below work.
 struct Dog : public Animal
 {
-  static constexpr const char* OBJNAME = "dog";
+  static constexpr auto OBJNAME = "dog";
   Dog(const std::string& given_name) : Animal(given_name) {}
-  virtual const char* say(void) const { return "Voff"; }
+  virtual const char* say(void) const override { return "Voff"; }
 };
 
 
@@ -52,9 +52,9 @@ struct Dog : public Animal
   // convenience classas defined below work.
 struct Cat : public Animal
 {
-  static constexpr const char* OBJNAME = "cat";
+  static constexpr auto OBJNAME = "cat";
   Cat(const std::string& given_name) : Animal(given_name) {}
-  virtual const char* say(void) const { return "Meow"; }
+  virtual const char* say(void) const override { return "Meow"; }
 };
 
 
@@ -62,9 +62,9 @@ struct Cat : public Animal
   // convenience classas defined below work.
 struct Fox : public Animal
 {
-  static constexpr const char* OBJNAME = "fox";
+  static constexpr auto OBJNAME = "fox";
   Fox(const std::string& given_name) : Animal(given_name) {}
-  virtual const char* say(void) const
+  virtual const char* say(void) const override
   {
     return "Ding, ding, ding, ding, ding, di-ding, di-ding";
   }
@@ -75,9 +75,9 @@ struct Fox : public Animal
   // "core animals" but instead it is added just before calling createAnimal.
 struct Cow : public Animal
 {
-  static constexpr const char* OBJNAME = "cow";
+  static constexpr auto OBJNAME = "cow";
   Cow(const std::string& given_name) : Animal(given_name) {}
-  virtual const char* say(void) const
+  virtual const char* say(void) const override
   {
     return "Moooo";
   }
@@ -97,16 +97,17 @@ struct AnimalSpecificFactory
 };
 
   // A convenience typedef to make access to Async::Factory members easier.
-typedef Async::Factory<Animal, std::string> AnimalFactory;
+using AnimalFactory = Async::Factory<Animal, std::string>;
 
   // A function for creating an animal
-Animal* createAnimal(const std::string& obj_name,
-                     const std::string& animal_name)
+std::unique_ptr<Animal> createAnimal(const std::string& obj_name,
+                                     const std::string& animal_name)
 {
   static AnimalSpecificFactory<Dog> dog_factory;
   static AnimalSpecificFactory<Cat> cat_factory;
   static AnimalSpecificFactory<Fox> fox_factory;
-  return AnimalFactory::createNamedObject(obj_name, animal_name);
+  return std::unique_ptr<Animal>(
+      AnimalFactory::createNamedObject(obj_name, animal_name));
 }
 
 
@@ -116,7 +117,7 @@ int main(int argc, const char *argv[])
   {
     std::cout << "Usage: " << argv[0] << " <obj name> <given name>"
               << std::endl;
-    exit(1);
+    return 1;
   }
   const std::string obj_name(argv[1]);
   const std::string given_name(argv[2]);
@@ -125,7 +126,7 @@ int main(int argc, const char *argv[])
   AnimalSpecificFactory<Cow> cow_factory;
 
     // Create the animal specified on the command line
-  Animal* obj = createAnimal(obj_name, given_name);
+  auto obj = createAnimal(obj_name, given_name);
   if (obj == nullptr)
   {
     std::cout << "Sorry, but there is no animal \"" << argv[1] << "\" :-("
