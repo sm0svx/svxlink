@@ -1572,17 +1572,26 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   // info to the logic connected
   if (talker != 0)
   {
+    uint32_t ti = time(0);
     Json::Value talkerstate(Json::objectValue);
     talkerstate["name"] = talker->remoteName();
     talkerstate["callsign"] = talker->remoteCallsign();
+    talkerstate["mode"] = "EchoLink";
+    talkerstate["idtype"] = "EL-ID";
+    talkerstate["tsi"] = talker->stationData().id();
+    talkerstate["comment"] = talker->stationData().description();
+    talkerstate["last_activity"] = ti;
     talkerstate["isTalking"] = squelch_is_open;
+
     Json::StreamWriterBuilder builder;
     builder["commentStyle"] = "None";
     builder["indentation"] = ""; //The JSON document is written on a single line
+
     Json::StreamWriter* writer = builder.newStreamWriter();
     stringstream os;
     writer->write(talkerstate, &os);
     delete writer;
+
     publishStateEvent("EchoLink:talker_state", os.str());
   }
 } /* ModuleEchoLink::broadcastTalkerStatus */
