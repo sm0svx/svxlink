@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <json/json.h>
+#include <fstream>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -124,7 +126,8 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), m_cmd_pty(0)
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), m_cmd_pty(0),
+    cfg_filename("/tmp/userinfo.json"), debug(false)
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
@@ -229,6 +232,21 @@ bool Reflector::initialize(Async::Config &cfg)
         sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
   }
 
+  m_cfg->getValue("GLOBAL", "DEBUG", debug);
+
+  if (!m_cfg->getValue("GLOBAL", "USERFILE", cfg_filename))
+  {
+    cfg_filename = "/tmp/svxreflector_userdata-";
+    cfg_filename += to_string(udp_listen_port);
+    cfg_filename += ".json";
+  }
+
+  // reads the user data from json file
+  if (!getUserData())
+  {
+    cout << "*** Can not read user data from json file: " << cfg_filename << endl;
+  }
+  
     // Path for command PTY
   string pty_path;
   m_cfg->getValue("GLOBAL", "COMMAND_PTY", pty_path);
@@ -251,6 +269,68 @@ bool Reflector::initialize(Async::Config &cfg)
 
   return true;
 } /* Reflector::initialize */
+
+
+void Reflector::updateUserdata(Json::Value user_arr)
+{
+  User m_user;
+  for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
+  {
+    Json::Value& t_userdata = user_arr[i];
+    m_user.id = t_userdata.get("id", "").asString();
+    m_user.name = t_userdata.get("name","").asString();
+    m_user.mode = t_userdata.get("mode","").asString();
+    m_user.call = t_userdata.get("call","").asString();
+    m_user.location = t_userdata.get("location","").asString();
+    m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+    m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+    m_user.comment = t_userdata.get("comment","").asString();
+    if (t_userdata.get("last_activity","").asUInt() > 0)
+    {
+      m_user.last_activity = (time_t) t_userdata.get("last_activity","").asUInt();
+    }
+
+    std::map<std::string, User>::iterator iu;
+    iu = userdata.find(m_user.id);
+    if (iu != userdata.end())
+    {
+      iu->second.name= m_user.name;
+      iu->second.mode= m_user.mode;
+      iu->second.aprs_sym = m_user.aprs_sym;
+      iu->second.aprs_tab = m_user.aprs_tab;
+      iu->second.comment = m_user.comment;
+      iu->second.location = m_user.location;
+      if (m_user.last_activity)
+      {
+        iu->second.last_activity = m_user.last_activity;
+      }
+
+      if (debug)
+      {
+        cout << "UPDATE: call=" << m_user.call << ", id=" << m_user.id
+          << ", name=" << m_user.name << ", location=" << m_user.location 
+          << " (" << m_user.comment << ")" << endl;
+      }
+    }
+    else
+    {
+      userdata.insert(std::pair<std::string, User>(m_user.id, m_user));
+      if (debug)
+      {
+        cout << "New user: call=" << m_user.call << ", id=" << m_user.id 
+             << ", name=" << m_user.name << ", location=" << m_user.location 
+             << " ("   << m_user.comment << ")" << endl;
+      }
+    }
+  }
+  writeUserData(userdata);
+} /* Reflector::updateUserdata */
+
+
+void Reflector::updateQsostate(Json::Value eventmessage)
+{
+  cout << jsonToString(eventmessage) << endl;
+} /* Reflector::updateQsostate */
 
 
 void Reflector::nodeList(std::vector<std::string>& nodes) const
@@ -806,6 +886,89 @@ uint32_t Reflector::nextRandomQsyTg(void)
 } /* Reflector::nextRandomQsyTg */
 
 
+bool Reflector::getUserData(void)
+{
+  // loading user info
+  Json::Value cfg_root;
+  std::ifstream cfgfile(cfg_filename);
+  if (!cfgfile.is_open())
+  {
+    if (debug)
+    {
+      cout << "+++ WARNING: Can not open " << cfg_filename << endl;
+    }
+    return false;
+  }
+  cfgfile >> cfg_root;
+  cfgfile.close();
+  if (cfg_root.size() < 1)
+  {
+    if (debug)
+    {
+      cout << "+++ WARNING: File (" << cfg_filename << ") contains no userdata"
+           << endl;
+    }
+   return false;
+  }
+  for (Json::Value::ArrayIndex i = 0; i != cfg_root.size(); i++)
+  {
+    User m_user;
+    Json::Value& t_userdata = cfg_root[i];
+    m_user.id = t_userdata.get("id", "").asString();
+    m_user.mode = t_userdata.get("mode","").asString();
+    m_user.name = t_userdata.get("name","").asString();
+    m_user.call = t_userdata.get("call","").asString();
+    m_user.location = t_userdata.get("location","").asString();
+    m_user.aprs_sym = static_cast<char>(t_userdata.get("sym","").asInt());
+    m_user.aprs_tab = static_cast<char>(t_userdata.get("tab","").asInt());
+    m_user.comment = t_userdata.get("comment","").asString();
+    m_user.last_activity = (time_t) t_userdata.get("last_activity","").asUInt();
+    userdata[m_user.id] = m_user;
+  }
+  cout << "+++ " << cfg_root.size() << " users loaded from '" 
+       << cfg_filename << "'" << endl;
+
+  return true;
+} /* Reflector::getUserData */
+
+
+void Reflector::writeUserData(std::map<std::string, User> userdata)
+{
+  Json::Value event(Json::arrayValue);
+  std::map<std::string, User>::iterator iu;
+
+  for (iu = userdata.begin(); iu!=userdata.end(); iu++)
+  {
+    Json::Value t_userinfo(Json::objectValue);
+    t_userinfo["id"] = iu->second.id;
+    t_userinfo["call"] = iu->second.call;
+    t_userinfo["mode"] = iu->second.mode;
+    t_userinfo["name"] = iu->second.name;
+    t_userinfo["location"] = iu->second.location;
+    t_userinfo["sym"] = iu->second.aprs_sym;
+    t_userinfo["tab"] = iu->second.aprs_tab;
+    t_userinfo["comment"] = iu->second.comment;
+    t_userinfo["last_activity"] = static_cast<uint32_t>(iu->second.last_activity);
+    event.append(t_userinfo);
+  }
+
+   // sending own Dv user information to the svxreflector network
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = ""; //The JSON document is written on a single line
+  Json::StreamWriter* writer = builder.newStreamWriter();
+  std::ofstream outputFileStream(cfg_filename);
+  std::stringstream os;
+  writer->write(event, &os);
+  writer->write(event, &outputFileStream);
+  delete writer;
+  // send user info to client nodes
+  broadcastMsg(MsgStateEvent("Reflector","DvUsers:info", 
+                os.str()), v1_client_filter);
+  cout << jsonToString(event) << endl;
+} /* Reflector::writeUserData */
+
+
 void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
 {
   const char* ptr = reinterpret_cast<const char*>(buf);
@@ -887,6 +1050,16 @@ void Reflector::cfgUpdated(const std::string& section, const std::string& tag)
     }
   }
 } /* Reflector::cfgUpdated */
+
+
+string Reflector::jsonToString(Json::Value eventmessage)
+{
+  Json::StreamWriterBuilder builder;
+  builder["indentation"] = "";
+  std::string message = Json::writeString(builder, eventmessage);
+  return message;
+} /* Reflector::jsonToString */
+
 
 
 /*

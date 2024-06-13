@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <vector>
 #include <string>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -182,8 +183,21 @@ class Reflector : public sigc::trackable
      */
     void requestQsy(ReflectorClient *client, uint32_t tg);
 
+    /**
+     * @brief  Updates the user information
+     * @param  user array with all data of the useres
+     */
+    void updateUserdata(Json::Value eventmessage);
+    
+    /**
+     * @brief  Update Qso information
+     * @param  ToDo
+     */
+    void updateQsostate(Json::Value eventmessage);
+
     uint32_t randomQsyLo(void) const { return m_random_qsy_lo; }
     uint32_t randomQsyHi(void) const { return m_random_qsy_hi; }
+
 
   private:
     typedef std::map<Async::FramedTcpConnection*,
@@ -200,7 +214,29 @@ class Reflector : public sigc::trackable
     uint32_t                                        m_random_qsy_tg;
     Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
     Async::Pty*                                     m_cmd_pty;
+    std::string                                     cfg_filename;
+    bool                                            debug;
 
+    
+    // contain user data
+    struct User {
+      std::string id;
+      std::string call;
+      std::string mode;
+      std::string name;
+      std::string location;
+      std::string comment;
+      float lat;
+      float lon;
+      std::string state;
+      short reasonforsending;
+      char aprs_sym;
+      char aprs_tab;
+      time_t last_activity;
+      time_t sent_last_sds;
+    };
+    std::map<std::string, User> userdata;
+    
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
     void clientConnected(Async::FramedTcpConnection *con);
@@ -217,6 +253,9 @@ class Reflector : public sigc::trackable
         Async::HttpServerConnection::DisconnectReason reason);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
+    bool getUserData(void);
+    void writeUserData(std::map<std::string, User> userdata);
+    std::string jsonToString(Json::Value eventmessage);
     void ctrlPtyDataReceived(const void *buf, size_t count);
     void cfgUpdated(const std::string& section, const std::string& tag);
 

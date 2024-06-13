@@ -38,3 +38,6 @@ SVXSERVER=0.0.6
 
 # Version for SvxReflector
 SVXREFLECTOR=1.2.0
+
+# Version for Usrp support
+USRPSUPPORT=0.0.1.2
