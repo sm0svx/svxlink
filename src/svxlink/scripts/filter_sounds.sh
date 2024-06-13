@@ -90,6 +90,10 @@ if [ ! -r "${SRC_DIR}/filter_sounds.cfg" ]; then
 fi
 . "${SRC_DIR}/filter_sounds.cfg"
 
+EFFECT="${EFFECT:-}"
+MAXIMIZE_EFFECT="${MIXIMIZE_EFFECT:-$EFFECT}"
+TRIM_EFFECT="${TRIM_EFFECT:-$EFFECT}"
+
 # Check if the SUBDIRS config variable is set
 if [ -z "$SUBDIRS" ]; then
   echo "*** ERROR: Configuration variable SUBDIRS not set."
@@ -115,9 +119,12 @@ for subdir in $SUBDIRS; do
     [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
     if [ -r "$src_clip.raw" -o -r "$src_clip.wav" ]; then
       echo "Maximizing $src_clip -> $dest_clip.$ext"
-      $basedir/play_sound.sh -f$endian$encoding -r$target_rate \
-			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
-	  sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
+      $basedir/play_sound.sh -f$endian$encoding \
+                             -r$target_rate \
+                             -l$SILENCE_LEVEL \
+                             ${MAXIMIZE_EFFECT:+-e "$MAXIMIZE_EFFECT"} \
+                             "$src_clip" |
+          sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
     else
       warning "Missing sound clip: $src_clip"
     fi
@@ -129,9 +136,12 @@ for subdir in $SUBDIRS; do
     [ ! -d $(dirname "$dest_clip") ] && mkdir -p $(dirname "$dest_clip")
     if [ -r "$src_clip.raw" -o -r "$src_clip.wav" ]; then
       echo "Trimming $src_clip -> $dest_clip.$ext"
-      $basedir/play_sound.sh -tf$endian$encoding -r$target_rate \
-			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
-	  sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
+      $basedir/play_sound.sh -tf$endian$encoding \
+                             -r$target_rate \
+                             -l$SILENCE_LEVEL \
+                             ${TRIM_EFFECT:+-e "$TRIM_EFFECT"} \
+                             "$src_clip" |
+          sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
       sox "$dest_clip.$ext" -r$target_rate ${SOX_RAW_SAMP_FMT} - >> /tmp/all_trimmed.raw
     else
       warning "Missing sound clip: $src_clip"
