@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "01052024"
+#define USRPVERSION "08072024"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -1140,7 +1140,7 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
   {
     talker.callsign = user_arr.get("callsign","").asString();
     talker.name = user_arr.get("name","").asString();
-    talker.isTalking = user_arr.get("isTalking","").asBool();
+    talker.isTalking = user_arr.get("isTalking",false).asBool();
     if (debug >= LOGINFO)
     {
       cout << "Get userinfo from EchoLink module("
