@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "08072024"
+#define USRPVERSION "08072024a"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -146,7 +146,7 @@ UsrpLogic::UsrpLogic(void)
     ident(false), m_dmrid(0), m_rptid(0), m_selected_cc(0), m_selected_ts(1),
     preamp_gain(0), net_preamp_gain(0), m_event_handler(0), m_last_tg(0),
     debug(LOGERROR), share_userinfo(true),
-    m_delay_timer(5000, Timer::TYPE_ONESHOT, false)
+    m_delay_timer(5000, Timer::TYPE_ONESHOT, false), callsign("N0CALL")
 {
   m_flush_timeout_timer.expired.connect(
       mem_fun(*this, &UsrpLogic::flushTimeout));
@@ -217,6 +217,7 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
          << " should have 6 digits maximum." << endl;
     return false;
   }
+  callsign = m_callsign;
 
   if (!cfg().getValue(name(), "DMRID", m_dmrid))
   {
@@ -848,6 +849,8 @@ void UsrpLogic::sendStopMsg(void)
   stringstream ss;
   ss << "transmission_stop " << m_selected_tg;
   processEvent(ss.str());
+  
+  callsign = m_callsign; // reset to own callsign
 } /* UsrpLogic::sendStopMsg */
 
 
@@ -1138,8 +1141,8 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
   }
   else if (event_name == "EchoLink:talker_state")
   {
-    talker.callsign = user_arr.get("callsign","").asString();
-    talker.name = user_arr.get("name","").asString();
+    talker.callsign = user_arr.get("callsign","N0CALL").asString();
+    talker.name = user_arr.get("name","No EL-Name").asString();
     talker.isTalking = user_arr.get("isTalking",false).asBool();
     if (debug >= LOGINFO)
     {

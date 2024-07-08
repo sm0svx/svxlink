@@ -226,6 +226,7 @@ class UsrpLogic : public LogicBase
     uint8_t                           m_last_ts;
     uint8_t                           m_last_cc;
     std::string                       m_last_mode;
+    std::string                       callsign;
 
     UsrpLogic(const UsrpLogic&);
     UsrpLogic& operator=(const UsrpLogic&);
