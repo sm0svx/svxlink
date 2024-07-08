@@ -866,7 +866,7 @@ void MainWindow::helpAbout(void)
         tr("Qtel v") + QTEL_VERSION +
         tr(" - Qt EchoLink client.\n") +
         "\n" +
-        tr("Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n"
+        tr("Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX\n\n"
            "Qtel comes with ABSOLUTELY NO WARRANTY. "
            "This is free software, and you "
            "are welcome to redistribute it in accordance with the "

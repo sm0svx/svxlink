@@ -314,7 +314,7 @@ int main(int argc, char **argv)
   CppApplication app;
   
   cout << PROGRAM_NAME " v" SIGLEV_DET_CAL_VERSION
-          " Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you\n";
   cout << "are welcome to redistribute it in accordance with the "
