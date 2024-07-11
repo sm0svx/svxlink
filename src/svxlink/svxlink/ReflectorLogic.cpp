@@ -403,9 +403,19 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   csr_exts.addKeyUsage(
       "critical, digitalSignature, keyEncipherment, keyAgreement");
   csr_exts.addExtKeyUsage("clientAuth");
-  if (cfg().getValue(name(), "CERT_EMAIL", value) && !value.empty())
+  std::vector<std::string> cert_email;
+  if (cfg().getValue(name(), "CERT_EMAIL", cert_email) && !cert_email.empty())
   {
-    csr_exts.addSubjectAltNames(std::string("email:") + value);
+    std::string csr_san;
+    for (const auto& email : cert_email)
+    {
+      if (!csr_san.empty())
+      {
+        csr_san += ",";
+      }
+      csr_san += std::string("email:") + email;
+    }
+    csr_exts.addSubjectAltNames(csr_san);
   }
   m_ssl_csr.addExtensions(csr_exts);
   m_ssl_csr.setPublicKey(m_ssl_pkey);
