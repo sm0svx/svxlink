@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 #include <version/SVXLINK.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -145,6 +146,7 @@ ReflectorLogic::ReflectorLogic(void)
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
+    m_tg_select_inhibit_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
@@ -363,6 +365,17 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     return false;
   }
 
+  m_tg_select_inhibit_timeout = m_tg_select_timeout;
+  if (!cfg().getValue(name(), "TG_SELECT_INHIBIT_TIMEOUT", 0U,
+                      std::numeric_limits<unsigned>::max(),
+                      m_tg_select_inhibit_timeout, true))
+  {
+    std::cout << "*** ERROR[" << name()
+              << "]: Illegal value (" << m_tg_select_inhibit_timeout
+              << ") for TG_SELECT_INHIBIT_TIMEOUT" << std::endl;
+    return false;
+  }
+
   int qsy_pending_timeout = -1;
   if (cfg().getValue(name(), "QSY_PENDING_TIMEOUT", qsy_pending_timeout) &&
       (qsy_pending_timeout > 0))
@@ -438,7 +451,8 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     }
   }
   m_node_info["sw"] = "SvxLink";
-  m_node_info["swVer"] = SVXLINK_VERSION;
+  m_node_info["swVer"] = SVXLINK_APP_VERSION;
+  m_node_info["projVer"] = PROJECT_VERSION;
 
   cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
       m_udp_heartbeat_tx_cnt_reset);
@@ -1647,7 +1661,8 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     m_qsy_pending_timer.reset();
     m_tg_local_activity = true;
     m_use_prio = false;
-    m_tg_select_timeout_cnt = m_tg_select_timeout;
+    m_tg_select_timeout_cnt =
+      (m_selected_tg > 0) ? m_tg_select_timeout : m_tg_select_inhibit_timeout;
   }
 
   if (!m_tg_selection_event.empty())
