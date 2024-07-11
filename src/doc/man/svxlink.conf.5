@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JANUARY 2024" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JULY 2024" Linux "File Formats"
 .
 .SH NAME
 .
@@ -624,10 +624,19 @@ configurable so that a talk group can be automatically selected when it's
 active. After a configurable timeout the node will return to monitor all
 configured talk groups if there is no activity on the currently selected talk
 group. Which talk group to select for outgoing traffic for a node can be set to
-a default and/or selected using DTMF commands. The DTMF commands are entered
-through the logic linking definition associated with the reflector.  So if a
-command prefix of 9 have been specified for a link, selecting talk group 888
-will be achieved by entering the command 91888#.
+a default, selected by the CTCSS tone used and/or selected using DTMF
+commands. The DTMF commands are entered through the logic linking definition
+associated with the reflector.  So if a command prefix of 9 have been
+specified for a link, selecting talk group 888 will be achieved by entering
+the command 91888#.
+.P
+The reflector connection will be authenticated using X.509 certificates. Both
+the server and the client requires authentication. The AUTH_KEY authentication
+method that were previously used is deprecated. The certificate generation
+process is mostly automated. The contents of the certificate can be customized
+using the configuration variables with name prefix CERT_. Default values are
+good in most cases. CERT_EMAIL may be good to specify so that the SvxLink node
+owner can be contacted. Ask the reflector sysop what the convention is.
 .TP
 .B TYPE
 The type for a reflector logic core is always
@@ -787,6 +796,88 @@ It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
+.TP
+.B CERT_PKI_DIR
+The path to the directory where PKI (Public Key Infrastructure) files will be
+stored.
+
+Example: CERT_PKI_DIR=/var/lib/svxlink/pki
+.TP
+.B CERT_KEYFILE
+The path to the private key for the X.509 client certificate. This file will
+be auto generated if it does not exist. It must be kept secure since this is
+what authenticates your node. It must NOT be sent in the clear over the
+internet for example. Also, if you loose this file you will have to ask the
+reflector sysop to issue a new certificate for the new key.
+
+Example: CERT_KEYFILE=/var/lib/svxlink/pki/MYCALL.key
+.TP
+.B CERT_CSRFILE
+The path to the certificate signing request for the X.509 client certificate.
+This file will be auto generated if it does not exist or if the configuration
+information has been changed. When a new CSR is generated, the reflector sysop
+need to sign it before it will become active.
+
+Example: CERT_CSRFILE=/var/lib/svxlink/pki/MYCALL.csr
+.TP
+.B CERT_CRTFILE
+The path to the X.509 client certificate. This file is a public file that is
+used to identify your node. It is sent to the reflector during the
+authentication procedure. It will be created after the CSR has been signed by
+the reflector sysop. The reflector will send this file to the client during
+the authentication procedure if it's missing on the node or if the certificate
+has been updated.
+
+Example: CERT_CRTFILE=/var/lib/svxlink/pki/MYCALL.crt
+.TP
+.B CERT_CAFILE
+The path to the X.509 certificate bundle. This file contains one or more
+certificates that is used to verify the authenticity of the reflector server.
+
+Example: CERT_CAFILE=/var/lib/svxlink/pki/ca-bundle.pem
+.TP
+.B CERT_SUBJ_GN, CERT_SUBJ_givenName
+The name of the person, with which s/he is normally called, owning the
+SvxLink node.
+
+Example: CERT_SUBJ_GN=John
+.TP
+.B CERT_SUBJ_SN, CERT_SUBJ_surname
+The family name of the person owning the SvxLink node.
+
+Example: CERT_SUBJ_SN=Doe
+.TP
+.B CERT_SUBJ_OU, CERT_SUBJ_organizationalUnitName
+The name of the organizational unit to which the SvxLink node belongs. That
+may be a subdivision of a ham radio organization for example.
+
+Example: CERT_SUBJ_OU="VHF/UHF Unit"
+.TP
+.B CERT_SUBJ_O, CERT_SUBJ_organizationName
+The name of the organization to which the SvxLink node belongs. That may be a
+ham radio club for example.
+
+Example: CERT_SUBJ_O=SSA
+.TP
+.B CERT_SUBJ_L, CERT_SUBJ_localityName
+The name of the city where the SvxLink node is located.
+
+Example: CERT_SUBJ_L=Stockholm
+.TP
+.B CERT_SUBJ_ST, CERT_SUBJ_stateOrProvinceName
+The name of the state or province where the SvxLink node is located.
+
+Example: CERT_SUBJ_ST=Södermanland
+.TP
+.B CERT_SUBJ_C, CERT_SUBJ_countryName
+The ISO 3166 country code for the country where the SvxLink node is located.
+
+Example: CERT_SUBJ_C=SE
+.TP
+.B CERT_EMAIL
+The email address where the SvxLink node owner can be reached.
+
+Example: CERT_EMAIL=mycall@example.com
 .
 .SS QSO Recorder Section
 .

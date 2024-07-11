@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -61,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "LogicBase.h"
-#include "../reflector/ReflectorMsg.h"
 
 
 /****************************************************************************
@@ -72,7 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class EncryptedUdpSocket;
+  class UdpSocket;
   class AudioValve;
 };
 
@@ -198,21 +197,9 @@ class ReflectorLogic : public LogicBase
 
     typedef enum
     {
-      STATE_DISCONNECTED,
-      STATE_EXPECT_CA_INFO,
-      STATE_EXPECT_AUTH_CHALLENGE,
-      STATE_EXPECT_START_ENCRYPTION,
-      STATE_EXPECT_CA_BUNDLE,
-      STATE_EXPECT_SSL_CON_READY,
-      STATE_EXPECT_AUTH_ANSWER,
-      STATE_EXPECT_AUTH_OK,
-      STATE_EXPECT_SERVER_INFO,
-      STATE_EXPECT_START_UDP_ENCRYPTION,
-      STATE_EXPECT_UDP_HEARTBEAT,
-      STATE_CONNECTED
+      STATE_DISCONNECTED, STATE_EXPECT_AUTH_CHALLENGE, STATE_EXPECT_AUTH_OK,
+      STATE_EXPECT_SERVER_INFO, STATE_CONNECTED
     } ConState;
-    static const ConState STATE_TCP_CONNECTED =
-                              STATE_EXPECT_START_UDP_ENCRYPTION;
 
     typedef Async::TcpPrioClient<Async::FramedTcpConnection> FramedTcpClient;
     typedef std::set<MonitorTgEntry> MonitorTgsSet;
@@ -227,14 +214,15 @@ class ReflectorLogic : public LogicBase
     std::string                       m_reflector_host;
     FramedTcpClient                   m_con;
     unsigned                          m_msg_type;
-    Async::EncryptedUdpSocket*        m_udp_sock;
-    ReflectorUdpMsg::ClientId         m_client_id;
+    Async::UdpSocket*                 m_udp_sock;
+    uint32_t                          m_client_id;
+    std::string                       m_auth_key;
     std::string                       m_callsign;
     Async::AudioStreamStateDetector*  m_logic_con_in;
     Async::AudioStreamStateDetector*  m_logic_con_out;
     Async::Timer                      m_reconnect_timer;
-    //uint16_t                          m_next_udp_tx_seq;
-    UdpCipher::IVCntr                 m_next_udp_rx_seq;
+    uint16_t                          m_next_udp_tx_seq;
+    uint16_t                          m_next_udp_rx_seq;
     Async::Timer                      m_heartbeat_timer;
     Async::AudioDecoder*              m_dec;
     Async::Timer                      m_flush_timeout_timer;
@@ -248,7 +236,6 @@ class ReflectorLogic : public LogicBase
     Async::AudioEncoder*              m_enc;
     uint32_t                          m_default_tg;
     unsigned                          m_tg_select_timeout;
-    unsigned                          m_tg_select_inhibit_timeout;
     Async::Timer                      m_tg_select_timer;
     unsigned                          m_tg_select_timeout_cnt;
     uint32_t                          m_selected_tg;
@@ -266,30 +253,15 @@ class ReflectorLogic : public LogicBase
     bool                              m_mute_first_tx_rem;
     Async::Timer                      m_tmp_monitor_timer;
     int                               m_tmp_monitor_timeout;
-    Async::SslContext                 m_ssl_ctx;
-    Async::SslKeypair                 m_ssl_pkey;
-    Async::SslCertSigningReq          m_ssl_csr;
-    Async::SslX509                    m_ssl_cert;
-    std::string                       m_pki_dir;
-    std::string                       m_cafile;
-    std::string                       m_crtfile;
-    std::string                       m_keyfile;
-    std::string                       m_csrfile;
     bool                              m_use_prio;
     Async::Timer                      m_qsy_pending_timer;
     bool                              m_verbose;
-    std::vector<uint8_t>              m_udp_cipher_iv_rand;
-    UdpCipher::IVCntr                 m_udp_cipher_iv_cntr;
-    UdpCipher::AAD                    m_aad;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
     void onConnected(void);
     void onDisconnected(Async::TcpConnection *con,
                         Async::TcpConnection::DisconnectReason reason);
-    bool onVerifyPeer(Async::TcpConnection *con, bool preverify_ok,
-                      X509_STORE_CTX *x509_store_ctx);
-    void onSslConnectionReady(Async::TcpConnection* con);
     void onFrameReceived(Async::FramedTcpConnection *con,
                          std::vector<uint8_t>& data);
     void handleMsgError(std::istream& is);
@@ -301,29 +273,18 @@ class ReflectorLogic : public LogicBase
     void handleMsgTalkerStart(std::istream& is);
     void handleMsgTalkerStop(std::istream& is);
     void handleMsgRequestQsy(std::istream& is);
-    void handlMsgStartUdpEncryption(std::istream& is);
     void handleMsgAuthOk(void);
-    void handleMsgCAInfo(std::istream& is);
-    void handleMsgStartEncryption(void);
-    void handleMsgCABundle(std::istream& is);
-    void handleMsgClientCsrRequest(void);
-    void handleMsgClientCert(std::istream& is);
     void handleMsgServerInfo(std::istream& is);
     void sendMsg(const ReflectorMsg& msg);
     void sendEncodedAudio(const void *buf, int count);
     void flushEncodedAudio(void);
-    bool udpCipherDataReceived(const Async::IpAddress& addr, uint16_t port,
-                               void *buf, int count);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
-                             void* aad, void *buf, int count);
-    void sendUdpMsg(const UdpCipher::AAD& aad, const ReflectorUdpMsg& msg);
+                             void *buf, int count);
     void sendUdpMsg(const ReflectorUdpMsg& msg);
-    void sendUdpRegisterMsg(void);
     void connect(void);
     void disconnect(void);
     void reconnect(void);
     bool isConnected(void) const;
-    bool isTcpLoggedIn(void) const { return m_con_state >= STATE_TCP_CONNECTED; }
     bool isLoggedIn(void) const { return m_con_state == STATE_CONNECTED; }
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);
@@ -344,8 +305,6 @@ class ReflectorLogic : public LogicBase
     void handlePlaySilence(int duration);
     void handlePlayTone(int fq, int amp, int duration);
     void handlePlayDtmf(const std::string& digit, int amp, int duration);
-    bool loadClientCertificate(void);
-    void csrAddSubjectNamesFromConfig(void);
 
 };  /* class ReflectorLogic */
 

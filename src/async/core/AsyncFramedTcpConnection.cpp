@@ -116,8 +116,10 @@ FramedTcpConnection::FramedTcpConnection(size_t recv_buf_len)
   : TcpConnection(recv_buf_len), m_max_frame_size(DEFAULT_MAX_FRAME_SIZE),
     m_size_received(false)
 {
+#if 0
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &FramedTcpConnection::onSendBufferFull));
+#endif
 } /* FramedTcpConnection::FramedTcpConnection */
 
 
@@ -127,8 +129,10 @@ FramedTcpConnection::FramedTcpConnection(
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
     m_max_frame_size(DEFAULT_MAX_FRAME_SIZE), m_size_received(false)
 {
+#if 0
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &FramedTcpConnection::onSendBufferFull));
+#endif
 } /* FramedTcpConnection::FramedTcpConnection */
 
 
@@ -273,8 +277,8 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       ptr += copy_cnt;
       if (m_frame.size() == m_frame_size)
       {
-        frameReceived(this, m_frame);
         m_size_received = false;
+        frameReceived(this, m_frame);
       }
     }
   }
@@ -289,6 +293,7 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
  *
  ****************************************************************************/
 
+#if 0
 void FramedTcpConnection::onSendBufferFull(bool is_full)
 {
   //cout << "### FramedTcpConnection::onSendBufferFull: is_full="
@@ -315,6 +320,7 @@ void FramedTcpConnection::onSendBufferFull(bool is_full)
     }
   }
 } /* FramedTcpConnection::onSendBufferFull */
+#endif
 
 
 void FramedTcpConnection::disconnectCleanup(void)

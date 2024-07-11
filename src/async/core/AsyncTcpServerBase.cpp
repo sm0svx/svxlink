@@ -284,6 +284,12 @@ int TcpServerBase::writeExcept(TcpConnection *con, const void *buf, int count)
 } /* TcpServerBase::writeExcept */
 
 
+void TcpServerBase::setSslContext(SslContext& ctx)
+{
+  m_ssl_ctx = &ctx;
+} /* TcpServerBase::setSslContext */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -292,6 +298,10 @@ int TcpServerBase::writeExcept(TcpConnection *con, const void *buf, int count)
 
 void TcpServerBase::addConnection(TcpConnection *con)
 {
+  if (m_ssl_ctx != nullptr)
+  {
+    con->setSslContext(*m_ssl_ctx, true);
+  }
   tcpConnectionList.push_back(con);
 } /* TcpServerBase::addConnection */
 
@@ -303,7 +313,7 @@ void TcpServerBase::removeConnection(TcpConnection *con)
   assert(it != tcpConnectionList.end());
   tcpConnectionList.erase(it);
   Application::app().runTask([=]{ delete con; });
-} /* TcpServerBase::onDisconnected */
+} /* TcpServerBase::removeConnection */
 
 
 /****************************************************************************

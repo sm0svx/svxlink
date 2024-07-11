@@ -285,7 +285,7 @@ class FramedTcpConnection : public TcpConnection
     TxQueue               m_txq;
 
     FramedTcpConnection(const FramedTcpConnection&) = delete;
-    void onSendBufferFull(bool is_full);
+    //void onSendBufferFull(bool is_full);
     void disconnectCleanup(void);
 
 };  /* class FramedTcpConnection */

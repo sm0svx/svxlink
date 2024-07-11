@@ -349,7 +349,7 @@ class HttpServerConnection : public TcpConnection
     using TcpConnection::write;
     void handleStartLine(void);
     void handleHeader(void);
-    void onSendBufferFull(bool is_full);
+    //void onSendBufferFull(bool is_full);
     void disconnectCleanup(void);
     const char* codeToString(unsigned code);
 

@@ -10,6 +10,15 @@
    fun:main
 }
 {
+   gcry_check_version
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:gcry_check_version
+   ...
+}
+{
    dl_init
    Memcheck:Leak
    match-leak-kinds: reachable

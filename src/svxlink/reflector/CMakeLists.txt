@@ -5,10 +5,10 @@ include_directories(${POPT_INCLUDE_DIRS})
 add_definitions(${POPT_DEFINITIONS})
 
 # Find the GCrypt library
-find_package(GCrypt REQUIRED)
-set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
-include_directories(${GCRYPT_INCLUDE_DIRS})
-add_definitions(${GCRYPT_DEFINITIONS})
+#find_package(GCrypt REQUIRED)
+#set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
+#include_directories(${GCRYPT_INCLUDE_DIRS})
+#add_definitions(${GCRYPT_DEFINITIONS})
 
 # Find jsoncpp library
 #find_package(jsoncpp REQUIRED)
@@ -34,4 +34,5 @@ set_target_properties(svxreflector PROPERTIES
 # Install targets
 install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})
 install_if_not_exists(svxreflector.conf ${SVX_SYSCONF_INSTALL_DIR})
-install(PROGRAMS svxreflector-status DESTINATION ${BIN_INSTALL_DIR})
+install(PROGRAMS svxreflector-status svxreflector-ca
+  DESTINATION ${BIN_INSTALL_DIR})

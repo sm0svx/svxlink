@@ -167,20 +167,6 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
       TcpPrioClientBase::disconnect();
     }
 
-    /**
-     * @brief   Mark connection as failed
-     *
-     * The application can use this function to mark a connection as failed so
-     * that when a reconnect is performed, the next server will be tried. If a
-     * connect is classified as successful, the same host will be tried again
-     * on reconnect.
-     */
-    //void markAsFailedConnect(void)
-    //{
-    //  //std::cout << "### TcpPrioClient::markAsFailedConnect" << std::endl;
-    //  m_successful_connect = false;
-    //}
-
   protected:
     using ConT::operator=;
     using TcpPrioClientBase::operator=;
@@ -206,7 +192,6 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
     virtual void onDisconnected(TcpConnection::DisconnectReason reason)
     {
       //std::cout << "### TcpPrioClient::onDisconnected:"
-      //          //<< " m_successful_connect=" << m_successful_connect
       //          << std::endl;
       ConT::onDisconnected(reason);
       TcpPrioClientBase::onDisconnected(reason);
@@ -232,11 +217,10 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
     }
 
   private:
-    //bool                      m_successful_connect  = false;
-
     TcpPrioClient<ConT>& operator=(TcpClient<ConT>&& other)
     {
-      //std::cout << "### TcpPrioClient::operator=(TcpClient<ConT>&&)" << std::endl;
+      //std::cout << "### TcpPrioClient::operator=(TcpClient<ConT>&&)"
+      //          << std::endl;
       *static_cast<TcpClientBase*>(this) =
         std::move(*static_cast<TcpClientBase*>(&other));
       return *this;

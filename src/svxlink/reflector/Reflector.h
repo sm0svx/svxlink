@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpServer.h>
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
+#include <AsyncAtTimer.h>
 #include <AsyncHttpServerConnection.h>
 
 
@@ -70,7 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class UdpSocket;
+  class EncryptedUdpSocket;
   class Config;
   class Pty;
 };
@@ -165,7 +166,7 @@ class Reflector : public sigc::trackable
      * @param   count The number of bytes in the payload
      * @return  Returns \em true on success or else \em false
      */
-    bool sendUdpDatagram(ReflectorClient *client, const void *buf, size_t count);
+    bool sendUdpDatagram(ReflectorClient *client, const ReflectorUdpMsg& msg);
 
     void broadcastUdpMsg(const ReflectorUdpMsg& msg,
         const ReflectorClient::Filter& filter=ReflectorClient::NoFilter());
@@ -182,32 +183,74 @@ class Reflector : public sigc::trackable
      */
     void requestQsy(ReflectorClient *client, uint32_t tg);
 
+    Async::EncryptedUdpSocket* udpSocket(void) const { return m_udp_sock; }
+
     uint32_t randomQsyLo(void) const { return m_random_qsy_lo; }
     uint32_t randomQsyHi(void) const { return m_random_qsy_hi; }
+
+    Async::SslCertSigningReq loadClientPendingCsr(const std::string& callsign);
+    Async::SslCertSigningReq loadClientCsr(const std::string& callsign);
+    bool signClientCert(Async::SslX509& cert);
+    Async::SslX509 signClientCsr(const std::string& cn);
+    Async::SslX509 loadClientCertificate(const std::string& callsign);
+
+    size_t caSize(void) const { return m_ca_size; }
+    const std::vector<uint8_t>& caDigest(void) const { return m_ca_md; }
+    const std::vector<uint8_t>& caSignature(void) const { return m_ca_sig; }
+    const std::string& caUrl(void) const { return m_ca_url; }
+    std::string clientCertPem(const std::string& callsign) const;
+    std::string caBundlePem(void) const;
+    std::string issuingCertPem(void) const;
+
+  protected:
 
   private:
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
+    using HttpServer = Async::TcpServer<Async::HttpServerConnection>;
 
-    FramedTcpServer*                                m_srv;
-    Async::UdpSocket*                               m_udp_sock;
-    ReflectorClientConMap                           m_client_con_map;
-    Async::Config*                                  m_cfg;
-    uint32_t                                        m_tg_for_v1_clients;
-    uint32_t                                        m_random_qsy_lo;
-    uint32_t                                        m_random_qsy_hi;
-    uint32_t                                        m_random_qsy_tg;
-    Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
-    Async::Pty*                                     m_cmd_pty;
+    static constexpr time_t CERT_VALIDITY_TIME = 3*3600;
+
+    FramedTcpServer*            m_srv;
+    Async::EncryptedUdpSocket*  m_udp_sock;
+    ReflectorClientConMap       m_client_con_map;
+    Async::Config*              m_cfg;
+    uint32_t                    m_tg_for_v1_clients;
+    uint32_t                    m_random_qsy_lo;
+    uint32_t                    m_random_qsy_hi;
+    uint32_t                    m_random_qsy_tg;
+    HttpServer*                 m_http_server;
+    Async::Pty*                 m_cmd_pty;
+    Async::SslContext           m_ssl_ctx;
+    std::string                 m_keys_dir;
+    std::string                 m_pending_csrs_dir;
+    std::string                 m_csrs_dir;
+    std::string                 m_certs_dir;
+    UdpCipher::AAD              m_aad;
+    Async::SslKeypair           m_ca_pkey;
+    Async::SslX509              m_ca_cert;
+    Async::SslKeypair           m_issue_ca_pkey;
+    Async::SslX509              m_issue_ca_cert;
+    std::string                 m_pki_dir;
+    std::string                 m_ca_bundle_file;
+    std::string                 m_crtfile;
+    Async::AtTimer              m_renew_cert_timer;
+    Async::AtTimer              m_renew_issue_ca_cert_timer;
+    size_t                      m_ca_size = 0;
+    std::vector<uint8_t>        m_ca_md;
+    std::vector<uint8_t>        m_ca_sig;
+    std::string                 m_ca_url;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
     void clientConnected(Async::FramedTcpConnection *con);
     void clientDisconnected(Async::FramedTcpConnection *con,
                             Async::FramedTcpConnection::DisconnectReason reason);
+    bool udpCipherDataReceived(const Async::IpAddress& addr, uint16_t port,
+                               void *buf, int count);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
-                             void *buf, int count);
+                             void* aad, void *buf, int count);
     void onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
                          ReflectorClient *new_talker);
     void httpRequestReceived(Async::HttpServerConnection *con,
@@ -219,6 +262,17 @@ class Reflector : public sigc::trackable
     uint32_t nextRandomQsyTg(void);
     void ctrlPtyDataReceived(const void *buf, size_t count);
     void cfgUpdated(const std::string& section, const std::string& tag);
+    bool loadCertificateFiles(void);
+    bool loadServerCertificateFiles(void);
+    bool generateKeyFile(Async::SslKeypair& pkey, const std::string& keyfile);
+    bool loadRootCAFiles(void);
+    bool loadSigningCAFiles(void);
+    bool onVerifyPeer(Async::TcpConnection *con, bool preverify_ok,
+                      X509_STORE_CTX *x509_store_ctx);
+    Async::SslX509 onCsrReceived(Async::SslCertSigningReq& req);
+    bool buildPath(const std::string& sec, const std::string& tag,
+                   const std::string& defdir, std::string& defpath);
+    bool removeClientCert(const std::string& cn);
 
 };  /* class Reflector */
 

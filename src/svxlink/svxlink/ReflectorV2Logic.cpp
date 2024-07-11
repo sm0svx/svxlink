@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,19 +30,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <unistd.h>
-//#include <openssl/x509.h>
-//#include <openssl/x509v3.h>
-
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
 #include <iterator>
-#include <streambuf>
 #include <limits>
-#include <numeric>
 
 
 /****************************************************************************
@@ -51,17 +45,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncApplication.h>
-#include <AsyncTcpClient.h>
-#include <AsyncDigest.h>
-#include <AsyncSslKeypair.h>
-#include <AsyncSslCertSigningReq.h>
-#include <AsyncEncryptedUdpSocket.h>
-#include <AsyncIpAddress.h>
+#include <AsyncUdpSocket.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 #include <version/SVXLINK.h>
-#include <config.h>
 
 
 /****************************************************************************
@@ -70,7 +57,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "ReflectorLogic.h"
+#include "ReflectorV2Logic.h"
+#include "../reflector/ReflectorMsg.h"
 #include "EventHandler.h"
 
 
@@ -107,53 +95,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace {
-  //void splitFilename(const std::string& filename, std::string& dirname,
-  //    std::string& basename)
-  //{
-  //  std::string ext;
-  //  basename = filename;
-
-  //  size_t basenamepos = filename.find_last_of('/');
-  //  if (basenamepos != string::npos)
-  //  {
-  //    if (basenamepos + 1 < filename.size())
-  //    {
-  //      basename = filename.substr(basenamepos + 1);
-  //    }
-  //    dirname = filename.substr(0, basenamepos + 1);
-  //  }
-
-  //  size_t extpos = basename.find_last_of('.');
-  //  if (extpos != string::npos)
-  //  {
-  //    if (extpos+1 < basename.size())
-  //    ext = basename.substr(extpos+1);
-  //    basename.erase(extpos);
-  //  }
-  //}
-
-  template <class T>
-  void hexdump(const T& d)
-  {
-    std::ostringstream ss;
-    std::string sep(48, '-');
-    ss << sep << "\n";
-    ss << std::setfill('0') << std::hex;
-    size_t cnt = 0;
-    for (const auto& byte : d)
-    {
-      std::string spacer(" ");
-      if (++cnt % 16 == 0)
-      {
-        spacer = "\n";
-      }
-      ss << std::setw(2) << unsigned(byte) << spacer;
-    }
-    std::cout << ss.str() << ((cnt % 16 > 0) ? "\n" : "")
-              << sep << std::endl;
-  }
-};
 
 
 /****************************************************************************
@@ -182,7 +123,7 @@ extern "C" {
  ****************************************************************************/
 
 namespace {
-  MsgProtoVer proto_ver;
+  MsgProtoVer proto_ver(2, 0);
 };
 
 
@@ -196,7 +137,7 @@ ReflectorLogic::ReflectorLogic(void)
   : m_msg_type(0), m_udp_sock(0),
     m_logic_con_in(0), m_logic_con_out(0),
     m_reconnect_timer(60000, Timer::TYPE_ONESHOT, false),
-    /*m_next_udp_tx_seq(0),*/ m_next_udp_rx_seq(0),
+    m_next_udp_tx_seq(0), m_next_udp_rx_seq(0),
     m_heartbeat_timer(1000, Timer::TYPE_PERIODIC, false), m_dec(0),
     m_flush_timeout_timer(3000, Timer::TYPE_ONESHOT, false),
     m_udp_heartbeat_tx_cnt_reset(DEFAULT_UDP_HEARTBEAT_TX_CNT_RESET),
@@ -204,7 +145,6 @@ ReflectorLogic::ReflectorLogic(void)
     m_tcp_heartbeat_tx_cnt(0), m_tcp_heartbeat_rx_cnt(0),
     m_con_state(STATE_DISCONNECTED), m_enc(0), m_default_tg(0),
     m_tg_select_timeout(DEFAULT_TG_SELECT_TIMEOUT),
-    m_tg_select_inhibit_timeout(DEFAULT_TG_SELECT_TIMEOUT),
     m_tg_select_timer(1000, Async::Timer::TYPE_PERIODIC),
     m_tg_select_timeout_cnt(0), m_selected_tg(0), m_previous_tg(0),
     m_event_handler(0),
@@ -238,10 +178,6 @@ ReflectorLogic::ReflectorLogic(void)
       sigc::mem_fun(*this, &ReflectorLogic::onDisconnected));
   m_con.frameReceived.connect(
       sigc::mem_fun(*this, &ReflectorLogic::onFrameReceived));
-  m_con.verifyPeer.connect(
-      sigc::mem_fun(*this, &ReflectorLogic::onVerifyPeer));
-  m_con.sslConnectionReady.connect(
-      sigc::mem_fun(*this, &ReflectorLogic::onSslConnectionReady));
   m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
 } /* ReflectorLogic::ReflectorLogic */
 
@@ -315,148 +251,24 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     }
   }
 
-  if (!cfg().getValue(name(), "CERT_PKI_DIR", m_pki_dir) || m_pki_dir.empty())
-  {
-    m_pki_dir = std::string(SVX_LOCAL_STATE_DIR) + "/pki";
-  }
-  if (!m_pki_dir.empty() && (access(m_pki_dir.c_str(), F_OK) != 0))
-  {
-    std::cout << name()
-              << ": Create PKI directory \"" << m_pki_dir << "\""
-              << std::endl;
-    if (mkdir(m_pki_dir.c_str(), 0755) != 0)
-    {
-      std::cerr << "*** ERROR: Could not create PKI directory \""
-                << m_pki_dir << "\" in logic \"" << name() << "\""
-                << std::endl;
-      return false;
-    }
-  }
-
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign) || m_callsign.empty())
   {
     std::cerr << "*** ERROR: " << name()
-              << "/CALLSIGN missing in configuration or is empty"
-              << std::endl;
+              << "/CALLSIGN missing in configuration or is empty" << std::endl;
     return false;
   }
 
-  if (!cfg().getValue(name(), "CERT_KEYFILE", m_keyfile))
+  if (!cfg().getValue(name(), "AUTH_KEY", m_auth_key) || m_auth_key.empty())
   {
-    m_keyfile = m_pki_dir + "/" + m_callsign + ".key";
-  }
-  if (access(m_keyfile.c_str(), F_OK) != 0)
-  {
-    std::cout << name()
-              << ": Certificate key file not found. Generating key file \""
-              << m_keyfile << "\"" << std::endl;
-    Async::SslKeypair keypair;
-    keypair.generate(2048);
-    if (!keypair.writePrivateKeyFile(m_keyfile))
-    {
-      std::cerr << "*** ERROR: Failed to write private key file to \""
-                << m_keyfile << "\" in logic \"" << name() << "\""
-                << std::endl;
-      return false;
-    }
-  }
-  if (!m_ssl_pkey.readPrivateKeyFile(m_keyfile))
-  {
-    std::cerr << "*** ERROR: Failed to read private key file from \""
-              << m_keyfile << "\" in logic \"" << name() << "\""
-              << std::endl;
+    std::cerr << "*** ERROR: " << name()
+              << "/AUTH_KEY missing in configuration or is empty" << std::endl;
     return false;
   }
-
-  m_ssl_csr.setVersion(Async::SslCertSigningReq::VERSION_1);
-  m_ssl_csr.addSubjectName("CN", m_callsign);
-  const std::vector<std::vector<std::string>> subject_names{
-    {SN_givenName,              LN_givenName,               "GIVEN_NAME"},
-    {SN_surname,                LN_surname,                 "SURNAME"},
-    {SN_organizationalUnitName, LN_organizationalUnitName,  "ORG_UNIT"},
-    {SN_organizationName,       LN_organizationName,        "ORG"},
-    {SN_localityName,           LN_localityName,            "LOCALITY"},
-    {SN_stateOrProvinceName,    LN_stateOrProvinceName,     "STATE"},
-    {SN_countryName,            LN_countryName,             "COUNTRY"},
-  };
-  std::string value;
-  const std::string prefix = "CERT_SUBJ_";
-  for (const auto& snames : subject_names)
+  if (m_auth_key == "Change this key now!")
   {
-    if (std::accumulate(snames.begin(), snames.end(), false,
-          [&](bool found, const std::string& cfgsname)
-          {
-            return found || cfg().getValue(name(), prefix + cfgsname, value);
-          }) &&
-        !value.empty())
-    {
-      if (!m_ssl_csr.addSubjectName(snames[0], value))
-      {
-        std::cerr << "*** ERROR: Failed to set subject name '" << snames[0]
-                  << "' in certificate signing request." << std::endl;
-        return false;
-      }
-    }
-  }
-  Async::SslX509Extensions csr_exts;
-  csr_exts.addBasicConstraints("critical, CA:FALSE");
-  csr_exts.addKeyUsage(
-      "critical, digitalSignature, keyEncipherment, keyAgreement");
-  csr_exts.addExtKeyUsage("clientAuth");
-  if (cfg().getValue(name(), "CERT_EMAIL", value) && !value.empty())
-  {
-    csr_exts.addSubjectAltNames(std::string("email:") + value);
-  }
-  m_ssl_csr.addExtensions(csr_exts);
-  m_ssl_csr.setPublicKey(m_ssl_pkey);
-  m_ssl_csr.sign(m_ssl_pkey);
-
-  if (!cfg().getValue(name(), "CERT_CSRFILE", m_csrfile))
-  {
-    m_csrfile = m_pki_dir + "/" + m_callsign + ".csr";
-  }
-  Async::SslCertSigningReq req(nullptr);
-  if (!req.readPemFile(m_csrfile) || !req.verify(m_ssl_pkey) ||
-      (m_ssl_csr.digest() != req.digest()))
-  {
-    std::cout << name() << ": Saving certificate signing request file '"
-              << m_csrfile << "'" << std::endl;
-    //std::cout << "### New CSR" << std::endl;
-    if (!m_ssl_csr.writePemFile(m_csrfile))
-    {
-      // FIXME: Read SSL error stack
-
-      std::cerr << "*** ERROR: Failed to write certificate signing "
-                   "request file to '"
-                << m_csrfile << "' in logic '" << name() << "'"
-                << std::endl;
-      return false;
-    }
-  }
-  //m_ssl_csr.print();
-
-  if (!cfg().getValue(name(), "CERT_CRTFILE", m_crtfile))
-  {
-    m_crtfile = m_pki_dir + "/" + m_callsign + ".crt";
-  }
-
-  if (!loadClientCertificate())
-  {
-    std::cerr << "*** WARNING[" << name() << "]: Failed to load client "
-                 "certificate. Ifnoring on-disk stored certificate file '"
-              << m_crtfile << "'." << std::endl;
-  }
-
-  if (!cfg().getValue(name(), "CERT_CAFILE", m_cafile))
-  {
-    m_cafile = m_pki_dir + "/ca-bundle.crt";
-  }
-  if (!m_ssl_ctx.setCaCertificateFile(m_cafile))
-  {
-    std::cerr << "*** WARNING[" << name() << "]: Failed to read CA file '"
-              << m_cafile << "'. Will try to retrieve it from the server."
-              << std::endl;
-    //return false;
+    cerr << "*** ERROR: You must change " << name() << "/AUTH_KEY from the "
+            "default value" << endl;
+    return false;
   }
 
   string event_handler_str;
@@ -545,20 +357,9 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
                       std::numeric_limits<unsigned>::max(),
                       m_tg_select_timeout, true))
   {
-    std::cerr << "*** ERROR[" << name()
+    std::cout << "*** ERROR[" << name()
               << "]: Illegal value (" << m_tg_select_timeout
               << ") for TG_SELECT_TIMEOUT" << std::endl;
-    return false;
-  }
-
-  m_tg_select_inhibit_timeout = m_tg_select_timeout;
-  if (!cfg().getValue(name(), "TG_SELECT_INHIBIT_TIMEOUT", 0U,
-                      std::numeric_limits<unsigned>::max(),
-                      m_tg_select_inhibit_timeout, true))
-  {
-    std::cout << "*** ERROR[" << name()
-              << "]: Illegal value (" << m_tg_select_inhibit_timeout
-              << ") for TG_SELECT_INHIBIT_TIMEOUT" << std::endl;
     return false;
   }
 
@@ -637,8 +438,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     }
   }
   m_node_info["sw"] = "SvxLink";
-  m_node_info["swVer"] = SVXLINK_APP_VERSION;
-  m_node_info["projVer"] = PROJECT_VERSION;
+  m_node_info["swVer"] = SVXLINK_VERSION;
 
   cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
       m_udp_heartbeat_tx_cnt_reset);
@@ -970,18 +770,16 @@ void ReflectorLogic::onConnected(void)
   m_tcp_heartbeat_tx_cnt = TCP_HEARTBEAT_TX_CNT_RESET;
   m_tcp_heartbeat_rx_cnt = TCP_HEARTBEAT_RX_CNT_RESET;
   m_heartbeat_timer.setEnable(true);
-  //m_next_udp_tx_seq = 0;
+  m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
   timerclear(&m_last_talker_timestamp);
-  //m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
-  m_con.setMaxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_SIZE);
-  m_con_state = STATE_EXPECT_CA_INFO;
-  //m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
+  m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
   processEvent("reflector_connection_status_update 1");
 } /* ReflectorLogic::onConnected */
 
 
-void ReflectorLogic::onDisconnected(TcpConnection*,
+void ReflectorLogic::onDisconnected(TcpConnection *con,
                                     TcpConnection::DisconnectReason reason)
 {
   cout << name() << ": Disconnected from " << m_con.remoteHost() << ":"
@@ -991,7 +789,7 @@ void ReflectorLogic::onDisconnected(TcpConnection*,
   m_reconnect_timer.setEnable(reason == TcpConnection::DR_ORDERED_DISCONNECT);
   delete m_udp_sock;
   m_udp_sock = 0;
-  //m_next_udp_tx_seq = 0;
+  m_next_udp_tx_seq = 0;
   m_next_udp_rx_seq = 0;
   m_heartbeat_timer.setEnable(false);
   if (m_flush_timeout_timer.isEnabled())
@@ -1009,88 +807,9 @@ void ReflectorLogic::onDisconnected(TcpConnection*,
 } /* ReflectorLogic::onDisconnected */
 
 
-bool ReflectorLogic::onVerifyPeer(TcpConnection *con, bool preverify_ok,
-                                  X509_STORE_CTX *x509_store_ctx)
-{
-  //std::cout << "### ReflectorLogic::onVerifyPeer: preverify_ok="
-  //          << (preverify_ok ? "yes" : "no") << std::endl;
-
-  Async::SslX509 cert(*x509_store_ctx);
-  preverify_ok = preverify_ok && !cert.isNull();
-  preverify_ok = preverify_ok && !cert.commonName().empty();
-  if (!preverify_ok)
-  {
-    std::cout << "*** ERROR[" << name()
-              << "]: Certificate verification failed for reflector server"
-              << std::endl;
-    std::cout << "------------- Peer Certificate --------------" << std::endl;
-    cert.print();
-    std::cout << "---------------------------------------------" << std::endl;
-  }
-
-  return preverify_ok;
-} /* ReflectorLogic::onVerifyPeer */
-
-
-void ReflectorLogic::onSslConnectionReady(TcpConnection*)
-{
-  std::cout << name() << ": Encrypted connection established" << std::endl;
-
-  if (m_con_state != STATE_EXPECT_SSL_CON_READY)
-  {
-    std::cerr << "*** ERROR["
-              << name() << "]: Unexpected SSL connection readiness"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  if (m_con.sslVerifyResult() != X509_V_OK)
-  {
-    std::cerr << "*** ERROR["
-              << name() << "]: SSL Certificate verification failed"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  auto peer_cert = m_con.sslPeerCertificate();
-  //std::cout << "###   Common Name=" << peer_cert.commonName() << std::endl;
-
-  bool cert_match_host = false;
-  std::string remote_name = m_con.remoteHostName();
-  if (!remote_name.empty())
-  {
-    if (remote_name[remote_name.size()-1] == '.')
-    {
-      remote_name.erase(remote_name.size()-1);
-    }
-    //std::cout << "### Remote hostname=" << remote_name << std::endl;
-    cert_match_host |= peer_cert.matchHost(remote_name);
-  }
-  cert_match_host |= peer_cert.matchIp(m_con.remoteHost());
-  if (!cert_match_host)
-  {
-    std::cerr << "*** EROR[" << name()
-              << "]: The server certificate does not match the remote "
-                 "hostname ("<< remote_name << ") nor the IP address ("
-              << m_con.remoteHost() << ")"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  m_con.setMaxFrameSize(ReflectorMsg::MAX_POST_SSL_SETUP_SIZE);
-
-  m_con_state = STATE_EXPECT_AUTH_ANSWER;
-} /* ReflectorLogic::onSslConnectionReady */
-
-
-void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
+void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
                                      std::vector<uint8_t>& data)
 {
-  //std::cout << "### ReflectorLogic::onFrameReceived: data.size()="
-  //          << data.size() << std::endl;
   char *buf = reinterpret_cast<char*>(&data.front());
   int len = data.size();
 
@@ -1100,13 +819,13 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
   ReflectorMsg header;
   if (!header.unpack(ss))
   {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Unpacking failed for TCP message header" << std::endl;
+    cout << "*** ERROR[" << name()
+         << "]: Unpacking failed for TCP message header\n";
     disconnect();
     return;
   }
 
-  if ((header.type() > 100) && !isTcpLoggedIn())
+  if ((header.type() > 100) && !isLoggedIn())
   {
     cerr << "*** ERROR[" << name() << "]: Unexpected protocol message received"
          << endl;
@@ -1132,21 +851,6 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
     case MsgAuthOk::TYPE:
       handleMsgAuthOk();
       break;
-    case MsgCAInfo::TYPE:
-      handleMsgCAInfo(ss);
-      break;
-    case MsgStartEncryption::TYPE:
-      handleMsgStartEncryption();
-      break;
-    case MsgCABundle::TYPE:
-      handleMsgCABundle(ss);
-      break;
-    case MsgClientCsrRequest::TYPE:
-      handleMsgClientCsrRequest();
-      break;
-    case MsgClientCert::TYPE:
-      handleMsgClientCert(ss);
-      break;
     case MsgServerInfo::TYPE:
       handleMsgServerInfo(ss);
       break;
@@ -1167,9 +871,6 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
       break;
     case MsgRequestQsy::TYPE:
       handleMsgRequestQsy(ss);
-      break;
-    case MsgStartUdpEncryption::TYPE:
-      handlMsgStartUdpEncryption(ss);
       break;
     default:
       // Better just ignoring unknown messages for easier addition of protocol
@@ -1203,39 +904,21 @@ void ReflectorLogic::handleMsgProtoVerDowngrade(std::istream& is)
   MsgProtoVerDowngrade msg;
   if (!msg.unpack(is))
   {
-    std::cerr << "*** ERROR[" << name() 
-              << "]: Could not unpack MsgProtoVerDowngrade" << std::endl;
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgProtoVerDowngrade" << endl;
     disconnect();
     return;
   }
-#if 0
-  if (msg.majorVer() == 2)
-  {
-    std::cout << name()
-	      << ": The server is requesting protocol downgrade to v"
-	      << msg.majorVer() << "." << msg.minorVer() << ". Complying."
-	      << std::endl;
-    sendMsg(MsgProtoVer(msg.majorVer(), msg.minorVer()));
-    m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
-  }
-  else
-#endif
-  {
-    std::cout << name()
-         << ": Server too old and we cannot downgrade to protocol version "
-         << msg.majorVer() << "." << msg.minorVer() << " from "
-         << proto_ver.majorVer() << "." << proto_ver.minorVer()
-         << std::endl;
-    disconnect();
-  }
+  cout << name() << ": Server too old and we cannot downgrade to protocol version "
+       << msg.majorVer() << "." << msg.minorVer() << " from "
+       << proto_ver.majorVer() << "." << proto_ver.minorVer()
+       << endl;
+  disconnect();
 } /* ReflectorLogic::handleMsgProtoVerDowngrade */
 
 
 void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
 {
-  if ((m_con_state != STATE_EXPECT_AUTH_ANSWER) /* &&
-      (m_con_state != STATE_EXPECT_CERT) &&
-      (m_con_state != STATE_EXPECT_AUTH_RESPONSE) */)
+  if (m_con_state != STATE_EXPECT_AUTH_CHALLENGE)
   {
     cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthChallenge\n";
     disconnect();
@@ -1245,8 +928,7 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
   MsgAuthChallenge msg;
   if (!msg.unpack(is))
   {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Could not unpack MsgAuthChallenge" << std::endl;
+    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthChallenge\n";
     disconnect();
     return;
   }
@@ -1257,342 +939,23 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
     disconnect();
     return;
   }
-
-  std::string auth_key;
-  cfg().getValue(name(), "AUTH_KEY", auth_key);
-  sendMsg(MsgAuthResponse(m_callsign, auth_key, challenge));
-  //m_con_state = STATE_EXPECT_AUTH_ANSWER;
+  sendMsg(MsgAuthResponse(m_callsign, m_auth_key, challenge));
+  m_con_state = STATE_EXPECT_AUTH_OK;
 } /* ReflectorLogic::handleMsgAuthChallenge */
 
 
 void ReflectorLogic::handleMsgAuthOk(void)
 {
-  if (m_con_state != STATE_EXPECT_AUTH_ANSWER)
+  if (m_con_state != STATE_EXPECT_AUTH_OK)
   {
     cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthOk\n";
     disconnect();
     return;
   }
-  std::cout << name() << ": Authentication OK" << std::endl;
+  cout << name() << ": Authentication OK" << endl;
   m_con_state = STATE_EXPECT_SERVER_INFO;
   m_con.setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
-
-  auto cert = m_con.sslCertificate();
-  if (!cert.isNull())
-  {
-    struct stat csrst, crtst;
-    if ((stat(m_csrfile.c_str(), &csrst) == 0) &&
-        (stat(m_crtfile.c_str(), &crtst) == 0) &&
-        (csrst.st_mtim.tv_sec > crtst.st_mtim.tv_sec))
-    {
-      //std::cout << "### CSR mtime=" << csrst.st_mtim.tv_sec
-      //          << "  CRT mtime=" << crtst.st_mtim.tv_sec
-      //          << std::endl;
-      std::cout << name()
-                << ": The CSR is newer than the certificate. Sending "
-                   "certificate signing request to server." << std::endl;
-      sendMsg(MsgClientCsr(m_ssl_csr.pem()));
-    }
-  }
 } /* ReflectorLogic::handleMsgAuthOk */
-
-
-void ReflectorLogic::handleMsgCAInfo(std::istream& is)
-{
-  if (m_con_state != STATE_EXPECT_CA_INFO)
-  {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Unexpected MsgCAInfo" << std::endl;
-    disconnect();
-    return;
-  }
-
-  MsgCAInfo msg;
-  if (!msg.unpack(is))
-  {
-    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgCAInfo"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  //std::cout << "### ca_size=" << msg.pemSize()
-  //          //<< "  ca_url='" << msg.url() << "'"
-  //          << std::endl;
-  //std::cout << "### Message digest size: " << msg.md().size() << std::endl;
-  //hexdump(msg.md());
-
-  std::ifstream ca_ifs(m_cafile);
-  bool request_ca_bundle = !ca_ifs.good();
-  if (ca_ifs.good())
-  {
-    std::string ca_pem(std::istreambuf_iterator<char>{ca_ifs}, {});
-    auto ca_md = Async::Digest().md("sha256", ca_pem);
-    request_ca_bundle = (ca_md != msg.md());
-    if (request_ca_bundle)
-    {
-      std::cout << "### Local CA PEM\n" << ca_pem << std::endl;
-      std::cout << "SHA256 Digest\n";
-      hexdump(ca_md);
-
-        // FIXME: Don't overwrite CA bundle if we have one already. To do
-        //        that we need to implement verification of the new bundle.
-      std::cout << "*** WARNING[" << name()
-                << "]: You need to update your CA bundle to the latest "
-                   "version. Contact the reflector sysop."  << std::endl;
-      request_ca_bundle = false;
-    }
-  }
-  ca_ifs.close();
-  if (request_ca_bundle)
-  {
-    //std::cout << "### Requesting CA Bundle" << std::endl;
-    sendMsg(MsgCABundleRequest());
-    m_con_state = STATE_EXPECT_CA_BUNDLE;
-  }
-  else
-  {
-    //std::cout << "### Requesting encrypted communications channel"
-    //          << std::endl;
-    m_con.setMaxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_SIZE);
-    sendMsg(MsgStartEncryptionRequest());
-    m_con_state = STATE_EXPECT_START_ENCRYPTION;
-  }
-  // FIXME: Handle CA bundle download
-
-  //if (m_ssl_ctx.caCertificateFileIsSet())
-  //{
-  //  sendMsg(MsgStartEncryption(false));
-  //  //m_con.enableSsl(true);
-  //  //m_con_state = STATE_EXPECT_SSL_CON_READY;
-  //  m_con_state = STATE_EXPECT_CA_BUNDLE;
-  //}
-  //else
-  //{
-  //}
-} /* ReflectorLogic::handleMsgCAInfo */
-
-
-void ReflectorLogic::handleMsgCABundle(std::istream& is)
-{
-  std::cout << "### ReflectorLogic::handleMsgCABundle" << std::endl;
-
-  if (m_con_state != STATE_EXPECT_CA_BUNDLE)
-  {
-    std::cerr << "*** ERROR[" << name()
-         << "]: Unexpected MsgCABundle" << std::endl;
-    disconnect();
-    return;
-  }
-  MsgCABundle msg;
-  if (!msg.unpack(is))
-  {
-    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgCABundle"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  std::cout << "### CA:\n" << msg.caPem() << std::endl;
-  std::cout << "### Signature:\n";
-  hexdump(msg.signature());
-  Async::SslX509 signing_cert;
-  signing_cert.readPem(msg.certPem());
-  std::cout << "### Signing cert chain:\n" << std::string(48, '-') << "\n";
-  signing_cert.print();
-  std::cout << std::string(48, '-') << "\n";
-
-  if (msg.caPem().empty())
-  {
-    std::cerr << "*** ERROR[" << name() << "]: Received empty CA bundle"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  Async::Digest dgst;
-  auto signing_cert_pubkey = signing_cert.publicKey();
-  std::cout << "### Signing public key:\n"
-            << signing_cert_pubkey.publicKeyPem() << std::endl;
-  bool signature_ok =
-    dgst.signVerifyInit(MsgCABundle::MD_ALG, signing_cert_pubkey) &&
-    dgst.signVerifyUpdate(msg.caPem()) &&
-    dgst.signVerifyFinal(msg.signature());
-  std::cout << "### Signature check: " << (signature_ok ? "OK" : "FAIL")
-            << std::endl;
-  if (!signature_ok)
-  {
-    std::cout << "*** WARNING[" << name()
-              << "]: Received CA bundle with invalid signature" << std::endl;
-    disconnect();
-    return;
-  }
-
-  // FIXME: Verify signing certificate against old CA
-
-  if (!msg.caPem().empty())
-  {
-    std::cout << name() << ": Writing received CA bundle to '" << m_cafile
-              << "'" << std::endl;
-    std::ofstream ofs(m_cafile);
-    if (ofs.good())
-    {
-      ofs << msg.caPem();
-      ofs.close();
-    }
-    else
-    {
-      std::cerr << "*** ERROR[" << name() << "]: Could not write CA file '"
-                << m_cafile << "'" << std::endl;
-    }
-
-    if (!m_ssl_ctx.setCaCertificateFile(m_cafile))
-    {
-      std::cerr << "*** ERROR[" << name() << "]: Failed to read CA file '"
-                << m_cafile << "'" << std::endl;
-      disconnect();
-      return;
-    }
-  }
-
-  sendMsg(MsgStartEncryptionRequest());
-  m_con_state = STATE_EXPECT_START_ENCRYPTION;
-} /* ReflectorLogic::handleMsgCABundle */
-
-
-void ReflectorLogic::handleMsgStartEncryption(void)
-{
-  //std::cout << "### ReflectorLogic::handleMsgStartEncryption" << std::endl;
-
-  if (m_con_state != STATE_EXPECT_START_ENCRYPTION)
-  {
-    std::cerr << "*** ERROR[" << name()
-         << "]: Unexpected MsgStartEncryption" << std::endl;
-    disconnect();
-    return;
-  }
-
-  std::cout << name() << ": Setting up encrypted communications channel"
-            << std::endl;
-
-  m_con.enableSsl(true);
-  m_con_state = STATE_EXPECT_SSL_CON_READY;
-} /* ReflectorLogic::handleMsgStartEncryption */
-
-
-void ReflectorLogic::handleMsgClientCsrRequest(void)
-{
-  if (m_con_state != STATE_EXPECT_AUTH_ANSWER)
-  {
-    std::cerr << "*** ERROR[" << name() << "]: Unexpected MsgClientCsrRequest"
-              << std::endl;
-    disconnect();
-    return;
-  }
-
-  //Async::SslCertSigningReq req;
-  //if (!req.readPemFile(m_csrfile) || req.isNull())
-  //{
-  //  std::cerr << "*** ERROR[" << name() << "]: Missing or invalid CSR file "
-  //               "'" << m_csrfile << "'" << std::endl;
-  //  disconnect();
-  //  return;
-  //}
-
-  std::cout << name() << ": Sending requested Certificate Signing Request "
-                         "to server" << std::endl;
-
-  sendMsg(MsgClientCsr(m_ssl_csr.pem()));
-  //m_con_state = STATE_EXPECT_CERT;
-} /* ReflectorLogic::handleMsgClientCsrRequest */
-
-
-void ReflectorLogic::handleMsgClientCert(std::istream& is)
-{
-  if (m_con_state < STATE_EXPECT_AUTH_ANSWER)
-  {
-    std::cerr << "*** ERROR[" << name() << "]: Unexpected MsgClientCert"
-              << std::endl;
-    disconnect();
-    return;
-  }
-  MsgClientCert msg;
-  if (!msg.unpack(is))
-  {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgClientCert\n";
-    disconnect();
-    return;
-  }
-
-  if (msg.certPem().empty())
-  {
-    std::cout << name() << ": Received an empty certificate. "
-              //<< "Sending Certificate Signing Request to server."
-              << std::endl;
-    //sendMsg(MsgClientCsr(m_ssl_csr.pem()));
-    disconnect();
-    return;
-  }
-
-  std::cout << name() << ": Received certificate from server"
-            << std::endl;
-  Async::SslX509 cert;
-  if (!cert.readPem(msg.certPem()) || cert.isNull())
-  {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Failed to parse certificate PEM data from server"
-              << std::endl;
-    disconnect();
-    return;
-  }
-  std::cout << "---------- New Client Certificate -----------" << std::endl;
-  cert.print();
-  std::cout << "---------------------------------------------" << std::endl;
-
-  if (cert.publicKey() != m_ssl_csr.publicKey())
-  {
-    std::cerr << "*** ERROR[" << name() << "]: The client certificate "
-                 "received from the server does not match our current "
-                 "private key. "
-                 //"Sending Certificate Signing Request."
-              << std::endl;
-    //sendMsg(MsgClientCsr(m_ssl_csr.pem()));
-    disconnect();
-    return;
-  }
-
-  std::ofstream ofs(m_crtfile);
-  if (!ofs.good() || !(ofs << msg.certPem()))
-  {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Failed to write certificate file to \""
-              << m_crtfile << "\"" << std::endl;
-    disconnect();
-    return;
-  }
-  ofs.close();
-
-  //if (!cert.writePemFile(m_crtfile))
-  //{
-  //  std::cerr << "*** ERROR[" << name()
-  //            << "]: Failed to write certificate file to \""
-  //            << m_crtfile << "\"" << std::endl;
-  //  disconnect();
-  //  return;
-  //}
-
-  if (!loadClientCertificate())
-  {
-    std::cout << name() << ": Failed to load client certificate. "
-              //<< "Sending certificate signing request to server"
-              << std::endl;
-    //sendMsg(MsgClientCsr(m_ssl_csr.pem()));
-    disconnect();
-    return;
-  }
-
-  reconnect();
-} /* ReflectorLogic::handleMsgClientCert */
 
 
 void ReflectorLogic::handleMsgServerInfo(std::istream& is)
@@ -1649,68 +1012,20 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   cout << name() << ": ";
   if (!selected_codec.empty())
   {
-    std::cout << "Using audio codec \"" << selected_codec << "\"" << std::endl;
+    cout << "Using audio codec \"" << selected_codec << "\"";
   }
   else
   {
-    std::cout << "No supported codec :-(" << std::endl;
-    disconnect();
-    return;
+    cout << "No supported codec :-(";
   }
-
-  /*
-  const Async::EncryptedUdpSocket::Cipher* cipher = nullptr;
-  for (const auto& cipher_name : msg.udpCiphers())
-  {
-    cipher = EncryptedUdpSocket::fetchCipher(cipher_name);
-    if (cipher != nullptr)
-    {
-      break;
-    }
-  }
-  */
-  std::cout << name() << ": ";
-  const auto cipher = EncryptedUdpSocket::fetchCipher(UdpCipher::NAME);
-  if (cipher != nullptr)
-  {
-    std::cout << "Using UDP cipher " << EncryptedUdpSocket::cipherName(cipher)
-              << std::endl;
-  }
-  else
-  {
-    std::cout << "Unsupported UDP cipher " << UdpCipher::NAME
-              << " :-(" << std::endl;
-    disconnect();
-    return;
-  }
+  cout << endl;
 
   delete m_udp_sock;
-  m_udp_cipher_iv_cntr = 1;
-  m_udp_sock = new Async::EncryptedUdpSocket;
-  m_udp_cipher_iv_rand.resize(UdpCipher::IVRANDLEN);
-  const char* err = "unknown reason";
-  if ((err="memory allocation failure",     (m_udp_sock == nullptr)) ||
-      (err="initialization failure",        !m_udp_sock->initOk()) ||
-      (err="unsupported cipher",            !m_udp_sock->setCipher(cipher)) ||
-      (err="cipher IV rand generation failure",
-       !Async::EncryptedUdpSocket::randomBytes(m_udp_cipher_iv_rand)) ||
-      (err="cipher key generation failure", !m_udp_sock->setCipherKey()))
-  {
-    std::cerr << "*** ERROR[" << name() << "]: Could not create UDP socket "
-                 "due to " << err << std::endl;
-    delete m_udp_sock;
-    m_udp_sock = nullptr;
-    disconnect();
-    return;
-  }
-  m_udp_sock->setCipherAADLength(UdpCipher::AADLEN);
-  m_udp_sock->setTagLength(UdpCipher::TAGLEN);
-  m_udp_sock->cipherDataReceived.connect(
-      mem_fun(*this, &ReflectorLogic::udpCipherDataReceived));
+  m_udp_sock = new UdpSocket;
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
-  m_con_state = STATE_EXPECT_START_UDP_ENCRYPTION;
+  m_con_state = STATE_CONNECTED;
 
   std::ostringstream node_info_os;
   Json::StreamWriterBuilder builder;
@@ -1719,8 +1034,7 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   Json::StreamWriter* writer = builder.newStreamWriter();
   writer->write(m_node_info, &node_info_os);
   delete writer;
-  MsgNodeInfo node_info_msg(m_udp_cipher_iv_rand, m_udp_sock->cipherKey(),
-                            node_info_os.str());
+  MsgNodeInfoV2 node_info_msg(node_info_os.str());
   sendMsg(node_info_msg);
 
 #if 0
@@ -1769,23 +1083,18 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   sendMsg(node_info);
 #endif
 
-  //if (m_selected_tg > 0)
-  //{
-  //  cout << name() << ": Selecting TG #" << m_selected_tg << endl;
-  //  sendMsg(MsgSelectTG(m_selected_tg));
-  //}
+  if (m_selected_tg > 0)
+  {
+    cout << name() << ": Selecting TG #" << m_selected_tg << endl;
+    sendMsg(MsgSelectTG(m_selected_tg));
+  }
 
-  //if (!m_monitor_tgs.empty())
-  //{
-  //  sendMsg(MsgTgMonitor(
-  //        std::set<uint32_t>(m_monitor_tgs.begin(), m_monitor_tgs.end())));
-  //}
-
-  //sendUdpMsg(MsgUdpHeartbeat());
-    // Send an empty datagram to open upp any firewalls
-  //m_udp_sock->UdpSocket::write(
-  //    m_con.remoteHost(), m_con.remotePort(), nullptr, 0);
-  //sendUdpRegisterMsg();
+  if (!m_monitor_tgs.empty())
+  {
+    sendMsg(MsgTgMonitor(
+          std::set<uint32_t>(m_monitor_tgs.begin(), m_monitor_tgs.end())));
+  }
+  sendUdpMsg(MsgUdpHeartbeat());
 
 } /* ReflectorLogic::handleMsgServerInfo */
 
@@ -1947,31 +1256,6 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
 } /* ReflectorLogic::handleMsgRequestQsy */
 
 
-void ReflectorLogic::handlMsgStartUdpEncryption(std::istream& is)
-{
-  //std::cout << "### ReflectorLogic::handlMsgStartUdpEncryption" << std::endl;
-
-  if (m_con_state != STATE_EXPECT_START_UDP_ENCRYPTION)
-  {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Unexpected MsgStartUdpEncryption message" << std::endl;
-    disconnect();
-    return;
-  }
-
-  MsgStartUdpEncryption msg;
-  if (!msg.unpack(is))
-  {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Could not unpack MsgStartUdpEncryption" << std::endl;
-    disconnect();
-    return;
-  }
-  m_con_state = STATE_EXPECT_UDP_HEARTBEAT;
-  sendUdpRegisterMsg();
-} /* ReflectorLogic::handlMsgStartUdpEncryption */
-
-
 void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 {
   if (!isConnected())
@@ -1992,9 +1276,6 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
   }
   if (m_con.write(ss.str().data(), ss.str().size()) == -1)
   {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Failed to write message to network connection"
-              << std::endl;
     disconnect();
   }
 } /* ReflectorLogic::sendMsg */
@@ -2027,43 +1308,12 @@ void ReflectorLogic::flushEncodedAudio(void)
 } /* ReflectorLogic::flushEncodedAudio */
 
 
-bool ReflectorLogic::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
-                                           void *buf, int count)
-{
-  if (static_cast<size_t>(count) < UdpCipher::AADLEN)
-  {
-    std::cout << "### ReflectorLogic::udpCipherDataReceived: Datagram too "
-                 "short to hold associated data" << std::endl;
-    return true;
-  }
-  stringstream ss;
-  ss.write(reinterpret_cast<const char *>(buf), UdpCipher::AADLEN);
-  if (!m_aad.unpack(ss))
-  {
-    std::cout << "*** WARNING: Unpacking associated data failed for UDP "
-                 "datagram from " << addr << ":" << port << std::endl;
-    return true;
-  }
-  //std::cout << "### ReflectorLogic::udpCipherDataReceived: m_aad.iv_cntr="
-  //          << m_aad.iv_cntr << std::endl;
-  m_udp_sock->setCipherIV(UdpCipher::IV{m_udp_cipher_iv_rand, 0,
-                                        m_aad.iv_cntr});
-  return false;
-} /* ReflectorLogic::udpCipherDataReceived */
-
-
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
-                                         void* aad, void *buf, int count)
+                                         void *buf, int count)
 {
-  if (!isTcpLoggedIn())
+  if (!isLoggedIn())
   {
     return;
-  }
-
-  if (aad != nullptr)
-  {
-    //std::cout << "### ReflectorLogic::udpDatagramReceived: m_aad.iv_cntr="
-    //          << m_aad.iv_cntr << std::endl;
   }
 
   if (addr != m_con.remoteHost())
@@ -2084,7 +1334,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), count);
 
-  ReflectorUdpMsg header;
+  ReflectorUdpMsgV2 header;
   if (!header.unpack(ss))
   {
     cout << "*** WARNING[" << name()
@@ -2092,59 +1342,34 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     return;
   }
 
-  //if (header.clientId() != m_client_id)
-  //{
-  //  cout << "*** WARNING[" << name()
-  //       << "]: UDP packet received with wrong client id "
-  //       << header.clientId() << ". Should be " << m_client_id << "." << endl;
-  //  return;
-  //}
+  if (header.clientId() != m_client_id)
+  {
+    cout << "*** WARNING[" << name()
+         << "]: UDP packet received with wrong client id "
+         << header.clientId() << ". Should be " << m_client_id << "." << endl;
+    return;
+  }
 
     // Check sequence number
-  if (m_aad.iv_cntr < m_next_udp_rx_seq) // Frame out of sequence (ignore)
+  uint16_t udp_rx_seq_diff = header.sequenceNum() - m_next_udp_rx_seq;
+  if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
   {
-    std::cout << name()
-              << ": Dropping out of sequence UDP frame with seq="
-              << m_aad.iv_cntr << std::endl;
+    cout << name()
+         << ": Dropping out of sequence UDP frame with seq="
+         << header.sequenceNum() << endl;
     return;
   }
-  else if (m_aad.iv_cntr > m_next_udp_rx_seq) // Frame lost
+  else if (udp_rx_seq_diff > 0) // Frame lost
   {
-    std::cout << name() << ": UDP frame(s) lost. Expected seq="
-              << m_next_udp_rx_seq
-              << " but received " << m_aad.iv_cntr
-              << ". Resetting next expected sequence number to "
-              << (m_aad.iv_cntr + 1) << std::endl;
+    cout << name() << ": UDP frame(s) lost. Expected seq="
+         << m_next_udp_rx_seq
+         << " but received " << header.sequenceNum()
+         << ". Resetting next expected sequence number to "
+         << (header.sequenceNum() + 1) << endl;
   }
-  m_next_udp_rx_seq = m_aad.iv_cntr + 1;
+  m_next_udp_rx_seq = header.sequenceNum() + 1;
 
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
-
-  if ((m_con_state == STATE_EXPECT_UDP_HEARTBEAT) &&
-      (header.type() == MsgUdpHeartbeat::TYPE))
-  {
-    std::cout << name() << ": Bidirectional UDP communication verified"
-              << std::endl;
-    m_con.markAsEstablished();
-    m_con_state = STATE_CONNECTED;
-
-    if (m_selected_tg > 0)
-    {
-      cout << name() << ": Selecting TG #" << m_selected_tg << endl;
-      sendMsg(MsgSelectTG(m_selected_tg));
-    }
-
-    if (!m_monitor_tgs.empty())
-    {
-      sendMsg(MsgTgMonitor(
-            std::set<uint32_t>(m_monitor_tgs.begin(), m_monitor_tgs.end())));
-    }
-  }
-
-  if (!isLoggedIn())
-  {
-    return;
-  }
 
   switch (header.type())
   {
@@ -2188,39 +1413,6 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
 } /* ReflectorLogic::udpDatagramReceived */
 
-void ReflectorLogic::sendUdpMsg(const UdpCipher::AAD& aad,
-                                const ReflectorUdpMsg& msg)
-{
-  m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
-
-  if (m_udp_sock == 0)
-  {
-    return;
-  }
-
-  ReflectorUdpMsg header(msg.type());
-  ostringstream ss;
-  if (!header.pack(ss) || !msg.pack(ss))
-  {
-    std::cerr << "*** ERROR[" << name()
-              << "]: Failed to pack reflector UDP message" << std::endl;
-    return;
-  }
-  m_udp_sock->setCipherIV(UdpCipher::IV{m_udp_cipher_iv_rand, m_client_id,
-                                        aad.iv_cntr});
-  std::ostringstream adss;
-  if (!aad.pack(adss))
-  {
-    std::cout << "*** WARNING: Packing associated data failed for UDP "
-                 "datagram to " << m_con.remoteHost() << ":"
-              << m_con.remotePort() << std::endl;
-    return;
-  }
-  m_udp_sock->write(m_con.remoteHost(), m_con.remotePort(),
-                    adss.str().data(), adss.str().size(),
-                    ss.str().data(), ss.str().size());
-} /* ReflectorLogic::sendUdpMsg */
-
 
 void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
 {
@@ -2228,14 +1420,25 @@ void ReflectorLogic::sendUdpMsg(const ReflectorUdpMsg& msg)
   {
     return;
   }
-  sendUdpMsg(UdpCipher::AAD{m_udp_cipher_iv_cntr++}, msg);
+
+  m_udp_heartbeat_tx_cnt = m_udp_heartbeat_tx_cnt_reset;
+
+  if (m_udp_sock == 0)
+  {
+    return;
+  }
+
+  ReflectorUdpMsgV2 header(msg.type(), m_client_id, m_next_udp_tx_seq++);
+  ostringstream ss;
+  if (!header.pack(ss) || !msg.pack(ss))
+  {
+    cerr << "*** ERROR[" << name()
+         << "]: Failed to pack reflector TCP message\n";
+    return;
+  }
+  m_udp_sock->write(m_con.remoteHost(), m_con.remotePort(),
+                    ss.str().data(), ss.str().size());
 } /* ReflectorLogic::sendUdpMsg */
-
-
-void ReflectorLogic::sendUdpRegisterMsg(void)
-{
-  sendUdpMsg(UdpCipher::InitialAAD{m_client_id}, MsgUdpHeartbeat());
-} /* ReflectorLogic::sendUdpRegisterMsg */
 
 
 void ReflectorLogic::connect(void)
@@ -2246,7 +1449,6 @@ void ReflectorLogic::connect(void)
     std::cout << name() << ": Connecting to service " << m_con.service()
               << std::endl;
     m_con.connect();
-    m_con.setSslContext(m_ssl_ctx, false);
   }
 } /* ReflectorLogic::connect */
 
@@ -2306,14 +1508,7 @@ void ReflectorLogic::handleTimerTick(Async::Timer *t)
 
   if (--m_udp_heartbeat_tx_cnt == 0)
   {
-    if (m_con_state == STATE_EXPECT_UDP_HEARTBEAT)
-    {
-      sendUdpRegisterMsg();
-    }
-    else if (isLoggedIn())
-    {
-      sendUdpMsg(MsgUdpHeartbeat());
-    }
+    sendUdpMsg(MsgUdpHeartbeat());
   }
 
   if (--m_tcp_heartbeat_tx_cnt == 0)
@@ -2452,8 +1647,7 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
     m_qsy_pending_timer.reset();
     m_tg_local_activity = true;
     m_use_prio = false;
-    m_tg_select_timeout_cnt =
-      (m_selected_tg > 0) ? m_tg_select_timeout : m_tg_select_inhibit_timeout;
+    m_tg_select_timeout_cnt = m_tg_select_timeout;
   }
 
   if (!m_tg_selection_event.empty())
@@ -2655,53 +1849,6 @@ void ReflectorLogic::handlePlayDtmf(const std::string& digit, int amp,
   setIdle(false);
   LinkManager::instance()->playDtmf(this, digit, amp, duration);
 } /* ReflectorLogic::handlePlayDtmf */
-
-
-bool ReflectorLogic::loadClientCertificate(void)
-{
-  if (m_ssl_cert.readPemFile(m_crtfile) &&
-      !m_ssl_cert.isNull() &&
-      //cert.verify(m_ssl_pkey) &&
-      m_ssl_cert.timeIsWithinRange())
-  {
-    if (!m_ssl_ctx.setCertificateFiles(m_keyfile, m_crtfile))
-    {
-      std::cerr << "*** ERROR: Failed to read and verify key ('"
-                << m_keyfile << "') and certificate ('"
-                << m_crtfile << "') files in logic \"" << name() << "'. "
-                << "If key- and cert-file does not match, the certificate "
-                   "has expired, or is invalid for any other reason, you "
-                   "need to remove the cert file in order to trigger the "
-                   "generation of a new one signed by the SvxReflector "
-                   "manager. If there is an access problem you need to fix "
-                   "the permissions of the key- and certificate files."
-                << std::endl;
-      return false;
-    }
-  }
-  return true;
-} /* ReflectorLogic::loadClientCertificate */
-
-
-void ReflectorLogic::csrAddSubjectNamesFromConfig(void)
-{
-  const std::string prefix = "CERT_SUBJ_";
-  for (const auto& section : cfg().listSection(name()))
-  {
-    const std::string sname = section.substr(prefix.size());
-    std::string value;
-    if ((section.rfind(prefix, 0) == 0) &&
-        cfg().getValue(name(), prefix + sname, value) &&
-        !value.empty())
-    {
-      if (!m_ssl_csr.addSubjectName(sname, value))
-      {
-        std::cerr << "*** WARNING: Failed to set subject name '" << sname
-                  << "' in certificate signing request." << std::endl;
-      }
-    }
-  }
-} /* ReflectorLogic::csrAddSubjectName */
 
 
 /*

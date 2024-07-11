@@ -7,7 +7,10 @@ set(EXPINC AsyncApplication.h AsyncFdWatch.h AsyncTimer.h AsyncIpAddress.h
            AsyncFramedTcpConnection.h AsyncTcpClientBase.h AsyncTcpServerBase.h
            AsyncHttpServerConnection.h AsyncFactory.h AsyncDnsResourceRecord.h
            AsyncTcpPrioClientBase.h AsyncTcpPrioClient.h AsyncStateMachine.h
-           AsyncPlugin.h)
+           AsyncPlugin.h AsyncEncryptedUdpSocket.h
+           AsyncSslContext.h AsyncSslKeypair.h AsyncSslCertSigningReq.h
+           AsyncSslX509.h AsyncSslX509Extensions.h
+           AsyncSslX509ExtSubjectAltName.h AsyncDigest.h)
 
 set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClientBase.cpp
@@ -16,12 +19,15 @@ set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncSerialDevice.cpp AsyncFileReader.cpp
            AsyncAtTimer.cpp AsyncExec.cpp AsyncPty.cpp AsyncPtyStreamBuf.cpp
            AsyncFramedTcpConnection.cpp AsyncHttpServerConnection.cpp
-           AsyncTcpPrioClientBase.cpp AsyncPlugin.cpp)
+           AsyncTcpPrioClientBase.cpp AsyncPlugin.cpp
+           AsyncEncryptedUdpSocket.cpp)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})
   expinc(${incfile})
 endforeach(incfile)
+
+set(LIBS ${LIBS} -lcrypto -lssl)
 
 # Find pthreads
 find_package(Threads)

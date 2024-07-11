@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTcpConnection.h>
+#include <AsyncSslContext.h>
 
 
 /****************************************************************************
@@ -164,6 +165,22 @@ class TcpServerBase : public sigc::trackable
      */
     int writeExcept(TcpConnection *con, const void *buf, int count);
 
+    /**
+     * @brief   Set the SSL context for all new connections
+     * @param   ctx The SSL context to set
+     *
+     * Call this function to set an SSL context that is applied automatically
+     * for all client connections. If this is set up in the server all that
+     * need to be done, in a client connection after it is established, is to
+     * enable SSL by calling enableSsl() on the connection object.
+     *
+     * NOTE: The context object is neither copied nor managed by this class so
+     * it must be persisted by the caller for as long as this class or any
+     * connections live. It is also the responsibility for the caller to delete
+     * the context object when it fills no purpose anymore.
+     */
+    void setSslContext(SslContext& ctx);
+
   protected:
     virtual void createConnection(int sock, const IpAddress& remote_addr,
                                   uint16_t remote_port) = 0;
@@ -176,6 +193,7 @@ class TcpServerBase : public sigc::trackable
     int       	      sock;
     FdWatch   	      *rd_watch;
     TcpConnectionList tcpConnectionList;
+    SslContext*       m_ssl_ctx           = nullptr;
 
     void cleanup(void);
     void onConnection(FdWatch *watch);

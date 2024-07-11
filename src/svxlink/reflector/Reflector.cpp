@@ -32,6 +32,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <json/json.h>
+#include <unistd.h>
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <regex>
 
 
 /****************************************************************************
@@ -42,10 +47,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncTcpServer.h>
-#include <AsyncUdpSocket.h>
+#include <AsyncDigest.h>
+#include <AsyncSslCertSigningReq.h>
+#include <AsyncEncryptedUdpSocket.h>
 #include <AsyncApplication.h>
 #include <AsyncPty.h>
 #include <common.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -76,6 +84,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#define RENEW_AFTER 2/3
 
 
 /****************************************************************************
@@ -88,10 +97,82 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Prototypes
+ * Local functions
  *
  ****************************************************************************/
 
+namespace {
+  //void splitFilename(const std::string& filename, std::string& dirname,
+  //    std::string& basename)
+  //{
+  //  std::string ext;
+  //  basename = filename;
+
+  //  size_t basenamepos = filename.find_last_of('/');
+  //  if (basenamepos != string::npos)
+  //  {
+  //    if (basenamepos + 1 < filename.size())
+  //    {
+  //      basename = filename.substr(basenamepos + 1);
+  //    }
+  //    dirname = filename.substr(0, basenamepos + 1);
+  //  }
+
+  //  size_t extpos = basename.find_last_of('.');
+  //  if (extpos != string::npos)
+  //  {
+  //    if (extpos+1 < basename.size())
+  //    ext = basename.substr(extpos+1);
+  //    basename.erase(extpos);
+  //  }
+  //}
+
+  bool ensureDirectoryExist(const std::string& path)
+  {
+    std::vector<std::string> parts;
+    SvxLink::splitStr(parts, path, "/");
+    std::string dirname;
+    if (path[0] == '/')
+    {
+      dirname = "/";
+    }
+    else if (path[0] != '.')
+    {
+      dirname = "./";
+    }
+    if (path.back() != '/')
+    {
+      parts.erase(std::prev(parts.end()));
+    }
+    for (const auto& part : parts)
+    {
+      dirname += part + "/";
+      if (access(dirname.c_str(), F_OK) != 0)
+      {
+        std::cout << "Create directory '" << dirname << "'" << std::endl;
+        if (mkdir(dirname.c_str(), 0755) != 0)
+        {
+          std::cerr << "*** ERROR: Could not create directory '"
+                    << dirname << "'" << std::endl;
+          return false;
+        }
+      }
+    }
+    return true;
+  } /* ensureDirectoryExist */
+
+
+  void startCertRenewTimer(const Async::SslX509& cert, Async::AtTimer& timer)
+  {
+    int days=0, seconds=0;
+    cert.timeSpan(days, seconds);
+    time_t renew_time = cert.notBefore() +
+        (static_cast<time_t>(days)*24*3600 + seconds)*RENEW_AFTER;
+    timer.setTimeout(renew_time);
+    timer.setExpireOffset(10000);
+    timer.start();
+  } /* startCertRenewTimer */
+};
 
 
 /****************************************************************************
@@ -111,8 +192,10 @@ using namespace Async;
 namespace {
   ReflectorClient::ProtoVerRangeFilter v1_client_filter(
       ProtoVer(1, 0), ProtoVer(1, 999));
-  ReflectorClient::ProtoVerRangeFilter v2_client_filter(
-      ProtoVer(2, 0), ProtoVer(2, 999));
+  //ReflectorClient::ProtoVerRangeFilter v2_client_filter(
+  //    ProtoVer(2, 0), ProtoVer(2, 999));
+  ReflectorClient::ProtoVerLargerOrEqualFilter ge_v2_client_filter(
+      ProtoVer(2, 0));
 };
 
 
@@ -124,12 +207,32 @@ namespace {
 
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
-    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), m_cmd_pty(0)
+    m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), m_cmd_pty(0),
+    m_keys_dir("private/"), m_pending_csrs_dir("pending_csrs/"),
+    m_csrs_dir("csrs/"), m_certs_dir("certs/"), m_pki_dir("pki/")
 {
   TGHandler::instance()->talkerUpdated.connect(
       mem_fun(*this, &Reflector::onTalkerUpdated));
   TGHandler::instance()->requestAutoQsy.connect(
       mem_fun(*this, &Reflector::onRequestAutoQsy));
+  m_renew_cert_timer.expired.connect(
+      [&](Async::AtTimer*)
+      {
+        if (!loadServerCertificateFiles())
+        {
+          std::cerr << "*** WARNING: Failed to renew server certificate"
+                    << std::endl;
+        }
+      });
+  m_renew_issue_ca_cert_timer.expired.connect(
+      [&](Async::AtTimer*)
+      {
+        if (!loadSigningCAFiles())
+        {
+          std::cerr << "*** WARNING: Failed to renew issuing CA certificate"
+                    << std::endl;
+        }
+      });
 } /* Reflector::Reflector */
 
 
@@ -154,28 +257,6 @@ bool Reflector::initialize(Async::Config &cfg)
   m_cfg = &cfg;
   TGHandler::instance()->setConfig(m_cfg);
 
-    // Initialize the GCrypt library if not already initialized
-  if (!gcry_control(GCRYCTL_INITIALIZATION_FINISHED_P))
-  {
-    gcry_check_version(NULL);
-    gcry_error_t err;
-    err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
-    if (err != GPG_ERR_NO_ERROR)
-    {
-      cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
-           << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
-      return false;
-    }
-      // Tell Libgcrypt that initialization has completed
-    err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
-    if (err != GPG_ERR_NO_ERROR)
-    {
-      cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
-           << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
-      return false;
-    }
-  }
-
   std::string listen_port("5300");
   cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
   m_srv = new TcpServer<FramedTcpConnection>(listen_port);
@@ -184,14 +265,29 @@ bool Reflector::initialize(Async::Config &cfg)
   m_srv->clientDisconnected.connect(
       mem_fun(*this, &Reflector::clientDisconnected));
 
-  uint16_t udp_listen_port = 5300;
-  cfg.getValue("GLOBAL", "LISTEN_PORT", udp_listen_port);
-  m_udp_sock = new UdpSocket(udp_listen_port);
-  if ((m_udp_sock == 0) || !m_udp_sock->initOk())
+  if (!loadCertificateFiles())
   {
-    cerr << "*** ERROR: Could not initialize UDP socket" << endl;
     return false;
   }
+
+  m_srv->setSslContext(m_ssl_ctx);
+
+  uint16_t udp_listen_port = 5300;
+  cfg.getValue("GLOBAL", "LISTEN_PORT", udp_listen_port);
+  m_udp_sock = new Async::EncryptedUdpSocket(udp_listen_port);
+  const char* err = "unknown reason";
+  if ((err="bad allocation",          (m_udp_sock == 0)) ||
+      (err="initialization failure",  !m_udp_sock->initOk()) ||
+      (err="unsupported cipher",      !m_udp_sock->setCipher(UdpCipher::NAME)))
+  {
+    std::cerr << "*** ERROR: Could not initialize UDP socket due to "
+              << err << std::endl;
+    return false;
+  }
+  m_udp_sock->setCipherAADLength(UdpCipher::AADLEN);
+  m_udp_sock->setTagLength(UdpCipher::TAGLEN);
+  m_udp_sock->cipherDataReceived.connect(
+      mem_fun(*this, &Reflector::udpCipherDataReceived));
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &Reflector::udpDatagramReceived));
 
@@ -282,11 +378,40 @@ void Reflector::broadcastMsg(const ReflectorMsg& msg,
 } /* Reflector::broadcastMsg */
 
 
-bool Reflector::sendUdpDatagram(ReflectorClient *client, const void *buf,
-                                size_t count)
+bool Reflector::sendUdpDatagram(ReflectorClient *client,
+    const ReflectorUdpMsg& msg)
 {
-  return m_udp_sock->write(client->remoteHost(), client->remoteUdpPort(), buf,
-                           count);
+  if (client->protoVer() >= ProtoVer(3, 0))
+  {
+    ReflectorUdpMsg header(msg.type());
+    ostringstream ss;
+    assert(header.pack(ss) && msg.pack(ss));
+
+    m_udp_sock->setCipherIV(client->udpCipherIV());
+    m_udp_sock->setCipherKey(client->udpCipherKey());
+    UdpCipher::AAD aad{client->udpCipherIVCntrNext()};
+    std::stringstream aadss;
+    if (!aad.pack(aadss))
+    {
+      std::cout << "*** WARNING: Packing associated data failed for UDP "
+                   "datagram to " << client->remoteHost() << ":"
+                << client->remotePort() << std::endl;
+      return false;
+    }
+    return m_udp_sock->write(client->remoteHost(), client->remoteUdpPort(),
+                             aadss.str().data(), aadss.str().size(),
+                             ss.str().data(), ss.str().size());
+  }
+  else
+  {
+    ReflectorUdpMsgV2 header(msg.type(), client->clientId(),
+        client->udpCipherIVCntrNext() & 0xffff);
+    ostringstream ss;
+    assert(header.pack(ss) && msg.pack(ss));
+    return m_udp_sock->UdpSocket::write(
+        client->remoteHost(), client->remoteUdpPort(),
+        ss.str().data(), ss.str().size());
+  }
 } /* Reflector::sendUdpDatagram */
 
 
@@ -326,9 +451,150 @@ void Reflector::requestQsy(ReflectorClient *client, uint32_t tg)
 
   broadcastMsg(MsgRequestQsy(tg),
       ReflectorClient::mkAndFilter(
-        v2_client_filter,
+        ge_v2_client_filter,
         ReflectorClient::TgFilter(current_tg)));
 } /* Reflector::requestQsy */
+
+
+Async::SslCertSigningReq
+Reflector::loadClientPendingCsr(const std::string& callsign)
+{
+  Async::SslCertSigningReq csr;
+  (void)csr.readPemFile(m_pending_csrs_dir + "/" + callsign + ".csr");
+  return csr;
+} /* Reflector::loadClientPendingCsr */
+
+
+Async::SslCertSigningReq
+Reflector::loadClientCsr(const std::string& callsign)
+{
+  Async::SslCertSigningReq csr;
+  (void)csr.readPemFile(m_csrs_dir + "/" + callsign + ".csr");
+  return csr;
+} /* Reflector::loadClientPendingCsr */
+
+
+bool Reflector::signClientCert(Async::SslX509& cert)
+{
+  //std::cout << "### Reflector::signClientCert" << std::endl;
+
+  cert.setSerialNumber();
+  cert.setIssuerName(m_issue_ca_cert.subjectName());
+  time_t tnow = time(NULL);
+  cert.setNotBefore(tnow);
+  cert.setNotAfter(tnow + CERT_VALIDITY_TIME);
+  auto cn = cert.commonName();
+  if (!cert.sign(m_issue_ca_pkey))
+  {
+    std::cerr << "*** ERROR: Certificate signing failed for client "
+              << cn << std::endl;
+    return false;
+  }
+  auto crtfile = m_certs_dir + "/" + cn + ".crt";
+  if (!cert.writePemFile(crtfile) || !m_issue_ca_cert.appendPemFile(crtfile))
+  {
+    std::cerr << "*** WARNING: Failed to write client certificate file '"
+              << crtfile << "'" << std::endl;
+  }
+  return true;
+} /* Reflector::signClientCert */
+
+
+Async::SslX509 Reflector::signClientCsr(const std::string& cn)
+{
+  //std::cout << "### Reflector::signClientCsr" << std::endl;
+
+  Async::SslX509 cert(nullptr);
+
+  auto req = loadClientPendingCsr(cn);
+  if (req.isNull())
+  {
+    std::cerr << "*** ERROR: Cannot find CSR to sign '" << req.filePath()
+              << "'" << std::endl;
+    return cert;
+  }
+
+  cert.clear();
+  cert.setVersion(Async::SslX509::VERSION_3);
+  cert.setSubjectName(req.subjectName());
+  const Async::SslX509Extensions exts(req.extensions());
+  Async::SslX509Extensions cert_exts;
+  cert_exts.addBasicConstraints("critical, CA:FALSE");
+  cert_exts.addKeyUsage(
+      "critical, digitalSignature, keyEncipherment, keyAgreement");
+  cert_exts.addExtKeyUsage("clientAuth");
+  Async::SslX509ExtSubjectAltName san(exts.subjectAltName());
+  cert_exts.addExtension(san);
+  cert.addExtensions(cert_exts);
+  Async::SslKeypair csr_pkey(req.publicKey());
+  cert.setPublicKey(csr_pkey);
+
+  if (!signClientCert(cert))
+  {
+    cert.set(nullptr);
+  }
+
+  std::string csr_path = m_csrs_dir + "/" + cn + ".csr";
+  if (rename(req.filePath().c_str(), csr_path.c_str()) != 0)
+  {
+    char errstr[256];
+    (void)strerror_r(errno, errstr, sizeof(errstr));
+    std::cerr << "*** WARNING: Failed to move signed CSR from '"
+              << req.filePath() << "' to '" << csr_path << "': "
+              << errstr << std::endl;
+  }
+
+  auto client = ReflectorClient::lookup(cn);
+  if ((client != nullptr) && !cert.isNull())
+  {
+    client->certificateUpdated(cert);
+  }
+
+  return cert;
+} /* Reflector::signClientCsr */
+
+
+Async::SslX509 Reflector::loadClientCertificate(const std::string& callsign)
+{
+  Async::SslX509 cert;
+  if (!cert.readPemFile(m_certs_dir + "/" + callsign + ".crt") ||
+      cert.isNull() ||
+      !cert.verify(m_issue_ca_pkey) ||
+      !cert.timeIsWithinRange())
+  {
+    return nullptr;
+  }
+  return cert;
+} /* Reflector::loadClientCertificate */
+
+
+std::string Reflector::clientCertPem(const std::string& callsign) const
+{
+  std::string crtfile(m_certs_dir + "/" + callsign + ".crt");
+  std::ifstream ifs(crtfile);
+  if (!ifs.good())
+  {
+    return std::string();
+  }
+  return std::string(std::istreambuf_iterator<char>{ifs}, {});
+} /* Reflector::clientCertPem */
+
+
+std::string Reflector::caBundlePem(void) const
+{
+  std::ifstream ifs(m_ca_bundle_file);
+  if (ifs.good())
+  {
+    return std::string(std::istreambuf_iterator<char>{ifs}, {});
+  }
+  return std::string();
+} /* Reflector::caBundlePem */
+
+
+std::string Reflector::issuingCertPem(void) const
+{
+  return m_issue_ca_cert.pem();
+} /* Reflector::issuingCertPem */
 
 
 /****************************************************************************
@@ -347,9 +613,13 @@ void Reflector::requestQsy(ReflectorClient *client, uint32_t tg)
 
 void Reflector::clientConnected(Async::FramedTcpConnection *con)
 {
-  cout << "Client " << con->remoteHost() << ":" << con->remotePort()
-       << " connected" << endl;
-  m_client_con_map[con] = new ReflectorClient(this, con, m_cfg);
+  std::cout << con->remoteHost() << ":" << con->remotePort()
+       << ": Client connected" << endl;
+  ReflectorClient *client = new ReflectorClient(this, con, m_cfg);
+  con->verifyPeer.connect(sigc::mem_fun(*this, &Reflector::onVerifyPeer));
+  client->csrReceived.connect(
+      sigc::mem_fun(*this, &Reflector::onCsrReceived));
+  m_client_con_map[con] = client;
 } /* Reflector::clientConnected */
 
 
@@ -368,9 +638,9 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
   }
   else
   {
-    cout << "Client " << con->remoteHost() << ":" << con->remotePort() << " ";
+    std::cout << con->remoteHost() << ":" << con->remotePort() << ": ";
   }
-  cout << "disconnected: " << TcpConnection::disconnectReasonStr(reason)
+  std::cout << "Client disconnected: " << TcpConnection::disconnectReasonStr(reason)
        << endl;
 
   m_client_con_map.erase(it);
@@ -384,11 +654,96 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
 } /* Reflector::clientDisconnected */
 
 
-void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
-                                    void *buf, int count)
+bool Reflector::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
+                                      void *buf, int count)
 {
+  if ((count <= 0) || (static_cast<size_t>(count) < UdpCipher::AADLEN))
+  {
+    std::cout << "### : Ignoring too short UDP datagram (" << count
+              << " bytes)" << std::endl;
+    return true;
+  }
+
   stringstream ss;
-  ss.write(reinterpret_cast<const char *>(buf), count);
+  ss.write(reinterpret_cast<const char *>(buf), UdpCipher::AADLEN);
+  assert(m_aad.unpack(ss));
+
+  ReflectorClient* client = nullptr;
+  if (m_aad.iv_cntr == 0)
+  {
+    UdpCipher::InitialAAD iaad;
+    //std::cout << "### Reflector::udpCipherDataReceived: m_aad.iv_cntr="
+    //          << m_aad.iv_cntr << std::endl;
+    if (static_cast<size_t>(count) < iaad.packedSize())
+    {
+      std::cout << "### Reflector::udpCipherDataReceived: "
+                   "Ignoring malformed UDP registration datagram" << std::endl;
+      return true;
+    }
+    ss.clear();
+    ss.write(reinterpret_cast<const char *>(buf)+UdpCipher::AADLEN,
+        sizeof(UdpCipher::ClientId));
+
+    Async::MsgPacker<UdpCipher::ClientId>::unpack(ss, iaad.client_id);
+    //std::cout << "### Reflector::udpCipherDataReceived: client_id="
+    //          << iaad.client_id << std::endl;
+    auto client = ReflectorClient::lookup(iaad.client_id);
+    if (client == nullptr)
+    {
+      std::cout << "### Could not find client id (" << iaad.client_id
+                << ") specified in initial AAD datagram" << std::endl;
+      return true;
+    }
+    m_udp_sock->setCipherIV(UdpCipher::IV{client->udpCipherIVRand(),
+                                          client->clientId(), 0});
+    m_udp_sock->setCipherKey(client->udpCipherKey());
+    m_udp_sock->setCipherAADLength(iaad.packedSize());
+  }
+  else if ((client=ReflectorClient::lookup(std::make_pair(addr, port))))
+  {
+    //if (static_cast<size_t>(count) < UdpCipher::AADLEN)
+    //{
+    //  std::cout << "### Reflector::udpCipherDataReceived: Datagram too short "
+    //               "to hold associated data" << std::endl;
+    //  return true;
+    //}
+
+    //if (!aad_unpack_ok)
+    //{
+    //  std::cout << "*** WARNING: Unpacking associated data failed for UDP "
+    //               "datagram from " << addr << ":" << port << std::endl;
+    //  return true;
+    //}
+    //std::cout << "### Reflector::udpCipherDataReceived: m_aad.iv_cntr="
+    //          << m_aad.iv_cntr << std::endl;
+    m_udp_sock->setCipherIV(UdpCipher::IV{client->udpCipherIVRand(),
+                                          client->clientId(), m_aad.iv_cntr});
+    m_udp_sock->setCipherKey(client->udpCipherKey());
+    m_udp_sock->setCipherAADLength(UdpCipher::AADLEN);
+  }
+  else
+  {
+    udpDatagramReceived(addr, port, nullptr, buf, count);
+    return true;
+  }
+
+  return false;
+} /* Reflector::udpCipherDataReceived */
+
+
+void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
+                                    void* aadptr, void *buf, int count)
+{
+  //std::cout << "### Reflector::udpDatagramReceived:"
+  //          << " addr=" << addr
+  //          << " port=" << port
+  //          << " count=" << count
+  //          << std::endl;
+
+  assert(m_udp_sock->cipherAADLength() >= UdpCipher::AADLEN);
+
+  stringstream ss;
+  ss.write(reinterpret_cast<const char *>(buf), static_cast<size_t>(count));
 
   ReflectorUdpMsg header;
   if (!header.unpack(ss))
@@ -397,14 +752,96 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
             "from " << addr << ":" << port << endl;
     return;
   }
+  ReflectorUdpMsgV2 header_v2;
 
-  ReflectorClient *client = ReflectorClient::lookup(header.clientId());
-  if (client == nullptr)
+  ReflectorClient* client = nullptr;
+  UdpCipher::AAD aad;
+  if (aadptr != nullptr)
   {
-    cerr << "*** WARNING: Incoming UDP datagram from " << addr << ":" << port
-         << " has invalid client id " << header.clientId() << endl;
-    return;
+    //std::cout << "### Reflector::udpDatagramReceived: m_aad.iv_cntr="
+    //          << m_aad.iv_cntr << std::endl;
+
+    stringstream aadss;
+    aadss.write(reinterpret_cast<const char *>(aadptr),
+        m_udp_sock->cipherAADLength());
+
+    if (!aad.unpack(aadss))
+    {
+      return;
+    }
+    if (aad.iv_cntr == 0) // Client UDP registration
+    {
+      UdpCipher::InitialAAD iaad;
+      assert(aadss.seekg(0));
+      if (!iaad.unpack(aadss))
+      {
+        std::cout << "### Reflector::udpDatagramReceived: "
+                     "Could not unpack iaad" << std::endl;
+        return;
+      }
+      assert(iaad.iv_cntr == 0);
+      //std::cout << "### Reflector::udpDatagramReceived: iaad.client_id="
+      //          << iaad.client_id << std::endl;
+      client = ReflectorClient::lookup(iaad.client_id);
+      if (client == nullptr)
+      {
+        std::cout << "### Reflector::udpDatagramReceived: Could not find "
+                     "client id " << iaad.client_id << std::endl;
+        return;
+      }
+      else if (client->remoteUdpPort() == 0)
+      {
+        //client->setRemoteUdpPort(port);
+      }
+      else
+      {
+        std::cout << "### Reflector::udpDatagramReceived: Client "
+                  << iaad.client_id << " already registered." << std::endl;
+      }
+      client->setUdpRxSeq(0);
+      //client->sendUdpMsg(MsgUdpHeartbeat());
+    }
+    else
+    {
+      client = ReflectorClient::lookup(std::make_pair(addr, port));
+      if (client == nullptr)
+      {
+        std::cout << "### Unknown client " << addr << ":" << port << std::endl;
+        return;
+      }
+    }
   }
+  else
+  {
+    ss.seekg(0);
+    if (!header_v2.unpack(ss))
+    {
+      std::cout << "*** WARNING: Unpacking V2 message header failed for UDP "
+              "datagram from " << addr << ":" << port << std::endl;
+      return;
+    }
+    client = ReflectorClient::lookup(header_v2.clientId());
+    if (client == nullptr)
+    {
+      std::cerr << "*** WARNING: Incoming V2 UDP datagram from " << addr << ":"
+           << port << " has invalid client id " << header_v2.clientId()
+           << std::endl;
+      return;
+    }
+  }
+
+  //auto client = ReflectorClient::lookup(std::make_pair(addr, port));
+  //if (client == nullptr)
+  //{
+  //  client = ReflectorClient::lookup(header.clientId());
+  //  if (client == nullptr)
+  //  {
+  //    cerr << "*** WARNING: Incoming UDP datagram from " << addr << ":" << port
+  //         << " has invalid client id " << header.clientId() << endl;
+  //    return;
+  //  }
+  //}
+
   if (addr != client->remoteHost())
   {
     cerr << "*** WARNING[" << client->callsign()
@@ -417,7 +854,7 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     client->setRemoteUdpPort(port);
     client->sendUdpMsg(MsgUdpHeartbeat());
   }
-  else if (port != client->remoteUdpPort())
+  if (port != client->remoteUdpPort())
   {
     cerr << "*** WARNING[" << client->callsign()
          << "]: Incoming UDP packet has the wrong source UDP "
@@ -427,24 +864,50 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
 
     // Check sequence number
-  uint16_t udp_rx_seq_diff = header.sequenceNum() - client->nextUdpRxSeq();
-  if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
+  if (client->protoVer() >= ProtoVer(3, 0))
   {
-    cout << client->callsign()
-         << ": Dropping out of sequence frame with seq="
-         << header.sequenceNum() << ". Expected seq="
-         << client->nextUdpRxSeq() << endl;
-    return;
+    if (aad.iv_cntr < client->nextUdpRxSeq()) // Frame out of sequence (ignore)
+    {
+      std::cout << client->callsign()
+                << ": Dropping out of sequence UDP frame with seq="
+                << aad.iv_cntr << std::endl;
+      return;
+    }
+    else if (aad.iv_cntr > client->nextUdpRxSeq()) // Frame lost
+    {
+      std::cout << client->callsign() << ": UDP frame(s) lost. Expected seq="
+                << client->nextUdpRxSeq()
+                << " but received " << aad.iv_cntr
+                << ". Resetting next expected sequence number to "
+                << (aad.iv_cntr + 1) << std::endl;
+    }
+    client->setUdpRxSeq(aad.iv_cntr + 1);
   }
-  else if (udp_rx_seq_diff > 0) // Frame(s) lost
+  else
   {
-    cout << client->callsign()
-         << ": UDP frame(s) lost. Expected seq=" << client->nextUdpRxSeq()
-         << ". Received seq=" << header.sequenceNum() << endl;
+    uint16_t next_udp_rx_seq = client->nextUdpRxSeq() & 0xffff;
+    uint16_t udp_rx_seq_diff = header_v2.sequenceNum() - next_udp_rx_seq;
+    if (udp_rx_seq_diff > 0x7fff) // Frame out of sequence (ignore)
+    {
+      std::cout << client->callsign()
+                << ": Dropping out of sequence frame with seq="
+                << header_v2.sequenceNum() << ". Expected seq="
+                << next_udp_rx_seq << std::endl;
+      return;
+    }
+    else if (udp_rx_seq_diff > 0) // Frame(s) lost
+    {
+      cout << client->callsign()
+           << ": UDP frame(s) lost. Expected seq=" << next_udp_rx_seq
+           << ". Received seq=" << header_v2.sequenceNum() << endl;
+    }
+    client->setUdpRxSeq(header_v2.sequenceNum() + 1);
   }
 
   client->udpMsgReceived(header);
 
+  //std::cout << "### Reflector::udpDatagramReceived: type="
+  //          << header.type() << std::endl;
   switch (header.type())
   {
     case MsgUdpHeartbeat::TYPE:
@@ -596,7 +1059,7 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
     cout << old_talker->callsign() << ": Talker stop on TG #" << tg << endl;
     broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()),
         ReflectorClient::mkAndFilter(
-          v2_client_filter,
+          ge_v2_client_filter,
           ReflectorClient::mkOrFilter(
             ReflectorClient::TgFilter(tg),
             ReflectorClient::TgMonitorFilter(tg))));
@@ -614,7 +1077,7 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
     cout << new_talker->callsign() << ": Talker start on TG #" << tg << endl;
     broadcastMsg(MsgTalkerStart(tg, new_talker->callsign()),
         ReflectorClient::mkAndFilter(
-          v2_client_filter,
+          ge_v2_client_filter,
           ReflectorClient::mkOrFilter(
             ReflectorClient::TgFilter(tg),
             ReflectorClient::TgMonitorFilter(tg))));
@@ -655,6 +1118,11 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   for (const auto& item : m_client_con_map)
   {
     ReflectorClient* client = item.second;
+    if (client->conState() != ReflectorClient::STATE_CONNECTED)
+    {
+      continue;
+    }
+
     Json::Value node(client->nodeInfo());
     //node["addr"] = client->remoteHost().toString();
     node["protoVer"]["majorVer"] = client->protoVer().majorVer();
@@ -774,7 +1242,7 @@ void Reflector::onRequestAutoQsy(uint32_t from_tg)
 
   broadcastMsg(MsgRequestQsy(tg),
       ReflectorClient::mkAndFilter(
-        v2_client_filter,
+        ge_v2_client_filter,
         ReflectorClient::TgFilter(from_tg)));
 } /* Reflector::onRequestAutoQsy */
 
@@ -820,17 +1288,86 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
     errss << "Invalid PTY command '" << cmdline << "'";
     goto write_status;
   }
+  std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 
   if (cmd == "CFG")
   {
     std::string section, tag, value;
     if (!(ss >> section >> tag >> value) || !ss.eof())
     {
-      errss << "Invalid PTY command '" << cmdline << "'. "
+      errss << "Invalid CFG PTY command '" << cmdline << "'. "
                "Usage: CFG <section> <tag> <value>";
       goto write_status;
     }
     m_cfg->setValue(section, tag, value);
+  }
+  else if (cmd == "CA")
+  {
+    std::string subcmd;
+    if (!(ss >> subcmd))
+    {
+      errss << "Invalid CA PTY command '" << cmdline << "'. "
+               "Usage: CA PENDING|SIGN <callsign>|LS|RM <callsign>";
+      goto write_status;
+    }
+    std::transform(subcmd.begin(), subcmd.end(), subcmd.begin(), ::toupper);
+    if (subcmd == "SIGN")
+    {
+      std::string cn;
+      if (!(ss >> cn))
+      {
+        errss << "Invalid CA SIGN PTY command '" << cmdline << "'. "
+                 "Usage: CA SIGN <callsign>";
+        goto write_status;
+      }
+      auto cert = signClientCsr(cn);
+      if (!cert.isNull())
+      {
+        std::cout << "------------- Client Certificate --------------"
+                  << std::endl;
+        cert.print(" ");
+        std::cout << "-----------------------------------------------"
+                  << std::endl;
+      }
+      else
+      {
+        errss << "Certificate signing failed";
+      }
+    }
+    else if (subcmd == "RM")
+    {
+      std::string cn;
+      if (!(ss >> cn))
+      {
+        errss << "Invalid CA RM PTY command '" << cmdline << "'. "
+                 "Usage: CA RM <callsign>";
+        goto write_status;
+      }
+      if (removeClientCert(cn))
+
+      {
+        std::cout << cn << ": Removed client certificate and CSR"
+                  << std::endl;
+      }
+      else
+      {
+        errss << "Failed to remove certificate and CSR for '" << cn << "'";
+      }
+    }
+    else if (subcmd == "LS")
+    {
+      errss << "Not yet implemented";
+    }
+    else if (subcmd == "PENDING")
+    {
+      errss << "Not yet implemented";
+    }
+    else
+    {
+      errss << "Invalid CA PTY command '" << cmdline << "'. "
+               "Usage: CA PENDING|SIGN <callsign>|LS|RM <callsign>";
+      goto write_status;
+    }
   }
   else
   {
@@ -887,6 +1424,686 @@ void Reflector::cfgUpdated(const std::string& section, const std::string& tag)
     }
   }
 } /* Reflector::cfgUpdated */
+
+
+bool Reflector::loadCertificateFiles(void)
+{
+  if (!buildPath("GLOBAL", "CERT_PKI_DIR", SVX_LOCAL_STATE_DIR, m_pki_dir) ||
+      !buildPath("GLOBAL", "CERT_CA_KEYS_DIR", m_pki_dir, m_keys_dir) ||
+      !buildPath("GLOBAL", "CERT_CA_PENDING_CSRS_DIR", m_pki_dir,
+                 m_pending_csrs_dir) ||
+      !buildPath("GLOBAL", "CERT_CA_CSRS_DIR", m_pki_dir, m_csrs_dir) ||
+      !buildPath("GLOBAL", "CERT_CA_CERTS_DIR", m_pki_dir, m_certs_dir))
+  {
+    return false;
+  }
+
+  if (!loadRootCAFiles() || !loadSigningCAFiles() ||
+      !loadServerCertificateFiles())
+  {
+    return false;
+  }
+
+  if (!m_cfg->getValue("GLOBAL", "CERT_CA_BUNDLE", m_ca_bundle_file))
+  {
+    m_ca_bundle_file = m_pki_dir + "/ca-bundle.crt";
+  }
+  if (access(m_ca_bundle_file.c_str(), F_OK) != 0)
+  {
+    if (!ensureDirectoryExist(m_ca_bundle_file) ||
+        !m_ca_cert.writePemFile(m_ca_bundle_file))
+    {
+      std::cout << "*** ERROR: Failed to write CA bundle file '"
+                << m_ca_bundle_file << "'" << std::endl;
+      return false;
+    }
+  }
+  if (!m_ssl_ctx.setCaCertificateFile(m_ca_bundle_file))
+  {
+    std::cout << "*** ERROR: Failed to read CA certificate bundle '"
+              << m_ca_bundle_file << "'" << std::endl;
+    return false;
+  }
+
+  struct stat st;
+  if (stat(m_ca_bundle_file.c_str(), &st) != 0)
+  {
+    char errstr[256];
+    (void)strerror_r(errno, errstr, sizeof(errstr));
+    std::cerr << "*** ERROR: Failed to read CA file from '"
+              << m_ca_bundle_file << "': " << errstr << std::endl;
+    return false;
+  }
+  auto bundle = caBundlePem();
+  m_ca_size = bundle.size();
+  Async::Digest ca_dgst;
+  if (!ca_dgst.md(m_ca_md, MsgCABundle::MD_ALG, bundle))
+  {
+    std::cerr << "*** ERROR: CA bundle checksumming failed"
+              << std::endl;
+    return false;
+  }
+  ca_dgst.signInit(MsgCABundle::MD_ALG, m_issue_ca_pkey);
+  m_ca_sig = ca_dgst.sign(bundle);
+  m_ca_url = "";
+  m_cfg->getValue("GLOBAL", "CERT_CA_URL", m_ca_url);
+
+  return true;
+} /* Reflector::loadCertificateFiles */
+
+
+bool Reflector::loadServerCertificateFiles(void)
+{
+  std::string cert_cn;
+  if (!m_cfg->getValue("SERVER_CERT", "COMMON_NAME", cert_cn) ||
+      cert_cn.empty())
+  {
+    std::cerr << "*** ERROR: The 'SERVER_CERT/COMMON_NAME' variable is "
+                 "unset which is needed for certificate signing request "
+                 "generation." << std::endl;
+    return false;
+  }
+
+  std::string keyfile;
+  if (!m_cfg->getValue("SERVER_CERT", "KEYFILE", keyfile))
+  {
+    keyfile = m_keys_dir + "/" + cert_cn + ".key";
+  }
+  Async::SslKeypair pkey;
+  if (access(keyfile.c_str(), F_OK) != 0)
+  {
+    std::cout << "Server private key file not found. Generating '"
+              << keyfile << "'" << std::endl;
+    if (!generateKeyFile(pkey, keyfile))
+    {
+      return false;
+    }
+  }
+  else if (!pkey.readPrivateKeyFile(keyfile))
+  {
+    std::cerr << "*** ERROR: Failed to read private key file from '"
+              << keyfile << "'" << std::endl;
+    return false;
+  }
+
+  if (!m_cfg->getValue("SERVER_CERT", "CRTFILE", m_crtfile))
+  {
+    m_crtfile = m_certs_dir + "/" + cert_cn + ".crt";
+  }
+  Async::SslX509 cert;
+  bool generate_cert = (access(m_crtfile.c_str(), F_OK) != 0);
+  if (!generate_cert)
+  {
+    generate_cert = !cert.readPemFile(m_crtfile) ||
+                    !cert.verify(m_issue_ca_pkey);
+    if (generate_cert)
+    {
+      std::cerr << "*** WARNING: Failed to read server certificate "
+                   "from '" << m_crtfile << "' or the cert is invalid. "
+                   "Generating new certificate." << std::endl;
+      cert.clear();
+    }
+    else
+    {
+      int days=0, seconds=0;
+      cert.timeSpan(days, seconds);
+      //std::cout << "### days=" << days << "  seconds=" << seconds
+      //          << std::endl;
+      time_t tnow = time(NULL);
+      time_t renew_time = tnow + (days*24*3600 + seconds)*RENEW_AFTER;
+      if (!cert.timeIsWithinRange(tnow, renew_time))
+      {
+        std::cerr << "Time to renew the server certificate '" << m_crtfile
+                  << "'. It's valid until "
+                  << cert.notAfterLocaltimeString() << "." << std::endl;
+        cert.clear();
+        generate_cert = true;
+      }
+    }
+  }
+  if (generate_cert)
+  {
+    //if (!pkey_fresh && !generateKeyFile(pkey, keyfile))
+    //{
+    //  return false;
+    //}
+
+    std::string csrfile;
+    if (!m_cfg->getValue("SERVER_CERT", "CSRFILE", csrfile))
+    {
+      csrfile = m_csrs_dir + "/" + cert_cn + ".csr";
+    }
+    Async::SslCertSigningReq req;
+    std::cout << "Generating server certificate signing request file '"
+              << csrfile << "'" << std::endl;
+    req.setVersion(Async::SslCertSigningReq::VERSION_1);
+    req.addSubjectName("CN", cert_cn);
+    Async::SslX509Extensions req_exts;
+    req_exts.addBasicConstraints("critical, CA:FALSE");
+    req_exts.addKeyUsage(
+        "critical, digitalSignature, keyEncipherment, keyAgreement");
+    req_exts.addExtKeyUsage("serverAuth");
+    std::stringstream csr_san_ss;
+    csr_san_ss << "DNS:" << cert_cn;
+    std::string cert_san_str;
+    if (m_cfg->getValue("SERVER_CERT", "SUBJECT_ALT_NAME", cert_san_str) &&
+        !cert_san_str.empty())
+    {
+      csr_san_ss << "," << cert_san_str;
+    }
+    std::string email_address;
+    if (m_cfg->getValue("SERVER_CERT", "EMAIL_ADDRESS", email_address) &&
+        !email_address.empty())
+    {
+      csr_san_ss << ",email:" << email_address;
+    }
+    req_exts.addSubjectAltNames(csr_san_ss.str());
+    req.addExtensions(req_exts);
+    req.setPublicKey(pkey);
+    req.sign(pkey);
+    if (!req.writePemFile(csrfile))
+    {
+      // FIXME: Read SSL error stack
+
+      std::cerr << "*** WARNING: Failed to write server certificate "
+                   "signing request file to '" << csrfile << "'"
+                << std::endl;
+      //return false;
+    }
+    std::cout << "-------- Certificate Signing Request -------" << std::endl;
+    req.print();
+    std::cout << "--------------------------------------------" << std::endl;
+
+    std::cout << "Generating server certificate file '" << m_crtfile << "'"
+              << std::endl;
+    cert.setSerialNumber();
+    cert.setVersion(Async::SslX509::VERSION_3);
+    cert.setIssuerName(m_issue_ca_cert.subjectName());
+    cert.setSubjectName(req.subjectName());
+    time_t tnow = time(NULL);
+    cert.setNotBefore(tnow);
+    cert.setNotAfter(tnow + CERT_VALIDITY_TIME);
+    cert.addExtensions(req.extensions());
+    cert.setPublicKey(pkey);
+    cert.sign(m_issue_ca_pkey);
+    assert(cert.verify(m_issue_ca_pkey));
+    if (!ensureDirectoryExist(m_crtfile) || !cert.writePemFile(m_crtfile) ||
+        !m_issue_ca_cert.appendPemFile(m_crtfile))
+    {
+      std::cout << "*** ERROR: Failed to write server certificate file '"
+                << m_crtfile << "'" << std::endl;
+      return false;
+    }
+  }
+  std::cout << "------------ Server Certificate ------------" << std::endl;
+  cert.print();
+  std::cout << "--------------------------------------------" << std::endl;
+
+  if (!m_ssl_ctx.setCertificateFiles(keyfile, m_crtfile))
+  {
+      std::cout << "*** ERROR: Failed to read and verify key ('"
+                << keyfile << "') and certificate ('"
+                << m_crtfile << "') files. "
+                << "If key- and cert-file does not match, the certificate "
+                   "is invalid for any other reason, you need "
+                   "to remove the cert file in order to trigger the "
+                   "generation of a new certificate signing request."
+                   "Then the CSR need to be signed by the CA which creates a "
+                   "valid certificate."
+                << std::endl;
+      return false;
+  }
+
+  startCertRenewTimer(cert, m_renew_cert_timer);
+
+  return true;
+} /* Reflector::loadServerCertificateFiles */
+
+
+bool Reflector::generateKeyFile(Async::SslKeypair& pkey,
+                                const std::string& keyfile)
+{
+  pkey.generate(2048);
+  if (!ensureDirectoryExist(keyfile) || !pkey.writePrivateKeyFile(keyfile))
+  {
+    std::cerr << "*** ERROR: Failed to write private key file to '"
+              << keyfile << "'" << std::endl;
+    return false;
+  }
+  return true;
+} /* Reflector::generateKeyFile */
+
+
+bool Reflector::loadRootCAFiles(void)
+{
+    // Read root CA private key or generate a new one if it does not exist
+  std::string ca_keyfile;
+  if (!m_cfg->getValue("ROOT_CA", "KEYFILE", ca_keyfile))
+  {
+    ca_keyfile = m_keys_dir + "/svxreflector_root_ca.key";
+  }
+  if (access(ca_keyfile.c_str(), F_OK) != 0)
+  {
+    std::cout << "Root CA private key file not found. Generating '"
+              << ca_keyfile << "'" << std::endl;
+    if (!m_ca_pkey.generate(4096))
+    {
+      std::cout << "*** ERROR: Failed to generate root CA key" << std::endl;
+      return false;
+    }
+    if (!ensureDirectoryExist(ca_keyfile) ||
+        !m_ca_pkey.writePrivateKeyFile(ca_keyfile))
+    {
+      std::cerr << "*** ERROR: Failed to write root CA private key file to '"
+                << ca_keyfile << "'" << std::endl;
+      return false;
+    }
+  }
+  else if (!m_ca_pkey.readPrivateKeyFile(ca_keyfile))
+  {
+    std::cerr << "*** ERROR: Failed to read root CA private key file from '"
+              << ca_keyfile << "'" << std::endl;
+    return false;
+  }
+
+    // Read the root CA certificate or generate a new one if it does not exist
+  std::string ca_crtfile;
+  if (!m_cfg->getValue("ROOT_CA", "CRTFILE", ca_crtfile))
+  {
+    ca_crtfile = m_certs_dir + "/svxreflector_root_ca.crt";
+  }
+  bool generate_ca_cert = (access(ca_crtfile.c_str(), F_OK) != 0);
+  if (!generate_ca_cert)
+  {
+    if (!m_ca_cert.readPemFile(ca_crtfile) ||
+        !m_ca_cert.verify(m_ca_pkey) ||
+        !m_ca_cert.timeIsWithinRange())
+    {
+      std::cerr << "*** ERROR: Failed to read root CA certificate file "
+                   "from '" << ca_crtfile << "' or the cert is invalid."
+                << std::endl;
+      return false;
+    }
+  }
+  if (generate_ca_cert)
+  {
+    std::cout << "Generating root CA certificate file '" << ca_crtfile << "'"
+              << std::endl;
+    m_ca_cert.setSerialNumber();
+    m_ca_cert.setVersion(Async::SslX509::VERSION_3);
+
+    std::string value;
+    value = "SvxReflector Root CA";
+    (void)m_cfg->getValue("ROOT_CA", "COMMON_NAME", value);
+    if (value.empty())
+    {
+      std::cerr << "*** ERROR: The 'ROOT_CA/COMMON_NAME' variable is "
+                   "unset which is needed for root CA certificate generation."
+                << std::endl;
+      return false;
+    }
+    m_ca_cert.addIssuerName("CN", value);
+    if (m_cfg->getValue("ROOT_CA", "ORG_UNIT", value) &&
+        !value.empty())
+    {
+      m_ca_cert.addIssuerName("OU", value);
+    }
+    if (m_cfg->getValue("ROOT_CA", "ORG", value) && !value.empty())
+    {
+      m_ca_cert.addIssuerName("O", value);
+    }
+    if (m_cfg->getValue("ROOT_CA", "LOCALITY", value) &&
+        !value.empty())
+    {
+      m_ca_cert.addIssuerName("L", value);
+    }
+    if (m_cfg->getValue("ROOT_CA", "STATE", value) && !value.empty())
+    {
+      m_ca_cert.addIssuerName("ST", value);
+    }
+    if (m_cfg->getValue("ROOT_CA", "COUNTRY", value) && !value.empty())
+    {
+      m_ca_cert.addIssuerName("C", value);
+    }
+    m_ca_cert.setSubjectName(m_ca_cert.issuerName());
+    Async::SslX509Extensions ca_exts;
+    ca_exts.addBasicConstraints("critical, CA:TRUE");
+    ca_exts.addKeyUsage("critical, cRLSign, digitalSignature, keyCertSign");
+    if (m_cfg->getValue("ROOT_CA", "EMAIL_ADDRESS", value) &&
+        !value.empty())
+    {
+      ca_exts.addSubjectAltNames("email:" + value);
+    }
+    m_ca_cert.addExtensions(ca_exts);
+    time_t tnow = time(NULL);
+    m_ca_cert.setNotBefore(tnow);
+    m_ca_cert.setNotAfter(tnow + 25*365*24*3600);
+    m_ca_cert.setPublicKey(m_ca_pkey);
+    m_ca_cert.sign(m_ca_pkey);
+    if (!m_ca_cert.writePemFile(ca_crtfile))
+    {
+      std::cout << "*** ERROR: Failed to write root CA certificate file '"
+                << ca_crtfile << "'" << std::endl;
+      return false;
+    }
+  }
+  std::cout << "----------- Root CA Certificate ------------" << std::endl;
+  m_ca_cert.print();
+  std::cout << "--------------------------------------------" << std::endl;
+
+  return true;
+} /* Reflector::loadRootCAFiles */
+
+
+bool Reflector::loadSigningCAFiles(void)
+{
+    // Read issuing CA private key or generate a new one if it does not exist
+  std::string ca_keyfile;
+  if (!m_cfg->getValue("ISSUING_CA", "KEYFILE", ca_keyfile))
+  {
+    ca_keyfile = m_keys_dir + "/svxreflector_issuing_ca.key";
+  }
+  if (access(ca_keyfile.c_str(), F_OK) != 0)
+  {
+    std::cout << "Issuing CA private key file not found. Generating '"
+              << ca_keyfile << "'" << std::endl;
+    if (!m_issue_ca_pkey.generate(2048))
+    {
+      std::cout << "*** ERROR: Failed to generate CA key" << std::endl;
+      return false;
+    }
+    if (!ensureDirectoryExist(ca_keyfile) ||
+        !m_issue_ca_pkey.writePrivateKeyFile(ca_keyfile))
+    {
+      std::cerr << "*** ERROR: Failed to write issuing CA private key file "
+                   "to '" << ca_keyfile << "'" << std::endl;
+      return false;
+    }
+  }
+  else if (!m_issue_ca_pkey.readPrivateKeyFile(ca_keyfile))
+  {
+    std::cerr << "*** ERROR: Failed to read issuing CA private key file "
+                 "from '" << ca_keyfile << "'" << std::endl;
+    return false;
+  }
+
+    // Read the CA certificate or generate a new one if it does not exist
+  std::string ca_crtfile;
+  if (!m_cfg->getValue("ISSUING_CA", "CRTFILE", ca_crtfile))
+  {
+    ca_crtfile = m_certs_dir + "/svxreflector_issuing_ca.crt";
+  }
+  bool generate_ca_cert = (access(ca_crtfile.c_str(), F_OK) != 0);
+  if (!generate_ca_cert)
+  {
+    generate_ca_cert = !m_issue_ca_cert.readPemFile(ca_crtfile) ||
+                       !m_issue_ca_cert.verify(m_ca_pkey) ||
+                       !m_issue_ca_cert.timeIsWithinRange();
+    if (generate_ca_cert)
+    {
+      std::cerr << "*** WARNING: Failed to read issuing CA certificate "
+                   "from '" << ca_crtfile << "' or the cert is invalid. "
+                   "Generating new certificate." << std::endl;
+      m_issue_ca_cert.clear();
+    }
+    else
+    {
+      int days=0, seconds=0;
+      m_issue_ca_cert.timeSpan(days, seconds);
+      time_t tnow = time(NULL);
+      time_t renew_time = tnow + (days*24*3600 + seconds)*RENEW_AFTER;
+      if (!m_issue_ca_cert.timeIsWithinRange(tnow, renew_time))
+      {
+        std::cerr << "Time to renew the issuing CA certificate '"
+                  << ca_crtfile << "'. It's valid until "
+                  << m_issue_ca_cert.notAfterLocaltimeString() << "."
+                  << std::endl;
+        m_issue_ca_cert.clear();
+        generate_ca_cert = true;
+      }
+    }
+  }
+
+  if (generate_ca_cert)
+  {
+    std::string ca_csrfile;
+    if (!m_cfg->getValue("ISSUING_CA", "CSRFILE", ca_csrfile))
+    {
+      ca_csrfile = m_csrs_dir + "/svxreflector_issuing_ca.csr";
+    }
+    std::cout << "Generating issuing CA CSR file '" << ca_csrfile
+              << "'" << std::endl;
+    Async::SslCertSigningReq csr;
+    csr.setVersion(Async::SslCertSigningReq::VERSION_1);
+    std::string value;
+    value = "SvxReflector Issuing CA";
+    (void)m_cfg->getValue("ISSUING_CA", "COMMON_NAME", value);
+    if (value.empty())
+    {
+      std::cerr << "*** ERROR: The 'ISSUING_CA/COMMON_NAME' variable is "
+                   "unset which is needed for issuing CA certificate "
+                   "generation." << std::endl;
+      return false;
+    }
+    csr.addSubjectName("CN", value);
+    if (m_cfg->getValue("ISSUING_CA", "ORG_UNIT", value) &&
+        !value.empty())
+    {
+      csr.addSubjectName("OU", value);
+    }
+    if (m_cfg->getValue("ISSUING_CA", "ORG", value) && !value.empty())
+    {
+      csr.addSubjectName("O", value);
+    }
+    if (m_cfg->getValue("ISSUING_CA", "LOCALITY", value) && !value.empty())
+    {
+      csr.addSubjectName("L", value);
+    }
+    if (m_cfg->getValue("ISSUING_CA", "STATE", value) && !value.empty())
+    {
+      csr.addSubjectName("ST", value);
+    }
+    if (m_cfg->getValue("ISSUING_CA", "COUNTRY", value) && !value.empty())
+    {
+      csr.addSubjectName("C", value);
+    }
+    Async::SslX509Extensions exts;
+    exts.addBasicConstraints("critical, CA:TRUE");
+    exts.addKeyUsage("critical, cRLSign, digitalSignature, keyCertSign");
+    if (m_cfg->getValue("ISSUING_CA", "EMAIL_ADDRESS", value) &&
+        !value.empty())
+    {
+      exts.addSubjectAltNames("email:" + value);
+    }
+    csr.addExtensions(exts);
+    csr.setPublicKey(m_issue_ca_pkey);
+    csr.sign(m_issue_ca_pkey);
+    //csr.print();
+    if (!csr.writePemFile(ca_csrfile))
+    {
+      std::cout << "*** ERROR: Failed to write issuing CA CSR file '"
+                << ca_csrfile << "'" << std::endl;
+      return false;
+    }
+
+    std::cout << "Generating issuing CA certificate file '" << ca_crtfile
+              << "'" << std::endl;
+    m_issue_ca_cert.setSerialNumber();
+    m_issue_ca_cert.setVersion(Async::SslX509::VERSION_3);
+    m_issue_ca_cert.setSubjectName(csr.subjectName());
+    m_issue_ca_cert.addExtensions(csr.extensions());
+    time_t tnow = time(NULL);
+    m_issue_ca_cert.setNotBefore(tnow);
+    m_issue_ca_cert.setNotAfter(tnow + 4*CERT_VALIDITY_TIME);
+    m_issue_ca_cert.setPublicKey(m_issue_ca_pkey);
+    m_issue_ca_cert.setIssuerName(m_ca_cert.subjectName());
+    m_issue_ca_cert.sign(m_ca_pkey);
+    if (!m_issue_ca_cert.writePemFile(ca_crtfile))
+    {
+      std::cout << "*** ERROR: Failed to write issuing CA certificate file '"
+                << ca_crtfile << "'" << std::endl;
+      return false;
+    }
+  }
+  std::cout << "---------- Issuing CA Certificate ----------" << std::endl;
+  m_issue_ca_cert.print();
+  std::cout << "--------------------------------------------" << std::endl;
+
+  startCertRenewTimer(m_issue_ca_cert, m_renew_issue_ca_cert_timer);
+
+  return true;
+} /* Reflector::loadSigningCAFiles */
+
+
+bool Reflector::onVerifyPeer(TcpConnection *con, bool preverify_ok,
+                             X509_STORE_CTX *x509_store_ctx)
+{
+  //std::cout << "### Reflector::onVerifyPeer: preverify_ok="
+  //          << (preverify_ok ? "yes" : "no") << std::endl;
+
+  Async::SslX509 cert(*x509_store_ctx);
+  preverify_ok = preverify_ok && !cert.isNull();
+  preverify_ok = preverify_ok && !cert.commonName().empty();
+  if (!preverify_ok)
+  {
+    std::cout << "*** ERROR: Certificate verification failed for client"
+              << std::endl;
+    std::cout << "------------- Peer Certificate --------------" << std::endl;
+    cert.print();
+    std::cout << "---------------------------------------------" << std::endl;
+  }
+
+  return preverify_ok;
+} /* Reflector::onVerifyPeer */
+
+
+Async::SslX509 Reflector::onCsrReceived(Async::SslCertSigningReq& req)
+{
+  if (req.isNull())
+  {
+    return nullptr;
+  }
+
+  std::string callsign(req.commonName());
+  if (callsign.empty())
+  {
+    std::cout << "*** WARNING: The callsign (CN) in the CSR is empty. "
+                 "Ignoring this CSR." << std::endl;
+    return nullptr;
+  }
+    // FIXME: Move code to initialize() and make a public function
+    // verifyCallsign() so that callsigns can be verified from
+    // ReflectorClient.
+  std::string csrestr;
+  if (!m_cfg->getValue("GLOBAL", "CALLSIGN_MATCH", csrestr) ||
+      csrestr.empty())
+  {
+    csrestr = "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{1,3}[A-Z](?:-[A-Z0-9]{1,3})?";
+  }
+  const std::regex csre(csrestr);
+  if (!std::regex_match(callsign, csre))
+  {
+    std::cout << "*** WARNING: The callsign (CN) in the received CSR, '"
+              << callsign << "', is malformed." << std::endl;
+    return nullptr;
+  }
+
+  std::string csr_path(m_csrs_dir + "/" + callsign + ".csr");
+  Async::SslCertSigningReq csr;
+  if (!csr.readPemFile(csr_path))
+  {
+    csr.set(nullptr);
+  }
+
+  if (!csr.isNull() && (req.publicKey() != csr.publicKey()))
+  {
+    std::cerr << "*** WARNING: The received CSR with callsign '"
+              << callsign << "' has a different public key "
+                 "than the current CSR. That may be a sign of someone "
+                 "trying to highjack a callsign or the owner of the "
+                 "callsign has generated a new private/public key pair."
+              << std::endl;
+    return nullptr;
+  }
+
+  std::string crtfile(m_certs_dir + "/" + callsign + ".crt");
+  Async::SslX509 cert;
+  if (!cert.readPemFile(crtfile) || !cert.verify(m_issue_ca_pkey) ||
+      !cert.timeIsWithinRange() || (cert.publicKey() != req.publicKey()))
+  {
+    cert.set(nullptr);
+  }
+
+  std::string pending_csr_path(m_pending_csrs_dir + "/" + callsign + ".csr");
+  Async::SslCertSigningReq pending_csr;
+  if (!pending_csr.readPemFile(pending_csr_path))
+  {
+    pending_csr.set(nullptr);
+  }
+
+  if ((
+        csr.isNull() ||
+        (req.digest() != csr.digest()) ||
+        cert.isNull()
+      ) && (
+        !pending_csr.readPemFile(pending_csr_path) ||
+        (req.digest() != pending_csr.digest())
+      ))
+  {
+    std::cout << callsign << ": Add pending CSR '" << pending_csr_path
+              << "' to CA" << std::endl;
+    if (!req.writePemFile(pending_csr_path))
+    {
+      std::cerr << "*** WARNING: Could not write CSR file '"
+                << pending_csr_path << "'" << std::endl;
+    }
+  }
+  else
+  {
+    std::cout << callsign << ": The new CSR is the same as the already "
+              << "existing CSR, so ignoring the new one" << std::endl;
+  }
+
+  return cert;
+} /* Reflector::onCsrReceived */
+
+
+bool Reflector::buildPath(const std::string& sec,    const std::string& tag,
+                          const std::string& defdir, std::string& defpath)
+{
+  bool isdir = (defpath.back() == '/');
+  std::string path(defpath);
+  if (!m_cfg->getValue(sec, tag, path) || path.empty())
+  {
+    path = defpath;
+  }
+  //std::cout << "### sec=" << sec << "  tag=" << tag << "  defdir=" << defdir << "  defpath=" << defpath << "  path=" << path << std::endl;
+  if ((path.front() != '/') && (path.front() != '.'))
+  {
+    path = defdir + "/" + defpath;
+  }
+  if (!ensureDirectoryExist(path))
+  {
+    return false;
+  }
+  if (isdir && (path.back() == '/'))
+  {
+    defpath = path.substr(0, path.size()-1);
+  }
+  else
+  {
+    defpath = std::move(path);
+  }
+  //std::cout << "### defpath=" << defpath << std::endl;
+  return true;
+} /* Reflector::buildPath */
+
+
+bool Reflector::removeClientCert(const std::string& cn)
+{
+  std::cout << "### Reflector::removeClientCert: cn=" << cn << std::endl;
+  return true;
+} /* Reflector::removeClientCert */
 
 
 /*

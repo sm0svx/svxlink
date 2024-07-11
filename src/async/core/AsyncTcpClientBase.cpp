@@ -228,6 +228,8 @@ void TcpClientBase::connect(void)
 {
   assert(isIdle() && con->isIdle());
 
+  //m_successful_connect = false;
+
   if (!dns.label().empty())
   {
     dns.lookup();

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,8 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncMsg.h>
-#include <gcrypt.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+#include <vector>
 
 
 /****************************************************************************
@@ -44,6 +45,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncMsg.h>
+#include <AsyncIpAddress.h>
+#include <AsyncDigest.h>
 
 
 /****************************************************************************
@@ -104,7 +108,9 @@ class ReflectorMsg : public Async::Msg
 {
   public:
     static const uint32_t MAX_PREAUTH_FRAME_SIZE = 64;
-    static const uint32_t MAX_POSTAUTH_FRAME_SIZE = 16384;
+    static const uint32_t MAX_PRE_SSL_SETUP_SIZE = 4096;
+    static const uint32_t MAX_POST_SSL_SETUP_SIZE = 16384;
+    static const uint32_t MAX_POSTAUTH_FRAME_SIZE = 32768;
 
     /**
      * @brief 	Constuctor
@@ -154,7 +160,7 @@ class ReflectorMsgBase : public ReflectorMsg
 /**
  * @brief   The base class for UDP network messages
  * @author  Tobias Blomberg / SM0SVX
- * @date    2017-02-12
+ * @date    2023-08-08
 
 This is the top most base class for UDP messages. It is typically used as
 the argument type for functions that take a UDP message as argument.
@@ -165,17 +171,66 @@ class ReflectorUdpMsg : public Async::Msg
     using ClientId = uint16_t;
 
     /**
+     * @brief   Default constuctor
+     */
+    ReflectorUdpMsg(void) : m_type(0) {}
+
+    /**
      * @brief 	Constuctor
      * @param 	type The message type
      * @param   client_id The client ID
+     * @param   seq Message sequence number
      */
-    ReflectorUdpMsg(uint16_t type=0, ClientId client_id=0, uint16_t seq=0)
-      : m_type(type), m_client_id(client_id), m_seq(seq) {}
+    ReflectorUdpMsg(uint16_t type) : m_type(type) {}
 
     /**
      * @brief 	Destructor
      */
     virtual ~ReflectorUdpMsg(void) {}
+
+    /**
+     * @brief 	Get the message type
+     * @return	Returns the message type
+     */
+    uint16_t type(void) const { return m_type; }
+
+    ASYNC_MSG_MEMBERS(m_type)
+
+  private:
+    uint16_t  m_type;
+};
+
+
+/**
+ * @brief   The header class for UDP network messages in protocol V2
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2017-02-12
+
+This is the header class for UDP messages in protocol version < 3.
+ */
+class ReflectorUdpMsgV2 : public Async::Msg
+{
+  public:
+    using ClientId = ReflectorUdpMsg::ClientId;
+
+    /**
+     * @brief   Default constuctor
+     */
+    ReflectorUdpMsgV2(void) : m_type(0), m_client_id(0), m_seq(0) {}
+
+    /**
+     * @brief 	Constuctor
+     * @param 	type The message type
+     * @param   client_id The client ID
+     * @param   seq Message sequence number
+     */
+    ReflectorUdpMsgV2(uint16_t type, ClientId client_id, uint16_t seq)
+      : m_type(type), m_client_id(client_id), m_seq(seq) {}
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~ReflectorUdpMsgV2(void) {}
 
     /**
      * @brief 	Get the message type
@@ -257,7 +312,7 @@ protocol.
 class MsgProtoVer : public ReflectorMsgBase<5>
 {
   public:
-    static const uint16_t MAJOR = 2;
+    static const uint16_t MAJOR = 3;
     static const uint16_t MINOR = 0;
     MsgProtoVer(void) : m_major(MAJOR), m_minor(MINOR) {}
     MsgProtoVer(uint16_t major, uint16_t minor)
@@ -312,17 +367,25 @@ random number. When received by the client, a MsgAuthResponse message is sent.
 class MsgAuthChallenge : public ReflectorMsgBase<10>
 {
   public:
-    static const size_t CHALLENGE_LEN  = 20;
-    MsgAuthChallenge(void) : m_challenge(CHALLENGE_LEN)
+    static const size_t LENGTH  = 20;
+    MsgAuthChallenge(void) : m_challenge(LENGTH)
     {
-      gcry_create_nonce(&m_challenge.front(), CHALLENGE_LEN);
+      int rc = RAND_bytes(&m_challenge.front(), LENGTH);
+      if (rc != 1)
+      {
+        unsigned long err = ERR_get_error();
+        std::cerr << "*** WARNING: Failed to generate challenge. "
+                     "RAND_bytes failed with error code " << err
+                  << std::endl;
+        m_challenge.clear();
+      }
     }
 
     const uint8_t *challenge(void) const
     {
-      if (m_challenge.size() != CHALLENGE_LEN)
+      if (m_challenge.size() != LENGTH)
       {
-        return 0;
+        return nullptr;
       }
       return &m_challenge[0];
     }
@@ -350,8 +413,7 @@ the network.
 class MsgAuthResponse : public ReflectorMsgBase<11>
 {
   public:
-    static const int      ALGO        = GCRY_MD_SHA1;
-    static const size_t   DIGEST_LEN  = 20;
+    static const size_t   DIGEST_LEN = 20;
     MsgAuthResponse(void) {}
 
     /**
@@ -362,11 +424,13 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
      */
     MsgAuthResponse(const std::string& callsign, const std::string &key,
                     const unsigned char *challenge)
-      : m_digest(DIGEST_LEN), m_callsign(callsign)
+      : m_callsign(callsign)
     {
-      if (!calcDigest(&m_digest.front(), key.c_str(), key.size(), challenge))
+      if (!calcHMAC(m_digest, key, challenge))
       {
-        exit(1);
+        std::cerr << "*** ERROR: Digest calculation failed in MsgAuthResponse"
+                  << std::endl;
+        abort();
       }
     }
 
@@ -392,10 +456,10 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
      */
     bool verify(const std::string &key, const unsigned char *challenge) const
     {
-      unsigned char digest[DIGEST_LEN];
-      bool ok = calcDigest(digest, key.c_str(), key.size(), challenge);
-      return ok && (m_digest.size() == DIGEST_LEN) &&
-             (memcmp(&m_digest.front(), digest, DIGEST_LEN) == 0);
+      Async::Digest::Signature digest;
+      bool ok = calcHMAC(digest, key, challenge);
+      return ok && (m_digest.size() == digest.size()) &&
+             Async::Digest::sigEqual(m_digest, digest);
     }
 
     ASYNC_MSG_MEMBERS(m_callsign, m_digest);
@@ -404,27 +468,21 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
     std::vector<uint8_t> m_digest;
     std::string          m_callsign;
 
-    bool calcDigest(unsigned char *digest, const char *key,
-                    int keylen, const unsigned char *challenge) const
+    bool calcHMAC(Async::Digest::Signature& hmac, const std::string& key,
+                  const unsigned char *challenge) const
     {
-      unsigned char *digest_ptr = 0;
-      gcry_md_hd_t hd = { 0 };
-      gcry_error_t err = gcry_md_open(&hd, ALGO, GCRY_MD_FLAG_HMAC);
-      if (err) goto error;
-      err = gcry_md_setkey(hd, key, keylen);
-      if (err) goto error;
-      gcry_md_write(hd, challenge, MsgAuthChallenge::CHALLENGE_LEN);
-      digest_ptr = gcry_md_read(hd, 0);
-      memcpy(digest, digest_ptr, DIGEST_LEN);
-      gcry_md_close(hd);
-      return true;
+        // Create the key object
+      Async::SslKeypair pkey;
+      bool ok = pkey.newRawPrivateKey(EVP_PKEY_HMAC, key);
 
-      error:
-        gcry_md_close(hd);
-        std::cerr << "*** ERROR: gcrypt error: "
-                  << gcry_strsource(err) << "/" << gcry_strerror(err)
-                  << std::endl;
-        return false;
+        // Initialize the digest signing with the hash algorithm and the key
+      Async::Digest dgst;
+      ok = ok && dgst.signInit("sha1", pkey);
+
+        // Process the challenge to produce the HMAC
+      ok = ok && dgst.sign(hmac, challenge, MsgAuthChallenge::LENGTH);
+
+      return ok;
     }
 }; /* MsgAuthResponse */
 
@@ -467,9 +525,185 @@ class MsgError : public ReflectorMsgBase<13>
 
 
 /**
+@brief   Request that the server start encryption
+@author  Tobias Blomberg / SM0SVX
+@date    2024-05-11
+
+This message is sent by the client to request the server to start enrypting
+the communications channel with SSL/TLS. Mutual authentication is required so
+that both server and client know that they are talking to the right peer.
+If the client does not send a certificate a fallback to password based
+authentication is done.
+*/
+class MsgStartEncryptionRequest : public ReflectorMsgBase<14>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgStartEncryptionRequest */
+
+
+/**
+@brief   Command the client to start encryption
+@author  Tobias Blomberg / SM0SVX
+@date    2020-08-01
+
+This message is sent by the server to command the client to start enrypting
+the communications channel with SSL/TLS. Mutual authentication is required so
+that both server and client know that they are talking to the right peer.
+If the client does not send a certificate a fallback to password based
+authentication is done.
+*/
+class MsgStartEncryption : public ReflectorMsgBase<15>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgStartEncryption */
+
+
+/**
+ * @brief   Command the client to send a CSR
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2024-05-11
+ *
+ * This message is sent by the server to command the client to send a
+ * Certificate Signing Request so that the server can provide a signed client
+ * certificate. The client is expected to send a MsgClientCsr message.
+ */
+class MsgClientCsrRequest : public ReflectorMsgBase<16>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgClientCsrRequest */
+
+
+/**
+ * @brief   Send a CSR to the server
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2024-05-11
+ *
+ * This message is used by the client to send a Certificate Signing Request to
+ * the server. It must be sent when the client receives a MsgClientCsrRequest.
+ * The client may also send a CSR, after the connection has been
+ * authenticated, whenever it find the need for it.
+ */
+class MsgClientCsr : public ReflectorMsgBase<17>
+{
+  public:
+    MsgClientCsr(const std::string& pem="") : m_pem(pem) {}
+    const std::string& csrPem(void) const { return m_pem; }
+
+    ASYNC_MSG_MEMBERS(m_pem)
+
+  private:
+    std::string m_pem;
+}; /* MsgClientCsr */
+
+
+/**
+ * @brief   Send a signed client certificate to the client
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2024-05-11
+ *
+ * This message is used by the server to send a signed client certificate to a
+ * client. This is done whenever the server has a valid client certificate
+ * stored for the client and the server determine that the client probably
+ * does not have the correct version of the certificate.
+ */
+class MsgClientCert : public ReflectorMsgBase<18>
+{
+  public:
+    MsgClientCert(const std::string& pem="") : m_pem(pem) {}
+    const std::string& certPem(void) const { return m_pem; }
+
+    ASYNC_MSG_MEMBERS(m_pem)
+
+  private:
+    std::string m_pem;
+}; /* MsgClientCert */
+
+
+/**
+ * @brief   Send information about the CA bundle
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2024-05-11
+ *
+ * This message is used by the server to send information about the CA bundle
+ * currently in use. The client can use this information to determine if a new
+ * CA bundle need to be downloaded.
+ */
+class MsgCAInfo : public ReflectorMsgBase<19>
+{
+  public:
+    MsgCAInfo(size_t size=0, const std::vector<uint8_t>& md={})
+      : m_size(size), m_md(md) {}
+    size_t pemSize(void) const { return m_size; }
+    const std::vector<uint8_t>& md(void) const { return m_md; }
+
+    ASYNC_MSG_MEMBERS(m_size, m_md)
+
+  private:
+    uint16_t              m_size;
+    std::vector<uint8_t>  m_md;
+}; /* MsgCAInfo */
+
+
+/**
+ * @brief   Request that the server send the current CA bundle
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2024-05-11
+ *
+ * This message is used by a client to request that the server send the CA
+ * bundle currently in use. It may only be sent as a reply to the MsgCAInfo
+ * message.
+ */
+class MsgCABundleRequest : public ReflectorMsgBase<20>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgCABundleRequest */
+
+
+/**
+ * @brief   Send the CA bundle currently in use to the client
+ * @author  Tobias Blomberg / SM0SVX
+ * @date    2024-05-11
+ *
+ * This message is used by the server to send the CA bundle currently in use
+ * to the client. In order for the client to have a way to determine if the CA
+ * bundle is valid, this message also contain a signature and the certificate
+ * chain used to sign the bundle. If the signing certificate can be verified
+ * against the old CA bundle, the client can be sure that the CA bundle is
+ * from the correct authority.
+ */
+class MsgCABundle : public ReflectorMsgBase<21>
+{
+  public:
+    static constexpr const char* MD_ALG = "sha256";
+    MsgCABundle(const std::string& ca_pem="",
+                const Async::Digest::Signature& sig={},
+                const std::string& cert_pem="")
+      : m_ca_pem(ca_pem), m_sig(sig), m_cert_pem(cert_pem) {}
+    const std::string& caPem(void) const { return m_ca_pem; }
+    const Async::Digest::Signature& signature(void) const { return m_sig; }
+    const std::string& certPem(void) const { return m_cert_pem; }
+
+    ASYNC_MSG_MEMBERS(m_ca_pem, m_sig, m_cert_pem)
+
+  private:
+    std::string               m_ca_pem;
+    Async::Digest::Signature  m_sig;
+    std::string               m_cert_pem;
+}; /* MsgCABundle */
+
+
+
+
+
+
+/**
 @brief	 Server information TCP network message
 @author  Tobias Blomberg / SM0SVX
-@date    2017-02-12
+@date    2023-07-24
 
 This message is sent by the server to the client to inform about server and
 connection properties.
@@ -479,12 +713,12 @@ class MsgServerInfo : public ReflectorMsgBase<100>
   public:
     using ClientId = ReflectorUdpMsg::ClientId;
 
-    MsgServerInfo(ClientId client_id=0,
-                  std::vector<std::string> codecs=std::vector<std::string>())
+    MsgServerInfo(void) {}
+    MsgServerInfo(ClientId client_id, std::vector<std::string> codecs)
       : m_client_id(client_id), m_codecs(codecs) {}
     ClientId clientId(void) const { return m_client_id; }
     std::vector<std::string>& nodes(void) { return m_nodes; }
-    std::vector<std::string>& codecs(void) { return m_codecs; }
+    const std::vector<std::string>& codecs(void) { return m_codecs; }
 
     ASYNC_MSG_MEMBERS(m_reserved, m_client_id, m_nodes, m_codecs)
 
@@ -965,7 +1199,7 @@ class MsgStateEvent : public ReflectorMsgBase<110>
 /**
 @brief   Client information
 @author  Tobias Blomberg / SM0SVX
-@date    2019-10-06
+@date    2023-07-24
 
 This message is sent by a client to inform the reflector server about various
 facts about the client. JSON is used so that information can be added without
@@ -974,7 +1208,45 @@ redefining the message type.
 class MsgNodeInfo : public ReflectorMsgBase<111>
 {
   public:
-    MsgNodeInfo(const std::string& json="")
+    MsgNodeInfo(void) {}
+    MsgNodeInfo(const std::vector<uint8_t>& udp_cipher_iv_rand,
+                const std::vector<uint8_t>& udp_cipher_key,
+                const std::string& json)
+      : m_udp_cipher_iv_rand(udp_cipher_iv_rand),
+        m_udp_cipher_key(udp_cipher_key), m_json(json) {}
+
+    const std::vector<uint8_t>& ivRand(void) const
+    {
+      return m_udp_cipher_iv_rand;
+    }
+    const std::vector<uint8_t>& udpCipherKey(void) const
+    {
+      return m_udp_cipher_key;
+    }
+    const std::string& json(void) const { return m_json; }
+
+    ASYNC_MSG_MEMBERS(m_udp_cipher_iv_rand, m_udp_cipher_key, m_json);
+
+  private:
+    std::vector<uint8_t>  m_udp_cipher_iv_rand;
+    std::vector<uint8_t>  m_udp_cipher_key;
+    std::string           m_json;
+}; /* MsgNodeInfo */
+
+
+/**
+@brief   Client information
+@author  Tobias Blomberg / SM0SVX
+@date    2019-10-06
+
+This message is sent by a client to inform the reflector server about various
+facts about the client. JSON is used so that information can be added without
+redefining the message type.
+*/
+class MsgNodeInfoV2 : public ReflectorMsgBase<111>
+{
+  public:
+    MsgNodeInfoV2(const std::string& json="")
       : m_json(json) {}
 
     const std::string& json(void) const { return m_json; }
@@ -983,7 +1255,7 @@ class MsgNodeInfo : public ReflectorMsgBase<111>
 
   private:
     std::string m_json;
-}; /* MsgNodeInfo */
+}; /* MsgNodeInfoV2 */
 
 
 /**
@@ -1111,6 +1383,21 @@ class MsgTxStatus : public ReflectorMsgBase<113>
 }; /* class MsgTxStatus */
 
 
+/**
+@brief   Start UDP Encryption
+@author  Tobias Blomberg / SM0SVX
+@date    2023-08-07
+
+This message is sent by the server to inform the client that it's ok to start
+UDP encryption.
+*/
+class MsgStartUdpEncryption : public ReflectorMsgBase<114>
+{
+  public:
+    ASYNC_MSG_NO_MEMBERS
+}; /* MsgStartUdpEncryption */
+
+
 /***************************** UDP Messages *****************************/
 
 /**
@@ -1202,6 +1489,101 @@ struct MsgUdpSignalStrengthValues
 {
   ASYNC_MSG_MEMBERS(m_rxs)
 }; /* MsgUdpSignalStrengthValues */
+
+
+/**
+@brief   A namespace for holding UDP ciphering information
+@author  Tobias Blomberg / SM0SVX
+@date    2023-08-03
+
+This namespace hold some constants, types and classes that are used when
+forming ciphered UDP datagrams.
+*/
+namespace UdpCipher
+{
+  using IVCntr    = uint32_t;
+  using ClientId  = ReflectorUdpMsg::ClientId;
+
+  static constexpr const char*  NAME      = "AES-128-GCM";
+  static constexpr const size_t AADLEN    = 4;
+  static constexpr const size_t TAGLEN    = 8;
+  static constexpr const size_t IVLEN     = 12;
+  static constexpr const size_t IVRANDLEN = IVLEN - sizeof(IVCntr) -
+                                            sizeof(ClientId);
+
+  struct AAD : public Async::Msg
+  {
+    AAD(void) {}
+    AAD(IVCntr cntr) : iv_cntr(cntr) {}
+    IVCntr iv_cntr = 0;
+    ASYNC_MSG_MEMBERS(iv_cntr)
+  };
+
+  struct InitialAAD : public AAD
+  {
+    InitialAAD(void) {}
+    InitialAAD(ClientId id) : AAD(0), client_id(id) {}
+    ClientId  client_id = 0;
+    ASYNC_MSG_DERIVED_FROM(AAD)
+    ASYNC_MSG_MEMBERS(client_id)
+  };
+
+  class IV : public Async::Msg
+  {
+    public:
+      IV(void) {}
+      IV(const std::vector<uint8_t>& rand, ClientId client_id, IVCntr cntr)
+        : m_client_id(client_id), m_cntr(cntr)
+      {
+        for (size_t i=0; i<sizeof(m_rand); ++i)
+        {
+          m_rand[i] = (i < rand.size()) ? rand[i] : 0;
+        }
+      }
+
+      operator std::vector<uint8_t>(void) const
+      {
+        std::vector<uint8_t> iv;
+        iv.reserve(IVLEN);
+        push_ostreambuf<decltype(iv)> posbuf(iv);
+        std::ostream pos(&posbuf);
+        pack(pos);
+        return iv;
+      }
+
+      ASYNC_MSG_MEMBERS(m_rand, m_client_id, m_cntr)
+
+    private:
+      template <typename Container>
+      struct push_ostreambuf : public std::streambuf
+      {
+          push_ostreambuf(Container& ctr) : m_ctr(ctr) {}
+
+        protected:
+          std::streamsize xsputn(const char_type* s, std::streamsize n) override
+          {
+            for (std::streamsize i=0; i<n; ++i)
+            {
+              m_ctr.push_back(s[i]);
+            }
+            return n;
+          }
+
+          int_type overflow(int_type ch) override
+          {
+            m_ctr.push_back(ch);
+            return 1;
+          }
+
+        private:
+          Container& m_ctr;
+      };
+
+      uint8_t   m_rand[IVRANDLEN] = {0};
+      ClientId  m_client_id       = 0;
+      IVCntr    m_cntr            = 0;
+  }; /* IV */
+}; /* namespace UdpCipher */
 
 
 #if 0

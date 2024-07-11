@@ -1,5 +1,5 @@
 /**
-@file   MyNamespaceTemplate.h
+@file   MyNamespaceTemplate.cpp
 @brief  A_brief_description_for_this_file
 @author Tobias Blomberg / SM0SVX
 @date   2024-
@@ -26,14 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example MyNamespaceTemplate_demo.cpp
-An example of how to use the MyNamespace::Template class
-*/
-
-#ifndef TEMPLATE_INCLUDED
-#define TEMPLATE_INCLUDED
-
-
 /****************************************************************************
  *
  * System Includes
@@ -56,32 +48,16 @@ An example of how to use the MyNamespace::Template class
  *
  ****************************************************************************/
 
+#include "MyNamespaceTemplate.h"
 
 
 /****************************************************************************
  *
- * Forward declarations
+ * Namespaces to use
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-namespace MyNamespace
-{
-
-
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+using namespace MyNamespace;
 
 
 /****************************************************************************
@@ -94,7 +70,7 @@ namespace MyNamespace
 
 /****************************************************************************
  *
- * Exported Global Variables
+ * Static class variables
  *
  ****************************************************************************/
 
@@ -102,58 +78,56 @@ namespace MyNamespace
 
 /****************************************************************************
  *
- * Class definitions
+ * Local class definitions
  *
  ****************************************************************************/
 
-/**
-@brief  A_brief_class_description
-@author Tobias Blomberg / SM0SVX
-@date   2024-
+namespace {
 
-A_detailed_class_description
 
-\include MyNamespaceTemplate_demo.cpp
-*/
-class Template
+/****************************************************************************
+ *
+ * Local functions
+ *
+ ****************************************************************************/
+
+
+
+}; /* End of anonymous namespace */
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+Template::Template(void)
 {
-  public:
-    /**
-     * @brief   Default constructor
-     */
-    Template(void);
 
-    /**
-     * @brief   Disallow copy construction
-     */
-    Template(const Template&) = delete;
-
-    /**
-     * @brief   Disallow copy assignment
-     */
-    Template& operator=(const Template&) = delete;
-
-    /**
-     * @brief   Destructor
-     */
-    ~Template(void);
-
-    /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
-     */
-
-  protected:
-
-  private:
-
-};  /* class Template */
+} /* Template::Template */
 
 
-} /* namespace MyNamespace */
+Template::~Template(void)
+{
 
-#endif /* TEMPLATE_INCLUDED */
+} /* Template::~Template */
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
 
 /*
  * This file has not been truncated

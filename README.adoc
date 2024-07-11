@@ -26,6 +26,7 @@ either C++ or TCL. Examples of modules are:
 * *SelCall*            -- Send selective calling sequences by entering DTMF codes
 * *MetarInformation*   -- Play airport weather information
 * *Frn*                -- Connect to Free Radio Network (FRN) servers
+* *Trx*                -- Remote control tranceivers using DTMF
 
 == Qtel ==
 Qtel, the Qt EchoLink client, is a graphical application used to access the
@@ -39,9 +40,8 @@ These are some of the resources connected to SvxLink:
 :gh_issues:   https://github.com/sm0svx/svxlink/issues
 :gh_releases: https://github.com/sm0svx/svxlink/releases
 :gh_sndclips: https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases
-:sf_lists:    http://sourceforge.net/p/svxlink/mailman
 :gh_main:     https://github.com/sm0svx/svxlink
-:sf_summary:  https://sourceforge.net/projects/svxlink
+:gi_svxlink:  https://groups.io/g/svxlink
 
 * {gh_pages}[Project Home Page] -- The main project page
 * {gh_wiki}[Wiki Pages] -- Main documentation
@@ -49,6 +49,5 @@ These are some of the resources connected to SvxLink:
 * {gh_releases}[Download Releases] -- Download source code releases here
 * {gh_sndclips}[Download Sound Clips] -- Download English sound clip files for
   SvxLink Server from here
-* {sf_lists}[Mailing Lists] -- Communicate with other SvxLink users
 * {gh_main}[GitHub Main Page] -- The project site on GitHub
-* {sf_summary}[The SvxLink SourcForge Site] -- Old project site
+* {gi_svxlink}[Groups.io SvxLink] -- Communicate with other SvxLink users

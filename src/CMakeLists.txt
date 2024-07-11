@@ -161,6 +161,11 @@ if(NOT DEFINED SVX_SPOOL_INSTALL_DIR)
   set(SVX_SPOOL_INSTALL_DIR ${LOCAL_STATE_DIR}/spool/svxlink)
 endif(NOT DEFINED SVX_SPOOL_INSTALL_DIR)
 
+# Where to put SvxLink variable files
+if(NOT DEFINED SVX_LOCAL_STATE_DIR)
+  set(SVX_LOCAL_STATE_DIR ${LOCAL_STATE_DIR}/lib/svxlink)
+endif(NOT DEFINED SVX_LOCAL_STATE_DIR)
+
 # Where to install SvxLink architecture independent files
 if(NOT DEFINED SVX_SHARE_INSTALL_DIR)
   set(SVX_SHARE_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/svxlink)

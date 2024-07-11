@@ -360,20 +360,19 @@ int main(int argc, const char *argv[])
   }
   string main_cfg_filename(cfg_filename);
 
+  std::string main_cfg_dir = ".";
+  auto slash_pos = main_cfg_filename.rfind('/');
+  if (slash_pos != std::string::npos)
+  {
+    main_cfg_dir = main_cfg_filename.substr(0, slash_pos);
+  }
+
   string cfg_dir;
   if (cfg.getValue("GLOBAL", "CFG_DIR", cfg_dir))
   {
     if (cfg_dir[0] != '/')
     {
-      int slash_pos = main_cfg_filename.rfind('/');
-      if (slash_pos != -1)
-      {
-        cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
-      }
-      else
-      {
-        cfg_dir = string("./") + cfg_dir;
-      }
+      cfg_dir = main_cfg_dir + "/" + cfg_dir;
     }
 
     DIR *dir = opendir(cfg_dir.c_str());
@@ -410,6 +409,13 @@ int main(int argc, const char *argv[])
   }
 
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
+
+  //std::string pki_dir;
+  //if (!cfg.getValue("GLOBAL", "CERT_PKI_DIR", pki_dir))
+  //{
+  //  pki_dir = main_cfg_dir + "/pki";
+  //  cfg.setValue("GLOBAL", "CERT_PKI_DIR", pki_dir);
+  //}
 
   cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
           " Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX\n\n";

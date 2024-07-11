@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <json/json.h>
+#include <sigc++/sigc++.h>
 #include <random>
 
 
@@ -47,7 +48,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncFramedTcpConnection.h>
 #include <AsyncTimer.h>
+#include <AsyncAtTimer.h>
 #include <AsyncConfig.h>
+#include <AsyncSslCertSigningReq.h>
+#include <AsyncSslX509.h>
 
 
 /****************************************************************************
@@ -112,11 +116,18 @@ class ReflectorClient
 {
   public:
     using ClientId = ReflectorUdpMsg::ClientId;
+    using ClientSrc = std::pair<Async::IpAddress, uint16_t>;
 
     typedef enum
     {
-      STATE_DISCONNECTED, STATE_EXPECT_PROTO_VER, STATE_EXPECT_AUTH_RESPONSE,
-      STATE_CONNECTED, STATE_EXPECT_DISCONNECT
+      STATE_EXPECT_DISCONNECT,
+      STATE_DISCONNECTED,
+      STATE_EXPECT_PROTO_VER,
+      STATE_EXPECT_START_ENCRYPTION,
+      STATE_EXPECT_SSL_CON_READY,
+      STATE_EXPECT_CSR,
+      STATE_EXPECT_AUTH_RESPONSE,
+      STATE_CONNECTED
     } ConState;
 
     struct Rx
@@ -175,6 +186,18 @@ class ReflectorClient
         }
       private:
         ProtoVerRange m_pv_range;
+    };
+
+    class ProtoVerLargerOrEqualFilter : public Filter
+    {
+      public:
+        ProtoVerLargerOrEqualFilter(const ProtoVer& min) : m_pv(min) {}
+        virtual bool operator ()(ReflectorClient *client) const
+        {
+          return (client->protoVer() >= m_pv);
+        }
+      private:
+        ProtoVer m_pv;
     };
 
     class TgFilter : public Filter
@@ -243,7 +266,21 @@ class ReflectorClient
      * @param   id The id of the client object to find
      * @return  Return the client object associated with the given id
      */
-    static ReflectorClient* lookup(ClientId id);
+    static ReflectorClient* lookup(const ClientId& id);
+
+    /**
+     * @brief   Get the client object associated with the given source addr
+     * @param   src The source address of the client object to find
+     * @return  Return the client object associated with the given source addr
+     */
+    static ReflectorClient* lookup(const ClientSrc& src);
+
+    /**
+     * @brief   Get the client object associated with the given callsign
+     * @param   cs The callsign of the client object to find
+     * @return  Return the client object associated with the given callsign
+     */
+    static ReflectorClient* lookup(const std::string& cs);
 
     /**
      * @brief   Remove all client objects
@@ -275,12 +312,35 @@ class ReflectorClient
     ClientId clientId(void) const { return m_client_id; }
 
     /**
+     * @brief   Get the local IP address associated with this connection
+     * @return  Returns an IP address
+     */
+    Async::IpAddress localHost(void) const
+    {
+      return m_con->localHost();
+    }
+
+    /**
+     * @brief   Get the local TCP port associated with this connection
+     * @return  Returns a port number
+     */
+    uint16_t localPort(void) const
+    {
+      return m_con->localPort();
+    }
+
+    /**
      * @brief   Return the remote IP address
      * @return  Returns the IP address of the client
      */
     const Async::IpAddress& remoteHost(void) const
     {
       return m_con->remoteHost();
+    }
+
+    uint16_t remotePort(void) const
+    {
+      return m_con->remotePort();
     }
 
     /**
@@ -297,7 +357,7 @@ class ReflectorClient
      * client so that UDP packets can be send to the client and check that
      * incoming packets originate from the correct port.
      */
-    void setRemoteUdpPort(uint16_t port) { m_remote_udp_port = port; }
+    void setRemoteUdpPort(uint16_t port);
 
     /**
      * @brief   Get the callsign for this connection
@@ -315,7 +375,12 @@ class ReflectorClient
      * used by the receiver to find out if a packet is out of order or if a
      * packet has been lost in transit.
      */
-    uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
+    //uint16_t nextUdpTxSeq(void) { return m_next_udp_tx_seq++; }
+
+    /**
+     * @brief   Set the UDP RX sequence number
+     */
+    void setUdpRxSeq(UdpCipher::IVCntr seq) { m_next_udp_rx_seq = seq; }
 
     /**
      * @brief   Get the next expected UDP packet sequence number
@@ -324,7 +389,7 @@ class ReflectorClient
      * This function will return the next expected UDP sequence number, which
      * is simply the previously received sequence number plus one.
      */
-    uint16_t nextUdpRxSeq(void) { return m_next_udp_rx_seq; }
+    UdpCipher::IVCntr nextUdpRxSeq(void) { return m_next_udp_rx_seq; }
 
     /**
      * @brief   Send a TCP message to the remote end
@@ -426,9 +491,33 @@ class ReflectorClient
 
     const Json::Value& nodeInfo(void) const { return m_node_info; }
 
+    uint32_t udpCipherIVCntrNext() { return m_udp_cipher_iv_cntr++; }
+    std::vector<uint8_t> udpCipherIV(void) const;
+
+    void setUdpCipherIVRand(const std::vector<uint8_t>& iv_rand)
+    {
+      m_udp_cipher_iv_rand = iv_rand;
+    }
+    std::vector<uint8_t> udpCipherIVRand(void) const
+    {
+      return m_udp_cipher_iv_rand;
+    }
+
+    void setUdpCipherKey(const std::vector<uint8_t>& key)
+    {
+      m_udp_cipher_key = key;
+    }
+    std::vector<uint8_t> udpCipherKey(void) const { return m_udp_cipher_key; }
+
+    void certificateUpdated(Async::SslX509& cert);
+
+    sigc::signal<Async::SslX509, Async::SslCertSigningReq&> csrReceived;
+
   private:
     using ClientIdRandomDist  = std::uniform_int_distribution<ClientId>;
     using ClientMap           = std::map<ClientId, ReflectorClient*>;
+    using ClientSrcMap        = std::map<ClientSrc, ReflectorClient*>;
+    using ClientCallsignMap   = std::map<std::string, ReflectorClient*>;
 
     static const uint16_t MIN_MAJOR_VER = 0;
     static const uint16_t MIN_MINOR_VER = 6;
@@ -439,21 +528,25 @@ class ReflectorClient
     static const unsigned UDP_HEARTBEAT_RX_CNT_RESET  = 120;
 
     static const ClientId CLIENT_ID_MAX = std::numeric_limits<ClientId>::max();
+    static const ClientId CLIENT_ID_MIN = 1;
 
     static ClientMap            client_map;
+    static ClientSrcMap         client_src_map;
+    static ClientCallsignMap    client_callsign_map;
     static std::mt19937         id_gen;
     static ClientIdRandomDist   id_dist;
 
     Async::FramedTcpConnection* m_con;
-    unsigned char               m_auth_challenge[MsgAuthChallenge::CHALLENGE_LEN];
+    unsigned char               m_auth_challenge[MsgAuthChallenge::LENGTH];
     ConState                    m_con_state;
     Async::Timer                m_disc_timer;
     std::string                 m_callsign;
     ClientId                    m_client_id;
+    ClientSrc                   m_client_src;
     uint16_t                    m_remote_udp_port;
     Async::Config*              m_cfg;
-    uint16_t                    m_next_udp_tx_seq;
-    uint16_t                    m_next_udp_rx_seq;
+    //uint16_t                    m_next_udp_tx_seq;
+    UdpCipher::IVCntr           m_next_udp_rx_seq;
     Async::Timer                m_heartbeat_timer;
     unsigned                    m_heartbeat_tx_cnt;
     unsigned                    m_heartbeat_rx_cnt;
@@ -469,15 +562,24 @@ class ReflectorClient
     RxMap                       m_rx_map;
     TxMap                       m_tx_map;
     Json::Value                 m_node_info;
+    std::vector<uint8_t>        m_udp_cipher_iv_rand;
+    std::vector<uint8_t>        m_udp_cipher_key;
+    UdpCipher::IVCntr           m_udp_cipher_iv_cntr;
+    Async::AtTimer              m_renew_cert_timer;
 
-    static ClientId newClient(ReflectorClient* client);
+    static ClientId newClientId(ReflectorClient* client);
+    static ClientSrc newClientSrc(ReflectorClient* client);
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
+    void onSslConnectionReady(Async::TcpConnection *con);
     void onFrameReceived(Async::FramedTcpConnection *con,
                          std::vector<uint8_t>& data);
     void handleMsgProtoVer(std::istream& is);
+    void handleMsgCABundleRequest(std::istream& is);
+    void handleMsgStartEncryptionRequest(std::istream& is);
     void handleMsgAuthResponse(std::istream& is);
+    void handleMsgClientCsr(std::istream& is);
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
     void handleNodeInfo(std::istream& is);
@@ -491,6 +593,10 @@ class ReflectorClient
     void disconnect(void);
     void handleHeartbeat(Async::Timer *t);
     std::string lookupUserKey(const std::string& callsign);
+    void connectionAuthenticated(const std::string& callsign);
+    bool sendClientCert(const Async::SslX509& cert);
+    void sendAuthChallenge(void);
+    void renewClientCertificate(void);
 
 };  /* class ReflectorClient */
 

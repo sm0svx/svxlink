@@ -158,6 +158,16 @@ class TcpPrioClientBase::Machine
       m.state().disconnectEvent();
     }
 
+    void markAsEstablished(void)
+    {
+      ctx.marked_as_established = true;
+    }
+
+    bool markedAsEstablished(void) const
+    {
+      return ctx.marked_as_established;
+    }
+
     bool isIdle(void) const
     {
       return m.isActive<StateDisconnected>();
@@ -231,6 +241,7 @@ class TcpPrioClientBase::Machine
       DnsSRVList                      rrs;
       DnsSRVList::iterator            next_rr                 = rrs.end();
       BackoffTime                     connect_retry_wait;
+      bool                            marked_as_established   = false;
 
       Context(TcpPrioClientBase *client)
         : client(client), bg_con(client->newTcpClient()) {}
@@ -333,7 +344,7 @@ class TcpPrioClientBase::Machine
       static constexpr auto NAME = "Connecting";
       void entry(void) noexcept
       {
-        ctx().connect_retry_wait.reset();
+        //ctx().connect_retry_wait.reset();
       }
     }; /* StateConnecting */
 
@@ -367,6 +378,7 @@ class TcpPrioClientBase::Machine
 #endif
         if (!ctx().rrs.empty())
         {
+          ctx().next_rr = ctx().rrs.end();
           setState<StateConnectingTryConnect>();
         }
         else
@@ -384,12 +396,7 @@ class TcpPrioClientBase::Machine
 
       void entry(void) noexcept
       {
-        auto& next_rr = ctx().next_rr = ctx().rrs.begin();
-#ifdef ASYNC_STATE_MACHINE_DEBUG
-        std::cout << "### Connecting to " << (*ctx().next_rr)->target()
-                  << ":" << (*ctx().next_rr)->port() << std::endl;
-#endif
-        ctx().connect((*next_rr)->target(), (*next_rr)->port());
+        connectToNext();
       }
 
       virtual void connectedEvent(void) noexcept override
@@ -401,18 +408,33 @@ class TcpPrioClientBase::Machine
       virtual void disconnectedEvent(void) noexcept override
       {
         DEBUG_EVENT;
-        auto& next_rr = ++ctx().next_rr;
-        if (next_rr == ctx().rrs.end())
-        {
-          setState<StateConnectingIdle>();
-          return;
-        }
-#ifdef ASYNC_STATE_MACHINE_DEBUG
-        std::cout << "### Connecting to " << (*ctx().next_rr)->target()
-                  << ":" << (*ctx().next_rr)->port() << std::endl;
-#endif
-        ctx().connect((*next_rr)->target(), (*next_rr)->port());
+        connectToNext();
       }
+
+      private:
+        void connectToNext(void)
+        {
+          auto& next_rr = ctx().next_rr;
+          if (next_rr == ctx().rrs.end())
+          {
+            next_rr = ctx().rrs.begin();
+          }
+          else if (!ctx().marked_as_established)
+          {
+            next_rr = std::next(next_rr);
+          }
+          if (next_rr == ctx().rrs.end())
+          {
+            setState<StateConnectingIdle>();
+            return;
+          }
+#ifdef ASYNC_STATE_MACHINE_DEBUG
+          std::cout << "### Connecting to " << (*next_rr)->target()
+                    << ":" << (*next_rr)->port() << std::endl;
+#endif
+          ctx().marked_as_established = false;
+          ctx().connect((*next_rr)->target(), (*next_rr)->port());
+        }
     }; /* StateConnectingTryConnect */
 
 
@@ -423,6 +445,10 @@ class TcpPrioClientBase::Machine
 
       void entry(void) noexcept
       {
+        if (ctx().marked_as_established)
+        {
+          ctx().connect_retry_wait.reset();
+        }
         setTimeout(ctx().connect_retry_wait);
       }
 
@@ -465,7 +491,14 @@ class TcpPrioClientBase::Machine
       virtual void disconnectedEvent(void) noexcept override
       {
         DEBUG_EVENT;
-        setState<StateConnectingIdle>();
+        if (ctx().marked_as_established)
+        {
+          setState<StateConnectingIdle>();
+        }
+        else
+        {
+          setState<StateConnectingTryConnect>();
+        }
       }
     }; /* StateConnected */
 
@@ -570,6 +603,8 @@ class TcpPrioClientBase::Machine
         std::cout << "### Connecting to " << (*ctx().next_rr)->target()
                   << ":" << (*ctx().next_rr)->port() << std::endl;
 #endif
+        ctx().bg_con->conObj()->setRecvBufLen(
+            ctx().client->conObj()->recvBufLen());
         ctx().bg_con->connect((*ctx().next_rr)->target(),
                               (*ctx().next_rr)->port());
       }
@@ -587,8 +622,10 @@ class TcpPrioClientBase::Machine
           ctx().closeConnection();
           ctx().emitDisconnected(TcpConnection::DR_SWITCH_PEER);
         }
+        auto ssl_ctx = ctx().client->conObj()->sslContext();
         *reinterpret_cast<TcpClientBase*>(ctx().client) =
             std::move(*ctx().bg_con);
+        ctx().client->conObj()->setSslContext(*ssl_ctx, false);
         Application::app().runTask(sigc::bind(
               [](Context& ctx)
               {
@@ -715,6 +752,7 @@ const std::string& TcpPrioClientBase::service(void) const
 
 void TcpPrioClientBase::connect(void)
 {
+  //m_successful_connect = false;
   m_machine->connect();
 } /* TcpPrioClientBase::connect */
 
@@ -723,6 +761,19 @@ void TcpPrioClientBase::disconnect(void)
 {
   m_machine->disconnect();
 } /* TcpPrioClientBase::disconnect */
+
+
+void TcpPrioClientBase::markAsEstablished(void)
+{
+  //std::cout << "### TcpPrioClientBase::markAsEstablished" << std::endl;
+  m_machine->markAsEstablished();
+} /* TcpPrioClientBase::markAsEstablished */
+
+
+bool TcpPrioClientBase::markedAsEstablished(void) const
+{
+  return m_machine->markedAsEstablished();
+} /* TcpPrioClientBase::markedAsEstablished */
 
 
 bool TcpPrioClientBase::isIdle(void) const

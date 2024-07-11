@@ -203,6 +203,11 @@ class TcpClient : public ConT, public TcpClientBase
       return TcpClientBase::isIdle() && ConT::isIdle();
     }
 
+    void setSslContext(SslContext& ctx)
+    {
+      ConT::setSslContext(ctx, false);
+    }
+
   protected:
     /**
      * @brief   Disconnect from the remote peer

@@ -5,6 +5,28 @@
   Contribution from DL1HRC/Adi, following an idea from DJ1JAY/Jens to change
   some SvxReflector parameters at runtime.
 
+* The reflector connection is now authenticated using X.509 certificates. Both
+  the server and the client requires authentication. The AUTH_KEY
+  authentication method that were previously used is deprecated. The
+  certificate generation process is mostly automated. The contents of the
+  certificate can be customized using the configuration variables with name
+  prefix CERT_. Default values are good in most cases. CERT_EMAIL may be good
+  to specify so that the SvxLink node owner can be contacted. Ask the
+  reflector sysop what the convention is.
+  Both the TCP and UDP connections are encrypted. The default is to use
+  the AES128 cipher in GCM mode.
+  The reflector server need to be updated to use this version of SvxLink on a
+  reflector client. If the server is older and only support the version 2
+  protocol, you must use TYPE=ReflectorV2 in the ReflectorLogic config.
+  All PKI (Public Key Infrastructure) files will be stored in the directory
+  given by the CERT_PKI_DIR configuration variable. The path defaults to
+  something like /var/lib/svxlink/pki but the exact default path depend on
+  build configuration. In any case, that path need to be created and made
+  writable for SvxLink. That should be done automatically by "make install".
+  Building SvxLink also require a new dependency on OpenSSL so the development
+  package for that library need to be installed (e.g. install package
+  libssl-dev if on a Debian based distro).
+
 
 
  1.8.0 -- 25 Feb 2024

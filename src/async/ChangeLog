@@ -1,7 +1,9 @@
- 1.7.1 -- ?? ??? ????
+ 1.8.0 -- ?? ??? ????
 ----------------------
 
 * Code cleanup of Async::Pty, fixing a small memory leak.
+
+* TLS connection support added. Build require OpenSSL development files.
 
 
 

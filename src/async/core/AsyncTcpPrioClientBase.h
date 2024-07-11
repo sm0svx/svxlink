@@ -260,6 +260,26 @@ class TcpPrioClientBase : public TcpClientBase
     virtual void disconnect(void);
 
     /**
+     * @brief   Mark connection as established
+     *
+     * The application must use this function to mark a connection as
+     * established when the application layer deem the connection as
+     * successful. It is up to the application to decide this, e.g. after the
+     * connection has been authenticated.
+     * If a connection has not been marked as established when a disconnection
+     * occurs, a new connection will be tried again after the exponential
+     * backoff timer has expired.
+     * On the other hand, if the connection has been marked as established, a
+     * reconnect will be retried after the minimal reconnect delay.
+     */
+    void markAsEstablished(void);
+
+    /**
+     * @brief   Check if a connection has been marked as established
+     */
+    bool markedAsEstablished(void) const;
+
+    /**
      * @brief   Check if the connection is idle
      * @return  Returns \em true if the connection is idle
      *
@@ -267,8 +287,14 @@ class TcpPrioClientBase : public TcpClientBase
      */
     bool isIdle(void) const;
 
+    /**
+     * @brief   Check if connected to the primary server
+     */
     bool isPrimary(void) const;
 
+    /**
+     * @brief   Inherit the assignment operator from TcpClientBase
+     */
     using TcpClientBase::operator=;
 
   protected:
@@ -282,6 +308,19 @@ class TcpPrioClientBase : public TcpClientBase
      * inheriting class.
      */
     void initialize(void);
+
+    /**
+     * @brief   Check if the connection has been fully connected
+     * @return  Return \em true if the connection was successful
+     *
+     * This function return true when the connection has been fully
+     * established. It will continue to return true even after disconnection
+     * and will be reset at the moment when a new connection attempt is made.
+     */
+    //virtual bool successfulConnect(void) override
+    //{
+    //  return m_successful_connect && TcpClientBase::successfulConnect();
+    //}
 
     /**
      * @brief   Called when the connection has been established to the server
@@ -319,7 +358,8 @@ class TcpPrioClientBase : public TcpClientBase
 
   private:
     class Machine;
-    Machine*  m_machine = nullptr;
+    Machine*  m_machine             = nullptr;
+    //bool      m_successful_connect  = false;
 
 };  /* class TcpPrioClientBase */
 
