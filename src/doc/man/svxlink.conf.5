@@ -836,6 +836,11 @@ certificates that is used to verify the authenticity of the reflector server.
 
 Example: CERT_CAFILE=/var/lib/svxlink/pki/ca-bundle.pem
 .TP
+.B CERT_DOWNLOAD_CA_BUNDLE
+The CA bundle is by default downloaded from the reflector server if it's
+missing or need to be updated. Set this configuration variable to 0 to disable
+that behaviour. That should be done if you want to provide your own CA bundle.
+.TP
 .B CERT_SUBJ_GN, CERT_SUBJ_givenName
 The name of the person, with which s/he is normally called, owning the
 SvxLink node.

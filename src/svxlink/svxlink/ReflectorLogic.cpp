@@ -457,16 +457,26 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
               << m_crtfile << "'." << std::endl;
   }
 
+  cfg().getValue(name(), "CERT_DOWNLOAD_CA_BUNDLE", m_download_ca_bundle);
   if (!cfg().getValue(name(), "CERT_CAFILE", m_cafile))
   {
     m_cafile = m_pki_dir + "/ca-bundle.crt";
   }
   if (!m_ssl_ctx.setCaCertificateFile(m_cafile))
   {
-    std::cerr << "*** WARNING[" << name() << "]: Failed to read CA file '"
-              << m_cafile << "'. Will try to retrieve it from the server."
-              << std::endl;
-    //return false;
+    if (m_download_ca_bundle)
+    {
+      std::cerr << "*** WARNING[" << name() << "]: Failed to read CA file '"
+                << m_cafile << "'. Will try to retrieve it from the server."
+                << std::endl;
+    }
+    else
+    {
+      std::cerr << "*** ERROR[" << name() << "]: Failed to read CA file '"
+                << m_cafile << "' and CERT_DOWNLOAD_CA_BUNDLE is false."
+                << std::endl;
+      return false;
+    }
   }
 
   string event_handler_str;
@@ -1332,28 +1342,32 @@ void ReflectorLogic::handleMsgCAInfo(std::istream& is)
   //std::cout << "### Message digest size: " << msg.md().size() << std::endl;
   //hexdump(msg.md());
 
-  std::ifstream ca_ifs(m_cafile);
-  bool request_ca_bundle = !ca_ifs.good();
-  if (ca_ifs.good())
+  bool request_ca_bundle = false;
+  if (m_download_ca_bundle)
   {
-    std::string ca_pem(std::istreambuf_iterator<char>{ca_ifs}, {});
-    auto ca_md = Async::Digest().md("sha256", ca_pem);
-    request_ca_bundle = (ca_md != msg.md());
-    if (request_ca_bundle)
+    std::ifstream ca_ifs(m_cafile);
+    request_ca_bundle = !ca_ifs.good();
+    if (ca_ifs.good())
     {
-      std::cout << "### Local CA PEM\n" << ca_pem << std::endl;
-      std::cout << "SHA256 Digest\n";
-      hexdump(ca_md);
+      std::string ca_pem(std::istreambuf_iterator<char>{ca_ifs}, {});
+      auto ca_md = Async::Digest().md("sha256", ca_pem);
+      request_ca_bundle = (ca_md != msg.md());
+      if (request_ca_bundle)
+      {
+        //std::cout << "### Local CA PEM\n" << ca_pem << std::endl;
+        //std::cout << "SHA256 Digest\n";
+        //hexdump(ca_md);
 
-        // FIXME: Don't overwrite CA bundle if we have one already. To do
-        //        that we need to implement verification of the new bundle.
-      std::cout << "*** WARNING[" << name()
-                << "]: You need to update your CA bundle to the latest "
-                   "version. Contact the reflector sysop."  << std::endl;
-      request_ca_bundle = false;
+          // FIXME: Don't overwrite CA bundle if we have one already. To do
+          //        that we need to implement verification of the new bundle.
+        std::cout << "*** WARNING[" << name()
+                  << "]: You need to update your CA bundle to the latest "
+                     "version. Contact the reflector sysop."  << std::endl;
+        request_ca_bundle = false;
+      }
     }
+    ca_ifs.close();
   }
-  ca_ifs.close();
   if (request_ca_bundle)
   {
     //std::cout << "### Requesting CA Bundle" << std::endl;
@@ -1368,24 +1382,12 @@ void ReflectorLogic::handleMsgCAInfo(std::istream& is)
     sendMsg(MsgStartEncryptionRequest());
     m_con_state = STATE_EXPECT_START_ENCRYPTION;
   }
-  // FIXME: Handle CA bundle download
-
-  //if (m_ssl_ctx.caCertificateFileIsSet())
-  //{
-  //  sendMsg(MsgStartEncryption(false));
-  //  //m_con.enableSsl(true);
-  //  //m_con_state = STATE_EXPECT_SSL_CON_READY;
-  //  m_con_state = STATE_EXPECT_CA_BUNDLE;
-  //}
-  //else
-  //{
-  //}
 } /* ReflectorLogic::handleMsgCAInfo */
 
 
 void ReflectorLogic::handleMsgCABundle(std::istream& is)
 {
-  std::cout << "### ReflectorLogic::handleMsgCABundle" << std::endl;
+  //std::cout << "### ReflectorLogic::handleMsgCABundle" << std::endl;
 
   if (m_con_state != STATE_EXPECT_CA_BUNDLE)
   {
@@ -1403,14 +1405,14 @@ void ReflectorLogic::handleMsgCABundle(std::istream& is)
     return;
   }
 
-  std::cout << "### CA:\n" << msg.caPem() << std::endl;
-  std::cout << "### Signature:\n";
-  hexdump(msg.signature());
+  //std::cout << "### CA:\n" << msg.caPem() << std::endl;
+  //std::cout << "### Signature:\n";
+  //hexdump(msg.signature());
   Async::SslX509 signing_cert;
   signing_cert.readPem(msg.certPem());
-  std::cout << "### Signing cert chain:\n" << std::string(48, '-') << "\n";
-  signing_cert.print();
-  std::cout << std::string(48, '-') << "\n";
+  //std::cout << "### Signing cert chain:\n" << std::string(48, '-') << "\n";
+  //signing_cert.print();
+  //std::cout << std::string(48, '-') << "\n";
 
   if (msg.caPem().empty())
   {
@@ -1422,23 +1424,25 @@ void ReflectorLogic::handleMsgCABundle(std::istream& is)
 
   Async::Digest dgst;
   auto signing_cert_pubkey = signing_cert.publicKey();
-  std::cout << "### Signing public key:\n"
-            << signing_cert_pubkey.publicKeyPem() << std::endl;
+  //std::cout << "### Signing public key:\n"
+  //          << signing_cert_pubkey.publicKeyPem() << std::endl;
   bool signature_ok =
     dgst.signVerifyInit(MsgCABundle::MD_ALG, signing_cert_pubkey) &&
     dgst.signVerifyUpdate(msg.caPem()) &&
     dgst.signVerifyFinal(msg.signature());
-  std::cout << "### Signature check: " << (signature_ok ? "OK" : "FAIL")
-            << std::endl;
+  //std::cout << "### Signature check: " << (signature_ok ? "OK" : "FAIL")
+  //          << std::endl;
   if (!signature_ok)
   {
+    // FIXME: Add more info to the warning printout
     std::cout << "*** WARNING[" << name()
               << "]: Received CA bundle with invalid signature" << std::endl;
     disconnect();
     return;
   }
 
-  // FIXME: Verify signing certificate against old CA
+  // FIXME: Verify signing certificate against old CA, then write new CA
+  //        bundle file if it's ok
 
   if (!msg.caPem().empty())
   {

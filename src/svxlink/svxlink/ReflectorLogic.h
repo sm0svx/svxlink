@@ -281,6 +281,7 @@ class ReflectorLogic : public LogicBase
     std::vector<uint8_t>              m_udp_cipher_iv_rand;
     UdpCipher::IVCntr                 m_udp_cipher_iv_cntr;
     UdpCipher::AAD                    m_aad;
+    bool                              m_download_ca_bundle = true;
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
