@@ -214,6 +214,21 @@ void Exec::appendArgument(const std::string &arg)
 } /* Exec::appendArgument */
 
 
+void Exec::addEnvironmentVar(const std::string& name, const std::string& val)
+{
+  env.push_back(name + "=" + val);
+} /* Exec::addEnvironmentVar */
+
+
+void Exec::setEnvironment(const Environment& env)
+{
+  for (const auto& e : env)
+  {
+    addEnvironmentVar(e.first, e.second);
+  }
+} /* Exec::setEnvironment */
+
+
 bool Exec::nice(int inc)
 {
   nice_value += inc;
@@ -336,7 +351,15 @@ bool Exec::run(void)
     cmd[i] = strdup(args[i].c_str());
   }
   cmd[args.size()] = 0;
-  ret = execv(cmd[0], cmd);
+
+  char* envp[env.size()+1];
+  for (size_t i=0; i<env.size(); ++i)
+  {
+    envp[i] = strdup(env[i].c_str());
+  }
+  envp[env.size()] = nullptr;
+
+  ret = execve(cmd[0], cmd, envp);
   assert (ret == -1);
 
   cerr << "*** ERROR: Failed to exec " << args[0]

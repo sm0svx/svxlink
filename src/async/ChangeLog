@@ -5,6 +5,8 @@
 
 * TLS connection support added. Build require OpenSSL development files.
 
+* Async::Exec: Now possible to set up environment variables.
+
 
 
  1.7.0 -- 25 Feb 2024

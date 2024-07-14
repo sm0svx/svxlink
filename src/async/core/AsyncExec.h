@@ -131,6 +131,8 @@ another part of the application.
 class Exec : public sigc::trackable
 {
   public:
+    using Environment = std::vector<std::pair<std::string,std::string>>;
+
     /**
      * @brief 	Default constructor
      */
@@ -163,6 +165,25 @@ class Exec : public sigc::trackable
      * @param   arg The command line argument to add
      */
     void appendArgument(const std::string &arg);
+
+    /**
+     * @brief   Set up the environment variables
+     * @param   env The environment to set
+     *
+     * This function is used to set up the environment for the process to be
+     * executed. It must be done before calling run().
+     */
+    void setEnvironment(const Environment& env);
+
+    /**
+     * @brief   Add an additional environment variable
+     * @param   name The name of the environment variable
+     * @param   val  The value of the environment variable
+     *
+     * This function is used to add a variable to the environment for the
+     * process to be executed. It must be done before calling run().
+     */
+    void addEnvironmentVar(const std::string& name, const std::string& val);
 
     /**
      * @brief   Modify the nice value for the child subprocess
@@ -322,6 +343,7 @@ class Exec : public sigc::trackable
     static struct sigaction   old_sigact;
 
     std::vector<std::string>  args;
+    std::vector<std::string>  env;
     pid_t                     pid;
     Async::FdWatch            *stdout_watch;
     Async::FdWatch            *stderr_watch;
