@@ -389,8 +389,8 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
   if (peer_cert.isNull())
   {
     std::cout << m_con->remoteHost() << ":" << m_con->remotePort()
-              << ": No peer certificate. Requesting Certificate "
-                 "Signing Request from peer." << std::endl;
+              << ": No client certificate. Requesting Certificate "
+                 "Signing Request from client." << std::endl;
     sendMsg(MsgClientCsrRequest());
     m_con_state = STATE_EXPECT_CSR;
     return;
@@ -407,7 +407,7 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
     //return;
   }
 
-  std::cout << "-------------- Peer Certificate ---------------" << std::endl;
+  std::cout << "------------- Client Certificate --------------" << std::endl;
   peer_cert.print();
   std::cout << "-----------------------------------------------" << std::endl;
 
@@ -416,7 +416,7 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
   //{
   //  std::cout << "*** ERROR[" << m_con->remoteHost() << ":"
   //            << m_con->remotePort()
-  //            << "]: peer certificate has empty common name" << std::endl;
+  //            << "]: client certificate has empty common name" << std::endl;
   //  disconnect();
   //  return;
   //}
@@ -1089,7 +1089,7 @@ void ReflectorClient::handleMsgError(std::istream& is)
   {
     cout << m_con->remoteHost() << ":" << m_con->remotePort() << " ";
   }
-  cout << "Error message received from remote peer: " << message << endl;
+  cout << "Error message received from client: " << message << endl;
   disconnect();
 } /* ReflectorClient::handleMsgError */
 

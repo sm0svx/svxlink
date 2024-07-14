@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncEncryptedUdpSocket.h>
 #include <AsyncApplication.h>
 #include <AsyncPty.h>
+
 #include <common.h>
 #include <config.h>
 
@@ -491,7 +492,14 @@ bool Reflector::signClientCert(Async::SslX509& cert)
     return false;
   }
   auto crtfile = m_certs_dir + "/" + cn + ".crt";
-  if (!cert.writePemFile(crtfile) || !m_issue_ca_cert.appendPemFile(crtfile))
+  if (cert.writePemFile(crtfile) && m_issue_ca_cert.appendPemFile(crtfile))
+  {
+    runCAHook({
+        { "CA_OP",      "CSR_SIGNED" },
+        { "CA_CRT_PEM", cert.pem() }
+      });
+  }
+  else
   {
     std::cerr << "*** WARNING: Failed to write client certificate file '"
               << crtfile << "'" << std::endl;
@@ -1323,7 +1331,7 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
       auto cert = signClientCsr(cn);
       if (!cert.isNull())
       {
-        std::cout << "------------- Client Certificate --------------"
+        std::cout << "---------- Signed Client Certificate ----------"
                   << std::endl;
         cert.print(" ");
         std::cout << "-----------------------------------------------"
@@ -1968,7 +1976,7 @@ bool Reflector::onVerifyPeer(TcpConnection *con, bool preverify_ok,
   {
     std::cout << "*** ERROR: Certificate verification failed for client"
               << std::endl;
-    std::cout << "------------- Peer Certificate --------------" << std::endl;
+    std::cout << "------------ Client Certificate -------------" << std::endl;
     cert.print();
     std::cout << "---------------------------------------------" << std::endl;
   }
@@ -2034,13 +2042,9 @@ Async::SslX509 Reflector::onCsrReceived(Async::SslCertSigningReq& req)
     cert.set(nullptr);
   }
 
-  std::string pending_csr_path(m_pending_csrs_dir + "/" + callsign + ".csr");
+  const std::string pending_csr_path(
+      m_pending_csrs_dir + "/" + callsign + ".csr");
   Async::SslCertSigningReq pending_csr;
-  if (!pending_csr.readPemFile(pending_csr_path))
-  {
-    pending_csr.set(nullptr);
-  }
-
   if ((
         csr.isNull() ||
         (req.digest() != csr.digest()) ||
@@ -2052,7 +2056,16 @@ Async::SslX509 Reflector::onCsrReceived(Async::SslCertSigningReq& req)
   {
     std::cout << callsign << ": Add pending CSR '" << pending_csr_path
               << "' to CA" << std::endl;
-    if (!req.writePemFile(pending_csr_path))
+    if (req.writePemFile(pending_csr_path))
+    {
+      const auto ca_op =
+        pending_csr.isNull() ? "PENDING_CSR_CREATE" : "PENDING_CSR_UPDATE";
+      runCAHook({
+          { "CA_OP",      ca_op },
+          { "CA_CSR_PEM", req.pem() }
+        });
+    }
+    else
     {
       std::cerr << "*** WARNING: Could not write CSR file '"
                 << pending_csr_path << "'" << std::endl;
@@ -2104,6 +2117,46 @@ bool Reflector::removeClientCert(const std::string& cn)
   std::cout << "### Reflector::removeClientCert: cn=" << cn << std::endl;
   return true;
 } /* Reflector::removeClientCert */
+
+
+void Reflector::runCAHook(const Async::Exec::Environment& env)
+{
+  auto ca_hook_cmd = m_cfg->getValue("GLOBAL", "CERT_CA_HOOK");
+  if (!ca_hook_cmd.empty())
+  {
+    auto ca_hook = new Async::Exec(ca_hook_cmd);
+    ca_hook->setEnvironment(env);
+    ca_hook->setTimeout(300); // Five minutes timeout
+    ca_hook->stdoutData.connect(
+        [=](const char* buf, int cnt)
+        {
+          std::cout << buf;
+        });
+    ca_hook->stderrData.connect(
+        [=](const char* buf, int cnt)
+        {
+          std::cerr << buf;
+        });
+    ca_hook->exited.connect(
+        [=](void) {
+          if (ca_hook->ifExited())
+          {
+            if (ca_hook->exitStatus() != 0)
+            {
+              std::cerr << "*** ERROR: CA hook exited with exit status "
+                        << ca_hook->exitStatus() << std::endl;
+            }
+          }
+          else if (ca_hook->ifSignaled())
+          {
+            std::cerr << "*** ERROR: CA hook exited with signal "
+                      << ca_hook->termSig() << std::endl;
+          }
+          Async::Application::app().runTask([=]{ delete ca_hook; });
+        });
+    ca_hook->run();
+  }
+} /* Reflector::runCAHook */
 
 
 /*
