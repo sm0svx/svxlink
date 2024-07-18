@@ -191,6 +191,23 @@ The path to the directory containing signed certificate files. If a relative
 path is given, the value of the CERT_PKI_DIR variable will be prepended.
 
 Default: CERT_CA_CERTS_DIR=certs/
+.TP
+.B CERT_CA_HOOK
+Set to a path for an external application that is run on CA events like when a
+CSR is received or when a certificate is signed. The following environment
+variables will be set up before running the external application.
+.RS
+.IP \(bu 4
+.BR "CA_OP" ":"
+Set to one of the strings PENDING_CSR_CREATE, PENDING_CSR_UPDATE or
+CSR_SIGNED, which should be self explanatory.
+.IP \(bu 4
+.BR "CA_CSR_PEM" ":"
+CSR data in PEM format. This is not set for operation CSR_SIGNED.
+.IP \(bu 4
+.BR "CA_CRT_PEM" ":"
+Certificate data in PEM format. This is only set for operation CSR_SIGNED.
+.RE
 .
 .SS ROOT_CA, ISSUING_CA and SERVER_CERT sections
 .

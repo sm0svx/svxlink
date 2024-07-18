@@ -1,0 +1,75 @@
+---
+###############################################################################
+#
+# Configuration file for the ca-hook.py SvxReflector server CA events hook
+# script.
+#
+# For the CSR_CREATE_MAIL_SUBJECT and CSR_CREATE_MAIL_CONTENT configuration
+# variables it is possible to embed the following variables inside curly
+# braces.
+#
+#   callsign:   The callsign (Subject CN)
+#   subject:    The Subject DN of the CSR
+#   email:      The email addresses included in the CSR
+#   hostname:   The name of the host where this script run
+#
+# In addition to the above variables, the following ones can be embedded in the
+# CSR_SIGNED_MAIL_SUBJECT and CSR_SIGNED_MAIL_CONTENT configuration variables.
+#
+#   serial_number:  The serial number of the certificate
+#   issuer:         The certificate issuer Subject DN
+#   not_before      When the certificate is valid from
+#   not_after       When the certificate will expire
+#
+###############################################################################
+
+# Set to true to print the mail message instead of sending it
+EMAIL_DEBUG: true
+
+# The SMTP server to send the message to
+EMAIL_SMTP_SERVER: "localhost"
+
+# Use the following email sender address ("From")
+EMAIL_FROM: "SvxReflector <reflector@example.com>"
+
+# Send sysop mails to the following addresses
+SYSOP_EMAIL:
+  - "sysop1@example.com"
+  - "sysop2@example.com"
+
+# Email subject to use for CSR create notifications
+CSR_CREATE_MAIL_SUBJECT: "SvxReflector: CSR received from node {callsign}"
+
+# Email content to use for CSR create notifications
+CSR_CREATE_MAIL_CONTENT: |
+  Hi,
+  
+  The reflector node {callsign} has submitted a CSR at reflector server {hostname}. Please check that the CSR is correct and then sign it.
+  
+    Subject: {subject}
+    Email:   {email}
+  
+  Regards,
+  SvxReflector Server
+
+# Email subject to use for CSR signed notifications
+CSR_SIGNED_MAIL_SUBJECT: "SvxReflector: Certificate signed for node {callsign}"
+
+# Email content to use for CSR signed notifications
+CSR_SIGNED_MAIL_CONTENT: |
+  Hi,
+  
+  The certificate for reflector node {callsign} has been signed and is now ready for use. If this was not initiated by you, your callsign may have been hijacked by someone. In that case, please reply to this email to notify the reflector sysop.
+  
+    Serial:     {serial_number:X}
+    Issuer:     {issuer}
+    Subject:    {subject}
+    Not before: {not_before}Z
+    Not after:  {not_after}Z
+    Email:      {email}
+  
+  If everything is in order, you do not have to do anything. Your node will receive the certificate from the reflector server and will start to use it immediately.
+  
+  Regards,
+  SvxReflector Server Sysop
+

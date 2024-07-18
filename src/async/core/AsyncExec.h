@@ -167,13 +167,14 @@ class Exec : public sigc::trackable
     void appendArgument(const std::string &arg);
 
     /**
-     * @brief   Set up the environment variables
-     * @param   env The environment to set
+     * @brief   Clear the environment
      *
-     * This function is used to set up the environment for the process to be
-     * executed. It must be done before calling run().
+     * This function is used to clear the environment. It must be called before
+     * calling run(). It will clear both the environment inherited from the
+     * parent process as well as any environment variables added using the
+     * addEnvironmentVar(s) functions.
      */
-    void setEnvironment(const Environment& env);
+    void clearEnvironment(void);
 
     /**
      * @brief   Add an additional environment variable
@@ -184,6 +185,15 @@ class Exec : public sigc::trackable
      * process to be executed. It must be done before calling run().
      */
     void addEnvironmentVar(const std::string& name, const std::string& val);
+
+    /**
+     * @brief   Add multiple environment variables
+     * @param   env The environment variables to add
+     *
+     * This function is used to add multiple variables to the environment for
+     * the process to be executed. It must be done before calling run().
+     */
+    void addEnvironmentVars(const Environment& env);
 
     /**
      * @brief   Modify the nice value for the child subprocess
@@ -352,6 +362,7 @@ class Exec : public sigc::trackable
     int                       nice_value;
     Async::Timer              *timeout_timer;
     bool                      pending_term;
+    bool                      clear_env = false;
 
     static void handleSigChld(int signal_number, siginfo_t *info,
                               void *context);

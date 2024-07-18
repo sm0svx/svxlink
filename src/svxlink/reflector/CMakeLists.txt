@@ -31,8 +31,25 @@ set_target_properties(svxreflector PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
+# Generate config file with correct paths
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxreflector.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/svxreflector.conf
+  @ONLY
+  )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ca-hook.py.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ca-hook.py
+  @ONLY
+  )
+
 # Install targets
 install(TARGETS svxreflector DESTINATION ${BIN_INSTALL_DIR})
-install_if_not_exists(svxreflector.conf ${SVX_SYSCONF_INSTALL_DIR})
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxreflector.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
+install_if_not_exists(ca-hook.yaml ${SVX_SYSCONF_INSTALL_DIR})
 install(PROGRAMS svxreflector-status svxreflector-ca
-  DESTINATION ${BIN_INSTALL_DIR})
+  DESTINATION ${BIN_INSTALL_DIR}
+  )
+install(PROGRAMS ${CMAKE_BINARY_DIR}/ca-hook.py
+  DESTINATION ${SVX_SHARE_INSTALL_DIR}
+  )

@@ -2125,7 +2125,7 @@ void Reflector::runCAHook(const Async::Exec::Environment& env)
   if (!ca_hook_cmd.empty())
   {
     auto ca_hook = new Async::Exec(ca_hook_cmd);
-    ca_hook->setEnvironment(env);
+    ca_hook->addEnvironmentVars(env);
     ca_hook->setTimeout(300); // Five minutes timeout
     ca_hook->stdoutData.connect(
         [=](const char* buf, int cnt)

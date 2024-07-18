@@ -214,19 +214,26 @@ void Exec::appendArgument(const std::string &arg)
 } /* Exec::appendArgument */
 
 
+void Exec::clearEnvironment(void)
+{
+  clear_env = true;
+  env.clear();
+} /* Exec::clearEnvironment */
+
+
 void Exec::addEnvironmentVar(const std::string& name, const std::string& val)
 {
   env.push_back(name + "=" + val);
 } /* Exec::addEnvironmentVar */
 
 
-void Exec::setEnvironment(const Environment& env)
+void Exec::addEnvironmentVars(const Environment& env)
 {
   for (const auto& e : env)
   {
     addEnvironmentVar(e.first, e.second);
   }
-} /* Exec::setEnvironment */
+} /* Exec::addEnvironmentVars */
 
 
 bool Exec::nice(int inc)
@@ -352,14 +359,16 @@ bool Exec::run(void)
   }
   cmd[args.size()] = 0;
 
-  char* envp[env.size()+1];
+  if (clear_env)
+  {
+    clearenv();
+  }
   for (size_t i=0; i<env.size(); ++i)
   {
-    envp[i] = strdup(env[i].c_str());
+    putenv(strdup(env[i].c_str()));
   }
-  envp[env.size()] = nullptr;
 
-  ret = execve(cmd[0], cmd, envp);
+  ret = execv(cmd[0], cmd);
   assert (ret == -1);
 
   cerr << "*** ERROR: Failed to exec " << args[0]

@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+"""\
+CA hook script for the SvxReflector server application.
+
+This script will be called by the SvxReflector application on some CA events.
+
+When a new CSR (Certificate Signing Request) is received from a node
+(CA_OP=PENDING_CSR_CREATE) an email will be sent to the SvxReflector sysop(s)
+to notify them that there is a CSR to sign.
+
+When an updated CSR is received (CA_OP=PENDING_CSR_UPDATED) nothing is done by
+default.
+
+When a CSR is signed (CA_OP=CSR_SIGNED), an email will be sent to the
+sysop(s) and to any email addresses listed in the certificate.
+
+Environment:
+
+    CA_OP       -- Indicate what CA operation this is
+    CA_CSR_PEM  -- The CSR PEM string
+    CA_CRT_PEM  -- The certificate PEM, including intermediates
+
+"""
+
+import os
+import os.path
+import sys
+import socket
+
+import yaml
+from cryptography import x509
+from cryptography.x509.oid import NameOID, ExtensionOID
+from cryptography.x509.extensions import ExtensionNotFound
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+
+from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+import smtplib
+
+
+config = {}
+
+
+def load_config() -> None:
+    """\
+    Find the configuration file and load it into the config dict
+    """
+    global config
+    path = None
+    home = os.getenv("HOME")
+    if home:
+        path = f"{home}/.svxlink/ca-hook.yaml"
+    if not path or not os.path.exists(path):
+        path = "@SVX_SYSCONF_INSTALL_DIR@/ca-hook.yaml"
+    with open(path, 'r') as f:
+        config = yaml.safe_load(f)
+
+
+def send_email(**kwargs) -> int:
+    """\
+    Send and email using the following keyword arguments.
+
+      to:         A list of destination addresses
+      bcc:        A list of BCC addresses
+      subject:    The subject of the message
+      content:    The contents of the message
+
+    The global variable EMAIL_FROM will be used as the sender.
+    The global variable EMAIL_SMTP_SERVER will be used as the SMTP server to
+    send the message to.
+    """
+    msg = MIMEMultipart()
+    msg['From'] = config['EMAIL_FROM']
+    msg['To'] = ', '.join(kwargs['to'])
+    if 'bcc' in kwargs and kwargs['bcc']:
+        msg['BCC'] = ', '.join(kwargs['bcc'])
+    msg['Subject'] = kwargs['subject']
+    msg.attach(MIMEText(kwargs['content']))
+    if 'attachments' in kwargs:
+        for attachment in kwargs['attachments']:
+            part = MIMEText(attachment['content'])
+            part['Content-Disposition'] =\
+                    f"attachment; filename=\"{attachment['name']}\""
+            msg.attach(part)
+
+    if config['EMAIL_DEBUG']:
+        print(msg)
+    else:
+        s = smtplib.SMTP(config['EMAIL_SMTP_SERVER'])
+        s.send_message(msg)
+        s.quit()
+    return 0
+
+
+def pending_csr_create(csr) -> int:
+    """\
+    Called when a pending CSR is created.
+    """
+    callsign = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    email = []
+    san = None
+    try:
+        san = csr.extensions.get_extension_for_oid(
+                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+        email = san.value.get_values_for_type(x509.RFC822Name)
+    except ExtensionNotFound:
+        pass
+
+    #print(f"Create callsign={callsign} email={email}")
+
+    values = {
+            "callsign": callsign,
+            "subject": csr.subject.rfc4514_string(),
+            "hostname": socket.gethostname(),
+            "email": ', '.join(email),
+            }
+
+    send_email(
+            to=config['SYSOP_EMAIL'],
+            subject=config['CSR_CREATE_MAIL_SUBJECT'].format(**values),
+            content=config['CSR_CREATE_MAIL_CONTENT'].format(**values),
+            attachments=[{
+                "name": f"{callsign}.csr",
+                "content": csr.public_bytes(serialization.Encoding.PEM).decode(),
+                }]
+            )
+    return 0
+
+
+def pending_csr_update(csr) -> int:
+    """\
+    No action on updated CSRs
+    """
+    return 0
+
+
+def csr_signed(cert) -> int:
+    """\
+    Called when a CSR is signed.
+    """
+    callsign = cert.subject.get_attributes_for_oid(
+            NameOID.COMMON_NAME)[0].value
+    email = []
+    try:
+        san = cert.extensions.get_extension_for_oid(
+                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+        email = san.value.get_values_for_type(x509.RFC822Name)
+    except ExtensionNotFound:
+        pass
+
+    #print(f"Create callsign={callsign} email={email}")
+
+    values = {
+        "callsign": callsign,
+        "serial_number": cert.serial_number,
+        "issuer": cert.issuer.rfc4514_string(),
+        "subject": cert.subject.rfc4514_string(),
+        "not_before": cert.not_valid_before,
+        "not_after": cert.not_valid_after,
+        "email": ', '.join(email),
+        "hostname": socket.gethostname(),
+        }
+    send_email(
+            to=email,
+            bcc=config['SYSOP_EMAIL'],
+            subject=config['CSR_SIGNED_MAIL_SUBJECT'].format(**values),
+            content=config['CSR_SIGNED_MAIL_CONTENT'].format(**values),
+            )
+    return 0
+
+
+def main() -> int:
+    """\
+    The main entry point for the this script.
+    """
+    load_config()
+
+    op = os.getenv('CA_OP')
+    if not op:
+        print(f"*** ERROR: The CA_OP environment variable is not set or empty")
+        return 1
+
+    if op != 'CSR_SIGNED':
+        csr_pem = os.getenv('CA_CSR_PEM')
+        if not csr_pem:
+            print("*** ERROR: CA_CSR_PEM not set")
+            return 1
+        if csr_pem:
+            csr = x509.load_pem_x509_csr(csr_pem.encode(), default_backend())
+        else:
+            print("*** ERROR: Invalid CSR PEM")
+            return 1
+
+    if op == 'PENDING_CSR_CREATE':
+        return pending_csr_create(csr)
+    elif op == 'PENDING_CSR_UPDATE':
+        return pending_csr_update(csr)
+    elif op == 'CSR_SIGNED':
+        certs_pem = os.getenv('CA_CRT_PEM')
+        if not certs_pem:
+            print("*** ERROR: CA_CRT_PEM not set")
+            return 1
+        cert = x509.load_pem_x509_certificate(certs_pem.encode(), default_backend())
+        return csr_signed(cert)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+
