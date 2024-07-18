@@ -47,7 +47,7 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxreflector.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )
 install_if_not_exists(ca-hook.yaml ${SVX_SYSCONF_INSTALL_DIR})
-install(PROGRAMS svxreflector-status svxreflector-ca
+install(PROGRAMS svxreflector-status
   DESTINATION ${BIN_INSTALL_DIR}
   )
 install(PROGRAMS ${CMAKE_BINARY_DIR}/ca-hook.py
