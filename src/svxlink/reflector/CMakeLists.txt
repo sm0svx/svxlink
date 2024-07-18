@@ -50,6 +50,6 @@ install_if_not_exists(ca-hook.yaml ${SVX_SYSCONF_INSTALL_DIR})
 install(PROGRAMS svxreflector-status
   DESTINATION ${BIN_INSTALL_DIR}
   )
-install(PROGRAMS ${CMAKE_BINARY_DIR}/ca-hook.py
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/ca-hook.py
   DESTINATION ${SVX_SHARE_INSTALL_DIR}
   )
