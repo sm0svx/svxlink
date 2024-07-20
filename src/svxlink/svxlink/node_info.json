@@ -1,5 +1,6 @@
 {
   "nodeLocation": "MyTownOrArea",
+  "nodeClass": "one of repeater|simplex|hotspot|bridge",
   "hidden": false,
   "sysop": "CALL1 CALL2",
   "toneToTalkgroup": {"136.5": 0, "88.5": 999, "123.0": 9990},
