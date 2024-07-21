@@ -412,14 +412,15 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
   std::cout << "-----------------------------------------------" << std::endl;
 
   std::string callsign = peer_cert.commonName();
-  //if (callsign.empty())
-  //{
-  //  std::cout << "*** ERROR[" << m_con->remoteHost() << ":"
-  //            << m_con->remotePort()
-  //            << "]: client certificate has empty common name" << std::endl;
-  //  disconnect();
-  //  return;
-  //}
+  if (!m_reflector->callsignOk(callsign))
+  {
+    std::cout << "*** WARNING[" << m_con->remoteHost() << ":"
+              << m_con->remotePort()
+              << "]: client certificate has invalid CN (callsign)"
+              << std::endl;
+    disconnect();
+    return;
+  }
 
   int days=0, seconds=0;
   peer_cert.timeSpan(days, seconds);
@@ -679,12 +680,15 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     sendError("Illegal MsgAuthResponse protocol message received");
     return;
   }
-  if (msg.callsign().empty())
+
+  if (!m_reflector->callsignOk(msg.callsign()))
   {
     std::cerr << "*** ERROR[" << m_con->remoteHost() << ":"
               << m_con->remotePort()
-              << "]: Empty callsign in MsgAuthResponse" << std::endl;
-    sendError("Illegal MsgAuthResponse protocol message received");
+              << "]: Invalid node callsign '" << msg.callsign()
+              << "' in MsgAuthResponse"
+              << std::endl;
+    sendError("Invalid callsign");
     return;
   }
 

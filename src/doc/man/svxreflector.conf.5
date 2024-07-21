@@ -155,10 +155,14 @@ To sign a client certificate:
 
   echo "CA SIGN callsign" > /dev/shm/reflector_ctrl
 .TP
-.B CALLSIGN_MATCH
+.B ACCEPT_CALLSIGN
 A regular expression for verifying that the common name in client certificates
 really contain a valid callsign. The default is to roughly match standard ham
 radio callsigns.
+.TP
+.B REJECT_CALLSIGN
+Reject client certificates where the common name match the given regular
+expression. No callsigns is rejected by default.
 .TP
 .B CERT_PKI_DIR
 The path to the directory containing PKI (Public Key Infrastructure) files. If

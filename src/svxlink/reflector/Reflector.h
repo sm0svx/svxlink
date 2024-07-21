@@ -202,6 +202,7 @@ class Reflector : public sigc::trackable
     std::string clientCertPem(const std::string& callsign) const;
     std::string caBundlePem(void) const;
     std::string issuingCertPem(void) const;
+    bool callsignOk(const std::string& callsign) const;
 
   protected:
 

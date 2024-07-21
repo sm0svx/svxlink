@@ -605,6 +605,51 @@ std::string Reflector::issuingCertPem(void) const
 } /* Reflector::issuingCertPem */
 
 
+bool Reflector::callsignOk(const std::string& callsign) const
+{
+    // Empty check
+  if (callsign.empty())
+  {
+    std::cout << "*** WARNING: The callsign is empty" << std::endl;
+    return false;
+  }
+
+    // Accept check
+  std::string accept_cs_re_str;
+  if (!m_cfg->getValue("GLOBAL", "ACCEPT_CALLSIGN", accept_cs_re_str) ||
+      accept_cs_re_str.empty())
+  {
+    accept_cs_re_str =
+      "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{1,3}[A-Z](?:-[A-Z0-9]{1,3})?";
+  }
+  const std::regex accept_callsign_re(accept_cs_re_str);
+  if (!std::regex_match(callsign, accept_callsign_re))
+  {
+    std::cerr << "*** WARNING: The callsign '" << callsign
+              << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
+              << std::endl;
+    return false;
+  }
+
+    // Reject check
+  std::string reject_cs_re_str;
+  m_cfg->getValue("GLOBAL", "REJECT_CALLSIGN", reject_cs_re_str);
+  if (!reject_cs_re_str.empty())
+  {
+    const std::regex reject_callsign_re(reject_cs_re_str);
+    if (std::regex_match(callsign, reject_callsign_re))
+    {
+      std::cerr << "*** WARNING: The callsign '" << callsign
+                << "' has been rejected by configuration (REJECT_CALLSIGN)."
+                << std::endl;
+      return false;
+    }
+  }
+
+  return true;
+} /* Reflector::callsignOk */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -1993,26 +2038,10 @@ Async::SslX509 Reflector::onCsrReceived(Async::SslCertSigningReq& req)
   }
 
   std::string callsign(req.commonName());
-  if (callsign.empty())
+  if (!callsignOk(callsign))
   {
-    std::cout << "*** WARNING: The callsign (CN) in the CSR is empty. "
-                 "Ignoring this CSR." << std::endl;
-    return nullptr;
-  }
-    // FIXME: Move code to initialize() and make a public function
-    // verifyCallsign() so that callsigns can be verified from
-    // ReflectorClient.
-  std::string csrestr;
-  if (!m_cfg->getValue("GLOBAL", "CALLSIGN_MATCH", csrestr) ||
-      csrestr.empty())
-  {
-    csrestr = "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{1,3}[A-Z](?:-[A-Z0-9]{1,3})?";
-  }
-  const std::regex csre(csrestr);
-  if (!std::regex_match(callsign, csre))
-  {
-    std::cout << "*** WARNING: The callsign (CN) in the received CSR, '"
-              << callsign << "', is malformed." << std::endl;
+    std::cerr << "*** WARNING: The CSR CN (callsign) check failed"
+              << std::endl;
     return nullptr;
   }
 

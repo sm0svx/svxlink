@@ -27,6 +27,10 @@
   package for that library need to be installed (e.g. install package
   libssl-dev if on a Debian based distro).
 
+* The SvxReflector now check the callsign for a connecting node against the
+  ACCEPT_CALLSIGN and REJECT_CALLSIGN configuration variables. That is done
+  for both AUTH_KEY connections and certificate connections.
+
 
 
  1.8.0 -- 25 Feb 2024
