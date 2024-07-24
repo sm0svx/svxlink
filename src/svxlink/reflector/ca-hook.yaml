@@ -4,7 +4,8 @@
 # Configuration file for the ca-hook.py SvxReflector server CA events hook
 # script.
 #
-# For the CSR_CREATE_MAIL_SUBJECT and CSR_CREATE_MAIL_CONTENT configuration
+# For the CSR_CREATE_MAIL_SUBJECT, CSR_CREATE_MAIL_CONTENT,
+# CSR_UPDATE_MAIL_SUBJECT and CSR_UPDATE_MAIL_CONTENT configuration
 # variables it is possible to embed the following variables inside curly
 # braces.
 #
@@ -37,10 +38,12 @@ SYSOP_EMAIL:
   - "sysop1@example.com"
   - "sysop2@example.com"
 
-# Email subject to use for CSR create notifications
+# Email subject to use for CSR create notifications.
+# Comment out to suppress sending of CSR create emails.
 CSR_CREATE_MAIL_SUBJECT: "SvxReflector: CSR received from node {callsign}"
 
-# Email content to use for CSR create notifications
+# Email content to use for CSR create notifications.
+# Comment out to suppress sending of CSR create emails.
 CSR_CREATE_MAIL_CONTENT: |
   Hi,
   
@@ -52,10 +55,29 @@ CSR_CREATE_MAIL_CONTENT: |
   Regards,
   SvxReflector Server
 
-# Email subject to use for CSR signed notifications
+# Email subject to use for CSR update notifications.
+# Comment out to suppress sending of CSR update emails.
+CSR_UPDATE_MAIL_SUBJECT: "SvxReflector: CSR update received from node {callsign}"
+
+# Email content to use for CSR update notifications.
+# Comment out to suppress sending of CSR update emails.
+CSR_UPDATE_MAIL_CONTENT: |
+  Hi,
+
+  The reflector node {callsign} has submitted an updated CSR at reflector server {hostname}. Please check that the CSR is correct and then sign it.
+
+    Subject: {subject}
+    Email:   {email}
+
+  Regards,
+  SvxReflector Server
+
+# Email subject to use for CSR signed notifications.
+# Comment out to suppress sending of CSR signed emails.
 CSR_SIGNED_MAIL_SUBJECT: "SvxReflector: Certificate signed for node {callsign}"
 
-# Email content to use for CSR signed notifications
+# Email content to use for CSR signed notifications.
+# Comment out to suppress sending of CSR signed emails.
 CSR_SIGNED_MAIL_CONTENT: |
   Hi,
   

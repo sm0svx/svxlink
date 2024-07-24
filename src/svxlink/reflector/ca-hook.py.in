@@ -99,6 +99,9 @@ def pending_csr_create(csr) -> int:
     """\
     Called when a pending CSR is created.
     """
+    if not config.keys() & {'CSR_CREATE_MAIL_SUBJECT', 'CSR_CREATE_MAIL_CONTENT'}:
+        return 0
+
     callsign = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
     email = []
     san = None
@@ -109,7 +112,7 @@ def pending_csr_create(csr) -> int:
     except ExtensionNotFound:
         pass
 
-    #print(f"Create callsign={callsign} email={email}")
+    #print(f"### Create CSR: callsign={callsign} email={email}")
 
     values = {
             "callsign": callsign,
@@ -132,8 +135,39 @@ def pending_csr_create(csr) -> int:
 
 def pending_csr_update(csr) -> int:
     """\
-    No action on updated CSRs
+    Called when a pending CSR is updated.
     """
+    if not config.keys() & {'CSR_UPDATE_MAIL_SUBJECT', 'CSR_UPDATE_MAIL_CONTENT'}:
+        return 0
+
+    callsign = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    email = []
+    san = None
+    try:
+        san = csr.extensions.get_extension_for_oid(
+                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+        email = san.value.get_values_for_type(x509.RFC822Name)
+    except ExtensionNotFound:
+        pass
+
+    #print(f"### Update CSR: callsign={callsign} email={email}")
+
+    values = {
+            "callsign": callsign,
+            "subject": csr.subject.rfc4514_string(),
+            "hostname": socket.gethostname(),
+            "email": ', '.join(email),
+            }
+
+    send_email(
+            to=config['SYSOP_EMAIL'],
+            subject=config['CSR_UPDATE_MAIL_SUBJECT'].format(**values),
+            content=config['CSR_UPDATE_MAIL_CONTENT'].format(**values),
+            attachments=[{
+                "name": f"{callsign}.csr",
+                "content": csr.public_bytes(serialization.Encoding.PEM).decode(),
+                }]
+            )
     return 0
 
 
@@ -141,6 +175,9 @@ def csr_signed(cert) -> int:
     """\
     Called when a CSR is signed.
     """
+    if not config.keys() & {'CSR_SIGNED_MAIL_SUBJECT', 'CSR_SIGNED_MAIL_CONTENT'}:
+        return 0
+
     callsign = cert.subject.get_attributes_for_oid(
             NameOID.COMMON_NAME)[0].value
     email = []
@@ -151,7 +188,7 @@ def csr_signed(cert) -> int:
     except ExtensionNotFound:
         pass
 
-    #print(f"Create callsign={callsign} email={email}")
+    #print(f"### Sign CSR: callsign={callsign} email={email}")
 
     values = {
         "callsign": callsign,
