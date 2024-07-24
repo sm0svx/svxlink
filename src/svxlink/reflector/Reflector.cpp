@@ -2057,7 +2057,7 @@ Async::SslX509 Reflector::onCsrReceived(Async::SslCertSigningReq& req)
     std::cerr << "*** WARNING: The received CSR with callsign '"
               << callsign << "' has a different public key "
                  "than the current CSR. That may be a sign of someone "
-                 "trying to highjack a callsign or the owner of the "
+                 "trying to hijack a callsign or the owner of the "
                  "callsign has generated a new private/public key pair."
               << std::endl;
     return nullptr;
