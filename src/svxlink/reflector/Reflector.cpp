@@ -1961,7 +1961,7 @@ bool Reflector::loadSigningCAFiles(void)
       csr.addSubjectName("C", value);
     }
     Async::SslX509Extensions exts;
-    exts.addBasicConstraints("critical, CA:TRUE");
+    exts.addBasicConstraints("critical, CA:TRUE, pathlen:0");
     exts.addKeyUsage("critical, cRLSign, digitalSignature, keyCertSign");
     if (m_cfg->getValue("ISSUING_CA", "EMAIL_ADDRESS", value) &&
         !value.empty())
