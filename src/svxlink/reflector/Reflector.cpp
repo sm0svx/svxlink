@@ -650,6 +650,81 @@ bool Reflector::callsignOk(const std::string& callsign) const
 } /* Reflector::callsignOk */
 
 
+Async::SslX509 Reflector::csrReceived(Async::SslCertSigningReq& req)
+{
+  if (req.isNull())
+  {
+    return nullptr;
+  }
+
+  std::string callsign(req.commonName());
+  if (!callsignOk(callsign))
+  {
+    std::cerr << "*** WARNING: The CSR CN (callsign) check failed"
+              << std::endl;
+    return nullptr;
+  }
+
+  std::string csr_path(m_csrs_dir + "/" + callsign + ".csr");
+  Async::SslCertSigningReq csr;
+  if (!csr.readPemFile(csr_path))
+  {
+    csr.set(nullptr);
+  }
+
+  if (!csr.isNull() && (req.publicKey() != csr.publicKey()))
+  {
+    std::cerr << "*** WARNING: The received CSR with callsign '"
+              << callsign << "' has a different public key "
+                 "than the current CSR. That may be a sign of someone "
+                 "trying to hijack a callsign or the owner of the "
+                 "callsign has generated a new private/public key pair."
+              << std::endl;
+    return nullptr;
+  }
+
+  std::string crtfile(m_certs_dir + "/" + callsign + ".crt");
+  Async::SslX509 cert;
+  if (!cert.readPemFile(crtfile) || !cert.verify(m_issue_ca_pkey) ||
+      !cert.timeIsWithinRange() || (cert.publicKey() != req.publicKey()))
+  {
+    cert.set(nullptr);
+  }
+
+  const std::string pending_csr_path(
+      m_pending_csrs_dir + "/" + callsign + ".csr");
+  Async::SslCertSigningReq pending_csr;
+  if ((
+        csr.isNull() ||
+        (req.digest() != csr.digest()) ||
+        cert.isNull()
+      ) && (
+        !pending_csr.readPemFile(pending_csr_path) ||
+        (req.digest() != pending_csr.digest())
+      ))
+  {
+    std::cout << callsign << ": Add pending CSR '" << pending_csr_path
+              << "' to CA" << std::endl;
+    if (req.writePemFile(pending_csr_path))
+    {
+      const auto ca_op =
+        pending_csr.isNull() ? "PENDING_CSR_CREATE" : "PENDING_CSR_UPDATE";
+      runCAHook({
+          { "CA_OP",      ca_op },
+          { "CA_CSR_PEM", req.pem() }
+        });
+    }
+    else
+    {
+      std::cerr << "*** WARNING: Could not write CSR file '"
+                << pending_csr_path << "'" << std::endl;
+    }
+  }
+
+  return cert;
+} /* Reflector::csrReceived */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -670,8 +745,6 @@ void Reflector::clientConnected(Async::FramedTcpConnection *con)
        << ": Client connected" << endl;
   ReflectorClient *client = new ReflectorClient(this, con, m_cfg);
   con->verifyPeer.connect(sigc::mem_fun(*this, &Reflector::onVerifyPeer));
-  client->csrReceived.connect(
-      sigc::mem_fun(*this, &Reflector::onCsrReceived));
   m_client_con_map[con] = client;
 } /* Reflector::clientConnected */
 
@@ -2028,86 +2101,6 @@ bool Reflector::onVerifyPeer(TcpConnection *con, bool preverify_ok,
 
   return preverify_ok;
 } /* Reflector::onVerifyPeer */
-
-
-Async::SslX509 Reflector::onCsrReceived(Async::SslCertSigningReq& req)
-{
-  if (req.isNull())
-  {
-    return nullptr;
-  }
-
-  std::string callsign(req.commonName());
-  if (!callsignOk(callsign))
-  {
-    std::cerr << "*** WARNING: The CSR CN (callsign) check failed"
-              << std::endl;
-    return nullptr;
-  }
-
-  std::string csr_path(m_csrs_dir + "/" + callsign + ".csr");
-  Async::SslCertSigningReq csr;
-  if (!csr.readPemFile(csr_path))
-  {
-    csr.set(nullptr);
-  }
-
-  if (!csr.isNull() && (req.publicKey() != csr.publicKey()))
-  {
-    std::cerr << "*** WARNING: The received CSR with callsign '"
-              << callsign << "' has a different public key "
-                 "than the current CSR. That may be a sign of someone "
-                 "trying to hijack a callsign or the owner of the "
-                 "callsign has generated a new private/public key pair."
-              << std::endl;
-    return nullptr;
-  }
-
-  std::string crtfile(m_certs_dir + "/" + callsign + ".crt");
-  Async::SslX509 cert;
-  if (!cert.readPemFile(crtfile) || !cert.verify(m_issue_ca_pkey) ||
-      !cert.timeIsWithinRange() || (cert.publicKey() != req.publicKey()))
-  {
-    cert.set(nullptr);
-  }
-
-  const std::string pending_csr_path(
-      m_pending_csrs_dir + "/" + callsign + ".csr");
-  Async::SslCertSigningReq pending_csr;
-  if ((
-        csr.isNull() ||
-        (req.digest() != csr.digest()) ||
-        cert.isNull()
-      ) && (
-        !pending_csr.readPemFile(pending_csr_path) ||
-        (req.digest() != pending_csr.digest())
-      ))
-  {
-    std::cout << callsign << ": Add pending CSR '" << pending_csr_path
-              << "' to CA" << std::endl;
-    if (req.writePemFile(pending_csr_path))
-    {
-      const auto ca_op =
-        pending_csr.isNull() ? "PENDING_CSR_CREATE" : "PENDING_CSR_UPDATE";
-      runCAHook({
-          { "CA_OP",      ca_op },
-          { "CA_CSR_PEM", req.pem() }
-        });
-    }
-    else
-    {
-      std::cerr << "*** WARNING: Could not write CSR file '"
-                << pending_csr_path << "'" << std::endl;
-    }
-  }
-  else
-  {
-    std::cout << callsign << ": The new CSR is the same as the already "
-              << "existing CSR, so ignoring the new one" << std::endl;
-  }
-
-  return cert;
-} /* Reflector::onCsrReceived */
 
 
 bool Reflector::buildPath(const std::string& sec,    const std::string& tag,

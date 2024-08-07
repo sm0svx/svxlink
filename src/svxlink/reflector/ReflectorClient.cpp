@@ -768,7 +768,7 @@ void ReflectorClient::handleMsgClientCsr(std::istream& is)
   }
   req.print(idss.str() + ":   ");
 
-  auto cert = csrReceived(req);
+  auto cert = m_reflector->csrReceived(req);
   auto current_req = m_reflector->loadClientCsr(req.commonName());
   if ((
         (m_con_state == STATE_EXPECT_CSR) ||
@@ -776,7 +776,7 @@ void ReflectorClient::handleMsgClientCsr(std::istream& is)
       ) &&
       sendClientCert(cert))
   {
-    //std::cout << "### Sent certificate to peer:" << std::endl;
+    std::cout << idss.str() << ": Sent certificate to peer" << std::endl;
     //cert.print();
     m_con_state = STATE_EXPECT_DISCONNECT;
   }

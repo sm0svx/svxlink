@@ -511,8 +511,6 @@ class ReflectorClient
 
     void certificateUpdated(Async::SslX509& cert);
 
-    sigc::signal<Async::SslX509, Async::SslCertSigningReq&> csrReceived;
-
   private:
     using ClientIdRandomDist  = std::uniform_int_distribution<ClientId>;
     using ClientMap           = std::map<ClientId, ReflectorClient*>;
