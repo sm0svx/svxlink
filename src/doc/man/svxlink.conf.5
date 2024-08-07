@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JULY 2024" Linux "File Formats"
+.TH SVXLINK.CONF 5 "AUGUST 2024" Linux "File Formats"
 .
 .SH NAME
 .
@@ -409,13 +409,15 @@ after starting SvxLink. The device works bidirectional, received dtmf characters
 Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .TP
 .B CTCSS_TO_TG
-Use this variable to specify a comma separated list of pairs of tone
-frequencies and talk groups. When one of the tone frequencies is detected, the
-corresponding talk group will be associated with the received audio. This can
-be used for example by ReflectorLogic to automatically switch to a talk group
-when one of the specified tone frequencies is received. You also must configure
-CTCSS_FQ for all receivers to open the squelch on the same tone frequencies.
-Otherwise it will not work.
+Use this configuration variable to specify a comma separated list of pairs of
+tone frequencies and talk groups. When one of the tone frequencies is
+detected, the corresponding talk group will be associated with the received
+audio. This can be used for example by ReflectorLogic to automatically switch
+to a talk group when one of the specified tone frequencies is received. You
+also must configure CTCSS_FQ for all receivers to open the squelch on the same
+tone frequencies.  Otherwise it will not work. Also, the CTCSS squelch
+detector must actually be used in the receiver. It's not enough to just set
+CTCSS_FQ.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .TP
@@ -527,7 +529,8 @@ A value of 0 will disable 1750 Hz repeater opening.
 Use this configuration variable if it should be possible to open the repeater
 using a CTCSS tone (PL). The repeater will activate after the specified number
 of milliseconds on detection of any of the CTCSS frequencies specified in the
-receiver configuration.
+receiver configuration. Note that the CTCSS squelch must actually be used as a
+squelch detector in the receiver. It's not enough to just set CTCSS_FQ.
 .TP
 .B OPEN_ON_DTMF
 Use this configuration variable if it should be possible to open the repeater with 
