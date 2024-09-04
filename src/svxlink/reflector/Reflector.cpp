@@ -1609,8 +1609,8 @@ bool Reflector::loadCertificateFiles(void)
   }
   ca_dgst.signInit(MsgCABundle::MD_ALG, m_issue_ca_pkey);
   m_ca_sig = ca_dgst.sign(bundle);
-  m_ca_url = "";
-  m_cfg->getValue("GLOBAL", "CERT_CA_URL", m_ca_url);
+  //m_ca_url = "";
+  //m_cfg->getValue("GLOBAL", "CERT_CA_URL", m_ca_url);
 
   return true;
 } /* Reflector::loadCertificateFiles */

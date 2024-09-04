@@ -265,24 +265,45 @@ void ReflectorClient::setRemoteUdpPort(uint16_t port)
 
 int ReflectorClient::sendMsg(const ReflectorMsg& msg)
 {
+  errno = 0;
+
   if (((m_con_state != STATE_CONNECTED) && (msg.type() >= 100)) ||
       !m_con->isConnected())
   {
     errno = ENOTCONN;
-    return -1;
   }
 
-  m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
-
-  ReflectorMsg header(msg.type());
   ostringstream ss;
-  if (!header.pack(ss) || !msg.pack(ss))
+  if (errno == 0)
   {
-    cerr << "*** ERROR: Failed to pack TCP message\n";
-    errno = EBADMSG;
-    return -1;
+    m_heartbeat_tx_cnt = HEARTBEAT_TX_CNT_RESET;
+
+    ReflectorMsg header(msg.type());
+    if (!header.pack(ss) || !msg.pack(ss))
+    {
+      cerr << "*** ERROR: Failed to pack TCP message\n";
+      errno = EBADMSG;
+    }
   }
-  return m_con->write(ss.str().data(), ss.str().size());
+
+  if (errno == 0)
+  {
+    auto ret = m_con->write(ss.str().data(), ss.str().size());
+    if (ret >= 0)
+    {
+      return ret;
+    }
+  }
+  std::cerr << "*** ERROR[" << m_con->remoteHost() << ":"
+            << m_con->remotePort() << "]: Write to client failed";
+  auto errname = strerrorname_np(errno);
+  if (errname != nullptr)
+  {
+    std::cerr << " due to " << errname  << ", " << strerrordesc_np(errno);
+  }
+  std::cerr << ". Message type=" << msg.type() << "." << std::endl;
+  disconnect();
+  return -1;
 } /* ReflectorClient::sendMsg */
 
 
