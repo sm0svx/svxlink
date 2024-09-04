@@ -296,13 +296,9 @@ int ReflectorClient::sendMsg(const ReflectorMsg& msg)
     }
   }
   std::cerr << "*** ERROR[" << m_con->remoteHost() << ":"
-            << m_con->remotePort() << "]: Write to client failed";
-  auto errname = strerrorname_np(errno);
-  if (errname != nullptr)
-  {
-    std::cerr << " due to " << errname  << ", " << strerrordesc_np(errno);
-  }
-  std::cerr << ". Message type=" << msg.type() << "." << std::endl;
+            << m_con->remotePort() << "]: Write to client failed due to '"
+            << strerror(errno) << "'. Message type=" << msg.type() << "."
+            << std::endl;
   disconnect();
   return -1;
 } /* ReflectorClient::sendMsg */
