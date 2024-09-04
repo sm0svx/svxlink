@@ -195,7 +195,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
     m_reflector(ref), m_blocktime(0), m_remaining_blocktime(0),
     m_current_tg(0), m_udp_cipher_iv_cntr(0)
 {
-  m_con->setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  m_con->setMaxRxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  m_con->setMaxTxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
   m_con->sslConnectionReady.connect(
       sigc::mem_fun(*this, &ReflectorClient::onSslConnectionReady));
   m_con->frameReceived.connect(
@@ -404,7 +405,7 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
     return;
   }
 
-  m_con->setMaxFrameSize(ReflectorMsg::MAX_POST_SSL_SETUP_SIZE);
+  //m_con->setMaxRxFrameSize(ReflectorMsg::MAX_POST_SSL_SETUP_FRAME_SIZE);
 
   Async::SslX509 peer_cert(con->sslPeerCertificate());
   if (peer_cert.isNull())
@@ -617,7 +618,7 @@ void ReflectorClient::handleMsgProtoVer(std::istream& is)
   {
     //std::cout << "### ReflectorClient::handMsgProtoVer: Send CAInfo"
     //          << std::endl;
-    m_con->setMaxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_SIZE);
+    //m_con->setMaxRxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_FRAME_SIZE);
     sendMsg(MsgCAInfo(m_reflector->caSize(), m_reflector->caDigest()));
     m_con_state = STATE_EXPECT_START_ENCRYPTION;
   }
@@ -641,8 +642,8 @@ void ReflectorClient::handleMsgCABundleRequest(std::istream& is)
     return;
   }
 
-  std::cout << "### Sending CA Bundle" << std::endl;
-  m_con->setMaxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_SIZE);
+  //std::cout << "### Sending CA Bundle" << std::endl;
+  //m_con->setMaxRxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_FRAME_SIZE);
   sendMsg(MsgCABundle(m_reflector->caBundlePem(), m_reflector->caSignature(),
                       m_reflector->issuingCertPem()));
 } /* ReflectorClient::handleMsgCABundleRequest */
@@ -675,6 +676,7 @@ void ReflectorClient::handleMsgStartEncryptionRequest(std::istream& is)
   std::cout << m_con->remoteHost() << ":" << m_con->remotePort()
             << ": Starting encryption" << std::endl;
 
+  m_con->setMaxRxFrameSize(ReflectorMsg::MAX_SSL_SETUP_FRAME_SIZE);
   sendMsg(MsgStartEncryption());
   m_con->enableSsl(true);
   m_con_state = STATE_EXPECT_SSL_CON_READY;
@@ -1230,7 +1232,7 @@ void ReflectorClient::connectionAuthenticated(const std::string& callsign)
   if (find(connected_nodes.begin(), connected_nodes.end(),
            callsign) == connected_nodes.end())
   {
-    m_con->setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
+    m_con->setMaxRxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
     m_callsign = callsign;
     sendMsg(MsgAuthOk());
     cout << m_callsign << ": Login OK from "

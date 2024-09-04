@@ -242,7 +242,8 @@ ReflectorLogic::ReflectorLogic(void)
       sigc::mem_fun(*this, &ReflectorLogic::onVerifyPeer));
   m_con.sslConnectionReady.connect(
       sigc::mem_fun(*this, &ReflectorLogic::onSslConnectionReady));
-  m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  //m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  m_con.setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
 } /* ReflectorLogic::ReflectorLogic */
 
 
@@ -994,9 +995,9 @@ void ReflectorLogic::onConnected(void)
   m_next_udp_rx_seq = 0;
   timerclear(&m_last_talker_timestamp);
   //m_con_state = STATE_EXPECT_AUTH_CHALLENGE;
-  m_con.setMaxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_SIZE);
+  //m_con.setMaxFrameSize(ReflectorMsg::MAX_SSL_SETUP_FRAME_SIZE);
   m_con_state = STATE_EXPECT_CA_INFO;
-  //m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_SIZE);
+  //m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_FRAME_SIZE);
   processEvent("reflector_connection_status_update 1");
 } /* ReflectorLogic::onConnected */
 
@@ -1100,7 +1101,7 @@ void ReflectorLogic::onSslConnectionReady(TcpConnection*)
     return;
   }
 
-  m_con.setMaxFrameSize(ReflectorMsg::MAX_POST_SSL_SETUP_SIZE);
+  //m_con.setMaxFrameSize(ReflectorMsg::MAX_POST_SSL_SETUP_FRAME_SIZE);
 
   m_con_state = STATE_EXPECT_AUTH_ANSWER;
 } /* ReflectorLogic::onSslConnectionReady */
@@ -1295,7 +1296,7 @@ void ReflectorLogic::handleMsgAuthOk(void)
   }
   std::cout << name() << ": Authentication OK" << std::endl;
   m_con_state = STATE_EXPECT_SERVER_INFO;
-  m_con.setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
+  //m_con.setMaxFrameSize(ReflectorMsg::MAX_POSTAUTH_FRAME_SIZE);
 
   auto cert = m_con.sslCertificate();
   if (!cert.isNull())
@@ -1378,7 +1379,7 @@ void ReflectorLogic::handleMsgCAInfo(std::istream& is)
   {
     //std::cout << "### Requesting encrypted communications channel"
     //          << std::endl;
-    m_con.setMaxFrameSize(ReflectorMsg::MAX_PRE_SSL_SETUP_SIZE);
+    //m_con.setMaxFrameSize(ReflectorMsg::MAX_SSL_SETUP_FRAME_SIZE);
     sendMsg(MsgStartEncryptionRequest());
     m_con_state = STATE_EXPECT_START_ENCRYPTION;
   }

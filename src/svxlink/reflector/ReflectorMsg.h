@@ -107,10 +107,9 @@ the argument type for functions that take a TCP message as argument.
 class ReflectorMsg : public Async::Msg
 {
   public:
-    static const uint32_t MAX_PREAUTH_FRAME_SIZE = 64;
-    static const uint32_t MAX_PRE_SSL_SETUP_SIZE = 4096;
-    static const uint32_t MAX_POST_SSL_SETUP_SIZE = 16384;
-    static const uint32_t MAX_POSTAUTH_FRAME_SIZE = 32768;
+    static const uint32_t MAX_PREAUTH_FRAME_SIZE    = 64;
+    static const uint32_t MAX_SSL_SETUP_FRAME_SIZE  = 4096;
+    static const uint32_t MAX_POSTAUTH_FRAME_SIZE   = 32768;
 
     /**
      * @brief 	Constuctor
@@ -279,7 +278,7 @@ class ReflectorUdpMsgBase : public ReflectorUdpMsg
 }; /* ReflectorUdpMsgBase */
 
 
-/************************** Administrative Messages **************************/
+/************************** Administrative Messages *************************/
 
 /**
 @brief	 Heartbeat TCP network message
@@ -696,9 +695,7 @@ class MsgCABundle : public ReflectorMsgBase<21>
 }; /* MsgCABundle */
 
 
-
-
-
+/*************************** Application Messages ***************************/
 
 /**
 @brief	 Server information TCP network message
