@@ -213,7 +213,9 @@ class Reflector : public sigc::trackable
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
     using HttpServer = Async::TcpServer<Async::HttpServerConnection>;
 
-    static constexpr time_t CERT_VALIDITY_TIME = 90*24*3600;
+    static constexpr time_t ROOT_CA_VALIDITY_DAYS     = 25*365;
+    static constexpr time_t ISSUING_CA_VALIDITY_DAYS  = 4*90;
+    static constexpr time_t CERT_VALIDITY_DAYS        = 90;
 
     FramedTcpServer*            m_srv;
     Async::EncryptedUdpSocket*  m_udp_sock;

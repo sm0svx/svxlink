@@ -44,6 +44,7 @@ An example of how to use the SslX509 class
 #include <iomanip>
 #include <numeric>
 #include <ctime>
+#include <limits>
 
 
 /****************************************************************************
@@ -459,7 +460,19 @@ class SslX509
       return ss.str();
     }
 
-    void timeSpan(int& days, int& seconds) const
+    void setValidityTime(int days, int seconds=0)
+    {
+      std::time_t validity_secs = days * 24 * 60 * 60 + seconds;
+      std::time_t tnow = time(NULL);
+      if (std::numeric_limits<time_t>::max() - validity_secs < tnow)
+      {
+        validity_secs = std::numeric_limits<time_t>::max() - tnow;
+      }
+      setNotBefore(tnow);
+      setNotAfter(tnow + validity_secs);
+    }
+
+    void validityTime(int& days, int& seconds) const
     {
       const ASN1_TIME* not_before = X509_get_notBefore(m_cert);
       const ASN1_TIME* not_after = X509_get_notAfter(m_cert);

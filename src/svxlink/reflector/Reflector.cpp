@@ -166,7 +166,7 @@ namespace {
   void startCertRenewTimer(const Async::SslX509& cert, Async::AtTimer& timer)
   {
     int days=0, seconds=0;
-    cert.timeSpan(days, seconds);
+    cert.validityTime(days, seconds);
     time_t renew_time = cert.notBefore() +
         (static_cast<time_t>(days)*24*3600 + seconds)*RENEW_AFTER;
     timer.setTimeout(renew_time);
@@ -481,9 +481,7 @@ bool Reflector::signClientCert(Async::SslX509& cert)
 
   cert.setSerialNumber();
   cert.setIssuerName(m_issue_ca_cert.subjectName());
-  time_t tnow = time(NULL);
-  cert.setNotBefore(tnow);
-  cert.setNotAfter(tnow + CERT_VALIDITY_TIME);
+  cert.setValidityTime(CERT_VALIDITY_DAYS);
   auto cn = cert.commonName();
   if (!cert.sign(m_issue_ca_pkey))
   {
@@ -1672,7 +1670,7 @@ bool Reflector::loadServerCertificateFiles(void)
     else
     {
       int days=0, seconds=0;
-      cert.timeSpan(days, seconds);
+      cert.validityTime(days, seconds);
       //std::cout << "### days=" << days << "  seconds=" << seconds
       //          << std::endl;
       time_t tnow = time(NULL);
@@ -1746,9 +1744,7 @@ bool Reflector::loadServerCertificateFiles(void)
     cert.setVersion(Async::SslX509::VERSION_3);
     cert.setIssuerName(m_issue_ca_cert.subjectName());
     cert.setSubjectName(req.subjectName());
-    time_t tnow = time(NULL);
-    cert.setNotBefore(tnow);
-    cert.setNotAfter(tnow + CERT_VALIDITY_TIME);
+    cert.setValidityTime(CERT_VALIDITY_DAYS);
     cert.addExtensions(req.extensions());
     cert.setPublicKey(pkey);
     cert.sign(m_issue_ca_pkey);
@@ -1901,9 +1897,7 @@ bool Reflector::loadRootCAFiles(void)
       ca_exts.addSubjectAltNames("email:" + value);
     }
     m_ca_cert.addExtensions(ca_exts);
-    time_t tnow = time(NULL);
-    m_ca_cert.setNotBefore(tnow);
-    m_ca_cert.setNotAfter(tnow + 25*365*24*3600);
+    m_ca_cert.setValidityTime(ROOT_CA_VALIDITY_DAYS);
     m_ca_cert.setPublicKey(m_ca_pkey);
     m_ca_cert.sign(m_ca_pkey);
     if (!m_ca_cert.writePemFile(ca_crtfile))
@@ -1975,7 +1969,7 @@ bool Reflector::loadSigningCAFiles(void)
     else
     {
       int days=0, seconds=0;
-      m_issue_ca_cert.timeSpan(days, seconds);
+      m_issue_ca_cert.validityTime(days, seconds);
       time_t tnow = time(NULL);
       time_t renew_time = tnow + (days*24*3600 + seconds)*RENEW_AFTER;
       if (!m_issue_ca_cert.timeIsWithinRange(tnow, renew_time))
@@ -2058,9 +2052,7 @@ bool Reflector::loadSigningCAFiles(void)
     m_issue_ca_cert.setVersion(Async::SslX509::VERSION_3);
     m_issue_ca_cert.setSubjectName(csr.subjectName());
     m_issue_ca_cert.addExtensions(csr.extensions());
-    time_t tnow = time(NULL);
-    m_issue_ca_cert.setNotBefore(tnow);
-    m_issue_ca_cert.setNotAfter(tnow + 4*CERT_VALIDITY_TIME);
+    m_issue_ca_cert.setValidityTime(ISSUING_CA_VALIDITY_DAYS);
     m_issue_ca_cert.setPublicKey(m_issue_ca_pkey);
     m_issue_ca_cert.setIssuerName(m_ca_cert.subjectName());
     m_issue_ca_cert.sign(m_ca_pkey);

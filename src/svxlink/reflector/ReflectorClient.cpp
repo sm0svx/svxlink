@@ -423,7 +423,7 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
   }
 
   int days=0, seconds=0;
-  peer_cert.timeSpan(days, seconds);
+  peer_cert.validityTime(days, seconds);
   time_t renew_time = peer_cert.notBefore() +
       (static_cast<time_t>(days)*24*3600 + seconds)*RENEW_AFTER;
   //std::cout << "### Client cert days=" << days << " seconds="
