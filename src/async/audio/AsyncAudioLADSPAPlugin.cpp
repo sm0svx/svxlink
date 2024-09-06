@@ -1,6 +1,6 @@
 /**
 @file   AsyncAudioLADSPAPlugin.cpp
-@brief  A_brief_description_for_this_file
+@brief  A class for using a LADSPA plugin as an audio processor
 @author Tobias Blomberg / SM0SVX
 @date   2023-12-09
 
