@@ -31,6 +31,9 @@
   ACCEPT_CALLSIGN and REJECT_CALLSIGN configuration variables. That is done
   for both AUTH_KEY connections and certificate connections.
 
+* It's now possible to apply LADSPA plugin audio processing to the transmitted
+  audio. Plugins are set up using the LADSPA_PLUGINS configuration variable.
+
 
 
  1.8.0 -- 25 Feb 2024
