@@ -609,13 +609,13 @@ bool LocalRxBase::initialize(void)
   LADSPAPluginLoader ladspa_plug_loader;
   if (!ladspa_plug_loader.load(cfg(), name()))
   {
-    delete ladspa_plug_loader.firstPlugin();
+    delete ladspa_plug_loader.chainSink();
     return false;
   }
-  if (ladspa_plug_loader.firstPlugin() != nullptr)
+  if (ladspa_plug_loader.chainSink() != nullptr)
   {
-    prev_src->registerSink(ladspa_plug_loader.firstPlugin(), true);
-    prev_src = ladspa_plug_loader.lastPlugin();
+    prev_src->registerSink(ladspa_plug_loader.chainSink(), true);
+    prev_src = ladspa_plug_loader.chainSource();
   }
 
     // Add a limiter to smoothly limit the audio before hard clipping it

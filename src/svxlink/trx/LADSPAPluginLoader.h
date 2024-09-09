@@ -216,29 +216,29 @@ class LADSPAPluginLoader
 
           plug->print(sec + ": ");
 
-          if (m_last_plug == nullptr)
+          if (m_chain_src == nullptr)
           {
-            m_first_plug = plug;
+            m_chain_sink = plug;
           }
           else
           {
-            m_last_plug->registerSink(plug, true);
+            m_chain_src->registerSink(plug, true);
           }
-          m_last_plug = plug;
+          m_chain_src = plug;
         }
       }
 #endif
       return true;
     } /* load */
 
-    Async::AudioLADSPAPlugin* firstPlugin(void) { return m_first_plug; }
-    Async::AudioLADSPAPlugin* lastPlugin(void) { return m_last_plug; }
+    Async::AudioSink* chainSink(void) { return m_chain_sink; }
+    Async::AudioSource* chainSource(void) { return m_chain_src; }
 
   protected:
 
   private:
-    Async::AudioLADSPAPlugin* m_first_plug  = nullptr;
-    Async::AudioLADSPAPlugin* m_last_plug   = nullptr;
+    Async::AudioSink*   m_chain_sink  = nullptr;
+    Async::AudioSource* m_chain_src   = nullptr;
 
 };  /* class LADSPAPluginLoader */
 
