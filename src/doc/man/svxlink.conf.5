@@ -1861,28 +1861,7 @@ processing chain is applied just before the final stages of the receiver audio
 processing and will only affect how the audio sounds. Any digital signal
 processing done on the audio before that, like DTMF, CTCSS etc, is unaffected.
 
-LADSPA is a framework for sharing pluggable audio components and there are
-numerous plugins to choose from. Each plugin has a name ("label") and zero or
-more configuration parameters ("control input ports"). To find out which
-plugins are installed on your system, use the "listplugins" command. If you
-are missing some plugin it may be available to install using your package
-system (rpm/yum/dnf, deb/apt etc). To find out more information about a
-plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
-more about the LADSPA framework in their official documentation.
-
-In SvxLink only plugins that have exactly one audio input and one audio
-output can be used, so all stereo plugins are excluded for example.  The same
-thing is valid for input-only or output-only plugins.
-
-The analyseplugin utility will, among other things, list the ports. All ports
-that are typed as "input, control" can be used to configure the plugin. Valid
-range and a default value may also be listed. The format for the
-LADSPA_PLUGINS configuration variable in SvxLink is
-"label1:port1:port2:...:portN,label2:port1:port2:...:portN,...". Note that
-only control input ports are counted here so when applying the parameters any
-intermingled ports of other types are skipped.
-
-Example: LADSPA_PLUGINS=hpf:1000,tap_dynamics_m:4:500:15:15:13
+See "LADSPA PLUGIN USAGE" for more information.
 .
 .SS Ddr Receiver Section
 .
@@ -2508,28 +2487,7 @@ The processing chain is applied right at the top of the transmitter audio
 processing and will only affect how the audio sounds. Any digital signal
 processing done on the audio after that, like DTMF, CTCSS etc, is unaffected.
 
-LADSPA is a framework for sharing pluggable audio components and there are
-numerous plugins to choose from. Each plugin has a name ("label") and zero or
-more configuration parameters ("control input ports"). To find out which
-plugins are installed on your system, use the "listplugins" command. If you
-are missing some plugin it may be available to install using your package
-system (rpm/yum/dnf, deb/apt etc). To find out more information about a
-plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
-more about the LADSPA framework in their official documentation.
-
-In SvxLink only plugins that have exactly one audio input and one audio
-output can be used, so all stereo plugins are excluded for example.  The same
-thing is valid for input-only or output-only plugins.
-
-The analyseplugin utility will, among other things, list the ports. All ports
-that are typed as "input, control" can be used to configure the plugin. Valid
-range and a default value may also be listed. The format for the
-LADSPA_PLUGINS configuration variable in SvxLink is
-"label1:port1:port2:...:portN,label2:port1:port2:...:portN,...". Note that
-only control input ports are counted here so when applying the parameters any
-intermingled ports of other types are skipped.
-
-Example: LADSPA_PLUGINS=hpf:1000,tap_dynamics_m:4:500:15:15:13
+See "LADSPA PLUGIN USAGE" for more information.
 .TP
 .B MASTER_GAIN
 This configuration variable can be used to fine tune or increase the audio
@@ -3125,6 +3083,48 @@ active = Set to true if the receiver is the active one, selected by the voter
 .RS 0
 siglev = The measured signal level
 .RE
+.
+.SH LADSPA PLUGIN USAGE
+.
+LADSPA is a framework for sharing pluggable audio components and there are
+numerous plugins to choose from. Each plugin has a name ("label") and zero or
+more configuration parameters ("control input ports"). To find out which
+plugins are installed on your system, use the "listplugins" command. If you
+are missing some plugin it may be available to install using your package
+manager (rpm/yum/dnf, deb/apt etc). To find out more information about a
+plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
+more about the LADSPA framework in their official documentation.
+
+In SvxLink only plugins that have exactly one audio input and one audio
+output can be used, so all stereo plugins are excluded for example.  The same
+thing is valid for input-only or output-only plugins.
+
+The analyseplugin utility will, among other things, list the ports. All ports
+that are typed as "input, control" can be used to configure the plugin. Valid
+range and a default value may also be listed. The format for the
+LADSPA_PLUGINS configuration variable in SvxLink is
+"label1:port1:port2:...:portN,label2:port1:port2:...:portN,@MyPlugConfig,...".
+Note that only control input ports are counted here so when applying the
+parameters any intermingled ports of other types are skipped.
+
+If an instance config start with an @-sign, a configuration section with the
+given name is used to configure the plugin. There must be a LABEL
+configuration item and the rest of the configuration variables in that section
+must match input control port names in the plugin instance specified by LABEL.
+The config variable names are matched against the beginning of the port names
+but does not have to match the whole name.
+
+Example:
+
+  LADSPA_PLUGINS=hpf:1000,@Tx1_Compressor
+
+  [Tx1_Compressor]
+  LABEL=tap_dynamics_m
+  Attack=4
+  Release=500
+  Offset Gain=15
+  Makeup Gain=15
+  Function=13
 .
 .SH FILES
 .

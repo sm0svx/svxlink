@@ -75,9 +75,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <HdlcFramer.h>
 #include <AfskModulator.h>
 #include <AsyncAudioFsf.h>
-#ifdef LADSPA_VERSION
-#include <AsyncAudioLADSPAPlugin.h>
-#endif
 
 
 /****************************************************************************
@@ -94,6 +91,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Rx.h"
 #include "Emphasis.h"
 #include "Ptt.h"
+#include "LADSPAPluginLoader.h"
 
 
 /****************************************************************************
@@ -461,59 +459,17 @@ bool LocalTx::initialize(void)
   prev_src = comp;
   */
 
-#ifdef LADSPA_VERSION
-  std::vector<std::string> ladspa_plugin_cfg;
-  if (cfg.getValue(name(), "LADSPA_PLUGINS", ladspa_plugin_cfg))
+  LADSPAPluginLoader ladspa_plug_loader;
+  if (!ladspa_plug_loader.load(cfg, name()))
   {
-    for (const auto& pcfg : ladspa_plugin_cfg)
-    {
-      std::istringstream is(pcfg);
-      std::string label;
-      std::getline(is, label, ':');
-      //std::cout << "### pcfg=" << pcfg << "  label=" << label << std::endl;
-      auto plug = new Async::AudioLADSPAPlugin(label);
-      if (!plug->initialize())
-      {
-        std::cerr << "*** ERROR: Could not instantiate LADSPA plugin "
-                     "instance with label '" << label << "' "
-                  << "specified in configuration variable "
-                  << name() << "/LADSPA_PLUGINS." << std::endl;
-        return false;
-      }
-      unsigned long portno = 0;
-      LADSPA_Data val;
-      while (is >> val)
-      {
-        while ((portno < plug->portCount()) &&
-               !(plug->portIsControl(portno) && plug->portIsInput(portno)))
-        {
-          ++portno;
-        }
-        if (portno >= plug->portCount())
-        {
-          std::cerr << "*** ERROR: Too many parameters specified for LADSPA "
-                       "plugin \"" << plug->label()
-                    << "\" specified in configuration variable "
-                    << name() << "/LADSPA_PLUGINS." << std::endl;
-          return false;
-        }
-        plug->setControl(portno++, val);
-        char colon = 0;
-        if ((is >> colon) && (colon != ':'))
-        {
-          std::cerr << "*** ERROR: Illegal format for " << name()
-                    << "/LADSPA_PLUGINS configuration variable" << std::endl;
-          return false;
-        }
-      }
-
-      plug->print(name() + ": ");
-
-      prev_src->registerSink(plug, true);
-      prev_src = plug;
-    }
+    delete ladspa_plug_loader.firstPlugin();
+    return false;
   }
-#endif
+  if (ladspa_plug_loader.firstPlugin() != nullptr)
+  {
+    prev_src->registerSink(ladspa_plug_loader.firstPlugin(), true);
+    prev_src = ladspa_plug_loader.lastPlugin();
+  }
 
     // If preemphasis is enabled, create the preemphasis filter
   if (cfg.getValue(name(), "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))

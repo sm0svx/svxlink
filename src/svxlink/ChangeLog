@@ -34,6 +34,9 @@
 * It's now possible to apply LADSPA plugin audio processing to the transmitted
   audio. Plugins are set up using the LADSPA_PLUGINS configuration variable.
 
+* Added a more verbose way to configure LADSPA plugins where the available
+  input controls are specified by name in their own configuration section.
+
 
 
  1.8.0 -- 25 Feb 2024
