@@ -163,7 +163,7 @@ bool Config::getValue(const string& section, const string& tag,
     return false;
   }
 
-  value = val_it->second;
+  value = val_it->second.val;
   return true;
 } /* Config::getValue */
 
@@ -184,7 +184,7 @@ const string &Config::getValue(const string& section, const string& tag) const
     return empty_strng;
   }
 
-  return val_it->second;
+  return val_it->second.val;
 } /* Config::getValue */
 
 
@@ -208,7 +208,7 @@ list<string> Config::listSection(const string& section)
     return tags;
   }
   
-  Values& values = sections[section];  
+  Values& values = sections[section];
   Values::iterator it = values.begin();
   for (it=values.begin(); it!=values.end(); ++it)
   {
@@ -221,13 +221,17 @@ list<string> Config::listSection(const string& section)
 
 
 void Config::setValue(const std::string& section, const std::string& tag,
-      	      	      const std::string& value)
+                      const std::string& value)
 {
   Values &values = sections[section];
-  if (value != values[tag])
+  if (value != values[tag].val)
   {
-    values[tag] = value;
+    values[tag].val = value;
     valueUpdated(section, tag);
+    for (const auto& func : values[tag].subs)
+    {
+      func(value);
+    }
   }
 } /* Config::setValue */
 
@@ -337,7 +341,7 @@ bool Config::parseCfgFile(FILE *file)
 	assert(!current_sec.empty());
 	
 	Values &values = sections[current_sec];
-	string& value = values[current_tag];
+	string& value = values[current_tag].val;
 	value += val;
 	break;
       }
@@ -361,7 +365,7 @@ bool Config::parseCfgFile(FILE *file)
 	}
 	Values &values = sections[current_sec];
 	current_tag = tag;
-	values[current_tag] = value;
+	values[current_tag].val = value;
       	break;
       }
     }
@@ -514,9 +518,6 @@ char *Config::translateEscapedChars(char *val)
 } /* Config::translateEscapedChars */
 
 
-
-
 /*
  * This file has not been truncated
  */
-

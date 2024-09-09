@@ -384,6 +384,25 @@ bool AudioLADSPAPlugin::setControl(PortNumber portno, LADSPA_Data val)
 } /* AudioLADSPAPlugin::setControl */
 
 
+AudioLADSPAPlugin::PortNumber
+AudioLADSPAPlugin::findControlInputByName(const std::string& name)
+{
+  for (PortNumber i=0; i<m_desc->PortCount; ++i)
+  {
+    LADSPA_PortDescriptor port_desc = m_desc->PortDescriptors[i];
+    if (LADSPA_IS_PORT_CONTROL(port_desc) && LADSPA_IS_PORT_INPUT(port_desc))
+    {
+      std::string port_name(m_desc->PortNames[i]);
+      if (port_name.rfind(name, 0) == 0)
+      {
+        return i;
+      }
+    }
+  }
+  return npos;
+} /* AudioLADSPAPlugin::findControlInputByName */
+
+
 void AudioLADSPAPlugin::activate(void)
 {
   assert((m_desc != nullptr) && (m_inst_handle != nullptr));

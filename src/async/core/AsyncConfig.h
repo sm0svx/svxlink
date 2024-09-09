@@ -55,6 +55,7 @@ An example of how to use the Config class
 #include <sstream>
 #include <locale>
 #include <vector>
+#include <cassert>
 
 
 /****************************************************************************
@@ -461,6 +462,113 @@ class Config
     } /* Config::getValue */
 
     /**
+     * @brief Subscribe to the given configuration variable (char*)
+     * @param section The name of the section where the configuration
+     *                variable is located
+     * @param tag     The name of the configuration variable to get
+     * @param def     Default value if the config var does not exist
+     * @param func    The function to call when the config var changes
+     *
+     * This function is used to subscribe to the changes of the specified
+     * configuration variable. The given function will be called when the value
+     * changes. If the configuration variable is not set, it will be set to the
+     * given default value.
+     *
+     * This version of the function is called when the default value is a C
+     * string (char*).
+     */
+    template <typename F=std::function<void(const char*)>>
+    void subscribeValue(const std::string& section, const std::string& tag,
+                        const char* def, F func)
+    {
+      subscribeValue(section, tag, std::string(def),
+          [=](const std::string& str_val) -> void
+          {
+            func(str_val.c_str());
+          });
+    } /* subscribeValue */
+
+    /**
+     * @brief Subscribe to the given configuration variable
+     * @param section The name of the section where the configuration
+     *                variable is located
+     * @param tag     The name of the configuration variable to get
+     * @param def     Default value if the config var does not exist
+     * @param func    The function to call when the config var changes
+     *
+     * This function is used to subscribe to the changes of the specified
+     * configuration variable. The given function will be called when the value
+     * changes. If the configuration variable is not set, it will be set to the
+     * given default value.
+     *
+     * This version of the function is called when the default value is of a
+     * non-container type (e.g. std::string, int, bool etc).
+     */
+    template <typename Rsp, typename F=std::function<void(const Rsp&)>>
+    void subscribeValue(const std::string& section, const std::string& tag,
+                        const Rsp& def, F func)
+    {
+      Value& v = getValueP(section, tag, def);
+      v.subs.push_back(
+          [=](const std::string& str_val) -> void
+          {
+            std::stringstream ssval(str_val);
+            ssval.imbue(std::locale(ssval.getloc(), new nospace_ctype));
+            Rsp tmp;
+            ssval >> tmp;
+            func(tmp);
+          });
+      v.subs.back()(v.val);
+    } /* subscribeValue */
+
+    /**
+     * @brief Subscribe to the given configuration variable (sequence)
+     * @param section The name of the section where the configuration
+     *                variable is located
+     * @param tag     The name of the configuration variable to get
+     * @param def     Default value if the config var does not exist
+     * @param func    The function to call when the config var changes
+     *
+     * This function is used to subscribe to the changes of the specified
+     * configuration variable. The given function will be called when the value
+     * changes. If the configuration variable is not set, it will be set to the
+     * given default value.
+     *
+     * This version of the function is called when the default value is a
+     * sequence container (e.g. std::vector, std::list etc).
+     */
+    template <template <typename, typename> class Container,
+              typename Rsp, typename F=std::function<void(const Rsp&)>>
+    void subscribeValue(const std::string& section, const std::string& tag,
+                        const Container<Rsp, std::allocator<Rsp>>& def, F func)
+    {
+      Value& v = getValueP(section, tag, def);
+      v.subs.push_back(
+          [=](const std::string& str_val) -> void
+          {
+            std::stringstream ssval(str_val);
+            ssval.imbue(std::locale(ssval.getloc(), new csv_whitespace));
+            Container<Rsp, std::allocator<Rsp>> c;
+            while (!ssval.eof())
+            {
+              Rsp tmp;
+              ssval >> tmp;
+              if(!ssval.eof())
+              {
+                ssval >> std::ws;
+              }
+              if (ssval.fail())
+              {
+                return;
+              }
+              c.push_back(tmp);
+            }
+            func(std::move(c));
+          });
+      v.subs.back()(v.val);
+    } /* Config::subscribeValue */
+
+    /**
      * @brief   Return the name of all configuration sections
      * @return  Returns a list of all existing section names
      */
@@ -520,6 +628,44 @@ class Config
     }
 
     /**
+     * @brief   Set the value of a configuration variable (sequence container)
+     * @param   section   The name of the section where the configuration
+     *                    variable is located
+     * @param   tag       The name of the configuration variable to set.
+     * @param   c         The sequence to set
+     *
+     * This function is used to set the value of a configuration variable that
+     * holds a sequence container (e.g. std::vector, std::list etc).
+     * The type of the elements of the container may be any type that support
+     * streaming to string.
+     * If the given configuration section or variable does not exist, it
+     * is created.
+     * Note that this function will not write anything back to the
+     * associated configuration file. It will only set the value in memory.
+     *
+     * The valueUpdated signal will be emitted so that subscribers can get
+     * notified when the value of a configuration variable is changed.
+     */
+    template <template <typename, typename> class Container,
+              typename Rsp>
+    void setValue(const std::string& section, const std::string& tag,
+                  const Container<Rsp, std::allocator<Rsp>>& c)
+    {
+      std::ostringstream ss;
+      bool first_val = true;
+      for (const auto& val : c)
+      {
+        if (!first_val)
+        {
+          ss << ",";
+        }
+        first_val = false;
+        ss << val;
+      }
+      setValue(section, tag, ss.str());
+    } /* setValue */
+
+    /**
      * @brief   A signal that is emitted when a config value is updated
      * @param   section The config section of the update
      * @param   tag     The tag (variable name) of the update
@@ -531,8 +677,33 @@ class Config
     sigc::signal<void, const std::string&, const std::string&> valueUpdated;
 
   private:
-    typedef std::map<std::string, std::string>  Values;
-    typedef std::map<std::string, Values>       Sections;
+    using Subscriber = std::function<void(const std::string&)>;
+    struct Value
+    {
+      std::string                               val;
+      std::vector<Subscriber>  subs;
+    };
+    typedef std::map<std::string, Value>  Values;
+    typedef std::map<std::string, Values> Sections;
+    struct nospace_ctype : std::ctype<char>
+    {
+      static const mask* make_table(void)
+      {
+          // Make a copy of the "C" locale table
+        static std::vector<mask> v(classic_table(),
+                                   classic_table() + table_size);
+        for (auto& t : v)
+        {
+          if (t & space)
+          {
+            t &= ~space;
+          }
+        }
+        return &v[0];
+      }
+      nospace_ctype(std::size_t refs=0)
+        : std::ctype<char>(make_table(), false, refs) {}
+    };
     struct csv_whitespace : std::ctype<char>
     {
       static const mask* make_table(void)
@@ -549,8 +720,6 @@ class Config
 
     Sections  sections;
 
-    //Config(const Config&);
-    //Config& operator=(const Config&);
     bool parseCfgFile(FILE *file);
     char *trimSpaces(char *line);
     char *parseSection(char *line);
@@ -570,6 +739,19 @@ class Config
       }
       return !ss.fail() && ss.eof();
     }
+
+    template <typename T>
+    Value& getValueP(const std::string& section, const std::string& tag,
+                     const T& def)
+    {
+      Values::iterator val_it = sections[section].find(tag);
+      if (val_it == sections[section].end())
+      {
+        setValue(section, tag, def);
+      }
+
+      return sections[section][tag];
+    } /* getValueP */
 
 }; /* class Config */
 

@@ -7,6 +7,9 @@
 
 * Async::Exec: Now possible to set up environment variables.
 
+* Async::Config now have a mechanism for subscribing to changes for specific
+  configuration variables.
+
 
 
  1.7.0 -- 25 Feb 2024
