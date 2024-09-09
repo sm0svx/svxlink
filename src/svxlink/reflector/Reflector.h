@@ -191,14 +191,13 @@ class Reflector : public sigc::trackable
 
     Async::SslCertSigningReq loadClientPendingCsr(const std::string& callsign);
     Async::SslCertSigningReq loadClientCsr(const std::string& callsign);
-    bool signClientCert(Async::SslX509& cert);
+    bool signClientCert(Async::SslX509& cert, const std::string& ca_op);
     Async::SslX509 signClientCsr(const std::string& cn);
     Async::SslX509 loadClientCertificate(const std::string& callsign);
 
     size_t caSize(void) const { return m_ca_size; }
     const std::vector<uint8_t>& caDigest(void) const { return m_ca_md; }
     const std::vector<uint8_t>& caSignature(void) const { return m_ca_sig; }
-    //const std::string& caUrl(void) const { return m_ca_url; }
     std::string clientCertPem(const std::string& callsign) const;
     std::string caBundlePem(void) const;
     std::string issuingCertPem(void) const;
@@ -245,7 +244,6 @@ class Reflector : public sigc::trackable
     size_t                      m_ca_size = 0;
     std::vector<uint8_t>        m_ca_md;
     std::vector<uint8_t>        m_ca_sig;
-    //std::string                 m_ca_url;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);

@@ -46,12 +46,12 @@ CSR_CREATE_MAIL_SUBJECT: "SvxReflector: CSR received from node {callsign}"
 # Comment out to suppress sending of CSR create emails.
 CSR_CREATE_MAIL_CONTENT: |
   Hi,
-  
+
   The reflector node {callsign} has submitted a CSR at reflector server {hostname}. Please check that the CSR is correct and then sign it.
-  
+
     Subject: {subject}
     Email:   {email}
-  
+
   Regards,
   SvxReflector Server
 
@@ -80,18 +80,41 @@ CSR_SIGNED_MAIL_SUBJECT: "SvxReflector: Certificate signed for node {callsign}"
 # Comment out to suppress sending of CSR signed emails.
 CSR_SIGNED_MAIL_CONTENT: |
   Hi,
-  
+
   The certificate for reflector node {callsign} has been signed and is now ready for use. If this was not initiated by you, your callsign may have been hijacked by someone. In that case, please reply to this email to notify the reflector sysop.
-  
+
     Serial:     {serial_number:X}
     Issuer:     {issuer}
     Subject:    {subject}
     Not before: {not_before}Z
     Not after:  {not_after}Z
     Email:      {email}
-  
+
   If everything is in order, you do not have to do anything. Your node will receive the certificate from the reflector server and will start to use it immediately.
-  
+
+  Regards,
+  SvxReflector Server Sysop
+
+# Email subject to use for certificate renew notifications.
+# Comment out to suppress sending of renew emails.
+CRT_RENEWED_MAIL_SUBJECT: "SvxReflector: Certificate renewed for node {callsign}"
+
+# Email content to use for certificate renew notifications.
+# Comment out to suppress sending of CSR signed emails.
+CRT_RENEWED_MAIL_CONTENT: |
+  Hi,
+
+  The certificate for reflector node {callsign} has been renewed and is now ready for use. Node certificates are automatically renewed when about one third of the total certificate lifetime remains.
+
+    Serial:     {serial_number:X}
+    Issuer:     {issuer}
+    Subject:    {subject}
+    Not before: {not_before}Z
+    Not after:  {not_after}Z
+    Email:      {email}
+
+  If everything is in order, you do not have to do anything. Your node will receive the new certificate from the reflector server and will start to use it immediately.
+
   Regards,
   SvxReflector Server Sysop
 

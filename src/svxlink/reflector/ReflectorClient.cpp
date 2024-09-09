@@ -1324,7 +1324,7 @@ void ReflectorClient::renewClientCertificate(void)
 {
   std::cout << m_callsign << ": Renew client certificate" << std::endl;
   auto cert = m_con->sslPeerCertificate();
-  if (cert.isNull() || !m_reflector->signClientCert(cert))
+  if (cert.isNull() || !m_reflector->signClientCert(cert, "CRT_RENEWED"))
   {
     std::cerr << "*** WARNING: Certificate resigning for '"
               << m_callsign << "' failed" << std::endl;

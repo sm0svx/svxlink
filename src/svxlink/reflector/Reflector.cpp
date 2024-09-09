@@ -475,7 +475,7 @@ Reflector::loadClientCsr(const std::string& callsign)
 } /* Reflector::loadClientPendingCsr */
 
 
-bool Reflector::signClientCert(Async::SslX509& cert)
+bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
 {
   //std::cout << "### Reflector::signClientCert" << std::endl;
 
@@ -493,7 +493,7 @@ bool Reflector::signClientCert(Async::SslX509& cert)
   if (cert.writePemFile(crtfile) && m_issue_ca_cert.appendPemFile(crtfile))
   {
     runCAHook({
-        { "CA_OP",      "CSR_SIGNED" },
+        { "CA_OP",      ca_op },
         { "CA_CRT_PEM", cert.pem() }
       });
   }
@@ -535,7 +535,7 @@ Async::SslX509 Reflector::signClientCsr(const std::string& cn)
   Async::SslKeypair csr_pkey(req.publicKey());
   cert.setPublicKey(csr_pkey);
 
-  if (!signClientCert(cert))
+  if (!signClientCert(cert, "CSR_SIGNED"))
   {
     cert.set(nullptr);
   }
