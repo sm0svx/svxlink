@@ -8,7 +8,7 @@
 RUNASUSER=@SVXLINK_USER@
 
 # The directory where SvxLink write state files
-STATEDIR=@SVX_LOCAL_STATE_DIR@/svxlink
+STATEDIR=@SVX_LOCAL_STATE_DIR@
 
 # Specify which configuration file to use
 CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
