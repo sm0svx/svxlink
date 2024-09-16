@@ -151,7 +151,7 @@ namespace {
       if (access(dirname.c_str(), F_OK) != 0)
       {
         std::cout << "Create directory '" << dirname << "'" << std::endl;
-        if (mkdir(dirname.c_str(), 0755) != 0)
+        if (mkdir(dirname.c_str(), 0777) != 0)
         {
           std::cerr << "*** ERROR: Could not create directory '"
                     << dirname << "'" << std::endl;

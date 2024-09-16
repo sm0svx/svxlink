@@ -325,7 +325,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     std::cout << name()
               << ": Create PKI directory \"" << m_pki_dir << "\""
               << std::endl;
-    if (mkdir(m_pki_dir.c_str(), 0755) != 0)
+    if (mkdir(m_pki_dir.c_str(), 0777) != 0)
     {
       std::cerr << "*** ERROR: Could not create PKI directory \""
                 << m_pki_dir << "\" in logic \"" << name() << "\""
