@@ -481,7 +481,7 @@ bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
 
   cert.setSerialNumber();
   cert.setIssuerName(m_issue_ca_cert.subjectName());
-  cert.setValidityTime(CERT_VALIDITY_DAYS);
+  cert.setValidityTime(CERT_VALIDITY_DAYS, CERT_VALIDITY_OFFSET_DAYS);
   auto cn = cert.commonName();
   if (!cert.sign(m_issue_ca_pkey))
   {

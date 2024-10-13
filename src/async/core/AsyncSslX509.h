@@ -460,10 +460,11 @@ class SslX509
       return ss.str();
     }
 
-    void setValidityTime(int days, int seconds=0)
+    void setValidityTime(unsigned days, int offset_days=0)
     {
-      std::time_t validity_secs = days * 24 * 60 * 60 + seconds;
+      std::time_t validity_secs = days * 24 * 60 * 60;
       std::time_t tnow = time(NULL);
+      tnow += offset_days * 24 * 60 * 60;
       if (std::numeric_limits<time_t>::max() - validity_secs < tnow)
       {
         validity_secs = std::numeric_limits<time_t>::max() - tnow;
