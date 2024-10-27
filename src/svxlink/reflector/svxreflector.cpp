@@ -9,7 +9,7 @@ nodes together.
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -495,6 +495,8 @@ int main(int argc, const char *argv[])
  */
 static void parse_arguments(int argc, const char **argv)
 {
+  int print_version;
+
   poptContext optCon;
   const struct poptOption optionsTable[] =
   {
@@ -513,6 +515,8 @@ static void parse_arguments(int argc, const char **argv)
     */
     {"daemon", 0, POPT_ARG_NONE, &daemonize, 0,
 	    "Start " PROGRAM_NAME " as a daemon", NULL},
+    {"version", 0, POPT_ARG_NONE, &print_version, 0,
+	    "Print the application version string", NULL},
     {NULL, 0, 0, NULL, 0}
   };
   int err;
@@ -549,6 +553,11 @@ static void parse_arguments(int argc, const char **argv)
 
   poptFreeContext(optCon);
 
+  if (print_version)
+  {
+    std::cout << SVXREFLECTOR_VERSION << std::endl;
+    exit(0);
+  }
 } /* parse_arguments */
 
 

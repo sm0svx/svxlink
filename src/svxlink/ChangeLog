@@ -37,6 +37,9 @@
 * Added a more verbose way to configure LADSPA plugins where the available
   input controls are specified by name in their own configuration section.
 
+* Add --version command line option to applications svxlink, remotetrx,
+  devcal and svxreflector.
+
 
 
  1.8.0 -- 25 Feb 2024
