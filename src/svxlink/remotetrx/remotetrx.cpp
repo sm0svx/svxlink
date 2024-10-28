@@ -622,7 +622,7 @@ int main(int argc, char **argv)
  */
 static void parse_arguments(int argc, const char **argv)
 {
-  int print_version;
+  int print_version = 0;
 
   poptContext optCon;
   const struct poptOption optionsTable[] =
