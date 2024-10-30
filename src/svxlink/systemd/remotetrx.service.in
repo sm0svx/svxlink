@@ -25,6 +25,9 @@ After=svxlink_gpio_setup.service
 
 [Service]
 Type=simple
+Environment=RUNASUSER=@SVXLINK_USER@
+Environment=CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/remotetrx.conf
+Environment=LOGFILE=@LOCAL_STATE_DIR@/log/remotetrx
 EnvironmentFile=@SYSTEMD_DEFAULTS_FILES_DIR@/remotetrx
 UMask=0002
 ExecStartPre=/bin/touch ${LOGFILE}

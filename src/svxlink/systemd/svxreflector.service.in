@@ -23,6 +23,10 @@ After=network.target remote-fs.target syslog.target time.target
 
 [Service]
 Type=simple
+Environment=RUNASUSER=@SVXLINK_USER@
+Environment=STATEDIR=@SVX_LOCAL_STATE_DIR@
+Environment=CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxreflector.conf
+Environment=LOGFILE=@LOCAL_STATE_DIR@/log/svxreflector
 EnvironmentFile=@SYSTEMD_DEFAULTS_FILES_DIR@/svxreflector
 UMask=0002
 ExecStartPre=/bin/touch ${LOGFILE}

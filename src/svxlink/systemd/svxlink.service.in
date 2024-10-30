@@ -25,6 +25,10 @@ After=svxlink_gpio_setup.service
 
 [Service]
 Type=simple
+Environment=RUNASUSER=@SVXLINK_USER@
+Environment=STATEDIR=@SVX_LOCAL_STATE_DIR@
+Environment=CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
+Environment=LOGFILE=@LOCAL_STATE_DIR@/log/svxlink
 EnvironmentFile=@SYSTEMD_DEFAULTS_FILES_DIR@/svxlink
 UMask=0002
 ExecStartPre=/bin/touch ${LOGFILE}
