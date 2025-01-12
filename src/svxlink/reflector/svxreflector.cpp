@@ -9,7 +9,7 @@ nodes together.
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -418,7 +418,7 @@ int main(int argc, const char *argv[])
   //}
 
   cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
-          " Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "

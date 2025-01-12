@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -866,7 +866,7 @@ void MainWindow::helpAbout(void)
         tr("Qtel v") + QTEL_VERSION +
         tr(" - Qt EchoLink client.\n") +
         "\n" +
-        tr("Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX\n\n"
+        tr("Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n"
            "Qtel comes with ABSOLUTELY NO WARRANTY. "
            "This is free software, and you "
            "are welcome to redistribute it in accordance with the "
