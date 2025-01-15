@@ -10,6 +10,8 @@
 * Async::Config now have a mechanism for subscribing to changes for specific
   configuration variables.
 
+* Add connection rate throttling, using token buckets, to Async::TcpServer.
+
 
 
  1.7.0 -- 25 Feb 2024

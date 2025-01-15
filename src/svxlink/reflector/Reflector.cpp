@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -261,6 +261,7 @@ bool Reflector::initialize(Async::Config &cfg)
   std::string listen_port("5300");
   cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
   m_srv = new TcpServer<FramedTcpConnection>(listen_port);
+  m_srv->setConnectionThrottling(10, 0.1, 1000);
   m_srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
   m_srv->clientDisconnected.connect(

@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 
 /****************************************************************************
@@ -122,40 +123,40 @@ using namespace Async;
 
 TcpServerBase::TcpServerBase(const string& port_str,
                              const Async::IpAddress &bind_ip)
-  : sock(-1), rd_watch(0)
+  : m_sock(-1), m_rd_watch(0), m_con_throt_timer(-1, Timer::TYPE_PERIODIC)
 {
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+  if ((m_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
     perror("socket");
     cleanup();
     return;
   }
-  
-  /* Force close on exec */
-  if (fcntl(sock, F_SETFD, 1) == -1)
+
+    /* Force close on exec */
+  if (fcntl(m_sock, F_SETFD, 1) == -1)
   {
     perror("fcntl(F_SETFD)");
     cleanup();
     return;
   }
-  
+
     /* Reuse address if server crashes */
   const int on = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) == -1)
+  if (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) == -1)
   {
     perror("setsockopt(sock, SO_REUSEADDR)");
     cleanup();
     return;
   }
-  
+
     /* Send small packets at once. */
-  if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) == -1)
+  if (setsockopt(m_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) == -1)
   {
     perror("setsockopt(sock, TCP_NODELAY)");
     cleanup();
     return;
   }
-  
+
   char *endptr = 0;
   struct servent *se;
   uint16_t port = strtol(port_str.c_str(), &endptr, 10);
@@ -184,23 +185,25 @@ TcpServerBase::TcpServerBase(const string& port_str,
   {
     addr.sin_addr = bind_ip.ip4Addr();
   }
-  if (::bind(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
+  if (::bind(m_sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
   {
     perror("bind");
     cleanup();
     return;
   }
 
-  if (listen(sock, 5) != 0)
+  if (listen(m_sock, 5) != 0)
   {
     perror("listen");
     cleanup();
     return;
   }
 
-  rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(mem_fun(*this, &TcpServerBase::onConnection));
-    
+  m_rd_watch = new FdWatch(m_sock, FdWatch::FD_WATCH_RD);
+  m_rd_watch->activity.connect(mem_fun(*this, &TcpServerBase::onConnection));
+
+  m_con_throt_timer.expired.connect(
+      sigc::mem_fun(*this, &TcpServerBase::updateConnThrotMap));
 } /* TcpServerBase::TcpServerBase */
 
 
@@ -212,15 +215,15 @@ TcpServerBase::~TcpServerBase(void)
 
 int TcpServerBase::numberOfClients(void)
 {
-  return tcpConnectionList.size();
+  return m_tcpConnectionList.size();
 } /* TcpServerBase::numberOfClients */
 
 
 TcpConnection *TcpServerBase::getClient(unsigned int index)
 {
-  if ((numberOfClients() > 0) && (index < tcpConnectionList.size()))
+  if ((numberOfClients() > 0) && (index < m_tcpConnectionList.size()))
   {
-    return tcpConnectionList[index];
+    return m_tcpConnectionList[index];
   }
   
   return 0;
@@ -230,13 +233,13 @@ TcpConnection *TcpServerBase::getClient(unsigned int index)
 
 int TcpServerBase::writeAll(const void *buf, int count)
 {
-  if (tcpConnectionList.empty())
+  if (m_tcpConnectionList.empty())
   {
     return 0;
   }
   
   TcpConnectionList::const_iterator it;
-  for (it=tcpConnectionList.begin(); it!=tcpConnectionList.end() ; ++it)
+  for (it=m_tcpConnectionList.begin(); it!=m_tcpConnectionList.end() ; ++it)
   {
     (*it)->write(buf,count);
   }
@@ -248,14 +251,14 @@ int TcpServerBase::writeAll(const void *buf, int count)
 
 int TcpServerBase::writeOnly(TcpConnection *con, const void *buf, int count)
 {
-  if (tcpConnectionList.empty())
+  if (m_tcpConnectionList.empty())
   {
     return 0;
   }
   
   TcpConnectionList::const_iterator it;
-  it = find(tcpConnectionList.begin(), tcpConnectionList.end(), con);
-  assert(it != tcpConnectionList.end());
+  it = find(m_tcpConnectionList.begin(), m_tcpConnectionList.end(), con);
+  assert(it != m_tcpConnectionList.end());
   (*it)->write(buf, count);
   
   return count;
@@ -265,13 +268,13 @@ int TcpServerBase::writeOnly(TcpConnection *con, const void *buf, int count)
 
 int TcpServerBase::writeExcept(TcpConnection *con, const void *buf, int count)
 {
-  if (tcpConnectionList.empty())
+  if (m_tcpConnectionList.empty())
   {
     return 0;
   }
   
   TcpConnectionList::const_iterator it;
-  for (it=tcpConnectionList.begin(); it!=tcpConnectionList.end() ; ++it)
+  for (it=m_tcpConnectionList.begin(); it!=m_tcpConnectionList.end() ; ++it)
   {
     if(*it != con)
     {
@@ -290,6 +293,27 @@ void TcpServerBase::setSslContext(SslContext& ctx)
 } /* TcpServerBase::setSslContext */
 
 
+void TcpServerBase::setConnectionThrottling(unsigned bucket_max,
+                                            float bucket_inc,
+                                            int inc_interval_ms)
+{
+  if (bucket_max > 0)
+  {
+    assert(bucket_inc > 0.0f);
+    m_con_throt_bucket_max = 1000 * bucket_max;
+    m_con_throt_bucket_inc = roundf(1000.0f * bucket_inc);
+    m_con_throt_timer.setTimeout(inc_interval_ms);
+  }
+  else
+  {
+    m_con_throt_bucket_max = 0;
+    m_con_throt_bucket_inc = 0;
+    m_con_throt_timer.setEnable(false);
+    m_con_throt_map.clear();
+  }
+} /* TcpServerBase::setConnectionThrottling */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -302,16 +326,56 @@ void TcpServerBase::addConnection(TcpConnection *con)
   {
     con->setSslContext(*m_ssl_ctx, true);
   }
-  tcpConnectionList.push_back(con);
+  m_tcpConnectionList.push_back(con);
+
+  if (m_con_throt_bucket_max > 0)
+  {
+    auto it = m_con_throt_map.find(con->remoteHost());
+    if (it == m_con_throt_map.end())
+    {
+      auto ret = m_con_throt_map.emplace(std::make_pair(
+            con->remoteHost(), ConThrotItem(m_con_throt_bucket_max)));
+      assert(ret.second);
+      it = ret.first;
+    }
+    if (it->second.m_bucket >= 1000)
+    {
+      it->second.m_bucket -= 1000;
+      emitClientConnected(con);
+    }
+    else
+    {
+      con->freeze();
+      it->second.m_pending_connections.push_back(con);
+    }
+    m_con_throt_timer.setEnable(true);
+  }
+  else
+  {
+    emitClientConnected(con);
+  }
 } /* TcpServerBase::addConnection */
 
 
 void TcpServerBase::removeConnection(TcpConnection *con)
 {
-  TcpConnectionList::iterator it;
-  it = find(tcpConnectionList.begin(), tcpConnectionList.end(), con);
-  assert(it != tcpConnectionList.end());
-  tcpConnectionList.erase(it);
+  auto it = find(m_tcpConnectionList.begin(), m_tcpConnectionList.end(), con);
+  assert(it != m_tcpConnectionList.end());
+  m_tcpConnectionList.erase(it);
+
+  for (auto& map_item : m_con_throt_map)
+  {
+    if (map_item.first == con->remoteHost())
+    {
+      auto& pending_conns = map_item.second.m_pending_connections;
+      auto it = find(pending_conns.begin(), pending_conns.end(), con);
+      if (it != pending_conns.end())
+      {
+        pending_conns.erase(it);
+      }
+    }
+  }
+
   Application::app().runTask([=]{ delete con; });
 } /* TcpServerBase::removeConnection */
 
@@ -324,23 +388,24 @@ void TcpServerBase::removeConnection(TcpConnection *con)
 
 void TcpServerBase::cleanup(void)
 {
-  delete rd_watch;
-  rd_watch = 0;
-  
-  if (sock != -1)
+  delete m_rd_watch;
+  m_rd_watch = 0;
+
+  if (m_sock != -1)
   {
-    close(sock);
-    sock = -1;
+    ::close(m_sock);
+    m_sock = -1;
   }
-  
+
+  m_con_throt_map.clear();
+
     // If there are any connected clients, disconnect them and clear the list
   TcpConnectionList::const_iterator it;
-  for (it=tcpConnectionList.begin(); it!=tcpConnectionList.end(); ++it)
+  for (it=m_tcpConnectionList.begin(); it!=m_tcpConnectionList.end(); ++it)
   {
     delete *it;
   }
-  tcpConnectionList.clear();
-  
+  m_tcpConnectionList.clear();
 } /* TcpServerBase::cleanup */
 
 
@@ -349,7 +414,7 @@ void TcpServerBase::onConnection(FdWatch *watch)
   int client_sock;
   struct sockaddr_in client;
   socklen_t addrlen = sizeof(client);
-  client_sock = accept(sock, (struct sockaddr *)&client, &addrlen);
+  client_sock = accept(m_sock, (struct sockaddr *)&client, &addrlen);
   if (client_sock == -1)
   {
     perror("accept");
@@ -360,7 +425,7 @@ void TcpServerBase::onConnection(FdWatch *watch)
   if (fcntl(client_sock, F_SETFD, 1) == -1)
   {
     perror("fcntl(F_SETFD)");
-    close(client_sock);
+    ::close(client_sock);
     return;
   }
   
@@ -368,7 +433,7 @@ void TcpServerBase::onConnection(FdWatch *watch)
   if (fcntl(client_sock, F_SETFL, O_NONBLOCK) == -1)
   {
     perror("fcntl(client_sock, F_SETFL)");
-    close(client_sock);
+    ::close(client_sock);
     return;
   }
   
@@ -378,7 +443,7 @@ void TcpServerBase::onConnection(FdWatch *watch)
                  (char *)&on, sizeof(on)) == -1)
   {
     perror("setsockopt(client_sock, TCP_NODELAY)");
-    close(client_sock);
+    ::close(client_sock);
     return;
   }
   
@@ -388,9 +453,37 @@ void TcpServerBase::onConnection(FdWatch *watch)
 } /* TcpServerBase::onConnection */
 
 
+void TcpServerBase::updateConnThrotMap(Timer*)
+{
+  auto it = m_con_throt_map.begin();
+  while (it != m_con_throt_map.end())
+  {
+    auto& item = it->second;
+    item.m_bucket += m_con_throt_bucket_inc;
+    //std::cout << "### ip=" << it->first
+    //          << " bucket=" << item.m_bucket
+    //          << std::endl;
+    while (!item.m_pending_connections.empty() && (item.m_bucket >= 1000))
+    {
+      auto con_it = item.m_pending_connections.begin();
+      item.m_bucket -= 1000;
+      auto con = *con_it;
+      item.m_pending_connections.erase(con_it);
+      emitClientConnected(con);
+      con->unfreeze();
+    }
+    if (it->second.m_bucket >= m_con_throt_bucket_max)
+    {
+      auto erase_it = it++;
+      m_con_throt_map.erase(erase_it);
+      continue;
+    }
+    ++it;
+  }
+  m_con_throt_timer.setEnable(!m_con_throt_map.empty());
+} /* TcpServerBase::updateConnThrotMap */
+
+
 /*
  * This file has not been truncated
  */
-
-
-

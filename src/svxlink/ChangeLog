@@ -40,6 +40,11 @@
 * Add --version command line option to applications svxlink, remotetrx,
   devcal and svxreflector.
 
+* Add connection throttling to SvxReflector. The throttling is per IP. A token
+  bucket of size ten is used to throttle the connection rate. The bucket is
+  filled with one connection per ten seconds up until the bucket size is
+  reached.
+
 
 
  1.8.0 -- 25 Feb 2024

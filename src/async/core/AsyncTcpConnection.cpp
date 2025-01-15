@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2025 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -293,6 +293,21 @@ void TcpConnection::setSslContext(SslContext& ctx, bool is_server)
 } /* TcpConnection::setSslContext */
 
 
+void TcpConnection::freeze(void)
+{
+  m_freezed = true;
+  m_wr_watch.setEnabled(false);
+} /* TcpConnection::freeze */
+
+
+void TcpConnection::unfreeze(void)
+{
+  m_freezed = false;
+  m_wr_watch.setEnabled(!m_write_buf.empty());
+  processRecvBuf();
+} /* TcpConnection::unfreeze */
+
+
 Async::SslX509 TcpConnection::sslPeerCertificate(void)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
@@ -501,6 +516,15 @@ void TcpConnection::recvHandler(FdWatch *watch)
     m_recv_buf.reserve(new_capacity);
   }
 
+  if (!m_freezed)
+  {
+    processRecvBuf();
+  }
+} /* TcpConnection::recvHandler */
+
+
+void TcpConnection::processRecvBuf(void)
+{
   ssize_t processed = -1;
   if (m_ssl != nullptr)
   {
@@ -534,13 +558,13 @@ void TcpConnection::recvHandler(FdWatch *watch)
       onDisconnected(DR_PROTOCOL_ERROR);
     }
   }
-} /* TcpConnection::recvHandler */
+} /* TcpConnection::processRecvBuf */
 
 
 void TcpConnection::addToWriteBuf(const char *buf, size_t len)
 {
   m_write_buf.insert(m_write_buf.end(), buf, buf+len);
-  m_wr_watch.setEnabled(!m_write_buf.empty());
+  m_wr_watch.setEnabled(!m_freezed && !m_write_buf.empty());
 } /* TcpConnection::addToWriteBuf */
 
 
@@ -699,7 +723,7 @@ int TcpConnection::sslRecvHandler(char* src, int count)
   }
 
   return (orig_count - count);
-} /* TcpConnection::readHandler */
+} /* TcpConnection::sslRecvHandler */
 
 
 enum TcpConnection::SslStatus TcpConnection::sslDoHandshake(void)

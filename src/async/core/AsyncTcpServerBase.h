@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2017 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <vector>
+#include <map>
 #include <sigc++/sigc++.h>
 
 
@@ -45,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 #include <AsyncTcpConnection.h>
 #include <AsyncSslContext.h>
 
@@ -181,22 +183,58 @@ class TcpServerBase : public sigc::trackable
      */
     void setSslContext(SslContext& ctx);
 
+    /**
+     * @brief   Enable connection throttling
+     * @param   bucket_max The size of the bucket
+     * @param   bucket_inc How much to add to the bucket on each tick
+     * @param   inc_interval_ms How often, in milliseconds, to apply bucket_inc
+     *
+     * Use this function to put a limit on the connection rate for each IP
+     * address. The "token bucket" algorithm is used to throttle connection
+     * flooding. The connection will be accepted but the communication will be
+     * blocked until a token is available in the bucket.
+     *
+     * Example: bucket_max=5, bucket_inc=0.1, inc_interval_ms=1000
+     * With those settings five connections from an IP will be accepted without
+     * delay. Each second (1000ms) the bucket for the IP will be filled with
+     * 0.1 tokens so it will take ten seconds until another connection will be
+     * allowed to communicate. If no additional connections for the IP are
+     * initiated, the bucket will fill to five tokens again efter 50 seconds
+     * and we are back to where we started.
+     */
+    void setConnectionThrottling(unsigned bucket_max, float bucket_inc,
+                                 int inc_interval_ms);
+
   protected:
     virtual void createConnection(int sock, const IpAddress& remote_addr,
                                   uint16_t remote_port) = 0;
     void addConnection(TcpConnection *con);
     void removeConnection(TcpConnection *con);
+    virtual void emitClientConnected(TcpConnection *con) = 0;
 
   private:
-    typedef std::vector<TcpConnection*> TcpConnectionList;
+    using TcpConnectionList = std::vector<TcpConnection*>;
+    struct ConThrotItem
+    {
+      ConThrotItem(float bucket_max) : m_bucket(bucket_max) {}
+      float             m_bucket;
+      TcpConnectionList m_pending_connections;
+    };
+    using ConThrotMap = std::map<IpAddress, ConThrotItem>;
 
-    int       	      sock;
-    FdWatch   	      *rd_watch;
-    TcpConnectionList tcpConnectionList;
-    SslContext*       m_ssl_ctx           = nullptr;
+    int               m_sock;
+    FdWatch*          m_rd_watch;
+    TcpConnectionList m_tcpConnectionList;
+    SslContext*       m_ssl_ctx               = nullptr;
+
+    ConThrotMap       m_con_throt_map;
+    Timer             m_con_throt_timer;
+    unsigned          m_con_throt_bucket_max  = 0;
+    unsigned          m_con_throt_bucket_inc  = 0;
 
     void cleanup(void);
     void onConnection(FdWatch *watch);
+    void updateConnThrotMap(Timer*);
 
 };  /* class TcpServerBase */
 
