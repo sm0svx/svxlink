@@ -216,7 +216,7 @@ def crt_renewed(cert) -> int:
     """\
     Called when a certificate is renewed.
     """
-    if not config.keys() & {'CSR_SIGNED_MAIL_SUBJECT', 'CSR_SIGNED_MAIL_CONTENT'}:
+    if not config.keys() & {'CRT_RENEWED_MAIL_SUBJECT', 'CRT_RENEWED_MAIL_CONTENT'}:
         return 0
 
     callsign = cert.subject.get_attributes_for_oid(
