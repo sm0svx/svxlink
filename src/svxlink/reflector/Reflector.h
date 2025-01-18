@@ -122,6 +122,8 @@ the dispatching of incoming messages to the correct ReflectorClient object.
 class Reflector : public sigc::trackable
 {
   public:
+    static time_t timeToRenewCert(const Async::SslX509& cert);
+
     /**
      * @brief 	Default constructor
      */

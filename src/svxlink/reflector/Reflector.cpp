@@ -202,6 +202,27 @@ namespace {
 
 /****************************************************************************
  *
+ * Public static functions
+ *
+ ****************************************************************************/
+
+time_t Reflector::timeToRenewCert(const Async::SslX509& cert)
+{
+  if (cert.isNull())
+  {
+    return 0;
+  }
+
+  int days=0, seconds=0;
+  cert.validityTime(days, seconds);
+  time_t renew_time = cert.notBefore() +
+    (static_cast<time_t>(days)*24*3600 + seconds)*RENEW_AFTER;
+  return renew_time;
+} /* Reflector::timeToRenewCert */
+
+
+/****************************************************************************
+ *
  * Public member functions
  *
  ****************************************************************************/
@@ -566,7 +587,7 @@ Async::SslX509 Reflector::loadClientCertificate(const std::string& callsign)
   Async::SslX509 cert;
   if (!cert.readPemFile(m_certs_dir + "/" + callsign + ".crt") ||
       cert.isNull() ||
-      !cert.verify(m_issue_ca_pkey) ||
+      //!cert.verify(m_issue_ca_pkey) ||
       !cert.timeIsWithinRange())
   {
     return nullptr;
@@ -682,10 +703,10 @@ Async::SslX509 Reflector::csrReceived(Async::SslCertSigningReq& req)
     return nullptr;
   }
 
-  std::string crtfile(m_certs_dir + "/" + callsign + ".crt");
-  Async::SslX509 cert;
-  if (!cert.readPemFile(crtfile) || !cert.verify(m_issue_ca_pkey) ||
-      !cert.timeIsWithinRange() || (cert.publicKey() != req.publicKey()))
+  Async::SslX509 cert = loadClientCertificate(callsign);
+  if (!cert.isNull() &&
+      ((cert.publicKey() != req.publicKey()) ||
+       (timeToRenewCert(cert) <= std::time(NULL))))
   {
     cert.set(nullptr);
   }
@@ -765,8 +786,8 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
   {
     std::cout << con->remoteHost() << ":" << con->remotePort() << ": ";
   }
-  std::cout << "Client disconnected: " << TcpConnection::disconnectReasonStr(reason)
-       << endl;
+  std::cout << "Client disconnected: "
+            << TcpConnection::disconnectReasonStr(reason) << std::endl;
 
   m_client_con_map.erase(it);
 
