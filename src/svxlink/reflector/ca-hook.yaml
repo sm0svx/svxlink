@@ -4,6 +4,11 @@
 # Configuration file for the ca-hook.py SvxReflector server CA events hook
 # script.
 #
+# For the *_MAIL_TO and *_MAIL_BCC configuration variables it is possible to
+# embed the following variables inside curly braces.
+#
+#   email:      The email addresses included in the CSR/CRT
+#
 # For the CSR_CREATE_MAIL_SUBJECT, CSR_CREATE_MAIL_CONTENT,
 # CSR_UPDATE_MAIL_SUBJECT and CSR_UPDATE_MAIL_CONTENT configuration
 # variables it is possible to embed the following variables inside curly
@@ -11,11 +16,12 @@
 #
 #   callsign:   The callsign (Subject CN)
 #   subject:    The Subject DN of the CSR
-#   email:      The email addresses included in the CSR
+#   email:      The email addresses included in the CSR/CRT
 #   hostname:   The name of the host where this script run
 #
 # In addition to the above variables, the following ones can be embedded in the
-# CSR_SIGNED_MAIL_SUBJECT and CSR_SIGNED_MAIL_CONTENT configuration variables.
+# CSR_SIGNED_MAIL_SUBJECT, CSR_SIGNED_MAIL_CONTENT, CRT_RENEWED_MAIL_SUBJECT
+# and CRT_RENEWED_MAIL_CONTENT configuration variables.
 #
 #   serial_number:  The serial number of the certificate
 #   issuer:         The certificate issuer Subject DN
@@ -34,9 +40,15 @@ EMAIL_SMTP_SERVER: "localhost"
 EMAIL_FROM: "SvxReflector <reflector@example.com>"
 
 # Send sysop mails to the following addresses
-SYSOP_EMAIL:
+SYSOP_EMAIL: &SYSOP_EMAIL
   - "sysop1@example.com"
   - "sysop2@example.com"
+
+# Send the CSR create emails to the following addresses
+CSR_CREATE_MAIL_TO: *SYSOP_EMAIL
+
+# Send the CSR create emails to the following BCC addresses
+CSR_CREATE_MAIL_BCC:
 
 # Email subject to use for CSR create notifications.
 # Comment out to suppress sending of CSR create emails.
@@ -55,6 +67,13 @@ CSR_CREATE_MAIL_CONTENT: |
   Regards,
   SvxReflector Server
 
+
+# Send the CSR update emails to the following addresses
+CSR_UPDATE_MAIL_TO: *SYSOP_EMAIL
+
+# Send the CSR update emails to the following BCC addresses
+CSR_UPDATE_MAIL_BCC:
+
 # Email subject to use for CSR update notifications.
 # Comment out to suppress sending of CSR update emails.
 CSR_UPDATE_MAIL_SUBJECT: "SvxReflector: CSR update received from node {callsign}"
@@ -71,6 +90,13 @@ CSR_UPDATE_MAIL_CONTENT: |
 
   Regards,
   SvxReflector Server
+
+
+# Send the CSR signed emails to the following addresses
+CSR_SIGNED_MAIL_TO: "{email}"
+
+# Send the CSR signed emails to the following BCC addresses
+CSR_SIGNED_MAIL_BCC: *SYSOP_EMAIL
 
 # Email subject to use for CSR signed notifications.
 # Comment out to suppress sending of CSR signed emails.
@@ -94,6 +120,13 @@ CSR_SIGNED_MAIL_CONTENT: |
 
   Regards,
   SvxReflector Server Sysop
+
+
+# Send the certificate renewed emails to the following addresses
+CRT_RENEWED_MAIL_TO: *SYSOP_EMAIL
+
+# Send the certificate renewed emails to the following BCC addresses
+CRT_RENEWED_MAIL_BCC:
 
 # Email subject to use for certificate renew notifications.
 # Comment out to suppress sending of renew emails.

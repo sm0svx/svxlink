@@ -3,25 +3,18 @@
 CA hook script for the SvxReflector server application.
 
 This script will be called by the SvxReflector application on some CA events.
+The type of event will be available in the CA_OP environment variable. The
+following event types are available for CA_OP.
 
-When a new CSR (Certificate Signing Request) is received from a node
-(CA_OP=PENDING_CSR_CREATE) an email will be sent to the SvxReflector sysop(s)
-to notify them that there is a CSR to sign.
+- PENDING_CSR_CREATE: A new CSR (Certificate Signing Request) is received
+- PENDING_CSR_UPDATED: An updated CSR is received
+- CSR_SIGNED: A CSR is signed
+- CRT_RENEWED: A certificate is renewed
 
-When an updated CSR is received (CA_OP=PENDING_CSR_UPDATED) nothing is done by
-default.
+The PEM conents is available in the following environment variables.
 
-When a CSR is signed (CA_OP=CSR_SIGNED), an email will be sent to the
-sysop(s) and to any email addresses listed in the certificate.
-
-When a certificate is renewed (CA_OP=CRT_RENEWED), an email will be sent to the
-sysop(s) and to and to any email addressed listed in the certificate.
-
-Environment:
-
-    CA_OP       -- Indicate what CA operation this is
-    CA_CSR_PEM  -- The CSR PEM string
-    CA_CRT_PEM  -- The certificate PEM, including intermediates
+- CA_CSR_PEM  -- The CSR PEM contents
+- CA_CRT_PEM  -- The certificate PEM contents, including intermediates
 
 """
 
@@ -52,14 +45,35 @@ def load_config() -> None:
     Find the configuration file and load it into the config dict
     """
     global config
-    path = None
-    home = os.getenv("HOME")
-    if home:
-        path = f"{home}/.svxlink/ca-hook.yaml"
-    if not path or not os.path.exists(path):
-        path = "@SVX_SYSCONF_INSTALL_DIR@/ca-hook.yaml"
-    with open(path, 'r') as f:
+    FILENAME = "ca-hook.yaml"
+    path = "@SVX_SYSCONF_INSTALL_DIR@/" + FILENAME
+    if os.path.exists(FILENAME):
+        path = FILENAME
+    elif home := os.getenv("HOME"):
+        path = f"{home}/.svxlink/" + FILENAME
+    with open(path, "r") as f:
         config = yaml.safe_load(f)
+
+
+def config_format(varname, values):
+    """\
+    Get the value of the specified configuration variable. If it is a string,
+    pass it through formatting. Otherwise return the config variable as is.
+    """
+    if not varname in config:
+        return None
+    return (
+        config[varname].format(**values)
+        if isinstance(config[varname], str)
+        else config[varname]
+    )
+
+
+def config_is_set(varnames: set) -> bool:
+    for varname in varnames:
+        if not varname in config or config[varname] is None:
+            return False
+    return True
 
 
 def send_email(**kwargs) -> int:
@@ -76,23 +90,32 @@ def send_email(**kwargs) -> int:
     send the message to.
     """
     msg = MIMEMultipart()
-    msg['From'] = config['EMAIL_FROM']
-    msg['To'] = ', '.join(kwargs['to'])
-    if 'bcc' in kwargs and kwargs['bcc']:
-        msg['BCC'] = ', '.join(kwargs['bcc'])
-    msg['Subject'] = kwargs['subject']
-    msg.attach(MIMEText(kwargs['content']))
-    if 'attachments' in kwargs:
-        for attachment in kwargs['attachments']:
-            part = MIMEText(attachment['content'])
-            part['Content-Disposition'] =\
-                    f"attachment; filename=\"{attachment['name']}\""
+    msg["From"] = config["EMAIL_FROM"]
+    msg["To"] = (
+        ", ".join(kwargs["to"])
+        if isinstance(kwargs["to"], list)
+        else kwargs["to"]
+    )
+    if kwargs.get("bcc"):
+        msg["BCC"] = (
+            ", ".join(kwargs["bcc"])
+            if isinstance(kwargs["bcc"], list)
+            else kwargs["bcc"]
+        )
+    msg["Subject"] = kwargs["subject"]
+    msg.attach(MIMEText(kwargs["content"]))
+    if "attachments" in kwargs:
+        for attachment in kwargs["attachments"]:
+            part = MIMEText(attachment["content"])
+            part["Content-Disposition"] = (
+                f"attachment; filename=\"{attachment['name']}\""
+            )
             msg.attach(part)
 
-    if config['EMAIL_DEBUG']:
+    if config["EMAIL_DEBUG"]:
         print(msg)
     else:
-        s = smtplib.SMTP(config['EMAIL_SMTP_SERVER'])
+        s = smtplib.SMTP(config["EMAIL_SMTP_SERVER"])
         s.send_message(msg)
         s.quit()
     return 0
@@ -102,37 +125,50 @@ def pending_csr_create(csr) -> int:
     """\
     Called when a pending CSR is created.
     """
-    if not config.keys() & {'CSR_CREATE_MAIL_SUBJECT', 'CSR_CREATE_MAIL_CONTENT'}:
+    if not config_is_set(
+        {
+            "CSR_CREATE_MAIL_TO",
+            "CSR_CREATE_MAIL_SUBJECT",
+            "CSR_CREATE_MAIL_CONTENT",
+        }
+    ):
         return 0
 
-    callsign = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    cn = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+    callsign = cn[0].value if len(cn) > 0 else ""
     email = []
     san = None
     try:
         san = csr.extensions.get_extension_for_oid(
-                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+            ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+        )
         email = san.value.get_values_for_type(x509.RFC822Name)
     except ExtensionNotFound:
         pass
 
-    #print(f"### Create CSR: callsign={callsign} email={email}")
+    # print(f"### Create CSR: callsign={callsign} email={email}")
 
     values = {
-            "callsign": callsign,
-            "subject": csr.subject.rfc4514_string(),
-            "hostname": socket.gethostname(),
-            "email": ', '.join(email),
-            }
+        "callsign": callsign,
+        "subject": csr.subject.rfc4514_string(),
+        "hostname": socket.gethostname(),
+        "email": ", ".join(email),
+    }
 
     send_email(
-            to=config['SYSOP_EMAIL'],
-            subject=config['CSR_CREATE_MAIL_SUBJECT'].format(**values),
-            content=config['CSR_CREATE_MAIL_CONTENT'].format(**values),
-            attachments=[{
+        to=config_format("CSR_CREATE_MAIL_TO", values),
+        bcc=config_format("CSR_CREATE_MAIL_BCC", values),
+        subject=config["CSR_CREATE_MAIL_SUBJECT"].format(**values),
+        content=config["CSR_CREATE_MAIL_CONTENT"].format(**values),
+        attachments=[
+            {
                 "name": f"{callsign}.csr",
-                "content": csr.public_bytes(serialization.Encoding.PEM).decode(),
-                }]
-            )
+                "content": csr.public_bytes(
+                    serialization.Encoding.PEM
+                ).decode(),
+            }
+        ],
+    )
     return 0
 
 
@@ -140,37 +176,50 @@ def pending_csr_update(csr) -> int:
     """\
     Called when a pending CSR is updated.
     """
-    if not config.keys() & {'CSR_UPDATE_MAIL_SUBJECT', 'CSR_UPDATE_MAIL_CONTENT'}:
+    if not config_is_set(
+        {
+            "CSR_UPDATE_MAIL_TO",
+            "CSR_UPDATE_MAIL_SUBJECT",
+            "CSR_UPDATE_MAIL_CONTENT",
+        }
+    ):
         return 0
 
-    callsign = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    cn = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+    callsign = cn[0].value if len(cn) > 0 else ""
     email = []
     san = None
     try:
         san = csr.extensions.get_extension_for_oid(
-                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+            ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+        )
         email = san.value.get_values_for_type(x509.RFC822Name)
     except ExtensionNotFound:
         pass
 
-    #print(f"### Update CSR: callsign={callsign} email={email}")
+    # print(f"### Update CSR: callsign={callsign} email={email}")
 
     values = {
-            "callsign": callsign,
-            "subject": csr.subject.rfc4514_string(),
-            "hostname": socket.gethostname(),
-            "email": ', '.join(email),
-            }
+        "callsign": callsign,
+        "subject": csr.subject.rfc4514_string(),
+        "hostname": socket.gethostname(),
+        "email": ", ".join(email),
+    }
 
     send_email(
-            to=config['SYSOP_EMAIL'],
-            subject=config['CSR_UPDATE_MAIL_SUBJECT'].format(**values),
-            content=config['CSR_UPDATE_MAIL_CONTENT'].format(**values),
-            attachments=[{
+        to=config_format("CSR_UPDATE_MAIL_TO", values),
+        bcc=config_format("CSR_UPDATE_MAIL_BCC", values),
+        subject=config["CSR_UPDATE_MAIL_SUBJECT"].format(**values),
+        content=config["CSR_UPDATE_MAIL_CONTENT"].format(**values),
+        attachments=[
+            {
                 "name": f"{callsign}.csr",
-                "content": csr.public_bytes(serialization.Encoding.PEM).decode(),
-                }]
-            )
+                "content": csr.public_bytes(
+                    serialization.Encoding.PEM
+                ).decode(),
+            }
+        ],
+    )
     return 0
 
 
@@ -178,20 +227,27 @@ def csr_signed(cert) -> int:
     """\
     Called when a CSR is signed.
     """
-    if not config.keys() & {'CSR_SIGNED_MAIL_SUBJECT', 'CSR_SIGNED_MAIL_CONTENT'}:
+    if not config_is_set(
+        {
+            "CSR_SIGNED_MAIL_TO",
+            "CSR_SIGNED_MAIL_SUBJECT",
+            "CSR_SIGNED_MAIL_CONTENT",
+        }
+    ):
         return 0
 
-    callsign = cert.subject.get_attributes_for_oid(
-            NameOID.COMMON_NAME)[0].value
+    cn = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+    callsign = cn[0].value if len(cn) > 0 else ""
     email = []
     try:
         san = cert.extensions.get_extension_for_oid(
-                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+            ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+        )
         email = san.value.get_values_for_type(x509.RFC822Name)
     except ExtensionNotFound:
         pass
 
-    #print(f"### Sign CSR: callsign={callsign} email={email}")
+    # print(f"### Sign CSR: callsign={callsign} email={email}")
 
     values = {
         "callsign": callsign,
@@ -200,15 +256,15 @@ def csr_signed(cert) -> int:
         "subject": cert.subject.rfc4514_string(),
         "not_before": cert.not_valid_before,
         "not_after": cert.not_valid_after,
-        "email": ', '.join(email),
+        "email": ", ".join(email),
         "hostname": socket.gethostname(),
-        }
+    }
     send_email(
-            to=email,
-            bcc=config['SYSOP_EMAIL'],
-            subject=config['CSR_SIGNED_MAIL_SUBJECT'].format(**values),
-            content=config['CSR_SIGNED_MAIL_CONTENT'].format(**values),
-            )
+        to=config_format("CSR_SIGNED_MAIL_TO", values),
+        bcc=config_format("CSR_SIGNED_MAIL_BCC", values),
+        subject=config["CSR_SIGNED_MAIL_SUBJECT"].format(**values),
+        content=config["CSR_SIGNED_MAIL_CONTENT"].format(**values),
+    )
     return 0
 
 
@@ -216,20 +272,27 @@ def crt_renewed(cert) -> int:
     """\
     Called when a certificate is renewed.
     """
-    if not config.keys() & {'CRT_RENEWED_MAIL_SUBJECT', 'CRT_RENEWED_MAIL_CONTENT'}:
+    if not config_is_set(
+        {
+            "CRT_RENEWED_MAIL_TO",
+            "CRT_RENEWED_MAIL_SUBJECT",
+            "CRT_RENEWED_MAIL_CONTENT",
+        }
+    ):
         return 0
 
-    callsign = cert.subject.get_attributes_for_oid(
-            NameOID.COMMON_NAME)[0].value
+    cn = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+    callsign = cn[0].value if len(cn) > 0 else ""
     email = []
     try:
         san = cert.extensions.get_extension_for_oid(
-                ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+            ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+        )
         email = san.value.get_values_for_type(x509.RFC822Name)
     except ExtensionNotFound:
         pass
 
-    #print(f"### Renew cert: callsign={callsign} email={email}")
+    # print(f"### Renew cert: callsign={callsign} email={email}")
 
     values = {
         "callsign": callsign,
@@ -238,15 +301,15 @@ def crt_renewed(cert) -> int:
         "subject": cert.subject.rfc4514_string(),
         "not_before": cert.not_valid_before,
         "not_after": cert.not_valid_after,
-        "email": ', '.join(email),
+        "email": ", ".join(email),
         "hostname": socket.gethostname(),
-        }
+    }
     send_email(
-            to=email,
-            bcc=config['SYSOP_EMAIL'],
-            subject=config['CRT_RENEWED_MAIL_SUBJECT'].format(**values),
-            content=config['CRT_RENEWED_MAIL_CONTENT'].format(**values),
-            )
+        to=config_format("CRT_RENEWED_MAIL_TO", values),
+        bcc=config_format("CRT_RENEWED_MAIL_BCC", values),
+        subject=config["CRT_RENEWED_MAIL_SUBJECT"].format(**values),
+        content=config["CRT_RENEWED_MAIL_CONTENT"].format(**values),
+    )
     return 0
 
 
@@ -256,13 +319,13 @@ def main() -> int:
     """
     load_config()
 
-    op = os.getenv('CA_OP')
+    op = os.getenv("CA_OP")
     if not op:
         print(f"*** ERROR: The CA_OP environment variable is not set or empty")
         return 1
 
-    if op != 'CSR_SIGNED' and op != 'CRT_RENEWED':
-        csr_pem = os.getenv('CA_CSR_PEM')
+    if op != "CSR_SIGNED" and op != "CRT_RENEWED":
+        csr_pem = os.getenv("CA_CSR_PEM")
         if not csr_pem:
             print("*** ERROR: CA_CSR_PEM not set")
             return 1
@@ -272,27 +335,30 @@ def main() -> int:
             print("*** ERROR: Invalid CSR PEM")
             return 1
 
-    if op == 'PENDING_CSR_CREATE':
+    if op == "PENDING_CSR_CREATE":
         return pending_csr_create(csr)
-    elif op == 'PENDING_CSR_UPDATE':
+    elif op == "PENDING_CSR_UPDATE":
         return pending_csr_update(csr)
-    elif op == 'CSR_SIGNED':
-        certs_pem = os.getenv('CA_CRT_PEM')
+    elif op == "CSR_SIGNED":
+        certs_pem = os.getenv("CA_CRT_PEM")
         if not certs_pem:
             print("*** ERROR: CA_CRT_PEM not set")
             return 1
-        cert = x509.load_pem_x509_certificate(certs_pem.encode(), default_backend())
+        cert = x509.load_pem_x509_certificate(
+            certs_pem.encode(), default_backend()
+        )
         return csr_signed(cert)
-    elif op == 'CRT_RENEWED':
-        certs_pem = os.getenv('CA_CRT_PEM')
+    elif op == "CRT_RENEWED":
+        certs_pem = os.getenv("CA_CRT_PEM")
         if not certs_pem:
             print("*** ERROR: CA_CRT_PEM not set")
             return 1
-        cert = x509.load_pem_x509_certificate(certs_pem.encode(), default_backend())
+        cert = x509.load_pem_x509_certificate(
+            certs_pem.encode(), default_backend()
+        )
         return crt_renewed(cert)
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
-
