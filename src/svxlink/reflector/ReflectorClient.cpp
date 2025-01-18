@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <algorithm>
 #include <cerrno>
+#include <ctime>
 #include <iterator>
 
 
@@ -442,13 +443,11 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
 
   int days=0, seconds=0;
   peer_cert.validityTime(days, seconds);
-  time_t renew_time = peer_cert.notBefore() +
-      (static_cast<time_t>(days)*24*3600 + seconds)*RENEW_AFTER;
-  //std::cout << "### Client cert days=" << days << " seconds="
-  //          << seconds << " renew_in=" << (renew_time - time(NULL))
-  //          << std::endl;
+  time_t renew_time = std::max(
+      std::time(NULL) + 600,
+      peer_cert.notBefore() +
+        (static_cast<time_t>(days)*24*3600 + seconds)*RENEW_AFTER);
   m_renew_cert_timer.setTimeout(renew_time);
-  m_renew_cert_timer.setExpireOffset(10000);
   m_renew_cert_timer.start();
 
   std::cout << callsign << ": " << peer_cert.subjectNameString() << std::endl;
