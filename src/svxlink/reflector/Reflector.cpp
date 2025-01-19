@@ -1447,6 +1447,33 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
     }
     m_cfg->setValue(section, tag, value);
   }
+  else if (cmd == "NODE")
+  {
+    std::string subcmd, callsign;
+    unsigned blocktime;
+    if (!(ss >> subcmd >> callsign >> blocktime))
+    {
+      errss << "Invalid NODE PTY command '" << cmdline << "'. "
+               "Usage: NODE BLOCK <callsign> <blocktime seconds>";
+      goto write_status;
+    }
+    if (subcmd == "BLOCK")
+    {
+      auto node = ReflectorClient::lookup(callsign);
+      if (node == nullptr)
+      {
+        errss << "Could not find node " << callsign;
+        goto write_status;
+      }
+      node->setBlock(blocktime);
+    }
+    else
+    {
+      errss << "Invalid NODE PTY command '" << cmdline << "'. "
+               "Usage: NODE BLOCK <callsign> <blocktime seconds>";
+      goto write_status;
+    }
+  }
   else if (cmd == "CA")
   {
     std::string subcmd;

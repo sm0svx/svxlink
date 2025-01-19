@@ -331,6 +331,15 @@ void ReflectorClient::sendUdpMsg(const ReflectorUdpMsg &msg)
 
 void ReflectorClient::setBlock(unsigned blocktime)
 {
+  if (blocktime > 0)
+  {
+    std::cout << m_callsign << ": Blocking talker for " << blocktime
+              << " seconds" << std::endl;
+  }
+  else if (m_blocktime > 0)
+  {
+    std::cout << m_callsign << ": Unblocking talker" << std::endl;
+  }
   m_blocktime = blocktime;
   m_remaining_blocktime = blocktime;
 } /* ReflectorClient::setBlock */
@@ -1186,7 +1195,7 @@ void ReflectorClient::handleHeartbeat(Async::Timer *t)
   {
     if (m_remaining_blocktime == 0)
     {
-      m_blocktime = 0;
+      setBlock(0);
     }
     else
     {
