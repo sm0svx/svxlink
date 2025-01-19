@@ -45,6 +45,11 @@
   filled with one connection per ten seconds up until the bucket size is
   reached.
 
+* New reflector PTY command:
+  NODE BLOCK <callsign> <blocktime seconds>
+  The node will be blocked until it has been silent for the number of
+  specified seconds.
+
 
 
  1.8.0 -- 25 Feb 2024
