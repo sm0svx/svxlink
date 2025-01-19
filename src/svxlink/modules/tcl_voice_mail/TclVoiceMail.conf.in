@@ -14,7 +14,7 @@
 #              mail have arrived. This is optional.
 #
 # Recommended callsign suffix to user id mapping as below. On user id
-# collitions, add one.
+# collisions, add one.
 #
 # ABC=2, DEF=3,  GHI=4, JKL=5,
 # MNO=6, PQRS=7, TUV=8, WXYZ=9
