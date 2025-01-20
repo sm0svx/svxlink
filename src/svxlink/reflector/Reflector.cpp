@@ -796,7 +796,8 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
     broadcastMsg(MsgNodeLeft(client->callsign()),
         ReflectorClient::ExceptFilter(client));
   }
-  Application::app().runTask([=]{ delete client; });
+  //Application::app().runTask([=]{ delete client; });
+  delete client;
 } /* Reflector::clientDisconnected */
 
 

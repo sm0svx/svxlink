@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ This class represents one client connection. When a client connects, an
 instance of this class will be created that will persist for the lifetime of
 the client connection.
 */
-class ReflectorClient
+class ReflectorClient : public sigc::trackable
 {
   public:
     using ClientId = ReflectorUdpMsg::ClientId;
