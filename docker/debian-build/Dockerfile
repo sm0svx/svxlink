@@ -55,7 +55,7 @@ RUN apt-get update && \
                        libasound2-dev alsa-utils vorbis-tools qtbase5-dev \
                        qttools5-dev qttools5-dev-tools libopus-dev \
                        librtlsdr-dev libjsoncpp-dev libcurl4-openssl-dev \
-                       libgpiod-dev libogg-dev ladspa-sdk curl sudo
+                       libgpiod-dev libogg-dev ladspa-sdk curl sudo libssl-dev
 #RUN apt-get -y install groff doxygen
 
 ARG SOUNDS_VER="19.09.99.3"
