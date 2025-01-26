@@ -134,10 +134,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      * take host and port must be used.
      */
     explicit TcpPrioClient(size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
-      : ConT(recv_buf_len), TcpPrioClientBase(this)
-    {
-      initialize();
-    }
+      : ConT(recv_buf_len), TcpPrioClientBase(this) {}
 
     /**
      * @brief   Disallow copy construction
@@ -206,7 +203,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      * server. Note that the object should be a "normal" TcpClient and not a
      * TcpPrioClient.
      */
-    virtual TcpClientBase *newTcpClient(void)
+    virtual TcpClientBase* newTcpClient(void) override
     {
       return new TcpClient<ConT>;
     }

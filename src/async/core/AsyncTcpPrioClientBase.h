@@ -299,30 +299,6 @@ class TcpPrioClientBase : public TcpClientBase
 
   protected:
     /**
-     * @brief   Must be called from the inheriting class constructor
-     *
-     * This function must be called by the inheriting class to initialize this
-     * class. That is because this class cannot be initialized until the
-     * inheriting class has been initialized, e.g. because this class need to
-     * call the pure virtual function newTcpClient that is implemented in the
-     * inheriting class.
-     */
-    void initialize(void);
-
-    /**
-     * @brief   Check if the connection has been fully connected
-     * @return  Return \em true if the connection was successful
-     *
-     * This function return true when the connection has been fully
-     * established. It will continue to return true even after disconnection
-     * and will be reset at the moment when a new connection attempt is made.
-     */
-    //virtual bool successfulConnect(void) override
-    //{
-    //  return m_successful_connect && TcpClientBase::successfulConnect();
-    //}
-
-    /**
      * @brief   Called when the connection has been established to the server
      *
      * This function may be overridden by inheriting classes to get informed of
@@ -358,8 +334,10 @@ class TcpPrioClientBase : public TcpClientBase
 
   private:
     class Machine;
-    Machine*  m_machine             = nullptr;
-    //bool      m_successful_connect  = false;
+
+    Machine* machine(void) const;
+
+    mutable Machine*  m_machine = nullptr;
 
 };  /* class TcpPrioClientBase */
 

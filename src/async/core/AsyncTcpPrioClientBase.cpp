@@ -694,25 +694,25 @@ TcpPrioClientBase::~TcpPrioClientBase(void)
 
 void TcpPrioClientBase::setReconnectMinTime(unsigned t)
 {
-  m_machine->setReconnectMinTime(t);
+  machine()->setReconnectMinTime(t);
 } /* TcpPrioClientBase::setReconnectMinTime */
 
 
 void TcpPrioClientBase::setReconnectMaxTime(unsigned t)
 {
-  m_machine->setReconnectMaxTime(t);
+  machine()->setReconnectMaxTime(t);
 }
 
 
 void TcpPrioClientBase::setReconnectBackoffPercent(unsigned p)
 {
-  m_machine->setReconnectBackoffPercent(p);
+  machine()->setReconnectBackoffPercent(p);
 }
 
 
 void TcpPrioClientBase::setReconnectRandomizePercent(unsigned p)
 {
-  m_machine->setReconnectRandomizePercent(p);
+  machine()->setReconnectRandomizePercent(p);
 }
 
 
@@ -727,7 +727,7 @@ void TcpPrioClientBase::setService(const std::string& srv_name,
   srv += srv_proto;
   srv += ".";
   srv += srv_domain;
-  m_machine->setLookupParams(srv, DnsLookup::Type::SRV);
+  machine()->setLookupParams(srv, DnsLookup::Type::SRV);
 } /* TcpPrioClientBase::setService */
 
 
@@ -738,53 +738,51 @@ void TcpPrioClientBase::addStaticSRVRecord(
                         DnsResourceRecordSRV::Port    port,
                         DnsResourceRecordSRV::Target  target)
 {
-  const auto& srv = m_machine->label();
-  m_machine->addStaticResourceRecord(new DnsResourceRecordSRV(
+  const auto& srv = machine()->label();
+  machine()->addStaticResourceRecord(new DnsResourceRecordSRV(
         srv.empty() ? "static" : srv, ttl, prio, weight, port, target));
 } /* TcpPrioClientBase::addStaticSRVRecord */
 
 
 const std::string& TcpPrioClientBase::service(void) const
 {
-  return m_machine->label();
+  return machine()->label();
 } /* TcpPrioClientBase::service */
 
 
 void TcpPrioClientBase::connect(void)
 {
-  //m_successful_connect = false;
-  m_machine->connect();
+  machine()->connect();
 } /* TcpPrioClientBase::connect */
 
 
 void TcpPrioClientBase::disconnect(void)
 {
-  m_machine->disconnect();
+  machine()->disconnect();
 } /* TcpPrioClientBase::disconnect */
 
 
 void TcpPrioClientBase::markAsEstablished(void)
 {
-  //std::cout << "### TcpPrioClientBase::markAsEstablished" << std::endl;
-  m_machine->markAsEstablished();
+  machine()->markAsEstablished();
 } /* TcpPrioClientBase::markAsEstablished */
 
 
 bool TcpPrioClientBase::markedAsEstablished(void) const
 {
-  return m_machine->markedAsEstablished();
+  return machine()->markedAsEstablished();
 } /* TcpPrioClientBase::markedAsEstablished */
 
 
 bool TcpPrioClientBase::isIdle(void) const
 {
-  return m_machine->isIdle();
+  return machine()->isIdle();
 } /* TcpPrioClientBase::isIdle */
 
 
 bool TcpPrioClientBase::isPrimary(void) const
 {
-  return m_machine->isPrimary();
+  return machine()->isPrimary();
 } /* TcpPrioClientBase::isPrimary */
 
 
@@ -794,24 +792,25 @@ bool TcpPrioClientBase::isPrimary(void) const
  *
  ****************************************************************************/
 
-void TcpPrioClientBase::initialize(void)
+TcpPrioClientBase::Machine* TcpPrioClientBase::machine(void) const
 {
-  m_machine = new Machine(this);
-} /* TcpPrioClientBase::initialize */
+  if (m_machine == nullptr)
+  {
+    m_machine = new Machine(const_cast<TcpPrioClientBase*>(this));
+  }
+  return m_machine;
+} /* TcpPrioClientBase::machine */
 
 
 void TcpPrioClientBase::connectionEstablished(void)
 {
-  //m_successful_connect = true;
-  //TcpClientBase::connectionEstablished();
-  m_machine->connectionEstablished();
+  machine()->connectionEstablished();
 } /* TcpPrioClientBase::connectionEstablished */
 
 
 void TcpPrioClientBase::onDisconnected(TcpConnection::DisconnectReason reason)
 {
-  m_machine->onDisconnected();
-  //m_successful_connect = false;
+  machine()->onDisconnected();
 } /* TcpPrioClientBase::onDisconnected */
 
 
