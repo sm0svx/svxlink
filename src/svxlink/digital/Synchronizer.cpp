@@ -110,7 +110,6 @@ Synchronizer::Synchronizer(unsigned baudrate, unsigned sample_rate)
     shift_pos(sample_rate / 2), pos(0), was_mark(false),
     last_stored_was_mark(false)
 {
-  bitbuf.reserve(8);
 } /* Synchronizer::Synchronizer */
 
 

@@ -1,3 +1,11 @@
+/******************************************************************************
+ *
+ * Test with something like:
+ * sox TNC_Test_Ver-1.1-01.wav -t raw -esigned-integer -c1 -r 16000 - | \
+ * valgrind --leak-check=full svxlink/digital/afsk_test
+ *
+ ******************************************************************************/
+
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -198,7 +206,7 @@ struct AX25Frame
         else
         {
           cout << "<" << hex << setw(2) << setfill('0')
-               << (int)info[i] << ">";
+               << (int)info[i] << dec << ">";
         }
       }
       cout << endl;
@@ -238,10 +246,9 @@ class StdInSource : public Async::AudioSource, public sigc::trackable
 {
   public:
     StdInSource(void)
-      : bufpos(0)
+      : bufpos(0), watch(STDIN_FILENO, FdWatch::FD_WATCH_RD)
     {
-      watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-      watch->activity.connect(hide(mem_fun(*this, &StdInSource::readAudio)));
+      watch.activity.connect(hide(mem_fun(*this, &StdInSource::readAudio)));
     }
 
     void readAudio(void)
@@ -259,7 +266,7 @@ class StdInSource : public Async::AudioSource, public sigc::trackable
         {
           sinkFlushSamples();
           cout << "\n### End of file\n";
-          watch->setEnabled(false);
+          watch.setEnabled(false);
         }
 
         bufpos += cnt;
@@ -276,7 +283,7 @@ class StdInSource : public Async::AudioSource, public sigc::trackable
         int written = sinkWriteSamples(samples, sizeof(buf) / 2);
         if (written == 0)
         {
-          watch->setEnabled(false);
+          watch.setEnabled(false);
         }
         else if (written != sizeof(buf) / 2)
         {
@@ -298,7 +305,7 @@ class StdInSource : public Async::AudioSource, public sigc::trackable
     virtual void resumeOutput(void)
     {
       //cout << "### resumeOutput\n";
-      watch->setEnabled(true);
+      watch.setEnabled(true);
     }
 
     virtual void allSamplesFlushed(void)
@@ -310,7 +317,7 @@ class StdInSource : public Async::AudioSource, public sigc::trackable
   private:
     uint8_t buf[512];
     unsigned bufpos;
-    FdWatch *watch;
+    FdWatch watch;
 
 }; /* class StdInSource */
 
@@ -398,10 +405,11 @@ int main(int argc, const char **argv)
   AudioSource *prev_src = 0;
 
   //AudioIO audio_in("udp:127.0.0.1:10000", 0);
-  AudioIO audio_io("alsa:plughw:0", 0);
+  //AudioIO audio_io("alsa:plughw:0", 0);
 
   //StdInSourceDev audio_in;
-  //prev_src = &audio_in;
+  StdInSource audio_in;
+  prev_src = &audio_in;
   //AudioFifo fifo(2048);
   //prev_src->registerSink(&fifo);
   //prev_src = &fifo;
@@ -438,27 +446,27 @@ int main(int argc, const char **argv)
     exit(1);
   }
 
-  string rx_name("RxRtl");
-  Rx *rx = RxFactory::createNamedRx(cfg, rx_name);
-  if ((rx == 0) || !rx->initialize())
-  {
-    cout << "*** ERROR: Could not initialize receiver " << rx_name << endl;
-    exit(1);
-  }
-  rx->setMuteState(Rx::MUTE_NONE);
-  prev_src = rx;
+  //string rx_name("RxRtl");
+  //Rx *rx = RxFactory::createNamedRx(cfg, rx_name);
+  //if ((rx == 0) || !rx->initialize())
+  //{
+  //  cout << "*** ERROR: Could not initialize receiver " << rx_name << endl;
+  //  exit(1);
+  //}
+  //rx->setMuteState(Rx::MUTE_NONE);
+  //prev_src = rx;
 
-  AudioSplitter audio_splitter;
-  prev_src->registerSink(&audio_splitter);
-  prev_src = &audio_splitter;
+  //AudioSplitter audio_splitter;
+  //prev_src->registerSink(&audio_splitter);
+  //prev_src = &audio_splitter;
 
-  //AudioIO audio_out("alsa:plughw:0", 0);
-  if (!audio_io.open(AudioIO::MODE_RDWR))
-  {
-    cerr << "*** ERROR: Could not open audio device\n";
-    exit(1);
-  }
-  audio_splitter.addSink(&audio_io);
+  //AudioIO audio_out("alsa:default", 0);
+  //if (!audio_io.open(AudioIO::MODE_RDWR))
+  //{
+  //  cerr << "*** ERROR: Could not open audio device\n";
+  //  exit(1);
+  //}
+  //audio_splitter.addSink(&audio_io);
 
   AfskDemodulator fsk_demod(f0, f1, baudrate, sample_rate);
   prev_src->registerSink(&fsk_demod);
@@ -501,13 +509,12 @@ int main(int argc, const char **argv)
   AX25Decoder decoder;
   deframer.frameReceived.connect(mem_fun(decoder, &AX25Decoder::frameReceived));
 
-  /*
-  if (!audio_out.open(AudioIO::MODE_WR))
-  {
-    cerr << "*** ERROR: Could not open audio device for writing\n";
-    exit(1);
-  }
-  */
+  //if (!audio_out.open(AudioIO::MODE_WR))
+  //{
+  //  cerr << "*** ERROR: Could not open audio device for writing\n";
+  //  exit(1);
+  //}
+  //splitter.addSink(&audio_out);
   //if (!audio_in.open(AudioIO::MODE_RD))
   //{
   //  cerr << "*** ERROR: Could not open audio device for reading\n";
