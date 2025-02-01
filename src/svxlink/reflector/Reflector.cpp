@@ -565,8 +565,7 @@ Async::SslX509 Reflector::signClientCsr(const std::string& cn)
   std::string csr_path = m_csrs_dir + "/" + cn + ".csr";
   if (rename(req.filePath().c_str(), csr_path.c_str()) != 0)
   {
-    char errstr[256];
-    (void)strerror_r(errno, errstr, sizeof(errstr));
+    auto errstr = SvxLink::strError(errno);
     std::cerr << "*** WARNING: Failed to move signed CSR from '"
               << req.filePath() << "' to '" << csr_path << "': "
               << errstr << std::endl;
@@ -1642,8 +1641,7 @@ bool Reflector::loadCertificateFiles(void)
   struct stat st;
   if (stat(m_ca_bundle_file.c_str(), &st) != 0)
   {
-    char errstr[256];
-    (void)strerror_r(errno, errstr, sizeof(errstr));
+    auto errstr = SvxLink::strError(errno);
     std::cerr << "*** ERROR: Failed to read CA file from '"
               << m_ca_bundle_file << "': " << errstr << std::endl;
     return false;
