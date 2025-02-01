@@ -43,6 +43,7 @@ An example of how to use the Async::Digest class
 #include <openssl/err.h>
 
 #include <vector>
+#include <cstddef>
 
 
 /****************************************************************************
@@ -466,7 +467,7 @@ class Digest
           m_md = nullptr;
         }
         operator const EVP_MD*() const { return m_md; }
-        bool operator==(nullptr_t) const { return (m_md == nullptr); }
+        bool operator==(std::nullptr_t) const { return (m_md == nullptr); }
       private:
 #if OPENSSL_VERSION_MAJOR >= 3
         EVP_MD* m_md = nullptr;
