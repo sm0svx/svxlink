@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <istream>
 #include <ostream>
 #include <cstring>
+#include <cassert>
 
 
 /****************************************************************************
@@ -253,15 +254,24 @@ class SepPair : public std::pair<a, b>
 
 static inline const char* strError(int errnum)
 {
-  static thread_local char errstr[256];
-  char* errstrp = errstr;
-#if (_POSIX_C_SOURCE >= 200112L) && ! _GNU_SOURCE
-  int ret = strerror_r(errno, errstr, sizeof(errstr));
-  assert(ret == 0);
-#else
-  errstrp = strerror_r(errno, errstr, sizeof(errstr));
-#endif
-  return errstrp;
+  static thread_local struct
+  {
+    char errstr[256];
+
+      // XSI version of strerror_r
+    const char* operator()(int ret)
+    {
+      assert(ret == 0);
+      return errstr;
+    }
+
+      // GNU version of strerror_r
+    const char* operator()(char* ret)
+    {
+      return ret;
+    }
+  } wrap;
+  return wrap(strerror_r(errno, wrap.errstr, sizeof(wrap.errstr)));
 } /* strError */
 
 
