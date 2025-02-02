@@ -27,7 +27,10 @@ foreach(incfile ${EXPINC})
   expinc(${incfile})
 endforeach(incfile)
 
-set(LIBS ${LIBS} -lcrypto -lssl)
+# Find OpenSSL
+#set(LIBS ${LIBS} -lcrypto -lssl)
+find_package(OpenSSL REQUIRED)
+set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 
 # Find pthreads
 find_package(Threads)
