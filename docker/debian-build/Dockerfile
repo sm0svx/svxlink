@@ -46,7 +46,7 @@
 ARG FROM=debian:latest
 
 FROM ${FROM}
-MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
+MAINTAINER Tobias Blomberg <sm0svx@svxlink.org>
 
 # Install required packages and set up the svxlink user
 RUN apt-get update && \
@@ -58,7 +58,7 @@ RUN apt-get update && \
                        libgpiod-dev libogg-dev ladspa-sdk libssl-dev curl sudo
 #RUN apt-get -y install groff doxygen
 
-ARG SOUNDS_VER="19.09.99.3"
+ARG SOUNDS_VER="24.02"
 ARG SOUNDS_LANG="en_US"
 ARG SOUNDS_VOICE="heather"
 ARG SOUNDS_RATE="16k"

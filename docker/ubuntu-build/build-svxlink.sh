@@ -38,5 +38,8 @@ make -j$num_cores
 rm -f *.deb
 make package
 sudo dpkg -i *.deb
-#sudo make install
-#sudo ldconfig
+
+# Create SvxLink directories
+sudo mkdir -p /var/spool/svxlink/{voice_mail,qso_recorder} /var/lib/svxlink/pki
+sudo chown -R $(id -u):$(id -g) /var/spool/svxlink /var/lib/svxlink
+

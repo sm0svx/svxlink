@@ -1,2 +1,2 @@
-# Let the svxlink user become root without a password
-svxlink ALL=(ALL)       NOPASSWD: ALL
+# Let all users become root without a password
+ALL ALL=(ALL)       NOPASSWD: ALL

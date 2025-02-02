@@ -1,9 +1,0 @@
-[libselinux]
-name=CentOS-$releasever - libselinux
-#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus
-baseurl=http://vault.centos.org/5.11/centosplus/$basearch/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
-includepkgs=libselinux*
-
