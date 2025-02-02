@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -167,7 +167,13 @@ bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_n
   }
 
   LocationInfo::_instance->loc_cfg.mycall  = value;
-  LocationInfo::_instance->loc_cfg.comment = cfg.getValue(cfg_name, "COMMENT");
+  cfg.getValue(cfg_name, "COMMENT", LocationInfo::_instance->loc_cfg.comment);
+
+  unsigned dest_num = 1;
+  //cfg.getValue(cfg_name, "DESTINATION_NUM", 1U, 9U, dest_num);
+  std::stringstream dest_ss;
+  dest_ss << "APSVX" << hex << dest_num;
+  LocationInfo::_instance->loc_cfg.destination = dest_ss.str();
 
   init_ok &= LocationInfo::_instance->parsePosition(cfg, cfg_name);
   init_ok &= LocationInfo::_instance->parseStationHW(cfg, cfg_name);
@@ -468,7 +474,9 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
 bool LocationInfo::parsePath(const Async::Config &cfg, const string &name)
 {
     // FIXME: Verify the path syntax!
-  loc_cfg.path = cfg.getValue(name, "PATH");
+    //        http://www.aprs.org/newN/new-eu-paradigm.txt
+  loc_cfg.path = "WIDE1-1";
+  cfg.getValue(name, "PATH", loc_cfg.path);
   return true;
 } /* LocationInfo::parsePath */
 

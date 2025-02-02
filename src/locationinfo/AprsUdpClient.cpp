@@ -223,6 +223,7 @@ void AprsUdpClient::sendLocationInfo(Timer *t)
     char sdes_packet[256];
     int sdes_len = buildSdesPacket(sdes_packet);
 
+    std::cout << "### AprsUdpClient::sendLocationInfo" << std::endl;
     sock.write(ip_addr, port, sdes_packet, sdes_len);
   }
 } /* AprsUdpClient::sendLocationInfo */

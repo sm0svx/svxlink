@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -192,6 +192,7 @@ class LocationInfo
       std::string prefix;
       std::string path;
       std::string comment;
+      std::string destination;
     };
 
     static bool initialize(const Async::Config &cfg, const std::string &cfg_name);

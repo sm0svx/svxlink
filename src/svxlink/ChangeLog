@@ -50,6 +50,9 @@
   The node will be blocked until it has been silent for the number of
   specified seconds.
 
+* APRS beacon and status packets changed destination to the SvxLink specific
+  one, "APSVX1".
+
 
 
  1.8.0 -- 25 Feb 2024
