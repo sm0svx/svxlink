@@ -12,7 +12,7 @@ is shown below.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -513,7 +513,7 @@ class Config
           [=](const std::string& str_val) -> void
           {
             std::stringstream ssval(str_val);
-            ssval.imbue(std::locale(ssval.getloc(), new nospace_ctype));
+            ssval.imbue(std::locale(ssval.getloc(), new empty_ctype));
             Rsp tmp;
             ssval >> tmp;
             func(tmp);
@@ -680,42 +680,38 @@ class Config
     using Subscriber = std::function<void(const std::string&)>;
     struct Value
     {
-      std::string                               val;
-      std::vector<Subscriber>  subs;
+      std::string             val;
+      std::vector<Subscriber> subs;
     };
     typedef std::map<std::string, Value>  Values;
     typedef std::map<std::string, Values> Sections;
-    struct nospace_ctype : std::ctype<char>
+
+      // Really wanted to use classic_table() but it returns nullptr on Alpine
+    static const std::ctype<char>::mask* empty_table()
     {
-      static const mask* make_table(void)
-      {
-          // Make a copy of the "C" locale table
-        static std::vector<mask> v(classic_table(),
-                                   classic_table() + table_size);
-        for (auto& t : v)
-        {
-          if (t & space)
-          {
-            t &= ~space;
-          }
-        }
-        return &v[0];
-      }
-      nospace_ctype(std::size_t refs=0)
-        : std::ctype<char>(make_table(), false, refs) {}
+      static const auto table_size = std::ctype<char>::table_size;
+      static std::ctype<char>::mask v[table_size];
+      std::fill(&v[0], &v[table_size], 0);
+      return &v[0];
+    }
+
+    struct empty_ctype : std::ctype<char>
+    {
+      static const mask* make_table(void) { return empty_table(); }
+      empty_ctype(std::size_t refs=0) : ctype(make_table(), false, refs) {}
     };
+
     struct csv_whitespace : std::ctype<char>
     {
-      static const mask* make_table(void)
+      static const mask* make_table()
       {
-          // Make a copy of the "C" locale table
-        static std::vector<mask> v(classic_table(),
-                                   classic_table() + table_size);
-        v[','] |=  space;  // comma will be classified as whitespace
+        auto tbl = empty_table();
+        static std::vector<mask> v(tbl, tbl + table_size);
+        v[' '] |= space;
+        v[','] |= space;
         return &v[0];
       }
-      csv_whitespace(std::size_t refs=0)
-        : std::ctype<char>(make_table(), false, refs) {}
+      csv_whitespace(std::size_t refs=0) : ctype(make_table(), false, refs) {}
     };
 
     Sections  sections;

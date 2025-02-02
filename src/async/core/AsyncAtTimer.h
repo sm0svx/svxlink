@@ -44,6 +44,7 @@ An example of how to use the AsyncAtTimer class
  ****************************************************************************/
 
 #include <time.h>
+#include <sys/time.h>
 #include <sigc++/sigc++.h>
 
 

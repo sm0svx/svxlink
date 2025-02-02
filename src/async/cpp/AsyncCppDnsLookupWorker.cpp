@@ -10,7 +10,7 @@ used by Async::CppApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2023 Tobias Blomberg
+Copyright (C) 2003-2025 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <cstring>
+#include <mutex>
 
 
 /****************************************************************************
@@ -89,6 +90,60 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+#if !(__RES >= 19991006)
+  std::mutex res_mutex;
+#endif
+
+  class Resolver
+  {
+    public:
+      Resolver(void) { m_state.options = RES_DEFAULT; }
+      ~Resolver(void) { close(); }
+#if __RES >= 19991006
+      int init(void)
+      {
+        return res_ninit(&m_state);
+      }
+      int search(const char *dname, int dclass, int type,
+                 unsigned char* answer, int anslen)
+      {
+        return res_nsearch(&m_state, dname, dclass, type, answer, anslen);
+      }
+      void close(void)
+      {
+          // FIXME: Valgrind complain about leaked memory in the resolver
+          //        library when a lookup fails. It seems to be a one time leak
+          //        though so it does not grow with every failed lookup. But
+          //        even so, it seems that res_nclose is not cleaning up
+          //        properly.  Glibc 2.33-18 on Fedora 34.
+        res_nclose(&m_state);
+      }
+#else
+      int init(void)
+      {
+        const std::lock_guard<std::mutex> lock(res_mutex);
+        int rc = res_init();
+        memcpy(&m_state, &_res, sizeof(m_state));
+        return rc;
+      }
+      int search(const char *dname, int dclass, int type,
+                 unsigned char* answer, int anslen)
+      {
+        const std::lock_guard<std::mutex> lock(res_mutex);
+        struct __res_state old_state;
+        memcpy(&old_state, &_res, sizeof(old_state));
+        memcpy(&_res, &m_state, sizeof(m_state));
+        int rc = res_search(dname, dclass, type, answer, anslen);
+        memcpy(&_res, &old_state, sizeof(old_state));
+        return rc;
+      }
+      void close(void) {}
+#endif
+    private:
+      struct __res_state m_state;
+  };
+};
 
 
 /****************************************************************************
@@ -305,26 +360,18 @@ void CppDnsLookupWorker::workerFunc(CppDnsLookupWorker::ThreadContext& ctx)
 
   if (qtype != 0)
   {
-    struct __res_state state;
-    int ret = res_ninit(&state);
+    Resolver res;
+    int ret = res.init();
     if (ret != -1)
     {
-      state.options = RES_DEFAULT;
       const char *dname = ctx.label.c_str();
-      ctx.anslen = res_nsearch(&state, dname, ns_c_in, qtype,
-                               ctx.answer, sizeof(ctx.answer));
+      ctx.anslen = res.search(dname, ns_c_in, qtype,
+                              ctx.answer, sizeof(ctx.answer));
       if (ctx.anslen == -1)
       {
         th_cerr << "*** ERROR: Name resolver failure -- res_nsearch: "
                 << hstrerror(h_errno) << std::endl;
       }
-
-        // FIXME: Valgrind complain about leaked memory in the resolver library
-        //        when a lookup fails. It seems to be a one time leak though so it
-        //        does not grow with every failed lookup. But even so, it seems
-        //        that res_close is not cleaning up properly.
-        //        Glibc 2.33-18 on Fedora 34.
-      res_nclose(&state);
     }
     else
     {
@@ -536,14 +583,13 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 
 void CppDnsLookupWorker::printErrno(const std::string& msg)
 {
-  char errbuf[1024];
-  char* errmsg = errbuf;
-#if (_POSIX_C_SOURCE >= 200112L) && ! _GNU_SOURCE
-  int ret = strerror_r(errno, errbuf, sizeof(errbuf));
-  assert(ret == 0);
-#else
-  errmsg = strerror_r(errno, errbuf, sizeof(errbuf));
-#endif
+  static thread_local struct
+  {
+    char errstr[256];
+    const char* operator()(int ret) { assert(ret == 0); return errstr; }
+    const char* operator()(char* ret) { return ret; }
+  } wrap;
+  auto errmsg = wrap(strerror_r(errno, wrap.errstr, sizeof(wrap.errstr)));
   std::cerr << "*** " << msg << ": " << errmsg << std::endl;
 } /* CppDnsLookupWorker::printErrno */
 
