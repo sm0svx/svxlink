@@ -1,4 +1,4 @@
-.TH REMOTETRX 1 "AUGUST 2021" Linux "User Manuals"
+.TH REMOTETRX 1 "FEBRUARY 2025" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -6,7 +6,7 @@ remotetrx \- The SvxLink remote transceiver application
 .
 .SH SYNOPSIS
 .
-.BI "remotetrx [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
+.BI "remotetrx [--help] [--daemon] [--quiet] [--reset] [--version] [--logfile=" "log file" "] [--config=" "configuration file" "] [--pidfile=" "pid file" "] [--runasuser=" "user name" ]
 .
 .SH DESCRIPTION
 .
@@ -44,7 +44,7 @@ Print a help message and exit.
 .B --daemon
 Start the SvxLink remote receiver server as a daemon.
 .TP
-.B --runasuser
+.BI "--runasuser" "username"
 Start RemoteTrx as the specified user. The switch to the new user
 will happen after the log and pid files has been opened.
 .TP
@@ -57,6 +57,16 @@ Specify a pid file to write the process ID into.
 .TP
 .BI "--config=" "configuration file"
 Specify which configuration file to use.
+.TP
+.B --reset
+Do a normal application startup, initializing everything, but exit immediately
+when the initialization is done.
+.TP
+.B --quiet
+Don't output any info messages, just warnings and errors.
+.TP
+.B --version
+Print the application version then exit.
 .
 .SH FILES
 .

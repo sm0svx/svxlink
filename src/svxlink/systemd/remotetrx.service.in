@@ -34,6 +34,7 @@ ExecStartPre=/bin/touch ${LOGFILE}
 ExecStartPre=/bin/chmod 0644 ${LOGFILE}
 ExecStartPre=/bin/sh -c 'chown ${RUNASUSER}:$(id -gn ${RUNASUSER}) "${LOGFILE}"'
 ExecStart=@BIN_INSTALL_DIR@/remotetrx --logfile=${LOGFILE} --config=${CFGFILE} --runasuser=${RUNASUSER}
+ExecStopPost=@BIN_INSTALL_DIR@/remotetrx --config=${CFGFILE} --runasuser=${RUNASUSER} --reset --quiet
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 Nice=-10

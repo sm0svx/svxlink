@@ -267,7 +267,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   std::vector<std::string> hosts;
   if (cfg().getValue(name(), "HOST", hosts))
   {
-    std::cout << "*** WARNING: The " << name()
+    std::cerr << "*** WARNING: The " << name()
               << "/HOST configuration variable is deprecated. "
                  "Use HOSTS instead." << std::endl;
   }
@@ -290,7 +290,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     uint16_t reflector_port = 5300;
     if (cfg().getValue(name(), "PORT", reflector_port))
     {
-      std::cout << "*** WARNING: The " << name()
+      std::cerr << "*** WARNING: The " << name()
                 << "/PORT configuration variable is deprecated. "
                    "Use HOST_PORT instead." << std::endl;
     }
@@ -577,7 +577,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
                       std::numeric_limits<unsigned>::max(),
                       m_tg_select_inhibit_timeout, true))
   {
-    std::cout << "*** ERROR[" << name()
+    std::cerr << "*** ERROR[" << name()
               << "]: Illegal value (" << m_tg_select_inhibit_timeout
               << ") for TG_SELECT_INHIBIT_TIMEOUT" << std::endl;
     return false;
@@ -664,7 +664,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
       m_udp_heartbeat_tx_cnt_reset);
 
-  connect();
+  Async::Application::app().runTask([&]{ connect(); });
 
   return true;
 } /* ReflectorLogic::initialize */
@@ -773,7 +773,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           }
           else
           {
-            std::cout << "*** WARNING: Not allowed to add a temporary montior "
+            std::cerr << "*** WARNING: Not allowed to add a temporary montior "
                          "for TG #" << tg << " which is being permanently "
                          "monitored" << std::endl;
             os << "command_failed " << cmd;
@@ -793,14 +793,14 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
       }
       else
       {
-        std::cout << "*** WARNING: Failed to parse temporary TG monitor "
+        std::cerr << "*** WARNING: Failed to parse temporary TG monitor "
                      "command: " << cmd << std::endl;
         os << "command_failed " << cmd;
       }
     }
     else
     {
-      std::cout << "*** WARNING: Ignoring temporary TG monitoring command ("
+      std::cerr << "*** WARNING: Ignoring temporary TG monitoring command ("
                 << cmd << ") since that function is not enabled or there "
                    "were no TG specified" << std::endl;
       os << "command_failed " << cmd;
@@ -1041,7 +1041,7 @@ bool ReflectorLogic::onVerifyPeer(TcpConnection *con, bool preverify_ok,
   preverify_ok = preverify_ok && !cert.commonName().empty();
   if (!preverify_ok)
   {
-    std::cout << "*** ERROR[" << name()
+    std::cerr << "*** ERROR[" << name()
               << "]: Certificate verification failed for reflector server"
               << std::endl;
     std::cout << "------------- Peer Certificate --------------" << std::endl;
@@ -1361,7 +1361,7 @@ void ReflectorLogic::handleMsgCAInfo(std::istream& is)
 
           // FIXME: Don't overwrite CA bundle if we have one already. To do
           //        that we need to implement verification of the new bundle.
-        std::cout << "*** WARNING[" << name()
+        std::cerr << "*** WARNING[" << name()
                   << "]: You need to update your CA bundle to the latest "
                      "version. Contact the reflector sysop."  << std::endl;
         request_ca_bundle = false;
@@ -1436,7 +1436,7 @@ void ReflectorLogic::handleMsgCABundle(std::istream& is)
   if (!signature_ok)
   {
     // FIXME: Add more info to the warning printout
-    std::cout << "*** WARNING[" << name()
+    std::cerr << "*** WARNING[" << name()
               << "]: Received CA bundle with invalid signature" << std::endl;
     disconnect();
     return;
@@ -2055,7 +2055,7 @@ bool ReflectorLogic::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
   ss.write(reinterpret_cast<const char *>(buf), UdpCipher::AADLEN);
   if (!m_aad.unpack(ss))
   {
-    std::cout << "*** WARNING: Unpacking associated data failed for UDP "
+    std::cerr << "*** WARNING: Unpacking associated data failed for UDP "
                  "datagram from " << addr << ":" << port << std::endl;
     return true;
   }
@@ -2083,14 +2083,14 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
   if (addr != m_con.remoteHost())
   {
-    cout << "*** WARNING[" << name()
+    cerr << "*** WARNING[" << name()
          << "]: UDP packet received from wrong source address "
          << addr << ". Should be " << m_con.remoteHost() << "." << endl;
     return;
   }
   if (port != m_con.remotePort())
   {
-    cout << "*** WARNING[" << name()
+    cerr << "*** WARNING[" << name()
          << "]: UDP packet received with wrong source port number "
          << port << ". Should be " << m_con.remotePort() << "." << endl;
     return;
@@ -2102,14 +2102,14 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   ReflectorUdpMsg header;
   if (!header.unpack(ss))
   {
-    cout << "*** WARNING[" << name()
+    cerr << "*** WARNING[" << name()
          << "]: Unpacking failed for UDP message header" << endl;
     return;
   }
 
   //if (header.clientId() != m_client_id)
   //{
-  //  cout << "*** WARNING[" << name()
+  //  cerr << "*** WARNING[" << name()
   //       << "]: UDP packet received with wrong client id "
   //       << header.clientId() << ". Should be " << m_client_id << "." << endl;
   //  return;
@@ -2226,7 +2226,7 @@ void ReflectorLogic::sendUdpMsg(const UdpCipher::AAD& aad,
   std::ostringstream adss;
   if (!aad.pack(adss))
   {
-    std::cout << "*** WARNING: Packing associated data failed for UDP "
+    std::cerr << "*** WARNING: Packing associated data failed for UDP "
                  "datagram to " << m_con.remoteHost() << ":"
               << m_con.remotePort() << std::endl;
     return;

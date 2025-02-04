@@ -188,6 +188,8 @@ static char             *logfile_name = NULL;
 static char             *runasuser = NULL;
 static char   	      	*config = NULL;
 static int    	      	daemonize = 0;
+static int    	      	reset = 0;
+static int    	      	quiet = 0;
 static int    	      	logfd = -1;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
@@ -238,80 +240,89 @@ int main(int argc, char **argv)
     perror("sigaction");
     exit(1);
   }
-  
+
   int pipefd[2] = {-1, -1};
   int noclose = 0;
-  if (logfile_name != 0)
+  if (quiet || (logfile_name != 0))
   {
-      /* Open the logfile */
-    if (!logfile_open())
-    {
-      exit(1);
-    }
-
-      /* Create a pipe to route stdout through */
-    if (pipe(pipefd) == -1)
-    {
-      perror("pipe");
-      exit(1);
-    }
-    int flags = fcntl(pipefd[0], F_GETFL);
-    if (flags == -1)
-    {
-      perror("fcntl(..., F_GETFL)");
-      exit(1);
-    }
-    flags |= O_NONBLOCK;
-    if (fcntl(pipefd[0], F_SETFL, flags) == -1)
-    {
-      perror("fcntl(..., F_SETFL)");
-      exit(1);
-    }
-    stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
-
-      /* Redirect stdout to the logpipe */
-    if (dup2(pipefd[1], STDOUT_FILENO) == -1)
-    {
-      perror("dup2(stdout)");
-      exit(1);
-    }
-
-      /* Redirect stderr to the logpipe */
-    if (dup2(pipefd[1], STDERR_FILENO) == -1)
-    {
-      perror("dup2(stderr)");
-      exit(1);
-    }
-
-      // We also need to close stdin but that is not a good idea since we need
-      // the stdin filedescriptor to keep being allocated so that it is not
-      // assigned to some other random filedescriptor allocation. That would
-      // be very bad.
-    int devnull = open("/dev/null", O_RDONLY);
+    int devnull = open("/dev/null", O_RDWR);
     if (devnull == -1)
     {
       perror("open(/dev/null)");
       exit(1);
     }
-    if (dup2(devnull, STDIN_FILENO) == -1)
+
+    if (quiet)
     {
-      perror("dup2(stdin)");
-      exit(1);
-    }
-    close(devnull);
-    
-      /* Force stdout to line buffered mode */
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-    {
-      perror("setlinebuf");
-      exit(1);
+        /* Redirect stdout to /dev/null */
+      dup2(devnull, STDOUT_FILENO);
     }
 
-    atexit(logfile_flush);
-    
-      /* Tell the daemon function call not to close the file descriptors */
-    noclose = 1;
+    if (logfile_name != 0)
+    {
+        /* Open the logfile */
+      if (!logfile_open())
+      {
+        exit(1);
+      }
+      atexit(logfile_flush);
+
+        /* Create a pipe to route stdout and stderr through */
+      if (pipe(pipefd) == -1)
+      {
+        perror("pipe");
+        exit(1);
+      }
+      int flags = fcntl(pipefd[0], F_GETFL);
+      if (flags == -1)
+      {
+        perror("fcntl(..., F_GETFL)");
+        exit(1);
+      }
+      flags |= O_NONBLOCK;
+      if (fcntl(pipefd[0], F_SETFL, flags) == -1)
+      {
+        perror("fcntl(..., F_SETFL)");
+        exit(1);
+      }
+      stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
+      stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
+
+      if (!quiet)
+      {
+          /* Redirect stdout to the logpipe */
+        if (dup2(pipefd[1], STDOUT_FILENO) == -1)
+        {
+          perror("dup2(stdout)");
+          exit(1);
+        }
+
+          /* Force stdout to line buffered mode */
+        if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+        {
+          perror("setlinebuf");
+          exit(1);
+        }
+      }
+
+        /* Redirect stderr to the logpipe */
+      if (dup2(pipefd[1], STDERR_FILENO) == -1)
+      {
+        perror("dup2(stderr)");
+        exit(1);
+      }
+
+        /* Redirect stdin to /dev/null */
+      if (dup2(devnull, STDIN_FILENO) == -1)
+      {
+        perror("dup2(stdin)");
+        exit(1);
+      }
+
+        /* Tell the daemon function call not to close the file descriptors */
+      noclose = 1;
+    }
+    close(devnull);
   }
 
   if (daemonize)
@@ -556,9 +567,14 @@ int main(int argc, char **argv)
     trx_handlers.push_back(trx_handler);
     cout << endl;
   }
-  
+
   if (!trx_handlers.empty())
   {
+    if (reset)
+    {
+      std::cout << "Initialization done. Exiting." << std::endl;
+      Async::Application::app().quit();
+    }
     app.exec();
   }
   else
@@ -642,6 +658,10 @@ static void parse_arguments(int argc, const char **argv)
     */
     {"daemon", 0, POPT_ARG_NONE, &daemonize, 0,
 	    "Start " PROGRAM_NAME " as a daemon", NULL},
+    {"reset", 0, POPT_ARG_NONE, &reset, 0,
+	    "Initialize all hardware to initial state then quit", NULL},
+    {"quiet", 0, POPT_ARG_NONE, &quiet, 0,
+	    "Don't print any info messages, just warnings and errors", NULL},
     {"version", 0, POPT_ARG_NONE, &print_version, 0,
 	    "Print the application version string", NULL},
     {NULL, 0, 0, NULL, 0}

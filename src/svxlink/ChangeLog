@@ -53,6 +53,14 @@
 * APRS beacon and status packets changed destination to the SvxLink specific
   one, "APSVX1".
 
+* Add commandline option --reset to svxlink and remotetrx. It was added to get
+  an easy way to reset all SvxLink hardware to initial state. The default
+  systemd unit will run the application with that option set after the main
+  application has exited.
+
+* Add command line option --quiet to svxlink and remotetrx. Suppress output of
+  info messages. Warning and error messages will still be output.
+
 
 
  1.8.0 -- 25 Feb 2024
