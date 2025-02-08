@@ -12,6 +12,9 @@
 
 * Add connection rate throttling, using token buckets, to Async::TcpServer.
 
+* Async::Config bugfix: Add parameter missing_ok to the string specific
+  getValue function.
+
 
 
  1.7.0 -- 25 Feb 2024

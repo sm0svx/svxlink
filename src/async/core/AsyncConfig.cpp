@@ -12,7 +12,7 @@ is shown below.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -148,19 +148,19 @@ bool Config::open(const string& name)
 } /* Config::open */
 
 
-bool Config::getValue(const string& section, const string& tag,
-		      string& value) const
+bool Config::getValue(const std::string& section, const std::string& tag,
+                      std::string& value, bool missing_ok) const
 {
   Sections::const_iterator sec_it = sections.find(section);
   if (sec_it == sections.end())
   {
-    return false;
+    return missing_ok;
   }
 
   Values::const_iterator val_it = sec_it->second.find(tag);
   if (val_it == sec_it->second.end())
   {
-    return false;
+    return missing_ok;
   }
 
   value = val_it->second.val;

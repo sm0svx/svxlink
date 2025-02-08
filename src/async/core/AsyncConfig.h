@@ -187,7 +187,7 @@ class Config
      * of type "string".
      */
     bool getValue(const std::string& section, const std::string& tag,
-      	      	  std::string& value) const;
+                  std::string& value, bool missing_ok = false) const;
 
     /**
      * @brief 	Get the value of the given configuration variable.
