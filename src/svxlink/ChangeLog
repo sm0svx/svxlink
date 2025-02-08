@@ -5,6 +5,11 @@
   down when a talkgroup is active, a buzzing sound will be prepended to the
   roger sound.
 
+* Writing to the logfile in SvxLink Server is now done from a separate thread.
+  That will increase the accuracy of the timestamps in some situations.
+  Previously multiple log rows could be lumped together in a block where all
+  rows had the same timestamp. That made it harder to debug some problems.
+
 
 
  1.9.1 -- ?? ??? 2025
