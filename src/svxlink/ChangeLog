@@ -61,6 +61,9 @@
 * Add command line option --quiet to svxlink and remotetrx. Suppress output of
   info messages. Warning and error messages will still be output.
 
+* Bugfix in RemoteTrx: If the AUTH_KEY contained whitespace it ended up to be
+  completely empty, thus no authentication was enabled.
+
 
 
  1.8.0 -- 25 Feb 2024
