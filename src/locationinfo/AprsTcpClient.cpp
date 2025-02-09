@@ -133,7 +133,7 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    con->dataReceived.connect(mem_fun(*this, &AprsTcpClient::tcpDataReceived));
    con->connect();
 
-   beacon_timer = new Timer(loc_cfg.interval, Timer::TYPE_PERIODIC);
+   beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
    beacon_timer->expired.connect(mem_fun(*this, &AprsTcpClient::sendAprsBeacon));
 
@@ -281,7 +281,10 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-  //std::cout << "### AprsTcpClient::sendMsg: aprsmsg=" << aprsmsg;
+  if (loc_cfg.debug)
+  {
+    std::cout << "APRS: " << aprsmsg;
+  }
 
   if (!con->isConnected())
   {
@@ -299,7 +302,6 @@ void AprsTcpClient::sendMsg(const char *aprsmsg)
     con->disconnect();
   }
 } /* AprsTcpClient::sendMsg */
-
 
 
 void AprsTcpClient::aprsLogin(void)

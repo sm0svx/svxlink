@@ -2867,8 +2867,13 @@ TONE=0        # we don't use CTCSS sub-audible or call tones
 TONE=1750     # the link/repeater use a tone burst of 1750 Hz
 .TP
 .B STATISTICS_INTERVAL
-Defines the interval in minutes in that an aprs statistic is sent into the aprs
-network. Range: 5-60, default is 10 minutes
+Defines the interval in minutes in that an aprs statistic (telemetry) is sent
+into the aprs network. Range: 5-60, default is 10 minutes
+.TP
+.B STATISTICS_LOGIC
+The name of the logic core that statistics (telemetry) should be sent for.
+
+Example: STATISTICS_LOGIC=SimplexLogic
 .TP
 .B COMMENT
 Specify a short comment here, maybe a link to your website
@@ -2883,8 +2888,11 @@ Example:
 COMMENT=[svx] Running SvxLink by SM0SVX
 .TP
 .B PTY_PATH
-Specify a path to a communications PTY that can be used by external applications to
-inject APRS packets into the APRS-IS network.
+Specify a path to a communications PTY that can be used by external
+applications to inject APRS packets into the APRS-IS network.
+.TP
+.B DEBUG
+Set to 1 to print which APRS packets that are sent into the APRS-IS network.
 .
 .SH AUDIO DEVICE SPECIFICATIONS
 .

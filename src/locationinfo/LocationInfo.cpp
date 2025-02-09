@@ -128,28 +128,36 @@ void print_error(const string &name, const string &variable,
  *
  ****************************************************************************/
 
-LocationInfo* LocationInfo::_instance = 0;
+LocationInfo* LocationInfo::_instance = nullptr;
 
-bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_name)
+
+LocationInfo::LocationInfo(void)
 {
+  aprs_stats_timer.expired.connect(
+      mem_fun(*this, &LocationInfo::sendAprsStatistics));
+} /* LocationInfo::LocationInfo */
 
-   // check if already initialized
+
+bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
+{
+    // Check if already initialized
   if (LocationInfo::_instance->has_instance()) return false;
 
   bool init_ok = true;
-  string value;
 
-  LocationInfo::_instance = new LocationInfo();
+  LocationInfo::_instance = new LocationInfo;
+  auto& loc_cfg = LocationInfo::_instance->loc_cfg;
 
-  value = cfg.getValue(cfg_name, "CALLSIGN");
+  std::string callsign;
+  callsign = cfg.getValue(cfg_name, "CALLSIGN");
 
-  if (value.find("EL-") != string::npos)
+  if (callsign.find("EL-") != string::npos)
   {
-    LocationInfo::_instance->loc_cfg.prefix = "L";
+    loc_cfg.prefix = "L";
   }
-  else if (value.find("ER-") != string::npos)
+  else if (callsign.find("ER-") != string::npos)
   {
-    LocationInfo::_instance->loc_cfg.prefix = "R";
+    loc_cfg.prefix = "R";
   }
   else
   {
@@ -158,39 +166,41 @@ bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_n
          "Example: CALLSIGN=ER-DL1ABC\n";
     return false;
   }
-
-  if (value.erase(0,3).length() < 4)
+  if (callsign.erase(0,3).length() < 4)
   {
     cerr << "*** ERROR: variable CALLSIGN in section " <<
         cfg_name << " is missing or wrong\nExample: CALLSIGN=ER-DL1ABC\n";
     return false;
   }
+  loc_cfg.mycall = callsign;
 
-  LocationInfo::_instance->loc_cfg.mycall  = value;
-  cfg.getValue(cfg_name, "COMMENT", LocationInfo::_instance->loc_cfg.comment);
+  cfg.getValue(cfg_name, "COMMENT", loc_cfg.comment);
+
+  loc_cfg.debug = false;
+  cfg.subscribeValue(cfg_name, "DEBUG",
+      loc_cfg.debug,
+      [](bool debug) {
+        LocationInfo::_instance->loc_cfg.debug = debug;
+      });
 
   unsigned dest_num = 1;
   //cfg.getValue(cfg_name, "DESTINATION_NUM", 1U, 9U, dest_num);
   std::stringstream dest_ss;
-  dest_ss << "APSVX" << hex << dest_num;
-  LocationInfo::_instance->loc_cfg.destination = dest_ss.str();
+  dest_ss << "APSVX" << dest_num;
+  loc_cfg.destination = dest_ss.str();
 
   init_ok &= LocationInfo::_instance->parsePosition(cfg, cfg_name);
   init_ok &= LocationInfo::_instance->parseStationHW(cfg, cfg_name);
   init_ok &= LocationInfo::_instance->parsePath(cfg, cfg_name);
   init_ok &= LocationInfo::_instance->parseClients(cfg, cfg_name);
 
-  unsigned int iv = atoi(cfg.getValue(cfg_name, "STATISTICS_INTERVAL").c_str());
+  auto& siv = LocationInfo::_instance->sinterval;
+  cfg.getValue(cfg_name, "STATISTICS_INTERVAL", 5U, 60U, siv);
+  LocationInfo::_instance->startStatisticsTimer(siv * 60 * 1000);
 
-  if (iv < 5 || iv > 60)
-  {
-    iv = 10;
-  }
-  LocationInfo::_instance->sinterval = iv;
-  LocationInfo::_instance->startStatisticsTimer(iv*60000);
+  cfg.getValue(cfg_name, "STATISTICS_LOGIC", LocationInfo::_instance->slogic);
 
-  value = cfg.getValue(cfg_name, "PTY_PATH");
-  LocationInfo::_instance->initExtPty(value);
+  LocationInfo::_instance->initExtPty(cfg.getValue(cfg_name, "PTY_PATH"));
 
   if( !init_ok )
   {
@@ -257,39 +267,40 @@ bool LocationInfo::getTransmitting(const std::string &name)
 
 
 void LocationInfo::setTransmitting(const std::string &name, struct timeval tv,
-                                     bool state)
+                                   bool is_transmitting)
 {
-   aprs_stats[name].tx_on = state;
-   if (state)
-   {
-      aprs_stats[name].tx_on_nr++;
-      aprs_stats[name].last_tx_sec = tv;
-   }
-   else
-   {
-      aprs_stats[name].tx_sec += ((tv.tv_sec -
-                aprs_stats[name].last_tx_sec.tv_sec) +
-            (tv.tv_usec - aprs_stats[name].last_tx_sec.tv_usec)/1000000.0);
-   }
-} /* LocationInfo::isTransmitting */
+  aprs_stats[name].tx_on = is_transmitting;
+  if (is_transmitting)
+  {
+    aprs_stats[name].tx_on_nr++;
+    aprs_stats[name].last_tx_sec = tv;
+  }
+  else
+  {
+    aprs_stats[name].tx_sec +=
+      tv.tv_sec - aprs_stats[name].last_tx_sec.tv_sec +
+      (tv.tv_usec - aprs_stats[name].last_tx_sec.tv_usec) / 1000000.0f;
+  }
+} /* LocationInfo::setTransmitting */
 
 
 void LocationInfo::setReceiving(const std::string &name, struct timeval tv,
-                                 bool state)
+                                bool is_receiving)
 {
-   aprs_stats[name].squelch_on = state;
-   if (state)
-   {
-      aprs_stats[name].rx_on_nr++;
-      aprs_stats[name].last_rx_sec = tv;
-   }
-   else
-   {
-      aprs_stats[name].rx_sec += ((tv.tv_sec -
-                aprs_stats[name].last_rx_sec.tv_sec) +
-           (tv.tv_usec - aprs_stats[name].last_rx_sec.tv_usec)/1000000.0);
-   }
-} /* LocationInfo::isReceiving */
+  aprs_stats[name].squelch_on = is_receiving;
+  if (is_receiving)
+  {
+    aprs_stats[name].rx_on_nr += 1;
+    aprs_stats[name].last_rx_sec = tv;
+  }
+  else
+  {
+    aprs_stats[name].rx_sec +=
+      tv.tv_sec - aprs_stats[name].last_rx_sec.tv_sec +
+      (tv.tv_usec - aprs_stats[name].last_rx_sec.tv_usec) / 1000000.0f;
+  }
+} /* LocationInfo::setReceiving */
+
 
 /****************************************************************************
  *
@@ -451,9 +462,9 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
     success = false;
   }
 
-  int interval = 10;
+  int binterval = 10;
   int max = numeric_limits<int>::max();
-  if (!cfg.getValue(name, "BEACON_INTERVAL", 10, max, interval, true))
+  if (!cfg.getValue(name, "BEACON_INTERVAL", 10, max, binterval, true))
   {
     print_error(name, "BEACON_INTERVAL", cfg.getValue(name, "BEACON_INTERVAL"),
                 "BEACON_INTERVAL=10");
@@ -461,7 +472,7 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
   }
   else
   {
-    loc_cfg.interval = 60 * 1000 * interval;
+    loc_cfg.binterval = binterval;
   }
 
   loc_cfg.range = calculateRange(loc_cfg);
@@ -475,7 +486,6 @@ bool LocationInfo::parsePath(const Async::Config &cfg, const string &name)
 {
     // FIXME: Verify the path syntax!
     //        http://www.aprs.org/newN/new-eu-paradigm.txt
-  loc_cfg.path = "WIDE1-1";
   cfg.getValue(name, "PATH", loc_cfg.path);
   return true;
 } /* LocationInfo::parsePath */
@@ -611,76 +621,111 @@ bool LocationInfo::parseClientStr(string &host, int &port, const string &val)
 } /* LocationInfo::parseClientStr */
 
 
-void LocationInfo::startStatisticsTimer(int interval) {
-  delete aprs_stats_timer;
-  aprs_stats_timer = new Timer(interval, Timer::TYPE_PERIODIC);
-  aprs_stats_timer->setEnable(true);
-  aprs_stats_timer->expired.connect(mem_fun(*this, &LocationInfo::sendAprsStatistics));
+void LocationInfo::startStatisticsTimer(int sinterval)
+{
+  aprs_stats_timer.setTimeout(sinterval);
+  aprs_stats_timer.setEnable(true);
 } /* LocationInfo::statStatisticsTimer */
 
 
 void LocationInfo::sendAprsStatistics(Timer *t)
 {
-  char info[255];
-  info[0] ='\0';
-  string head ="UNIT.RX Erlang,TX Erlang,RXcount/10m,TXcount/10m,none1,STxxxxxx,logic";
+  // https://github.com/PhirePhly/aprs_notes/blob/master/telemetry_format.md
 
-  sprintf(info, "E%s-%s>RXTLM-1,TCPIP,qAR,%s::E%s-%-6s:%s\n",
-       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
-       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), head.c_str());
+    // FROM>APSVXn,VIA1,VIA2,VIAn:
+  std::ostringstream addr;
+  addr << loc_cfg.mycall << ">" << loc_cfg.destination << ":";
 
-   // sends the Aprs stats header
-  string message = info;
-  igateMessage(message);
+    // :MYCALL   :
+  std::ostringstream addressee;
+  addressee << ":E" << loc_cfg.prefix << "-"
+            << setw(6) << loc_cfg.mycall << ":";
 
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
+    // PARM.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
+  std::ostringstream parm;
+  parm << addr.str()
+       << addressee.str()
+       << "PARM."
+       << "RX Avg " << sinterval << "m"
+       << ",TX Avg " << sinterval << "m"
+       << ",RX Count " << sinterval << "m"
+       << ",TX Count " << sinterval << "m"
+       << ","
+       << ",RX,TX\r\n";
+  igateMessage(parm.str());
 
-   // loop for each logic
-  std::map<string, AprsStatistics>::iterator it;
+    // UNIT.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
+  std::ostringstream unit;
+  unit << addr.str()
+       << addressee.str()
+       << "UNIT.erlang,erlang,receptions,transmissions\r\n";
+  igateMessage(unit.str());
 
-  for (it = LocationInfo::instance()->aprs_stats.begin();
-           it != LocationInfo::instance()->aprs_stats.end(); it++)
+  struct timeval now;
+  gettimeofday(&now, NULL);
+
+    // Loop for each logic
+  for (auto& entry : LocationInfo::instance()->aprs_stats)
   {
+    const std::string& logic_name = entry.first;
+    AprsStatistics& stats = entry.second;
 
-    if ((*it).second.squelch_on)
+    if (!slogic.empty() && (logic_name != slogic))
     {
-      (*it).second.rx_sec += ((tv.tv_sec - (*it).second.last_rx_sec.tv_sec) +
-                             (tv.tv_usec - (*it).second.last_rx_sec.tv_usec)/1000000.0);
-    }
-    if ((*it).second.tx_on)
-    {
-      (*it).second.tx_sec += ((tv.tv_sec - (*it).second.last_tx_sec.tv_sec) +
-                             (tv.tv_usec - (*it).second.last_tx_sec.tv_usec)/1000000.0 );
+      continue;
     }
 
-    info[0] = '\0';
-    sprintf(info,
-     "E%s-%s>RXTLM-1,TCPIP,qAR,%s:T#%03d,%3.2f,%3.2f,%d,%d,0.0,%d%d000000,%s\n",
-      loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
-      sequence, (*it).second.rx_sec/(60*sinterval),
-      (*it).second.tx_sec/(60*sinterval), (*it).second.rx_on_nr,
-      (*it).second.tx_on_nr, ((*it).second.squelch_on ? 1 : 0),
-      ((*it).second.tx_on ? 1 : 0), (*it).first.c_str());
-
-    // sends the Aprs stats information
-    message = info;
-    //cout << message;
-    igateMessage(message);
-
-     // reset statistics if needed
-    (*it).second.reset();
-
-    if ((*it).second.squelch_on)
+    if (stats.squelch_on)
     {
-      (*it).second.rx_on_nr = 1;
-      (*it).second.last_rx_sec = tv;
+      setReceiving(logic_name, now, false);
+    }
+    if (stats.tx_on)
+    {
+      setTransmitting(logic_name, now, false);
     }
 
-    if ((*it).second.tx_on)
+      // BITS.XXXXXXXX,Project Title
+    std::ostringstream bits;
+    bits << addr.str()
+         << addressee.str()
+         << "BITS.11111111,SvxLink " << logic_name << "\r\n";
+    igateMessage(bits.str());
+
+      // T#nnn,nnn,nnn,nnn,nnn,nnn,nnnnnnnn
+    auto rx_erlang = stats.rx_sec / (60.0f * sinterval);
+    auto tx_erlang = stats.tx_sec / (60.0f * sinterval);
+    std::ostringstream tlm;
+    //tlm << addr.str()
+    tlm << "E" << loc_cfg.prefix << "-" << loc_cfg.mycall
+        << ">" << loc_cfg.destination
+        << ",TCPIP"
+        << ",qAR," << loc_cfg.mycall << ":"
+        << "T#" << std::setw(3) << std::setfill('0') << sequence
+        << "," << std::fixed << std::setw(6) << setprecision(2) << rx_erlang
+        << "," << std::fixed << std::setw(6) << setprecision(2) << tx_erlang
+        << "," << stats.rx_on_nr
+        << "," << stats.tx_on_nr
+        << ",0"
+        << "," << (stats.squelch_on ? 1 : 0)
+        << (stats.tx_on ? 1 : 0)
+        << "000000"
+        << " " << logic_name
+        << "\r\n";
+    igateMessage(tlm.str());
+
+      // reset statistics if needed
+    stats.reset();
+
+    if (stats.squelch_on)
     {
-      (*it).second.tx_on_nr = 1;
-      (*it).second.last_tx_sec = tv;
+      stats.rx_on_nr = 1;
+      stats.last_rx_sec = now;
+    }
+
+    if (stats.tx_on)
+    {
+      stats.tx_on_nr = 1;
+      stats.last_tx_sec = now;
     }
 
     if (++sequence > 999)
