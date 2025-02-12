@@ -116,8 +116,10 @@ HttpServerConnection::HttpServerConnection(size_t recv_buf_len)
   : TcpConnection(recv_buf_len), m_state(STATE_DISCONNECTED),
     m_chunked(false)
 {
+#if 0
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &HttpServerConnection::onSendBufferFull));
+#endif
 } /* HttpServerConnection::HttpServerConnection */
 
 
@@ -127,8 +129,10 @@ HttpServerConnection::HttpServerConnection(
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
     m_state(STATE_EXPECT_START_LINE), m_chunked(false)
 {
+#if 0
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &HttpServerConnection::onSendBufferFull));
+#endif
 } /* HttpServerConnection::HttpServerConnection */
 
 
@@ -413,6 +417,7 @@ void HttpServerConnection::handleHeader(void)
 } /* HttpServerConnection::handleHeader */
 
 
+#if 0
 void HttpServerConnection::onSendBufferFull(bool is_full)
 {
   //cout << "### HttpServerConnection::onSendBufferFull: is_full="
@@ -439,6 +444,7 @@ void HttpServerConnection::onSendBufferFull(bool is_full)
   //  }
   //}
 } /* HttpServerConnection::onSendBufferFull */
+#endif
 
 
 void HttpServerConnection::disconnectCleanup(void)

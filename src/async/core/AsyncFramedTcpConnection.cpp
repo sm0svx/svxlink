@@ -113,11 +113,13 @@ using namespace Async;
  ****************************************************************************/
 
 FramedTcpConnection::FramedTcpConnection(size_t recv_buf_len)
-  : TcpConnection(recv_buf_len), m_max_frame_size(DEFAULT_MAX_FRAME_SIZE),
-    m_size_received(false)
+  : TcpConnection(recv_buf_len), m_max_rx_frame_size(DEFAULT_MAX_FRAME_SIZE),
+    m_max_tx_frame_size(DEFAULT_MAX_FRAME_SIZE), m_size_received(false)
 {
+#if 0
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &FramedTcpConnection::onSendBufferFull));
+#endif
 } /* FramedTcpConnection::FramedTcpConnection */
 
 
@@ -125,10 +127,13 @@ FramedTcpConnection::FramedTcpConnection(
     int sock, const IpAddress& remote_addr, uint16_t remote_port,
     size_t recv_buf_len)
   : TcpConnection(sock, remote_addr, remote_port, recv_buf_len),
-    m_max_frame_size(DEFAULT_MAX_FRAME_SIZE), m_size_received(false)
+    m_max_rx_frame_size(DEFAULT_MAX_FRAME_SIZE),
+    m_max_tx_frame_size(DEFAULT_MAX_FRAME_SIZE), m_size_received(false)
 {
+#if 0
   TcpConnection::sendBufferFull.connect(
       sigc::mem_fun(*this, &FramedTcpConnection::onSendBufferFull));
+#endif
 } /* FramedTcpConnection::FramedTcpConnection */
 
 
@@ -150,8 +155,10 @@ TcpConnection& FramedTcpConnection::operator=(TcpConnection&& other_base)
   this->TcpConnection::operator=(std::move(other_base));
   auto& other = dynamic_cast<FramedTcpConnection&>(other_base);
 
-  m_max_frame_size = other.m_max_frame_size;
-  other.m_max_frame_size = DEFAULT_MAX_FRAME_SIZE;
+  m_max_rx_frame_size = other.m_max_rx_frame_size;
+  m_max_tx_frame_size = other.m_max_tx_frame_size;
+  other.m_max_rx_frame_size = DEFAULT_MAX_FRAME_SIZE;
+  other.m_max_tx_frame_size = DEFAULT_MAX_FRAME_SIZE;
 
   m_size_received = other.m_size_received;
   other.m_size_received = false;
@@ -176,7 +183,7 @@ int FramedTcpConnection::write(const void *buf, int count)
   {
     return 0;
   }
-  else if (static_cast<uint32_t>(count) > m_max_frame_size)
+  else if (static_cast<uint32_t>(count) > m_max_tx_frame_size)
   {
     errno = EMSGSIZE;
     return -1;
@@ -252,7 +259,7 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       m_frame_size |= static_cast<uint32_t>(*ptr++) << 16;
       m_frame_size |= static_cast<uint32_t>(*ptr++) << 8;
       m_frame_size |= static_cast<uint32_t>(*ptr++);
-      if (m_frame_size > m_max_frame_size)
+      if (m_frame_size > m_max_rx_frame_size)
       {
         closeConnection();
         onDisconnected(DR_PROTOCOL_ERROR);
@@ -273,8 +280,8 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       ptr += copy_cnt;
       if (m_frame.size() == m_frame_size)
       {
-        frameReceived(this, m_frame);
         m_size_received = false;
+        frameReceived(this, m_frame);
       }
     }
   }
@@ -289,6 +296,7 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
  *
  ****************************************************************************/
 
+#if 0
 void FramedTcpConnection::onSendBufferFull(bool is_full)
 {
   //cout << "### FramedTcpConnection::onSendBufferFull: is_full="
@@ -315,6 +323,7 @@ void FramedTcpConnection::onSendBufferFull(bool is_full)
     }
   }
 } /* FramedTcpConnection::onSendBufferFull */
+#endif
 
 
 void FramedTcpConnection::disconnectCleanup(void)

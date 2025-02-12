@@ -249,8 +249,8 @@ QsoFrn::QsoFrn(ModuleFrn *module)
       mem_fun(*this, &QsoFrn::onDisconnected));
   tcp_client->dataReceived.connect(
       mem_fun(*this, &QsoFrn::onDataReceived));
-  tcp_client->sendBufferFull.connect(
-      mem_fun(*this, &QsoFrn::onSendBufferFull));
+  //tcp_client->sendBufferFull.connect(
+  //    mem_fun(*this, &QsoFrn::onSendBufferFull));
 
   this->rxVoiceStarted.connect(
       mem_fun(*this, &QsoFrn::onRxVoiceStarted));
@@ -844,10 +844,10 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
       needs_reconnect = true;
       break;
 
-    case TcpConnection::DR_RECV_BUFFER_OVERFLOW:
-      cout << "DR_RECV_BUFFER_OVERFLOW" << endl;
-      setState(STATE_ERROR);
-      break;
+    //case TcpConnection::DR_RECV_BUFFER_OVERFLOW:
+    //  cout << "DR_RECV_BUFFER_OVERFLOW" << endl;
+    //  setState(STATE_ERROR);
+    //  break;
 
     case TcpConnection::DR_ORDERED_DISCONNECT:
       cout << "DR_ORDERED_DISCONNECT" << endl;

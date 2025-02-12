@@ -91,7 +91,7 @@ fi
 . "${SRC_DIR}/filter_sounds.cfg"
 
 EFFECT="${EFFECT:-}"
-MAXIMIZE_EFFECT="${MIXIMIZE_EFFECT:-$EFFECT}"
+MAXIMIZE_EFFECT="${MAXIMIZE_EFFECT:-$EFFECT}"
 TRIM_EFFECT="${TRIM_EFFECT:-$EFFECT}"
 
 # Check if the SUBDIRS config variable is set

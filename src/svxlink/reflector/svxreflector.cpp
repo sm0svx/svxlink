@@ -9,7 +9,7 @@ nodes together.
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -360,20 +360,19 @@ int main(int argc, const char *argv[])
   }
   string main_cfg_filename(cfg_filename);
 
+  std::string main_cfg_dir = ".";
+  auto slash_pos = main_cfg_filename.rfind('/');
+  if (slash_pos != std::string::npos)
+  {
+    main_cfg_dir = main_cfg_filename.substr(0, slash_pos);
+  }
+
   string cfg_dir;
   if (cfg.getValue("GLOBAL", "CFG_DIR", cfg_dir))
   {
     if (cfg_dir[0] != '/')
     {
-      int slash_pos = main_cfg_filename.rfind('/');
-      if (slash_pos != -1)
-      {
-        cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
-      }
-      else
-      {
-        cfg_dir = string("./") + cfg_dir;
-      }
+      cfg_dir = main_cfg_dir + "/" + cfg_dir;
     }
 
     DIR *dir = opendir(cfg_dir.c_str());
@@ -411,8 +410,15 @@ int main(int argc, const char *argv[])
 
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
 
+  //std::string pki_dir;
+  //if (!cfg.getValue("GLOBAL", "CERT_PKI_DIR", pki_dir))
+  //{
+  //  pki_dir = main_cfg_dir + "/pki";
+  //  cfg.setValue("GLOBAL", "CERT_PKI_DIR", pki_dir);
+  //}
+
   cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
-          " Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "
@@ -489,6 +495,8 @@ int main(int argc, const char *argv[])
  */
 static void parse_arguments(int argc, const char **argv)
 {
+  int print_version = 0;
+
   poptContext optCon;
   const struct poptOption optionsTable[] =
   {
@@ -507,6 +515,8 @@ static void parse_arguments(int argc, const char **argv)
     */
     {"daemon", 0, POPT_ARG_NONE, &daemonize, 0,
 	    "Start " PROGRAM_NAME " as a daemon", NULL},
+    {"version", 0, POPT_ARG_NONE, &print_version, 0,
+	    "Print the application version string", NULL},
     {NULL, 0, 0, NULL, 0}
   };
   int err;
@@ -543,6 +553,11 @@ static void parse_arguments(int argc, const char **argv)
 
   poptFreeContext(optCon);
 
+  if (print_version)
+  {
+    std::cout << SVXREFLECTOR_VERSION << std::endl;
+    exit(0);
+  }
 } /* parse_arguments */
 
 

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -124,8 +124,6 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
 {
    StrList str_list;
 
-   destination = "APRS";
-
    el_call = loc_cfg.mycall;  // the EchoLink callsign
    el_prefix = "E" + loc_cfg.prefix + "-"; // the EchoLink prefix ER- od EL-
 
@@ -135,7 +133,7 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    con->dataReceived.connect(mem_fun(*this, &AprsTcpClient::tcpDataReceived));
    con->connect();
 
-   beacon_timer = new Timer(loc_cfg.interval, Timer::TYPE_PERIODIC);
+   beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
    beacon_timer->expired.connect(mem_fun(*this, &AprsTcpClient::sendAprsBeacon));
 
@@ -189,12 +187,12 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
     // APRS message
   char aprsmsg[256];
   sprintf(aprsmsg, "%s>%s,%s:;%s%-6.6s*111111z%s%s\r\n",
-          el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
+          el_call.c_str(), loc_cfg.destination.c_str(), loc_cfg.path.c_str(),
           el_prefix.c_str(), el_call.c_str(), pos, msg);
   sendMsg(aprsmsg);
 
   // APRS status message, connected calls
-  string status = el_prefix + el_call+">"+destination+","+loc_cfg.path+":>";
+  string status = el_prefix + el_call+">"+loc_cfg.destination+","+loc_cfg.path+":>";
 
   list<string>::const_iterator it;
   for (it = call_list.begin(); it != call_list.end(); ++it)
@@ -270,7 +268,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
     // APRS message
   char aprsmsg[150 + loc_cfg.comment.length()];
   sprintf(aprsmsg, "%s>%s,%s:;%s%-6.6s*111111z%s%03d.%03dMHz %s R%02d%c %s\r\n",
-            el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
+            el_call.c_str(), loc_cfg.destination.c_str(), loc_cfg.path.c_str(),
             el_prefix.c_str(), el_call.c_str(), pos, loc_cfg.frequency / 1000,
             loc_cfg.frequency % 1000, tone, loc_cfg.range,
             loc_cfg.range_unit, loc_cfg.comment.c_str());
@@ -283,7 +281,10 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-   //cout << aprsmsg << endl;
+  if (loc_cfg.debug)
+  {
+    std::cout << "APRS: " << aprsmsg;
+  }
 
   if (!con->isConnected())
   {
@@ -301,7 +302,6 @@ void AprsTcpClient::sendMsg(const char *aprsmsg)
     con->disconnect();
   }
 } /* AprsTcpClient::sendMsg */
-
 
 
 void AprsTcpClient::aprsLogin(void)

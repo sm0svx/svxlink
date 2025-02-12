@@ -847,11 +847,7 @@ void Directory::ctrlSockDisconnected(void)
       error(string("Directory server communications error: ")
             + strerror(errno));
       break;
-      
-    case Async::TcpClient<>::DR_RECV_BUFFER_OVERFLOW:
-      error("Directory server receiver buffer overflow!\n");
-      break;
-    
+
     case Async::TcpClient<>::DR_ORDERED_DISCONNECT:
       break;
   }

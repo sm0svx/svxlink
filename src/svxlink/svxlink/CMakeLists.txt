@@ -12,7 +12,7 @@ set(SVXLINK_TCL_EVENT_FILES
 
 # Logic core plugins to build
 set(SVXLINK_LOGIC_CORES
-  Dummy Simplex Repeater Reflector
+  Dummy Simplex Repeater ReflectorV2 Reflector
   )
 
 # Find the popt library
@@ -42,10 +42,10 @@ set(LIBS ${LIBS} ${TCL_LIBRARY})
 include_directories(${TCL_INCLUDE_PATH})
 
 # Find the GCrypt library
-find_package(GCrypt REQUIRED)
-set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
-include_directories(${GCRYPT_INCLUDE_DIRS})
-add_definitions(${GCRYPT_DEFINITIONS})
+#find_package(GCrypt REQUIRED)
+#set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
+#include_directories(${GCRYPT_INCLUDE_DIRS})
+#add_definitions(${GCRYPT_DEFINITIONS})
 
 # Find the dl library - only for Linux, not required for FreeBSD
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -115,6 +115,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_down.in
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
 install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder ${SVXLINK_USER}:${SVXLINK_GROUP})
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
+install_mkdir(${SVX_LOCAL_STATE_DIR}/pki ${SVXLINK_USER}:${SVXLINK_GROUP})
 install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   ${SVX_SYSCONF_INSTALL_DIR}
   )

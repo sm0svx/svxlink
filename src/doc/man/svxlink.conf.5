@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JANUARY 2024" Linux "File Formats"
+.TH SVXLINK.CONF 5 "SEPTEMBER 2024" Linux "File Formats"
 .
 .SH NAME
 .
@@ -409,13 +409,15 @@ after starting SvxLink. The device works bidirectional, received dtmf characters
 Example: DTMF_CTRL_PTY=/dev/shm/dtmf_ctrl
 .TP
 .B CTCSS_TO_TG
-Use this variable to specify a comma separated list of pairs of tone
-frequencies and talk groups. When one of the tone frequencies is detected, the
-corresponding talk group will be associated with the received audio. This can
-be used for example by ReflectorLogic to automatically switch to a talk group
-when one of the specified tone frequencies is received. You also must configure
-CTCSS_FQ for all receivers to open the squelch on the same tone frequencies.
-Otherwise it will not work.
+Use this configuration variable to specify a comma separated list of pairs of
+tone frequencies and talk groups. When one of the tone frequencies is
+detected, the corresponding talk group will be associated with the received
+audio. This can be used for example by ReflectorLogic to automatically switch
+to a talk group when one of the specified tone frequencies is received. You
+also must configure CTCSS_FQ for all receivers to open the squelch on the same
+tone frequencies.  Otherwise it will not work. Also, the CTCSS squelch
+detector must actually be used in the receiver. It's not enough to just set
+CTCSS_FQ.
 
 Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .TP
@@ -527,7 +529,8 @@ A value of 0 will disable 1750 Hz repeater opening.
 Use this configuration variable if it should be possible to open the repeater
 using a CTCSS tone (PL). The repeater will activate after the specified number
 of milliseconds on detection of any of the CTCSS frequencies specified in the
-receiver configuration.
+receiver configuration. Note that the CTCSS squelch must actually be used as a
+squelch detector in the receiver. It's not enough to just set CTCSS_FQ.
 .TP
 .B OPEN_ON_DTMF
 Use this configuration variable if it should be possible to open the repeater with 
@@ -624,10 +627,19 @@ configurable so that a talk group can be automatically selected when it's
 active. After a configurable timeout the node will return to monitor all
 configured talk groups if there is no activity on the currently selected talk
 group. Which talk group to select for outgoing traffic for a node can be set to
-a default and/or selected using DTMF commands. The DTMF commands are entered
-through the logic linking definition associated with the reflector.  So if a
-command prefix of 9 have been specified for a link, selecting talk group 888
-will be achieved by entering the command 91888#.
+a default, selected by the CTCSS tone used and/or selected using DTMF
+commands. The DTMF commands are entered through the logic linking definition
+associated with the reflector.  So if a command prefix of 9 have been
+specified for a link, selecting talk group 888 will be achieved by entering
+the command 91888#.
+.P
+The reflector connection will be authenticated using X.509 certificates. Both
+the server and the client requires authentication. The AUTH_KEY authentication
+method that were previously used is deprecated. The certificate generation
+process is mostly automated. The contents of the certificate can be customized
+using the configuration variables with name prefix CERT_. Default values are
+good in most cases. CERT_EMAIL may be good to specify so that the SvxLink node
+owner can be contacted. Ask the reflector sysop what the convention is.
 .TP
 .B TYPE
 The type for a reflector logic core is always
@@ -787,6 +799,94 @@ It is also possible to set audio codec parameters using the same configuration
 variables as documented for networked receivers and transmitters. For example,
 to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
 to something lower than 9.
+.TP
+.B CERT_PKI_DIR
+The path to the directory where PKI (Public Key Infrastructure) files will be
+stored.
+
+Example: CERT_PKI_DIR=/var/lib/svxlink/pki
+.TP
+.B CERT_KEYFILE
+The path to the private key for the X.509 client certificate. This file will
+be auto generated if it does not exist. It must be kept secure since this is
+what authenticates your node. It must NOT be sent in the clear over the
+internet for example. Also, if you loose this file you will have to ask the
+reflector sysop to issue a new certificate for the new key.
+
+Example: CERT_KEYFILE=/var/lib/svxlink/pki/MYCALL.key
+.TP
+.B CERT_CSRFILE
+The path to the certificate signing request for the X.509 client certificate.
+This file will be auto generated if it does not exist or if the configuration
+information has been changed. When a new CSR is generated, the reflector sysop
+need to sign it before it will become active.
+
+Example: CERT_CSRFILE=/var/lib/svxlink/pki/MYCALL.csr
+.TP
+.B CERT_CRTFILE
+The path to the X.509 client certificate. This file is a public file that is
+used to identify your node. It is sent to the reflector during the
+authentication procedure. It will be created after the CSR has been signed by
+the reflector sysop. The reflector will send this file to the client during
+the authentication procedure if it's missing on the node or if the certificate
+has been updated.
+
+Example: CERT_CRTFILE=/var/lib/svxlink/pki/MYCALL.crt
+.TP
+.B CERT_CAFILE
+The path to the X.509 certificate bundle. This file contains one or more
+certificates that is used to verify the authenticity of the reflector server.
+
+Example: CERT_CAFILE=/var/lib/svxlink/pki/ca-bundle.pem
+.TP
+.B CERT_DOWNLOAD_CA_BUNDLE
+The CA bundle is by default downloaded from the reflector server if it's
+missing or need to be updated. Set this configuration variable to 0 to disable
+that behaviour. That should be done if you want to provide your own CA bundle.
+.TP
+.B CERT_SUBJ_GN, CERT_SUBJ_givenName
+The name of the person, with which s/he is normally called, owning the
+SvxLink node.
+
+Example: CERT_SUBJ_GN=John
+.TP
+.B CERT_SUBJ_SN, CERT_SUBJ_surname
+The family name of the person owning the SvxLink node.
+
+Example: CERT_SUBJ_SN=Doe
+.TP
+.B CERT_SUBJ_OU, CERT_SUBJ_organizationalUnitName
+The name of the organizational unit to which the SvxLink node belongs. That
+may be a subdivision of a ham radio organization for example.
+
+Example: CERT_SUBJ_OU="VHF/UHF Unit"
+.TP
+.B CERT_SUBJ_O, CERT_SUBJ_organizationName
+The name of the organization to which the SvxLink node belongs. That may be a
+ham radio club for example.
+
+Example: CERT_SUBJ_O=SSA
+.TP
+.B CERT_SUBJ_L, CERT_SUBJ_localityName
+The name of the city where the SvxLink node is located.
+
+Example: CERT_SUBJ_L=Stockholm
+.TP
+.B CERT_SUBJ_ST, CERT_SUBJ_stateOrProvinceName
+The name of the state or province where the SvxLink node is located.
+
+Example: CERT_SUBJ_ST=Södermanland
+.TP
+.B CERT_SUBJ_C, CERT_SUBJ_countryName
+The ISO 3166 country code for the country where the SvxLink node is located.
+
+Example: CERT_SUBJ_C=SE
+.TP
+.B CERT_EMAIL
+A comma separated list of email addresses where the SvxLink node owners can be
+reached.
+
+Example: CERT_EMAIL=mycall1@example.com,mycall2@example.com
 .
 .SS UsrpLogic
 .
@@ -1821,28 +1921,7 @@ processing chain is applied just before the final stages of the receiver audio
 processing and will only affect how the audio sounds. Any digital signal
 processing done on the audio before that, like DTMF, CTCSS etc, is unaffected.
 
-LADSPA is a framework for sharing pluggable audio components and there are
-numerous plugins to choose from. Each plugin has a name ("label") and zero or
-more configuration parameters ("control input ports"). To find out which
-plugins are installed on your system, use the "listplugins" command. If you
-are missing some plugin it may be available to install using your package
-system (rpm/yum/dnf, deb/apt etc). To find out more information about a
-plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
-more about the LADSPA framework in their official documentation.
-
-In SvxLink only plugins that have exactly one audio input and one audio
-output can be used, so all stereo plugins are excluded for example.  The same
-thing is valid for input-only or output-only plugins.
-
-The analyseplugin utility will, among other things, list the ports. All ports
-that are typed as "input, control" can be used to configure the plugin. Valid
-range and a default value may also be listed. The format for the
-LADSPA_PLUGINS configuration variable in SvxLink is
-"label1:port1:port2:...:portN,label2:port1:port2:...:portN,...". Note that
-only control input ports are counted here so when applying the parameters any
-intermingled ports of other types are skipped.
-
-Example: LADSPA_PLUGINS=hpf:1000,tap_dynamics_m:4:500:15:15:13
+See "LADSPA PLUGIN USAGE" for more information.
 .
 .SS Ddr Receiver Section
 .
@@ -2462,6 +2541,14 @@ The TONE_SIGLEV_LEVEL configuration variable is used to set the tone level.
 It is a value in the 1-100 range which indicate the output level in percent
 of the maximum possible level. The default is 10.
 .TP
+.B LADSPA_PLUGINS
+Used to set up one or more LADSPA plugins to process the transmitted audio.
+The processing chain is applied right at the top of the transmitter audio
+processing and will only affect how the audio sounds. Any digital signal
+processing done on the audio after that, like DTMF, CTCSS etc, is unaffected.
+
+See "LADSPA PLUGIN USAGE" for more information.
+.TP
 .B MASTER_GAIN
 This configuration variable can be used to fine tune or increase the audio
 gain for all transmitted sound if it's not possible to do using the normal
@@ -2809,7 +2896,7 @@ changed according to local requirements. Please contact your local APRS sysop
 for further information. Changes should be made only according to the NEWn-N
 paradigm. Leave this variable untouched if you are unsure of its setting.
 No spaces or control characters are allowed. PATH has no influence on the
-propagation on non-RF networks.
+propagation on non-RF networks. Default is PATH=WIDE1-1.
 
 Examples:
 .br
@@ -2840,8 +2927,13 @@ TONE=0        # we don't use CTCSS sub-audible or call tones
 TONE=1750     # the link/repeater use a tone burst of 1750 Hz
 .TP
 .B STATISTICS_INTERVAL
-Defines the interval in minutes in that an aprs statistic is sent into the aprs
-network. Range: 5-60, default is 10 minutes
+Defines the interval in minutes in that an aprs statistic (telemetry) is sent
+into the aprs network. Range: 5-60, default is 10 minutes
+.TP
+.B STATISTICS_LOGIC
+The name of the logic core that statistics (telemetry) should be sent for.
+
+Example: STATISTICS_LOGIC=SimplexLogic
 .TP
 .B COMMENT
 Specify a short comment here, maybe a link to your website
@@ -2856,8 +2948,11 @@ Example:
 COMMENT=[svx] Running SvxLink by SM0SVX
 .TP
 .B PTY_PATH
-Specify a path to a communications PTY that can be used by external applications to
-inject APRS packets into the APRS-IS network.
+Specify a path to a communications PTY that can be used by external
+applications to inject APRS packets into the APRS-IS network.
+.TP
+.B DEBUG
+Set to 1 to print which APRS packets that are sent into the APRS-IS network.
 .
 .SH AUDIO DEVICE SPECIFICATIONS
 .
@@ -3056,6 +3151,48 @@ active = Set to true if the receiver is the active one, selected by the voter
 .RS 0
 siglev = The measured signal level
 .RE
+.
+.SH LADSPA PLUGIN USAGE
+.
+LADSPA is a framework for sharing pluggable audio components and there are
+numerous plugins to choose from. Each plugin has a name ("label") and zero or
+more configuration parameters ("control input ports"). To find out which
+plugins are installed on your system, use the "listplugins" command. If you
+are missing some plugin it may be available to install using your package
+manager (rpm/yum/dnf, deb/apt etc). To find out more information about a
+plugin, use the "analyseplugin" command (e.g. analyseplugin filter hpf). Learn
+more about the LADSPA framework in their official documentation.
+
+In SvxLink only plugins that have exactly one audio input and one audio
+output can be used, so all stereo plugins are excluded for example.  The same
+thing is valid for input-only or output-only plugins.
+
+The analyseplugin utility will, among other things, list the ports. All ports
+that are typed as "input, control" can be used to configure the plugin. Valid
+range and a default value may also be listed. The format for the
+LADSPA_PLUGINS configuration variable in SvxLink is
+"label1:port1:port2:...:portN,label2:port1:port2:...:portN,@MyPlugConfig,...".
+Note that only control input ports are counted here so when applying the
+parameters any intermingled ports of other types are skipped.
+
+If an instance config start with an @-sign, a configuration section with the
+given name is used to configure the plugin. There must be a LABEL
+configuration item and the rest of the configuration variables in that section
+must match input control port names in the plugin instance specified by LABEL.
+The config variable names are matched against the beginning of the port names
+but does not have to match the whole name.
+
+Example:
+
+  LADSPA_PLUGINS=hpf:1000,@Tx1_Compressor
+
+  [Tx1_Compressor]
+  LABEL=tap_dynamics_m
+  Attack=4
+  Release=500
+  Offset Gain=15
+  Makeup Gain=15
+  Function=13
 .
 .SH FILES
 .

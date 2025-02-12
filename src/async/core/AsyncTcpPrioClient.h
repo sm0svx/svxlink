@@ -134,10 +134,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      * take host and port must be used.
      */
     explicit TcpPrioClient(size_t recv_buf_len = ConT::DEFAULT_RECV_BUF_LEN)
-      : ConT(recv_buf_len), TcpPrioClientBase(this)
-    {
-      initialize();
-    }
+      : ConT(recv_buf_len), TcpPrioClientBase(this) {}
 
     /**
      * @brief   Disallow copy construction
@@ -167,20 +164,6 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
       TcpPrioClientBase::disconnect();
     }
 
-    /**
-     * @brief   Mark connection as failed
-     *
-     * The application can use this function to mark a connection as failed so
-     * that when a reconnect is performed, the next server will be tried. If a
-     * connect is classified as successful, the same host will be tried again
-     * on reconnect.
-     */
-    //void markAsFailedConnect(void)
-    //{
-    //  //std::cout << "### TcpPrioClient::markAsFailedConnect" << std::endl;
-    //  m_successful_connect = false;
-    //}
-
   protected:
     using ConT::operator=;
     using TcpPrioClientBase::operator=;
@@ -206,7 +189,6 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
     virtual void onDisconnected(TcpConnection::DisconnectReason reason)
     {
       //std::cout << "### TcpPrioClient::onDisconnected:"
-      //          //<< " m_successful_connect=" << m_successful_connect
       //          << std::endl;
       ConT::onDisconnected(reason);
       TcpPrioClientBase::onDisconnected(reason);
@@ -221,7 +203,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      * server. Note that the object should be a "normal" TcpClient and not a
      * TcpPrioClient.
      */
-    virtual TcpClientBase *newTcpClient(void)
+    virtual TcpClientBase* newTcpClient(void) override
     {
       return new TcpClient<ConT>;
     }
@@ -232,11 +214,10 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
     }
 
   private:
-    //bool                      m_successful_connect  = false;
-
     TcpPrioClient<ConT>& operator=(TcpClient<ConT>&& other)
     {
-      //std::cout << "### TcpPrioClient::operator=(TcpClient<ConT>&&)" << std::endl;
+      //std::cout << "### TcpPrioClient::operator=(TcpClient<ConT>&&)"
+      //          << std::endl;
       *static_cast<TcpClientBase*>(this) =
         std::move(*static_cast<TcpClientBase*>(&other));
       return *this;

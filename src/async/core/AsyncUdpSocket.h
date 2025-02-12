@@ -1,30 +1,30 @@
 /**
- * @file    AsyncUdpSocket.h
- * @brief   Contains a class for using UDP sockets
- * @author  Tobias Blomberg
- * @date    2003-04-26
- *
- * This file contains a class for communication over a UDP sockets.
- *
- * \verbatim
- * Async - A library for programming event driven applications
- * Copyright (C) 2003  Tobias Blomberg
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * \endverbatim
- */
+@file    AsyncUdpSocket.h
+@brief   Contains a class for using UDP sockets
+@author  Tobias Blomberg
+@date    2003-04-26
+
+This file contains a class for communication over a UDP sockets.
+
+\verbatim
+Async - A library for programming event driven applications
+Copyright (C) 2003-2023 Tobias Blomberg
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
 
 /** @example AsyncUdpSocket_demo.cpp
 An example of how to use the Async::UdpSocket class
@@ -136,8 +136,8 @@ class UdpSocket : public sigc::trackable
     /**
      * @brief 	Destructor
      */
-    ~UdpSocket(void);
-    
+    virtual ~UdpSocket(void);
+
     /**
      * @brief 	Check if the initialization was ok
      * @return	Returns \em true if everything went fine during initialization
@@ -146,7 +146,19 @@ class UdpSocket : public sigc::trackable
      * This function should always be called after constructing the object to
      * see if everything went fine.
      */
-    bool initOk(void) const { return (sock != -1); }
+    virtual bool initOk(void) const { return (sock != -1); }
+
+    /**
+     * @brief   Get the local IP address associated with this connection
+     * @return  Returns an IP address
+     */
+    Async::IpAddress localAddr(void) const;
+
+    /**
+     * @brief   Get the local UDP port associated with this connection
+     * @return  Returns a port number
+     */
+    uint16_t localPort(void) const;
 
     /**
      * @brief 	Write data to the remote host
@@ -156,16 +168,16 @@ class UdpSocket : public sigc::trackable
      * @param 	count       The number of bytes to write
      * @return	Return \em true on success or \em false on failure
      */
-    bool write(const IpAddress& remote_ip, int remote_port, const void *buf,
-	int count);
+    virtual bool write(const IpAddress& remote_ip, int remote_port,
+        const void *buf, int count);
 
     /**
      * @brief   Get the file descriptor for the UDP socket
      * @return  Returns the file descriptor associated with the socket or
      *          -1 on error
      */
-    int fd(void) const { return sock; }
-    
+    virtual int fd(void) const { return sock; }
+
     /**
      * @brief 	A signal that is emitted when data has been received
      * @param 	ip    The IP-address the data was received from
@@ -183,7 +195,9 @@ class UdpSocket : public sigc::trackable
     sigc::signal<void, bool> sendBufferFull;
     
   protected:
-    
+    virtual void onDataReceived(const IpAddress& ip, uint16_t port, void* buf,
+        int count);
+
   private:
     int       	sock;
     FdWatch * 	rd_watch;

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,6 +38,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <istream>
 #include <ostream>
+#include <cstring>
+#include <cassert>
 
 
 /****************************************************************************
@@ -248,6 +250,29 @@ class SepPair : public std::pair<a, b>
       return output;
     }
 };
+
+
+static inline const char* strError(int errnum)
+{
+  static thread_local struct
+  {
+    char errstr[256];
+
+      // XSI version of strerror_r
+    const char* operator()(int ret)
+    {
+      assert(ret == 0);
+      return errstr;
+    }
+
+      // GNU version of strerror_r
+    const char* operator()(char* ret)
+    {
+      return ret;
+    }
+  } wrap;
+  return wrap(strerror_r(errno, wrap.errstr, sizeof(wrap.errstr)));
+} /* strError */
 
 
 } /* namespace */

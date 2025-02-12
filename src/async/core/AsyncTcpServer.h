@@ -8,7 +8,7 @@ This class is used to create a TCP server that listens to a TCP-port.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -170,20 +170,50 @@ class TcpServer : public TcpServerBase
   
   protected:
     virtual void createConnection(int sock, const IpAddress& remote_addr,
-                                  uint16_t remote_port)
+                                  uint16_t remote_port) override
     {
-      ConT *con = new ConT(sock, remote_addr, remote_port);
+      ConT *con = new TcpServerConnection(sock, remote_addr, remote_port);
       con->disconnected.connect(
           mem_fun(*this, &TcpServer<ConT>::onDisconnected));
       addConnection(con);
-      clientConnected(con);
     }
-    
-  private:
-    void onDisconnected(ConT *con, typename ConT::DisconnectReason reason)
+
+    virtual void emitClientConnected(TcpConnection *con_base) override
     {
-      clientDisconnected(con, reason);
-      removeConnection(con);
+      auto con = dynamic_cast<TcpServerConnection*>(con_base);
+      con->m_is_connected = true;
+      clientConnected(reinterpret_cast<ConT*>(con));
+    }
+
+  private:
+    struct TcpServerConnection : public ConT
+    {
+      TcpServerConnection(int sock, const IpAddress& remote_addr,
+                          uint16_t remote_port)
+        : ConT(sock, remote_addr, remote_port)
+      {
+      }
+      virtual TcpConnection& operator=(TcpConnection&& other_base) override
+      {
+        this->TcpConnection::operator=(std::move(other_base));
+        auto& other = dynamic_cast<TcpServerConnection&>(other_base);
+        m_is_connected = other.m_is_connected;
+        m_is_connected = false;
+        return *this;
+      }
+
+      bool m_is_connected = false;
+    };
+
+    void onDisconnected(ConT *con_base, typename ConT::DisconnectReason reason)
+    {
+      auto con = dynamic_cast<TcpServerConnection*>(con_base);
+      if (con->m_is_connected)
+      {
+        con->m_is_connected = false;
+        clientDisconnected(con_base, reason);
+      }
+      removeConnection(con_base);
     }
     
 };  /* class TcpServer */

@@ -1,3 +1,22 @@
+ 1.8.0 -- ?? ??? ????
+----------------------
+
+* Code cleanup of Async::Pty, fixing a small memory leak.
+
+* TLS connection support added. Build require OpenSSL development files.
+
+* Async::Exec: Now possible to set up environment variables.
+
+* Async::Config now have a mechanism for subscribing to changes for specific
+  configuration variables.
+
+* Add connection rate throttling, using token buckets, to Async::TcpServer.
+
+* Async::Config bugfix: Add parameter missing_ok to the string specific
+  getValue function.
+
+
+
  1.7.0 -- 25 Feb 2024
 ----------------------
 

@@ -6,7 +6,7 @@
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2018 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -190,10 +190,10 @@ bool NetUplink::initialize(void)
       	 << "/LISTEN_PORT is missing.\n";
     return false;
   }
-  
+
   cfg.getValue(name, "FALLBACK_REPEATER", fallback_enabled, true);
-  cfg.getValue(name, "AUTH_KEY", auth_key, true);
-  
+  cfg.getValue(name, "AUTH_KEY", auth_key);
+
   int mute_tx_on_rx = -1;
   cfg.getValue(name, "MUTE_TX_ON_RX", mute_tx_on_rx, true);
   if (mute_tx_on_rx >= 0)

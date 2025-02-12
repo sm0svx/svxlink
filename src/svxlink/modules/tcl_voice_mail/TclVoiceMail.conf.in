@@ -13,8 +13,15 @@
 #   email    - The e-mail address to send a text message to when a new voice
 #              mail have arrived. This is optional.
 #
-set users(001) "call=SM0AAA pass=123 email=sm0aaa@some.domain";
-set users(002) "call=SM0BBB pass=456";
+# Recommended callsign suffix to user id mapping as below. On user id
+# collisions, add one.
+#
+# ABC=2, DEF=3,  GHI=4, JKL=5,
+# MNO=6, PQRS=7, TUV=8, WXYZ=9
+#
+set users(789) "call=SM0SVX pass=123 email=sm0svx@some.domain";
+set users(456) "call=SM0GJM pass=456";
+set users(457) "call=SM0HKN pass=789";
 
 #
 # The directory where the voice mails are stored

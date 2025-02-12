@@ -13,9 +13,6 @@ CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/remotetrx.conf
 # Where to place the log file
 LOGFILE=@LOCAL_STATE_DIR@/log/remotetrx
 
-# Where to place the PID file
-PIDFILE=/run/remotetrx.pid
-
 # Disable Alsa zerofill if set to 0 (see manual page)
 #ASYNC_AUDIO_ALSA_ZEROFILL=1
 

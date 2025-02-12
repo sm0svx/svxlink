@@ -214,6 +214,28 @@ void Exec::appendArgument(const std::string &arg)
 } /* Exec::appendArgument */
 
 
+void Exec::clearEnvironment(void)
+{
+  clear_env = true;
+  env.clear();
+} /* Exec::clearEnvironment */
+
+
+void Exec::addEnvironmentVar(const std::string& name, const std::string& val)
+{
+  env.push_back(name + "=" + val);
+} /* Exec::addEnvironmentVar */
+
+
+void Exec::addEnvironmentVars(const Environment& env)
+{
+  for (const auto& e : env)
+  {
+    addEnvironmentVar(e.first, e.second);
+  }
+} /* Exec::addEnvironmentVars */
+
+
 bool Exec::nice(int inc)
 {
   nice_value += inc;
@@ -336,6 +358,16 @@ bool Exec::run(void)
     cmd[i] = strdup(args[i].c_str());
   }
   cmd[args.size()] = 0;
+
+  if (clear_env)
+  {
+    clearenv();
+  }
+  for (size_t i=0; i<env.size(); ++i)
+  {
+    putenv(strdup(env[i].c_str()));
+  }
+
   ret = execv(cmd[0], cmd);
   assert (ret == -1);
 

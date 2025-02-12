@@ -1,0 +1,300 @@
+#!/bin/bash
+
+set -euo pipefail
+
+declare -r PKI_PATH=${PKI_PATH:-"/etc/svxlink/pki"}
+declare -r CA_PATH=${CA_PATH:-"${PKI_PATH}/ca"}
+declare -r CA_DB_PATH=${CA_DB_PATH:-"${CA_PATH}/db"}
+declare -r CA_CSR_PATH=${CA_CSR_PATH:-"${CA_PATH}/ca.csr"}
+declare -r CA_CRT_PATH=${CA_CRT_PATH:-"${CA_PATH}/ca.crt"}
+declare -r CA_BUNDLE_PATH=${CA_BUNDLE_PATH:-"${PKI_PATH}/ca.pem"}
+declare -r PENDING_CSRS_PATH=${PENDING_CSRS_PATH:-"${CA_PATH}/pending_csrs"}
+declare -r CSRS_PATH=${CSRS_PATH:-"${CA_PATH}/csrs"}
+declare -r CERTS_PATH=${CERTS_PATH:-"${CA_PATH}/certs"}
+declare -r CRL_PATH=${CRL_PATH:-"${CA_PATH}/ca.crl"}
+
+initialize_directories()
+{
+  echo "--- Ensure that the PKI directory structure is present"
+  # Make sure that all CA directories have been created
+  for dirvar in CA_PATH PENDING_CSRS_PATH CSRS_PATH CERTS_PATH; do
+    dir="${!dirvar}"
+    if [[ ! -d "${dir}" ]]; then
+      echo "Creating directory '${dir}'"
+      mkdir -p "${dir}"
+    fi
+  done
+  echo
+}
+
+ca_conf()
+{
+  cat <<-_EOF_
+	[ ca ]
+	default_ca = ca_default
+
+	[ ca_default ]
+	dir = ${CA_DB_PATH}
+	certs = \$dir
+	new_certs_dir = \$dir/ca.db.certs
+	database = \$dir/ca.db.index
+	serial = \$dir/ca.db.serial
+	RANDFILE = \$dir/ca.db.rand
+	certificate = ${CA_PATH}/ca.crt
+	private_key = ${CA_PATH}/ca.key
+	default_days = 365
+	default_crl_days = 30
+	default_md = sha256
+	preserve = no
+	policy = generic_policy
+	copy_extensions = copy
+	RANDFILE = ${CA_DB_PATH}/.rand
+
+	[ req ]
+	default_bits        = 2048
+	distinguished_name  = req_distinguished_name
+	string_mask         = utf8only
+	default_md          = sha256
+	x509_extensions     = v3_ca
+	RANDFILE            = ${CA_DB_PATH}/.rand
+
+	[ req_distinguished_name ]
+	countryName                     = Country Name (2 letter code)
+	countryName_default             =
+	coutryName_min                  = 2
+	coutryName_max                  = 2
+
+	stateOrProvinceName             = State or Province Name
+	stateOrProvinceName_default     =
+
+	localityName                    = Locality Name (e.g. City)
+	localityName_default            =
+
+	0.organizationName              = Organization Name (e.g. Club/Callsign)
+	0.organizationName_default      =
+
+	#organizationalUnitName          = Organizational Unit Name
+	#organizationalUnitName_default  =
+
+	commonName                      = Common Name (e.g. My Club CA)
+
+	emailAddress                    = Email Address
+	emailAddress_default            =
+
+	[ v3_ca ]
+	subjectKeyIdentifier = hash
+	authorityKeyIdentifier = keyid:always,issuer
+	basicConstraints = critical, CA:true
+	keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+	[ generic_policy ]
+	countryName = optional
+	stateOrProvinceName = optional
+	localityName = optional
+	organizationName = optional
+	organizationalUnitName = optional
+	commonName = supplied
+	emailAddress = optional
+
+	[ generic_cert ]
+	basicConstraints = CA:false
+	subjectKeyIdentifier = hash
+	authorityKeyIdentifier = keyid,issuer
+	_EOF_
+}
+
+initialize_ca_db()
+{
+  [[ ! -d "${CA_DB_PATH}" ]] || return 0
+  echo "--- Creating CA database under ${CA_DB_PATH}"
+  local ANS self_signed
+  while ! read -p 'Generate self-signed certificate (y/n)? ' ANS || \
+    ! [[ "${ANS}" =~ ^[yYnN]$ ]] || \
+    ! self_signed=$([[ "${ANS^}" = "Y" ]] && echo "true" || echo "false")
+    do :; done
+  mkdir -p "${CA_DB_PATH}/ca.db.certs"
+  touch "${CA_DB_PATH}/ca.db.index"
+  echo "1000" > "${CA_DB_PATH}/ca.db.serial"
+  #echo "unique_subject = no" > "${CA_DB_PATH}/ca.db.index.attr"
+  local openssl_args=(-newkey rsa:2048 -keyout "${CA_PATH}/ca.key")
+  if ${self_signed}; then
+    openssl_args+=(-x509 -days 7300 -out "${CA_CRT_PATH}")
+  else
+    openssl_args+=(-out "${CA_CSR_PATH}")
+  fi
+  openssl req -config <(ca_conf) "${openssl_args[@]}" &&:
+  if [[ $? -ne 0 ]]; then
+    echo "*** ERROR: Failed to create CA key and certificate"
+    return 1
+  fi
+  if ${self_signed}; then
+    [[ -e "${CA_BUNDLE_PATH}" ]] || cp "${CA_PATH}/ca.crt" "${CA_BUNDLE_PATH}"
+  else
+    cat <<-_EOF_
+
+	---------------------------------------------------------------------
+	Send the generated Certificate Signing Request (CSR) located in file
+
+	  ${CA_CSR_PATH}
+
+	to the Certificate Authority (CA) for signing. When the signed
+	certificate is returned by the CA, place it at these two locations:
+
+	  ${CA_CRT_PATH}
+	  ${CA_BUNDLE_PATH}
+
+	---------------------------------------------------------------------
+
+	_EOF_
+  fi
+}
+
+ca_cmd_config()
+{
+  echo "--- CA OpenSSL configuration file"
+  ca_conf
+}
+
+ca_cmd_pending()
+{
+  echo "--- Pending Certificate Signing Requests"
+  shopt -s nullglob
+  for csrfile in "${PENDING_CSRS_PATH}"/*.csr; do
+    #echo -n "${csrfile##*/}: "
+    openssl req -in "${csrfile}" -noout -subject | sed 's/^subject=//'
+  done
+}
+
+ca_cmd_rmpending()
+{
+  local callsign="${1:-}"
+  if ! shift; then
+    echo "*** ERROR: Missing argument <CN/callsign> for 'rmpending' command."
+    echo
+    print_help
+    return 1
+  fi
+  echo "--- Remove Pending Certificate Signing Request: ${callsign}"
+
+  local csrfile="${PENDING_CSRS_PATH}/${callsign}.csr"
+  if [[ ! -e "${csrfile}" ]]; then
+    echo "*** ERROR: Could not find CSR file: ${csrfile}"
+    echo
+    ca_cmd_pending
+    return 1
+  fi
+
+  rm -f "${csrfile}"
+}
+
+ca_cmd_sign()
+{
+  local callsign="${1:-}"
+  if ! shift; then
+    echo "*** ERROR: Missing argument <CN/callsign> for 'sign' command."
+    echo
+    print_help
+    return 1
+  fi
+
+  echo "--- Sign Certificate Signing Request for ${callsign}"
+
+  local csrfile="${PENDING_CSRS_PATH}/${callsign}.csr"
+  if [[ ! -e "${csrfile}" ]]; then
+    echo "*** ERROR: Could not find CSR file: ${csrfile}"
+    return 1
+  fi
+
+  openssl ca \
+    -config <(ca_conf) \
+    -out "${CERTS_PATH}/${callsign}.crt" \
+    -infiles "${csrfile}" &&:
+  if [[ $? -ne 0 ]]; then
+    echo "*** ERROR: Failed to sign ${csrfile}"
+    return 1
+  fi
+
+  mv "${csrfile}" "${CSRS_PATH}/${csrfile##*/}" &&:
+  if [[ $? -ne 0 ]]; then
+    echo "*** ERROR: Failed to move CSR from pending to signed"
+    return 1
+  fi
+}
+
+ca_cmd_revoke()
+{
+  local callsign="${1:-}"
+  if ! shift; then
+    echo "*** ERROR: Missing argument <CN/callsign> for 'revoke' command."
+    echo
+    print_help
+    return 1
+  fi
+
+  echo "--- Revoke Certificate for ${callsign}"
+
+  local crtfile="${CERTS_PATH}/${callsign}.crt"
+  if [[ ! -e "${crtfile}" ]]; then
+    echo "*** ERROR: Could not find certificate file: ${crtfile}"
+    return 1
+  fi
+
+  openssl ca \
+    -config <(ca_conf) \
+    -revoke "${crtfile}" \
+    -crl_reason superseded &&:
+  if [[ $? -ne 0 ]]; then
+    echo "*** ERROR: Failed to revoke ${crtfile}"
+    return 1
+  fi
+
+  openssl ca \
+    -config <(ca_conf) \
+    -gencrl \
+    -out "${CRL_PATH}"
+}
+
+run_command()
+{
+  local cmd_name="$1"; shift
+  local cmd_func="ca_cmd_${cmd_name}"
+  if ! declare -F "${cmd_func}" &>/dev/null; then
+    echo "*** ERROR: No such command: '${cmd_name}'"
+    return 1
+  fi
+  "${cmd_func}" "$@"
+}
+
+print_help()
+{
+  cat <<-_EOF_
+	Usage: ${0##*/} <command> [command args]
+
+	Commands:
+
+	  config                  -- Print OpenSSL configuration file
+	  pending                 -- List pending certificate signing requests
+	  rmpending <CN/callsign> -- Remove a pending certificate signing request
+	  sign <CN/callsign>      -- Sign a pending certificate signing request
+	  revoke <CN/callsign>    -- Revoke a certificate
+
+	_EOF_
+}
+
+main()
+{
+  if [[ $# -lt 1 ]]; then
+    print_help
+    exit 1
+  fi
+
+  local cmd="$1"; shift
+
+  initialize_directories
+  initialize_ca_db
+  run_command "${cmd}" "$@"
+}
+
+main "$@"
+
+# vim: set filetype=sh:

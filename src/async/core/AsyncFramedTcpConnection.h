@@ -165,6 +165,34 @@ class FramedTcpConnection : public TcpConnection
     virtual TcpConnection& operator=(TcpConnection&& other_base) override;
 
     /**
+     * @brief   Set the maximum RX frame size
+     * @param   frame_size The maximum frame size in bytes
+     *
+     * Use this function to set the maximum allowed received frame size. If a
+     * frame size number larger than this is received a disconnection is
+     * immediately issued. The default maximum frame size is
+     * DEFAULT_MAX_FRAME_SIZE.
+     */
+    void setMaxRxFrameSize(uint32_t frame_size)
+    {
+      m_max_rx_frame_size = frame_size;
+    }
+
+    /**
+     * @brief   Set the maximum TX frame size
+     * @param   frame_size The maximum frame size in bytes
+     *
+     * Use this function to set the maximum allowed transmitted frame size. If
+     * a frame size larger than this is transmitted the write function will
+     * return an error. The default maximum frame size is
+     * DEFAULT_MAX_FRAME_SIZE.
+     */
+    void setMaxTxFrameSize(uint32_t frame_size)
+    {
+      m_max_tx_frame_size = frame_size;
+    }
+
+    /**
      * @brief   Set the maximum frame size
      * @param   frame_size The maximum frame size in bytes
      *
@@ -172,7 +200,11 @@ class FramedTcpConnection : public TcpConnection
      * number larger than this is received a disconnection is immediately
      * issued. The default maximum frame size is DEFAULT_MAX_FRAME_SIZE.
      */
-    void setMaxFrameSize(uint32_t frame_size) { m_max_frame_size = frame_size; }
+    void setMaxFrameSize(uint32_t frame_size)
+    {
+      setMaxRxFrameSize(frame_size);
+      setMaxTxFrameSize(frame_size);
+    }
 
     /**
      * @brief 	Send a frame on the TCP connection
@@ -278,14 +310,15 @@ class FramedTcpConnection : public TcpConnection
     };
     typedef std::deque<QueueItem*> TxQueue;
 
-    uint32_t              m_max_frame_size;
+    uint32_t              m_max_rx_frame_size;
+    uint32_t              m_max_tx_frame_size;
     bool                  m_size_received;
     uint32_t              m_frame_size;
     std::vector<uint8_t>  m_frame;
     TxQueue               m_txq;
 
     FramedTcpConnection(const FramedTcpConnection&) = delete;
-    void onSendBufferFull(bool is_full);
+    //void onSendBufferFull(bool is_full);
     void disconnectCleanup(void);
 
 };  /* class FramedTcpConnection */

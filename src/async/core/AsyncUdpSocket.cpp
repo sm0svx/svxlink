@@ -156,8 +156,6 @@ class UdpPacket
 UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
   : sock(-1), rd_watch(0), wr_watch(0), send_buf(0)
 {
-  struct sockaddr_in addr;
-  
     // Create UDP socket
   sock = socket(AF_INET, SOCK_DGRAM, 0);
   if(sock == -1)
@@ -178,6 +176,7 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
     // Bind the socket to a local port if one was specified
   if (local_port > 0)
   {
+    struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(local_port);
@@ -189,14 +188,15 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
     {
       addr.sin_addr = bind_ip.ip4Addr();
     }
-    if(::bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
+    if(::bind(sock, reinterpret_cast<struct sockaddr *>(&addr),
+              sizeof(addr)) == -1)
     {
       perror("bind");
       cleanup();
       return;
     }
   }
-  
+
     // Setup a watch for incoming data
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
   assert(rd_watch != 0);
@@ -216,6 +216,40 @@ UdpSocket::~UdpSocket(void)
 {
   cleanup();
 } /* UdpSocket::~UdpSocket */
+
+
+Async::IpAddress UdpSocket::localAddr(void) const
+{
+  struct sockaddr_in addr;
+  socklen_t len = sizeof(addr);
+  int ret = getsockname(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                        &len);
+  if ((ret != 0) || (len != sizeof(addr)))
+  {
+    perror("getsockname");
+    return Async::IpAddress();
+  }
+  //std::cout << "### UdpSocket::localAddr: sin_addr="
+  //          << Async::IpAddress(addr.sin_addr) << std::endl;
+  return Async::IpAddress(addr.sin_addr);
+} /* UdpSocket::localAddr */
+
+
+uint16_t UdpSocket::localPort(void) const
+{
+  struct sockaddr_in addr;
+  socklen_t len = sizeof(addr);
+  int ret = getsockname(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                        &len);
+  if ((ret != 0) || (len != sizeof(addr)))
+  {
+    perror("getsockname");
+    return 0;
+  }
+  //std::cout << "### UdpSocket::localPort: sin_port="
+  //          << ntohs(addr.sin_port) << std::endl;
+  return ntohs(addr.sin_port);
+} /* UdpSocket::localPort */
 
 
 bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
@@ -261,23 +295,11 @@ bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
+void UdpSocket::onDataReceived(const IpAddress& ip, uint16_t port, void* buf,
+    int count)
+{
+  dataReceived(ip, port, buf, count);
+} /* UdpSocket::onDataReceived */
 
 
 /****************************************************************************
@@ -334,9 +356,8 @@ void UdpSocket::handleInput(FdWatch *watch)
     perror("recvfrom in UdpSocket::handleInput");
     return;
   }
-  
-  dataReceived(IpAddress(addr.sin_addr), ntohs(addr.sin_port), buf, len);
-  
+
+  onDataReceived(IpAddress(addr.sin_addr), ntohs(addr.sin_port), buf, len);
 } /* UdpSocket::handleInput */
 
 

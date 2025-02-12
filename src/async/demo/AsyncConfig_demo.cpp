@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <cstdlib>
+#include <iterator>
 
 #include <AsyncConfig.h>
 
@@ -65,4 +67,29 @@ int main(int argc, char **argv)
     cerr << "*** ERROR: Config variable SECTION2/MY_FLOAT malformed, "
 	    "not found or out of range.\n";
   }
+
+  cfg.subscribeValue("SECTION1", "VALUE1", "",
+      [](const std::string& val)
+      {
+        cout << "SECTION1/VALUE1=" << val << endl;
+      });
+  cfg.setValue("SECTION1", "VALUE1", "A subscribed string value");
+
+  cfg.subscribeValue("SECTION2", "MY_INT", -1,
+      [](int val)
+      {
+        cout << "SECTION2/MY_INT=" << val << endl;
+      });
+  cfg.setValue("SECTION2", "MY_INT", 4711);
+
+  cfg.subscribeValue("SECTION1", "VEC", std::vector<int>{1,2,3},
+      [=](const std::vector<int>& vec)
+      {
+        std::copy(vec.begin(), vec.end(),
+          std::ostream_iterator<int>(std::cout, " "));
+        std::cout << std::endl;
+      });
+  cfg.setValue("SECTION1", "VEC", std::vector<int>{42,43,44});
+
+  return 0;
 }

@@ -322,11 +322,10 @@ bool TGHandler::isRestricted(uint32_t tg) const
 
 void TGHandler::checkTimers(Async::Timer *t)
 {
+  struct timeval now;
+  gettimeofday(&now, NULL);
   for (IdMap::iterator it = m_id_map.begin(); it != m_id_map.end(); ++it)
   {
-    struct timeval now;
-    gettimeofday(&now, NULL);
-
     TGInfo *tg_info = it->second;
     assert(tg_info != 0);
     if (tg_info->talker != 0)
@@ -348,13 +347,12 @@ void TGHandler::checkTimers(Async::Timer *t)
         setTalkerForTG(tg_info->id, 0);
       }
     }
-
-    //if ((tg_info->auto_qsy_time > 0) &&
-    //    (now.tv_sec > tg_info->auto_qsy_time))
-    //{
-    //  requestAutoQsy(tg_info->id);
-    //  tg_info->auto_qsy_time = time(NULL) + tg_info->auto_qsy_after_s;
-    //}
+    else if ((tg_info->auto_qsy_time > 0) &&
+        (now.tv_sec > tg_info->auto_qsy_time))
+    {
+      requestAutoQsy(tg_info->id);
+      tg_info->auto_qsy_time = now.tv_sec + tg_info->auto_qsy_after_s;
+    }
   }
 } /* TGHandler::checkTimers */
 

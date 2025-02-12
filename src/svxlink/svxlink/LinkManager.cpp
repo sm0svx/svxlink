@@ -191,14 +191,14 @@ bool LinkManager::initialize(Async::Config &cfg,
             link.logic_props.insert(make_pair(logic_name, logic_props));
         if (!ret.second)
         {
-          cout << "*** ERROR: Duplicate logic \"" << logic_name
+          cerr << "*** ERROR: Duplicate logic \"" << logic_name
                << "\" specified in link \"" << link.name << "\".\n";
           init_ok = false;
         }
       }
       else
       {
-        cout << "*** ERROR: Bad configuration for " << link.name
+        cerr << "*** ERROR: Bad configuration for " << link.name
              << "/CONNECT_LOGICS=" << connect_logics << ". Legal format: "
              << "<logic name>:<command>:<announcement name>,...\n";
         init_ok = false;
@@ -234,8 +234,8 @@ bool LinkManager::initialize(Async::Config &cfg,
         // while so the TIMEOUT configuration variable must be set.
       if (timeout <= 0)
       {
-        cout << "*** WARNING: missing param " << link.name
-             << "/TIMEOUT=??, set to default (30 sec)\n";
+        std::cerr << "*** WARNING: missing param " << link.name
+                  << "/TIMEOUT=??, set to default (30 sec)" << std::endl;
         timeout = 30;
       }
     }
@@ -345,8 +345,9 @@ void LinkManager::addLogic(LogicBase *logic)
           LinkCmd *link_cmd = new LinkCmd(cmd_logic, link);
           if (!link_cmd->initialize(logic_props.cmd))
           {
-            cout << "*** WARNING: Can not setup command " << logic_props.cmd
-                 << " for the logic " << logic->name() << endl;
+            std::cerr << "*** WARNING: Can not setup command "
+                      << logic_props.cmd << " for the logic " << logic->name()
+                      << std::endl;
           }
         }
       }
@@ -429,9 +430,10 @@ void LinkManager::allLogicsStarted(void)
       const string &logic_name = (*prop_it).first;
       if (logic_map.find(logic_name) == logic_map.end())
       {
-        cout << "*** WARNING: Logic " << logic_name
-             << " has been specified in logic link " << link.name
-             << " but that logic is missing. Removing logic from link.\n";
+        std::cerr << "*** WARNING: Logic " << logic_name
+                  << " has been specified in logic link " << link.name
+                  << " but that logic is missing. Removing logic from link."
+                  << std::endl;
         LogicPropMap::iterator remove_it = prop_it++;
         link.logic_props.erase(remove_it);
       }

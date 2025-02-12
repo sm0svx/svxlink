@@ -45,6 +45,7 @@ extern "C" {
 #include <string>
 #include <map>
 #include <memory>
+#include <limits>
 
 
 /****************************************************************************
@@ -127,6 +128,8 @@ class AudioLADSPAPlugin : public AudioProcessor
     using PortNumber  = decltype(LADSPA_Descriptor::PortCount);
     using PluginIndex = unsigned long;
     using UniqueID    = unsigned long;
+
+    constexpr static PortNumber npos = std::numeric_limits<PortNumber>::max();
 
     /**
      * @brief   Find any LADSPA plugins in the given subdirectory
@@ -214,6 +217,13 @@ class AudioLADSPAPlugin : public AudioProcessor
      * possible.
      */
     bool initialize(void);
+
+    /**
+     * @brief   Find an input control port by name
+     * @param   name The port namne to look for
+     * @return  Return the port number or "npos" if not found
+     */
+    PortNumber findControlInputByName(const std::string& name);
 
     /**
      * @brief   Set a control input to the given value

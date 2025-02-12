@@ -1,0 +1,153 @@
+---
+###############################################################################
+#
+# Configuration file for the ca-hook.py SvxReflector server CA events hook
+# script.
+#
+# For the *_MAIL_TO and *_MAIL_BCC configuration variables it is possible to
+# embed the following variables inside curly braces.
+#
+#   email:      The email addresses included in the CSR/CRT
+#
+# For the CSR_CREATE_MAIL_SUBJECT, CSR_CREATE_MAIL_CONTENT,
+# CSR_UPDATE_MAIL_SUBJECT and CSR_UPDATE_MAIL_CONTENT configuration
+# variables it is possible to embed the following variables inside curly
+# braces.
+#
+#   callsign:   The callsign (Subject CN)
+#   subject:    The Subject DN of the CSR
+#   email:      The email addresses included in the CSR/CRT
+#   hostname:   The name of the host where this script run
+#
+# In addition to the above variables, the following ones can be embedded in the
+# CSR_SIGNED_MAIL_SUBJECT, CSR_SIGNED_MAIL_CONTENT, CRT_RENEWED_MAIL_SUBJECT
+# and CRT_RENEWED_MAIL_CONTENT configuration variables.
+#
+#   serial_number:  The serial number of the certificate
+#   issuer:         The certificate issuer Subject DN
+#   not_before      When the certificate is valid from
+#   not_after       When the certificate will expire
+#
+###############################################################################
+
+# Set to true to print the mail message instead of sending it
+EMAIL_DEBUG: true
+
+# The SMTP server to send the message to
+EMAIL_SMTP_SERVER: "localhost"
+
+# Use the following email sender address ("From")
+EMAIL_FROM: "SvxReflector <reflector@example.com>"
+
+# Send sysop mails to the following addresses
+SYSOP_EMAIL: &SYSOP_EMAIL
+  - "sysop1@example.com"
+  - "sysop2@example.com"
+
+# Send the CSR create emails to the following addresses
+CSR_CREATE_MAIL_TO: *SYSOP_EMAIL
+
+# Send the CSR create emails to the following BCC addresses
+CSR_CREATE_MAIL_BCC:
+
+# Email subject to use for CSR create notifications.
+# Comment out to suppress sending of CSR create emails.
+CSR_CREATE_MAIL_SUBJECT: "SvxReflector: CSR received from node {callsign}"
+
+# Email content to use for CSR create notifications.
+# Comment out to suppress sending of CSR create emails.
+CSR_CREATE_MAIL_CONTENT: |
+  Hi,
+
+  The reflector node {callsign} has submitted a CSR at reflector server {hostname}. Please check that the CSR is correct and then sign it.
+
+    Subject: {subject}
+    Email:   {email}
+
+  Regards,
+  SvxReflector Server
+
+
+# Send the CSR update emails to the following addresses
+CSR_UPDATE_MAIL_TO: *SYSOP_EMAIL
+
+# Send the CSR update emails to the following BCC addresses
+CSR_UPDATE_MAIL_BCC:
+
+# Email subject to use for CSR update notifications.
+# Comment out to suppress sending of CSR update emails.
+CSR_UPDATE_MAIL_SUBJECT: "SvxReflector: CSR update received from node {callsign}"
+
+# Email content to use for CSR update notifications.
+# Comment out to suppress sending of CSR update emails.
+CSR_UPDATE_MAIL_CONTENT: |
+  Hi,
+
+  The reflector node {callsign} has submitted an updated CSR at reflector server {hostname}. Please check that the CSR is correct and then sign it.
+
+    Subject: {subject}
+    Email:   {email}
+
+  Regards,
+  SvxReflector Server
+
+
+# Send the CSR signed emails to the following addresses
+CSR_SIGNED_MAIL_TO: "{email}"
+
+# Send the CSR signed emails to the following BCC addresses
+CSR_SIGNED_MAIL_BCC: *SYSOP_EMAIL
+
+# Email subject to use for CSR signed notifications.
+# Comment out to suppress sending of CSR signed emails.
+CSR_SIGNED_MAIL_SUBJECT: "SvxReflector: Certificate signed for node {callsign}"
+
+# Email content to use for CSR signed notifications.
+# Comment out to suppress sending of CSR signed emails.
+CSR_SIGNED_MAIL_CONTENT: |
+  Hi,
+
+  The certificate for reflector node {callsign} has been signed and is now ready for use. If this was not initiated by you, your callsign may have been hijacked by someone. In that case, please reply to this email to notify the reflector sysop.
+
+    Serial:     {serial_number:X}
+    Issuer:     {issuer}
+    Subject:    {subject}
+    Not before: {not_before}Z
+    Not after:  {not_after}Z
+    Email:      {email}
+
+  If everything is in order, you do not have to do anything. Your node will receive the certificate from the reflector server and will start to use it immediately.
+
+  Regards,
+  SvxReflector Server Sysop
+
+
+# Send the certificate renewed emails to the following addresses
+CRT_RENEWED_MAIL_TO: *SYSOP_EMAIL
+
+# Send the certificate renewed emails to the following BCC addresses
+CRT_RENEWED_MAIL_BCC:
+
+# Email subject to use for certificate renew notifications.
+# Comment out to suppress sending of renew emails.
+CRT_RENEWED_MAIL_SUBJECT: "SvxReflector: Certificate renewed for node {callsign}"
+
+# Email content to use for certificate renew notifications.
+# Comment out to suppress sending of CSR signed emails.
+CRT_RENEWED_MAIL_CONTENT: |
+  Hi,
+
+  The certificate for reflector node {callsign} has been renewed and is now ready for use. Node certificates are automatically renewed when about one third of the total certificate lifetime remains.
+
+    Serial:     {serial_number:X}
+    Issuer:     {issuer}
+    Subject:    {subject}
+    Not before: {not_before}Z
+    Not after:  {not_after}Z
+    Email:      {email}
+
+  If everything is in order, you do not have to do anything. Your node will receive the new certificate from the reflector server and will start to use it immediately.
+
+  Regards,
+  SvxReflector Server Sysop
+

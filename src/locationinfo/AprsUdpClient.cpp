@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -123,7 +123,8 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
   : loc_cfg(loc_cfg), server(server), port(port), dns(0), beacon_timer(0),
     curr_status(StationData::STAT_UNKNOWN), num_connected(0)
 {
-   beacon_timer = new Timer(loc_cfg.interval, Timer::TYPE_PERIODIC);
+   beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000,
+                            Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
    beacon_timer->expired.connect(
      mem_fun(*this, &AprsUdpClient::sendLocationInfo));
@@ -223,6 +224,7 @@ void AprsUdpClient::sendLocationInfo(Timer *t)
     char sdes_packet[256];
     int sdes_len = buildSdesPacket(sdes_packet);
 
+    std::cout << "### AprsUdpClient::sendLocationInfo" << std::endl;
     sock.write(ip_addr, port, sdes_packet, sdes_len);
   }
 } /* AprsUdpClient::sendLocationInfo */

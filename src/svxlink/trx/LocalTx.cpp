@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -91,6 +91,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Rx.h"
 #include "Emphasis.h"
 #include "Ptt.h"
+#include "LADSPAPluginLoader.h"
 
 
 /****************************************************************************
@@ -457,7 +458,19 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(comp, true);
   prev_src = comp;
   */
-  
+
+  LADSPAPluginLoader ladspa_plug_loader;
+  if (!ladspa_plug_loader.load(cfg, name()))
+  {
+    delete ladspa_plug_loader.chainSink();
+    return false;
+  }
+  if (ladspa_plug_loader.chainSink() != nullptr)
+  {
+    prev_src->registerSink(ladspa_plug_loader.chainSink(), true);
+    prev_src = ladspa_plug_loader.chainSource();
+  }
+
     // If preemphasis is enabled, create the preemphasis filter
   if (cfg.getValue(name(), "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {

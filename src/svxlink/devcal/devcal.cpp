@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -484,21 +484,22 @@ static const unsigned audio_ch = 0;
 
 int main(int argc, const char *argv[])
 {
-  cout << PROGRAM_NAME " v" DEVCAL_VERSION
-          " Copyright (C) 2003-2023 Tobias Blomberg / SM0SVX\n\n";
-  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
-          "This is free software, and you\n";
-  cout << "are welcome to redistribute it in accordance with the "
-          "terms and conditions in\n";
-  cout << "the GNU GPL (General Public License) version 2 or later.\n\n";
-
   setlocale(LC_ALL, "");
+
   CppApplication app;
   app.catchUnixSignal(SIGINT);
   app.catchUnixSignal(SIGTERM);
   app.unixSignalCaught.connect(sigc::ptr_fun(&sigterm_handler));
 
   parse_arguments(argc, const_cast<const char **>(argv));
+
+  cout << PROGRAM_NAME " v" DEVCAL_VERSION
+          " Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you\n";
+  cout << "are welcome to redistribute it in accordance with the "
+          "terms and conditions in\n";
+  cout << "the GNU GPL (General Public License) version 2 or later.\n\n";
 
   vector<float> mod_idxs(mod_fqs.size());
   transform(mod_fqs.begin(), mod_fqs.end(), mod_idxs.begin(),
@@ -716,6 +717,8 @@ int main(int argc, const char *argv[])
  */
 static void parse_arguments(int argc, const char **argv)
 {
+  int print_version = 0;
+
   poptContext optCon;
   const struct poptOption optionsTable[] =
   {
@@ -745,6 +748,8 @@ static void parse_arguments(int argc, const char **argv)
             &audio_dev, 0,
 	    "The audio device to use for audio output",
             "<type:dev>"},
+    {"version", 0, POPT_ARG_NONE, &print_version, 0,
+	    "Print the application version string", NULL},
     {NULL, 0, 0, NULL, 0}
   };
   int err;
@@ -780,6 +785,12 @@ static void parse_arguments(int argc, const char **argv)
         poptPrintUsage(optCon, stderr, 0);
         exit(1);
     }
+  }
+
+  if (print_version)
+  {
+    std::cout << DEVCAL_VERSION << std::endl;
+    exit(0);
   }
 
   if ((static_cast<int>(cal_rx) + cal_tx + measure) != 1)

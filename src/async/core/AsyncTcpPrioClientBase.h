@@ -260,6 +260,26 @@ class TcpPrioClientBase : public TcpClientBase
     virtual void disconnect(void);
 
     /**
+     * @brief   Mark connection as established
+     *
+     * The application must use this function to mark a connection as
+     * established when the application layer deem the connection as
+     * successful. It is up to the application to decide this, e.g. after the
+     * connection has been authenticated.
+     * If a connection has not been marked as established when a disconnection
+     * occurs, a new connection will be tried again after the exponential
+     * backoff timer has expired.
+     * On the other hand, if the connection has been marked as established, a
+     * reconnect will be retried after the minimal reconnect delay.
+     */
+    void markAsEstablished(void);
+
+    /**
+     * @brief   Check if a connection has been marked as established
+     */
+    bool markedAsEstablished(void) const;
+
+    /**
      * @brief   Check if the connection is idle
      * @return  Returns \em true if the connection is idle
      *
@@ -267,22 +287,17 @@ class TcpPrioClientBase : public TcpClientBase
      */
     bool isIdle(void) const;
 
+    /**
+     * @brief   Check if connected to the primary server
+     */
     bool isPrimary(void) const;
 
+    /**
+     * @brief   Inherit the assignment operator from TcpClientBase
+     */
     using TcpClientBase::operator=;
 
   protected:
-    /**
-     * @brief   Must be called from the inheriting class constructor
-     *
-     * This function must be called by the inheriting class to initialize this
-     * class. That is because this class cannot be initialized until the
-     * inheriting class has been initialized, e.g. because this class need to
-     * call the pure virtual function newTcpClient that is implemented in the
-     * inheriting class.
-     */
-    void initialize(void);
-
     /**
      * @brief   Called when the connection has been established to the server
      *
@@ -319,7 +334,10 @@ class TcpPrioClientBase : public TcpClientBase
 
   private:
     class Machine;
-    Machine*  m_machine = nullptr;
+
+    Machine* machine(void) const;
+
+    mutable Machine*  m_machine = nullptr;
 
 };  /* class TcpPrioClientBase */
 
