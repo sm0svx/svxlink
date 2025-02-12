@@ -2763,6 +2763,16 @@ Example:
 .br
 APRS_SERVER_LIST=euro.aprs2.net:14580
 .TP
+.B FILTER
+Set the APRS-IS filter expression to use. The filter is used to decide which
+APRS packets the APRS-IS server should forward to SvxLink. Documentation on
+filter expressions can be found here:
+https://www.aprs-is.net/javAPRSFilter.aspx
+
+Example:
+.br
+FILTER=m/10
+.TP
 .B LON_POSITION
 The longitude of the station position, entered as "degrees.arcminutes.arcseconds"
 
@@ -2795,12 +2805,23 @@ Example:
 .br
 FREQUENCY=430.050     # tx-frequency is 430.050 MHz
 .TP
+.B TX_OFFSET
+The tx offset is the number of kHz from the FREQUENCY where the node is
+listening for other stations. For a repeater that is the "shift" (e.g. -600).
+For a simplex node it's most often 0. The limits for the offset is
+[-9990,+9990] kHz. If not specified it will be set to 0.
+.TP
 .B TX_POWER
 The power of your transmitter in watts.
 
 Example:
 .br
 TX_POWER=10           # tx output is 10 watts
+.TP
+.B NARROW
+Setting this configuration variable to 1 will indicate that this node is using
+narow band FM, 12.5 kHz channel spacing. The default is 0, meaning a channel
+spacing of 25kHz.
 .TP
 .B ANTENNA_GAIN
 The gain of your antenna in dBd.
@@ -2854,6 +2875,20 @@ Example:
 .br
 BEACON_INTERVAL=30    # APRS-beacons will be sent every 30 minutes.
 .TP
+.B SYMBOL
+Specify which APRS symbol that should be displayed on maps. Symbols are
+specified using two characters where the first one determines which symbol
+table to use and the second one select the actual symbol to use from the
+selected table. So for example "/-" is a house and "/r" mean a repeater tower.
+For all details abount APRS symbols, have a look at the latest documentation:
+https://www.aprs.org/symbols/symbolsX.txt.
+The specified symbol is only applied to the base callsign and not on the
+Echolink one.
+
+Example:
+.br
+SYMBOL=/r
+.TP
 .B TONE
 The CTCSS sub-audible tone that is to be used for operation over your link or
 repeater. If you don't use tone control set it to 0.
@@ -2867,18 +2902,21 @@ TONE=0        # we don't use CTCSS sub-audible or call tones
 TONE=1750     # the link/repeater use a tone burst of 1750 Hz
 .TP
 .B STATISTICS_INTERVAL
-Defines the interval in minutes in that an aprs statistic (telemetry) is sent
-into the aprs network. Range: 5-60, default is 10 minutes
+Defines the interval in minutes in that an aprs statistics (telemetry) are sent
+into the aprs network. Range: 5-60 minutes, default is 10 minutes
 .TP
 .B STATISTICS_LOGIC
-The name of the logic core that statistics (telemetry) should be sent for.
+The name of the logic core that statistics (telemetry) should be sent for. If
+this configuration varible is not set, telemetry will be sent for all logics.
+That will probably lead to unpredictable results but it depend on what logic
+core types that are loaded in SvxLink.
 
 Example: STATISTICS_LOGIC=SimplexLogic
 .TP
 .B COMMENT
 Specify a short comment here, maybe a link to your website
-or information that could be interesting for others. The length should not
-exceed 255 characters and may not have control characters like "Carriage Return"
+or information that could be interesting for others. The length must not
+exceed 36 characters and may not have control characters like "Carriage Return"
 (\\r) or "Line Feed" (\\n) inside. Make your comment as short as you can to
 give users with a small display (TH-D7) the chance to display the full comment
 text.
