@@ -639,7 +639,7 @@ void LocationInfo::sendAprsStatistics(Timer *t)
     // :MYCALL   :
   std::ostringstream addressee;
   addressee << ":E" << loc_cfg.prefix << "-"
-            << setw(6) << loc_cfg.mycall << ":";
+            << std::left << setw(6) << loc_cfg.mycall << ":";
 
     // PARM.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
   std::ostringstream parm;
