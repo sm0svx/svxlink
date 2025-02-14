@@ -639,7 +639,7 @@ bool Reflector::callsignOk(const std::string& callsign) const
       accept_cs_re_str.empty())
   {
     accept_cs_re_str =
-      "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{1,3}[A-Z](?:-[A-Z0-9]{1,3})?";
+      "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{0,3}[A-Z](?:-[A-Z0-9]{1,3})?";
   }
   const std::regex accept_callsign_re(accept_cs_re_str);
   if (!std::regex_match(callsign, accept_callsign_re))
