@@ -1439,13 +1439,44 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
   if (cmd == "CFG")
   {
     std::string section, tag, value;
-    if (!(ss >> section >> tag >> value) || !ss.eof())
+    ss >> section >> tag >> value;
+    if (!value.empty())
     {
-      errss << "Invalid CFG PTY command '" << cmdline << "'. "
-               "Usage: CFG <section> <tag> <value>";
-      goto write_status;
+      m_cfg->setValue(section, tag, value);
     }
-    m_cfg->setValue(section, tag, value);
+    else if (!tag.empty())
+    {
+      std::cout << section << "/" << tag << "=\""
+                << m_cfg->getValue(section, tag) << "\""
+                << std::endl;
+    }
+    else if (!section.empty())
+    {
+      for (const auto& tag : m_cfg->listSection(section))
+      {
+        std::cout << section << "/" << tag << "=\""
+                  << m_cfg->getValue(section, tag) << "\""
+                  << std::endl;
+      }
+    }
+    else
+    {
+      for (const auto& section : m_cfg->listSections())
+      {
+        for (const auto& tag : m_cfg->listSection(section))
+        {
+          std::cout << section << "/" << tag << "=\""
+                    << m_cfg->getValue(section, tag) << "\""
+                    << std::endl;
+        }
+      }
+    }
+    //if ((ss >> section >> tag >> value) || !ss.eof())
+    //{
+    //  errss << "Invalid CFG PTY command '" << cmdline << "'. "
+    //           "Usage: CFG <section> <tag> <value>";
+    //  goto write_status;
+    //}
   }
   else if (cmd == "NODE")
   {
