@@ -133,8 +133,8 @@ LocationInfo* LocationInfo::_instance = nullptr;
 
 LocationInfo::LocationInfo(void)
 {
-  aprs_stats_timer.expired.connect(
-      mem_fun(*this, &LocationInfo::sendAprsStatistics));
+  aprs_stats_timer.expired.connect(sigc::hide(
+      mem_fun(*this, &LocationInfo::sendAprsStatistics)));
 } /* LocationInfo::LocationInfo */
 
 
@@ -175,6 +175,13 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   loc_cfg.mycall = callsign;
 
   cfg.getValue(cfg_name, "COMMENT", loc_cfg.comment);
+  if (loc_cfg.comment.size() > 36)
+  {
+    std::cerr << "*** WARNING: The APRS comment specified in " << cfg_name
+              << "/COMMENT is too long. The maximum length is 36 characters."
+              << std::endl;
+    loc_cfg.comment.erase(36);
+  }
 
   loc_cfg.debug = false;
   cfg.subscribeValue(cfg_name, "DEBUG",
@@ -199,6 +206,17 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   LocationInfo::_instance->startStatisticsTimer(siv * 60 * 1000);
 
   cfg.getValue(cfg_name, "STATISTICS_LOGIC", LocationInfo::_instance->slogic);
+
+  cfg.getValue(cfg_name, "FILTER", loc_cfg.filter);
+
+  cfg.getValue(cfg_name, "SYMBOL", loc_cfg.symbol);
+  if (!loc_cfg.symbol.empty() && (loc_cfg.symbol.size() != 2))
+  {
+    std::cerr << "*** ERROR: The APRS symbol specified in " << cfg_name
+              << "/SYMBOL must be exactly two characters or empty"
+              << std::endl;
+    return false;
+  }
 
   LocationInfo::_instance->initExtPty(cfg.getValue(cfg_name, "PTY_PATH"));
 
@@ -427,6 +445,15 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
     loc_cfg.frequency = lrintf(1000.0 * frequency);
   }
 
+  if (!cfg.getValue(name, "TX_OFFSET", -9990, 9990, loc_cfg.tx_offset_khz, true))
+  {
+    print_error(name, "TX_OFFSET", cfg.getValue(name, "TX_OFFSET"),
+                "TX_OFFSET=-600");
+    success = false;
+  }
+
+  cfg.getValue(name, "NARROW", loc_cfg.narrow);
+
   if (!cfg.getValue(name, "TX_POWER", 1U, numeric_limits<unsigned int>::max(),
 		    loc_cfg.power))
   {
@@ -628,7 +655,7 @@ void LocationInfo::startStatisticsTimer(int sinterval)
 } /* LocationInfo::statStatisticsTimer */
 
 
-void LocationInfo::sendAprsStatistics(Timer *t)
+void LocationInfo::sendAprsStatistics(void)
 {
   // https://github.com/PhirePhly/aprs_notes/blob/master/telemetry_format.md
 
@@ -636,33 +663,46 @@ void LocationInfo::sendAprsStatistics(Timer *t)
   std::ostringstream addr;
   addr << loc_cfg.mycall << ">" << loc_cfg.destination << ":";
 
-    // :MYCALL   :
+    // :ADDRESSEE:
   std::ostringstream addressee;
-  addressee << ":E" << loc_cfg.prefix << "-"
-            << std::left << setw(6) << loc_cfg.mycall << ":";
-
-    // PARM.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
-  std::ostringstream parm;
-  parm << addr.str()
-       << addressee.str()
-       << "PARM."
-       << "RX Avg " << sinterval << "m"
-       << ",TX Avg " << sinterval << "m"
-       << ",RX Count " << sinterval << "m"
-       << ",TX Count " << sinterval << "m"
-       << ","
-       << ",RX,TX\r\n";
-  igateMessage(parm.str());
-
-    // UNIT.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
-  std::ostringstream unit;
-  unit << addr.str()
-       << addressee.str()
-       << "UNIT.erlang,erlang,receptions,transmissions\r\n";
-  igateMessage(unit.str());
+  addressee << ":" // << ":E" << loc_cfg.prefix << "-"
+            << std::left << setw(9) << loc_cfg.mycall << ":";
 
   struct timeval now;
   gettimeofday(&now, NULL);
+
+  bool send_metadata = ((now.tv_sec - last_tlm_metadata) > 1800);
+  if (send_metadata)
+  {
+    last_tlm_metadata = now.tv_sec;
+
+      // PARM.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
+    std::ostringstream parm;
+    parm << addr.str()
+         << addressee.str()
+         << "PARM."
+         << "RX Avg " << sinterval << "m"     // A1
+         << ",TX Avg " << sinterval << "m"    // A2
+         << ",RX Count " << sinterval << "m"  // A3
+         << ",TX Count " << sinterval << "m"  // A4
+         << ","                               // A5
+         << ",RX"                             // B1
+         << ",TX"                             // B2
+         ;
+    igateMessage(parm.str());
+
+      // UNIT.A1,A2,A3,A4,A5,B1,B2,B3,B4,B5,B6,B7,B8
+    std::ostringstream unit;
+    unit << addr.str()
+         << addressee.str()
+         << "UNIT."
+         << "erlang"          // A1
+         << ",erlang"         // A2
+         << ",receptions"     // A3
+         << ",transmissions"  // A4
+         ;
+    igateMessage(unit.str());
+  }
 
     // Loop for each logic
   for (auto& entry : LocationInfo::instance()->aprs_stats)
@@ -684,33 +724,48 @@ void LocationInfo::sendAprsStatistics(Timer *t)
       setTransmitting(logic_name, now, false);
     }
 
-      // BITS.XXXXXXXX,Project Title
-    std::ostringstream bits;
-    bits << addr.str()
-         << addressee.str()
-         << "BITS.11111111,SvxLink " << logic_name << "\r\n";
-    igateMessage(bits.str());
+    const float erlang_b = 0.00392f;
+    if (send_metadata)
+    {
+        // BITS.XXXXXXXX,Project Title
+      std::ostringstream bits;
+      bits << addr.str()
+           << addressee.str()
+           << "BITS.11111111,SvxLink " << logic_name;
+      igateMessage(bits.str());
+
+        // EQNS.a,b,c,a,b,c,a,b,c,a,b,c,a,b,c
+      std::ostringstream eqns;
+      eqns << addr.str()
+           << addressee.str()
+           << "EQNS."
+           << "0"                                                   // A1a
+           << "," << std::fixed << std::setprecision(5) << erlang_b // A1b
+           << ",0"                                                  // A1c
+           << ",0"                                                  // A2a
+           << "," << std::fixed << std::setprecision(5) << erlang_b // A2b
+           << ",0"                                                  // A2c
+           ;
+      igateMessage(eqns.str());
+    }
 
       // T#nnn,nnn,nnn,nnn,nnn,nnn,nnnnnnnn
     auto rx_erlang = stats.rx_sec / (60.0f * sinterval);
     auto tx_erlang = stats.tx_sec / (60.0f * sinterval);
     std::ostringstream tlm;
-    //tlm << addr.str()
-    tlm << "E" << loc_cfg.prefix << "-" << loc_cfg.mycall
-        << ">" << loc_cfg.destination
-        << ",TCPIP"
-        << ",qAR," << loc_cfg.mycall << ":"
+    tlm << addr.str()
         << "T#" << std::setw(3) << std::setfill('0') << sequence
-        << "," << std::fixed << std::setw(6) << setprecision(2) << rx_erlang
-        << "," << std::fixed << std::setw(6) << setprecision(2) << tx_erlang
-        << "," << stats.rx_on_nr
-        << "," << stats.tx_on_nr
-        << ",0"
+        << "," << std::setw(3) << std::setfill('0') << int(rx_erlang / erlang_b)
+        << "," << std::setw(3) << std::setfill('0') << int(tx_erlang / erlang_b)
+        << "," << std::setw(3) << std::setfill('0')
+          << std::min(stats.rx_on_nr, 255U)
+        << "," << std::setw(3) << std::setfill('0')
+          << std::min(stats.tx_on_nr, 255U)
+        << ",000"
         << "," << (stats.squelch_on ? 1 : 0)
         << (stats.tx_on ? 1 : 0)
         << "000000"
-        << " " << logic_name
-        << "\r\n";
+        ;
     igateMessage(tlm.str());
 
       // reset statistics if needed
@@ -761,8 +816,9 @@ void LocationInfo::mesReceived(std::string message)
     message.replace(found, 6, loc_call);
   }
 
+  std::cout << "APRS PTY: " << message << std::endl;
+
   igateMessage(message);
-  cout << message << endl;
 } /* LocationInfo::mesReceived */
 
 

@@ -143,14 +143,18 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     std::string		el_call;
     std::string		el_prefix;
 
-    void  sendMsg(const char *aprsmsg);
-    void  posStr(char *pos);
+    std::string         recv_buf;
+
+    void  sendMsg(std::string aprsmsg);
+    std::string posStr(const std::string& symbol="");
+    std::string timeStr(void);
     void  sendAprsBeacon(Async::Timer *t);
 
     void  tcpConnected(void);
     void  aprsLogin(void);
     short getPasswd(const std::string& call);
 
+    void  decodeAprsPacket(std::string frame);
     int   tcpDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
                           int count);
     void  tcpDisconnected(Async::TcpClient<>::TcpConnection *con,

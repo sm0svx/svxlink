@@ -170,25 +170,29 @@ class LocationInfo
 
     struct Cfg
     {
-      unsigned int binterval  {10}; // Minutes
-      unsigned int frequency  {0};
-      unsigned int power      {0};
-      unsigned int tone       {0};
-      unsigned int height     {10};
-      unsigned int gain       {0};
-      int          beam_dir   {-1};
-      unsigned int range      {0};
-      char         range_unit {'m'};
+      unsigned int binterval    {10}; // Minutes
+      unsigned int frequency    {0};
+      unsigned int power        {0};
+      unsigned int tone         {0};
+      unsigned int height       {10};
+      unsigned int gain         {0};
+      int          beam_dir     {-1};
+      unsigned int range        {0};
+      char         range_unit   {'m'};
 
       Coordinate  lat_pos;
       Coordinate  lon_pos;
 
       std::string mycall;
       std::string prefix;
-      std::string path        {"WIDE1-1"};
-      std::string comment     {"SvxLink by SM0SVX (www.svxlink.org)"};
-      std::string destination {"APSVX1"};
-      bool        debug       {false};
+      std::string path          {"WIDE1-1"};
+      std::string comment       {"SvxLink by SM0SVX (www.svxlink.org)"};
+      std::string destination   {"APSVX1"};
+      bool        debug         {false};
+      std::string filter;
+      std::string symbol        {"S0"};
+      int         tx_offset_khz {0};
+      bool        narrow        {false};
     };
 
     static bool initialize(Async::Config& cfg, const std::string& cfg_name);
@@ -216,6 +220,7 @@ class LocationInfo
     Async::Timer  aprs_stats_timer  {-1, Async::Timer::TYPE_PERIODIC};
     unsigned int  sinterval         {10}; // Minutes
     std::string   slogic;
+    time_t        last_tlm_metadata {0};
 
     bool parsePosition(const Async::Config &cfg, const std::string &name);
     bool parseLatitude(Coordinate &pos, const std::string &value);
@@ -228,7 +233,7 @@ class LocationInfo
     bool parseClientStr(std::string &host, int &port, const std::string &val);
     bool parseClients(const Async::Config &cfg, const std::string &name);
     void startStatisticsTimer(int sinterval);
-    void sendAprsStatistics(Async::Timer *t);
+    void sendAprsStatistics(void);
     void initExtPty(std::string ptydevice);
     void mesReceived(std::string message);
 
