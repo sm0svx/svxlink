@@ -295,7 +295,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   objmsg << loc_cfg.mycall << ">" << loc_cfg.destination
          << "," << loc_cfg.path
          << ":"
-         << ";" << el_prefix  << el_call << "*"
+         << ";" << el_prefix << std::left << std::setw(6) << el_call << "*"
          << timeStr()
          << posStr()
          << std::fixed << std::setw(7) << std::setfill('0')
