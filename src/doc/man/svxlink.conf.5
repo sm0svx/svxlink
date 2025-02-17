@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "SEPTEMBER 2024" Linux "File Formats"
+.TH SVXLINK.CONF 5 "FEBRUARI 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -2810,6 +2810,10 @@ The tx offset is the number of kHz from the FREQUENCY where the node is
 listening for other stations. For a repeater that is the "shift" (e.g. -600).
 For a simplex node it's most often 0. The limits for the offset is
 [-9990,+9990] kHz. If not specified it will be set to 0.
+
+Note that when the APRS packet is transmitted the value is expressed in tens of
+kHz. So if the configuration parameter if set to -600 kHz, it will be sent as
+-060.
 .TP
 .B TX_POWER
 The power of your transmitter in watts.
@@ -2857,7 +2861,8 @@ changed according to local requirements. Please contact your local APRS sysop
 for further information. Changes should be made only according to the NEWn-N
 paradigm. Leave this variable untouched if you are unsure of its setting.
 No spaces or control characters are allowed. PATH has no influence on the
-propagation on non-RF networks. Default is PATH=WIDE1-1.
+propagation on non-RF networks. Default is empty which should be a good setting
+in most cases.
 
 Examples:
 .br

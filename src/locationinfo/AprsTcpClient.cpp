@@ -185,17 +185,22 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   char pos[128];
   posStr(pos);
 
+  std::string path(loc_cfg.path);
+  if (!path.empty())
+  {
+    path = std::string(",") + path;
+  }
+
     // APRS object message
   char aprsmsg[256];
-  sprintf(aprsmsg, "%s>%s,%s:;%s%-6.6s*111111z%s%s",
-          el_call.c_str(), loc_cfg.destination.c_str(), loc_cfg.path.c_str(),
+  sprintf(aprsmsg, "%s>%s%s:;%s%-6.6s*111111z%s%s",
+          el_call.c_str(), loc_cfg.destination.c_str(), path.c_str(),
           el_prefix.c_str(), el_call.c_str(), pos, msg);
   sendMsg(aprsmsg);
 
     // APRS status message, connected calls
   std::string status =
-    el_prefix + el_call + ">" + loc_cfg.destination + "," + loc_cfg.path +
-    ":>";
+    el_prefix + el_call + ">" + loc_cfg.destination + path + ":>";
   for (const auto& call : call_list)
   {
     status += call + " ";
@@ -290,11 +295,16 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
     sprintf(tone, "%04d", loc_cfg.tone);
   }
 
+  std::string addr = loc_cfg.mycall + ">" + loc_cfg.destination;
+  if (!loc_cfg.path.empty())
+  {
+    addr += std::string(",") + loc_cfg.path;
+  }
+  addr += ":";
+
     // Object message for Echolink
   std::ostringstream objmsg;
-  objmsg << loc_cfg.mycall << ">" << loc_cfg.destination
-         << "," << loc_cfg.path
-         << ":"
+  objmsg << addr
          << ";" << el_prefix << std::left << std::setw(6) << el_call << "*"
          << timeStr()
          << posStr()
@@ -309,9 +319,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
     // Position report for main callsign
   std::ostringstream posmsg;
-  posmsg << loc_cfg.mycall << ">" << loc_cfg.destination
-         << "," << loc_cfg.path
-         << ":"
+  posmsg << addr
          << "=" << posStr(loc_cfg.symbol)
          << std::fixed << std::setw(7) << std::setfill('0')
             << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
@@ -331,7 +339,7 @@ void AprsTcpClient::sendMsg(std::string aprsmsg)
     std::cout << "APRS: " << aprsmsg << std::endl;
   }
 
-  if (!con->isConnected())
+  if (!con->isConnected() || aprsmsg.empty())
   {
     return;
   }
