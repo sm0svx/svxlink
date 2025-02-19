@@ -185,7 +185,7 @@ class LocationInfo
 
       std::string mycall;
       std::string prefix;
-      std::string path          {"WIDE1-1"};
+      std::string path          {""};
       std::string comment       {"SvxLink by SM0SVX (www.svxlink.org)"};
       std::string destination   {"APSVX1"};
       bool        debug         {false};
