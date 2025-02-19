@@ -126,8 +126,6 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
 {
    StrList str_list;
 
-   el_prefix = "E" + loc_cfg.prefix + "-"; // The EchoLink prefix ER- or EL-
-
    con = new TcpClient<>(server, port);
    con->connected.connect(mem_fun(*this, &AprsTcpClient::tcpConnected));
    con->disconnected.connect(mem_fun(*this, &AprsTcpClient::tcpDisconnected));
@@ -162,6 +160,11 @@ AprsTcpClient::~AprsTcpClient(void)
 void AprsTcpClient::updateQsoStatus(int action, const string& call,
   const string& info, list<string>& call_list)
 {
+  if (loc_cfg.prefix.empty())
+  {
+    return;
+  }
+
   num_connected = call_list.size();
 
   char msg[80];
@@ -182,7 +185,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
     // ;EL-242660*111111z4900.05NE00823.29E0QSO status message
   std::ostringstream objmsg;
   objmsg << addrStr()
-         << ";" << addresseeStr(el_prefix + loc_cfg.mycall) << "*"
+         << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
          << timeStr()
          << posStr()
          << msg
@@ -190,7 +193,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
-  std::string status = el_prefix + addrStr() + ":>";
+  std::string status = loc_cfg.prefix + addrStr() + ":>";
   for (const auto& call : call_list)
   {
     status += call + " ";
@@ -317,21 +320,24 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
     sprintf(tone, "%04d", loc_cfg.tone);
   }
 
-    // Object message for Echolink
-  std::ostringstream objmsg;
-  objmsg << addrStr()
-         << ";" << addresseeStr(el_prefix + loc_cfg.mycall) << "*"
-         << timeStr()
-         << posStr()
-         << phgStr()
-         << std::fixed << std::setw(7) << std::setfill('0')
-            << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
-         << " " << tone
-         << " " << std::showpos << std::setw(4) << std::internal
-            << (loc_cfg.tx_offset_khz / 10)
-         << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
-         << " " << loc_cfg.comment;
-  sendMsg(objmsg.str());
+  if (!loc_cfg.prefix.empty())
+  {
+      // Object message for Echolink
+    std::ostringstream objmsg;
+    objmsg << addrStr()
+           << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
+           << timeStr()
+           << posStr()
+           << phgStr()
+           << std::fixed << std::setw(7) << std::setfill('0')
+              << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
+           << " " << tone
+           << " " << std::showpos << std::setw(4) << std::internal
+              << (loc_cfg.tx_offset_khz / 10)
+           << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
+           << " " << loc_cfg.comment;
+    sendMsg(objmsg.str());
+  }
 
     // Position report for main callsign
   std::ostringstream posmsg;

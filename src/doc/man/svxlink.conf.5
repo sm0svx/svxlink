@@ -2788,14 +2788,16 @@ Example:
 LAT_POSITION=51.02.22N
 .TP
 .B CALLSIGN
-Enter your callsign for the APRS network with a prefix that indicates the type 
-of station, (ER- for repeaters, EL- for links).
+Enter your callsign for the APRS network. If one of the Echolink prefixes are
+specified an Echolink object and Echolink status will be published.
+The Echolink prefix indicate the type of station and can be either "ER-" for
+repeaters or "EL-" for links.
 
 Examples:
 .br
 CALLSIGN=EL-DL1ABC    # callsign for a link
 .br
-CALLSIGN=ER-DB0ABC    # callsign for a repeater
+CALLSIGN=DB0ABC       # callsign for node without Echolink
 .TP
 .B FREQUENCY
 The tx-frequency of the link/repeater in MHz. For repeaters, information about
