@@ -460,7 +460,8 @@ void AprsTcpClient::decodeAprsPacket(std::string frame)
 
   std::smatch m;
 
-  const std::regex msg_addr("([^>]{1,9})>([^:]{1,9})((?:,[^:]{1,9})*):(.*)");
+    // Ex: "ISS>APWW11,KJ4ERJ-15*,TCPIP*,qAS,KJ4ERJ-15:"
+  const std::regex msg_addr("([^>]{1,9})>([^:,]{1,9})((?:,[^:,]{1,10})*):(.*)");
   if (!std::regex_match(frame, m, msg_addr) && (m.size() != 5))
   {
     return;
@@ -475,7 +476,8 @@ void AprsTcpClient::decodeAprsPacket(std::string frame)
   //          << " aprs_msg='" << aprs_msg << "'"
   //          << std::endl;
 
-  const std::regex msg_re(":(.{9}):([^|~{]{0,67})(?:\\{(\\d{1,5}))?");
+    // Ex: ":SM0SVX   :AOS 4h41m (20 0226z) SE^4{RT}"
+  const std::regex msg_re(":(.{9}):([^|~{]{0,67})(?:\\{(.{1,5}))?");
   if (std::regex_match(aprs_msg, m, msg_re) && (m.size() >= 3))
   {
     std::string addressee = m[1];
