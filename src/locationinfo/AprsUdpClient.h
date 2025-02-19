@@ -115,15 +115,22 @@ namespace EchoLink
 class AprsUdpClient : public AprsClient, public sigc::trackable
 {
   public:
-     AprsUdpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
-                   int port);
-     ~AprsUdpClient(void);
+    static int getPowerParam(unsigned int power);
+    static int getHeightParam(unsigned int height);
+    static int getGainParam(unsigned int gain);
+    static int getDirectionParam(int beam_dir);
+    static std::string phgStr(unsigned int power, unsigned int height,
+                              unsigned int gain, int beam_dir);
 
-     void updateDirectoryStatus(EchoLink::StationData::Status status);
-     void updateQsoStatus(int action, const std::string& call,
-       const std::string& info, std::list<std::string>& call_list);
-     void update3rdState(const std::string& call, const std::string& info);
-     void igateMessage(const std::string& info) {}
+    AprsUdpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
+                  int port);
+    ~AprsUdpClient(void);
+
+    void updateDirectoryStatus(EchoLink::StationData::Status status);
+    void updateQsoStatus(int action, const std::string& call,
+      const std::string& info, std::list<std::string>& call_list);
+    void update3rdState(const std::string& call, const std::string& info);
+    void igateMessage(const std::string& info) {}
 
   private:
     LocationInfo::Cfg	&loc_cfg;
@@ -147,10 +154,6 @@ class AprsUdpClient : public AprsClient, public sigc::trackable
     short getPasswd(const std::string& call);
 
     int   getToneParam();
-    int   getPowerParam();
-    int   getHeightParam();
-    int   getGainParam();
-    int   getDirectionParam();
 
 };  /* class LocationInfoClient */
 

@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "version/SVXLINK.h"
 #include "AprsTcpClient.h"
+#include "AprsUdpClient.h"
 #include "common.h"
 
 
@@ -125,9 +126,6 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
 {
    StrList str_list;
 
-   el_call = loc_cfg.mycall;  // the EchoLink callsign
-   el_prefix = "E" + loc_cfg.prefix + "-"; // the EchoLink prefix ER- od EL-
-
    con = new TcpClient<>(server, port);
    con->connected.connect(mem_fun(*this, &AprsTcpClient::tcpConnected));
    con->disconnected.connect(mem_fun(*this, &AprsTcpClient::tcpDisconnected));
@@ -162,6 +160,11 @@ AprsTcpClient::~AprsTcpClient(void)
 void AprsTcpClient::updateQsoStatus(int action, const string& call,
   const string& info, list<string>& call_list)
 {
+  if (loc_cfg.prefix.empty())
+  {
+    return;
+  }
+
   num_connected = call_list.size();
 
   char msg[80];
@@ -178,29 +181,19 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
       break;
   }
 
-  // Format for "object from..."
-  // DL1HRC>;EL-242660*111111z4900.05NE00823.29E0434.687MHz T123 R10k   DA0AAA
+    // Object message for Echolink
+    // ;EL-242660*111111z4900.05NE00823.29E0QSO status message
+  std::ostringstream objmsg;
+  objmsg << addrStr()
+         << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
+         << timeStr()
+         << posStr()
+         << msg
+         ;
+  sendMsg(objmsg.str());
 
-    // Geographic position
-  char pos[128];
-  posStr(pos);
-
-  std::string path(loc_cfg.path);
-  if (!path.empty())
-  {
-    path = std::string(",") + path;
-  }
-
-    // APRS object message
-  char aprsmsg[256];
-  sprintf(aprsmsg, "%s>%s%s:;%s%-6.6s*111111z%s%s",
-          el_call.c_str(), loc_cfg.destination.c_str(), path.c_str(),
-          el_prefix.c_str(), el_call.c_str(), pos, msg);
-  sendMsg(aprsmsg);
-
-    // APRS status message, connected calls
-  std::string status =
-    el_prefix + el_call + ">" + loc_cfg.destination + path + ":>";
+    // Status message for Echolink, connected calls
+  std::string status = loc_cfg.prefix + addrStr() + ":>";
   for (const auto& call : call_list)
   {
     status += call + " ";
@@ -238,6 +231,19 @@ void AprsTcpClient::igateMessage(const string& info)
  * Private member functions
  *
  ****************************************************************************/
+
+std::string AprsTcpClient::addrStr(void)
+{
+    // MYCALL>APSVXn,path:
+  std::string addr = loc_cfg.mycall + ">" + loc_cfg.destination;
+  if (!loc_cfg.path.empty())
+  {
+    addr += std::string(",") + loc_cfg.path;
+  }
+  addr += ":";
+  return addr;
+} /* AprsTcpClient::addrStr */
+
 
 std::string AprsTcpClient::posStr(const std::string& symbol)
 {
@@ -282,6 +288,21 @@ std::string AprsTcpClient::timeStr(void)
 } /* AprsTcpClient::timeStr */
 
 
+std::string AprsTcpClient::phgStr(void)
+{
+  return AprsUdpClient::phgStr(loc_cfg.power, loc_cfg.height, loc_cfg.gain,
+                               loc_cfg.beam_dir);
+} /* AprsTcpClient::phgStr */
+
+
+std::string AprsTcpClient::addresseeStr(const std::string& call)
+{
+  std::ostringstream addressee;
+  addressee << std::left << std::setw(9) << call;
+  return addressee.str();
+} /* AprsTcpClient::addresseeStr */
+
+
 void AprsTcpClient::sendAprsBeacon(Timer *t)
 {
     // CTCSS/1750Hz tone
@@ -290,37 +311,40 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   {
     sprintf(tone, "%c%03d", (loc_cfg.narrow ? 't' : 'T'), loc_cfg.tone);
   }
+  else if (loc_cfg.tone < 2000)
+  {
+    sprintf(tone, "%c%03d", (loc_cfg.narrow ? 'l' : '1'), loc_cfg.tone - 1000);
+  }
   else
   {
     sprintf(tone, "%04d", loc_cfg.tone);
   }
 
-  std::string addr = loc_cfg.mycall + ">" + loc_cfg.destination;
-  if (!loc_cfg.path.empty())
+  if (!loc_cfg.prefix.empty())
   {
-    addr += std::string(",") + loc_cfg.path;
+      // Object message for Echolink
+    std::ostringstream objmsg;
+    objmsg << addrStr()
+           << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
+           << timeStr()
+           << posStr()
+           << phgStr()
+           << std::fixed << std::setw(7) << std::setfill('0')
+              << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
+           << " " << tone
+           << " " << std::showpos << std::setw(4) << std::internal
+              << (loc_cfg.tx_offset_khz / 10)
+           << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
+           << " " << loc_cfg.comment;
+    sendMsg(objmsg.str());
   }
-  addr += ":";
-
-    // Object message for Echolink
-  std::ostringstream objmsg;
-  objmsg << addr
-         << ";" << el_prefix << std::left << std::setw(6) << el_call << "*"
-         << timeStr()
-         << posStr()
-         << std::fixed << std::setw(7) << std::setfill('0')
-            << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
-         << " " << tone
-         << " " << std::showpos << std::setw(4) << std::internal
-            << (loc_cfg.tx_offset_khz / 10)
-         << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
-         << " " << loc_cfg.comment;
-  sendMsg(objmsg.str());
 
     // Position report for main callsign
   std::ostringstream posmsg;
-  posmsg << addr
-         << "=" << posStr(loc_cfg.symbol)
+  posmsg << addrStr()
+         << "="
+         << posStr(loc_cfg.symbol)
+         << phgStr()
          << std::fixed << std::setw(7) << std::setfill('0')
             << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
          << " " << tone
@@ -362,8 +386,8 @@ void AprsTcpClient::sendMsg(std::string aprsmsg)
 void AprsTcpClient::aprsLogin(void)
 {
   std::ostringstream loginmsg;
-  loginmsg << "user " << el_call
-           << " pass " << getPasswd(el_call)
+  loginmsg << "user " << loc_cfg.mycall
+           << " pass " << getPasswd(loc_cfg.mycall)
            << " vers SvxLink " << SVXLINK_VERSION;
   if (!loc_cfg.filter.empty())
   {
@@ -481,7 +505,7 @@ void AprsTcpClient::decodeAprsPacket(std::string frame)
       {
         std::ostringstream ack;
         ack << loc_cfg.mycall << ">" << loc_cfg.destination
-            << "::" << std::left << std::setw(9) << from << ":ack" << id;
+            << "::" << addresseeStr(from) << ":ack" << id;
         sendMsg(ack.str());
       }
     }
