@@ -2797,7 +2797,18 @@ Examples:
 .br
 CALLSIGN=EL-DL1ABC    # callsign for a link
 .br
-CALLSIGN=DB0ABC       # callsign for node without Echolink
+CALLSIGN=DB0ABC-1     # callsign (with SSID 1) for node without Echolink
+.TP
+.B LOGIN_CALLSIGN
+Specify the callsign to use to log in to the APRS-IS network. The login
+callsign must comply with the APRS-IS specification found at
+https://www.aprs-is.net/connecting.aspx. If this configuration variable is not
+specified, the callsign will be extracted from the CALLSIGN config variable.
+Any EL- or ER- prefix will be stripped off.
+
+Example:
+.br
+LOGIN_CALLSIGN=DB0ABC-70
 .TP
 .B FREQUENCY
 The tx-frequency of the link/repeater in MHz. For repeaters, information about
@@ -2814,7 +2825,7 @@ For a simplex node it's most often 0. The limits for the offset is
 [-9990,+9990] kHz. If not specified it will be set to 0.
 
 Note that when the APRS packet is transmitted the value is expressed in tens of
-kHz. So if the configuration parameter if set to -600 kHz, it will be sent as
+kHz. So if the configuration parameter is set to -600 kHz, it will be sent as
 -060.
 .TP
 .B TX_POWER
@@ -2857,14 +2868,17 @@ ANTENNA_DIR=-1        # an omni directional antenna is used
 ANTENNA_DIR=128       # main beam direction is 128 degrees
 .TP
 .B PATH
-The PATH variable controls the way of forwarding your beacon inside the APRS
-network if it is gated by a local APRS digipeater. In some cases it has to be
-changed according to local requirements. Please contact your local APRS sysop
-for further information. Changes should be made only according to the NEWn-N
-paradigm. Leave this variable untouched if you are unsure of its setting.
-No spaces or control characters are allowed. PATH has no influence on the
-propagation on non-RF networks. Default is empty which should be a good setting
-in most cases.
+When connecting to APRS-IS, this configuration variable is best left commented
+out so that the default is used (TCPIP*). Only the qAR and qAO constructs may
+be added to the path.  Do not change it unless you really know what you are
+doing.
+
+If you don't connect to APRS-IS you may be able to use this config variable to
+control the way the forwarding of your packets inside the RF APRS network is
+done. In some cases it has to be changed according to local requirements.
+Please contact your local APRS sysop for further information. Changes should be
+made only according to the NEWn-N paradigm. Set it to WIDE1-1 if you are unsure
+of its setting.
 
 Examples:
 .br

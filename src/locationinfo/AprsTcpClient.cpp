@@ -358,6 +358,16 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(std::string aprsmsg)
 {
+  const size_t max_packet_size = 512;
+  if (aprsmsg.size() >= max_packet_size-2)
+  {
+    std::cerr << "*** WARNING: APRS packet too long (>= "
+              << max_packet_size << " bytes): "
+              << aprsmsg
+              << std::endl;
+    return;
+  }
+
   if (loc_cfg.debug)
   {
     std::cout << "APRS: " << aprsmsg << std::endl;
@@ -385,9 +395,11 @@ void AprsTcpClient::sendMsg(std::string aprsmsg)
 
 void AprsTcpClient::aprsLogin(void)
 {
+  const auto& logincall = loc_cfg.logincall;
+  const auto& loginssid = loc_cfg.loginssid;
   std::ostringstream loginmsg;
-  loginmsg << "user " << loc_cfg.mycall
-           << " pass " << getPasswd(loc_cfg.mycall)
+  loginmsg << "user " << (logincall + loginssid)
+           << " pass " << getPasswd(logincall)
            << " vers SvxLink " << SVXLINK_VERSION;
   if (!loc_cfg.filter.empty())
   {
