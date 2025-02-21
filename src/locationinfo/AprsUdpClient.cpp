@@ -93,37 +93,38 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
-int AprsUdpClient::getPowerParam(unsigned int power)
+char AprsUdpClient::getPowerParam(unsigned int power)
 {
-  return lrintf(sqrtf(power));
+  return '0' + std::min(lrintf(sqrtf(power)), 9L);
 } /* AprsUdpClient::getPowerParam */
 
 
-int AprsUdpClient::getHeightParam(unsigned int height)
+char AprsUdpClient::getHeightParam(unsigned int height)
 {
-  return lrintf(logf(height / 10.0f) / logf(2.0f));
+  return '0' + lrintf(logf(height / 10.0f) / logf(2.0f));
 } /* AprsUdpClient::getHeightParam */
 
 
-int AprsUdpClient::getGainParam(unsigned int gain)
+char AprsUdpClient::getGainParam(unsigned int gain)
 {
-  return (gain < 10) ? gain : 9;
+  return '0' + ((gain < 10) ? gain : 9);
 } /* AprsUdpClient::getGainParam */
 
 
-int AprsUdpClient::getDirectionParam(int beam_dir)
+char AprsUdpClient::getDirectionParam(int beam_dir)
 {
-  if (beam_dir == 0 || beam_dir > 360)
-  {
-    return 8;
-  }
-
   if (beam_dir < 0)
   {
-    return 0;
+    return '0';
   }
 
-  return lrintf(beam_dir / 45.0f);
+  auto param = lrintf((beam_dir % 360) / 45.0f);
+  if (param == 0)
+  {
+    return '8';
+  }
+
+  return '0' + param;
 } /* AprsUdpClient::getDirectionParam */
 
 
@@ -371,10 +372,12 @@ int AprsUdpClient::buildSdesPacket(char *p)
   addText(ap, tmp);
 
   *ap++ = RTCP_SDES_LOC;
-  sprintf(tmp, ")EL-%.6s!%s0PHG%d%d%d%d/%06d/%03d%6s%02d%02d\r\n",
+  sprintf(tmp, ")EL-%.6s!%s0PHG%c%c%c%c/%06d/%03d%6s%02d%02d\r\n",
                loc_cfg.mycall.c_str(), pos,
-               getPowerParam(loc_cfg.power), getHeightParam(loc_cfg.height),
-               getGainParam(loc_cfg.gain), getDirectionParam(loc_cfg.beam_dir),
+               getPowerParam(loc_cfg.power),
+               getHeightParam(loc_cfg.height),
+               getGainParam(loc_cfg.gain),
+               getDirectionParam(loc_cfg.beam_dir),
                loc_cfg.frequency, getToneParam(),
                info, utc.tm_hour, utc.tm_min);
   addText(ap, tmp);
