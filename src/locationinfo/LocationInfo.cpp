@@ -152,7 +152,7 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.mycall);
   std::string logincall;
   const std::regex el_call_re("(E[LR]-)([0-9A-Z]{4,6})");
-  const std::regex call_re("([0-9A-Z]{4,6})(?:-(?:[1-9]|1[0-5]))?");
+  const std::regex call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
   std::smatch m;
   if (std::regex_match(loc_cfg.mycall, m, el_call_re))
   {
@@ -163,7 +163,7 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   else if (std::regex_match(loc_cfg.mycall, m, call_re))
   {
     loc_cfg.mycall = m[0];
-    logincall = m[1];
+    logincall = m[1].str() + m[2].str();
   }
   else
   {
@@ -177,9 +177,9 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   }
 
   cfg.getValue(cfg_name, "LOGIN_CALLSIGN", logincall);
-  const std::regex login_call_re("([A-Za-z0-9]{3,9})(?:-([A-Za-z0-9]{1,2}))?");
+  const std::regex login_call_re("([A-Za-z0-9]{3,9})(-[A-Za-z0-9]{1,2})?");
   if (!std::regex_match(logincall, m, login_call_re) ||
-      (logincall.size() > 9) || (m[2] == "0"))
+      (logincall.size() > 9) || (m[2] == "-0"))
   {
     std::cerr << "*** ERROR: The APRS-IS login callsign '"
               << logincall << "' is invalid"
