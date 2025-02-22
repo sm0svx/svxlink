@@ -115,10 +115,10 @@ namespace EchoLink
 class AprsUdpClient : public AprsClient, public sigc::trackable
 {
   public:
-    static int getPowerParam(unsigned int power);
-    static int getHeightParam(unsigned int height);
-    static int getGainParam(unsigned int gain);
-    static int getDirectionParam(int beam_dir);
+    static char getPowerParam(unsigned int power);
+    static char getHeightParam(unsigned int height);
+    static char getGainParam(unsigned int gain);
+    static char getDirectionParam(int beam_dir);
     static std::string phgStr(unsigned int power, unsigned int height,
                               unsigned int gain, int beam_dir);
 

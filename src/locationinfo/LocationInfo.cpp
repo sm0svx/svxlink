@@ -150,21 +150,24 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   auto& loc_cfg = LocationInfo::_instance->loc_cfg;
 
   cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.mycall);
+  std::string logincall;
   const std::regex el_call_re("(E[LR]-)([0-9A-Z]{4,6})");
-  const std::regex call_re("[0-9A-Z]{4,6}(?:-(?:[1-9]|1[0-5]))?");
+  const std::regex call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
   std::smatch m;
   if (std::regex_match(loc_cfg.mycall, m, el_call_re))
   {
     loc_cfg.prefix = m[1];
     loc_cfg.mycall = m[2];
+    logincall = loc_cfg.mycall;
   }
   else if (std::regex_match(loc_cfg.mycall, m, call_re))
   {
     loc_cfg.mycall = m[0];
+    logincall = m[1].str() + m[2].str();
   }
   else
   {
-    std::cerr << "*** ERROR: variable " << cfg_name << "/CALLSIGN is malformed."
+    std::cerr << "*** ERROR: Variable " << cfg_name << "/CALLSIGN is malformed."
               << " Either it must have a prefix (ER- or EL-) to indicate that "
                  "is an Echolink station or it need to be a valid AX.25 "
                  "callsign.\n"
@@ -172,6 +175,22 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
               << std::endl;
     return false;
   }
+
+  cfg.getValue(cfg_name, "LOGIN_CALLSIGN", logincall);
+  const std::regex login_call_re("([A-Za-z0-9]{3,9})(-[A-Za-z0-9]{1,2})?");
+  if (!std::regex_match(logincall, m, login_call_re) ||
+      (logincall.size() > 9) || (m[2] == "-0"))
+  {
+    std::cerr << "*** ERROR: The APRS-IS login callsign '"
+              << logincall << "' is invalid"
+              << std::endl;
+    return false;
+  }
+  loc_cfg.logincall = m[1];
+  loc_cfg.loginssid = m[2];
+  //std::cout << "### logincall=" << loc_cfg.logincall
+  //          << "  loginssid=" << loc_cfg.loginssid
+  //          << std::endl;
 
   cfg.getValue(cfg_name, "COMMENT", loc_cfg.comment);
   if (loc_cfg.comment.size() > 36)

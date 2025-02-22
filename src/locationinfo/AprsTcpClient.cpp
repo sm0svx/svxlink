@@ -358,6 +358,16 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(std::string aprsmsg)
 {
+  const size_t max_packet_size = 512;
+  if (aprsmsg.size() >= max_packet_size-2)
+  {
+    std::cerr << "*** WARNING: APRS packet too long (>= "
+              << max_packet_size << " bytes): "
+              << aprsmsg
+              << std::endl;
+    return;
+  }
+
   if (loc_cfg.debug)
   {
     std::cout << "APRS: " << aprsmsg << std::endl;
@@ -385,9 +395,11 @@ void AprsTcpClient::sendMsg(std::string aprsmsg)
 
 void AprsTcpClient::aprsLogin(void)
 {
+  const auto& logincall = loc_cfg.logincall;
+  const auto& loginssid = loc_cfg.loginssid;
   std::ostringstream loginmsg;
-  loginmsg << "user " << loc_cfg.mycall
-           << " pass " << getPasswd(loc_cfg.mycall)
+  loginmsg << "user " << (logincall + loginssid)
+           << " pass " << getPasswd(logincall)
            << " vers SvxLink " << SVXLINK_VERSION;
   if (!loc_cfg.filter.empty())
   {
@@ -460,7 +472,8 @@ void AprsTcpClient::decodeAprsPacket(std::string frame)
 
   std::smatch m;
 
-  const std::regex msg_addr("([^>]{1,9})>([^:]{1,9})((?:,[^:]{1,9})*):(.*)");
+    // Ex: "ISS>APWW11,KJ4ERJ-15*,TCPIP*,qAS,KJ4ERJ-15:"
+  const std::regex msg_addr("([^>]{1,9})>([^:,]{1,9})((?:,[^:,]{1,10})*):(.*)");
   if (!std::regex_match(frame, m, msg_addr) && (m.size() != 5))
   {
     return;
@@ -475,7 +488,8 @@ void AprsTcpClient::decodeAprsPacket(std::string frame)
   //          << " aprs_msg='" << aprs_msg << "'"
   //          << std::endl;
 
-  const std::regex msg_re(":(.{9}):([^|~{]{0,67})(?:\\{(\\d{1,5}))?");
+    // Ex: ":SM0SVX   :AOS 4h41m (20 0226z) SE^4{RT}"
+  const std::regex msg_re(":(.{9}):([^|~{]{0,67})(?:\\{(.{1,5}))?");
   if (std::regex_match(aprs_msg, m, msg_re) && (m.size() >= 3))
   {
     std::string addressee = m[1];
