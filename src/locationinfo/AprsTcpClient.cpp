@@ -329,7 +329,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
            << timeStr()
            << posStr()
            << phgStr()
-           << std::fixed << std::setw(7) << std::setfill('0')
+           << "/" << std::fixed << std::setw(7) << std::setfill('0')
               << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
            << " " << tone
            << " " << std::showpos << std::setw(4) << std::internal
@@ -345,7 +345,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
          << "="
          << posStr(loc_cfg.symbol)
          << phgStr()
-         << std::fixed << std::setw(7) << std::setfill('0')
+         << "/" << std::fixed << std::setw(7) << std::setfill('0')
             << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
          << " " << tone
          << " " << std::showpos << std::setw(4) << std::internal

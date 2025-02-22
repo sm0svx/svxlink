@@ -305,17 +305,17 @@ bool LocationInfo::getTransmitting(const std::string &name)
 void LocationInfo::setTransmitting(const std::string &name, struct timeval tv,
                                    bool is_transmitting)
 {
-  aprs_stats[name].tx_on = is_transmitting;
+  AprsStatistics& stats = aprs_stats[name];
+  stats.tx_on = is_transmitting;
   if (is_transmitting)
   {
-    aprs_stats[name].tx_on_nr++;
-    aprs_stats[name].last_tx_sec = tv;
+    stats.tx_on_nr++;
+    stats.last_tx_sec = tv;
   }
   else
   {
-    aprs_stats[name].tx_sec +=
-      tv.tv_sec - aprs_stats[name].last_tx_sec.tv_sec +
-      (tv.tv_usec - aprs_stats[name].last_tx_sec.tv_usec) / 1000000.0f;
+    stats.tx_sec += tv.tv_sec - stats.last_tx_sec.tv_sec +
+                    (tv.tv_usec - stats.last_tx_sec.tv_usec) / 1000000.0f;
   }
 } /* LocationInfo::setTransmitting */
 
@@ -323,17 +323,17 @@ void LocationInfo::setTransmitting(const std::string &name, struct timeval tv,
 void LocationInfo::setReceiving(const std::string &name, struct timeval tv,
                                 bool is_receiving)
 {
-  aprs_stats[name].squelch_on = is_receiving;
+  AprsStatistics& stats = aprs_stats[name];
+  stats.squelch_on = is_receiving;
   if (is_receiving)
   {
-    aprs_stats[name].rx_on_nr += 1;
-    aprs_stats[name].last_rx_sec = tv;
+    stats.rx_on_nr += 1;
+    stats.last_rx_sec = tv;
   }
   else
   {
-    aprs_stats[name].rx_sec +=
-      tv.tv_sec - aprs_stats[name].last_rx_sec.tv_sec +
-      (tv.tv_usec - aprs_stats[name].last_rx_sec.tv_usec) / 1000000.0f;
+    stats.rx_sec += tv.tv_sec - stats.last_rx_sec.tv_sec +
+                    (tv.tv_usec - stats.last_rx_sec.tv_usec) / 1000000.0f;
   }
 } /* LocationInfo::setReceiving */
 
@@ -791,14 +791,12 @@ void LocationInfo::sendAprsStatistics(void)
 
     if (stats.squelch_on)
     {
-      stats.rx_on_nr = 1;
-      stats.last_rx_sec = now;
+      setReceiving(logic_name, now, true);
     }
 
     if (stats.tx_on)
     {
-      stats.tx_on_nr = 1;
-      stats.last_tx_sec = now;
+      setTransmitting(logic_name, now, true);
     }
 
     if (++sequence > 999)
