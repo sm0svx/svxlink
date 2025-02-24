@@ -36,9 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
-#include <vector>
 #include <list>
-#include <sys/time.h>
+#include <chrono>
 
 
 /****************************************************************************
@@ -111,23 +110,8 @@ class AprsClient;
 class LocationInfo
 {
   public:
-    static LocationInfo* instance()
-    {
-       if (!_instance)
-        return NULL; // illegal pointer, if not initialized
-       return _instance;
-    }
-
-    static bool has_instance()
-    {
-        return _instance;
-    }
-
-    static void deleteInstance(void)
-    {
-      delete _instance;
-      _instance = 0;
-    }
+    using Clock     = std::chrono::steady_clock;
+    using Timepoint = Clock::time_point;
 
     struct Coordinate
     {
@@ -136,36 +120,6 @@ class LocationInfo
       unsigned int  sec {0};
       char          dir {'N'};
     };
-
-    LocationInfo(void);
-    LocationInfo(const LocationInfo&) = delete;
-
-    std::string getCallsign();
-
-    struct AprsStatistics
-    {
-      unsigned    rx_on_nr        {0};
-      unsigned    tx_on_nr        {0};
-      float       rx_sec          {0.0f};
-      float       tx_sec          {0.0f};
-      struct timeval last_rx_sec  {0, 0};
-      struct timeval last_tx_sec  {0, 0};
-      bool        tx_on           {false};
-      bool        squelch_on      {false};
-
-      void reset(void)
-      {
-        rx_on_nr = 0;
-        tx_on_nr = 0;
-        rx_sec = 0.0f;
-        tx_sec = 0.0f;
-        last_rx_sec = {0, 0};
-        last_tx_sec = {0, 0};
-      }
-    };
-
-    using aprs_struct = std::map<std::string, AprsStatistics>;
-    aprs_struct aprs_stats;
 
     struct Cfg
     {
@@ -196,24 +150,64 @@ class LocationInfo
       bool        narrow        {false};
     };
 
+    static LocationInfo* instance(void)
+    {
+      return _instance;
+    }
+
+    static bool has_instance(void)
+    {
+      return _instance != nullptr;
+    }
+
+    static void deleteInstance(void)
+    {
+      delete _instance;
+      _instance = 0;
+    }
+
     static bool initialize(Async::Config& cfg, const std::string& cfg_name);
+
+    LocationInfo(void);
+    LocationInfo(const LocationInfo&) = delete;
 
     void updateDirectoryStatus(EchoLink::StationData::Status new_status);
     void igateMessage(const std::string& info);
     void update3rdState(const std::string& call, const std::string& info);
     void updateQsoStatus(int action, const std::string& call,
                          const std::string& name,
-			 std::list<std::string>& call_list);
+                         std::list<std::string>& call_list);
     bool getTransmitting(const std::string &name);
-    void setTransmitting(const std::string &name, struct timeval tv,
-                         bool is_transmitting);
-    void setReceiving(const std::string &name, struct timeval tv,
-                      bool is_receiving);
+    void setTransmitting(const std::string& name, bool is_transmitting,
+                         Timepoint tp=Clock::now());
+    void setReceiving(const std::string& name, bool is_receiving,
+                      const Timepoint& tp=Clock::now());
 
   private:
     static LocationInfo* _instance;
 
-    typedef std::list<AprsClient*> ClientList;
+    using ClientList = std::list<AprsClient*>;
+    using Duration  = std::chrono::duration<double>;
+    struct AprsStatistics
+    {
+      unsigned    rx_on_nr        {0};
+      unsigned    tx_on_nr        {0};
+      Duration    rx_sec          {0};
+      Duration    tx_sec          {0};
+      Timepoint   last_rx_tp;
+      Timepoint   last_tx_tp;
+      bool        is_transmitting {false};
+      bool        is_receiving    {false};
+
+      void reset(void)
+      {
+        rx_on_nr = 0;
+        tx_on_nr = 0;
+        rx_sec = Duration::zero();
+        tx_sec = Duration::zero();
+      }
+    };
+    using AprsStatsMap = std::map<std::string, AprsStatistics>;
 
     Cfg           loc_cfg; // weshalb?
     ClientList    clients;
@@ -221,7 +215,9 @@ class LocationInfo
     Async::Timer  aprs_stats_timer  {-1, Async::Timer::TYPE_PERIODIC};
     unsigned int  sinterval         {10}; // Minutes
     std::string   slogic;
-    time_t        last_tlm_metadata {0};
+    Timepoint     last_tlm_metadata {-std::chrono::hours(1)};
+    AprsStatsMap  aprs_stats;
+
 
     bool parsePosition(const Async::Config &cfg, const std::string &name);
     bool parseLatitude(Coordinate &pos, const std::string &value);
@@ -237,6 +233,7 @@ class LocationInfo
     void sendAprsStatistics(void);
     void initExtPty(std::string ptydevice);
     void mesReceived(std::string message);
+    AprsStatistics& aprsStats(const std::string& logic_name);
 
 };  /* class LocationInfo */
 
