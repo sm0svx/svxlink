@@ -679,7 +679,12 @@ void LocationInfo::sendAprsStatistics(void)
 
     // FROM>APSVXn,VIA1,VIA2,VIAn:
   std::ostringstream addr;
-  addr << loc_cfg.mycall << ">" << loc_cfg.destination << ":";
+  addr << loc_cfg.mycall << ">" << loc_cfg.destination;
+  if (!loc_cfg.path.empty())
+  {
+    addr << "," << loc_cfg.path;
+  }
+  addr << ":";
 
     // :ADDRESSEE:
   std::ostringstream addressee;
