@@ -149,7 +149,7 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
 
   cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.mycall);
   std::string logincall;
-  const std::regex el_call_re("(E[LR]-)([0-9A-Z]{4,6})");
+  const std::regex el_call_re("E([LR])-([0-9A-Z]{4,6})");
   const std::regex call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
   std::smatch m;
   if (std::regex_match(loc_cfg.mycall, m, el_call_re))
@@ -688,7 +688,7 @@ void LocationInfo::sendAprsStatistics(void)
 
     // :ADDRESSEE:
   std::ostringstream addressee;
-  addressee << ":" // << loc_cfg.prefix
+  addressee << ":" // << "E" << loc_cfg.prefix << "-"
             << std::left << std::setw(9) << loc_cfg.mycall << ":";
 
   const auto now = Clock::now();

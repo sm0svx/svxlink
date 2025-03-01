@@ -221,7 +221,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
     // ;EL-242660*111111z4900.05NE00823.29E0QSO status message
   std::ostringstream objmsg;
   objmsg << addrStr()
-         << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
+         << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
          << "111111z"
          << posStr()
          << msg
@@ -229,7 +229,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
-  std::string status = loc_cfg.prefix + addrStr() + ":>";
+  std::string status = prefixStr() + addrStr() + ">";
   for (const auto& call : call_list)
   {
     status += call + " ";
@@ -404,6 +404,12 @@ std::string AprsTcpClient::rangeStr(void)
 } /* AprsTcpClient::rangeStr */
 
 
+std::string AprsTcpClient::prefixStr(void) const
+{
+  return std::string("E") + loc_cfg.prefix + "-";
+} /* AprsTcpClient::prefixStr */
+
+
 std::string AprsTcpClient::addresseeStr(const std::string& call)
 {
   std::ostringstream addressee;
@@ -428,7 +434,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
       // Object message for Echolink
     std::ostringstream objmsg;
     objmsg << addrStr()
-           << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
+           << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
            << "111111z"
            << posStr()
            << phgStr()
