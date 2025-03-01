@@ -295,19 +295,15 @@ std::string AprsTcpClient::phgStr(void)
 } /* AprsTcpClient::phgStr */
 
 
-std::string AprsTcpClient::addresseeStr(const std::string& call)
-{
-  std::ostringstream addressee;
-  addressee << std::left << std::setw(9) << call;
-  return addressee.str();
-} /* AprsTcpClient::addresseeStr */
-
-
-void AprsTcpClient::sendAprsBeacon(Timer *t)
+std::string AprsTcpClient::toneStr(void)
 {
     // CTCSS/1750Hz tone
   char tone[5];
-  if (loc_cfg.tone < 1000)
+  if ((loc_cfg.tone == 0) || (loc_cfg.tone > 9999))
+  {
+    sprintf(tone, "%coff", (loc_cfg.narrow ? 't' : 'T'));
+  }
+  else if (loc_cfg.tone < 1000)
   {
     sprintf(tone, "%c%03d", (loc_cfg.narrow ? 't' : 'T'), loc_cfg.tone);
   }
@@ -319,7 +315,20 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   {
     sprintf(tone, "%04d", loc_cfg.tone);
   }
+  return tone;
+} /* AprsTcpClient::toneStr */
 
+
+std::string AprsTcpClient::addresseeStr(const std::string& call)
+{
+  std::ostringstream addressee;
+  addressee << std::left << std::setw(9) << call;
+  return addressee.str();
+} /* AprsTcpClient::addresseeStr */
+
+
+void AprsTcpClient::sendAprsBeacon(Timer *t)
+{
   if (!loc_cfg.prefix.empty())
   {
       // Object message for Echolink
@@ -331,7 +340,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
            << phgStr()
            << "/" << std::fixed << std::setw(7) << std::setfill('0')
               << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
-           << " " << tone
+           << " " << toneStr()
            << " " << std::showpos << std::setw(4) << std::internal
               << (loc_cfg.tx_offset_khz / 10)
            << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
@@ -347,7 +356,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
          << phgStr()
          << "/" << std::fixed << std::setw(7) << std::setfill('0')
             << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
-         << " " << tone
+         << " " << toneStr()
          << " " << std::showpos << std::setw(4) << std::internal
             << (loc_cfg.tx_offset_khz / 10)
          << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit

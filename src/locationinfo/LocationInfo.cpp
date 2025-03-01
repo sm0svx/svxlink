@@ -499,7 +499,7 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg,
     success = false;
   }
 
-  if (!cfg.getValue(name, "TONE", loc_cfg.tone, true))
+  if (!cfg.getValue(name, "TONE", 0U, 9999U, loc_cfg.tone, true))
   {
     print_error(name, "TONE", cfg.getValue(name, "TONE"), "TONE=0");
     success = false;
