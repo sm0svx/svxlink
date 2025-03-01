@@ -222,7 +222,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   std::ostringstream objmsg;
   objmsg << addrStr()
          << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
-         << timeStr()
+         << "111111z"
          << posStr()
          << msg
          ;
@@ -429,7 +429,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
     std::ostringstream objmsg;
     objmsg << addrStr()
            << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
-           << timeStr()
+           << "111111z"
            << posStr()
            << phgStr()
            << "/" << frequencyStr()
