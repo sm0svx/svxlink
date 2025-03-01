@@ -447,10 +447,10 @@ bool LocationInfo::parseLongitude(Coordinate &pos, const std::string& value)
 bool LocationInfo::parseStationHW(const Async::Config &cfg,
                                   const std::string& name)
 {
-  float frequency = 0;
   bool success = true;
 
-  if (!cfg.getValue(name, "FREQUENCY", frequency))
+  double frequency = 0.0;
+  if (!cfg.getValue(name, "FREQUENCY", 0.001, 999.999, frequency))
   {
     print_error(name, "FREQUENCY", cfg.getValue(name, "FREQUENCY"),
                 "FREQUENCY=438.875");
@@ -458,7 +458,7 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg,
   }
   else
   {
-    loc_cfg.frequency = lrintf(1000.0 * frequency);
+    loc_cfg.frequency = lrint(1000.0 * frequency);
   }
 
   if (!cfg.getValue(name, "TX_OFFSET", -9990, 9990, loc_cfg.tx_offset_khz, true))

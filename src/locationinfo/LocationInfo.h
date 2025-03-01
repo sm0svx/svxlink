@@ -146,7 +146,7 @@ class LocationInfo
       bool        debug         {false};
       std::string filter;
       std::string symbol        {"S0"};
-      int         tx_offset_khz {0};
+      int         tx_offset_khz {10000};
       bool        narrow        {false};
     };
 
