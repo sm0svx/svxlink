@@ -450,7 +450,7 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg,
   bool success = true;
 
   double frequency = 0.0;
-  if (!cfg.getValue(name, "FREQUENCY", 0.001, 999.999, frequency))
+  if (!cfg.getValue(name, "FREQUENCY", 0.001, 24299.999, frequency))
   {
     print_error(name, "FREQUENCY", cfg.getValue(name, "FREQUENCY"),
                 "FREQUENCY=438.875");
