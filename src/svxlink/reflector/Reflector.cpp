@@ -366,6 +366,8 @@ bool Reflector::initialize(Async::Config &cfg)
         mem_fun(*this, &Reflector::ctrlPtyDataReceived));
   }
 
+  m_cfg->getValue("GLOBAL", "ACCEPT_CERT_EMAIL", m_accept_cert_email);
+
   m_cfg->valueUpdated.connect(sigc::mem_fun(*this, &Reflector::cfgUpdated));
 
   return true;
@@ -667,6 +669,61 @@ bool Reflector::callsignOk(const std::string& callsign) const
 
   return true;
 } /* Reflector::callsignOk */
+
+
+bool Reflector::emailOk(const std::string& email) const
+{
+  if (m_accept_cert_email.empty())
+  {
+    return true;
+  }
+  return std::regex_match(email, std::regex(m_accept_cert_email));
+} /* Reflector::emailOk */
+
+
+bool Reflector::reqEmailOk(const Async::SslCertSigningReq& req) const
+{
+  if (req.isNull())
+  {
+    return false;
+  }
+
+  const auto san = req.extensions().subjectAltName();
+  if (san.isNull())
+  {
+    return emailOk("");
+  }
+
+  size_t email_cnt = 0;
+  bool email_ok = true;
+  san.forEach(
+      [&](int type, std::string value)
+      {
+        if (type == GEN_EMAIL)
+        {
+          email_cnt += 1;
+          email_ok &= emailOk(value);
+        }
+      });
+  email_ok &= (email_cnt > 0) || emailOk("");
+  return email_ok;
+} /* Reflector::reqEmailOk */
+
+
+std::string Reflector::checkCsr(const Async::SslCertSigningReq& req)
+{
+  if (!callsignOk(req.commonName()))
+  {
+    return std::string(
+        "Certificate signing request with invalid callsign: '");
+  }
+  if (!reqEmailOk(req))
+  {
+    return std::string(
+        "Certificate signing request with invalid CERT_EMAIL");
+  }
+  return "";
+} /* Reflector::checkCsr */
 
 
 Async::SslX509 Reflector::csrReceived(Async::SslCertSigningReq& req)

@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <unistd.h>
-//#include <openssl/x509.h>
-//#include <openssl/x509v3.h>
 
 #include <sstream>
 #include <iostream>
@@ -108,31 +106,6 @@ using namespace Async;
  ****************************************************************************/
 
 namespace {
-  //void splitFilename(const std::string& filename, std::string& dirname,
-  //    std::string& basename)
-  //{
-  //  std::string ext;
-  //  basename = filename;
-
-  //  size_t basenamepos = filename.find_last_of('/');
-  //  if (basenamepos != string::npos)
-  //  {
-  //    if (basenamepos + 1 < filename.size())
-  //    {
-  //      basename = filename.substr(basenamepos + 1);
-  //    }
-  //    dirname = filename.substr(0, basenamepos + 1);
-  //  }
-
-  //  size_t extpos = basename.find_last_of('.');
-  //  if (extpos != string::npos)
-  //  {
-  //    if (extpos+1 < basename.size())
-  //    ext = basename.substr(extpos+1);
-  //    basename.erase(extpos);
-  //  }
-  //}
-
   template <class T>
   void hexdump(const T& d)
   {
@@ -1209,12 +1182,13 @@ void ReflectorLogic::handleMsgError(std::istream& is)
   MsgError msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthError" << endl;
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgAuthError"
+              << std::endl;
     disconnect();
     return;
   }
-  cout << name() << ": Error message received from server: " << msg.message()
-       << endl;
+  std::cerr << "*** ERROR[" << name() << "]: Server error: " << msg.message()
+       << std::endl;
   disconnect();
 } /* ReflectorLogic::handleMsgError */
 
