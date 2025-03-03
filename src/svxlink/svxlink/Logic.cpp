@@ -656,10 +656,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 
   if (LocationInfo::has_instance())
   {
-     LocationInfo::AprsStatistics lis;
-     LocationInfo::instance()->aprs_stats.insert(
-         pair<string,LocationInfo::AprsStatistics>(name(), lis));
-     LocationInfo::instance()->aprs_stats[name()].reset();
+      // Ensure that statistics for this logic core get created
+    (void)LocationInfo::instance()->getTransmitting(name());
   }
 
   every_minute_timer.setExpireOffset(100);
@@ -1079,9 +1077,7 @@ void Logic::squelchOpen(bool is_open)
 
   if (LocationInfo::has_instance())
   {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    LocationInfo::instance()->setReceiving(name(), tv, is_open);
+    LocationInfo::instance()->setReceiving(name(), is_open);
   }
 
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
@@ -1105,9 +1101,7 @@ void Logic::transmitterStateChange(bool is_transmitting)
   if (LocationInfo::has_instance() &&
       (LocationInfo::instance()->getTransmitting(name()) != is_transmitting))
   {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    LocationInfo::instance()->setTransmitting(name(), tv, is_transmitting);
+    LocationInfo::instance()->setTransmitting(name(), is_transmitting);
   }
 
   stringstream ss;

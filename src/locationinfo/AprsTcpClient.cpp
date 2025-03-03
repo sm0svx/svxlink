@@ -112,6 +112,42 @@ using namespace SvxLink;
 
 #define HASH_KEY	0x73e2 			// This is the seed for the key
 
+namespace {
+    // Extended frequency mapping according to UNOFFICIAL APRS Protocol
+    // Reference 1.2 Chapter 18.
+    // A96.000MHz would be 1296 MHz
+    // B20.000MHz would be 2320 MHz
+    // C01.000MHz would be 2401 MHz
+    // D01.000MHz would be 3401 MHz
+    // E51.000MHz would be 5651 MHz
+    // F60.000MHz would be 5760 MHz
+    // G30.000MHz would be 5830 MHz
+    // H01.000MHz would be 10,101 MHz
+    // I01.000MHz would be 10,201 MHz
+    // J68.000MHz would be 10,368 MHz
+    // K01.000MHz would be 10,401 MHz
+    // L01.000MHz would be 10,501 MHz
+    // M48.000MHz would be 24,048 MHz
+    // N01.000MHz would be 24,101 MHz
+    // O01.000MHz would be 24,201 MHz
+  const std::map<unsigned, char> freq_map{
+    {12, 'A'},
+    {23, 'B'},
+    {24, 'C'},
+    {34, 'D'},
+    {56, 'E'},
+    {57, 'F'},
+    {58, 'G'},
+    {101, 'H'},
+    {102, 'I'},
+    {103, 'J'},
+    {104, 'K'},
+    {105, 'L'},
+    {240, 'M'},
+    {241, 'N'},
+    {242, 'O'}
+  };
+};
 
 /****************************************************************************
  *
@@ -185,15 +221,15 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
     // ;EL-242660*111111z4900.05NE00823.29E0QSO status message
   std::ostringstream objmsg;
   objmsg << addrStr()
-         << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
-         << timeStr()
+         << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
+         << "111111z"
          << posStr()
          << msg
          ;
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
-  std::string status = loc_cfg.prefix + addrStr() + ":>";
+  std::string status = prefixStr() + addrStr() + ">";
   for (const auto& call : call_list)
   {
     status += call + " ";
@@ -295,19 +331,15 @@ std::string AprsTcpClient::phgStr(void)
 } /* AprsTcpClient::phgStr */
 
 
-std::string AprsTcpClient::addresseeStr(const std::string& call)
-{
-  std::ostringstream addressee;
-  addressee << std::left << std::setw(9) << call;
-  return addressee.str();
-} /* AprsTcpClient::addresseeStr */
-
-
-void AprsTcpClient::sendAprsBeacon(Timer *t)
+std::string AprsTcpClient::toneStr(void)
 {
     // CTCSS/1750Hz tone
   char tone[5];
-  if (loc_cfg.tone < 1000)
+  if ((loc_cfg.tone == 0) || (loc_cfg.tone > 9999))
+  {
+    sprintf(tone, "%coff", (loc_cfg.narrow ? 't' : 'T'));
+  }
+  else if (loc_cfg.tone < 1000)
   {
     sprintf(tone, "%c%03d", (loc_cfg.narrow ? 't' : 'T'), loc_cfg.tone);
   }
@@ -319,23 +351,98 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   {
     sprintf(tone, "%04d", loc_cfg.tone);
   }
+  return tone;
+} /* AprsTcpClient::toneStr */
+
+
+std::string AprsTcpClient::txOffsetStr(void)
+{
+  std::ostringstream offset;
+  if (std::abs(loc_cfg.tx_offset_khz) <= 9990)
+  {
+    offset << std::showpos << std::setw(4) << std::internal
+           << (loc_cfg.tx_offset_khz / 10);
+  }
+  return offset.str();
+} /* AprsTcpClient::txOffsetStr */
+
+
+std::string AprsTcpClient::frequencyStr(void)
+{
+  std::ostringstream fq;
+  unsigned freq_khz = loc_cfg.frequency;
+  const unsigned mhz100 = freq_khz / 100000;
+  if (mhz100 > 9)
+  {
+    auto it = freq_map.find(mhz100);
+    if (it != freq_map.end())
+    {
+      fq << it->second;
+    }
+    else
+    {
+      freq_khz = 0;
+      fq << "0";
+    }
+  }
+  else
+  {
+    fq << mhz100;
+  }
+  fq << std::fixed << std::setw(6) << std::setfill('0') << std::setprecision(3)
+     << ((freq_khz % 100000) / 1000.0)
+     << "MHz";
+  return fq.str();
+} /* AprsTcpClient::frequencyStr */
+
+
+std::string AprsTcpClient::rangeStr(void)
+{
+  std::ostringstream range;
+  range << "R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit;
+  return range.str();
+} /* AprsTcpClient::rangeStr */
+
+
+std::string AprsTcpClient::prefixStr(void) const
+{
+  return std::string("E") + loc_cfg.prefix + "-";
+} /* AprsTcpClient::prefixStr */
+
+
+std::string AprsTcpClient::addresseeStr(const std::string& call)
+{
+  std::ostringstream addressee;
+  addressee << std::left << std::setw(9) << call;
+  return addressee.str();
+} /* AprsTcpClient::addresseeStr */
+
+
+std::string AprsTcpClient::prependSpaceIfNotEmpty(const std::string& str)
+{
+  return (str.empty() ? std::string() : std::string(" ").append(str));
+} /* AprsTcpClient::prependSpaceIfNotEmpty */
+
+
+void AprsTcpClient::sendAprsBeacon(Timer *t)
+{
+  const std::string tx_offset_str = prependSpaceIfNotEmpty(txOffsetStr());
+  const std::string comment_str = prependSpaceIfNotEmpty(loc_cfg.comment);
 
   if (!loc_cfg.prefix.empty())
   {
       // Object message for Echolink
     std::ostringstream objmsg;
     objmsg << addrStr()
-           << ";" << addresseeStr(loc_cfg.prefix + loc_cfg.mycall) << "*"
-           << timeStr()
+           << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
+           << "111111z"
            << posStr()
            << phgStr()
-           << "/" << std::fixed << std::setw(7) << std::setfill('0')
-              << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
-           << " " << tone
-           << " " << std::showpos << std::setw(4) << std::internal
-              << (loc_cfg.tx_offset_khz / 10)
-           << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
-           << " " << loc_cfg.comment;
+           << "/" << frequencyStr()
+           << " " << toneStr()
+           << tx_offset_str
+           << " " << rangeStr()
+           << comment_str;
     sendMsg(objmsg.str());
   }
 
@@ -345,13 +452,11 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
          << "="
          << posStr(loc_cfg.symbol)
          << phgStr()
-         << "/" << std::fixed << std::setw(7) << std::setfill('0')
-            << std::setprecision(3) << (loc_cfg.frequency / 1000.0f) << "MHz"
-         << " " << tone
-         << " " << std::showpos << std::setw(4) << std::internal
-            << (loc_cfg.tx_offset_khz / 10)
-         << " R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit
-         << " " << loc_cfg.comment;
+         << "/" << frequencyStr()
+         << " " << toneStr()
+         << tx_offset_str
+         << " " << rangeStr()
+         << comment_str;
   sendMsg(posmsg.str());
 } /* AprsTcpClient::sendAprsBeacon*/
 

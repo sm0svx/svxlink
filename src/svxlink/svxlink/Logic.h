@@ -242,12 +242,6 @@ class Logic : public LogicBase
       TX_CTCSS_MODULE=8, TX_CTCSS_ANNOUNCEMENT=16
     } TxCtcssType;
 
-    struct AprsStatistics : public LocationInfo::AprsStatistics
-    {
-      time_t last_rx_sec;
-      time_t last_tx_sec;
-    };
-
     Rx	      	      	      	    *m_rx;
     Tx	      	      	      	    *m_tx;
     MsgHandler	      	      	    *msg_handler;
@@ -286,7 +280,6 @@ class Logic : public LogicBase
     uint8_t			    tx_ctcss_mask;
     std::string                     sel5_from;
     std::string                     sel5_to;
-    AprsStatistics                  aprs_stats;
     Tx::TxCtrlMode                  currently_set_tx_ctrl_mode;
     bool                            is_online;
     std::string                     online_cmd;

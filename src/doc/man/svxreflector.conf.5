@@ -1,4 +1,4 @@
-.TH SVXREFLECTOR.CONF 5 "SEPTEMBER 2024" Linux "File Formats"
+.TH SVXREFLECTOR.CONF 5 "MARS 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -165,6 +165,15 @@ A regular expression for rejecting login callsigns. This can be used to block
 some specific callsigns or even a whole range of callsigns. No callsigns are
 rejected by default.
 Example: REJECT_CALLSIGN="SM0XYZ|SM1ABC|SM2.*"
+.TP
+.B ACCEPT_CERT_EMAIL
+A regular expression for verifying that email addresses in a received
+certificate signing requests are valid. If unset, which is the default, all
+email addresses are accepted. If an invalid email address is received from a
+node it will be disconnected and an error message will be sent to the node. The
+following example should accept most email addresses at the same time as
+detecting most invalid ones.
+Example: ACCEPT_CERT_EMAIL=""\\w+(?:[-._+]\\w+)*@\\w+(?:\\.\\w+)*"
 .TP
 .B CERT_PKI_DIR
 The path to the directory containing PKI (Public Key Infrastructure) files. If

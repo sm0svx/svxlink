@@ -17,6 +17,7 @@ TG_FOR_V1_CLIENTS=999
 COMMAND_PTY=/dev/shm/reflector_ctrl
 #ACCEPT_CALLSIGN="[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{0,3}[A-Z](?:-[A-Z0-9]{1,3})?"
 #REJECT_CALLSIGN=""
+#ACCEPT_CERT_EMAIL="\\w+(?:[-._+]\\w+)*@\\w+(?:\\.\\w+)*"
 #CERT_PKI_DIR=pki/
 #CERT_CA_KEYS_DIR=private/
 #CERT_CA_PENDING_CSRS_DIR=pending_csrs/
