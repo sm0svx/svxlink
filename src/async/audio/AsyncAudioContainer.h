@@ -217,7 +217,7 @@ class AudioContainer : public Async::AudioSink
      * The application should connect to this signal i order to write the data
      * to file or whatever the destination is.
      */
-    sigc::signal<void, const char*, size_t> writeBlock;
+    sigc::signal<void(const char*, size_t)> writeBlock;
 };  /* class AudioContainer */
 
 

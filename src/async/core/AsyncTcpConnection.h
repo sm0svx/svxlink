@@ -355,7 +355,7 @@ class TcpConnection : virtual public sigc::trackable
      * @param 	con   	The connection object
      * @param 	reason  The reason for the disconnect
      */
-    sigc::signal<void, TcpConnection *, DisconnectReason> disconnected;
+    sigc::signal<void(TcpConnection*, DisconnectReason)> disconnected;
     
     /**
      * @brief 	A signal that is emitted when data has been received on the
@@ -371,7 +371,7 @@ class TcpConnection : virtual public sigc::trackable
      * and presented again to the slot when more data arrives. The new data
      * will be appended to the old data.
      */
-    sigc::signal<int, TcpConnection *, void *, int> dataReceived;
+    sigc::signal<int(TcpConnection*, void*, int)> dataReceived;
 
     /**
      * @brief   A signal that is emitted on SSL/TLS certificate verification
@@ -386,8 +386,8 @@ class TcpConnection : virtual public sigc::trackable
      * For more information on the function arguments have a look at the manual
      * page for the OpenSSL function SSL_set_verify().
      */
-    sigc::signal<if_all_true_acc::result_type, TcpConnection*, int,
-                 X509_STORE_CTX*>::accumulated<if_all_true_acc> verifyPeer;
+    sigc::signal<if_all_true_acc::result_type(TcpConnection*, int,
+                 X509_STORE_CTX*)>::accumulated<if_all_true_acc> verifyPeer;
 
     /**
      * @brief   A signal that is emitted when the SSL connection is ready
@@ -396,7 +396,7 @@ class TcpConnection : virtual public sigc::trackable
      * This signal is emitted when the SSL initialization and handshake has
      * finished after the application has called the enableSsl() function.
      */
-    sigc::signal<void, TcpConnection*> sslConnectionReady;
+    sigc::signal<void(TcpConnection*)> sslConnectionReady;
 
   protected:
     /**

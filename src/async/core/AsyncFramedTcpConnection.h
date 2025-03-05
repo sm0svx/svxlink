@@ -224,7 +224,7 @@ class FramedTcpConnection : public TcpConnection
      * @param 	con   	The connection object
      * @param 	reason  The reason for the disconnect
      */
-    sigc::signal<void, FramedTcpConnection *, DisconnectReason> disconnected;
+    sigc::signal<void(FramedTcpConnection*, DisconnectReason)> disconnected;
 
     /**
      * @brief 	A signal that is emitted when a frame has been received on the
@@ -234,12 +234,12 @@ class FramedTcpConnection : public TcpConnection
      *
      * This signal is emitted when a frame has been received on this connection.
      */
-    sigc::signal<void, FramedTcpConnection *,
-                 std::vector<uint8_t>&> frameReceived;
+    sigc::signal<void(FramedTcpConnection*,
+                      std::vector<uint8_t>&)> frameReceived;
 
   protected:
-    sigc::signal<int, TcpConnection*, void*, int> dataReceived;
-    sigc::signal<void, bool> sendBufferFull;
+    sigc::signal<int(TcpConnection*, void*, int)> dataReceived;
+    sigc::signal<void(bool)> sendBufferFull;
 
     FramedTcpConnection& operator=(const FramedTcpConnection&) = delete;
 

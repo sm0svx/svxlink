@@ -218,7 +218,7 @@ class Pty : public sigc::trackable
      * @param   buf A buffer containing the received data
      * @param   count The number of bytes in the buffer
      */
-    sigc::signal<void, const void*, size_t> dataReceived;
+    sigc::signal<void(const void*, size_t)> dataReceived;
     
   protected:
     

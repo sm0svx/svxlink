@@ -195,9 +195,9 @@ class RxAdapter : public Rx, public AudioSink
       siglev = new_siglev;
       signalLevelUpdated(siglev);
     }
-    
-    sigc::signal<void, float> ctcssDetectorFqChanged;
-   
+
+    sigc::signal<void(float)> ctcssDetectorFqChanged;
+
   private:
     AudioValve      mute_valve;
     Config    	    cfg;
@@ -354,12 +354,12 @@ class TxAdapter : public Tx, public AudioSource
       	transmit(false);
       }
     }
-    
-    signal<void, bool>        sigTransmit;
-    signal<void, char, int>   sendDtmfDigit;
-    signal<void, float>       sendTone;
-    signal<void, char, float> transmittedSignalStrength;
-    
+
+    signal<void(bool)>        sigTransmit;
+    signal<void(char, int)>   sendDtmfDigit;
+    signal<void(float)>       sendTone;
+    signal<void(char, float)> transmittedSignalStrength;
+
   private:
     Tx::TxCtrlMode  tx_ctrl_mode;
     bool      	    is_idle;

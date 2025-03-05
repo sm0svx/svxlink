@@ -397,7 +397,7 @@ class SquelchCtcss : public Squelch
      * tone has been calculated. The signal will only be emitted when
      * CTCSS_MODE is set to 2 or 3.
      */
-    sigc::signal<void, float, float> snrUpdated;
+    sigc::signal<void(float, float)> snrUpdated;
 
   protected:
     /**

@@ -340,7 +340,7 @@ class DnsLookup : public sigc::trackable
      * @brief 	A signal to indicate that the query has been completed
      * @param 	dns A reference to the DNS object associated with the query
      */
-    sigc::signal<void, DnsLookup&> resultsReady;
+    sigc::signal<void(DnsLookup&)> resultsReady;
 
   private:
     typedef std::vector<DnsResourceRecord*> RRListP;

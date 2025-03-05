@@ -260,7 +260,7 @@ class TcpClientBase : virtual public sigc::trackable
     /**
      * @brief 	A signal that is emitted when a connection has been established
      */
-    sigc::signal<void>       	      	  connected;
+    sigc::signal<void()>       	      	  connected;
 
   protected:
     /**

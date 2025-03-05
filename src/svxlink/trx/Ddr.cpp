@@ -767,7 +767,7 @@ namespace {
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in) = 0;
 
-      sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
+      sigc::signal<void(const std::vector<RtlTcp::Sample>&)> preDemod;
   };
 
   class Channelizer960 : public Channelizer
@@ -1099,7 +1099,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 
     bool isEnabled(void) const { return enabled; }
 
-    sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
+    sigc::signal<void(const std::vector<RtlTcp::Sample>&)> preDemod;
 
   private:
     unsigned sample_rate;

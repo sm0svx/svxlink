@@ -202,8 +202,8 @@ class RtlUsb::SampleBuffer : public sigc::trackable
       return true;
     }
 
-    sigc::signal<void, complex<uint8_t>*, int> handleIq;
-    sigc::signal<void> writePipeClosed;
+    sigc::signal<void(complex<uint8_t>*, int)> handleIq;
+    sigc::signal<void()> writePipeClosed;
 
   private:
     uint32_t          block_size;

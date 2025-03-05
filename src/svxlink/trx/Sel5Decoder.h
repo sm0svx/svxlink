@@ -194,7 +194,7 @@ class Sel5Decoder : public sigc::trackable, public Async::AudioSink
      *          detected
      * @param 	sequence  The detected selcall sequence
     */
-    sigc::signal<void, std::string> sequenceDetected;
+    sigc::signal<void(std::string)> sequenceDetected;
 
   protected:
     /**

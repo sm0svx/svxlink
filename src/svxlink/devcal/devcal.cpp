@@ -646,7 +646,7 @@ int main(int argc, const char *argv[])
     }
     DevMeasure *dev_measure = new DevMeasure(ddr->preDemodSampleRate(), 
                                              mod_fqs, ddr->nbFq());
-    ddr->preDemod.connect(mem_fun(dev_measure, &DevMeasure::processPreDemod));
+    ddr->preDemod.connect(mem_fun(*dev_measure, &DevMeasure::processPreDemod));
 
     if (audio_dev[0] != '\0')
     {

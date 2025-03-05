@@ -173,15 +173,14 @@ class NetTrxTcpClient : public Async::TcpClient<>
      *        is ready for operation
      * @param is_ready  \em true when ready, \em false when not ready
      */
-    sigc::signal<void, bool> isReady;
-    
+    sigc::signal<void(bool)> isReady;
+
     /**
      * @brief A signal that is emitted when a message has been received
      * @param msg The received message
      */
-    sigc::signal<void, NetTrxMsg::Msg*> msgReceived;
-    
-    
+    sigc::signal<void(NetTrxMsg::Msg*)> msgReceived;
+
   protected:
     /**
      * @brief   Constructor

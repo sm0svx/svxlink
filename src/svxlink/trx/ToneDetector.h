@@ -516,7 +516,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * @brief  A signal that is emitted when the tone detector changes state
      * @param  is_active \em true when active and \em false if not
      */
-    sigc::signal<void, bool> activated;
+    sigc::signal<void(bool)> activated;
 
     /**
      * @brief  A signal that is emitted when a tone is first detected
@@ -526,7 +526,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * frequency is not a measured frequency but just the frequency given to
      * the detector during construction.
      */
-    sigc::signal<void, float> detected;
+    sigc::signal<void(float)> detected;
 
     /**
      * @brief  A signal that is emitted when the tone SNR has been recalculated
@@ -537,7 +537,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * setDetectSnrThresh and/or setUndetectSnrThresh have been used to setup
      * a threshold.
      */
-    sigc::signal<void, float> snrUpdated;
+    sigc::signal<void(float)> snrUpdated;
     
   private:
     struct DetectorParams;

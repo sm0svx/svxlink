@@ -280,13 +280,13 @@ class LogicBase : public Async::Plugin, public sigc::trackable
      * @brief   A signal that is emitted when the idle state change
      * @param   is_idle \em True if the logic core is idle or \em false if not
      */
-    sigc::signal<void, bool> idleStateChanged;
+    sigc::signal<void(bool)> idleStateChanged;
 
     /**
      * @brief   A signal that is emitted when the received talk group changes
      * @param   tg The new talk group
      */
-    sigc::signal<void, uint32_t> receivedTgUpdated;
+    sigc::signal<void(uint32_t)> receivedTgUpdated;
 
     /**
      * @brief   A signal that is emitted to publish a state update event
@@ -299,8 +299,8 @@ class LogicBase : public Async::Plugin, public sigc::trackable
      * event name must be unique within SvxLink. The recommended format is
      * <context>:<name>, e.g. Rx:sql_state.
      */
-    sigc::signal<void, const std::string&,
-                 const std::string&> publishStateEvent;
+    sigc::signal<void(const std::string&,
+                 const std::string&)> publishStateEvent;
 
   protected:
     /**

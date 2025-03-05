@@ -174,7 +174,7 @@ class DtmfDigitHandler : public sigc::trackable
     /**
      * @brief   Signal that is emitted when a complete command has been received
      */
-    sigc::signal<void> commandComplete;
+    sigc::signal<void()> commandComplete;
 
   private:
     Async::Timer  cmd_tmo_timer;

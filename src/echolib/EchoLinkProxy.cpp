@@ -150,7 +150,9 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
   con.disconnected.connect(mem_fun(*this, &Proxy::onDisconnected));
 
   reconnect_timer.setEnable(false);
-  reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient<>::connect)));
+  //reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient<>::connect)));
+  reconnect_timer.expired.connect(
+      sigc::mem_fun(*this, &Proxy::reconnect));
 
   cmd_timer.setEnable(false);
   cmd_timer.expired.connect(hide(mem_fun(*this, &Proxy::cmdTimeout)));
@@ -682,6 +684,11 @@ void Proxy::cmdTimeout(void)
   reset();
 } /* Proxy::cmdTimeout */
 
+
+void Proxy::reconnect(Async::Timer*)
+{
+  con.connect();
+} /* Proxy::reconnect */
 
 
 /*
