@@ -11,7 +11,7 @@ used internally by the async library.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2024 Tobias Blomberg
+Copyright (C) 2003-2025 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -293,7 +293,7 @@ class DnsLookupWorker
     /**
      * @brief 	A signal to indicate that the query has been completed
      */
-    sigc::signal<void> resultsReady;
+    sigc::signal<void()> resultsReady;
 
   protected:
     const DnsLookup& dns(void) { return m_dns; }
@@ -428,7 +428,7 @@ class DnsLookupWorker
     struct CompSRV
     {
       bool operator()(const DnsResourceRecordSRV* lhs,
-                      const DnsResourceRecordSRV* rhs)
+                      const DnsResourceRecordSRV* rhs) const
       {
         return lhs->prio() < rhs->prio();
       }

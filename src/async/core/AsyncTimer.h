@@ -207,7 +207,7 @@ class Timer : public sigc::trackable
      * to delete the timer in the connected slot if it is known to be the
      * only connected slot.
      */
-    sigc::signal<void, Timer *> expired;
+    sigc::signal<void(Timer*)> expired;
     
     
   protected:

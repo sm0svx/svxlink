@@ -277,7 +277,7 @@ class HttpServerConnection : public TcpConnection
      * @param   con     The connection object
      * @param   reason  The reason for the disconnect
      */
-    sigc::signal<void, HttpServerConnection *, DisconnectReason> disconnected;
+    sigc::signal<void(HttpServerConnection*, DisconnectReason)> disconnected;
 
     /**
      * @brief   A signal that is emitted when a HTTP request has been received
@@ -287,10 +287,10 @@ class HttpServerConnection : public TcpConnection
      * This signal is emitted when a HTTP request has been received on this
      * connection.
      */
-    sigc::signal<void, HttpServerConnection *, Request&> requestReceived;
+    sigc::signal<void(HttpServerConnection*, Request&)> requestReceived;
 
   protected:
-    sigc::signal<void, bool> sendBufferFull;
+    sigc::signal<void(bool)> sendBufferFull;
 
     /**
      * @brief   Disconnect from the remote peer

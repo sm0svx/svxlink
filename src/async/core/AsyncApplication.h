@@ -176,7 +176,7 @@ class Application : public sigc::trackable
      * In this case the function take two arguments where the first is a bool
      * and the second is an integer.
      */
-    void runTask(sigc::slot<void> task);
+    void runTask(sigc::slot<void()> task);
     
   protected:
     void clearTasks(void);
@@ -186,7 +186,7 @@ class Application : public sigc::trackable
     friend class Timer;
     friend class DnsLookup;
     
-    typedef std::list<sigc::slot<void> > SlotList;
+    typedef std::list<sigc::slot<void()>> SlotList;
 
     static Application *app_ptr;
     
