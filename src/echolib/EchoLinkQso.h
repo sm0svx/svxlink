@@ -373,28 +373,28 @@ class Qso
      * @brief A signal that is emitted when a station info message is received
      * @param msg The received message
      */
-    sigc::signal<void, const std::string&> infoMsgReceived;
-    
+    sigc::signal<void(const std::string&)> infoMsgReceived;
+
     /**
      * @brief A signal that is emitted when a chat message is received
      * @param msg The received chat message
      */
-    sigc::signal<void, const std::string&> chatMsgReceived;
-    
+    sigc::signal<void(const std::string&)> chatMsgReceived;
+
     /**
      * @brief A signal that is emitted when the connection state changes
      * @param state The new connection state
      */
-    sigc::signal<void, State> stateChange;
-    
+    sigc::signal<void(State)> stateChange;
+
     /**
      * @brief A signal that is emitted when the audio receive state changes
      * @param is_receiving  Is \em true when audio is being received and
      *	      	      	    \em false when not
      * @note This signal can be used to control a reception indicator
      */
-    sigc::signal<void, bool> isReceiving;
-    
+    sigc::signal<void(bool)> isReceiving;
+
     /**
      * @brief A signal that is emitted when an audio datagram has been received
      * @param data A pointer to the buffer that contains the raw audio packet
@@ -404,8 +404,8 @@ class Qso
      * if the encoded data is going to be retransmitted. In this case it is
      * not good to decode and then encode the data again. It will sound awful.
      */
-    sigc::signal<void, RawPacket*>  audioReceivedRaw;
-    
+    sigc::signal<void(RawPacket*)>  audioReceivedRaw;
+
 
     /**
      * @brief 	Write samples into this audio sink
