@@ -158,16 +158,16 @@ class TcpServer : public TcpServerBase
      * @brief 	A signal that is emitted when a client connect to the server
      * @param 	con The connected TcpConnection object
      */
-    sigc::signal<void, ConT*>  clientConnected;
+    sigc::signal<void(ConT*)>  clientConnected;
   
     /**
      * @brief 	A signal that is emitted when a client disconnect from the
      *	      	server
      * @param 	con The disconnected TcpConnection object
      */
-    sigc::signal<void, ConT*, typename ConT::DisconnectReason>
+    sigc::signal<void(ConT*, typename ConT::DisconnectReason)>
             clientDisconnected;
-  
+
   protected:
     virtual void createConnection(int sock, const IpAddress& remote_addr,
                                   uint16_t remote_port) override
