@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
+#include <AsyncPty.h>
 #include <EchoLinkStationData.h>
 
 
@@ -57,7 +58,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AprsPty.h"
 
 
 /****************************************************************************
@@ -170,6 +170,7 @@ class LocationInfo
 
     LocationInfo(void);
     LocationInfo(const LocationInfo&) = delete;
+    ~LocationInfo(void);
 
     void updateDirectoryStatus(EchoLink::StationData::Status new_status);
     void igateMessage(const std::string& info);
@@ -217,7 +218,7 @@ class LocationInfo
     std::string   slogic;
     Timepoint     last_tlm_metadata {-std::chrono::hours(1)};
     AprsStatsMap  aprs_stats;
-
+    Async::Pty*   aprspty           {nullptr};
 
     bool parsePosition(const Async::Config &cfg, const std::string &name);
     bool parseLatitude(Coordinate &pos, const std::string &value);
@@ -232,7 +233,7 @@ class LocationInfo
     void startStatisticsTimer(int sinterval);
     void sendAprsStatistics(void);
     void initExtPty(std::string ptydevice);
-    void mesReceived(std::string message);
+    void mesReceived(const void* buf, size_t len);
     AprsStatistics& aprsStats(const std::string& logic_name);
 
 };  /* class LocationInfo */

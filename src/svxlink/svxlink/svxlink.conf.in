@@ -358,5 +358,5 @@ APRS_SERVER_LIST=rotate.aprs2.net:14580
 #STATISTICS_LOGIC=SimplexLogic
 #TONE=136
 #COMMENT=SvxLink by SM0SVX (www.svxlink.org)
+#PTY_PATH=/dev/shm/aprs_pty
 #DEBUG=0
-

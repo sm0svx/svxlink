@@ -2,7 +2,7 @@
 set(LIBNAME locationinfo)
 
 # Which include files to export to the global include directory
-set(EXPINC LocationInfo.h AprsClient.h AprsTcpClient.h AprsUdpClient.h AprsPty.h)
+set(EXPINC LocationInfo.h AprsClient.h AprsTcpClient.h AprsUdpClient.h)
 
 # What sources to compile for the library
 set(LIBSRC LocationInfo.cpp AprsTcpClient.cpp AprsUdpClient.cpp)
