@@ -118,14 +118,14 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       if (rx != 0)
       {
         mute_state = rx->muteState();
-	rx->dtmfDigitDetected.connect(
-		mem_fun(*this, &SatRx::onDtmfDigitDetected));
-	rx->selcallSequenceDetected.connect(
-		mem_fun(*this, &SatRx::onSelcallSequenceDetected));
-	rx->squelchOpen.connect(
-		mem_fun(*this, &SatRx::rxSquelchOpen));
-	rx->signalLevelUpdated.connect(
-		mem_fun(*this, &SatRx::rxSignalLevelUpdated));
+        rx->dtmfDigitDetected.connect(
+                sigc::mem_fun(*this, &SatRx::onDtmfDigitDetected));
+        rx->selcallSequenceDetected.connect(
+                sigc::mem_fun(*this, &SatRx::onSelcallSequenceDetected));
+        rx->squelchOpen.connect(
+                sigc::mem_fun(*this, &SatRx::rxSquelchOpen));
+        rx->signalLevelUpdated.connect(
+                sigc::mem_fun(*this, &SatRx::rxSignalLevelUpdated));
         rx->toneDetected.connect(toneDetected.make_slot());
 
         // FIXME: We should take care of publishStateEvent
@@ -247,14 +247,13 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       sql_open_delay = new_sql_open_delay;
     }
     unsigned sqlOpenDelay(void) const { return sql_open_delay; }
-    
-    signal<void, char, int>  	dtmfDigitDetected;
-    signal<void, string>  	selcallSequenceDetected;
-    signal<void, bool, SatRx*> 	squelchOpen;
-    signal<void, float, SatRx*>	signalLevelUpdated;
-    signal<void, float>		toneDetected;
 
-    
+    sigc::signal<void(char, int)>     dtmfDigitDetected;
+    sigc::signal<void(string)>        selcallSequenceDetected;
+    sigc::signal<void(bool, SatRx*)>  squelchOpen;
+    sigc::signal<void(float, SatRx*)> signalLevelUpdated;
+    sigc::signal<void(float)>         toneDetected;
+
   protected:
     virtual void allSamplesFlushed(void)
     {
@@ -861,12 +860,12 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
 
   if (srx == activeSrx())
   {
-    runTask(bind(voter().signalLevelUpdated.make_slot(), siglev));
+    runTask(sigc::bind(voter().signalLevelUpdated.make_slot(), siglev));
   }
 } /* Voter::Top::satSignalLevelUpdated */
 
 
-void Voter::Top::runTask(sigc::slot<void> task)
+void Voter::Top::runTask(sigc::slot<void()> task)
 {
   Async::Application::app().runTask(task);
 } /* Voter::Top::runTask */
@@ -1045,7 +1044,7 @@ void Voter::ActiveRxSelected::init(SatRx *srx)
 
 void Voter::ActiveRxSelected::exit(void)
 {
-  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), true));  
+  runTask(sigc::bind(sigc::mem_fun(activeSrx(), &SatRx::stopOutput), true));
 } /* Voter::ActiveRxSelected::exit */
 
 

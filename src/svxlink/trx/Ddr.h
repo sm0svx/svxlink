@@ -184,8 +184,8 @@ class Ddr : public LocalRxBase
      * filtering has been done but before demodulation is performed. This make
      * the channel samples available for other types of signal processing.
      */
-    sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
-    
+    sigc::signal<void(const std::vector<RtlTcp::Sample>&)> preDemod;
+
   protected:
     /**
      * @brief   Open the audio input source
