@@ -424,7 +424,7 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
   const auto pcm_state = snd_pcm_state(rec_handle);
   //std::cout << "### AudioDeviceAlsa::writeSpaceAvailable: pcm_state="
   //          << pcm_state << std::endl;
-  if (pcm_state == SND_PCM_STATE_DISCONNECTED)
+  if ((pcm_state < 0) || (pcm_state == SND_PCM_STATE_DISCONNECTED))
   {
     setDeviceError();
     return;
@@ -482,7 +482,7 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
   const auto pcm_state = snd_pcm_state(play_handle);
   //std::cout << "### AudioDeviceAlsa::writeSpaceAvailable: pcm_state="
   //          << pcm_state << std::endl;
-  if (pcm_state == SND_PCM_STATE_DISCONNECTED)
+  if ((pcm_state < 0) || (pcm_state == SND_PCM_STATE_DISCONNECTED))
   {
     setDeviceError();
     return;
