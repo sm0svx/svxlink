@@ -160,16 +160,15 @@ class TcpConnection : virtual public sigc::trackable
      */
     struct if_all_true_acc
     {
-      typedef bool result_type;
+      typedef int result_type;
       template <class I>
-      bool operator()(I first, I last)
+      result_type operator()(I first, I last)
       {
-        bool success = true;
         for (; first != last; first ++)
         {
-          success &= *first;
+          if (!*first) return 0;
         }
-        return success;
+        return 1;
       }
     };
 
@@ -387,7 +386,7 @@ class TcpConnection : virtual public sigc::trackable
      * For more information on the function arguments have a look at the manual
      * page for the OpenSSL function SSL_set_verify().
      */
-    sigc::signal<bool, TcpConnection*, bool,
+    sigc::signal<if_all_true_acc::result_type, TcpConnection*, int,
                  X509_STORE_CTX*>::accumulated<if_all_true_acc> verifyPeer;
 
     /**
@@ -484,17 +483,16 @@ class TcpConnection : virtual public sigc::trackable
     /**
      * @brief   Emit the verifyPeer signal
      * @param   preverify_ok  The basic certificate verifications passed
-     * @param   x509_store_ctx  The OpenSSL X509 store context
+     * @param   store_ctx     The OpenSSL X509 store context
      * @return  Returns 1 on success or 0 if verification fail
      */
-    virtual int emitVerifyPeer(int preverify_ok,
-                               X509_STORE_CTX* x509_store_ctx)
+    virtual int emitVerifyPeer(int preverify_ok, X509_STORE_CTX* store_ctx)
     {
       if (verifyPeer.empty())
       {
         return preverify_ok;
       }
-      return verifyPeer(this, preverify_ok == 1, x509_store_ctx) ? 1 : 0;
+      return verifyPeer(this, preverify_ok, store_ctx);
     }
 
   private:
