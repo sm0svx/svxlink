@@ -189,17 +189,17 @@ class DirectoryCon : public sigc::trackable
      * explaination of what ready mean, have a look att the documentation for
      * the isReady function.
      */
-    sigc::signal<void, bool> ready;
+    sigc::signal<void(bool)> ready;
 
     /**
      * @brief Signal emitted when the connection has been established
      */
-    sigc::signal<void> connected;
+    sigc::signal<void()> connected;
 
     /**
      * @brief Signal emitted when the connection has been closed
      */
-    sigc::signal<void> disconnected;
+    sigc::signal<void()> disconnected;
 
     /**
      * @brief   Signal emitted when data has been received
@@ -207,7 +207,7 @@ class DirectoryCon : public sigc::trackable
      * @param   len The size of the data to write
      * @returns Return the number of bytes processed in the handler
      */
-    sigc::signal<int, void *, unsigned> dataReceived;
+    sigc::signal<int(void*, unsigned)> dataReceived;
     
   protected:
     

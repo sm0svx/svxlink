@@ -240,7 +240,7 @@ class Proxy : public sigc::trackable
      * class should first call the connect method and then wait for this
      * signal.
      */
-    sigc::signal<void, bool> proxyReady;
+    sigc::signal<void(bool)> proxyReady;
 
     /**
      * @brief   Signal that is emitted when a TCP connection is established
@@ -248,7 +248,7 @@ class Proxy : public sigc::trackable
      * This signal will be emitted when a TCP connection to the EchoLink
      * directory server has been established through the proxy server.
      */
-    sigc::signal<void> tcpConnected;
+    sigc::signal<void()> tcpConnected;
 
     /**
      * @brief   Signal that is emitted when a TCP connection is closed
@@ -256,7 +256,7 @@ class Proxy : public sigc::trackable
      * This signal will be emitted when a TCP connection to the EchoLink
      * directory server has been closed.
      */
-    sigc::signal<void> tcpDisconnected;
+    sigc::signal<void()> tcpDisconnected;
 
     /**
      * @brief   Signal emitted when TCP data has been received
@@ -272,7 +272,7 @@ class Proxy : public sigc::trackable
      * more data have been received. This behaviour will make it easy to
      * handle the data stream in suitable chunks.
      */
-    sigc::signal<int, void*, unsigned> tcpDataReceived;
+    sigc::signal<int(void*, unsigned)> tcpDataReceived;
 
     /**
      * @brief   Signal emitted when UDP data has been received
@@ -284,8 +284,8 @@ class Proxy : public sigc::trackable
      * This signal will be emitted when UDP data, like audio, have been
      * received through the EchoLink proxy server.
      */
-    sigc::signal<void, const Async::IpAddress&, uint16_t, void*,
-                 unsigned> udpDataReceived;
+    sigc::signal<void(const Async::IpAddress&, uint16_t, void*,
+                      unsigned)> udpDataReceived;
 
     /**
      * @brief   Signal emitted when UDP control data has been received
@@ -297,8 +297,8 @@ class Proxy : public sigc::trackable
      * This signal will be emitted when UDP control data have been
      * received through the EchoLink proxy server.
      */
-    sigc::signal<void, const Async::IpAddress&, uint16_t, void*,
-                 unsigned> udpCtrlReceived;
+    sigc::signal<void(const Async::IpAddress&, uint16_t, void*,
+                      unsigned)> udpCtrlReceived;
 
     /**
      * @brief   Signal emitted when the TCP_STATUS proxy message is received
@@ -312,7 +312,7 @@ class Proxy : public sigc::trackable
      * non zero status word does not mean anything special other than that the
      * connection failed.
      */
-    sigc::signal<void, uint32_t> tcpStatusReceived;
+    sigc::signal<void(uint32_t)> tcpStatusReceived;
 
     /**
      * @brief   Signal emitted when the TCP_CLOSE proxy message is received
@@ -321,7 +321,7 @@ class Proxy : public sigc::trackable
      * is received. This signal should normally not be used since it's better
      * to use the tcpDisconnected signal.
      */
-    sigc::signal<void> tcpCloseReceived;
+    sigc::signal<void()> tcpCloseReceived;
 
   protected:
     
@@ -375,7 +375,8 @@ class Proxy : public sigc::trackable
                           int len);
     void handleSystemMsg(const unsigned char *buf, int len);
     void cmdTimeout(void);
-    
+    void reconnect(Async::Timer*);
+
 };  /* class Proxy */
 
 
