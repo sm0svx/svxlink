@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2009  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2025  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -354,6 +355,11 @@ class AudioDevice : public sigc::trackable
      */
     size_t getBlocks(int16_t *buf, size_t block_cnt);
 
+    /**
+     * @brief   Called by the device object to indicate an error condition
+     */
+    void setDeviceError(void);
+
   private:
     static const int    DEFAULT_SAMPLE_RATE = INTERNAL_SAMPLE_RATE;
     static const size_t DEFAULT_CHANNELS = 2;
@@ -365,6 +371,9 @@ class AudioDevice : public sigc::trackable
     Mode      	      	current_mode;
     size_t              use_count;
     std::list<AudioIO*> aios;
+    Async::Timer        reopen_timer  {1000, Async::Timer::TYPE_PERIODIC};
+
+    void reopenDevice(void);
 
 };  /* class AudioDevice */
 

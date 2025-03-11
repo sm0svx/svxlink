@@ -62,8 +62,7 @@ class MySslServer
              << m_server.numberOfClients() << " clients connected\n";
       con->enableSsl(true);
       con->verifyPeer.connect(
-        [](Async::TcpConnection* con, bool preverify_ok,
-           X509_STORE_CTX *ctx)
+        [](Async::TcpConnection* con, int preverify_ok, X509_STORE_CTX *ctx)
         {
           X509* err_cert = X509_STORE_CTX_get_current_cert(ctx);
           assert(err_cert != nullptr);
@@ -106,7 +105,7 @@ class MySslServer
            */
           if (depth > 1)
           {
-            preverify_ok = false;
+            preverify_ok = 0;
             err = X509_V_ERR_CERT_CHAIN_TOO_LONG;
             X509_STORE_CTX_set_error(ctx, err);
           }
@@ -116,7 +115,7 @@ class MySslServer
                       << X509_verify_cert_error_string(err) << ":depth="
                       << depth << ":" << buf << std::endl;
           }
-          else if (true)
+          else
           {
             std::cout << "### depth=" << depth << ":" << buf << std::endl;
           }

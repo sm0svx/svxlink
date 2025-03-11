@@ -133,8 +133,21 @@ LocationInfo* LocationInfo::_instance = nullptr;
 LocationInfo::LocationInfo(void)
 {
   aprs_stats_timer.expired.connect(sigc::hide(
-      mem_fun(*this, &LocationInfo::sendAprsStatistics)));
+      sigc::mem_fun(*this, &LocationInfo::sendAprsStatistics)));
 } /* LocationInfo::LocationInfo */
+
+
+LocationInfo::~LocationInfo(void)
+{
+  for (const auto client : clients)
+  {
+    delete client;
+  }
+  clients.clear();
+
+  delete aprspty;
+  aprspty = nullptr;
+} /* LocationInfo::~LocationInfo */
 
 
 bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
@@ -244,10 +257,9 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
 
 void LocationInfo::updateDirectoryStatus(StationData::Status status)
 {
-  ClientList::const_iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
+  for (const auto client : clients)
   {
-    (*it)->updateDirectoryStatus(status);
+    client->updateDirectoryStatus(status);
   }
 } /* LocationInfo::updateDirectoryStatus */
 
@@ -256,10 +268,9 @@ void LocationInfo::updateQsoStatus(int action, const std::string& call,
                                    const std::string& info,
                                    std::list<std::string>& call_list)
 {
-  ClientList::const_iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
+  for (const auto client : clients)
   {
-    (*it)->updateQsoStatus(action, call, info, call_list);
+    client->updateQsoStatus(action, call, info, call_list);
   }
 } /* LocationInfo::updateQsoStatus */
 
@@ -267,20 +278,18 @@ void LocationInfo::updateQsoStatus(int action, const std::string& call,
 void LocationInfo::update3rdState(const std::string& call,
                                   const std::string& info)
 {
-  ClientList::const_iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
+  for (const auto client : clients)
   {
-    (*it)->update3rdState(call, info);
+    client->update3rdState(call, info);
   }
 } /* LocationInfo::update3rdState */
 
 
 void LocationInfo::igateMessage(const std::string& info)
 {
-  ClientList::const_iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
+  for (const auto client : clients)
   {
-    (*it)->igateMessage(info);
+    client->igateMessage(info);
   }
 } /* LocationInfo::igateMessage */
 
@@ -805,22 +814,25 @@ void LocationInfo::sendAprsStatistics(void)
 
 void LocationInfo::initExtPty(std::string ptydevice)
 {
-  AprsPty *aprspty = new AprsPty();
-  if (!aprspty->initialize(ptydevice))
+  aprspty = new Async::Pty(ptydevice);
+  aprspty->setLineBuffered(true);
+  if (!aprspty || !aprspty->open())
   {
-    std::cout << "*** ERROR: initializing aprs pty device " << ptydevice
-              << std::endl;
+    std::cerr << "*** ERROR: Failed to open the aprs pty device "
+              << ptydevice << std::endl;
   }
   else
   {
-     aprspty->messageReceived.connect(mem_fun(*this,
-                    &LocationInfo::mesReceived));
+     aprspty->dataReceived.connect(
+         sigc::mem_fun(*this, &LocationInfo::mesReceived));
   }
 } /* LocationInfo::initExtPty */
 
 
-void LocationInfo::mesReceived(std::string message)
+void LocationInfo::mesReceived(const void* buf, size_t len)
 {
+  const char* ptr = static_cast<const char*>(buf);
+  std::string message(ptr, ptr+len);
   std::string loc_call = loc_cfg.mycall;
   size_t found = message.find("XXXXXX");
 

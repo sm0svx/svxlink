@@ -8,7 +8,7 @@ Implements the low level interface to an Alsa audio device.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -227,6 +227,8 @@ AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
 AudioDeviceAlsa::~AudioDeviceAlsa(void)
 {
   closeDevice();
+
+    // FIXME: What if we have multiple Alsa devices open?
   snd_config_update_free_global();
 } /* AudioDeviceAlsa::~AudioDeviceAlsa */
 
@@ -409,6 +411,8 @@ void AudioDeviceAlsa::closeDevice(void)
 
 void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
 {
+  //std::cout << "### AudioDeviceAlsa::audioReadHandler" << std::endl;
+
   assert(rec_handle != 0);
   assert((mode() == MODE_RD) || (mode() == MODE_RDWR));
   
@@ -416,6 +420,15 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
   {
     return;
   }  
+
+  const auto pcm_state = snd_pcm_state(rec_handle);
+  //std::cout << "### AudioDeviceAlsa::writeSpaceAvailable: pcm_state="
+  //          << pcm_state << std::endl;
+  if ((pcm_state < 0) || (pcm_state == SND_PCM_STATE_DISCONNECTED))
+  {
+    setDeviceError();
+    return;
+  }
 
   snd_pcm_sframes_t frames_avail = snd_pcm_avail_update(rec_handle);
   if (frames_avail < 0)
@@ -427,7 +440,7 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
     return;
   }
 
-  //printf("frames_avail=%d\n", frames_avail);
+  //printf("### frames_avail=%d\n", frames_avail);
 
   if (static_cast<size_t>(frames_avail) >= rec_block_size)
   {
@@ -437,12 +450,12 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
     int16_t buf[frames_avail * channels];
     memset(buf, 0, sizeof(buf));
 
-    snd_pcm_sframes_t frames_read = snd_pcm_readi(rec_handle, buf,
-                                                  frames_avail);
+    const auto frames_read = snd_pcm_readi(rec_handle, buf, frames_avail);
     if (frames_read < 0)
     {
       if (!startCapture(rec_handle))
       {
+        setDeviceError();
         watch->setEnabled(false);
       }
       return;
@@ -456,13 +469,22 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
 
 void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents)
 {
-  //printf("AudioDeviceAlsa::writeSpaceAvailable\n");
+  //printf("### AudioDeviceAlsa::writeSpaceAvailable\n");
   
   assert(play_handle != 0);
   assert((mode() == MODE_WR) || (mode() == MODE_RDWR));
 
   if (!(revents & POLLOUT))
   {
+    return;
+  }
+
+  const auto pcm_state = snd_pcm_state(play_handle);
+  //std::cout << "### AudioDeviceAlsa::writeSpaceAvailable: pcm_state="
+  //          << pcm_state << std::endl;
+  if ((pcm_state < 0) || (pcm_state == SND_PCM_STATE_DISCONNECTED))
+  {
+    setDeviceError();
     return;
   }
 
@@ -475,6 +497,7 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
     {
       if (!startPlayback(play_handle))
       {
+        setDeviceError();
         watch->setEnabled(false);
         return;
       }
@@ -514,6 +537,7 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
     {
       if (!startPlayback(play_handle))
       {
+        setDeviceError();
         watch->setEnabled(false);
         return;
       }
@@ -534,12 +558,12 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
       return;
     }
   }
-}
+} /* AudioDeviceAlsa::writeSpaceAvailable */
 
 
 bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
 {
-  snd_pcm_hw_params_t *hw_params;
+  snd_pcm_hw_params_t* hw_params = nullptr;
 
   int err = snd_pcm_hw_params_malloc (&hw_params);
   if (err < 0)
@@ -760,6 +784,7 @@ bool AudioDeviceAlsa::getBlockAttributes(snd_pcm_t *pcm_handle,
 
 bool AudioDeviceAlsa::startPlayback(snd_pcm_t *pcm_handle)
 {
+  //std::cout << "### AudioDeviceAlsa::startPlayback" << std::endl;
   int err = snd_pcm_prepare(pcm_handle);
   if (err < 0)
   {
@@ -774,6 +799,7 @@ bool AudioDeviceAlsa::startPlayback(snd_pcm_t *pcm_handle)
 
 bool AudioDeviceAlsa::startCapture(snd_pcm_t *pcm_handle)
 {
+  //std::cout << "### AudioDeviceAlsa::startCapture" << std::endl;
   int err = snd_pcm_prepare(pcm_handle);
   if (err < 0)
   {

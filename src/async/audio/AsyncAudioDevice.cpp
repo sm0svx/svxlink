@@ -9,7 +9,7 @@ hardware audio devices.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -255,6 +255,9 @@ void AudioDevice::close(void)
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), current_mode(MODE_NONE), use_count(0)
 {
+  reopen_timer.setEnable(false);
+  reopen_timer.expired.connect(
+      sigc::hide(sigc::mem_fun(*this, &AudioDevice::reopenDevice)));
 } /* AudioDevice::AudioDevice */
 
 
@@ -388,6 +391,16 @@ size_t AudioDevice::getBlocks(int16_t *buf, size_t block_cnt)
 } /* AudioDevice::getBlocks */
 
 
+void AudioDevice::setDeviceError(void)
+{
+  if (!reopen_timer.isEnabled())
+  {
+    std::cerr << "*** ERROR: Audio device failed. Trying to reopen..."
+              << std::endl;
+    reopen_timer.setEnable(true);
+  }
+} /* AudioDevice::setDeviceError */
+
 
 /****************************************************************************
  *
@@ -395,6 +408,15 @@ size_t AudioDevice::getBlocks(int16_t *buf, size_t block_cnt)
  *
  ****************************************************************************/
 
+void AudioDevice::reopenDevice(void)
+{
+  //std::cout << "### AudioDevice::reopenDevice" << std::endl;
+  closeDevice();
+  if ((current_mode == MODE_NONE) || openDevice(current_mode))
+  {
+    reopen_timer.setEnable(false);
+  }
+} /* AudioDevice::reopenDevice */
 
 /*
  * This file has not been truncated
