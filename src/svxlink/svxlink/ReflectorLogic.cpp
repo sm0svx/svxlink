@@ -427,7 +427,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   if (!loadClientCertificate())
   {
     std::cerr << "*** WARNING[" << name() << "]: Failed to load client "
-                 "certificate. Ifnoring on-disk stored certificate file '"
+                 "certificate. Ignoring on-disk stored certificate file '"
               << m_crtfile << "'." << std::endl;
   }
 
