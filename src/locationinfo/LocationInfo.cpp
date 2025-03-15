@@ -508,7 +508,12 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg,
     success = false;
   }
 
-  if (!cfg.getValue(name, "TONE", 0U, 9999U, loc_cfg.tone, true))
+  float tone = 0.0f;
+  if (cfg.getValue(name, "TONE", 0.0f, 9999.0f, tone, true))
+  {
+    loc_cfg.tone = floorf(tone);
+  }
+  else
   {
     print_error(name, "TONE", cfg.getValue(name, "TONE"), "TONE=0");
     success = false;
