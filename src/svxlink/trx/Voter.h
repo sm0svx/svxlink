@@ -275,7 +275,7 @@ class Voter : public Rx
       protected:
 	Voter &voter(void) { return *box().voter; }
 	SatRx *bestSrx(void) { return box().best_srx; }
-	void runTask(sigc::slot<void> task);
+	void runTask(sigc::slot<void()> task);
 	void startTimer(unsigned time_ms);
 	void stopTimer(void);
 	

@@ -154,7 +154,7 @@ class Synchronizer : public Async::AudioSink, public sigc::trackable
      * @brief   A signal emitted when new bits have been received
      * @param   A vector of received bits
      */
-    sigc::signal<void, std::vector<bool>&> bitsReceived;
+    sigc::signal<void(std::vector<bool>&)> bitsReceived;
 
   private:
     const unsigned    baudrate;
