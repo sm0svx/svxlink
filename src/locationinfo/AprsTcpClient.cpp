@@ -449,7 +449,9 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
     // Position report for main callsign
   std::ostringstream posmsg;
   posmsg << addrStr()
-         << "="
+         //<< "="
+         << ";" << addresseeStr(loc_cfg.mycall) << "*"
+         << "111111z"
          << posStr(loc_cfg.symbol)
          << phgStr()
          << "/" << frequencyStr()

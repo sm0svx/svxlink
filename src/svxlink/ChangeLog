@@ -50,8 +50,30 @@
   The node will be blocked until it has been silent for the number of
   specified seconds.
 
-* APRS beacon and status packets changed destination to the SvxLink specific
-  one, "APSVX1".
+* LocationInfo APRS code reworked
+  - All packets changed destination to the SvxLink specific one, "APSVX1"
+  - An APRS object is now emitted for the base callsign
+  - SYMBOL for the base callsign object can be specified in the configuration
+  - Compatibility: Telemetry now emitted with the base callsign as from-address
+  - Compatibility: Telemetry now use EQNS message to scale values
+  - Compatibility: Removed the SvxLink logic name from telemetry packets
+  - The STATISTICS_LOGIC configuration variable must be used to specify the
+    name of the logic core from where the APRS telemetry should be taken.
+  - CALLSIGN can be specified without the EL/ER-prefix in which case no
+    Echolink object will be emitted
+  - PHG is now included in the object packets
+  - PATH should now normally be left unset in which case default is TCPIP*
+  - Extended frequency range implemented according to UNOFFICIAL APRS
+    Protocol Reference 1.2 Chapter 18
+  - If LocationInfo TONE is not set, Toff is sent
+  - Added NARROW config variable to indicate if a node is using narrow FM
+  - APRS packet parsing code added
+  - Received directed message packets are now acked
+  - FILTER can be specified in configuration
+  - TX_OFFSET (repeater shift) can be specified in configuration
+  - Limit the APRS comment to 36 characters as per protocol spec
+  - The DEBUG configuration variable can be set to print APRS packets
+  - TONE should now be specified including the decimal
 
 * Add commandline option --reset to svxlink and remotetrx. It was added to get
   an easy way to reset all SvxLink hardware to initial state. The default

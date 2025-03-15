@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "FEBRUARI 2025" Linux "File Formats"
+.TH SVXLINK.CONF 5 "MARS 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -2789,11 +2789,16 @@ manual page.
 .
 .SS LocationInfo
 .
+The LocationInfo configuration section is used to specify information that
+should be sent into the APRS network and also to the Echolink link status page.
+The use of location info is activated by setting the LOCATION_INFO
+configuration variable in the GLOBAL section. The following configuration
+variables can be used in the LocationInfo configuration section.
 .TP
 .B STATUS_SERVER_LIST
 Enter a space separated list of EchoLink status servers that should be used
 to send node status beacons. Your node information can be found
-on http://www.echolink.org/links.jsp.
+on https://www.echolink.org/links.jsp.
 The format is host:port. Host - hostname or IP address, port - UDP port.
 Don't change the default unless you know what you are doing. If you don't
 want to update the EchoLink status server, comment out this configuration
@@ -2807,10 +2812,10 @@ STATUS_SERVER_LIST=aprs.echolink.org:5199
 This configuration variable specifies connection parameters for connecting
 to an APRS server network using the TCP protocol. In this case, the positioning
 information is forwarded to the worldwide APRS network. Have a look at
-http://aprs.fi/.
+https://aprs.fi/.
 
 To choose a suitable APRS server from the so called tier 2 network, have a
-look at http://www.aprs2.net/. Either choose a specific server or one of the
+look at https://www.aprs2.net/. Either choose a specific server or one of the
 regional addresses. The regional addresses bundle all APRS servers within a
 region so that a random tier 2 server is chosen within the region. There are
 five regions defined: noam.aprs2.net - North America, euro.aprs2.net - Europe,
@@ -2871,8 +2876,8 @@ Example:
 LOGIN_CALLSIGN=DB0ABC-70
 .TP
 .B FREQUENCY
-The tx-frequency of the link/repeater in MHz. For repeaters, information about
-the RX/TX shift in the COMMENT configuration variable may be useful.
+The tx-frequency of the link/repeater in MHz. For repeaters, the TX_OFFSET
+configuration variable should be used to specify the repeater shift.
 
 Example:
 .br
@@ -2891,6 +2896,12 @@ kHz. So if the configuration parameter is set to -600 kHz, it will be sent as
 .B TX_POWER
 The power of your transmitter in watts.
 
+The maximum power allowed in the APRS protocol is 81 watts so if a power grater
+than that is specified it will be set to that maximum value. However, the
+advice is to set it to the actual power if the protocol evolves to handle
+higher powers in the future. So if your transmitter outputs 200 watts, set it
+to that.
+
 Example:
 .br
 TX_POWER=10           # tx output is 10 watts
@@ -2908,8 +2919,8 @@ Example:
 ANTENNA_GAIN=5        # antenna gain is 5 dBd
 .TP
 .B ANTENNA_HEIGHT
-The height of the link-/repeater antenna in meters or feet above the terrain,
-not sealevel.
+The height of the link-/repeater antenna in meters or feet above the terrain
+(HAAT), NOT sealevel.
 
 Example:
 .br
@@ -2938,7 +2949,8 @@ control the way the forwarding of your packets inside the RF APRS network is
 done. In some cases it has to be changed according to local requirements.
 Please contact your local APRS sysop for further information. Changes should be
 made only according to the NEWn-N paradigm. Set it to WIDE1-1 if you are unsure
-of its setting.
+of its setting. But once again, leave it unset if you are not sure that it need
+to be set.
 
 Examples:
 .br
@@ -2948,13 +2960,14 @@ PATH=WIDE1-1,WIDE2-2
 .TP
 .B BEACON_INTERVAL
 The interval, in minutes, with which beacons will be sent to the APRS network.
-A good value is 10 minutes. If your beacon is gated via RF, please increase
-the interval a bit to keep the APRS traffic on RF produced by the APRS RF gate
-as low as possible. Intervals shorter than 10 minutes will be changed to 10.
+A good value is 10 minutes. If your beacon is gated via RF in a crowded area,
+it may be necessary to increase the interval a bit to keep the APRS traffic on
+RF produced by the APRS RF gate as low as possible. Intervals shorter than 10
+minutes will be changed to 10.
 
 Example:
 .br
-BEACON_INTERVAL=30    # APRS-beacons will be sent every 30 minutes.
+BEACON_INTERVAL=20    # APRS-beacons will be sent every 20 minutes.
 .TP
 .B SYMBOL
 Specify which APRS symbol that should be displayed on maps. Symbols are
@@ -2963,7 +2976,7 @@ table to use and the second one select the actual symbol to use from the
 selected table. So for example "/-" is a house and "/r" mean a repeater tower.
 For all details abount APRS symbols, have a look at the latest documentation:
 https://www.aprs.org/symbols/symbolsX.txt.
-The specified symbol is only applied to the base callsign and not on the
+The specified symbol is only applied to the base callsign and not to the
 Echolink one.
 
 Example:
@@ -2976,14 +2989,14 @@ repeater. If you don't use tone control set it to 0.
 
 Examples:
 .br
-TONE=136      # we are using a CTCSS-tone of 136.5 Hz
+TONE=136.5    # we are using a CTCSS-tone of 136.5 Hz
 .br
 TONE=0        # we don't use CTCSS sub-audible or call tones
 .br
 TONE=1750     # the link/repeater use a tone burst of 1750 Hz
 .TP
 .B STATISTICS_INTERVAL
-Defines the interval in minutes in that an aprs statistics (telemetry) are sent
+Defines the interval in minutes in that an APRS statistics (telemetry) are sent
 into the aprs network. Range: 5-60 minutes, default is 10 minutes
 .TP
 .B STATISTICS_LOGIC
@@ -3004,14 +3017,24 @@ text.
 
 Example:
 .br
-COMMENT=[svx] Running SvxLink by SM0SVX
+COMMENT=SvxLink by SM0SVX
 .TP
 .B PTY_PATH
 Specify a path to a communications PTY that can be used by external
-applications to inject APRS packets into the APRS-IS network.
+applications to inject APRS packets into the APRS-IS network. A source callsign
+specified with XXXXXX (6 X:es) will be replaced with the configured source
+callsign.
+
+Example:
+.EX
+PTY_PATH=/dev/shm/locationinfo
+
+$ echo 'XXXXXX>APSVX1,TCPIP*:>Testing SvxLink APRS' > /dev/shm/locationinfo
+.EE
 .TP
 .B DEBUG
-Set to 1 to print which APRS packets that are sent into the APRS-IS network.
+Set to 1 to print which APRS packets that are sent into or received from the
+APRS network.
 .
 .SH AUDIO DEVICE SPECIFICATIONS
 .
