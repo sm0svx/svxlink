@@ -161,6 +161,7 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   auto& loc_cfg = _instance->loc_cfg;
 
   cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.mycall);
+  std::string sourcecall;
   std::string logincall;
   const std::regex el_call_re("E([LR])-([0-9A-Z]{4,6})");
   const std::regex call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
@@ -169,12 +170,12 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   {
     loc_cfg.prefix = m[1];
     loc_cfg.mycall = m[2];
-    logincall = loc_cfg.mycall;
+    sourcecall = loc_cfg.mycall;
   }
   else if (std::regex_match(loc_cfg.mycall, m, call_re))
   {
     loc_cfg.mycall = m[0];
-    logincall = m[1].str() + m[2].str();
+    sourcecall = m[1].str() + m[2].str();
   }
   else
   {
@@ -186,6 +187,22 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
               << std::endl;
     return false;
   }
+
+  unsigned ssid = 0;
+  if (cfg.getValue(cfg_name, "SOURCE_CALLSIGN", sourcecall))
+  {
+    const std::regex from_call_re("([A-Za-z0-9]{3,6})(?:-([0-9]{1,2}))?");
+    if (!std::regex_match(sourcecall, m, from_call_re) ||
+        ((m[2] != "") && ((ssid = atoi(m[2].str().c_str())) == 0)) ||
+        (ssid > 15))
+    {
+      std::cerr << "*** ERROR: The APRS source callsign '"
+                << sourcecall << "' is invalid"
+                << std::endl;
+      return false;
+    }
+  }
+  loc_cfg.sourcecall = logincall = sourcecall;
 
   cfg.getValue(cfg_name, "LOGIN_CALLSIGN", logincall);
   const std::regex login_call_re("([A-Za-z0-9]{3,9})(-[A-Za-z0-9]{1,2})?");
@@ -693,7 +710,7 @@ void LocationInfo::sendAprsStatistics(void)
 
     // FROM>APSVXn,VIA1,VIA2,VIAn:
   std::ostringstream addr;
-  addr << loc_cfg.mycall << ">" << loc_cfg.destination;
+  addr << loc_cfg.sourcecall << ">" << loc_cfg.destination;
   if (!loc_cfg.path.empty())
   {
     addr << "," << loc_cfg.path;
@@ -838,7 +855,7 @@ void LocationInfo::mesReceived(const void* buf, size_t len)
 {
   const char* ptr = static_cast<const char*>(buf);
   std::string message(ptr, ptr+len);
-  std::string loc_call = loc_cfg.mycall;
+  std::string loc_call = loc_cfg.sourcecall;
   size_t found = message.find("XXXXXX");
 
   if (found != std::string::npos)

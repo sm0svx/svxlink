@@ -61,6 +61,8 @@
     name of the logic core from where the APRS telemetry should be taken.
   - CALLSIGN can be specified without the EL/ER-prefix in which case no
     Echolink object will be emitted
+  - SOURCE_CALLSIGN can be used to specify the source address
+  - LOGIN_CALLSIGN can be used to specify the APRS-IS login callsign
   - PHG is now included in the object packets
   - PATH should now normally be left unset in which case default is TCPIP*
   - Extended frequency range implemented according to UNOFFICIAL APRS

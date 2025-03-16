@@ -2804,16 +2804,25 @@ CALLSIGN=EL-DL1ABC    # callsign for a link
 .br
 CALLSIGN=DB0ABC-1     # callsign (with SSID 1) for node without Echolink
 .TP
+.B SOURCE_CALLSIGN
+Specify the callsign to use as the APRS source address. That callsign must
+comply with the AX.25 source callsign specification. If this configuration
+variable is not specified, the callsign will be extracted from the CALLSIGN
+config variable. Any EL- or ER- prefix will be stripped off.
+
+Example:
+.br
+SOURCE_CALLSIGN=DB0ABC-1
+.TP
 .B LOGIN_CALLSIGN
 Specify the callsign to use to log in to the APRS-IS network. The login
 callsign must comply with the APRS-IS specification found at
 https://www.aprs-is.net/connecting.aspx. If this configuration variable is not
-specified, the callsign will be extracted from the CALLSIGN config variable.
-Any EL- or ER- prefix will be stripped off.
+specified, the callsign will be the same as the source callsign.
 
 Example:
 .br
-LOGIN_CALLSIGN=DB0ABC-70
+LOGIN_CALLSIGN=DB0ABC-2M
 .TP
 .B FREQUENCY
 The tx-frequency of the link/repeater in MHz. For repeaters, the TX_OFFSET
