@@ -1,8 +1,8 @@
 # Build with:
-#   podman build --pull -t svxlink-fedora-build .
+#   podman build --pull -t svxlink-rocky-build .
 #
 # Run with:
-#   podman run -it --rm --hostname fedora-build svxlink-fedora-build
+#   podman run -it --rm --hostname rocky-build svxlink-rocky-build
 #
 # For using sound inside the container add:
 #              --privileged --device /dev/snd:/dev/snd
@@ -21,8 +21,10 @@
 #              -e NUM_CORES=8
 #
 
-FROM fedora AS downloader
-MAINTAINER Tobias Blomberg <sm0svx@svxlink.org>
+ARG FROM=rockylinux:9
+FROM ${FROM} AS downloader
+
+RUN dnf -y install bzip2
 
 # Add audio files
 ADD https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/24.02/svxlink-sounds-en_US-heather-16k-24.02.tar.bz2 /tmp/
@@ -32,20 +34,25 @@ RUN mkdir -p /sounds && \
     for tar in /tmp/*.tar.bz2; do \
       tar xvaf "${tar}"; \
     done && \
-    ln -s en_US-heather-16k en_US && \
-    ln -s sv_SE-elin-16k sv_SE
+    for lp in *; do \
+      ln -s "${lp}" "${lp%%-*}"; \
+    done
 
 
 ###############################################################################
 
-FROM fedora
+ARG FROM=rockylinux:9
+FROM ${FROM}
+MAINTAINER Tobias Blomberg <sm0svx@svxlink.org>
 
 # Install audio files
 COPY --from=downloader /sounds /usr/share/svxlink/sounds
 
 # Install required packages and set up the svxlink user
-RUN dnf -y install git sudo cmake make gcc gcc-c++ libsigc++20-devel \
-           alsa-lib-devel speex-devel opus-devel qt-devel rtl-sdr-devel \
+RUN dnf -y install epel-release && \
+    /usr/bin/crb enable && \
+    dnf -y install git sudo cmake make gcc gcc-c++ libsigc++20-devel \
+           alsa-lib-devel speex-devel opus-devel qt5-devel rtl-sdr-devel \
            popt-devel libgcrypt-devel tcl-devel gsm-devel libcurl-devel \
            jsoncpp-devel openssl-devel \
            doxygen alsa-utils wget tar bzip2 vim-enhanced && \

@@ -136,6 +136,7 @@ class LocationInfo
       Coordinate  lat_pos;
       Coordinate  lon_pos;
 
+      std::string sourcecall;
       std::string logincall;
       std::string loginssid;
       std::string mycall;

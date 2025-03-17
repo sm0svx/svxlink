@@ -1,29 +1,57 @@
 #!/bin/sh
 
-RUNASUSER=${RUNASUSER:-svxlink}
+set -euo pipefail
 
-# Create the hostaudio group if GID is specified
-if [ -n "$HOSTAUDIO_GID" ]; then
-  addgroup -g $HOSTAUDIO_GID hostaudio
-  adduser svxlink hostaudio
+GIT_REPO=${GIT_REPO:-"https://github.com/sm0svx/svxlink.git"}
+GIT_REF=${GIT_REF:-"master"}
+CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-"RelWithDebInfo"}
+
+if [[ ! -d svxlink ]]; then
+  git clone --branch "${GIT_REF}" "${GIT_REPO}"
+  cd svxlink/src
+  mkdir build
+  cd build
+  cmake \
+    -GNinja \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+    -DUSE_QT=OFF \
+    -DLIB_INSTALL_DIR=/lib \
+    -DDO_INSTALL_CHOWN=YES \
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+    ..
+  cd
 fi
 
-if [ -n "$RTLSDR_GID" ]; then
-  addgroup -g $RTLSDR_GID rtlsdr
-  adduser svxlink rtlsdr
+if [[ ! -d .svxlink ]]; then
+  mkdir .svxlink
+  cd .svxlink
+  mkdir svxlink.d events.d modules.d
+
+  cd events.d
+  cp -s ../../svxlink/src/svxlink/svxlink/*.tcl .
+  cp -s ../../svxlink/src/svxlink/modules/*/*.tcl .
+  find ../../svxlink/src/build -name "*.tcl" -exec ln -s {} . \;
+  rm events.tcl event_test.tcl Template.tcl
+  cd ..
+  mv events.d/Module[A-Z]*.tcl modules.d/
+  ln -s ../svxlink/src/svxlink/svxlink/events.tcl
+  ln -s ../../../usr/share/svxlink/sounds
+
+  cd svxlink.d
+  find ../../svxlink/src -name contrib -prune -o -name "*.conf" -exec cp {} . \;
+  sed -i 's/^LOGIC_CORE_PATH=.*$/LOGIC_CORE_PATH=/' svxlink.conf
+  sed -i 's|^EVENT_HANDLER=.*$|EVENT_HANDLER=/home/svxlink/.svxlink/events.tcl|' svxlink.conf
+  mv svxlink.conf remotetrx.conf svxreflector.conf TclVoiceMail.conf ../
+  rm gpio.conf ModuleTemplate.conf
+
+  cd
 fi
 
-umask 0002
+mkdir -p /var/lib/svxlink/pki
+cd /var/spool/svxlink/
+mkdir -p qso_recorder voice_mail
+cd
 
-# Copy skeleton if config dir is empty
-if ! ls /etc/svxlink/* &>/dev/null; then
-  cp -r /usr/share/doc/svxlink/skel/* /etc/svxlink/
-  chmod -R g+wX /etc/svxlink/*
-fi
-
-for dir in propagation_monitor qso_recorder voice_mail; do
-  [ -d "/var/spool/svxlink/${dir}" ] || mkdir -p "/var/spool/svxlink/${dir}"
-  chown svxlink "/var/spool/svxlink/${dir}"
-done
-
-exec su - ${RUNASUSER} -c "${*:-/bin/sh}"
+exec "${*:-/bin/sh}"
