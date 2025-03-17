@@ -89,7 +89,7 @@ class QueueItem;
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -133,7 +133,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * @brief 	Destructor
      */
     ~MsgHandler(void);
-    
+
     /**
      * @brief 	Play a file
      * @param 	path The full path to the file to play
@@ -144,7 +144,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * the file is being played.
      */
     void playFile(const std::string& path, bool idle_marked=false);
-    
+
     /**
      * @brief 	Play the given number of milliseconds of silence
      * @param 	length The length in milliseconds of the silence
@@ -155,7 +155,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * the silence is being played.
      */
     void playSilence(int length, bool idle_marked=false);
-    
+
     /**
      * @brief 	Play a sinus tone
      * @param 	fq The frequency of the tone to play
@@ -169,24 +169,24 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * the silence is being played.
      */
     void playTone(int fq, int amp, int length, bool idle_marked=false);
-    
+
     /**
      * @brief 	Check if a message is beeing written
      * @return	Return \em true if a message is beeing written
      */
     bool isWritingMessage(void) const { return is_writing_message; }
-    
+
     /**
      * @brief 	Check if the message writer is idle (ignoring idle marked items)
      * @return	Returns \em true if the idle or else \em false
      */
     bool isIdle(void) const { return non_idle_cnt == 0; }
-    
+
     /**
      * @brief 	Clear all messages
      */
     void clear(void);
-    
+
     /**
      * @brief 	Mark the beginning of a block of messages
      *
@@ -194,29 +194,29 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * called. Multiple begin/end can be nested.
      */
     void begin(void);
-    
+
     /**
      * @brief 	Mark the end of a block of messages
      *
      * All the playXxx functions that have been previously queued will be
      * executed.
      */
-    void end(void);    
-    
+    void end(void);
+
     /**
      * @brief 	A signal that is emitted when all messages has been written
      */
-    sigc::signal<void>       	    allMsgsWritten;
-    
+    sigc::signal<void()>       	    allMsgsWritten;
+
     /**
      * @brief Resume audio output to the sink
-     * 
+     *
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void);
-    
+
   protected:
     /**
      * @brief The registered sink has flushed all samples
@@ -226,7 +226,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * This function is normally only called from a connected sink object.
      */
     virtual void allSamplesFlushed(void);
-    
+
   private:
     std::list<QueueItem*>   msg_queue;
     int			    sample_rate;
@@ -235,7 +235,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     QueueItem 	      	    *current;
     bool      	      	    is_writing_message;
     int       	      	    non_idle_cnt;
-    
+
     MsgHandler(const MsgHandler&);
     MsgHandler& operator=(const MsgHandler&);
     void addItemToQueue(QueueItem *item);
