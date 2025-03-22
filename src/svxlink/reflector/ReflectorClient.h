@@ -344,8 +344,22 @@ class ReflectorClient : public sigc::trackable
     }
 
     /**
+     * @brief   Return the remote UDP IP
+     * @return  Returns the source IP used by the client for UDP
+     */
+    const Async::IpAddress& remoteUdpHost(void) const
+    {
+      const auto& addr = m_client_src.first;
+      if (addr.isEmpty())
+      {
+        return remoteHost();
+      }
+      return addr;
+    }
+
+    /**
      * @brief   Return the remote port number
-     * @return  Returns the local port number used by the client
+     * @return  Returns the source port used by the client for UDP
      */
     uint16_t remoteUdpPort(void) const { return m_remote_udp_port; }
 
