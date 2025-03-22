@@ -260,6 +260,7 @@ void ReflectorClient::setRemoteUdpSource(const ReflectorClient::ClientSrc& src)
   m_remote_udp_port = src.second;
   if (m_client_proto_ver >= ProtoVer(3, 0))
   {
+    m_client_src = src;
     client_src_map[src] = this;
   }
 } /* ReflectorClient::setRemoteUdpSource */
