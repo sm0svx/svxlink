@@ -133,7 +133,7 @@ class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
       }
     }
   
-    sigc::signal<void, FdWatch*, unsigned short> activity;
+    sigc::signal<void(FdWatch*, unsigned short)> activity;
 
   private:
     std::map<int, pollfd> pfd_map;
