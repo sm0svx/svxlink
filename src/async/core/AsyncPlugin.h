@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -105,20 +105,14 @@ namespace Async
  *
  ****************************************************************************/
 
-class PluginBase
-{
-};
-
 /**
 @brief  A base class for making a class into a dynamic loadable plugin
 @author Tobias Blomberg / SM0SVX
 @date   2022-08-23
 
-A_detailed_class_description
-
 \include AsyncPlugin_demo.cpp
 */
-class Plugin : public PluginBase
+class Plugin
 {
   public:
     /**
@@ -131,8 +125,8 @@ class Plugin : public PluginBase
      * @brief   Load the plugin from the specified path returning correct type
      * @param   path The file path
      *
-     * The plugin may use this function to load the plugin, check that it is of
-     * the correct type and then return a pointer to that type.
+     * The application may use this function to load the plugin, check that it
+     * is of the correct type and then return a pointer to that type.
      */
     template <class T>
     static T* load(const std::string& path)
@@ -142,15 +136,15 @@ class Plugin : public PluginBase
       {
         return nullptr;
       }
-      T* demop = dynamic_cast<T*>(p);
-      if (demop == nullptr)
+      T* plugin = dynamic_cast<T*>(p);
+      if (plugin == nullptr)
       {
         std::cerr << "*** ERROR: Could not load plugin \"" << path
                   << "\": Not a \"" << T::typeName() << "\" plugin"
                   << std::endl;
         delete p;
       }
-      return demop;
+      return plugin;
     }
 
     static void unload(Plugin* p);
