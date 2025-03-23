@@ -657,6 +657,7 @@ int AprsTcpClient::tcpDataReceived(TcpClient<>::TcpConnection *con,
     else
     {
       recv_buf.append(first, count);
+      count = 0;
     }
   }
 
