@@ -111,9 +111,9 @@ class EchoLinkQsoTest : public EchoLink::Qso
     
     void setVoxLimit(long limit) { vox_limit = limit; }
     long voxLimit(void) const { return vox_limit; }
-    
-    sigc::signal<void, EchoLinkQsoTest*> done;
-    
+
+    sigc::signal<void(EchoLinkQsoTest*)> done;
+
   protected:
     
   private:

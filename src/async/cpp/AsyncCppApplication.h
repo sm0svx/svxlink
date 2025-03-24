@@ -182,8 +182,8 @@ class CppApplication : public Application
      * to be monitored for activity. When the signal is triggered, this sigc
      * signal will be emitted.
      */
-    sigc::signal<void, int> unixSignalCaught;
-    
+    sigc::signal<void(int)> unixSignalCaught;
+
   protected:
     
   private:

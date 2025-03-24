@@ -206,9 +206,10 @@ class Dispatcher : public sigc::trackable
      * This signal is emitted when a remote station tries to connect. It will be
      * emitted every time a connect datagram is received.
      */
-    sigc::signal<void, const Async::IpAddress&, const std::string&,
-      	      	  const std::string&, const std::string&> incomingConnection;
-    
+    sigc::signal<void(const Async::IpAddress&, const std::string&,
+                      const std::string&,
+                      const std::string&)> incomingConnection;
+
   protected:
     
   private:
