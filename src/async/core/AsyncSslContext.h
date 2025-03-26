@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2020 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -169,9 +169,10 @@ class SslContext
     }
 
     /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
+     * @brief   Set which key and certificate file to use for connections
+     * @param   keyfile The path to the key file
+     * @param   crtfile The path to the certificate file
+     * @return  Returns \em true on success
      */
     bool setCertificateFiles(const std::string& keyfile,
                              const std::string& crtfile)
@@ -205,10 +206,19 @@ class SslContext
       //          << std::endl;
 
       return true;
-    }
+    } /* setCertificateFiles */
 
+    /**
+     * @brief   Find out if the CA certificate file is set
+     * @return  Returns \em true if the CA certificate has been set
+     */
     bool caCertificateFileIsSet(void) const { return m_cafile_set; }
 
+    /**
+     * @brief   Set which CA certificate file to use for verifying certificates
+     * @param   cafile The path to the CA file
+     * @return  Returns \em true on success
+     */
     bool setCaCertificateFile(const std::string& cafile)
     {
       int ret = SSL_CTX_load_verify_locations(m_ctx, cafile.c_str(), NULL);

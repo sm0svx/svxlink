@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AsyncSslExtX509SubjectAltName_demo.cpp
+/** @example AsyncSslX509_demo.cpp
 An example of how to use the SslX509ExtSubjectAltName class
 */
 
@@ -110,9 +110,7 @@ namespace Async
 @author Tobias Blomberg / SM0SVX
 @date   2022-05-27
 
-A_detailed_class_description
-
-\include AsyncSslExtX509SubjectAltName_demo.cpp
+\include AsyncSslX509_demo.cpp
 */
 class SslX509ExtSubjectAltName
 {
@@ -124,6 +122,13 @@ class SslX509ExtSubjectAltName
      */
     //SslX509ExtSubjectAltName(void);
 
+    /**
+     * @brief   Constructor
+     * @param   names A string of comma separated names
+     *
+     * Names are specified on a tag:value format. For example:
+     * DNS:example.org, IP:1.2.3.4, email:user@example.org
+     */
     explicit SslX509ExtSubjectAltName(const std::string& names)
     {
       m_ext = X509V3_EXT_conf_nid(NULL, NULL, NID_subject_alt_name,
@@ -132,7 +137,7 @@ class SslX509ExtSubjectAltName
 
     /**
      * @brief   Constructor
-     * @param   names An existing X509_EXTENSION object
+     * @param   ext An existing X509_EXTENSION object
      */
     SslX509ExtSubjectAltName(const X509_EXTENSION* ext)
     {
@@ -145,7 +150,7 @@ class SslX509ExtSubjectAltName
 
     /**
      * @brief   Constructor
-     * @param   names An existing GENERAL_NAMES object
+     * @param   names A pointer to an existing GENERAL_NAMES object
      */
     explicit SslX509ExtSubjectAltName(GENERAL_NAMES* names)
     {
