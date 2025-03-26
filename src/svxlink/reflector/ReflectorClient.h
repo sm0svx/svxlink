@@ -344,20 +344,35 @@ class ReflectorClient : public sigc::trackable
     }
 
     /**
+     * @brief   Return the remote UDP IP
+     * @return  Returns the source IP used by the client for UDP
+     */
+    const Async::IpAddress& remoteUdpHost(void) const
+    {
+      const auto& addr = m_client_src.first;
+      if (addr.isEmpty())
+      {
+        return remoteHost();
+      }
+      return addr;
+    }
+
+    /**
      * @brief   Return the remote port number
-     * @return  Returns the local port number used by the client
+     * @return  Returns the source port used by the client for UDP
      */
     uint16_t remoteUdpPort(void) const { return m_remote_udp_port; }
 
     /**
-     * @brief   Set the remote port number
-     * @param   The port number used by the client
+     * @brief   Set the remote UDP source (IP, port)
+     * @param   src A ClientSrc
      *
-     * The Reflector use this function to set the port number used by the
-     * client so that UDP packets can be send to the client and check that
-     * incoming packets originate from the correct port.
+     * The Reflector use this function to set the (IP, port number) used by the
+     * client so that UDP packets can be sent to the client, incoming UDP
+     * packets can be associated with the correct client object and to check
+     * that incoming packets originate from the correct source.
      */
-    void setRemoteUdpPort(uint16_t port);
+    void setRemoteUdpSource(const ClientSrc& src);
 
     /**
      * @brief   Get the callsign for this connection
@@ -566,7 +581,6 @@ class ReflectorClient : public sigc::trackable
     Async::AtTimer              m_renew_cert_timer;
 
     static ClientId newClientId(ReflectorClient* client);
-    static ClientSrc newClientSrc(ReflectorClient* client);
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);

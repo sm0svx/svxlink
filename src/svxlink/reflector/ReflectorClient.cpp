@@ -256,15 +256,16 @@ ReflectorClient::~ReflectorClient(void)
 } /* ReflectorClient::~ReflectorClient */
 
 
-void ReflectorClient::setRemoteUdpPort(uint16_t port)
+void ReflectorClient::setRemoteUdpSource(const ReflectorClient::ClientSrc& src)
 {
   assert(m_remote_udp_port == 0);
-  m_remote_udp_port = port;
+  m_remote_udp_port = src.second;
   if (m_client_proto_ver >= ProtoVer(3, 0))
   {
-    m_client_src = newClientSrc(this);
+    m_client_src = src;
+    client_src_map[src] = this;
   }
-} /* ReflectorClient::setRemoteUdpPort */
+} /* ReflectorClient::setRemoteUdpSource */
 
 
 int ReflectorClient::sendMsg(const ReflectorMsg& msg)
@@ -389,15 +390,6 @@ ReflectorClient::ClientId ReflectorClient::newClientId(ReflectorClient* client)
   client_map[id] = client;
   return id;
 } /* ReflectorClient::newClientId */
-
-
-ReflectorClient::ClientSrc ReflectorClient::newClientSrc(ReflectorClient* client)
-{
-  ClientSrc src{std::make_pair(client->m_con->remoteHost(),
-                               client->m_remote_udp_port)};
-  client_src_map[src] = client;
-  return src;
-} /* ReflectorClient::newClientSrc */
 
 
 void ReflectorClient::onSslConnectionReady(TcpConnection *con)
@@ -911,7 +903,7 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
     }
     //std::cout << "### handleNodeInfo: udpSrcPort()=" << msg.udpSrcPort()
     //          << " JSON=" << msg.json() << std::endl;
-    //setRemoteUdpPort(msg.udpSrcPort());
+    //setRemoteUdpSource(msg.udpSrcPort());
     setUdpCipherIVRand(msg.ivRand());
     setUdpCipherKey(msg.udpCipherKey());
     jsonstr = msg.json();

@@ -484,6 +484,8 @@ void Reflector::broadcastMsg(const ReflectorMsg& msg,
 bool Reflector::sendUdpDatagram(ReflectorClient *client,
     const ReflectorUdpMsg& msg)
 {
+  auto udp_addr = client->remoteUdpHost();
+  auto udp_port = client->remoteUdpPort();
   if (client->protoVer() >= ProtoVer(3, 0))
   {
     ReflectorUdpMsg header(msg.type());
@@ -497,11 +499,10 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client,
     if (!aad.pack(aadss))
     {
       std::cout << "*** WARNING: Packing associated data failed for UDP "
-                   "datagram to " << client->remoteHost() << ":"
-                << client->remotePort() << std::endl;
+                   "datagram to " << udp_addr << ":" << udp_port << std::endl;
       return false;
     }
-    return m_udp_sock->write(client->remoteHost(), client->remoteUdpPort(),
+    return m_udp_sock->write(udp_addr, udp_port,
                              aadss.str().data(), aadss.str().size(),
                              ss.str().data(), ss.str().size());
   }
@@ -512,7 +513,7 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client,
     ostringstream ss;
     assert(header.pack(ss) && msg.pack(ss));
     return m_udp_sock->UdpSocket::write(
-        client->remoteHost(), client->remoteUdpPort(),
+        udp_addr, udp_port,
         ss.str().data(), ss.str().size());
   }
 } /* Reflector::sendUdpDatagram */
@@ -1109,6 +1110,14 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
            << std::endl;
       return;
     }
+
+    if (addr != client->remoteHost())
+    {
+      cerr << "*** WARNING[" << client->callsign()
+           << "]: Incoming UDP packet has the wrong source ip, "
+           << addr << " instead of " << client->remoteHost() << endl;
+      return;
+    }
   }
 
   //auto client = ReflectorClient::lookup(std::make_pair(addr, port));
@@ -1123,16 +1132,9 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   //  }
   //}
 
-  if (addr != client->remoteHost())
-  {
-    cerr << "*** WARNING[" << client->callsign()
-         << "]: Incoming UDP packet has the wrong source ip, "
-         << addr << " instead of " << client->remoteHost() << endl;
-    return;
-  }
   if (client->remoteUdpPort() == 0)
   {
-    client->setRemoteUdpPort(port);
+    client->setRemoteUdpSource(std::make_pair(addr, port));
     client->sendUdpMsg(MsgUdpHeartbeat());
   }
   if (port != client->remoteUdpPort())
