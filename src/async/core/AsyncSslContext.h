@@ -111,13 +111,22 @@ namespace Async
 @author Tobias Blomberg / SM0SVX
 @date   2020-08-01
 
-A_detailed_class_description
-
-\include MyNamespaceTemplate_demo.cpp
+\include AsyncSslX509_demo.cpp
 */
 class SslContext
 {
   public:
+    /**
+     * @brief   Print the latest SSL errors
+     * @param   fname The name of the last called function
+     */
+    static void sslPrintErrors(const std::string& fname)
+    {
+      std::cerr << "*** ERROR: OpenSSL '" << fname << "' failed: ";
+      ERR_print_errors_fp(stderr);
+      std::cerr << std::endl;
+    } /* sslPrintErrors */
+
     /**
      * @brief   Default constructor
      */
@@ -141,7 +150,7 @@ class SslContext
       SSL_CTX_set_default_verify_paths(m_ctx);
       //int SSL_CTX_set_default_verify_dir(SSL_CTX *ctx);
       //int SSL_CTX_set_default_verify_file(SSL_CTX *ctx);
-    }
+    } /* SslContext */
 
     /**
      * @brief   Constructor
@@ -184,21 +193,21 @@ class SslContext
       //      m_ctx, crtfile.c_str(), SSL_FILETYPE_PEM) != 1)
       if (SSL_CTX_use_certificate_chain_file(m_ctx, crtfile.c_str()) != 1)
       {
-        sslPrintErrors("SSL_CTX_use_certificate_chain_file failed");
+        sslPrintErrors("SSL_CTX_use_certificate_chain_file");
         return false;
       }
 
       if (SSL_CTX_use_PrivateKey_file(
             m_ctx, keyfile.c_str(), SSL_FILETYPE_PEM) != 1)
       {
-        sslPrintErrors("SSL_CTX_use_PrivateKey_file failed");
+        sslPrintErrors("SSL_CTX_use_PrivateKey_file");
         return false;
       }
 
         // Make sure that the key and certificate files match
       if (SSL_CTX_check_private_key(m_ctx) != 1)
       {
-        sslPrintErrors("SSL_CTX_check_private_key failed");
+        sslPrintErrors("SSL_CTX_check_private_key");
         return false;
       }
       //std::cout << "### SslContext::setCertificateFiles: "
@@ -226,12 +235,10 @@ class SslContext
       return m_cafile_set;
     }
 
-    void sslPrintErrors(const char* fname)
-    {
-      std::cerr << "*** ERROR: OpenSSL failed: ";
-      ERR_print_errors_fp(stderr);
-    } /* sslPrintErrors */
-
+    /**
+     * @brief   Cast to pointer to SSL_CTX
+     * @return  Returns a pointer to the internal SSL_CTX
+     */
     operator SSL_CTX*(void) { return m_ctx; }
     operator const SSL_CTX*(void) const { return m_ctx; }
 
