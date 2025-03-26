@@ -700,12 +700,10 @@ bool Reflector::reqEmailOk(const Async::SslCertSigningReq& req) const
   san.forEach(
       [&](int type, std::string value)
       {
-        if (type == GEN_EMAIL)
-        {
-          email_cnt += 1;
-          email_ok &= emailOk(value);
-        }
-      });
+        email_cnt += 1;
+        email_ok &= emailOk(value);
+      },
+      GEN_EMAIL);
   email_ok &= (email_cnt > 0) || emailOk("");
   return email_ok;
 } /* Reflector::reqEmailOk */
@@ -715,13 +713,14 @@ std::string Reflector::checkCsr(const Async::SslCertSigningReq& req)
 {
   if (!callsignOk(req.commonName()))
   {
-    return std::string(
-        "Certificate signing request with invalid callsign: '");
+    return std::string("Certificate signing request with invalid callsign '") +
+           req.commonName() + "'";
   }
   if (!reqEmailOk(req))
   {
     return std::string(
-        "Certificate signing request with invalid CERT_EMAIL");
+             "Certificate signing request with no or invalid CERT_EMAIL"
+           );
   }
   return "";
 } /* Reflector::checkCsr */

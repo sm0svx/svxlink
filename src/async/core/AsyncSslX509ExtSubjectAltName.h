@@ -222,9 +222,12 @@ class SslX509ExtSubjectAltName
 
     /**
      * @brief   Loop through all names calling the given function for each one
-     * @param   f The function to call for each name
+     * @param   f     The function to call for each name
+     * @param   type  The name type to call the function for (default: all)
+     *
+     * Type can be GEN_DNS, GEN_IPADD or GEN_EMAIL. Other types are ignored.
      */
-    void forEach(ForeachFunction f) const
+    void forEach(ForeachFunction f, int type=-1) const
     {
       if (m_ext == nullptr)
       {
@@ -236,7 +239,7 @@ class SslX509ExtSubjectAltName
       for (int i = 0; i < count; ++i)
       {
         const GENERAL_NAME* entry = sk_GENERAL_NAME_value(names, i);
-        if (entry == nullptr)
+        if ((entry == nullptr) || ((type >= 0) && (entry->type != type)))
         {
           continue;
         }
@@ -297,9 +300,12 @@ class SslX509ExtSubjectAltName
 
     /**
      * @brief   Convert all SANs to a string
+     * @param   type  The name type consider (default: all)
      * @returns Return a ", " separated string with SANs
+     *
+     * Type can be GEN_DNS, GEN_IPADD or GEN_EMAIL.
      */
-    std::string toString(void) const
+    std::string toString(int type=-1) const
     {
       std::string sep;
       std::string str;
@@ -337,7 +343,8 @@ class SslX509ExtSubjectAltName
                 break;
             }
             sep = ", ";
-          });
+          },
+          type);
       return str;
     } /* toString */
 
