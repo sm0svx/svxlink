@@ -36,5 +36,8 @@ DEVCAL=1.0.3.99.2
 # Version for svxserver
 SVXSERVER=0.0.6
 
+# Version for Usrp support
+USRPSUPPORT=0.0.1.2
+
 # Version for SvxReflector
 SVXREFLECTOR=1.2.99.33
