@@ -546,7 +546,6 @@ class TcpConnection : virtual public sigc::trackable
     void onWriteSpaceAvailable(Async::FdWatch* w);
     int rawWrite(const void* buf, int count);
 
-    void sslPrintErrors(const char* fname);
     SslStatus sslGetStatus(int n);
     int sslRecvHandler(char* src, int count);
     SslStatus sslDoHandshake(void);

@@ -1,14 +1,12 @@
 /**
 @file   AsyncSslX509Extensions.h
-@brief  A_brief_description_for_this_file
+@brief  A class representing X.509 v3 extensions
 @author Tobias Blomberg / SM0SVX
 @date   2022-05-22
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AsyncSslX509Extensions_demo.cpp
+/** @example AsyncSslX509_demo.cpp
 An example of how to use the SslX509Extensions class
 */
 
@@ -112,13 +110,11 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief  A_brief_class_description
+@brief  A class representing X.509 extensions
 @author Tobias Blomberg / SM0SVX
 @date   2022-05-22
 
-A_detailed_class_description
-
-\include AsyncSslX509Extensions_demo.cpp
+\include AsyncSslX509_demo.cpp
 */
 class SslX509Extensions
 {
@@ -131,6 +127,10 @@ class SslX509Extensions
       m_exts = sk_X509_EXTENSION_new_null();
     }
 
+    /**
+     * @brief   Constructor
+     * @param   exts Pointer to a stack of X509_EXTENSION objects
+     */
     explicit SslX509Extensions(STACK_OF(X509_EXTENSION)* exts)
       : m_exts(exts)
     {
@@ -148,10 +148,11 @@ class SslX509Extensions
 
     /**
      * @brief   Copy constructor
+     * @param   other The object to copy from
      */
     explicit SslX509Extensions(const SslX509Extensions& other)
     {
-      std::cout << "### SslX509Extensions copy constructor" << std::endl;
+      //std::cout << "### SslX509Extensions copy constructor" << std::endl;
       for (int i=0; i<X509v3_get_ext_count(other.m_exts); ++i)
       {
         const auto ext = X509v3_get_ext(other.m_exts, i);
@@ -177,30 +178,59 @@ class SslX509Extensions
     }
 
     /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
+     * @brief   Add basic constraints extension
+     * @param   bc Basic constraints string
+     * @return  Return \em true on success
+     *
+     * Ex: addBasicConstraints("critical, CA:FALSE");
      */
     bool addBasicConstraints(const std::string& bc)
     {
       return addExt(NID_basic_constraints, bc);
     }
 
+    /**
+     * @brief   Add key usage
+     * @param   ku Key usage string
+     * @return  Return \em true on success
+     *
+     * Ex: addKeyUsage(
+     *       "critical, digitalSignature, keyEncipherment, keyAgreement"
+     *     );
+     */
     bool addKeyUsage(const std::string& ku)
     {
       return addExt(NID_key_usage, ku);
     }
 
+    /**
+     * @brief   Add extended key usage
+     * @param   eku Extended key usage string
+     * @return  Return \em true on success
+     *
+     * Ex: addExtKeyUsage("serverAuth");
+     */
     bool addExtKeyUsage(const std::string& eku)
     {
       return addExt(NID_ext_key_usage, eku);
     }
 
+    /**
+     * @brief   Add subject alternative names
+     * @param   Subject alternative names string
+     * @return  Return \em true on success
+     *
+     * Ex: addSUbjectAltNames("DNS:dom.org,IP:1.2.3.4,email:user@dom.org")
+     */
     bool addSubjectAltNames(const std::string& san)
     {
       return addExt(NID_subject_alt_name, san);
     }
 
+    /**
+     * @brief   Get the subject alternative names extension
+     * @return  Returns an object representing the SAN
+     */
     SslX509ExtSubjectAltName subjectAltName(void) const
     {
       int ext_idx = X509v3_get_ext_by_NID(m_exts, NID_subject_alt_name, -1);
@@ -212,6 +242,10 @@ class SslX509Extensions
       return ext;
     }
 
+    /**
+     * @brief   Add a subject alternative names object
+     * @param   san A subject alternative names object containing names to add
+     */
     bool addExtension(const SslX509ExtSubjectAltName& san)
     {
       const X509_EXTENSION* other_ext = san;
@@ -223,6 +257,9 @@ class SslX509Extensions
       return (sk_X509_EXTENSION_push(m_exts, ext) > 0);
     }
 
+    /**
+     * @brief   Cast to a pointer to a stack of X509_EXTENSION objects
+     */
     operator const STACK_OF(X509_EXTENSION)*() const { return m_exts; }
 
   private:
