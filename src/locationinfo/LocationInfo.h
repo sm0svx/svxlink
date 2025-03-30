@@ -123,7 +123,7 @@ class LocationInfo
 
     struct Cfg
     {
-      unsigned int binterval    {10}; // Minutes
+      unsigned int binterval    {10}; // Beacon interval in minutes
       unsigned int frequency    {0};
       unsigned int power        {0};
       unsigned int tone         {0};
@@ -142,7 +142,7 @@ class LocationInfo
       std::string mycall;
       std::string prefix;
       std::string path          {"TCPIP*"};
-      std::string comment       {"SvxLink by SM0SVX (www.svxlink.org)"};
+      std::string comment       {"SvxLink by SM0SVX"};
       std::string destination   {"APSVX1"};
       bool        debug         {false};
       std::string filter;

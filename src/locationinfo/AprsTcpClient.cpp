@@ -229,7 +229,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
-  std::string status = prefixStr() + addrStr() + ">";
+  std::string status = prefixStr() + addrStr() + ">" + timeStr();
   for (const auto& call : call_list)
   {
     status += call + " ";
@@ -406,6 +406,10 @@ std::string AprsTcpClient::rangeStr(void)
 
 std::string AprsTcpClient::prefixStr(void) const
 {
+  if (loc_cfg.prefix.empty())
+  {
+    return "";
+  }
   return std::string("E") + loc_cfg.prefix + "-";
 } /* AprsTcpClient::prefixStr */
 
@@ -555,7 +559,13 @@ void AprsTcpClient::tcpConnected(void)
 void AprsTcpClient::startNormalSequence(Timer *t)
 {
   sendAprsBeacon(t);
-  beacon_timer->setEnable(true);		// start the beaconinterval
+  beacon_timer->setEnable(true);  // Start the beacon interval
+
+    // Send SvxLink version as status on connection to APRS server
+  std::string status = addrStr() + ">" + timeStr() +
+                       "SvxLink v" + SVXLINK_APP_VERSION +
+                       " (https://www.svxlink.org)";
+  sendMsg(status);
 } /* AprsTcpClient::startNormalSequence */
 
 
