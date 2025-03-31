@@ -161,8 +161,8 @@ int main(int argc, char **argv)
       int button = QMessageBox::critical(0, "Bad configuration",
 	  "There are one or more configuration items that have not been "
 	  "filled in. Please fill in the missing items.",
-	  "Configure", "Quit");
-      if (button == 1)
+	QMessageBox::Abort, QMessageBox::Ok);
+      if (button == QMessageBox::Abort)
       {
       	return 1;
       }
