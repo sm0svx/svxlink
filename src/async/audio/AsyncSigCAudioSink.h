@@ -191,7 +191,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      * If 0 is returned, the source should write no more samples until the
      * resumeOutput function in the source have been called.
      */
-    sigc::signal<int, float *, int> sigWriteSamples;
+    sigc::signal<int(float*, int)> sigWriteSamples;
 
     /**
      * @brief 	Signal emitted when the source are finished writing samples
@@ -200,8 +200,8 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      * writing samples. When done flushing, the allSamplesFlushed function
      * should be called.
      */
-    sigc::signal<void>       	    sigFlushSamples;
-    
+    sigc::signal<void()> sigFlushSamples;
+
 };  /* class SigCAudioSink */
 
 

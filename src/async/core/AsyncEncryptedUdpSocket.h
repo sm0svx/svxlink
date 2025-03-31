@@ -331,8 +331,8 @@ class EncryptedUdpSocket : public UdpSocket
      * @param   buf   The buffer containing the read cipher data
      * @param   count The number of bytes read
      */
-    sigc::signal<bool, const IpAddress&, uint16_t,
-                 void*, int> cipherDataReceived;
+    sigc::signal<bool(const IpAddress&, uint16_t,
+                      void*, int)> cipherDataReceived;
 
     /**
      * @brief 	A signal that is emitted when cipher data has been decrypted
@@ -342,8 +342,8 @@ class EncryptedUdpSocket : public UdpSocket
      * @param 	buf   The buffer containing the read data
      * @param 	count The number of bytes read
      */
-    sigc::signal<void, const IpAddress&, uint16_t,
-                 void*, void*, int> dataReceived;
+    sigc::signal<void(const IpAddress&, uint16_t,
+                      void*, void*, int)> dataReceived;
 
   protected:
     void onDataReceived(const IpAddress& ip, uint16_t port, void* buf,

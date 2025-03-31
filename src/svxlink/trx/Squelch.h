@@ -302,7 +302,7 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      * @param 	is_open Is set to \em true if the squelch is open or else
      *	      	\em false
      */
-    sigc::signal<void, bool> squelchOpen;
+    sigc::signal<void(bool)> squelchOpen;
 
     /**
      * @brief   A signal that is emitted when a tone is detected
@@ -312,7 +312,7 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      * the squelch is open or not. This signal may then be emitted by such a
      * squelch detector.
      */
-    sigc::signal<void, float> toneDetected;
+    sigc::signal<void(float)> toneDetected;
 
   protected:
     /**
