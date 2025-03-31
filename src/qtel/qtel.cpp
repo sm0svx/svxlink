@@ -61,7 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
 
-	
+
 /****************************************************************************
  *
  * Local Includes
@@ -90,7 +90,7 @@ using namespace EchoLink;
 
 #define PROGRAM_NAME "qtel"
 
-	
+
 
 /****************************************************************************
  *
@@ -105,7 +105,7 @@ using namespace EchoLink;
  * Global Variables
  *
  ****************************************************************************/
- 
+
 
 
 /****************************************************************************
@@ -133,23 +133,23 @@ using namespace EchoLink;
  * Output:    Return 0 on success, else non-zero.
  * Author:    Tobias Blomberg
  * Created:   2003-03-09
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 int main(int argc, char **argv)
 {
   QtApplication app(argc, argv);
-  
+
   QTranslator translator;
-  translator.load(QString("qtel_%1").arg(QLocale::system().name()),
+  (void)translator.load(QString("qtel_%1").arg(QLocale::system().name()),
       SHARE_INSTALL_PREFIX "/qtel/translations");
   app.installTranslator(&translator);
 
   QCoreApplication::setOrganizationName("SvxLink");
   QCoreApplication::setOrganizationDomain("svxlink.org");
   QCoreApplication::setApplicationName("Qtel");
-	
+
   Settings *settings = Settings::instance();
   bool cfg_ok = false;
   while (!cfg_ok)
@@ -161,8 +161,8 @@ int main(int argc, char **argv)
       int button = QMessageBox::critical(0, "Bad configuration",
 	  "There are one or more configuration items that have not been "
 	  "filled in. Please fill in the missing items.",
-	  "Configure", "Quit");
-      if (button == 1)
+	QMessageBox::Abort, QMessageBox::Ok);
+      if (button == QMessageBox::Abort)
       {
       	return 1;
       }
@@ -172,13 +172,13 @@ int main(int argc, char **argv)
       cfg_ok = true;
     }
   }
-   
+
   MainWindow mainWindow;
   mainWindow.show();
   app.exec();
-  
+
   delete Settings::instance();
-  
+
   return 0;
 }
 

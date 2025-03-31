@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QCheckBox>
 #include <QSlider>
 #include <QTextCodec>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QPixmap>
 #include <QKeyEvent>
 #undef emit
@@ -178,12 +178,12 @@ ComDialog::ComDialog(Directory& dir, const QString& remote_host)
     chat_codec(0)
 {
   setupUi(this);
-  
+
   mic_audio_io =
       new AudioIO(Settings::instance()->micAudioDevice().toStdString(), 0);
   spkr_audio_io =
       new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
-  
+
   init();
   dns = new DnsLookup(remote_host.toStdString());
   dns->resultsReady.connect(mem_fun(*this, &ComDialog::dnsResultsReady));
@@ -243,7 +243,7 @@ void ComDialog::keyPressEvent(QKeyEvent *ke)
   {
     chat_outgoing->setFocus();
   }
-  
+
   if (ke->key() == Qt::Key_Control)
   {
     ptt_button->setCheckable(true);
@@ -280,12 +280,12 @@ void ComDialog::keyReleaseEvent(QKeyEvent *ke)
 void ComDialog::init(const QString& remote_name)
 {
   chat_codec = QTextCodec::codecForName(Settings::instance()->chatEncoding().toUtf8());
-  
-  if (callsign.contains(QRegExp("-L$")))
+
+  if (callsign.contains(QRegularExpression("-L$")))
   {
     setWindowIcon(QPixmap(":/icons/images/link.xpm"));
   }
-  else if (callsign.contains(QRegExp("-R$")))
+  else if (callsign.contains(QRegularExpression("-R$")))
   {
     setWindowIcon(QPixmap(":/icons/images/repeater.xpm"));
   }
@@ -297,25 +297,25 @@ void ComDialog::init(const QString& remote_name)
   {
     setWindowIcon(QPixmap(":/icons/images/online_icon.xpm"));
   }
-  
+
   setAttribute(Qt::WA_DeleteOnClose);
-  
+
   setWindowTitle(QString("EchoLink QSO: ") + callsign);
   call->setText(callsign);
   name_label->setText(remote_name);
-  
+
   AudioSource *prev_src = 0;
   rem_audio_fifo = new AudioFifo(INTERNAL_SAMPLE_RATE);
   rem_audio_fifo->setOverwrite(true);
   rem_audio_fifo->setPrebufSamples(1280 * INTERNAL_SAMPLE_RATE / 8000);
   prev_src = rem_audio_fifo;
-  
+
   rem_audio_valve = new AudioValve;
   rem_audio_valve->setOpen(false);
   prev_src->registerSink(rem_audio_valve);
   prev_src = rem_audio_valve;
 
-#if (INTERNAL_SAMPLE_RATE == 8000)  
+#if (INTERNAL_SAMPLE_RATE == 8000)
   if (spkr_audio_io->sampleRate() > 8000)
 #endif
   {
@@ -339,7 +339,7 @@ void ComDialog::init(const QString& remote_name)
     prev_src->registerSink(i2, true);
     prev_src = i2;
   }
-  
+
   prev_src->registerSink(spkr_audio_io);
   prev_src = 0;
 
@@ -375,7 +375,7 @@ void ComDialog::init(const QString& remote_name)
   tx_audio_splitter = new AudioSplitter;
   prev_src->registerSink(tx_audio_splitter);
   prev_src = 0;
-  
+
   Settings *settings = Settings::instance();
 
   vox = new Vox;
@@ -397,7 +397,7 @@ void ComDialog::init(const QString& remote_name)
   vox_enabled_checkbox->setChecked(vox->enabled());
   vox_threshold->setValue(vox->threshold());
   vox_delay->setValue(vox->delay());
-  
+
 #if INTERNAL_SAMPLE_RATE == 16000
   AudioDecimator *down_sampler = new AudioDecimator(
           2, coeff_16_8, coeff_16_8_taps);
@@ -408,7 +408,7 @@ void ComDialog::init(const QString& remote_name)
   ptt_valve = new AudioValve;
   tx_audio_splitter->addSink(ptt_valve);
 #endif
-  
+
   if (settings->useFullDuplex())
   {
     audio_full_duplex = true;
@@ -417,14 +417,14 @@ void ComDialog::init(const QString& remote_name)
       return;
     }
     rem_audio_valve->setOpen(true);
-    
+
     vox_enabled_checkbox->setEnabled(true);
   }
   else
   {
-    vox_enabled_checkbox->setEnabled(false);  
+    vox_enabled_checkbox->setEnabled(false);
   }
-    
+
   QObject::connect(
       reinterpret_cast<QObject *>(connect_button), SIGNAL(clicked()),
       this, SLOT(connectToStation()));
@@ -443,12 +443,12 @@ void ComDialog::init(const QString& remote_name)
   QObject::connect(
       reinterpret_cast<QObject *>(chat_outgoing), SIGNAL(returnPressed()),
       this, SLOT(sendChatMsg()));
-  
+
   ptt_button->installEventFilter(this);
-  
+
   dir.stationListUpdated.connect(mem_fun
     (*this, &ComDialog::onStationListUpdated));
-  
+
   orig_background_color = rx_indicator->palette().color(QPalette::Window);
 } /* ComDialog::init */
 
@@ -467,7 +467,7 @@ void ComDialog::updateStationData(const StationData *station)
     description->setText("?");
     status->setText("?");
     ip_address->setText("?");
-    time->setText("?");  
+    time->setText("?");
   }
 } /* ComDialog::updateStationData */
 
@@ -476,7 +476,7 @@ void ComDialog::createConnection(const StationData *station)
 {
   AudioSource *prev_src = ptt_valve;
 
-  Settings *settings = Settings::instance();  
+  Settings *settings = Settings::instance();
   con = new Qso(station->ip(), settings->callsign().toStdString(),
       settings->name().toStdString(), settings->info().toStdString());
   if (!con->initOk())
@@ -495,19 +495,19 @@ void ComDialog::createConnection(const StationData *station)
   con->isReceiving.connect(mem_fun(*this, &ComDialog::isReceiving));
   prev_src->registerSink(con);
   prev_src = con;
-  
+
   prev_src->registerSink(rem_audio_fifo);
-  
+
   connect_button->setEnabled(true);
   connect_button->setFocus();
-  
+
   if (accept_connection)
   {
     con->accept();
   }
-  
+
   setIsTransmitting(false);
-  
+
 } /* ComDialog::createConnection */
 
 
@@ -538,7 +538,7 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
 {
   bool mic_open_ok = true;
   bool spkr_open_ok = true;
-  
+
   if ((mode == AudioIO::MODE_RD) || (mode == AudioIO::MODE_RDWR))
   {
     mic_open_ok = mic_audio_io->open(AudioIO::MODE_RD);
@@ -550,7 +550,7 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
       connect(mb, SIGNAL(closed()), this, SLOT(close()));
     }
   }
-  
+
   if ((mode == AudioIO::MODE_WR) || (mode == AudioIO::MODE_RDWR))
   {
     spkr_open_ok = spkr_audio_io->open(AudioIO::MODE_WR);
@@ -562,9 +562,9 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
       connect(mb, SIGNAL(closed()), this, SLOT(close()));
     }
   }
-  
+
   return mic_open_ok && spkr_open_ok;
-  
+
 } /* ComDialog::openAudioDevice */
 
 
@@ -581,15 +581,15 @@ void ComDialog::dnsResultsReady(DnsLookup &)
     con = 0;
     return;
   }
-  
+
   StationData station;
   station.setIp(dns->addresses()[0]);
   updateStationData(&station);
-  createConnection(&station);  
-  
+  createConnection(&station);
+
   delete dns;
   dns = 0;
-  
+
 } /* ComDialog::dnsResultsReady */
 
 
@@ -644,7 +644,7 @@ void ComDialog::setIsTransmitting(bool transmit)
     QPalette palette = tx_indicator->palette();
     palette.setColor(QPalette::Window, orig_background_color);
     tx_indicator->setPalette(palette);
-    
+
     if (!ctrl_pressed)
     {
       ptt_button->setCheckable(false);
@@ -656,15 +656,15 @@ void ComDialog::setIsTransmitting(bool transmit)
 void ComDialog::pttButtonPressedReleased(void)
 {
   ptt_button->setFocus();
-  
+
     /* Ignore press and release events if toggle mode is enabled */
   if (ptt_button->isCheckable())
   {
     return;
   }
-  
+
   checkTransmit();
-  
+
 } /* ComDialog::pttButtonPressedReleased */
 
 
@@ -722,7 +722,7 @@ void ComDialog::stateChange(Qso::State state)
 	name_label->setText(con->remoteName().c_str());
       }
       break;
-    
+
     case Qso::STATE_CONNECTING:
       connect_button->setEnabled(false);
       disconnect_button->setEnabled(true);
@@ -731,7 +731,7 @@ void ComDialog::stateChange(Qso::State state)
       disconnect_button->setFocus();
       info_incoming->append(tr("Connecting to ") + call->text() + "...\n");
       break;
-      
+
     case Qso::STATE_BYE_RECEIVED:
       ctrl_pressed = false;
       ptt_button->setChecked(false);
@@ -740,7 +740,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       break;
-      
+
     case Qso::STATE_DISCONNECTED:
       ctrl_pressed = false;
       ptt_button->setChecked(false);
@@ -752,9 +752,9 @@ void ComDialog::stateChange(Qso::State state)
       info_incoming->append(tr("Disconnected") + "\n");
       break;
   }
-  
+
   checkTransmit();
-  
+
 } /* ComDialog::stateChange */
 
 
@@ -804,7 +804,7 @@ void ComDialog::checkTransmit(void)
   setIsTransmitting(
       	// We must be connected to transmit.
       ((con != 0) && (con->currentState() == Qso::STATE_CONNECTED)) &&
-      
+
       	// Either the PTT or the VOX must be active to transmit
       ((ptt_button->isChecked()) || ptt_button->isDown() ||
        (vox->state() != Vox::IDLE))
@@ -818,7 +818,7 @@ bool ComDialog::isChatText(const QString& msg)
     // three characters and a maximum of seven characters, excluding the
     // optional "-L" or "-R". To be classified as a chat message a ">" must
     // directly follow the callsign.
-  QRegExp rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
+  QRegularExpression rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
   return msg.contains(rexp);
 }
 
