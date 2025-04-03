@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <vector>
 #include <string>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -186,6 +187,18 @@ class Reflector : public sigc::trackable
      */
     void requestQsy(ReflectorClient *client, uint32_t tg);
 
+    /**
+     * @brief  Updates the user information
+     * @param  user array with all data of the useres
+     */
+    void updateUserdata(Json::Value eventmessage);
+
+    /**
+     * @brief  Update Qso information
+     * @param  ToDo
+     */
+    void updateQsostate(Json::Value eventmessage);
+
     Async::EncryptedUdpSocket* udpSocket(void) const { return m_udp_sock; }
 
     uint32_t randomQsyLo(void) const { return m_random_qsy_lo; }
@@ -215,7 +228,6 @@ class Reflector : public sigc::trackable
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
-    using HttpServer = Async::TcpServer<Async::HttpServerConnection>;
 
     static constexpr unsigned ROOT_CA_VALIDITY_DAYS     = 25*365;
     static constexpr unsigned ISSUING_CA_VALIDITY_DAYS  = 4*90;
@@ -230,8 +242,10 @@ class Reflector : public sigc::trackable
     uint32_t                    m_random_qsy_lo;
     uint32_t                    m_random_qsy_hi;
     uint32_t                    m_random_qsy_tg;
-    HttpServer*                 m_http_server;
+    Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
     Async::Pty*                 m_cmd_pty;
+    std::string                 cfg_filename;
+    bool                        debug;
     Async::SslContext           m_ssl_ctx;
     std::string                 m_keys_dir;
     std::string                 m_pending_csrs_dir;
@@ -252,6 +266,26 @@ class Reflector : public sigc::trackable
     std::vector<uint8_t>        m_ca_sig;
     std::string                 m_accept_cert_email;
 
+
+    // contain user data
+    struct User {
+      std::string id;
+      std::string call;
+      std::string mode;
+      std::string name;
+      std::string location;
+      std::string comment;
+      float lat;
+      float lon;
+      std::string state;
+      short reasonforsending;
+      char aprs_sym;
+      char aprs_tab;
+      time_t last_activity;
+      time_t sent_last_sds;
+    };
+    std::map<std::string, User> userdata;
+
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
     void clientConnected(Async::FramedTcpConnection *con);
@@ -270,6 +304,9 @@ class Reflector : public sigc::trackable
         Async::HttpServerConnection::DisconnectReason reason);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
+    bool getUserData(void);
+    void writeUserData(std::map<std::string, User> userdata);
+    std::string jsonToString(Json::Value eventmessage);
     void ctrlPtyDataReceived(const void *buf, size_t count);
     void cfgUpdated(const std::string& section, const std::string& tag);
     bool loadCertificateFiles(void);
