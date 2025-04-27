@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <unistd.h>
+#include <sys/utsname.h>
 
 #include <sstream>
 #include <iostream>
@@ -633,6 +634,12 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   m_node_info["sw"] = "SvxLink";
   m_node_info["swVer"] = SVXLINK_APP_VERSION;
   m_node_info["projVer"] = PROJECT_VERSION;
+
+  struct utsname osInfo{};
+  if (uname(&osInfo) == 0)
+  {
+    m_node_info["machineArch"] = osInfo.machine;
+  }
 
   cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
       m_udp_heartbeat_tx_cnt_reset);
