@@ -120,12 +120,12 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
                    int port);
      ~AprsTcpClient(void);
 
-     void updateDirectoryStatus(EchoLink::StationData::Status status) {};
      void updateQsoStatus(int action, const std::string& call,
-       const std::string& info, std::list<std::string>& call_list);
-      void update3rdState(const std::string& call, const std::string& info);
-     void igateMessage(const std::string& info);
-
+                          const std::string& info,
+                          const std::list<std::string>& calls) override;
+     void update3rdState(const std::string& call,
+                         const std::string& info) override;
+     void igateMessage(const std::string& info) override;
 
   private:
     typedef std::vector<std::string> StrList;
@@ -146,7 +146,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
 
     void  sendMsg(std::string aprsmsg);
     std::string addrStr(void);
-    std::string posStr(const std::string& symbol="");
+    std::string posStr(const std::string& symbol);
     std::string timeStr(void);
     std::string phgStr(void);
     std::string toneStr(void);

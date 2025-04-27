@@ -496,8 +496,9 @@ int main(int argc, char **argv)
   {
     if (!LocationInfo::initialize(cfg, value))
     {
-      cerr << "*** ERROR: Could not init LocationInfo, "
-           << "check configuration section LOCATION_INFO=" << value << "\n";
+      std::cerr << "*** ERROR: Could not initialize the location info "
+                << "subsystem. Check configuration section [" << value << "]."
+                << std::endl;
       exit(1);
     }
   }
