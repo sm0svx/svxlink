@@ -103,11 +103,13 @@ class AprsClient
   public:
     virtual ~AprsClient(void) {};
 
-    virtual void updateDirectoryStatus(EchoLink::StationData::Status status) = 0;
+    virtual void updateDirectoryStatus(EchoLink::StationData::Status status) {};
     virtual void updateQsoStatus(int action, const std::string& call,
-      const std::string& info, std::list<std::string>& call_list) = 0;
-    virtual void update3rdState(const std::string& call, const std::string& info) = 0;
-    virtual void igateMessage(const std::string& info) = 0;
+                                 const std::string& info,
+                                 const std::list<std::string>& calls) = 0;
+    virtual void update3rdState(const std::string& call,
+                                const std::string& info) = 0;
+    virtual void igateMessage(const std::string& info) {}
 
 };  /* class AprsClient */
 

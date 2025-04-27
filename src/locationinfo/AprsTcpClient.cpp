@@ -193,15 +193,16 @@ AprsTcpClient::~AprsTcpClient(void)
 } /* AprsTcpClient::~AprsTcpClient */
 
 
-void AprsTcpClient::updateQsoStatus(int action, const string& call,
-  const string& info, list<string>& call_list)
+void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
+                                    const std::string& info,
+                                    const std::list<std::string>& calls)
 {
   if (loc_cfg.prefix.empty())
   {
     return;
   }
 
-  num_connected = call_list.size();
+  num_connected = calls.size();
 
   char msg[80];
   switch(action)
@@ -223,14 +224,14 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   objmsg << addrStr()
          << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
          << "111111z"
-         << posStr()
+         << posStr("E0")
          << msg
          ;
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
   std::string status = prefixStr() + addrStr() + ">" + timeStr();
-  for (const auto& call : call_list)
+  for (const auto& call : calls)
   {
     status += call + " ";
   }
@@ -283,18 +284,13 @@ std::string AprsTcpClient::addrStr(void)
 
 std::string AprsTcpClient::posStr(const std::string& symbol)
 {
-  char symbol_table_id = 'E';
-  char symbol_code = '0';
+  char symbol_table_id = symbol[0];
+  char symbol_code = symbol[1];
 
-  if (symbol.size() >= 2)
+    // Set overlay if Echolink object position string
+  if (symbol_table_id == 'E')
   {
-    symbol_table_id = symbol[0];
-    symbol_code = symbol[1];
-  }
-  else if (num_connected > 0)
-  {
-      // Set overlay
-    symbol_table_id = (num_connected < 10) ? '0' + num_connected : '9';
+    symbol_code = (num_connected < 10) ? '0' + num_connected : '9';
   }
 
   char pos[32];
@@ -360,8 +356,8 @@ std::string AprsTcpClient::txOffsetStr(void)
   std::ostringstream offset;
   if (std::abs(loc_cfg.tx_offset_khz) <= 9990)
   {
-    offset << std::showpos << std::setw(4) << std::internal
-           << (loc_cfg.tx_offset_khz / 10);
+    offset << std::showpos << std::setw(4) << std::setfill('0')
+           << std::internal << (loc_cfg.tx_offset_khz / 10);
   }
   return offset.str();
 } /* AprsTcpClient::txOffsetStr */
@@ -433,28 +429,10 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   const std::string tx_offset_str = prependSpaceIfNotEmpty(txOffsetStr());
   const std::string comment_str = prependSpaceIfNotEmpty(loc_cfg.comment);
 
-  if (!loc_cfg.prefix.empty())
-  {
-      // Object message for Echolink
-    std::ostringstream objmsg;
-    objmsg << addrStr()
-           << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
-           << "111111z"
-           << posStr()
-           << phgStr()
-           << "/" << frequencyStr()
-           << " " << toneStr()
-           << tx_offset_str
-           << " " << rangeStr()
-           << comment_str;
-    sendMsg(objmsg.str());
-  }
-
-    // Position report for main callsign
+    // Position report for main object
   std::ostringstream posmsg;
   posmsg << addrStr()
-         //<< "="
-         << ";" << addresseeStr(loc_cfg.mycall) << "*"
+         << ";" << addresseeStr(loc_cfg.objectname) << "*"
          << "111111z"
          << posStr(loc_cfg.symbol)
          << phgStr()
@@ -464,6 +442,34 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
          << " " << rangeStr()
          << comment_str;
   sendMsg(posmsg.str());
+
+  if (loc_cfg.objectname != loc_cfg.statscall)
+  {
+      // Position for source callsign
+    std::ostringstream posmsg;
+    posmsg << addrStr()
+           << "="
+           << posStr(loc_cfg.symbol)
+           << phgStr()
+           << "/" << frequencyStr()
+           << " " << toneStr()
+           << tx_offset_str
+           << " " << rangeStr()
+           << comment_str;
+    sendMsg(posmsg.str());
+    //std::ostringstream objmsg;
+    //objmsg << addrStr()
+    //       << ";" << addresseeStr(loc_cfg.sourcecall) << "*"
+    //       << "111111z"
+    //       << posStr()
+    //       << phgStr()
+    //       << "/" << frequencyStr()
+    //       << " " << toneStr()
+    //       << tx_offset_str
+    //       << " " << rangeStr()
+    //       << comment_str;
+    //sendMsg(objmsg.str());
+  }
 } /* AprsTcpClient::sendAprsBeacon*/
 
 

@@ -94,6 +94,8 @@ namespace
 
 void print_error(const std::string& name, const std::string& variable,
                  const std::string& value, const std::string& example = "");
+std::string addrStr(const std::string& source, const std::string& dest,
+                    const std::string& path);
 
 
 /****************************************************************************
@@ -160,58 +162,76 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   _instance = new LocationInfo;
   auto& loc_cfg = _instance->loc_cfg;
 
-  cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.mycall);
   std::string sourcecall;
   std::string logincall;
   const std::regex el_call_re("E([LR])-([0-9A-Z]{4,6})");
-  const std::regex call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
+  //const std::regex call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
+  const std::regex ax25_call_re("([0-9A-Z]{4,6})(-(?:[1-9]|1[0-5]))?");
+  const std::regex source_call_re("([A-Za-z0-9]{3,6})(-[A-Za-z0-9]{1,2})?");
+  const std::regex object_re("[\x21-\x7E][\x20-\x7E]{0,8}");
   std::smatch m;
-  if (std::regex_match(loc_cfg.mycall, m, el_call_re))
+  cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.objectname);
+  //if (cfg.getValue(cfg_name, "CALLSIGN", loc_cfg.objectname))
+  //{
+  //  std::cerr << "*** WARNING: The '" << cfg_name << "/CALLSIGN' configuration "
+  //               "variable is deprecated and will be removed in the future. "
+  //               "Use the '" << cfg_name << "/OBJECT_NAME' configuration "
+  //               "variable instead." << std::endl;
+  //}
+  //cfg.getValue(cfg_name, "OBJECT_NAME", loc_cfg.objectname);
+  if (std::regex_match(loc_cfg.objectname, m, el_call_re))
   {
     loc_cfg.prefix = m[1];
     loc_cfg.mycall = m[2];
+    loc_cfg.statscall = loc_cfg.objectname;
     sourcecall = loc_cfg.mycall;
+    loc_cfg.symbol = "E0";
   }
-  else if (std::regex_match(loc_cfg.mycall, m, call_re))
+  else if (std::regex_match(loc_cfg.objectname, m, ax25_call_re))
   {
-    loc_cfg.mycall = m[0];
+    loc_cfg.statscall = loc_cfg.objectname;
     sourcecall = m[1].str() + m[2].str();
   }
-  else
+  else if (std::regex_match(loc_cfg.objectname, m, source_call_re))
+  {
+    loc_cfg.statscall = loc_cfg.objectname;
+  }
+  else if (!std::regex_match(loc_cfg.objectname, m, object_re))
   {
     std::cerr << "*** ERROR: Variable " << cfg_name << "/CALLSIGN is malformed."
-              << " Either it must have a prefix (ER- or EL-) to indicate that "
-                 "is an Echolink station or it need to be a valid AX.25 "
-                 "callsign.\n"
-              << "Example: CALLSIGN=ER-DL1ABC"
+              << " Either it must be an APRS object name or it need to be a "
+                 "valid APRS source callsign. If it starts with EL- or ER- it "
+                 "will be interpreted as an Echolink APRS object\n"
+              << "Example: CALLSIGN=EL-DL1ABC"
               << std::endl;
     return false;
   }
 
-  unsigned ssid = 0;
-  if (cfg.getValue(cfg_name, "SOURCE_CALLSIGN", sourcecall))
+  if (!cfg.getValue(cfg_name, "SOURCE_CALLSIGN", sourcecall, true) ||
+      !std::regex_match(sourcecall, m, source_call_re))
   {
-    const std::regex from_call_re("([A-Za-z0-9]{3,6})(?:-([0-9]{1,2}))?");
-    if (!std::regex_match(sourcecall, m, from_call_re) ||
-        ((m[2] != "") && ((ssid = atoi(m[2].str().c_str())) == 0)) ||
-        (ssid > 15))
-    {
-      std::cerr << "*** ERROR: The APRS source callsign '"
-                << sourcecall << "' is invalid"
-                << std::endl;
-      return false;
-    }
+    std::cerr << "*** ERROR: The APRS source callsign '"
+              << sourcecall << "' is invalid. Use the '" << cfg_name
+              << "/SOURCE_CALLSIGN' configuration variable to set a valid "
+              << "callsign." << std::endl;
+    return false;
   }
-  loc_cfg.sourcecall = logincall = sourcecall;
+  loc_cfg.sourcecall = sourcecall;
+  logincall = sourcecall;
+  if (loc_cfg.statscall.empty())
+  {
+    loc_cfg.statscall = sourcecall;
+  }
 
-  cfg.getValue(cfg_name, "LOGIN_CALLSIGN", logincall);
   const std::regex login_call_re("([A-Za-z0-9]{3,9})(-[A-Za-z0-9]{1,2})?");
-  if (!std::regex_match(logincall, m, login_call_re) ||
+  if (!cfg.getValue(cfg_name, "LOGIN_CALLSIGN", logincall, true) ||
+      !std::regex_match(logincall, m, login_call_re) ||
       (logincall.size() > 9) || (m[2] == "-0"))
   {
     std::cerr << "*** ERROR: The APRS-IS login callsign '"
-              << logincall << "' is invalid"
-              << std::endl;
+              << logincall << "' is invalid. Use the '" << cfg_name
+              << "/LOGIN_CALLSIGN' configuration variable to set a valid "
+              << "callsign." << std::endl;
     return false;
   }
   loc_cfg.logincall = m[1];
@@ -227,39 +247,42 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   }
 
   loc_cfg.debug = false;
-  cfg.subscribeValue(cfg_name, "DEBUG",
-      loc_cfg.debug,
-      [](bool debug) {
+  cfg.subscribeValue(cfg_name, "DEBUG", loc_cfg.debug,
+      [](bool debug)
+      {
         LocationInfo::_instance->loc_cfg.debug = debug;
       });
 
-  unsigned dest_num = 1;
+  //unsigned dest_num = 1;
   //cfg.getValue(cfg_name, "DESTINATION_NUM", 1U, 9U, dest_num);
-  std::stringstream dest_ss;
-  dest_ss << "APSVX" << dest_num;
-  loc_cfg.destination = dest_ss.str();
+  //std::stringstream dest_ss;
+  //dest_ss << "APSVX" << dest_num;
+  //loc_cfg.destination = dest_ss.str();
 
   init_ok &= _instance->parsePosition(cfg, cfg_name);
   init_ok &= _instance->parseStationHW(cfg, cfg_name);
   init_ok &= _instance->parsePath(cfg, cfg_name);
   init_ok &= _instance->parseClients(cfg, cfg_name);
 
-  auto& siv = _instance->sinterval;
-  cfg.getValue(cfg_name, "STATISTICS_INTERVAL", 5U, 60U, siv);
-  _instance->startStatisticsTimer(siv * 60 * 1000);
-
-  cfg.getValue(cfg_name, "STATISTICS_LOGIC", _instance->slogic);
-
-  cfg.getValue(cfg_name, "FILTER", loc_cfg.filter);
+  //cfg.getValue(cfg_name, "STATISTICS_CALLSIGN", loc_cfg.statscall);
+  if (!loc_cfg.statscall.empty())
+  {
+    cfg.getValue(cfg_name, "STATISTICS_LOGIC", _instance->slogic);
+    cfg.getValue(cfg_name, "STATISTICS_INTERVAL", 5U, 60U,
+        _instance->sinterval);
+    _instance->startStatisticsTimer(_instance->sinterval * 60 * 1000);
+  }
 
   cfg.getValue(cfg_name, "SYMBOL", loc_cfg.symbol);
-  if (!loc_cfg.symbol.empty() && (loc_cfg.symbol.size() != 2))
+  if (loc_cfg.symbol.size() != 2)
   {
     std::cerr << "*** ERROR: The APRS symbol specified in " << cfg_name
-              << "/SYMBOL must be exactly two characters or empty"
+              << "/SYMBOL must be exactly two characters"
               << std::endl;
     return false;
   }
+
+  cfg.getValue(cfg_name, "FILTER", loc_cfg.filter);
 
   _instance->initExtPty(cfg.getValue(cfg_name, "PTY_PATH"));
 
@@ -283,11 +306,11 @@ void LocationInfo::updateDirectoryStatus(StationData::Status status)
 
 void LocationInfo::updateQsoStatus(int action, const std::string& call,
                                    const std::string& info,
-                                   std::list<std::string>& call_list)
+                                   const std::list<std::string>& calls)
 {
   for (const auto client : clients)
   {
-    client->updateQsoStatus(action, call, info, call_list);
+    client->updateQsoStatus(action, call, info, calls);
   }
 } /* LocationInfo::updateQsoStatus */
 
@@ -710,17 +733,11 @@ void LocationInfo::sendAprsStatistics(void)
 
     // FROM>APSVXn,VIA1,VIA2,VIAn:
   std::ostringstream addr;
-  addr << loc_cfg.sourcecall << ">" << loc_cfg.destination;
-  if (!loc_cfg.path.empty())
-  {
-    addr << "," << loc_cfg.path;
-  }
-  addr << ":";
+  addr << addrStr(loc_cfg.sourcecall, loc_cfg.destination, loc_cfg.path);
 
     // :ADDRESSEE:
   std::ostringstream addressee;
-  addressee << ":" // << "E" << loc_cfg.prefix << "-"
-            << std::left << std::setw(9) << loc_cfg.mycall << ":";
+  addressee << ":" << std::left << std::setw(9) << loc_cfg.statscall << ":";
 
   const auto now = Clock::now();
   bool send_metadata = (now - last_tlm_metadata > std::chrono::minutes(59));
@@ -803,7 +820,7 @@ void LocationInfo::sendAprsStatistics(void)
     auto rx_erlang = stats.rx_sec.count() / (60.0 * sinterval);
     auto tx_erlang = stats.tx_sec.count() / (60.0 * sinterval);
     std::ostringstream tlm;
-    tlm << addr.str()
+    tlm << addrStr(loc_cfg.statscall, loc_cfg.destination, loc_cfg.path)
         << "T#" << std::setw(3) << std::setfill('0') << sequence  // Sequence
         << "," << std::setw(3) << std::setfill('0')               // A1
                << std::lrint(rx_erlang / erlang_b)
@@ -911,6 +928,20 @@ void print_error(const std::string& name, const std::string& variable,
   }
   std::cerr << std::endl;
 } /* print_error */
+
+
+std::string addrStr(const std::string& source, const std::string& dest,
+                    const std::string& path)
+{
+    // MYCALL>APSVXn,path:
+  std::string addr = source + ">" + dest;
+  if (!path.empty())
+  {
+    addr += std::string(",") + path;
+  }
+  addr += ":";
+  return addr;
+} /* addrStr */
 
 } // End of anonymous namespace
 

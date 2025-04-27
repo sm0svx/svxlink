@@ -126,11 +126,12 @@ class AprsUdpClient : public AprsClient, public sigc::trackable
                   int port);
     ~AprsUdpClient(void);
 
-    void updateDirectoryStatus(EchoLink::StationData::Status status);
+    void updateDirectoryStatus(EchoLink::StationData::Status status) override;
     void updateQsoStatus(int action, const std::string& call,
-      const std::string& info, std::list<std::string>& call_list);
-    void update3rdState(const std::string& call, const std::string& info);
-    void igateMessage(const std::string& info) {}
+                         const std::string& info,
+                         const std::list<std::string>& calls) override;
+    void update3rdState(const std::string& call,
+                        const std::string& info) override;
 
   private:
     LocationInfo::Cfg	&loc_cfg;
