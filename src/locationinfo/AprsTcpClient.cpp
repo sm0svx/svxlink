@@ -395,7 +395,8 @@ std::string AprsTcpClient::frequencyStr(void) const
 std::string AprsTcpClient::rangeStr(void) const
 {
   std::ostringstream range;
-  range << "R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit;
+  range << "R" << std::setw(2) << std::setfill('0')
+               << std::min(loc_cfg.range, 99U) << loc_cfg.range_unit;
   return range.str();
 } /* AprsTcpClient::rangeStr */
 
