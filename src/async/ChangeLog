@@ -17,6 +17,9 @@
 
 * Async::AudioDevice: Reopen the audio device on failure
 
+* Async::DnsLookup: The addresses method will now return the list of hosts in
+  random order for each call.
+
 
 
  1.7.0 -- 25 Feb 2024

@@ -10,7 +10,7 @@ for usage instructions.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022  Tobias Blomberg
+Copyright (C) 2003-2025  Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,16 +28,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <algorithm>
 
 
 /****************************************************************************
@@ -241,6 +238,7 @@ vector<IpAddress> DnsLookup::addresses(void)
       addrs.push_back(static_cast<const DnsResourceRecordA*>(rr)->ip());
     }
   }
+  std::shuffle(addrs.begin(), addrs.end(), m_rng);
   return addrs;
 } /* DnsLookup::addresses */
 
