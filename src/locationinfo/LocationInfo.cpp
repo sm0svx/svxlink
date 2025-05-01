@@ -791,7 +791,7 @@ void LocationInfo::sendAprsStatistics(void)
     setReceiving(logic_name, false, now);
     setTransmitting(logic_name, false, now);
 
-    const double erlang_b = 1.0 / 255.0;
+    const double erlang_b = 1.0 / 999.0;
     if (send_metadata)
     {
         // BITS.XXXXXXXX,Project Title
@@ -823,13 +823,13 @@ void LocationInfo::sendAprsStatistics(void)
     tlm << addrStr(loc_cfg.statscall, loc_cfg.destination, loc_cfg.path)
         << "T#" << std::setw(3) << std::setfill('0') << sequence  // Sequence
         << "," << std::setw(3) << std::setfill('0')               // A1
-               << std::lrint(rx_erlang / erlang_b)
+               << std::min(std::lrint(rx_erlang / erlang_b), 999L)
         << "," << std::setw(3) << std::setfill('0')               // A2
-               << std::lrint(tx_erlang / erlang_b)
+               << std::min(std::lrint(tx_erlang / erlang_b), 999L)
         << "," << std::setw(3) << std::setfill('0')               // A3
-          << std::min(stats.rx_on_nr, 255U)
+          << std::min(stats.rx_on_nr, 999U)
         << "," << std::setw(3) << std::setfill('0')               // A4
-          << std::min(stats.tx_on_nr, 255U)
+          << std::min(stats.tx_on_nr, 999U)
         << ",000"                                                 // A5
         << ","
         << (is_receiving ? 1 : 0)                                 // B1

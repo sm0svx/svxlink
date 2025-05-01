@@ -544,8 +544,8 @@ short AprsTcpClient::getPasswd(const string& call) const
 
 void AprsTcpClient::tcpConnected(void)
 {
-  cout << "Connected to APRS server " << con->remoteHost() <<
-          " on port " << con->remotePort() << endl;
+  std::cout << "Connected to APRS server " << con->remoteHost()
+            << ":" << con->remotePort() << std::endl;
 
   recv_buf.clear();
 
