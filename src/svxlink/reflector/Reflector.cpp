@@ -1546,6 +1546,7 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
                "Usage: NODE BLOCK <callsign> <blocktime seconds>";
       goto write_status;
     }
+    std::transform(subcmd.begin(), subcmd.end(), subcmd.begin(), ::toupper);
     if (subcmd == "BLOCK")
     {
       auto node = ReflectorClient::lookup(callsign);
