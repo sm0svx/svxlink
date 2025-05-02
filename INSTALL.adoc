@@ -16,7 +16,7 @@ Some dependencies need to be installed before building. First, the build tools:
 SvxLink depend on some third party libraries. Since packages are named
 differently in different distributions you need to do some research to find out
 exactly what the packages are called in your distribution. Packages usually are
-devided in two parts, a runtime part and a development part. Both are needed to
+divided in two parts, a runtime part and a development part. Both are needed to
 compile SvxLink. The development packages usually have a name ending in "-dev"
 or "-devel".
 
@@ -29,8 +29,8 @@ or "-devel".
 * *libjsoncpp*: For json file support (Required)
 * *libspeex*: The Speex audio codec (Optional)
 * *librtlsdr*: Support for RTL2832U DVB-T/SDR USB dongles (Optional)
-* *libgpiod*: More modern approach for GPIO support (Optional)
-* *libqt*: Version 4. Framework for graphical applications (Optional)
+* *libgpiod*: Version 1. More modern approach for GPIO support (Optional)
+* *libqt*: Version 4 or 5. Framework for graphical applications (Optional)
 * *libssl*: OpenSSL Cryptography and SSL/TLS Toolkit
 
 There also are some runtime dependencies which normally is needed to run a
@@ -97,7 +97,7 @@ command line switch are:
 == Further reading ==
 More details can be found on the SvxLink web pages:
 
-* Main web page: http://www.svxlink.org/
+* Main web page: https://svxlink.org/
 * Wiki main page: https://github.com/sm0svx/svxlink/wiki
 * Installation instructions:
   https://github.com/sm0svx/svxlink/wiki/InstallationInstructions
