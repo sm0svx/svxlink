@@ -76,14 +76,13 @@ COPY --from=downloader /sounds /usr/share/svxlink/sounds
 # Install required packages and set up the svxlink user
 RUN apt-get update && \
     export DEBIAN_FRONTEND=noninteractive && \
-    apt-get -y install git cmake g++ make libsigc++-2.0-dev libgsm1-dev \
-                       libpopt-dev tcl8.6-dev libgcrypt20-dev libspeex-dev \
-                       libasound2-dev alsa-utils vorbis-tools qtbase5-dev \
-                       qttools5-dev qttools5-dev-tools libopus-dev \
-                       librtlsdr-dev libjsoncpp-dev libcurl4-openssl-dev \
-                       libgpiod-dev libogg-dev ladspa-sdk curl sudo \
-                       libssl-dev
-#RUN apt-get -y install groff doxygen
+    apt-get -y install git cmake g++ make doxygen groff curl sudo \
+                       libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl8.6-dev \
+                       libgcrypt20-dev libspeex-dev libasound2-dev alsa-utils \
+                       vorbis-tools qtbase5-dev qttools5-dev \
+                       qttools5-dev-tools libopus-dev librtlsdr-dev \
+                       libjsoncpp-dev libcurl4-openssl-dev libgpiod-dev \
+                       libogg-dev ladspa-sdk libssl-dev
 
 
 # Set up password-less sudo for user svxlink

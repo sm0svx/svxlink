@@ -47,7 +47,7 @@ COPY --from=downloader /sounds /usr/share/svxlink/sounds
 RUN dnf -y install git sudo cmake make gcc gcc-c++ libsigc++20-devel \
            alsa-lib-devel speex-devel opus-devel qt-devel rtl-sdr-devel \
            popt-devel libgcrypt-devel tcl-devel gsm-devel libcurl-devel \
-           jsoncpp-devel openssl-devel \
+           jsoncpp-devel openssl-devel ladspa-devel libusb1-devel \
            doxygen alsa-utils wget tar bzip2 vim-enhanced && \
     dnf clean all
 
