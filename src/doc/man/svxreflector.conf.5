@@ -1,4 +1,4 @@
-.TH SVXREFLECTOR.CONF 5 "MARS 2025" Linux "File Formats"
+.TH SVXREFLECTOR.CONF 5 "MAY 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -282,11 +282,12 @@ Example: EMAIL_ADDRESS=sysop@svxlink.example.org
 .
 .SS USERS and PASSWORDS sections
 .
-All users must be specified in the USERS section. Usernames are totally
-arbitrary but typically the callsign is used. The purpose is to map each
-username to a password. However, the password is not given directly but instead
-a reference to the PASSWORDS section is given. It's done like this so that
-multiple nodes can share a single password.
+Previously, all users had to be specified in the USERS section. That is not
+needed anymore for nodes that use a SvxLink version > 1.8.0. Usernames are
+totally arbitrary but typically the callsign is used. The purpose is to map
+each username to a password. However, the password is not given directly but
+instead a reference to the PASSWORDS section is given. It's done like this so
+that multiple nodes can share a single password.
 .P
 An example of how the USERS and PASSWORDS sections may look is given below.
 
