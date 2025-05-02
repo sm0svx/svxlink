@@ -3026,14 +3026,17 @@ with the highest signal strength. The choice is made directly after squelch
 open. For the voter to make a correct choice, the signal level detector must be
 calibrated on each receiver.
 
-To use the noise signal level detector, first set SIGLEV_DET=NOISE.
+To use the noise signal level detector, first set SIGLEV_DET=NOISE or, since
+NOISE is the default, just make sure that it's unset.
 There are two configuration variables that is used to calibrate the detector.
 They are SIGLEV_SLOPE and SIGLEV_OFFSET in a local receiver section. The slope
 is the gain of the detector and the offset is used to adjust the detector so
 that when there is no input signal, the detector will return 0. The goal is to
 adjust the detector so that when no signal is received, a value of 0 is produced
 and when full signal strength is received, a value of 100 is produced. It will
-never be exakt but that does not matter.
+never be exact but that does not matter as long as each receiver produce a
+measurement that roughly has the same siglev value as the other receivers for a
+certain signal level.
 
 The calibration is normally done by using the
 .BR siglevdetcal (1)
@@ -3045,7 +3048,7 @@ Before starting the siglevdetcal application, pull the PTT cable since the PTT
 might get triggered during the calibration procedure.
 
 The siglevdetcal utility will also measure the CTCSS tone SNR offset so that
-the CTCSS_SNR_OFFSETS config variable can be set up to a proper value.
+the CTCSS_SNR_OFFSETS configuration variable can be set up to a proper value.
 
 If the siglevdetcal application cannot be used for some reason, the manual
 procedure below might be used. This procedure will only work for a
@@ -3065,8 +3068,8 @@ Open the squelch so that there is only noise coming into SvxLink.
 Use a second transceiver to make a short, unmodulated transmission. Release the
 PTT when the "Squelch OPEN" message is printed. Repeat this for about five times.
 .IP 5 4
-Calculate the mean diff (open level - close level) and the mean lower 
-(squelch close) value. Make sure to use at least four significant digits in your
+Calculate the mean diff (open level - close level) and the mean lower (squelch
+close) value. Make sure to use at least four significant digits in your
 calculations.
 .IP 6 4
 SIGLEV_SLOPE = 100 / (mean diff)
