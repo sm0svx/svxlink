@@ -1,14 +1,15 @@
-= SvxLink release 25.05 -- ?? May 2025
+= SvxLink release 25.05 -- 03 May 2025
 
 The largest change in this release is the authentication system used in the
 SvxReflector server, which now uses X.509 certificates instead of an AUTH_KEY.
 This has also enabled the use of encryption for both the TCP and UDP reflector
 network connections.
 
-Support for the LADSPA audio processing framework has been added to SvxLink.
-There are a lot of audio processing plugins available for LADSPA, which can be
-used to shape the audio in SvxLink. Both RX and TX audio can be shaped using
-these plugins.
+Support for the LADSPA audio processing framework has been extended. Audio
+processing can now be applied to the TX as well as the RX. There now also is a
+more verbose way to configure plugins where the configuration parameters is
+kept in their own configuration section. That also enables changing LADSPA
+parameters at runtime.
 
 A new 'NODE BLOCK' PTY command has been added to the reflector server. It can
 be used to temporarily block nodes at runtime for a specified duration.
