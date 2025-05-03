@@ -233,7 +233,7 @@ class AudioRecorder : public Async::AudioSink
      * the file is closed. It is safe to delete the audio recorder from the
      * slot that is connected to this signal.
      */
-    sigc::signal<void> maxRecordingTimeReached;
+    sigc::signal<void()> maxRecordingTimeReached;
 
     /**
      * @brief   This signal is emitted when an error occurrs in the recorder
@@ -243,7 +243,7 @@ class AudioRecorder : public Async::AudioSink
      * that is written after an error has occurred will be thrown away. To open
      * a new file, call the initialize method again.
      */
-    sigc::signal<void> errorOccurred;
+    sigc::signal<void()> errorOccurred;
 
   private:
     std::string     filename;
