@@ -115,7 +115,7 @@ class AudioDecoderSpeex : public AudioDecoder
     /**
      * @brief 	Default constuctor
      */
-    AudioDecoderSpeex(void);
+    AudioDecoderSpeex(const Options &options);
   
     /**
      * @brief 	Destructor
