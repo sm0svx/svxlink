@@ -55,5 +55,3 @@ These are some of the resources connected to SvxLink:
    -- Communicate with other SvxLink users
  * [GitHub Main Page](https://github.com/sm0svx/svxlink)
    -- The project site on GitHub
- * [The SvxLink SourcForge Site](http://sourceforge.net/projects/svxlink/)
-   -- Old project site
