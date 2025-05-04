@@ -51,7 +51,7 @@ These are some of the resources connected to SvxLink:
    -- Download source code releases here
  * [Download Sound Clips](https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases)
    -- Download English sound clip files for SvxLink Server from here
- * [Mailing Lists](http://sourceforge.net/p/svxlink/mailman)
+ * [Discussion Groups](https://svxlink.groups.io)
    -- Communicate with other SvxLink users
  * [GitHub Main Page](https://github.com/sm0svx/svxlink)
    -- The project site on GitHub
