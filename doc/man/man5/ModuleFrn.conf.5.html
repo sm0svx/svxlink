@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sat Dec 30 17:48:42 2017 -->
+<!-- Creator     : groff version 1.23.0 -->
+<!-- CreationDate: Sun May  4 14:24:10 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -23,9 +23,11 @@
 <a href="#NAME">NAME</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#ModuleFrn">ModuleFrn</a><br>
 <a href="#FRN NEW USER REGISTRATION">FRN NEW USER REGISTRATION</a><br>
 <a href="#FILES">FILES</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
 <a href="#SEE ALSO">SEE ALSO</a><br>
 
 <hr>
@@ -36,7 +38,7 @@
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">ModuleFrn.conf
+<p style="margin-left:9%; margin-top: 1em">ModuleFrn.conf
 &minus; Configuration file for the SvxLink server Free Radio
 Network (FRN) module</p>
 
@@ -45,12 +47,12 @@ Network (FRN) module</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink</b>
 is a general purpose voice service system for ham radio use.
 This man-page describe the SvxLink server configuration for
 the FRN module.</p>
 
-<p style="margin-left:11%; margin-top: 1em">The FRN module
+<p style="margin-left:9%; margin-top: 1em">The FRN module
 is used to connect to Free Radio Network (FRN) servers.</p>
 
 <h2>CONFIGURATION VARIABLES
@@ -58,92 +60,95 @@ is used to connect to Free Radio Network (FRN) servers.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">There are a
+<p style="margin-left:9%; margin-top: 1em">There are a
 couple of configuration variables that are common to all
 modules. The documentation for these can be found in the
 <b>svxlink.conf</b>(5) manual page.</p>
 
-<p style="margin-left:11%; margin-top: 1em">Here is the
+<p style="margin-left:9%; margin-top: 1em">Here is the
 description of all module specific configuration variables
 that the SvxLink FRN module understands.</p>
 
+<h3>ModuleFrn
+<a name="ModuleFrn"></a>
+</h3>
 
-<p style="margin-left:11%; margin-top: 1em"><b>ModuleFrn</b></p>
 
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="11%"></td>
-<td width="9%">
+<td width="9%"></td>
+<td width="8%">
 
 
-<p><b>SERVER</b></p></td>
-<td width="2%"></td>
-<td width="78%">
+<p style="margin-top: 1em"><b>SERVER</b></p></td>
+<td width="1%"></td>
+<td width="82%">
 
 
-<p>Free Radio Network (FRN) server hostname or ip address,
-you can find a list of active servers using FRN desktop
-application or at http://freeradionetwork.eu web page.</p></td></tr>
+<p style="margin-top: 1em">Free Radio Network (FRN) server
+hostname or ip address, you can find a list of active
+servers using FRN desktop application or at
+http://freeradionetwork.eu web page.</p></td></tr>
 <tr valign="top" align="left">
-<td width="11%"></td>
-<td width="9%">
+<td width="9%"></td>
+<td width="8%">
 
 
 <p><b>PORT</b></p></td>
-<td width="2%"></td>
-<td width="78%">
+<td width="1%"></td>
+<td width="82%">
 
 
 <p>FRN server port number</p></td></tr>
 </table>
 
-<p style="margin-left:11%;"><b>SERVER_BACKUP</b></p>
+<p style="margin-left:9%;"><b>SERVER_BACKUP</b></p>
 
-<p style="margin-left:22%;">Free Radio Network (FRN) backup
+<p style="margin-left:18%;">Free Radio Network (FRN) backup
 server hostname or ip address. When connectivity to main
 SERVER is not possible connection will fallback to this
 server.</p>
 
-<p style="margin-left:11%;"><b>PORT_BACKUP</b></p>
+<p style="margin-left:9%;"><b>PORT_BACKUP</b></p>
 
-<p style="margin-left:22%;">FRN backup server port
+<p style="margin-left:18%;">FRN backup server port
 number</p>
 
-<p style="margin-left:11%;"><b>VERSION</b></p>
+<p style="margin-left:9%;"><b>VERSION</b></p>
 
-<p style="margin-left:22%;">Identify itself as a FRN client
+<p style="margin-left:18%;">Identify itself as a FRN client
 with this version.</p>
 
-<p style="margin-left:11%;"><b>EMAIL_ADDRESS</b></p>
+<p style="margin-left:9%;"><b>EMAIL_ADDRESS</b></p>
 
-<p style="margin-left:22%;">Your email address, which was
+<p style="margin-left:18%;">Your email address, which was
 used during registration.</p>
 
-<p style="margin-left:11%;"><b>DYN_PASSWORD</b></p>
+<p style="margin-left:9%;"><b>DYN_PASSWORD</b></p>
 
-<p style="margin-left:22%;">Password provided to you by FRN
+<p style="margin-left:18%;">Password provided to you by FRN
 on registration.</p>
 
-<p style="margin-left:11%;"><b>CLIENT_TYPE</b></p>
+<p style="margin-left:9%;"><b>CLIENT_TYPE</b></p>
 
-<p style="margin-left:22%;">Type of the client: <br>
+<p style="margin-left:18%;">Type of the client: <br>
 0 - crosslink <br>
 1 - gateway <br>
 2 - pc only</p>
 
-<p style="margin-left:22%; margin-top: 1em">Read more at
+<p style="margin-left:18%; margin-top: 1em">Read more at
 http://freeradionetwork.eu/frnprotocol.htm web page.</p>
 
-<p style="margin-left:11%;"><b>CALLSIGN_AND_USER</b></p>
+<p style="margin-left:9%;"><b>CALLSIGN_AND_USER</b></p>
 
-<p style="margin-left:22%;">Your callsign and user name
+<p style="margin-left:18%;">Your callsign and user name
 used during registration, for example &quot;1234,
 Bob&quot;.</p>
 
-<p style="margin-left:11%;"><b>BAND_AND_CHANNEL</b></p>
+<p style="margin-left:9%;"><b>BAND_AND_CHANNEL</b></p>
 
-<p style="margin-left:22%;">In case of PC only user, this
+<p style="margin-left:18%;">In case of PC only user, this
 is &rsquo;PC Only&rsquo;. In case of a crosslink this is
 &rsquo;Crosslink&rsquo;. In case of a gateway this is the
 frequancy in full Mhz and kHz separated by a <br>
@@ -153,52 +158,52 @@ followed by a space and the squelch type &rsquo;CTC&rsquo;,
 &rsquo;DSC&rsquo; or &rsquo;NONE&rsquo; followed by the CTC
 frequency or ID code.</p>
 
-<p style="margin-left:22%; margin-top: 1em">Examples: <br>
+<p style="margin-left:18%; margin-top: 1em">Examples: <br>
 446.03125FM CTC131.8 <br>
 28.12500AM <br>
 145.43750FM DCS828 <br>
 446.02625DIG CID123</p>
 
-<p style="margin-left:11%;"><b>DESCRIPTION</b></p>
+<p style="margin-left:9%;"><b>DESCRIPTION</b></p>
 
-<p style="margin-left:22%;">Custom extra information about
+<p style="margin-left:18%;">Custom extra information about
 the node.</p>
 
-<p style="margin-left:11%;"><b>COUNTRY</b></p>
+<p style="margin-left:9%;"><b>COUNTRY</b></p>
 
-<p style="margin-left:22%;">Full name of the country.</p>
+<p style="margin-left:18%;">Full name of the country.</p>
 
-<p style="margin-left:11%;"><b>CITY_CITY_PART</b></p>
+<p style="margin-left:9%;"><b>CITY_CITY_PART</b></p>
 
-<p style="margin-left:22%;">The city and the part of the
+<p style="margin-left:18%;">The city and the part of the
 city, or the part of the country and the city divided by a
 minus sign, for example &quot;City &minus; Street&quot;.</p>
 
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="11%"></td>
+<td width="9%"></td>
 <td width="4%">
 
 
 <p><b>NET</b></p></td>
-<td width="7%"></td>
-<td width="78%">
+<td width="5%"></td>
+<td width="82%">
 
 
 <p>Network (room) where to connect, each server holds up to
 32 networks (rooms).</p></td></tr>
 </table>
 
-<p style="margin-left:11%;"><b>FRN_DEBUG</b></p>
+<p style="margin-left:9%;"><b>FRN_DEBUG</b></p>
 
-<p style="margin-left:22%;">Define to enable extensive
+<p style="margin-left:18%;">Define to enable extensive
 module logging, including FRN request and response
 printout.</p>
 
-<p style="margin-left:11%;"><b>DISABLE_RF</b></p>
+<p style="margin-left:9%;"><b>DISABLE_RF</b></p>
 
-<p style="margin-left:22%;">Define to disable sending voice
+<p style="margin-left:18%;">Define to disable sending voice
 from FRN to RIG. Nothing will be transmitted by radio (could
 be switched ON by DTMF command later if needed)</p>
 
@@ -207,12 +212,12 @@ be switched ON by DTMF command later if needed)</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">To register at
+<p style="margin-left:9%; margin-top: 1em">To register at
 FRN service it is possible to use native desktop client or
 just register using netcat:</p>
 
-<p style="margin-left:11%; margin-top: 1em">echo
-&rsquo;IG:\ <br>
+<p style="margin-left:9%; margin-top: 1em">echo &rsquo;IG:\
+<br>
 &lt;ON&gt;[CallsignAndUser]&lt;/ON&gt;\ <br>
 &lt;EA&gt;[EMailAddress]&lt;/EA&gt;\ <br>
 &lt;BC&gt;[BandAndChannel]&lt;/BC&gt;\ <br>
@@ -221,12 +226,12 @@ just register using netcat:</p>
 &lt;CT&gt;[CityCityPart]&lt;/CT&gt;&rsquo; | nc -v
 sysman.freeradionetwork.eu 10025</p>
 
-<p style="margin-left:11%; margin-top: 1em">FRN System
+<p style="margin-left:9%; margin-top: 1em">FRN System
 Manager should return OK in case of successful
 registration.</p>
 
-<p style="margin-left:11%; margin-top: 1em">More
-information about new user registration is available at
+<p style="margin-left:9%; margin-top: 1em">More information
+about new user registration is available at
 http://freeradionetwork.eu/frnprotocol.htm</p>
 
 <h2>FILES
@@ -235,29 +240,29 @@ http://freeradionetwork.eu/frnprotocol.htm</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
+<p style="margin-left:9%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
 (or deprecated <i>/etc/svxlink.conf</i>)</p>
 
-<p style="margin-left:22%;">The system wide configuration
+<p style="margin-left:18%;">The system wide configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxlink.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxlink.conf</i></p>
 
-<p style="margin-left:22%;">Per user configuration
+<p style="margin-left:18%;">Per user configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>/etc/svxlink/svxlink.d/ModuleFrn.conf</i></p>
+<p style="margin-left:9%;"><i>/etc/svxlink/svxlink.d/ModuleFrn.conf</i></p>
 
-<p style="margin-left:22%;">Global modularized
+<p style="margin-left:18%;">Global modularized
 configuration file. Depends on the CFG_DIR configuration
 variable setting.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxlink.d/ModuleFrn.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxlink.d/ModuleFrn.conf</i></p>
 
-<p style="margin-left:22%;">Per user modularized
+<p style="margin-left:18%;">Per user modularized
 configuration file. Depends on the CFG_DIR configuration
 variable setting.</p>
 
@@ -266,8 +271,22 @@ variable setting.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
-(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+<p style="margin-left:9%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at svxlink dot org&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">Bugs should be
+reported using the issue tracker at
+https://github.com/sm0svx/svxlink.</p>
+
+<p style="margin-left:9%; margin-top: 1em">Questions about
+SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink</p>
 
 <h2>SEE ALSO
 <a name="SEE ALSO"></a>
@@ -275,7 +294,7 @@ variable setting.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
 <hr>
 </body>
 </html>

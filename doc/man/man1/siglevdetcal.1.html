@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sat Dec 30 12:02:46 2017 -->
+<!-- Creator     : groff version 1.23.0 -->
+<!-- CreationDate: Sun May  4 14:24:08 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -36,7 +36,7 @@
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">siglevdetcal
+<p style="margin-left:9%; margin-top: 1em">siglevdetcal
 &minus; The SvxLink signal level detector calibration
 utility</p>
 
@@ -45,8 +45,7 @@ utility</p>
 </h2>
 
 
-
-<p style="margin-left:11%; margin-top: 1em"><b>siglevdetcal
+<p style="margin-left:9%; margin-top: 1em"><b>siglevdetcal
 &lt;</b><i>configuration file</i><b>&gt; &lt;</b><i>RX
 config section name</i><b>&gt;</b></p>
 
@@ -56,27 +55,32 @@ config section name</i><b>&gt;</b></p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>siglevdetcal</b>
+<p style="margin-left:9%; margin-top: 1em"><b>siglevdetcal</b>
 is the SvxLink signal level detector calibration utility. It
 is used to assist in the setup of the SIGLEV_SLOPE and
 SIGLEV_OFFSET configuration variables for a local receiver.
 The signal level detector need to be calibrated if a voter
 or the SIGLEV squelch detector is going to be used.</p>
 
-<p style="margin-left:11%; margin-top: 1em">The calibration
+<p style="margin-left:9%; margin-top: 1em">The siglevdetcal
+utility will also measure the CTCSS tone SNR offset so that
+the CTCSS_SNR_OFFSETS configuration variable can be set up
+to a proper value.</p>
+
+<p style="margin-left:9%; margin-top: 1em">The calibration
 procedure is quite simple and everything is more or less
 explained at run-time. The procedure is outlined below.</p>
 
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Disconnect the antenna and the PTT cable. The PTT might
@@ -84,84 +88,84 @@ be triggered by the siglevdetcal utility. If you want to be
 really sure that no harm come to your transceiver, connect a
 dummy load.</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Setup the audio input level. The audio input level must
 not be changed after the calibration has been done.</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Start the siglevdetcal utility.</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Transmit on another radio so that the receiver under
 calibration will receive full signal strength.</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Still holding the PTT, press ENTER and wait until the
 squelch open level measurements have been done.</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Release the PTT. Make sure the squelch is open so that
 only noise is received.</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Press ENTER to start the squelch close level
 measurements.</p> </td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>When finished, the two config variables SIGLEV_SLOPE and
@@ -169,13 +173,13 @@ SIGLEV_OFFSET are printed. Put these in your configuration
 file under the corresponding receiver configuration
 section.</p> </td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
 <td width="2%"></td>
-<td width="75%">
+<td width="79%">
 
 
 <p>Start the SvxLink server and verify that full signal
@@ -191,27 +195,45 @@ measurement until the signal is stable.</p></td></tr>
 
 
 
-<p style="margin-left:11%; margin-top: 1em">ASYNC_AUDIO_NOTRIGGER</p>
+<p style="margin-left:9%; margin-top: 1em">ASYNC_AUDIO_NOTRIGGER</p>
 
-<p style="margin-left:22%;">Set this environment variable
+<p style="margin-left:18%;">Set this environment variable
 to 1 if you get an error about <b>ioctl: Broken pipe</b>
 when the remotetrx server starts.</p>
+
+<p style="margin-left:9%;">ASYNC_AUDIO_ALSA_ZEROFILL</p>
+
+<p style="margin-left:18%;">Set this environment variable
+to 0 to stop the Alsa audio code from writing zeros to the
+audio device when there is no audio to write available.</p>
+
+<p style="margin-left:9%;">ASYNC_AUDIO_UDP_ZEROFILL</p>
+
+<p style="margin-left:18%;">Set this environment variable
+to 1 to enable the UDP audio code to write zeros to the UDP
+connection when there is no audio to write available.</p>
 
 <h2>AUTHOR
 <a name="AUTHOR"></a>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
-(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+<p style="margin-left:9%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at svxlink dot org&gt;</p>
 
 <h2>REPORTING BUGS
 <a name="REPORTING BUGS"></a>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">SvxLink Devel
-&lt;svxlink-devel at lists dot sourceforge dot net&gt;</p>
+<p style="margin-left:9%; margin-top: 1em">Bugs should be
+reported using the issue tracker at
+https://github.com/sm0svx/svxlink.</p>
+
+<p style="margin-left:9%; margin-top: 1em">Questions about
+SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink</p>
 
 <h2>SEE ALSO
 <a name="SEE ALSO"></a>
@@ -219,7 +241,7 @@ when the remotetrx server starts.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>(1),
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink</b>(1),
 <b>remotetrx</b>(1), <b>svxlink.conf</b>(5)</p>
 <hr>
 </body>

@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sat Dec 30 12:02:47 2017 -->
+<!-- Creator     : groff version 1.23.0 -->
+<!-- CreationDate: Sun May  4 14:24:09 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -23,8 +23,10 @@
 <a href="#NAME">NAME</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#ModuleDtmfRepeater">ModuleDtmfRepeater</a><br>
 <a href="#FILES">FILES</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
 <a href="#SEE ALSO">SEE ALSO</a><br>
 
 <hr>
@@ -36,7 +38,7 @@
 
 
 
-<p style="margin-left:11%; margin-top: 1em">ModuleDtmfRepeater.conf
+<p style="margin-left:9%; margin-top: 1em">ModuleDtmfRepeater.conf
 &minus; Configuration file for the SvxLink server DTMF
 Repeater module</p>
 
@@ -45,12 +47,12 @@ Repeater module</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink</b>
 is a general purpose voice service system for ham radio use.
 This man-page describe the SvxLink server configuration for
 the DTMF Repeater module.</p>
 
-<p style="margin-left:11%; margin-top: 1em">The DTMF
+<p style="margin-left:9%; margin-top: 1em">The DTMF
 Repeater module retransmits all received DTMF digits. This
 can be used to control remote systems that is also DTMF
 controlled. The DTMF muting feature should be used on a
@@ -61,32 +63,40 @@ repeater to not retransmit the received DTMF audio.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">There are a
+<p style="margin-left:9%; margin-top: 1em">There are a
 couple of configuration variables that are common to all
 modules. The documentation for these can be found in the
 <b>svxlink.conf</b>(5) manual page.</p>
 
-<p style="margin-left:11%; margin-top: 1em">The amplitude,
+<p style="margin-left:9%; margin-top: 1em">The amplitude,
 tone length and tone spacing of the generated DTMF digits is
 configured in the configuration section for the LocalTx that
 is actually transmitting the DTMF. Have a look at the
 documentation for the <b>DTMF_TONE_*</b> configuration
 variables for a full explanation.</p>
 
-<p style="margin-left:11%; margin-top: 1em">Here is the
+<p style="margin-left:9%; margin-top: 1em">Here is the
 description of all module specific configuration variables
 that the SvxLink DtmfRepeater module understands.</p>
 
+<h3>ModuleDtmfRepeater
+<a name="ModuleDtmfRepeater"></a>
+</h3>
 
-<p style="margin-left:11%; margin-top: 1em"><b>ModuleDtmfRepeater
-<br>
-REPEAT_DELAY</b></p>
 
-<p style="margin-left:22%;">Specify a time, in
+
+<p style="margin-left:9%; margin-top: 1em"><b>REPEAT_DELAY</b></p>
+
+<p style="margin-left:18%;">Specify a time, in
 milliseconds, that the DTMF Repeater module will wait after
-squelch close before retransmitting received DTMF digits. If
-zero or not specified, SvxLink will try to send the digits
-as soon as they are received.</p>
+digit reception and squelch close before retransmitting
+received DTMF digits. If zero or not specified, SvxLink will
+try to send the digits as soon as they are received.</p>
+
+<p style="margin-left:18%; margin-top: 1em">This variable
+does not apply when DTMF digits are sent in non-activated
+mode. Digits will then be retransmitted as soon as
+possible.</p>
 
 <h2>FILES
 <a name="FILES"></a>
@@ -94,29 +104,29 @@ as soon as they are received.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
+<p style="margin-left:9%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
 (or deprecated <i>/etc/svxlink.conf</i>)</p>
 
-<p style="margin-left:22%;">The system wide configuration
+<p style="margin-left:18%;">The system wide configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxlink.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxlink.conf</i></p>
 
-<p style="margin-left:22%;">Per user configuration
+<p style="margin-left:18%;">Per user configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>/etc/svxlink/svxlink.d/ModuleDtmfRepeater.conf</i></p>
+<p style="margin-left:9%;"><i>/etc/svxlink/svxlink.d/ModuleDtmfRepeater.conf</i></p>
 
-<p style="margin-left:22%;">Global modularized
+<p style="margin-left:18%;">Global modularized
 configuration file. Depends on the CFG_DIR configuration
 variable setting.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxlink.d/ModuleDtmfRepeater.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxlink.d/ModuleDtmfRepeater.conf</i></p>
 
-<p style="margin-left:22%;">Per user modularized
+<p style="margin-left:18%;">Per user modularized
 configuration file. Depends on the CFG_DIR configuration
 variable setting.</p>
 
@@ -125,8 +135,22 @@ variable setting.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
-(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+<p style="margin-left:9%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at svxlink dot org&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">Bugs should be
+reported using the issue tracker at
+https://github.com/sm0svx/svxlink.</p>
+
+<p style="margin-left:9%; margin-top: 1em">Questions about
+SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink</p>
 
 <h2>SEE ALSO
 <a name="SEE ALSO"></a>
@@ -134,7 +158,7 @@ variable setting.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
 <hr>
 </body>
 </html>

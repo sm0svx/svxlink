@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sat Dec 30 17:48:41 2017 -->
+<!-- Creator     : groff version 1.23.0 -->
+<!-- CreationDate: Sun May  4 14:24:09 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -24,8 +24,13 @@
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#FILE FORMAT">FILE FORMAT</a><br>
 <a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#GLOBAL">GLOBAL</a><br>
+<a href="#ROOT_CA, ISSUING_CA and SERVER_CERT sections">ROOT_CA, ISSUING_CA and SERVER_CERT sections</a><br>
+<a href="#USERS and PASSWORDS sections">USERS and PASSWORDS sections</a><br>
+<a href="#Talkgroup Configuration Sections">Talkgroup Configuration Sections</a><br>
 <a href="#FILES">FILES</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
 <a href="#SEE ALSO">SEE ALSO</a><br>
 
 <hr>
@@ -37,7 +42,7 @@
 
 
 
-<p style="margin-left:11%; margin-top: 1em">svxreflector.conf
+<p style="margin-left:9%; margin-top: 1em">svxreflector.conf
 &minus; Configuration file for the SvxReflector conference
 server audio reflector</p>
 
@@ -46,12 +51,12 @@ server audio reflector</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">The
+<p style="margin-left:9%; margin-top: 1em">The
 <b>svxreflector</b> server is used to interconnect multiple
 SvxLink nodes into one network. This man-page describe the
 configuration file format for it.</p>
 
-<p style="margin-left:11%; margin-top: 1em">SvxReflector
+<p style="margin-left:9%; margin-top: 1em">SvxReflector
 look for configuration files in a number of places. First it
 tries to find a user specific configuration file. It will
 look for a user specific configuration file in:
@@ -67,28 +72,28 @@ configuration file.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">The
+<p style="margin-left:9%; margin-top: 1em">The
 configuration file is in the famous INI-file format. A
 generic example of how such a file might look like is shown
 below.</p>
 
-<p style="margin-left:11%; margin-top: 1em">[SECTION1] <br>
+<p style="margin-left:9%; margin-top: 1em">[SECTION1] <br>
 VALUE1=1 <br>
 VALUE2=&quot;TWO &quot; <br>
 VAULE3=&quot;Multi &quot; <br>
 &quot;line&quot;</p>
 
-<p style="margin-left:11%; margin-top: 1em">[SECTION2] <br>
+<p style="margin-left:9%; margin-top: 1em">[SECTION2] <br>
 VALUE1=2</p>
 
-<p style="margin-left:11%; margin-top: 1em">This is a
-simple format that contain name=value pairs that belong to a
+<p style="margin-left:9%; margin-top: 1em">This is a simple
+format that contain name=value pairs that belong to a
 section. In written text, a specific configuration variable
 can be referred to as SECTION1/VALUE2 meaning
 &quot;configuration variable VALUE2 in section
 SECTION1&quot;.</p>
 
-<p style="margin-left:11%; margin-top: 1em">The same
+<p style="margin-left:9%; margin-top: 1em">The same
 variable name can exist in two different sections. For
 example VALUE1 in section SECTION1 have the value 1 and
 VALUE1 in section SECTION2 have the value 2. Values
@@ -101,18 +106,22 @@ Likewise with a multi line value (see SECTION1/VALUE3).</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">Here is the
+<p style="margin-left:9%; margin-top: 1em">Here is the
 description of all configuration variables that svxreflector
 understands. The configuration variables are described
 section for section.</p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>GLOBAL</b>
-<br>
-The GLOBAL section contains application global configuration
-data. <b><br>
+<h3>GLOBAL
+<a name="GLOBAL"></a>
+</h3>
+
+
+<p style="margin-left:9%; margin-top: 1em">The GLOBAL
+section contains application global configuration data.
+<b><br>
 CFG_DIR</b></p>
 
-<p style="margin-left:22%;">Specify the path to a directory
+<p style="margin-left:18%;">Specify the path to a directory
 that contain additional configuration files. If a relative
 path is specified, the path will be relative to the
 directory where the main configuration file is at. All files
@@ -120,9 +129,9 @@ in the specified directory will be read as additional
 configuration. Filenames starting with a dot are
 ignored.</p>
 
-<p style="margin-left:11%;"><b>TIMESTAMP_FORMAT</b></p>
+<p style="margin-left:9%;"><b>TIMESTAMP_FORMAT</b></p>
 
-<p style="margin-left:22%;">This variable specifies the
+<p style="margin-left:18%;">This variable specifies the
 format of the timestamp that is written in front of each row
 in the log file. The format string is in the same format as
 specified in the <b>strftime</b>(3) manual page. The default
@@ -137,103 +146,103 @@ specifiers are:</p>
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
-<td width="5%"></td>
-<td width="72%">
+<td width="4%"></td>
+<td width="77%">
 
 
 <p><b>%d</b> - The day of the month as a decimal number
 (range 01 to 31)</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
-<td width="5%"></td>
-<td width="72%">
+<td width="4%"></td>
+<td width="77%">
 
 
 <p><b>%b</b> - The abbreviated month name according to the
 current locale</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
-<td width="5%"></td>
-<td width="72%">
+<td width="4%"></td>
+<td width="77%">
 
 
 <p><b>%Y</b> - The year as a decimal number including the
 century</p> </td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
-<td width="5%"></td>
-<td width="72%">
+<td width="4%"></td>
+<td width="77%">
 
 
 <p><b>%H</b> - The hour as a decimal number using a 24-hour
 clock (range 00 to 23)</p></td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
-<td width="5%"></td>
-<td width="72%">
+<td width="4%"></td>
+<td width="77%">
 
 
 <p><b>%M</b> - The minute as a decimal number (range 00 to
 59)</p> </td></tr>
 <tr valign="top" align="left">
-<td width="22%"></td>
+<td width="18%"></td>
 <td width="1%">
 
 
 <p>&bull;</p></td>
-<td width="5%"></td>
-<td width="72%">
+<td width="4%"></td>
+<td width="77%">
 
 
 <p><b>%S</b> - The second as a decimal number (range 00 to
 61)</p> </td></tr>
 </table>
 
-<p style="margin-left:22%; margin-top: 1em">So,
+<p style="margin-left:18%; margin-top: 1em">So,
 TIMESTAMP_FORMAT=&quot;%d %b %Y %H:%M:%S&quot; would give a
 timestamp looking something like: &quot;29 Nov 2005
 22:31:59&quot;.</p>
 
-<p style="margin-left:11%;"><b>LISTEN_PORT</b></p>
+<p style="margin-left:9%;"><b>LISTEN_PORT</b></p>
 
-<p style="margin-left:22%;">The TCP and UDP port number to
+<p style="margin-left:18%;">The TCP and UDP port number to
 use for network communications. The default is 5300. Make
 sure to open this port for incoming traffic to the server on
 both TCP and UDP. Clients do not have to open any ports in
 their firewalls.</p>
 
-<p style="margin-left:11%;"><b>SQL_TIMEOUT</b></p>
+<p style="margin-left:9%;"><b>SQL_TIMEOUT</b></p>
 
-<p style="margin-left:22%;">Use this configuration variable
+<p style="margin-left:18%;">Use this configuration variable
 to set a time in seconds after which a clients audio is
 blocked if he has been talking for too long. The default is
 0 (disabled).</p>
 
 
-<p style="margin-left:11%;"><b>SQL_TIMEOUT_BLOCKTIME</b></p>
+<p style="margin-left:9%;"><b>SQL_TIMEOUT_BLOCKTIME</b></p>
 
-<p style="margin-left:22%;">If a client has been talking
+<p style="margin-left:18%;">If a client has been talking
 for longer than the time specified in the <b>SQL_TIMEOUT</b>
 configuration variable he will not be able to talk again
 until the time in this configuration variable have elapsed.
@@ -242,48 +251,416 @@ If not specified, the default is one second.</p>
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="11%"></td>
-<td width="9%">
+<td width="9%"></td>
+<td width="8%">
 
 
 <p><b>CODECS</b></p></td>
-<td width="2%"></td>
-<td width="78%">
+<td width="1%"></td>
+<td width="82%">
 
 
 <p>A comma separated list of allowed codecs. For the moment
 only one codec can be specified. Choose from the following
 codecs: OPUS, SPEEX, GSM, S16 (uncompressed signed 16 bit),
-RAW (uncompressed 32 bit floats).</p></td></tr>
+RAW (uncompressed 32 bit floats). The default is OPUS and
+you should have a very good reason for changing this since
+that codec provide both low bandwidth (&#732;20kbps by
+default) and very good audio quality.</p></td></tr>
 </table>
 
-<p style="margin-left:11%; margin-top: 1em"><b>USERS and
-PASSWORDS sections</b> <br>
-All users must be specified in the USERS section. Usernames
-are totally arbitrary but typically the callsign is used.
-The purpose is to map each username to a password. However,
-the password is not given directly but instead a reference
-to the PASSWORDS section is given. It&rsquo;s done like this
-so that multiple nodes can share a single password.</p>
+<p style="margin-left:9%;"><b>TG_FOR_V1_CLIENTS</b></p>
 
-<p style="margin-left:11%; margin-top: 1em">An example of
+<p style="margin-left:18%;">Set which talk group to place
+protocol version 1 clients in. Without this configuration
+version 1 clients will not be able to use the reflector
+since they cannot select a talk group by themselves. Talk
+groups should normally be configured to start with the ITU-T
+E.212 Mobile Country Code (MCC) for your country, e.g. 240
+for Sweden.</p>
+
+<p style="margin-left:9%;"><b>RANDOM_QSY_RANGE</b></p>
+
+<p style="margin-left:18%;">Specify in which talk group
+range the reflector server should select random talk groups
+used when using the QSY functionality. The range is
+specified using two colon separated values. The first one is
+the lower limit and the second value is the number of talk
+groups in the range. As an example, if set to 1239900:100
+QSY talk groups will be selected from the range 1239900 to
+1239999. The recommended lower range to use is
+&lt;MCC&gt;9900 where MCC is the ITU-T E.212 Mobile Country
+Code for your country, e.g. 240 for Sweden.</p>
+
+<p style="margin-left:9%;"><b>HTTP_SRV_PORT</b></p>
+
+<p style="margin-left:18%;">Set which port to use for the
+HTTP server. The HTTP server can be used to fetch reflector
+status. No port is set by default. Don&rsquo;t expose this
+port to the public Internet. There are multiple reasons for
+that. The built in web server is very simple and could be
+incompatible with some clients. It has not been audited for
+security problems so there may be security issues. There is
+also the risk of some client overwhelming the reflector with
+requests causing disturbances in the reflector
+operation.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+HTTP_SRV_PORT=8080</p>
+
+<p style="margin-left:9%;"><b>COMMAND_PTY</b></p>
+
+<p style="margin-left:18%;">Configure a path for a pseudo
+tty device to send runtime commands to the svxreflector. The
+device may be defined as
+COMMAND_PTY=/dev/shm/reflector_ctrl. To change the value of
+a configuration variable you may send a command to the
+device like this:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo CFG
+section varname value &gt; /dev/shm/reflector_ctrl <br>
+e.g. <br>
+echo CFG GLOBAL SQL_TIMEOUT_BLOCKTIME 60 &gt;
+/dev/shm/reflector_ctrl</p>
+
+<p style="margin-left:18%; margin-top: 1em">To sign a
+client certificate:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo CA SIGN
+callsign &gt; /dev/shm/reflector_ctrl</p>
+
+<p style="margin-left:9%;"><b>ACCEPT_CALLSIGN</b></p>
+
+<p style="margin-left:18%;">A regular expression for
+verifying that a received login callsign has the correct
+format. The default is to roughly match standard ham radio
+callsigns. Example:
+ACCEPT_CALLSIGN=&quot;S[A-M]\d[A-Z]{1,3}(?:-[A-Z0-9]{1,3})?&quot;</p>
+
+<p style="margin-left:9%;"><b>REJECT_CALLSIGN</b></p>
+
+<p style="margin-left:18%;">A regular expression for
+rejecting login callsigns. This can be used to block some
+specific callsigns or even a whole range of callsigns. No
+callsigns are rejected by default. Example:
+REJECT_CALLSIGN=&quot;SM0XYZ|SM1ABC|SM2.*&quot;</p>
+
+<p style="margin-left:9%;"><b>ACCEPT_CERT_EMAIL</b></p>
+
+<p style="margin-left:18%;">A regular expression for
+verifying that email addresses in a received certificate
+signing requests are valid. If unset, which is the default,
+all email addresses are accepted. If an invalid email
+address is received from a node it will be disconnected and
+an error message will be sent to the node. The following
+example should accept most email addresses at the same time
+as detecting most invalid ones. Example:
+ACCEPT_CERT_EMAIL=&quot;&quot;\w+(?:[-._+]\w+)*@\w+(?:\.\w+)*&quot;</p>
+
+<p style="margin-left:9%;"><b>CERT_PKI_DIR</b></p>
+
+<p style="margin-left:18%;">The path to the directory
+containing PKI (Public Key Infrastructure) files. If a
+relative path is given, the value of the build time variable
+SVX_LOCAL_STATE_DIR (e.g. /var/lib/svxlink/) will be
+prepended.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Default:
+CERT_PKI_DIR=pki/</p>
+
+<p style="margin-left:9%;"><b>CERT_CA_KEYS_DIR</b></p>
+
+<p style="margin-left:18%;">The path to the directory
+containing private key files. If a relative path is given,
+the value of the CERT_PKI_DIR variable will be
+prepended.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Default:
+CERT_CA_KEYS_DIR=private/</p>
+
+
+<p style="margin-left:9%;"><b>CERT_CA_PENDING_CSRS_DIR</b></p>
+
+<p style="margin-left:18%;">The path to the directory
+containing unsigned CSR files. If a relative path is given,
+the value of the CERT_PKI_DIR variable will be
+prepended.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Default:
+CERT_CA_PENDING_CSRS_DIR=pending_csrs/</p>
+
+<p style="margin-left:9%;"><b>CERT_CA_CSRS_DIR</b></p>
+
+<p style="margin-left:18%;">The path to the directory
+containing signed CSR files. If a relative path is given,
+the value of the CERT_PKI_DIR variable will be
+prepended.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Default:
+CERT_CA_CSRS_DIR=csrs/</p>
+
+<p style="margin-left:9%;"><b>CERT_CA_CERTS_DIR</b></p>
+
+<p style="margin-left:18%;">The path to the directory
+containing signed certificate files. If a relative path is
+given, the value of the CERT_PKI_DIR variable will be
+prepended.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Default:
+CERT_CA_CERTS_DIR=certs/</p>
+
+<p style="margin-left:9%;"><b>CERT_CA_HOOK</b></p>
+
+<p style="margin-left:18%;">Set to a path for an external
+application that is run on CA events like when a CSR is
+received or when a certificate is signed. The following
+environment variables will be set up before running the
+external application.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="4%"></td>
+<td width="77%">
+
+
+<p><b>CA_OP</b>: Set to one of the strings
+PENDING_CSR_CREATE, PENDING_CSR_UPDATE or CSR_SIGNED, which
+should be self explanatory.</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="4%"></td>
+<td width="77%">
+
+
+<p><b>CA_CSR_PEM</b>: CSR data in PEM format. This is not
+set for operation CSR_SIGNED.</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="4%"></td>
+<td width="77%">
+
+
+<p><b>CA_CRT_PEM</b>: Certificate data in PEM format. This
+is only set for operation CSR_SIGNED.</p></td></tr>
+</table>
+
+<h3>ROOT_CA, ISSUING_CA and SERVER_CERT sections
+<a name="ROOT_CA, ISSUING_CA and SERVER_CERT sections"></a>
+</h3>
+
+
+<p style="margin-left:9%; margin-top: 1em">These
+configuration sections is used to customize the contents of
+the different certificates that is generated by the
+reflector server. <b><br>
+KEYFILE</b></p>
+
+<p style="margin-left:18%;">The path to the certificate
+private key file. If a relative path is given, the value of
+the CERT_CA_KEYS_DIR variable will be prepended.</p>
+
+<p style="margin-left:9%;"><b>CSRFILE</b></p>
+
+<p style="margin-left:18%;">The path to the certificate
+signing request file. If a relative path is given, the value
+of the CERT_CA_CSRS_DIR variable will be prepended.</p>
+
+<p style="margin-left:9%;"><b>CRTFILE</b></p>
+
+<p style="margin-left:18%;">The path to the certificate
+file. If a relative path is given, the value of the
+CERT_CA_CERTS_DIR variable will be prepended.</p>
+
+<p style="margin-left:9%;"><b>COMMON_NAME</b></p>
+
+<p style="margin-left:18%;">The common name (CN) used in
+the subject of the certificate.</p>
+
+<p style="margin-left:9%;"><b>ORG_UNIT</b></p>
+
+<p style="margin-left:18%;">The organizational unit (OU)
+used in the subject of the certificate.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+ORG_UNIT=&quot;VHF/UHF-sektionen&quot;</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="9%"></td>
+<td width="4%">
+
+
+<p><b>ORG</b></p></td>
+<td width="5%"></td>
+<td width="82%">
+
+
+<p>The organization name (O) used in the subject of the
+certificate.</p> </td></tr>
+</table>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+ORG=SSA</p>
+
+<p style="margin-left:9%;"><b>LOCALITY</b></p>
+
+<p style="margin-left:18%;">The locality name (L) used in
+the subject of the certificate.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+LOCALITY=Boden</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="9%"></td>
+<td width="6%">
+
+
+<p><b>STATE</b></p></td>
+<td width="3%"></td>
+<td width="82%">
+
+
+<p>The name of the state or province (ST) used in the
+subject of the certificate.</p></td></tr>
+</table>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+STATE=Norrbotten</p>
+
+<p style="margin-left:9%;"><b>COUNTRY</b></p>
+
+<p style="margin-left:18%;">The ISO country code (C) used
+in the subject of the certificate.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+COUNTRY=SE</p>
+
+<p style="margin-left:9%;"><b>SUBJECT_ALT_NAME</b></p>
+
+<p style="margin-left:18%;">A comma separated list of
+subject alternative names.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+SUBJECT_ALT_NAME=DNS:public-hostname.example.org,IP:172.17.1.42</p>
+
+<p style="margin-left:9%;"><b>EMAIL_ADDRESS</b></p>
+
+<p style="margin-left:18%;">The email address that can be
+used to get in contact with the owner of the
+certificate.</p>
+
+<p style="margin-left:18%; margin-top: 1em">Example:
+EMAIL_ADDRESS=sysop@svxlink.example.org</p>
+
+<h3>USERS and PASSWORDS sections
+<a name="USERS and PASSWORDS sections"></a>
+</h3>
+
+
+<p style="margin-left:9%; margin-top: 1em">Previously, all
+users had to be specified in the USERS section. That is not
+needed anymore for nodes that use a SvxLink version &gt;
+1.8.0. Usernames are totally arbitrary but typically the
+callsign is used. The purpose is to map each username to a
+password. However, the password is not given directly but
+instead a reference to the PASSWORDS section is given.
+It&rsquo;s done like this so that multiple nodes can share a
+single password.</p>
+
+<p style="margin-left:9%; margin-top: 1em">An example of
 how the USERS and PASSWORDS sections may look is given
 below.</p>
 
-<p style="margin-left:11%; margin-top: 1em">[USERS] <br>
+<p style="margin-left:9%; margin-top: 1em">[USERS] <br>
 SM0ABC-1=MyNodes <br>
 SM0ABC-2=MyNodes <br>
 SM1XYZ=SM1XYZ</p>
 
-<p style="margin-left:11%; margin-top: 1em">[PASSWORDS]
-<br>
+<p style="margin-left:9%; margin-top: 1em">[PASSWORDS] <br>
 MyNodes=&quot;A very strong password!&quot; <br>
 SM1XYZ=&quot;Another very good password?&quot;</p>
 
-<p style="margin-left:11%; margin-top: 1em">This will set
-up <b>SM0ABC-1</b> and <b>SM0ABC-2</b> to use the same
-password specified by <b>MyNodes</b> in the PASSWORDS
-section. User <b>SM1XYZ</b> have his own password.</p>
+<p style="margin-left:9%; margin-top: 1em">This will set up
+<b>SM0ABC-1</b> and <b>SM0ABC-2</b> to use the same password
+specified by <b>MyNodes</b> in the PASSWORDS section. User
+<b>SM1XYZ</b> have his own password.</p>
+
+<h3>Talkgroup Configuration Sections
+<a name="Talkgroup Configuration Sections"></a>
+</h3>
+
+
+<p style="margin-left:9%; margin-top: 1em">It is possible
+to set configuration parameters that are only applied to one
+talkgroup. Those parameters are placed in a configuration
+section named &quot;TG#&lt;talkgroup id&gt;&quot;.
+Example:</p>
+
+<p style="margin-left:9%; margin-top: 1em">[TG#9999] <br>
+AUTO_QSY_AFTER=300 <br>
+ALLOW=S[A-M]\\d.*|LA8PV <br>
+SHOW_ACTIVITY=0</p>
+
+<p style="margin-left:9%; margin-top: 1em">The following
+configuration variables are valid in a talkgroup
+configuration section. <b><br>
+AUTO_QSY_AFTER</b></p>
+
+<p style="margin-left:18%;">Set this to the number of
+seconds after which an automatic QSY to a random talkgroup
+is requested. This is typically used to keep call channels
+and wide area channels clear so that stations does not dwell
+there for too long. Auto QSY is only triggered directly
+aftar a talker stop event. The default is that auto QSY is
+disabled (AUTO_QSY_AFTER=0).</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="9%"></td>
+<td width="6%">
+
+
+<p><b>ALLOW</b></p></td>
+<td width="3%"></td>
+<td width="82%">
+
+
+<p>A regular expression that must match the whole callsign
+of the nodes that try to select this talkgroup. The regular
+expression standard used is the same as for ECMAScript with
+the exception that the backslash special patterns (e.g. \s,
+\d etc) must be expressed with double backslash notation
+(e.g. \\s, \\d etc).</p></td></tr>
+</table>
+
+<p style="margin-left:18%; margin-top: 1em">An example that
+match most Swedish callsigns and a specific Norwegian one is
+&quot;S[A-M]\\d.*|LA8PV&quot;. That expression will for
+example match LA8PV, SM0SVX, SK3W, SA7ABC etc.</p>
+
+<p style="margin-left:9%;"><b>SHOW_ACTIVITY</b></p>
+
+<p style="margin-left:18%;">If set to 0, do not indicate in
+the http status message when the talkgroup is in use by a
+node. Default is 1 = show activity.</p>
 
 <h2>FILES
 <a name="FILES"></a>
@@ -291,21 +668,21 @@ section. User <b>SM1XYZ</b> have his own password.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxreflector.conf</i></p>
+<p style="margin-left:9%; margin-top: 1em"><i>/etc/svxlink/svxreflector.conf</i></p>
 
-<p style="margin-left:22%;">The system wide configuration
+<p style="margin-left:18%;">The system wide configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxreflector.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxreflector.conf</i></p>
 
-<p style="margin-left:22%;">Per user configuration
+<p style="margin-left:18%;">Per user configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>/etc/svxlink/svxreflector.d/*</i></p>
+<p style="margin-left:9%;"><i>/etc/svxlink/svxreflector.d/*</i></p>
 
-<p style="margin-left:22%;">Additional configuration files.
+<p style="margin-left:18%;">Additional configuration files.
 This directory is setup by the CFG_DIR configuration
 variable.</p>
 
@@ -314,8 +691,22 @@ variable.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
-(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+<p style="margin-left:9%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at svxlink dot org&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">Bugs should be
+reported using the issue tracker at
+https://github.com/sm0svx/svxlink.</p>
+
+<p style="margin-left:9%; margin-top: 1em">Questions about
+SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink</p>
 
 <h2>SEE ALSO
 <a name="SEE ALSO"></a>
@@ -323,7 +714,7 @@ variable.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxreflector</b>(1),
+<p style="margin-left:9%; margin-top: 1em"><b>svxreflector</b>(1),
 <b>svxlink</b>(1), <b>svxlink.conf</b>(5),</p>
 <hr>
 </body>

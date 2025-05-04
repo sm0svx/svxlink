@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sat Dec 30 12:02:47 2017 -->
+<!-- Creator     : groff version 1.23.0 -->
+<!-- CreationDate: Sun May  4 14:24:09 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -23,8 +23,10 @@
 <a href="#NAME">NAME</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#ModuleParrot">ModuleParrot</a><br>
 <a href="#FILES">FILES</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
 <a href="#SEE ALSO">SEE ALSO</a><br>
 
 <hr>
@@ -36,7 +38,7 @@
 
 
 
-<p style="margin-left:11%; margin-top: 1em">ModuleParrot.conf
+<p style="margin-left:9%; margin-top: 1em">ModuleParrot.conf
 &minus; Configuration file for the SvxLink server Parrot
 module</p>
 
@@ -45,12 +47,12 @@ module</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink</b>
 is a general purpose voice service system for ham radio use.
 This man-page describe the SvxLink server configuration for
 the Parrot module.</p>
 
-<p style="margin-left:11%; margin-top: 1em">The Parrot
+<p style="margin-left:9%; margin-top: 1em">The Parrot
 module record audio as long as the squelch is open and then
 plays it back. This can be used as a simplex repeater or for
 tests. It also plays back (spelling the digits) the DTMF
@@ -61,29 +63,32 @@ digits it receives.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">There are a
+<p style="margin-left:9%; margin-top: 1em">There are a
 couple of configuration variables that are common to all
 modules. The documentation for these can be found in the
 <b>svxlink.conf</b>(5) manual page.</p>
 
-<p style="margin-left:11%; margin-top: 1em">Here is the
+<p style="margin-left:9%; margin-top: 1em">Here is the
 description of all module specific configuration variables
 that the SvxLink Parrot module understands.</p>
 
+<h3>ModuleParrot
+<a name="ModuleParrot"></a>
+</h3>
 
-<p style="margin-left:11%; margin-top: 1em"><b>ModuleParrot
-<br>
-FIFO_LEN</b></p>
 
-<p style="margin-left:22%;">The length, in seconds, of the
+
+<p style="margin-left:9%; margin-top: 1em"><b>FIFO_LEN</b></p>
+
+<p style="margin-left:18%;">The length, in seconds, of the
 FIFO (First In First Out) audio buffer where audio is
 recorded to. When the squelch has been opened for longer
 than the time specified here, the oldest audio in the buffer
 will be thrown away.</p>
 
-<p style="margin-left:11%;"><b>REPEAT_DELAY</b></p>
+<p style="margin-left:9%;"><b>REPEAT_DELAY</b></p>
 
-<p style="margin-left:22%;">Specify a time, in
+<p style="margin-left:18%;">Specify a time, in
 milliseconds, that the parrot module will wait after squelch
 close before playing back the recorded message. This is
 mostly a way to prevent the parrot module to start sending
@@ -95,29 +100,29 @@ if the squlech momentarily closes on weak signals.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
+<p style="margin-left:9%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
 (or deprecated <i>/etc/svxlink.conf</i>)</p>
 
-<p style="margin-left:22%;">The system wide configuration
+<p style="margin-left:18%;">The system wide configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxlink.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxlink.conf</i></p>
 
-<p style="margin-left:22%;">Per user configuration
+<p style="margin-left:18%;">Per user configuration
 file.</p>
 
 
-<p style="margin-left:11%;"><i>/etc/svxlink/svxlink.d/ModuleParrot.conf</i></p>
+<p style="margin-left:9%;"><i>/etc/svxlink/svxlink.d/ModuleParrot.conf</i></p>
 
-<p style="margin-left:22%;">Global modularized
+<p style="margin-left:18%;">Global modularized
 configuration file. Depends on the CFG_DIR configuration
 variable setting.</p>
 
 
-<p style="margin-left:11%;"><i>~/.svxlink/svxlink.d/ModuleParrot.conf</i></p>
+<p style="margin-left:9%;"><i>&#732;/.svxlink/svxlink.d/ModuleParrot.conf</i></p>
 
-<p style="margin-left:22%;">Per user modularized
+<p style="margin-left:18%;">Per user modularized
 configuration file. Depends on the CFG_DIR configuration
 variable setting.</p>
 
@@ -126,8 +131,22 @@ variable setting.</p>
 </h2>
 
 
-<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
-(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+<p style="margin-left:9%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at svxlink dot org&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">Bugs should be
+reported using the issue tracker at
+https://github.com/sm0svx/svxlink.</p>
+
+<p style="margin-left:9%; margin-top: 1em">Questions about
+SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink</p>
 
 <h2>SEE ALSO
 <a name="SEE ALSO"></a>
@@ -135,7 +154,7 @@ variable setting.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
+<p style="margin-left:9%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
 <hr>
 </body>
 </html>
