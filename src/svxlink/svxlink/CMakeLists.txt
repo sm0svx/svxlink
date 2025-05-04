@@ -102,6 +102,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gpio.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   @ONLY
   )
+install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})
+install_if_not_exists(dv_users.json ${SVX_SYSCONF_INSTALL_DIR})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink_gpio_up.in
 	${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up
         @ONLY)

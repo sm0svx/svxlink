@@ -1,0 +1,71 @@
+Contrib: UsrpLogic
+==================
+
+----
+#
+# UsrpLogic (beta)
+# Adi Bier / DL1HRC (dl1hrc [at] gmx.de)
+#
+----
+== UsrpLogic ==
+Provides a Logic to connect to MMDVM services with USRP protocol.
+
+This branch only works if you have the following things:
+
+- DV3000 USB-stick (hardware transcoder) or 
+- md380-emu service
+
+Here are quick-and-dirty installation/update documentation, keep in
+mind: No configuration will be done!
+
+The configuration of the Usrp part has been moved to this new file,
+normally found in /etc/svxlink/svxlink.d
+
+== First time installation ==
+including German(!) voice announcements.
+
+You may use my semi-automatic installation-script from here 
+```
+http://svxlink.ham-radio-op.net/svxlink/svxlink-usrp.sh
+```
+
+Start installation as root:
+```
+wget -O - http://svxlink.ham-radio-op.net/svxlink/svxlink-usrp.sh | bash
+```
+
+== Installation of SvxLink with UsrpLogic extension ==
+
+```
+git clone https://github.com/dl1hrc/svxlink.git
+cd svxlink/src
+git checkout svxlink-usrp
+mkdir build
+cd build
+cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc -DLOCAL_STATE_DIR=/var -DCMAKE_BUILD_TYPE=Release -DWITH_CONTRIB_USRP_LOGIC=ON ..
+make
+make install
+```
+
+Please not that the cmake-parameter "-DWITH_CONTRIB_USRP_LOGIC=ON" enables the
+UsrpLogic extension. Without this it will not work.
+
+== Update an existing usrp-contrib ==
+```
+systemctl stop svxlink
+cd /home/svxlink/svxlink/src/build/
+make clean
+git pull
+sudo make install
+sudo systemctl restart svxlink
+```
+
+The new configuration file UsrpLogic.conf contains the [UsrpLogic]-section
+from svxlink.conf. This file is now located in /etc/svxlink/svxlink.d directory.
+Remove the [UsrpLogic]-section from svxlink.conf but let the LOGICS- and LINKS
+definitions with "Usrp" untouched.
+
+== Documentation ==
+- manpage svxlink.conf.5
+- German pdf is available here: https://github.com/dl1hrc/documentation
+
