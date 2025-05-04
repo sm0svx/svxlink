@@ -3,7 +3,8 @@ MAINTAINER Tobias Blomberg <sm0svx@svxlink.org>
 
 # Install required packages and set up the svxlink user
 RUN apk update
-RUN apk add git cmake make g++ pkgconfig libsigc++-dev alsa-lib-dev opus-dev \
+RUN apk add git cmake make g++ pkgconfig doxygen groff \
+            libsigc++-dev alsa-lib-dev opus-dev \
             speex-dev popt-dev libgcrypt-dev tcl-dev curl-dev gsm-dev \
             linux-headers jsoncpp-dev librtlsdr-dev libogg-dev libgpiod-dev \
             ladspa-dev lmms-plugins-ladspa \

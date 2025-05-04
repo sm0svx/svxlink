@@ -10,9 +10,10 @@ It started out as an EchoLink application for Linux back in 2003 but has now
 evolved to be something much more advanced.
 
 == SvxLink Server ==
-The SvxLink Server is a general purpose voice services system, which when
-connected to a transceiver, can act as both an advanced repeater system and can
-also operate on a simplex channel. One could call it a radio operating system.
+The SvxLink Server, often just called SvxLink, is a general purpose voice
+services system, which when connected to a transceiver, can act as both an
+advanced repeater system and can also operate on a simplex channel. One could
+call it a radio operating system.
 
 SvxLink is very extensible and modular. Voice services are implemented as
 modules which are isolated from each other.  Modules can be implemented in
@@ -36,7 +37,7 @@ EchoLink network.
 == Resources ==
 These are some of the resources connected to SvxLink:
 
-:gh_pages:    http://svxlink.org/
+:gh_pages:    https://svxlink.org/
 :gh_wiki:     https://github.com/sm0svx/svxlink/wiki
 :gh_issues:   https://github.com/sm0svx/svxlink/issues
 :gh_releases: https://github.com/sm0svx/svxlink/releases

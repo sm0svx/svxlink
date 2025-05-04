@@ -140,27 +140,24 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
 
     int			num_connected;
 
-    std::string		el_prefix;
-
     std::string         recv_buf;
 
     void  sendMsg(std::string aprsmsg);
-    std::string addrStr(void);
-    std::string posStr(const std::string& symbol);
-    std::string timeStr(void);
-    std::string phgStr(void);
-    std::string toneStr(void);
-    std::string txOffsetStr(void);
-    std::string frequencyStr(void);
-    std::string rangeStr(void);
-    std::string prefixStr(void) const;
-    std::string addresseeStr(const std::string& call);
-    std::string prependSpaceIfNotEmpty(const std::string& str);
+    std::string addrStr(const std::string& source) const;
+    std::string posStr(const std::string& symbol) const;
+    std::string timeStr(void) const;
+    std::string phgStr(void) const;
+    std::string toneStr(void) const;
+    std::string txOffsetStr(void) const;
+    std::string frequencyStr(void) const;
+    std::string rangeStr(void) const;
+    std::string addresseeStr(const std::string& call) const;
+    std::string prependSpaceIfNotEmpty(const std::string& str) const;
     void  sendAprsBeacon(Async::Timer *t);
 
     void  tcpConnected(void);
     void  aprsLogin(void);
-    short getPasswd(const std::string& call);
+    short getPasswd(const std::string& call) const;
 
     void  decodeAprsPacket(std::string frame);
     int   tcpDataReceived(Async::TcpClient<>::TcpConnection *con, void *buf,
@@ -169,6 +166,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
                           Async::TcpClient<>::DisconnectReason reason);
     void  reconnectAprsServer(Async::Timer *t);
     void  startNormalSequence(Async::Timer *t);
+    void  disconnect(void);
 
 };  /* class AprsTcpClient */
 

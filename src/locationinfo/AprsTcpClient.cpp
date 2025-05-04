@@ -221,8 +221,8 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
     // Object message for Echolink
     // ;EL-242660*111111z4900.05NE00823.29E0QSO status message
   std::ostringstream objmsg;
-  objmsg << addrStr()
-         << ";" << addresseeStr(prefixStr() + loc_cfg.mycall) << "*"
+  objmsg << addrStr(loc_cfg.sourcecall)
+         << ";" << addresseeStr(loc_cfg.objectname) << "*"
          << "111111z"
          << posStr("E0")
          << msg
@@ -230,7 +230,7 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
-  std::string status = prefixStr() + addrStr() + ">" + timeStr();
+  std::string status = addrStr(loc_cfg.objectname) + ">" + timeStr();
   for (const auto& call : calls)
   {
     status += call + " ";
@@ -269,10 +269,10 @@ void AprsTcpClient::igateMessage(const string& info)
  *
  ****************************************************************************/
 
-std::string AprsTcpClient::addrStr(void)
+std::string AprsTcpClient::addrStr(const std::string& source) const
 {
     // MYCALL>APSVXn,path:
-  std::string addr = loc_cfg.sourcecall + ">" + loc_cfg.destination;
+  std::string addr = source + ">" + loc_cfg.destination;
   if (!loc_cfg.path.empty())
   {
     addr += std::string(",") + loc_cfg.path;
@@ -282,7 +282,7 @@ std::string AprsTcpClient::addrStr(void)
 } /* AprsTcpClient::addrStr */
 
 
-std::string AprsTcpClient::posStr(const std::string& symbol)
+std::string AprsTcpClient::posStr(const std::string& symbol) const
 {
   char symbol_table_id = symbol[0];
   char symbol_code = symbol[1];
@@ -305,7 +305,7 @@ std::string AprsTcpClient::posStr(const std::string& symbol)
 } /* AprsTcpClient::posStr */
 
 
-std::string AprsTcpClient::timeStr(void)
+std::string AprsTcpClient::timeStr(void) const
 {
   time_t now = time(NULL);
   struct tm tm, *tm_ptr;
@@ -320,14 +320,14 @@ std::string AprsTcpClient::timeStr(void)
 } /* AprsTcpClient::timeStr */
 
 
-std::string AprsTcpClient::phgStr(void)
+std::string AprsTcpClient::phgStr(void) const
 {
   return AprsUdpClient::phgStr(loc_cfg.power, loc_cfg.height, loc_cfg.gain,
                                loc_cfg.beam_dir);
 } /* AprsTcpClient::phgStr */
 
 
-std::string AprsTcpClient::toneStr(void)
+std::string AprsTcpClient::toneStr(void) const
 {
     // CTCSS/1750Hz tone
   char tone[5];
@@ -351,7 +351,7 @@ std::string AprsTcpClient::toneStr(void)
 } /* AprsTcpClient::toneStr */
 
 
-std::string AprsTcpClient::txOffsetStr(void)
+std::string AprsTcpClient::txOffsetStr(void) const
 {
   std::ostringstream offset;
   if (std::abs(loc_cfg.tx_offset_khz) <= 9990)
@@ -363,7 +363,7 @@ std::string AprsTcpClient::txOffsetStr(void)
 } /* AprsTcpClient::txOffsetStr */
 
 
-std::string AprsTcpClient::frequencyStr(void)
+std::string AprsTcpClient::frequencyStr(void) const
 {
   std::ostringstream fq;
   unsigned freq_khz = loc_cfg.frequency;
@@ -392,25 +392,16 @@ std::string AprsTcpClient::frequencyStr(void)
 } /* AprsTcpClient::frequencyStr */
 
 
-std::string AprsTcpClient::rangeStr(void)
+std::string AprsTcpClient::rangeStr(void) const
 {
   std::ostringstream range;
-  range << "R" << std::setw(2) << loc_cfg.range << loc_cfg.range_unit;
+  range << "R" << std::setw(2) << std::setfill('0')
+               << std::min(loc_cfg.range, 99U) << loc_cfg.range_unit;
   return range.str();
 } /* AprsTcpClient::rangeStr */
 
 
-std::string AprsTcpClient::prefixStr(void) const
-{
-  if (loc_cfg.prefix.empty())
-  {
-    return "";
-  }
-  return std::string("E") + loc_cfg.prefix + "-";
-} /* AprsTcpClient::prefixStr */
-
-
-std::string AprsTcpClient::addresseeStr(const std::string& call)
+std::string AprsTcpClient::addresseeStr(const std::string& call) const
 {
   std::ostringstream addressee;
   addressee << std::left << std::setw(9) << call;
@@ -418,7 +409,7 @@ std::string AprsTcpClient::addresseeStr(const std::string& call)
 } /* AprsTcpClient::addresseeStr */
 
 
-std::string AprsTcpClient::prependSpaceIfNotEmpty(const std::string& str)
+std::string AprsTcpClient::prependSpaceIfNotEmpty(const std::string& str) const
 {
   return (str.empty() ? std::string() : std::string(" ").append(str));
 } /* AprsTcpClient::prependSpaceIfNotEmpty */
@@ -431,7 +422,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
     // Position report for main object
   std::ostringstream posmsg;
-  posmsg << addrStr()
+  posmsg << addrStr(loc_cfg.sourcecall)
          << ";" << addresseeStr(loc_cfg.objectname) << "*"
          << "111111z"
          << posStr(loc_cfg.symbol)
@@ -447,7 +438,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
   {
       // Position for source callsign
     std::ostringstream posmsg;
-    posmsg << addrStr()
+    posmsg << addrStr(loc_cfg.sourcecall)
            << "="
            << posStr(loc_cfg.symbol)
            << phgStr()
@@ -458,7 +449,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
            << comment_str;
     sendMsg(posmsg.str());
     //std::ostringstream objmsg;
-    //objmsg << addrStr()
+    //objmsg << addrStr(loc_cfg.sourcecall)
     //       << ";" << addresseeStr(loc_cfg.sourcecall) << "*"
     //       << "111111z"
     //       << posStr()
@@ -500,12 +491,14 @@ void AprsTcpClient::sendMsg(std::string aprsmsg)
   int written = con->write(aprsmsg.c_str(), aprsmsg.size());
   if (written < 0)
   {
-    cerr << "*** ERROR: TCP write error" << endl;
+    std::cerr << "*** ERROR: TCP write error" << std::endl;
+    disconnect();
   }
   else if (static_cast<size_t>(written) != aprsmsg.size())
   {
-    cerr << "*** ERROR: TCP transmit buffer overflow, reconnecting." << endl;
-    con->disconnect();
+    std::cerr << "*** ERROR: TCP transmit buffer overflow, reconnecting."
+              << std::endl;
+    disconnect();
   }
 } /* AprsTcpClient::sendMsg */
 
@@ -531,7 +524,7 @@ void AprsTcpClient::aprsLogin(void)
 // Copyright (C) 1999,2000  Frank Giannandrea
 // Copyright (C) 2000-2008  The Xastir Group
 
-short AprsTcpClient::getPasswd(const string& call)
+short AprsTcpClient::getPasswd(const string& call) const
 {
   short hash = HASH_KEY;
   string::size_type i = 0;
@@ -546,13 +539,13 @@ short AprsTcpClient::getPasswd(const string& call)
   }
 
   return (hash & 0x7fff);
-} /* AprsTcpClient::callpass */
+} /* AprsTcpClient::getPasswd */
 
 
 void AprsTcpClient::tcpConnected(void)
 {
-  cout << "Connected to APRS server " << con->remoteHost() <<
-          " on port " << con->remotePort() << endl;
+  std::cout << "Connected to APRS server " << con->remoteHost()
+            << ":" << con->remotePort() << std::endl;
 
   recv_buf.clear();
 
@@ -568,7 +561,7 @@ void AprsTcpClient::startNormalSequence(Timer *t)
   beacon_timer->setEnable(true);  // Start the beacon interval
 
     // Send SvxLink version as status on connection to APRS server
-  std::string status = addrStr() + ">" + timeStr() +
+  std::string status = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
                        "SvxLink v" + SVXLINK_APP_VERSION +
                        " (https://www.svxlink.org)";
   sendMsg(status);
@@ -685,7 +678,10 @@ int AprsTcpClient::tcpDataReceived(TcpClient<>::TcpConnection *con,
 void AprsTcpClient::tcpDisconnected(TcpClient<>::TcpConnection *con,
                                     TcpClient<>::DisconnectReason reason)
 {
-  cout << "*** WARNING: Disconnected from APRS server" << endl;
+  std::cerr << "*** WARNING: Disconnected from APRS server "
+            << con->remoteHost() << ":" << con->remotePort() << ": "
+            << TcpConnection::disconnectReasonStr(reason)
+            << std::endl;
 
   beacon_timer->setEnable(false);		// no beacon while disconnected
   reconnect_timer->setEnable(true);		// start the reconnect-timer
@@ -698,10 +694,19 @@ void AprsTcpClient::tcpDisconnected(TcpClient<>::TcpConnection *con,
 void AprsTcpClient::reconnectAprsServer(Async::Timer *t)
 {
   reconnect_timer->setEnable(false);		// stop the reconnect-timer
-  cout << "*** WARNING: Trying to reconnect to APRS server" << endl;
+  std::cout << "Trying to reconnect to APRS server..." << std::endl;
   con->connect();
 } /* AprsTcpClient::reconnectNextAprsServer */
 
+
+void AprsTcpClient::disconnect(void)
+{
+  if (con->isConnected())
+  {
+    con->disconnect();
+    tcpDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+  }
+} /* AprsTcpClient::disconnect */
 
 
 /*

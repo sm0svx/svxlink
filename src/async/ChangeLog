@@ -1,4 +1,4 @@
- 1.8.0 -- ?? ??? ????
+ 1.8.0 -- 03 May 2025
 ----------------------
 
 * Code cleanup of Async::Pty, fixing a small memory leak.
@@ -16,6 +16,9 @@
   getValue function.
 
 * Async::AudioDevice: Reopen the audio device on failure
+
+* Async::DnsLookup: The addresses method will now return the list of hosts in
+  random order for each call.
 
 
 
