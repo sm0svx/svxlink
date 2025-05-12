@@ -311,7 +311,7 @@ class Exec : public sigc::trackable
      * This signal is emitted when a subprocess write to its stdout. The data
      * will be zero terminated.
      */
-    sigc::signal<void, const char *, int> stdoutData;
+    sigc::signal<void(const char*, int)> stdoutData;
 
     /**
      * @brief   A signal that is emitted when the subprocess write to stderr
@@ -321,17 +321,17 @@ class Exec : public sigc::trackable
      * This signal is emitted when a subprocess write to its stderr. The data
      * will be zero terminated.
      */
-    sigc::signal<void, const char *, int> stderrData;
+    sigc::signal<void(const char*, int)> stderrData;
 
     /**
      * @brief   A signal that is emitted when the subprocess close its stdout
      */
-    sigc::signal<void> stdoutClosed;
+    sigc::signal<void()> stdoutClosed;
 
     /**
      * @brief   A signal that is emitted when the subprocess close its stderr
      */
-    sigc::signal<void> stderrClosed;
+    sigc::signal<void()> stderrClosed;
 
     /**
      * @brief   A signal that is emitted when the subprocess exits
@@ -340,7 +340,7 @@ class Exec : public sigc::trackable
      * methods ifExited, ifSignaled, exitStatus and termSig may be used to
      * find out what caused the subprocess to exit.
      */
-    sigc::signal<void> exited;
+    sigc::signal<void()> exited;
     
   protected:
     

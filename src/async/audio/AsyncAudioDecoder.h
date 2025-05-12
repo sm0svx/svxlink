@@ -177,8 +177,8 @@ class AudioDecoder : public AudioSource, public sigc::trackable
     /**
      * @brief This signal is emitted when all encoded samples have been flushed
      */
-    sigc::signal<void> allEncodedSamplesFlushed;
-    
+    sigc::signal<void()> allEncodedSamplesFlushed;
+
 
   protected:
     /**
