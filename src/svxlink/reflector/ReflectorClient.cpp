@@ -1321,14 +1321,14 @@ void ReflectorClient::sendAuthChallenge(void)
          MsgAuthChallenge::LENGTH);
   sendMsg(challenge_msg);
   m_con_state = STATE_EXPECT_AUTH_RESPONSE;
-}
+} /* ReflectorClient::sendAuthChallenge */
 
 
 void ReflectorClient::renewClientCertificate(void)
 {
   std::cout << m_callsign << ": Renew client certificate" << std::endl;
   auto cert = m_con->sslPeerCertificate();
-  if (cert.isNull() || !m_reflector->signClientCert(cert, "CRT_RENEWED"))
+  if (cert.isNull() || !m_reflector->renewedClientCert(cert))
   {
     std::cerr << "*** WARNING: Certificate resigning for '"
               << m_callsign << "' failed" << std::endl;

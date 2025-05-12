@@ -193,6 +193,7 @@ class Reflector : public sigc::trackable
 
     Async::SslCertSigningReq loadClientPendingCsr(const std::string& callsign);
     Async::SslCertSigningReq loadClientCsr(const std::string& callsign);
+    bool renewedClientCert(Async::SslX509& cert);
     bool signClientCert(Async::SslX509& cert, const std::string& ca_op);
     Async::SslX509 signClientCsr(const std::string& cn);
     Async::SslX509 loadClientCertificate(const std::string& callsign);

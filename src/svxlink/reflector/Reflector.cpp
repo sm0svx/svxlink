@@ -500,6 +500,26 @@ Reflector::loadClientCsr(const std::string& callsign)
 } /* Reflector::loadClientPendingCsr */
 
 
+bool Reflector::renewedClientCert(Async::SslX509& cert)
+{
+  if (cert.isNull())
+  {
+    return false;
+  }
+
+  std::string callsign(cert.commonName());
+  Async::SslX509 new_cert = loadClientCertificate(callsign);
+  if (!new_cert.isNull() &&
+      ((new_cert.publicKey() != cert.publicKey()) ||
+       (timeToRenewCert(new_cert) <= std::time(NULL))))
+  {
+    return signClientCert(cert, "CRT_RENEWED");
+  }
+  cert = std::move(new_cert);
+  return !cert.isNull();
+} /* Reflector::renewedClientCert */
+
+
 bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
 {
   //std::cout << "### Reflector::signClientCert" << std::endl;
