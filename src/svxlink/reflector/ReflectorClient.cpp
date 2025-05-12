@@ -1326,14 +1326,14 @@ void ReflectorClient::sendAuthChallenge(void)
 
 void ReflectorClient::renewClientCertificate(void)
 {
-  std::cout << m_callsign << ": Renew client certificate" << std::endl;
   auto cert = m_con->sslPeerCertificate();
   if (cert.isNull() || !m_reflector->renewedClientCert(cert))
   {
-    std::cerr << "*** WARNING: Certificate resigning for '"
+    std::cerr << "*** WARNING: Certificate renewal for '"
               << m_callsign << "' failed" << std::endl;
     return;
   }
+  std::cout << m_callsign << ": Send renewed client certificate" << std::endl;
   sendClientCert(cert);
   m_con_state = STATE_EXPECT_DISCONNECT;
 } /* ReflectorClient::renewClientCertificate */
