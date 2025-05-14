@@ -1,4 +1,4 @@
-.TH SVXLINK 1 "FEBRUARY 2025" Linux "User Manuals"
+.TH SVXLINK 1 "MAY 2025" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -48,6 +48,39 @@ Don't output any info messages, just warnings and errors.
 .B --version
 Print the application version then exit.
 .
+.SH REFLECTOR SERVER CONNECTION
+.
+The SvxReflector server is an application that provide a hub for multiple
+SvxLink nodes to connect to for performing audio streaming between the nodes.
+
+The SvxReflector system features separation of audio streams in talkgroups so
+that multiple QSOs can be routed through the reflector server without
+interfering with each other.
+
+Authentication to the reflector server is done using X.509 certificates. It is
+a complex technology but most details are hidden for a SvxLink node sysop.
+However, the node sysop need to know a few things for smooth operations of the
+node.
+
+When a SvxLink node connect to the reflector server for the first time, it will
+request a signed certificate. Signing a certificate is a manual process on the
+SvxReflector side so it may take a while for the reflector sysop to perform the
+signing. The node will not be able to connect to the reflector until the
+certificate has been signed but it will retry continuously. When the reflector
+sysop has signed the certificate it will be sent to the node when it connects
+the next time. After that the node is granted access to the reflector.
+
+A certificate has a limited lifetime. In SvxLink that is fixed to three months.
+When there is one third left of the lifetime a new certificate will be signed
+automatically by the reflector server. No manual interaction is needed by the
+node sysop nor the reflector sysop. However, if the certificate pass its end of
+life a new manual signing process is needed.
+
+During the certificate creation process there are a number of important files
+generated. Ensure that you back up these files. For example, you will at least
+need to restore the key-file after reinstalling the node OS. See FILES below
+for more information about these files.
+.
 .SH FILES
 .
 .TP
@@ -63,6 +96,24 @@ for further details.
 .TP
 .I /etc/svxlink/svxlink.d/*
 Additional configuration files. Typically one configuration file per module.
+.TP
+.I /var/lib/svxlink/pki/MYCALL.key
+Key file used for authenticating to a SvxReflector server. Make sure that you
+don't loose this file since you then will not be able to log in to the
+reflector server. This file must also be kept secret since anyone possessing it
+can log in to the reflector server in the name of the key owner.
+.TP
+.I /var/lib/svxlink/pki/MYCALL.csr
+File containing the certificate signing request for the SvxReflector
+authentication certificate. This file is auto generated if missing and updated
+if SvxLink certificate configuration has changed. It can be used to sign a
+certificate "out-of-band" if the reflector server owner has such a procedure.
+Otherwise it's just used internally by SvxLink.
+.TP
+.I /var/lib/svxlink/pki/MYCALL.crt
+File containing the certificate used to authenticate to the SvxReflector
+server. It's good to back this file up as well but if it's lost, the reflector
+server _may_ be able to send it to the SvxLink node upon connect.
 .
 .SH ENVIRONMENT
 .
