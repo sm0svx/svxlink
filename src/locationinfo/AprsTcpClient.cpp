@@ -158,7 +158,7 @@ namespace {
 AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
                             const std::string &server, int port)
   : loc_cfg(loc_cfg), server(server), port(port), con(0), beacon_timer(0),
-    reconnect_timer(0), offset_timer(0), num_connected(0)
+    status_timer(0), reconnect_timer(0), offset_timer(0), num_connected(0)
 {
    StrList str_list;
 
@@ -171,6 +171,10 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
    beacon_timer->expired.connect(mem_fun(*this, &AprsTcpClient::sendAprsBeacon));
+
+   status_timer = new Timer((24 * 60 - 5) * 60 * 1000, Timer::TYPE_PERIODIC);
+   status_timer->setEnable(false);
+   status_timer->expired.connect(mem_fun(*this, &AprsTcpClient::sendAprsStatus));
 
    offset_timer = new Timer(10000, Timer::TYPE_ONESHOT);
    offset_timer->setEnable(false);
@@ -190,6 +194,7 @@ AprsTcpClient::~AprsTcpClient(void)
    delete reconnect_timer;
    delete offset_timer;
    delete beacon_timer;
+   delete status_timer;
 } /* AprsTcpClient::~AprsTcpClient */
 
 
@@ -465,6 +470,16 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 } /* AprsTcpClient::sendAprsBeacon*/
 
 
+void AprsTcpClient::sendAprsStatus(Timer *t)
+{
+    // Send SvxLink version as status
+  std::string status = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
+                       "SvxLink v" + SVXLINK_APP_VERSION +
+                       " (https://www.svxlink.org)";
+  sendMsg(status);
+} /* AprsTcpClient::sendAprsStatus*/
+
+
 void AprsTcpClient::sendMsg(std::string aprsmsg)
 {
   const size_t max_packet_size = 512;
@@ -561,11 +576,8 @@ void AprsTcpClient::startNormalSequence(Timer *t)
   sendAprsBeacon(t);
   beacon_timer->setEnable(true);  // Start the beacon interval
 
-    // Send SvxLink version as status on connection to APRS server
-  std::string status = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
-                       "SvxLink v" + SVXLINK_APP_VERSION +
-                       " (https://www.svxlink.org)";
-  sendMsg(status);
+  sendAprsStatus(t);
+  status_timer->setEnable(true);  // Start the status interval
 } /* AprsTcpClient::startNormalSequence */
 
 
@@ -685,6 +697,7 @@ void AprsTcpClient::tcpDisconnected(TcpClient<>::TcpConnection *con,
             << std::endl;
 
   beacon_timer->setEnable(false);		// no beacon while disconnected
+  status_timer->setEnable(false);		// no status while disconnected
   reconnect_timer->setEnable(true);		// start the reconnect-timer
   offset_timer->setEnable(false);
   offset_timer->reset();
