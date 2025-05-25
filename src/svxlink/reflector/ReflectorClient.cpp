@@ -442,9 +442,17 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
     return;
   }
 
+    // Set cert renewal timer to expire one minute after the actual renewal
+    // time to avoid a race condition. Also delay renewal to at least 10
+    // minutes after node connection to reduce problems with renewal loops.
+    // Renewal loops may occur if the client does not accept a new certificate
+    // for some reason and upon reconnection continue to use the old
+    // certificate, in which case the reflector will send the new cert again,
+    // and so on. This may happen if the real-time clock is not correctly set
+    // on the node.
   time_t renew_time = std::max(
-      std::time(NULL) + 600,
-      Reflector::timeToRenewCert(peer_cert));
+      std::time(NULL) + 10*60,
+      Reflector::timeToRenewCert(peer_cert) + 60);
   m_renew_cert_timer.setTimeout(renew_time);
   m_renew_cert_timer.start();
 
