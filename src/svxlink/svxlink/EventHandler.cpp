@@ -482,7 +482,7 @@ int EventHandler::genericCommandHandler(ClientData cdata, Tcl_Interp *irp,
   if (!msg.empty())
   {
     auto msg_alloc_len = msg.size()+1;
-    char* msg_copy = Tcl_Alloc(msg_alloc_len);
+    char* msg_copy = static_cast<char*>(Tcl_Alloc(msg_alloc_len));
     memcpy(msg_copy, msg.c_str(), msg_alloc_len);
     Tcl_SetResult(irp, msg_copy, TCL_DYNAMIC);
     return TCL_ERROR;

@@ -428,7 +428,7 @@ class DnsLookupWorker
     struct CompSRV
     {
       bool operator()(const DnsResourceRecordSRV* lhs,
-                      const DnsResourceRecordSRV* rhs)
+                      const DnsResourceRecordSRV* rhs) const
       {
         return lhs->prio() < rhs->prio();
       }

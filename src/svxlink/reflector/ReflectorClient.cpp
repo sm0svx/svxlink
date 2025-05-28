@@ -444,9 +444,17 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
     return;
   }
 
+    // Set cert renewal timer to expire one minute after the actual renewal
+    // time to avoid a race condition. Also delay renewal to at least 10
+    // minutes after node connection to reduce problems with renewal loops.
+    // Renewal loops may occur if the client does not accept a new certificate
+    // for some reason and upon reconnection continue to use the old
+    // certificate, in which case the reflector will send the new cert again,
+    // and so on. This may happen if the real-time clock is not correctly set
+    // on the node.
   time_t renew_time = std::max(
-      std::time(NULL) + 600,
-      Reflector::timeToRenewCert(peer_cert));
+      std::time(NULL) + 10*60,
+      Reflector::timeToRenewCert(peer_cert) + 60);
   m_renew_cert_timer.setTimeout(renew_time);
   m_renew_cert_timer.start();
 
@@ -1345,19 +1353,19 @@ void ReflectorClient::sendAuthChallenge(void)
          MsgAuthChallenge::LENGTH);
   sendMsg(challenge_msg);
   m_con_state = STATE_EXPECT_AUTH_RESPONSE;
-}
+} /* ReflectorClient::sendAuthChallenge */
 
 
 void ReflectorClient::renewClientCertificate(void)
 {
-  std::cout << m_callsign << ": Renew client certificate" << std::endl;
   auto cert = m_con->sslPeerCertificate();
-  if (cert.isNull() || !m_reflector->signClientCert(cert, "CRT_RENEWED"))
+  if (cert.isNull() || !m_reflector->renewedClientCert(cert))
   {
-    std::cerr << "*** WARNING: Certificate resigning for '"
+    std::cerr << "*** WARNING: Certificate renewal for '"
               << m_callsign << "' failed" << std::endl;
     return;
   }
+  std::cout << m_callsign << ": Send renewed client certificate" << std::endl;
   sendClientCert(cert);
   m_con_state = STATE_EXPECT_DISCONNECT;
 } /* ReflectorClient::renewClientCertificate */
