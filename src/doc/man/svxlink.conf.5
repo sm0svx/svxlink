@@ -437,6 +437,15 @@ If the squelch close before the delay time has expired, no talkgroup will be
 reported. Default: 1000.
 
 Example: CTCSS_TO_TG_DELAY=0
+.TP
+.B MESSAGE_SOUNDS_TO_MODULES=0
+If set to true (1), all message sounds will also be routed to the configured
+modules. This is useful when bridging EchoLink to FM-Funknetz, for example.
+Talk Groups will be announced via EL, etc. Also EL status messages (call
+connecting/disconnecting, etc.) will also be heard in EL.
+Default: 0
+
+Example: MESSAGE_SOUNDS_TO_MODULES=1
 .
 .SS Simplex Logic Section
 .
