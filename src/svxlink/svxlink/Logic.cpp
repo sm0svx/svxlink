@@ -407,6 +407,9 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   cfg().getValue(name(), "FX_GAIN_NORMAL", fx_gain_normal);
   cfg().getValue(name(), "FX_GAIN_LOW", fx_gain_low);
 
+  bool eventmsg2modules = 0;
+  cfg().getValue(name(), "MESSAGE_SOUNDS_TO_MODULES", eventmsg2modules);
+
   AudioSource *prev_rx_src = 0;
 
     // Create the RX object
@@ -612,7 +615,30 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
       	      	      	      	      	 256 * INTERNAL_SAMPLE_RATE / 8000, 0);
   prev_tx_src->registerSink(msg_pacer, true);
-  tx_audio_mixer->addSource(msg_pacer);
+
+  /*
+   * Connect message sounds to modules if configured with "MESSAGE_SOUNDS_TO_MODULES".
+   * - Create audio splitter for message handler (pre-processed with gain and pacer).
+   * - Pass to modules.
+   * - Pass to tx mixer.
+   */
+  if(eventmsg2modules) {
+    AudioSplitter *msg_splitter = new AudioSplitter;
+    msg_pacer->registerSink(msg_splitter, true);
+
+    passthrough = new AudioPassthrough;
+    msg_splitter->addSink(passthrough, true);
+    audio_to_module_selector->addSource(passthrough);
+    audio_to_module_selector->enableAutoSelect(passthrough, 10);
+
+    passthrough = new AudioPassthrough;
+    msg_splitter->addSink(passthrough, true);
+
+    tx_audio_mixer->addSource(passthrough);
+  } else {
+    tx_audio_mixer->addSource(msg_pacer);
+  }
+
   prev_tx_src = 0;
 
   event_handler = new EventHandler(event_handler_str, name());
@@ -687,7 +713,7 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   every_second_timer.expired.connect(mem_fun(*this, &Logic::everySecond));
   timeoutNextSecond();
   every_second_timer.start();
-  
+
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
       mem_fun(*this, &Logic::putCmdOnQueue));
