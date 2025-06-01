@@ -487,7 +487,7 @@ void TcpConnection::recvHandler(FdWatch *watch)
   //          << std::endl;
 
   size_t recv_buf_size = m_recv_buf.size();
-  int cnt = read(sock, &m_recv_buf[recv_buf_size],
+  int cnt = read(sock, m_recv_buf.data()+recv_buf_size,
                  m_recv_buf.capacity()-recv_buf_size);
   //std::cout << "###   cnt=" << cnt << std::endl;
   if (cnt <= -1)
