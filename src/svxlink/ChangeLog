@@ -16,6 +16,8 @@
 * Bugfix: If there already is a renewed reflector certificate available for a
   node, don't renew it again.
 
+* New LocationInfo config variable for APRS: FREQUENCY_SEPARATOR.
+
 
 
  1.9.0 -- 03 May 2025
