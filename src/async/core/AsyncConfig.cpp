@@ -168,6 +168,31 @@ bool Config::getValue(const std::string& section, const std::string& tag,
 } /* Config::getValue */
 
 
+bool Config::getValue(const std::string& section, const std::string& tag,
+                      char& value, bool missing_ok) const
+{
+  Sections::const_iterator sec_it = sections.find(section);
+  if (sec_it == sections.end())
+  {
+    return missing_ok;
+  }
+
+  Values::const_iterator val_it = sec_it->second.find(tag);
+  if (val_it == sec_it->second.end())
+  {
+    return missing_ok;
+  }
+
+  if (val_it->second.val.size() != 1)
+  {
+    return false;
+  }
+
+  value = val_it->second.val[0];
+  return true;
+} /* Config::getValue */
+
+
 const string &Config::getValue(const string& section, const string& tag) const
 {
   static const string empty_strng;
