@@ -125,7 +125,7 @@ class LocationInfo
     {
       unsigned int binterval    {10}; // Beacon interval in minutes
       unsigned int frequency    {0};
-      char         freq_sep     {0};
+      std::string  freq_sep     {"/"};
       unsigned int power        {0};
       unsigned int tone         {0};
       unsigned int height       {10};

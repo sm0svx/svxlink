@@ -366,10 +366,7 @@ std::string AprsTcpClient::txOffsetStr(void) const
 std::string AprsTcpClient::frequencyStr(void) const
 {
   std::ostringstream fq;
-  if (loc_cfg.freq_sep != 0)
-  {
-    fq << loc_cfg.freq_sep;
-  }
+  fq << loc_cfg.freq_sep;
   unsigned freq_khz = loc_cfg.frequency;
   const unsigned mhz100 = freq_khz / 100000;
   if (mhz100 > 9)

@@ -510,7 +510,8 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg,
     loc_cfg.frequency = lrint(1000.0 * frequency);
   }
 
-  if (!cfg.getValue(name, "FREQUENCY_SEPARATOR", loc_cfg.freq_sep, true))
+  if (!cfg.getValue(name, "FREQUENCY_SEPARATOR", loc_cfg.freq_sep, true) ||
+      (loc_cfg.freq_sep.size() > 1))
   {
     print_error(name, "FREQUENCY_SEPARATOR",
         cfg.getValue(name, "FREQUENCY_SEPARATOR"), "FREQUENCY_SEPARATOR=\"/\"");
