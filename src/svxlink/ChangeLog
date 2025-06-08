@@ -1,3 +1,12 @@
+ 1.10.0 -- ?? ??? ????
+-----------------------
+
+* Improved announcements for reflector connection state. If the connection is
+  down when a talkgroup is active, a buzzing sound will be prepended to the
+  roger sound.
+
+
+
  1.9.1 -- ?? ??? 2025
 ----------------------
 

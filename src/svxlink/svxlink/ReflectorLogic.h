@@ -332,7 +332,7 @@ class ReflectorLogic : public LogicBase
     bool setAudioCodec(const std::string& codec_name);
     bool codecIsAvailable(const std::string &codec_name);
     void tgSelectTimerExpired(void);
-    void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
+    void onLogicConInStreamIsIdle(bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
     void selectTg(uint32_t tg, const std::string& event, bool unmute);
     void processEvent(const std::string& event);

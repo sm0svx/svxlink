@@ -83,14 +83,17 @@ proc command_failed {cmd} {
 #
 proc reflector_connection_status_update {is_established} {
   variable reflector_connection_established
+  variable selected_tg
   if {$is_established != $reflector_connection_established} {
     set reflector_connection_established $is_established
-    #playMsg "Core" "reflector"
-    #if {$is_established} {
-    #  playMsg "Core" "connected"
-    #} else {
-    #  playMsg "Core" "disconnected"
-    #}
+    if {$selected_tg != 0} {
+      playMsg "Core" "reflector"
+      if {$is_established} {
+        playMsg "Core" "connected"
+      } else {
+        playMsg "Core" "disconnected"
+      }
+    }
   }
 }
 
@@ -390,6 +393,30 @@ proc talker_stop {tg callsign} {
   #  playTone 659 200 50
   #  playTone 880 200 50
   #}
+}
+
+#
+# Local talker start (e.g. squelch open)
+#
+proc local_talker_start {} {
+  #puts "### Local talker start"
+}
+
+
+#
+# Local talker stop (e.g. squelch closed)
+#
+proc local_talker_stop {} {
+  variable selected_tg
+  variable reflector_connection_established
+  #puts "### Local talker stop"
+  if {!$reflector_connection_established && ($selected_tg > 0)} {
+    for {set i 0} {$i<12} {set i [expr $i+1]} {
+      playTone 500 100 12
+      playTone 900 100 12
+    }
+    playSilence 100
+  }
 }
 
 
