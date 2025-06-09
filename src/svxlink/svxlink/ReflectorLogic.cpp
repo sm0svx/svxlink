@@ -978,7 +978,7 @@ void ReflectorLogic::onConnected(void)
   //m_con.setMaxFrameSize(ReflectorMsg::MAX_SSL_SETUP_FRAME_SIZE);
   m_con_state = STATE_EXPECT_CA_INFO;
   //m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_FRAME_SIZE);
-  processEvent("reflector_connection_status_update 1");
+  //processEvent("reflector_connection_status_update 1");
 } /* ReflectorLogic::onConnected */
 
 
@@ -2123,6 +2123,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
               << std::endl;
     m_con.markAsEstablished();
     m_con_state = STATE_CONNECTED;
+    processEvent("reflector_connection_status_update 1");
 
     if (m_selected_tg > 0)
     {
