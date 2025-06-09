@@ -1,5 +1,5 @@
 # Project release version
-PROJECT=25.05.0.99.0
+PROJECT=master
 
 # Version for the Qtel application
 QTEL=1.2.5
