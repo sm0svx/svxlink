@@ -366,6 +366,7 @@ std::string AprsTcpClient::txOffsetStr(void) const
 std::string AprsTcpClient::frequencyStr(void) const
 {
   std::ostringstream fq;
+  fq << loc_cfg.freq_sep;
   unsigned freq_khz = loc_cfg.frequency;
   const unsigned mhz100 = freq_khz / 100000;
   if (mhz100 > 9)
@@ -427,7 +428,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
          << "111111z"
          << posStr(loc_cfg.symbol)
          << phgStr()
-         << "/" << frequencyStr()
+         << frequencyStr()
          << " " << toneStr()
          << tx_offset_str
          << " " << rangeStr()
@@ -442,7 +443,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
            << "="
            << posStr(loc_cfg.symbol)
            << phgStr()
-           << "/" << frequencyStr()
+           << frequencyStr()
            << " " << toneStr()
            << tx_offset_str
            << " " << rangeStr()
@@ -454,7 +455,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
     //       << "111111z"
     //       << posStr()
     //       << phgStr()
-    //       << "/" << frequencyStr()
+    //       << frequencyStr()
     //       << " " << toneStr()
     //       << tx_offset_str
     //       << " " << rangeStr()

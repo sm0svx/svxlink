@@ -1,3 +1,19 @@
+ 1.9.0 -- ?? ??? ????
+----------------------
+
+* Async::AudioStreamStateDetector facelift
+
+
+
+ 1.8.1 -- ?? ??? 2025
+----------------------
+
+* Bugfix in Async::TcpConnection: Illegal cast of pointer to receive buffer.
+
+* Async::Config: Now specifically handling the "char" case for getValue.
+
+
+
  1.8.0 -- 03 May 2025
 ----------------------
 

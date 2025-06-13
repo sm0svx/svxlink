@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "MAY 2025" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JUNE 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -2893,6 +2893,13 @@ configuration variable should be used to specify the repeater shift.
 Example:
 .br
 FREQUENCY=430.050     # tx-frequency is 430.050 MHz
+.TP
+.B FREQUENCY_SEPARATOR
+Use the specified character to separate the PHG from the frequency.
+Unfortunately different tranceivers understand different APRS formats. For
+example the Yaesu FTM-510D require that no separator is used and the Kenwood
+TM-D710 require a separator (e.g. "/") to be present. The default is to use a
+slash as the separator charachter.
 .TP
 .B TX_OFFSET
 The tx offset is the number of kHz from the FREQUENCY where the node is

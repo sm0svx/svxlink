@@ -1,3 +1,34 @@
+ 1.10.0 -- ?? ??? ????
+-----------------------
+
+* Improved announcements for reflector connection state. If the connection is
+  down when a talkgroup is active, a buzzing sound will be prepended to the
+  roger sound.
+
+
+
+ 1.9.1 -- ?? ??? 2025
+----------------------
+
+* Fix build errors for newer versions of gcc on some distros
+
+* Add documentation for SvxLink node reflector connection in the svxlink
+  manual page.
+
+* The systemd units for svxlink and svxreflector now make a recursive owner
+  change of the state directory (e.g. /var/lib/svxlink) to avoid owner
+  problems if an application by mistake is started as another user (e.g.
+  root).
+
+* Bugfix: Add offset to cert renewal timer to avoid a race
+
+* Bugfix: If there already is a renewed reflector certificate available for a
+  node, don't renew it again.
+
+* New LocationInfo config variable for APRS: FREQUENCY_SEPARATOR.
+
+
+
  1.9.0 -- 03 May 2025
 ----------------------
 

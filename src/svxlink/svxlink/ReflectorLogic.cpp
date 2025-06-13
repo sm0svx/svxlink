@@ -225,8 +225,8 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
 {
     // Must create logic connection objects before calling LogicBase::initialize
   m_logic_con_in = new Async::AudioStreamStateDetector;
-  m_logic_con_in->sigStreamStateChanged.connect(
-      sigc::mem_fun(*this, &ReflectorLogic::onLogicConInStreamStateChanged));
+  m_logic_con_in->sigStreamIsIdle.connect(
+      sigc::mem_fun(*this, &ReflectorLogic::onLogicConInStreamIsIdle));
   m_logic_con_out = new Async::AudioStreamStateDetector;
   m_logic_con_out->sigStreamStateChanged.connect(
       sigc::mem_fun(*this, &ReflectorLogic::onLogicConOutStreamStateChanged));
@@ -996,7 +996,7 @@ void ReflectorLogic::onConnected(void)
   //m_con.setMaxFrameSize(ReflectorMsg::MAX_SSL_SETUP_FRAME_SIZE);
   m_con_state = STATE_EXPECT_CA_INFO;
   //m_con.setMaxFrameSize(ReflectorMsg::MAX_PREAUTH_FRAME_FRAME_SIZE);
-  processEvent("reflector_connection_status_update 1");
+  //processEvent("reflector_connection_status_update 1");
 } /* ReflectorLogic::onConnected */
 
 
@@ -2141,6 +2141,7 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
               << std::endl;
     m_con.markAsEstablished();
     m_con_state = STATE_CONNECTED;
+    processEvent("reflector_connection_status_update 1");
 
     if (m_selected_tg > 0)
     {
@@ -2432,11 +2433,10 @@ bool ReflectorLogic::codecIsAvailable(const std::string &codec_name)
 } /* ReflectorLogic::codecIsAvailable */
 
 
-void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
-                                                    bool is_idle)
+void ReflectorLogic::onLogicConInStreamIsIdle(bool is_idle)
 {
-  //cout << "### ReflectorLogic::onLogicConInStreamStateChanged: is_active="
-  //     << is_active << "  is_idle=" << is_idle << endl;
+  //std::cout << "### ReflectorLogic::onLogicConInStreamIsIdle: "
+  //          << "is_idle=" << is_idle << std::endl;
   if (is_idle)
   {
     if (m_qsy_pending_timer.isEnabled())
@@ -2478,7 +2478,11 @@ void ReflectorLogic::onLogicConInStreamStateChanged(bool is_active,
   }
 
   checkIdle();
-} /* ReflectorLogic::onLogicConInStreamStateChanged */
+
+  std::ostringstream ss;
+  ss << "local_talker_" << (is_idle ? "stop" : "start");
+  processEvent(ss.str());
+} /* ReflectorLogic::onLogicConInStreamIsIdle */
 
 
 void ReflectorLogic::onLogicConOutStreamStateChanged(bool is_active,
