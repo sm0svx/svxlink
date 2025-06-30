@@ -1,4 +1,4 @@
- 1.9.1 -- ?? ??? 2025
+ 1.9.1 -- 01 Jul 2025
 ----------------------
 
 * Fix build errors for newer versions of gcc on some distros
