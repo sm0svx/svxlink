@@ -10,7 +10,7 @@
 namespace eval ${::logic_name} {
 
 # Mix in ("inherit") generic logic TCL code
-sourceTcl "$basedir/events.d/Logic.tcl"
+sourceTclWithOverrides "Logic.tcl"
 mixin Logic
 
 # end of namespace
