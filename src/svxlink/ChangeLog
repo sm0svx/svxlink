@@ -10,6 +10,8 @@
   Previously multiple log rows could be lumped together in a block where all
   rows had the same timestamp. That made it harder to debug some problems.
 
+* Support for hidraw PTT and squelch for the CM119A audio chip added.
+
 
 
  1.9.1 -- 01 Jul 2025
