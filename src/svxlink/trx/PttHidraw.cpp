@@ -184,6 +184,10 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
     {
       cout << "CM119";
     }
+    else if (hiddevinfo.product == 0x0013)
+    {
+      cout << "CM119A";
+    }
     else
     {
       cout << "unknown";
