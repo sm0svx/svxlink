@@ -148,7 +148,9 @@ proc manual_identification {} {
       ${module}::status_report
     }
   }
-  playMsg "press_0_for_help"
+  if {[lsearch [split ${::loaded_modules} " "] "Help"] != -1} {
+    playMsg "press_0_for_help"
+  }
   playSilence 250
 }
 
