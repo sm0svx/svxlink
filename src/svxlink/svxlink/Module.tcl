@@ -18,10 +18,16 @@ set module_name [namespace tail [namespace parent]];
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
 # as the first argument.
+# For legacy code support, if more than one argument is given to the function
+# it will call the original playMsg using all given arguments
 #
-proc playMsg {msg} {
+proc playMsg {args} {
   variable module_name;
-  ::playMsg $module_name $msg;
+  if {[llength $args] == 1} {
+    ::playMsg $module_name $args
+  } else {
+    ::playMsg {*}$args
+  }
 }
 
 

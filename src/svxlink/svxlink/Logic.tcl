@@ -26,54 +26,78 @@ variable min_time_between_ident 120
 # Short and long identification intervals. They are setup from config
 # variables below.
 variable long_ident_interval \
-  [getConfigValue $::logic_name LONG_IDENT_INTERVAL 0]
+  [getConfigValue ${::logic_name} LONG_IDENT_INTERVAL 0]
 variable short_ident_interval \
-  [getConfigValue $::logic_name SHORT_IDENT_INTERVAL $long_ident_interval]
+  [getConfigValue ${::logic_name} SHORT_IDENT_INTERVAL $long_ident_interval]
 
 variable short_voice_id_enable  \
-  [getConfigValue $::logic_name SHORT_VOICE_ID_ENABLE 1]
+  [getConfigValue ${::logic_name} SHORT_VOICE_ID_ENABLE 1]
 variable short_cw_id_enable     \
-  [getConfigValue $::logic_name SHORT_CW_ID_ENABLE 0]
+  [getConfigValue ${::logic_name} SHORT_CW_ID_ENABLE 0]
 variable short_announce_enable  \
-  [getConfigValue $::logic_name SHORT_ANNOUNCE_ENABLE 0]
+  [getConfigValue ${::logic_name} SHORT_ANNOUNCE_ENABLE 0]
 variable short_announce_file    \
-  [getConfigValue $::logic_name SHORT_ANNOUNCE_FILE ""]
+  [getConfigValue ${::logic_name} SHORT_ANNOUNCE_FILE ""]
 
 variable long_voice_id_enable   \
-  [getConfigValue $::logic_name LONG_VOICE_ID_ENABLE 1]
+  [getConfigValue ${::logic_name} LONG_VOICE_ID_ENABLE 1]
 variable long_cw_id_enable      \
-  [getConfigValue $::logic_name LONG_CW_ID_ENABLE 0]
+  [getConfigValue ${::logic_name} LONG_CW_ID_ENABLE 0]
 variable long_announce_enable   \
-  [getConfigValue $::logic_name LONG_ANNOUNCE_ENABLE 0]
+  [getConfigValue ${::logic_name} LONG_ANNOUNCE_ENABLE 0]
 variable long_announce_file     \
-  [getConfigValue $::logic_name LONG_ANNOUNCE_FILE ""]
+  [getConfigValue ${::logic_name} LONG_ANNOUNCE_FILE ""]
 
 # The ident_only_after_tx variable indicates if identification is only to
 # occur after the node has transmitted. The variable is setup below from the
 # configuration variable with the same name.
 # The need_ident variable indicates if identification is needed.
 variable ident_only_after_tx \
-  [getConfigValue $::logic_name IDENT_ONLY_AFTER_TX 0]
-variable need_ident 0;
+  [getConfigValue ${::logic_name} IDENT_ONLY_AFTER_TX 0]
+variable need_ident 0
 
 # List of functions that should be called periodically. Use the
 # addMinuteTickSubscriber and addSecondTickSubscriber functions to
 # add subscribers.
-variable minute_tick_subscribers [list];
-variable second_tick_subscribers [list];
+variable minute_tick_subscribers [list]
+variable second_tick_subscribers [list]
 
 # Contains the ID of the last receiver that indicated squelch activity
-variable sql_rx_id "?";
+variable sql_rx_id "?"
 
 # Load TCL code modules
 sourceTclWithOverrides "CW.tcl"
 
 
 #
+# An "overloaded" playMsg that eliminates the need to write "Core" as the first
+# argument everywhere.
+# For legacy code support, if more than one argument is given to the function
+# it will call the original playMsg using all given arguments
+#
+proc playMsg {args} {
+  if {[llength $args] == 1} {
+    ::playMsg Core $args
+  } else {
+    ::playMsg {*}$args
+  }
+}
+
+
+#
+# A convenience function for printing out information prefixed by the
+# module name
+#
+proc printInfo {msg} {
+  puts "${::logic_name}: ${msg}"
+}
+
+
+#
 # Executed when the SvxLink software is started
 #
 proc startup {} {
-  #playMsg "Core" "online"
+  #playMsg "online"
   #send_short_ident
   addMinuteTickSubscriber checkPeriodicIdentify
 }
@@ -84,8 +108,8 @@ proc startup {} {
 #   module_id - The numeric ID of the module
 #
 proc no_such_module {module_id} {
-  playMsg "Core" "no_such_module";
-  playNumber $module_id;
+  playMsg "no_such_module"
+  playNumber $module_id
 }
 
 
@@ -93,39 +117,84 @@ proc no_such_module {module_id} {
 # Executed when a manual identification is initiated with the * DTMF code
 #
 proc manual_identification {} {
-  variable prev_ident;
+  variable prev_ident
 
-  set epoch [clock seconds];
-  set hour [clock format $epoch -format "%k"];
-  regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute;
-  set prev_ident $epoch;
+  set epoch [clock seconds]
+  set hour [clock format $epoch -format "%k"]
+  regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute
+  set prev_ident $epoch
 
-  playMsg "Core" "online";
-  spellWord $::mycall;
-  if {$::logic_type == "Repeater"} {
-    playMsg "Core" "repeater";
+  playMsg "online"
+  spellWord ${::mycall}
+  if {${::logic_type} == "Repeater"} {
+    playMsg "repeater"
   }
-  playSilence 250;
-  playMsg "Core" "the_time_is";
-  playTime $hour $minute;
-  playSilence 250;
-  if {$::report_ctcss > 0} {
-    playMsg "Core" "pl_is";
-    playFrequency $::report_ctcss
-    playSilence 300;
+  playSilence 250
+  playMsg "the_time_is"
+  playTime $hour $minute
+  playSilence 250
+  if {${::report_ctcss} > 0} {
+    playMsg "pl_is"
+    playFrequency ${::report_ctcss}
+    playSilence 300
   }
-  if {$::active_module != ""} {
-    playMsg "Core" "active_module";
-    playMsg $::active_module "name";
-    playSilence 250;
+  if {${::active_module} != ""} {
+    playMsg "active_module"
+    playMsg ${::active_module} "name"
+    playSilence 250
     ${::active_module}::status_report
   } else {
-    foreach module [split $::loaded_modules " "] {
+    foreach module [split ${::loaded_modules} " "] {
       ${module}::status_report
     }
   }
-  playMsg "Default" "press_0_for_help"
-  playSilence 250;
+  playMsg "press_0_for_help"
+  playSilence 250
+}
+
+
+#
+# Executed when a short voice identification should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
+#
+proc send_short_voice_ident {hour minute} {
+  printInfo "Playing short voice ID"
+  spellWord ${::mycall}
+  if {${::logic_type} == "Repeater"} {
+    playMsg "repeater"
+  }
+}
+
+
+#
+# Executed when a short file announcement identification should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
+#
+proc send_short_announce_ident {hour minute} {
+  variable short_announce_file
+
+  if [file exist "$short_announce_file"] {
+    printInfo "Playing short announce"
+    playFile "$short_announce_file"
+  }
+}
+
+
+#
+# Executed when a short cw identification should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
+#
+proc send_short_cw_ident {hour minute} {
+  printInfo "Playing short CW ID"
+  if {${::logic_type} == "Repeater"} {
+    set call "${::mycall}/R"
+    CW::play $call
+  } else {
+    CW::play ${::mycall}
+  }
 }
 
 
@@ -135,40 +204,85 @@ proc manual_identification {} {
 #   minute  - The minute on which this identification occur
 #
 proc send_short_ident {{hour -1} {minute -1}} {
-  variable short_announce_file
-  variable short_announce_enable
   variable short_voice_id_enable
+  variable short_announce_enable
   variable short_cw_id_enable
+
+  printInfo "Sending short identification..."
 
   # Play voice id if enabled
   if {$short_voice_id_enable} {
-    puts "Playing short voice ID"
-    spellWord $::mycall;
-    if {$::logic_type == "Repeater"} {
-      playMsg "Core" "repeater";
-    }
-    playSilence 500;
+    send_short_voice_ident $hour $minute
+    playSilence 500
   }
 
   # Play announcement file if enabled
   if {$short_announce_enable} {
-    puts "Playing short announce"
-    if [file exist "$short_announce_file"] {
-      playFile "$short_announce_file"
-      playSilence 500
-    }
+    send_short_announce_ident $hour $minute
+    playSilence 500
   }
 
   # Play CW id if enabled
   if {$short_cw_id_enable} {
-    puts "Playing short CW ID"
-    if {$::logic_type == "Repeater"} {
-      set call "$::mycall/R"
-      CW::play $call
-    } else {
-      CW::play $::mycall
+    send_short_cw_ident $hour $minute
+    playSilence 500
+  }
+}
+
+
+#
+# Executed when a long voice identification (e.g. hourly) should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
+#
+proc send_long_voice_ident {hour minute} {
+  printInfo "Playing Long voice ID"
+  spellWord ${::mycall}
+  if {${::logic_type} == "Repeater"} {
+    playMsg "repeater"
+  }
+  playSilence 500
+  playMsg "the_time_is"
+  playSilence 100
+  playTime $hour $minute
+  playSilence 500
+
+  # Call the "status_report" function in all modules if no module is active
+  if {${::active_module} == ""} {
+    foreach module [split ${::loaded_modules} " "] {
+      ${module}::status_report
     }
-    playSilence 500;
+  }
+}
+
+
+#
+# Executed when a long file announcement identification (e.g. hourly) should be
+# sent
+#   hour    - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
+#
+proc send_long_announce_ident {hour minute} {
+  variable long_announce_file
+
+  printInfo "Playing long announce"
+  if [file exist "$long_announce_file"] {
+    playFile "$long_announce_file"
+  }
+}
+
+
+#
+# Executed when a long CW identification (e.g. hourly) should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The minute on which this identification occur
+#
+proc send_long_cw_ident {hour minute} {
+  printInfo "Playing long CW ID"
+  if {${::logic_type} == "Repeater"} {
+    CW::play "${::mycall}/R"
+  } else {
+    CW::play ${::mycall}
   }
 }
 
@@ -179,52 +293,28 @@ proc send_short_ident {{hour -1} {minute -1}} {
 #   minute  - The minute on which this identification occur
 #
 proc send_long_ident {hour minute} {
-  variable long_announce_file
-  variable long_announce_enable
   variable long_voice_id_enable
+  variable long_announce_enable
   variable long_cw_id_enable
+
+  printInfo "Sending long identification..."
 
   # Play the voice ID if enabled
   if {$long_voice_id_enable} {
-    puts "Playing Long voice ID"
-    spellWord $::mycall;
-    if {$::logic_type == "Repeater"} {
-      playMsg "Core" "repeater";
-    }
-    playSilence 500;
-    playMsg "Core" "the_time_is";
-    playSilence 100;
-    playTime $hour $minute;
-    playSilence 500;
-
-    # Call the "status_report" function in all modules if no module is active
-    if {$::active_module == ""} {
-      foreach module [split $::loaded_modules " "] {
-        ${module}::status_report
-      }
-    }
-
-    playSilence 500;
+    send_long_voice_ident $hour $minute
+    playSilence 500
   }
 
   # Play announcement file if enabled
   if {$long_announce_enable} {
-    puts "Playing long announce"
-    if [file exist "$long_announce_file"] {
-      playFile "$long_announce_file"
-      playSilence 500
-    }
+    send_long_announce_ident $hour $minute
+    playSilence 500
   }
 
   # Play CW id if enabled
   if {$long_cw_id_enable} {
-    puts "Playing long CW ID"
-    if {$::logic_type == "Repeater"} {
-      CW::play "$::mycall/R"
-    } else {
-      CW::play $::mycall
-    }
-    playSilence 100
+    send_long_cw_ident $hour $minute
+    playSilence 500
   }
 }
 
@@ -251,7 +341,7 @@ proc send_rgr_sound {} {
 # Executed when an empty macro command (i.e. D#) has been entered.
 #
 proc macro_empty {} {
-  playMsg "Core" "operation_failed";
+  playMsg "operation_failed"
 }
 
 
@@ -259,7 +349,7 @@ proc macro_empty {} {
 # Executed when an entered macro command could not be found
 #
 proc macro_not_found {} {
-  playMsg "Core" "operation_failed";
+  playMsg "operation_failed"
 }
 
 
@@ -267,7 +357,7 @@ proc macro_not_found {} {
 # Executed when a macro syntax error occurs (configuration error).
 #
 proc macro_syntax_error {} {
-  playMsg "Core" "operation_failed";
+  playMsg "operation_failed"
 }
 
 
@@ -276,7 +366,7 @@ proc macro_syntax_error {} {
 # (configuration error).
 #
 proc macro_module_not_found {} {
-  playMsg "Core" "operation_failed";
+  playMsg "operation_failed"
 }
 
 
@@ -285,7 +375,7 @@ proc macro_module_not_found {} {
 # failed.
 #
 proc macro_module_activation_failed {} {
-  playMsg "Core" "operation_failed";
+  playMsg "operation_failed"
 }
 
 
@@ -294,9 +384,9 @@ proc macro_module_activation_failed {} {
 # be activated but another module is already active.
 #
 proc macro_another_active_module {} {
-  playMsg "Core" "operation_failed";
-  playMsg "Core" "active_module";
-  playMsg $::active_module "name";
+  playMsg "operation_failed"
+  playMsg "active_module"
+  playMsg ${::active_module} "name"
 }
 
 
@@ -305,8 +395,8 @@ proc macro_another_active_module {} {
 #   cmd - The command string
 #
 proc unknown_command {cmd} {
-  spellWord $cmd;
-  playMsg "Core" "unknown_command";
+  spellWord $cmd
+  playMsg "unknown_command"
 }
 
 
@@ -315,8 +405,8 @@ proc unknown_command {cmd} {
 #   cmd - The command string
 #
 proc command_failed {cmd} {
-  spellWord $cmd;
-  playMsg "Core" "operation_failed";
+  spellWord $cmd
+  playMsg "operation_failed"
 }
 
 
@@ -326,8 +416,8 @@ proc command_failed {cmd} {
 #
 proc activating_link {name} {
   if {[string length $name] > 0} {
-    playMsg "Core" "activating_link_to";
-    spellWord $name;
+    playMsg "activating_link_to"
+    spellWord $name
   }
 }
 
@@ -338,8 +428,8 @@ proc activating_link {name} {
 #
 proc deactivating_link {name} {
   if {[string length $name] > 0} {
-    playMsg "Core" "deactivating_link_to";
-    spellWord $name;
+    playMsg "deactivating_link_to"
+    spellWord $name
   }
 }
 
@@ -351,8 +441,8 @@ proc deactivating_link {name} {
 #
 proc link_not_active {name} {
   if {[string length $name] > 0} {
-    playMsg "Core" "link_not_active_to";
-    spellWord $name;
+    playMsg "link_not_active_to"
+    spellWord $name
   }
 }
 
@@ -364,8 +454,8 @@ proc link_not_active {name} {
 #
 proc link_already_active {name} {
   if {[string length $name] > 0} {
-    playMsg "Core" "link_already_active_to";
-    spellWord $name;
+    playMsg "link_already_active_to"
+    spellWord $name
   }
 }
 
@@ -375,11 +465,11 @@ proc link_already_active {name} {
 #   is_on - Set to 1 if the transmitter is on or 0 if it's off
 #
 proc transmit {is_on} {
-  #puts "Turning the transmitter $is_on";
-  variable prev_ident;
-  variable need_ident;
+  #printInfo "Turning the transmitter $is_on"
+  variable prev_ident
+  variable need_ident
   if {$is_on && ([clock seconds] - $prev_ident > 5)} {
-    set need_ident 1;
+    set need_ident 1
   }
 }
 
@@ -390,9 +480,9 @@ proc transmit {is_on} {
 #   is_open - Set to 1 if the squelch is open or 0 if it's closed
 #
 proc squelch_open {rx_id is_open} {
-  variable sql_rx_id;
-  #puts "The squelch is $is_open on RX $rx_id";
-  set sql_rx_id $rx_id;
+  variable sql_rx_id
+  #printInfo "The squelch is $is_open on RX $rx_id"
+  set sql_rx_id $rx_id
 }
 
 
@@ -405,8 +495,8 @@ proc squelch_open {rx_id is_open} {
 # return 0 to make SvxLink continue processing as normal.
 #
 proc dtmf_digit_received {digit duration} {
-  #puts "DTMF digit \"$digit\" detected with duration $duration ms";
-  return 0;
+  #printInfo "DTMF digit \"$digit\" detected with duration $duration ms"
+  return 0
 }
 
 
@@ -422,9 +512,9 @@ proc dtmf_digit_received {digit duration} {
 proc dtmf_cmd_received {cmd} {
   # Example: Ignore all commands starting with 3 in the EchoLink module.
   #          Allow commands that have four or more digits.
-  #if {$::active_module == "EchoLink"} {
+  #if {${::active_module} == "EchoLink"} {
   #  if {[string length $cmd] < 4 && [string index $cmd 0] == "3"} {
-  #    puts "Ignoring random connect command for module EchoLink: $cmd"
+  #    printInfo "Ignoring random connect command for module EchoLink: $cmd"
   #    return 1
   #  }
   #}
@@ -432,7 +522,7 @@ proc dtmf_cmd_received {cmd} {
   # Handle the "force core command" mode where a command is forced to be
   # executed by the core command processor instead of by an active module.
   # The "force core command" mode is entered by prefixing a command by a star.
-  #if {$::active_module != "" && [string index $cmd 0] != "*"} {
+  #if {${::active_module} != "" && [string index $cmd 0] != "*"} {
   #  return 0
   #}
   #if {[string index $cmd 0] == "*"} {
@@ -441,8 +531,8 @@ proc dtmf_cmd_received {cmd} {
 
   # Example: Custom command executed when DTMF 99 is received
   #if {$cmd == "99"} {
-  #  puts "Executing external command"
-  #  playMsg "Core" "online"
+  #  printInfo "Executing external command"
+  #  playMsg "online"
   #  exec ls &
   #  return 1
   #}
@@ -457,8 +547,8 @@ proc dtmf_cmd_received {cmd} {
 # by using the function addMinuteTickSubscriber.
 #
 proc every_minute {} {
-  variable minute_tick_subscribers;
-  #puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
+  variable minute_tick_subscribers
+  #printInfo [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
   foreach subscriber $minute_tick_subscribers {
     set func [dict get $subscriber func]
     set ns [dict get $subscriber ns]
@@ -473,8 +563,8 @@ proc every_minute {} {
 # by using the function addSecondTickSubscriber.
 #
 proc every_second {} {
-  variable second_tick_subscribers;
-  #puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
+  variable second_tick_subscribers
+  #printInfo [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
   foreach subscriber $second_tick_subscribers {
     set func [dict get $subscriber func]
     set ns [dict get $subscriber ns]
@@ -489,7 +579,7 @@ proc every_second {} {
 proc addTimerTickSubscriber {func} {
   puts "*** WARNING: Calling deprecated TCL event handler addTimerTickSubcriber."
   puts "             Use addMinuteTickSubscriber instead"
-  addMinuteTickSubscriber $func;
+  addMinuteTickSubscriber $func
 }
 
 
@@ -499,7 +589,7 @@ proc addTimerTickSubscriber {func} {
 # function but rather a management function.
 #
 proc addMinuteTickSubscriber {func} {
-  variable minute_tick_subscribers;
+  variable minute_tick_subscribers
   set ns [uplevel namespace current]
   lappend minute_tick_subscribers [dict create func $func ns $ns]
 }
@@ -511,7 +601,7 @@ proc addMinuteTickSubscriber {func} {
 # function but rather a management function.
 #
 proc addSecondTickSubscriber {func} {
-  variable second_tick_subscribers;
+  variable second_tick_subscribers
   set ns [uplevel namespace current]
   lappend second_tick_subscribers [dict create func $func ns $ns]
 }
@@ -524,48 +614,39 @@ proc addSecondTickSubscriber {func} {
 # functions when it is time to identify.
 #
 proc checkPeriodicIdentify {} {
-  variable prev_ident;
-  variable short_ident_interval;
-  variable long_ident_interval;
-  variable min_time_between_ident;
-  variable ident_only_after_tx;
-  variable need_ident;
+  variable prev_ident
+  variable short_ident_interval
+  variable long_ident_interval
+  variable min_time_between_ident
+  variable ident_only_after_tx
+  variable need_ident
 
-  if {$short_ident_interval == 0} {
-    return;
-  }
-
-  set now [clock seconds];
-  set hour [clock format $now -format "%k"];
-  regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute;
+  set now [clock seconds]
+  set hour [clock format $now -format "%k"]
+  regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute
 
   set short_ident_now \
-      	    [expr {($hour * 60 + $minute) % $short_ident_interval == 0}];
-  set long_ident_now 0;
-  if {$long_ident_interval != 0} {
-    set long_ident_now \
-      	    [expr {($hour * 60 + $minute) % $long_ident_interval == 0}];
-  }
+    [expr {($short_ident_interval != 0) && \
+           (($hour * 60 + $minute) % $short_ident_interval == 0)}]
+  set long_ident_now \
+    [expr {($long_ident_interval != 0) && \
+           (($hour * 60 + $minute) % $long_ident_interval == 0)}]
 
   if {$long_ident_now} {
-    puts "$::logic_name: Sending long identification...";
-    send_long_ident $hour $minute;
-    set prev_ident $now;
-    set need_ident 0;
-  } else {
+    send_long_ident $hour $minute
+    set prev_ident $now
+    set need_ident 0
+  } elseif {$short_ident_now} {
     if {$now - $prev_ident < $min_time_between_ident} {
-      return;
+      return
     }
     if {$ident_only_after_tx && !$need_ident} {
-      return;
+      return
     }
 
-    if {$short_ident_now} {
-      puts "$::logic_name: Sending short identification...";
-      send_short_ident $hour $minute;
-      set prev_ident $now;
-      set need_ident 0;
-    }
+    send_short_ident $hour $minute
+    set prev_ident $now
+    set need_ident 0
   }
 }
 
@@ -574,8 +655,8 @@ proc checkPeriodicIdentify {} {
 # Executed when the QSO recorder is being activated
 #
 proc activating_qso_recorder {} {
-  playMsg "Core" "activating";
-  playMsg "Core" "qso_recorder";
+  playMsg "activating"
+  playMsg "qso_recorder"
 }
 
 
@@ -583,8 +664,8 @@ proc activating_qso_recorder {} {
 # Executed when the QSO recorder is being deactivated
 #
 proc deactivating_qso_recorder {} {
-  playMsg "Core" "deactivating";
-  playMsg "Core" "qso_recorder";
+  playMsg "deactivating"
+  playMsg "qso_recorder"
 }
 
 
@@ -593,8 +674,8 @@ proc deactivating_qso_recorder {} {
 # not active
 #
 proc qso_recorder_not_active {} {
-  playMsg "Core" "qso_recorder";
-  playMsg "Core" "not_active";
+  playMsg "qso_recorder"
+  playMsg "not_active"
 }
 
 
@@ -603,8 +684,8 @@ proc qso_recorder_not_active {} {
 # already active
 #
 proc qso_recorder_already_active {} {
-  playMsg "Core" "qso_recorder";
-  playMsg "Core" "already_active";
+  playMsg "qso_recorder"
+  playMsg "already_active"
 }
 
 
@@ -612,9 +693,9 @@ proc qso_recorder_already_active {} {
 # Executed when the timeout kicks in to activate the QSO recorder
 #
 proc qso_recorder_timeout_activate {} {
-  playMsg "Core" "timeout"
-  playMsg "Core" "activating";
-  playMsg "Core" "qso_recorder";
+  playMsg "timeout"
+  playMsg "activating"
+  playMsg "qso_recorder"
 }
 
 
@@ -622,9 +703,9 @@ proc qso_recorder_timeout_activate {} {
 # Executed when the timeout kicks in to deactivate the QSO recorder
 #
 proc qso_recorder_timeout_deactivate {} {
-  playMsg "Core" "timeout"
-  playMsg "Core" "deactivating";
-  playMsg "Core" "qso_recorder";
+  playMsg "timeout"
+  playMsg "deactivating"
+  playMsg "qso_recorder"
 }
 
 
@@ -632,7 +713,7 @@ proc qso_recorder_timeout_deactivate {} {
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {
-  puts "$::logic_name: Setting language $lang_code (NOT IMPLEMENTED)";
+  printInfo "Setting language $lang_code (NOT IMPLEMENTED)"
 
 }
 
@@ -641,7 +722,7 @@ proc set_language {lang_code} {
 # Executed when the user requests a list of available languages
 #
 proc list_languages {} {
-  puts "$::logic_name: Available languages: (NOT IMPLEMENTED)";
+  printInfo "Available languages: (NOT IMPLEMENTED)"
 }
 
 
@@ -650,10 +731,10 @@ proc list_languages {} {
 #
 proc logic_online {online} {
   if {$online} {
-    playMsg "Core" "online";
-    spellWord $::mycall;
-    if {$::logic_type == "Repeater"} {
-      playMsg "Core" "repeater";
+    playMsg "online"
+    spellWord ${::mycall}
+    if {${::logic_type} == "Repeater"} {
+      playMsg "repeater"
     }
   }
 }
@@ -664,7 +745,7 @@ proc logic_online {online} {
 # core
 #
 proc config_updated {tag value} {
-  #puts "Configuration variable updated: $tag=$value"
+  #printInfo "Configuration variable updated: $tag=$value"
 }
 
 
@@ -675,7 +756,7 @@ proc config_updated {tag value} {
 #   cmd   -- The received command
 #
 proc remote_cmd_received {logic cmd} {
-  #puts "Remote command received from logic $logic: $cmd"
+  #printInfo "Remote command received from logic $logic: $cmd"
   #playDtmf "$cmd" "500" "50"
 }
 
@@ -687,7 +768,7 @@ proc remote_cmd_received {logic cmd} {
 #   tg    -- The received talkgroup
 #
 proc remote_received_tg_updated {logic tg} {
-  #puts "Remote TG received from logic $logic: $tg"
+  #printInfo "Remote TG received from logic $logic: $tg"
   #if {$tg > 0} {
   #  playDtmf "1$tg" "500" "50"
   #}
@@ -699,9 +780,9 @@ proc remote_received_tg_updated {logic tg} {
 
 
 proc sourceModuleTclHandlers {} {
-  foreach module $::loaded_modules {
+  foreach module ${::loaded_modules} {
     sourceTclWithOverrides "${module}.tcl"
-    set module_path "$::basedir/modules.d/Module${module}.tcl"
+    set module_path "${::basedir}/modules.d/Module${module}.tcl"
     if [file exists "$module_path"] {
       sourceTcl "$module_path"
     }

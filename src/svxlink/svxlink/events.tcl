@@ -18,7 +18,7 @@
 #
 #   args  - One or more file path glob patterns
 #
-proc findFirstFileOf args {
+proc findFirstFileOf {args} {
   foreach path [glob -nocomplain {*}$args] {
     #puts "### $path"
     if [file readable $path] {
