@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -149,11 +149,15 @@ bool CmdParser::processCmd(const string& cmd_str)
   int len = cmd_str.size();
   while (len > 0)
   {
-    if (cmds.count(cmd_str.substr(0, len)) > 0)
+    const std::string base_cmd = cmd_str.substr(0, len);
+    if (cmds.count(base_cmd) == 1)
     {
-      Command *cmd = cmds[cmd_str.substr(0, len)];
-      (*cmd)(cmd_str.substr(len, cmd_str.size()-len));
-      return true;
+      Command *cmd = cmds[base_cmd];
+      if (!cmd->exactMatch() || (cmd_str.size() == cmd->cmdStr().size()))
+      {
+        (*cmd)(cmd_str.substr(len, cmd_str.size()-len));
+        return true;
+      }
     }
     --len;
   }

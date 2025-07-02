@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2025  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -121,7 +121,9 @@ class ModuleActivateCmd : public Command
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief   Constuctor
+     * @param   parser  The command parser to associate this command with
+     * @param   logic   The logic core instance the command should operate on
      */
     ModuleActivateCmd(CmdParser *parser, const std::string& cmd, Logic *logic)
       : Command(parser, cmd), logic(logic) {}
@@ -129,14 +131,13 @@ class ModuleActivateCmd : public Command
     /**
      * @brief 	Destructor
      */
-    ~ModuleActivateCmd(void) {}
+    virtual ~ModuleActivateCmd(void) {}
 
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief   Handle the command
+     * @param   subcmd The part of the command not matching the command base
      */
-    void operator ()(const std::string& subcmd)
+    virtual void operator ()(const std::string& subcmd) override
     {
       //std::cout << "cmd=" << cmdStr() << " subcmd=" << subcmd << std::endl;
       int module_id = atoi(cmdStr().c_str());
@@ -194,7 +195,7 @@ class LinkCmd : public Command
     /**
      * @brief 	Destructor
      */
-    ~LinkCmd(void) {}
+    virtual ~LinkCmd(void) {}
 
     /**
      * @brief   Initialize the command object
@@ -216,10 +217,10 @@ class LinkCmd : public Command
     }
 
     /**
-     * @brief	Execute this command
-     * @param	subcmd The sub command of the executed command
+     * @brief   Handle the command
+     * @param   subcmd The part of the command not matching the command base
      */
-    void operator ()(const std::string& subcmd)
+    virtual void operator ()(const std::string& subcmd) override
     {
       std::string event =
           LinkManager::instance()->cmdReceived(link, logic, subcmd);
@@ -263,7 +264,7 @@ class QsoRecorderCmd : public Command
     /**
      * @brief 	Destructor
      */
-    ~QsoRecorderCmd(void) {}
+    virtual ~QsoRecorderCmd(void) {}
 
     /**
      * @brief 	Initialize the command object
@@ -276,7 +277,11 @@ class QsoRecorderCmd : public Command
       return addToParser();
     }
 
-    void operator ()(const std::string& subcmd)
+    /**
+     * @brief   Handle the command
+     * @param   subcmd The part of the command not matching the command base
+     */
+    virtual void operator ()(const std::string& subcmd) override
     {
       if (subcmd == "0")
       {
@@ -337,7 +342,11 @@ class ChangeLangCmd : public Command
     {
     }
 
-    void operator ()(const std::string& subcmd)
+    /**
+     * @brief   Handle the command
+     * @param   subcmd The part of the command not matching the command base
+     */
+    virtual void operator ()(const std::string& subcmd) override
     {
       std::stringstream ss;
       if (subcmd.empty())
@@ -379,12 +388,22 @@ variable is named, ONLINE_CMD.
 class OnlineCmd : public Command
 {
   public:
+    /**
+     * @brief   Constuctor
+     * @param   parser  The command parser to associate this command with
+     * @param   logic   The logic core instance the command should operate on
+     * @param   cmd     The base command string
+     */
     OnlineCmd(CmdParser *parser, Logic *logic, const std::string &cmd)
       : Command(parser, cmd), logic(logic)
     {
     }
 
-    void operator ()(const std::string& subcmd)
+    /**
+     * @brief   Handle the command
+     * @param   subcmd The part of the command not matching the command base
+     */
+    virtual void operator ()(const std::string& subcmd) override
     {
       if (subcmd == "0")
       {
@@ -402,6 +421,53 @@ class OnlineCmd : public Command
     Logic       *logic;
 
 };
+
+
+/**
+@brief	The macro command handler
+@author Tobias Blomberg
+@date   2025-07-02
+
+This class handle macro commands.
+*/
+class MacroCmd : public Command
+{
+  public:
+    /**
+     * @brief   Constuctor
+     * @param   parser  The command parser to associate this command with
+     * @param   cmd     The base command string
+     * @param   logic   The logic core instance the command should operate on
+     */
+    MacroCmd(CmdParser *parser, const std::string& cmd, Logic *logic)
+      : Command(parser, cmd), m_logic(logic)
+    {
+      setExactMatch();
+    }
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~MacroCmd(void) override {}
+
+    /**
+     * @brief   Handle the command
+     * @param   subcmd The part of the command not matching the command base
+     */
+    virtual void operator ()(const std::string& subcmd) override
+    {
+      //std::cout << "### MacroCmd[" << m_logic->name() << "]: cmd=" << cmdStr()
+      //          << " subcmd=" << subcmd << std::endl;
+      assert(subcmd.empty());
+      m_logic->processMacroCmd(cmdStr());
+    }
+
+  protected:
+
+  private:
+    Logic*  m_logic;
+
+};  /* class MacroCmd */
 
 
 //} /* namespace */

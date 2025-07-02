@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -322,15 +322,29 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     long_cmd_module = module;
   }
 
-  string macro_section;
+  cfg().getValue(name(), "MACRO_PREFIX", m_macro_prefix);
+  std::string macro_section;
   if (cfg().getValue(name(), "MACROS", macro_section))
   {
-    list<string> macro_list = cfg().listSection(macro_section);
-    list<string>::iterator mlit;
-    for (mlit=macro_list.begin(); mlit!=macro_list.end(); ++mlit)
+    const auto& macro_list = cfg().listSection(macro_section);
+    for (const auto& macro : macro_list)
     {
-      cfg().getValue(macro_section, *mlit, value);
-      macros[atoi(mlit->c_str())] = value;
+      std::string macro_expansion;
+      cfg().getValue(macro_section, macro, macro_expansion);
+      macros[atoi(macro.c_str())] = macro_expansion;
+      //std::cout << "### Add macro command: '" << macro << "'='"
+      //          << macro_expansion << "'" << std::endl;
+      MacroCmd *cmd = new MacroCmd(&cmd_parser, m_macro_prefix + macro, this);
+      if (!cmd->addToParser())
+      {
+        std::cerr << "*** ERROR: Failed to add macro command "
+                  << "'" << macro << "' in logic '" << name() << "'. "
+                  << "This is probably due to having set up a macro command "
+                  << "which overlap with an already existing command "
+                  << std::endl;
+        delete cmd;
+        return false;
+      }
     }
   }
 
@@ -940,7 +954,7 @@ void Logic::selcallSequenceDetected(std::string sequence)
 {
   if ((sequence.compare(sel5_from) >= 0) && (sequence.compare(sel5_to) <= 0))
   {
-    string s = "D" + sequence + "#";
+    string s = m_macro_prefix + sequence + "#";
     processMacroCmd(s);
   }
   else
@@ -1491,7 +1505,8 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
       processCommand(rest, true);
     }
   }
-  else if (cmd[0] == 'D')
+  else if (!m_macro_prefix.empty() &&
+           (cmd.substr(0, m_macro_prefix.size()) == m_macro_prefix))
   {
     processMacroCmd(cmd);
   }
@@ -1536,8 +1551,9 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 void Logic::processMacroCmd(const string& macro_cmd)
 {
   cout << name() << ": Processing macro command: " << macro_cmd << "...\n";
-  assert(!macro_cmd.empty() && (macro_cmd[0] == 'D'));
-  string cmd(macro_cmd, 1);
+  std::string prefix(macro_cmd, 0, m_macro_prefix.size());
+  assert(!macro_cmd.empty() && (prefix == m_macro_prefix));
+  string cmd(macro_cmd, m_macro_prefix.size());
   if (cmd.empty())
   {
     cerr << "*** Macro error in logic " << name() << ": Empty command.\n";

@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JUNE 2025" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JULY 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -329,6 +329,16 @@ sounds and roger beeps will not have tone sent with them though.
 .IP \(bu 4
 .BR ALWAYS
 will always transmit a CTCSS tone as soon as the transmitter is turned on.
+.RE
+.TP
+.B MACRO_PREFIX
+Zero or more DTMF digits a command must start with to be identified as a macro
+command. If a prefix is set, macro commands will have higher priority in the
+command hierarchy. For example, if a module is active the macro will be handled
+as usual by the logic core whereas if no prefix is set the command will go to
+the module. If the user want the core to handle the macro, the command have to
+be prefixed with a star ("force core command").
+Default prefix is 'D'.
 .RE
 .TP
 .B MACROS

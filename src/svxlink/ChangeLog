@@ -12,6 +12,9 @@
 
 * Support for hidraw PTT and squelch for the CM119A audio chip added.
 
+* New config variable MACRO_PREFIX used to set a custom or no prefix for DTMF
+  macro commands.
+
 
 
  1.9.1 -- 01 Jul 2025
