@@ -689,7 +689,7 @@ class Config
      * by calling the setValue function. It will only be emitted if the value
      * actually changes.
      */
-    sigc::signal<void, const std::string&, const std::string&> valueUpdated;
+    sigc::signal<void(const std::string&, const std::string&)> valueUpdated;
 
   private:
     using Subscriber = std::function<void(const std::string&)>;
