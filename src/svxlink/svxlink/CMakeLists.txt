@@ -124,7 +124,7 @@ install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/gpio.conf
   )
 install_if_not_exists(node_info.json ${SVX_SYSCONF_INSTALL_DIR})
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
-install(FILES ${SVXLINK_TCL_EVENT_FILES}
+install(FILES globals.tcl ${SVXLINK_TCL_EVENT_FILES}
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
   )
 install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/svxlink_gpio_up

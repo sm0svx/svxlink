@@ -9,7 +9,7 @@ EchoLink Qso.
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -344,6 +344,7 @@ class QsoImpl
     void destroyMeNow(Async::Timer *t);
     bool getConfigValue(const std::string& section, const std::string& tag,
                         std::string& value);
+    void processEvent(const std::string& event);
 
 };  /* class QsoImpl */
 

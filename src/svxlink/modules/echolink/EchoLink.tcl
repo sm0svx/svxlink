@@ -437,59 +437,6 @@ proc config_updated {tag value} {
 }
 
 
-#-----------------------------------------------------------------------------
-# The events below are for remote EchoLink announcements. Sounds are not
-# played over the local transmitter but are sent to the remote station.
-#-----------------------------------------------------------------------------
-
-#
-# Executed when an incoming connection is accepted
-#
-proc remote_greeting {call} {
-  playSilence 1000;
-  playMsg "greeting";
-}
-
-
-#
-# Executed when an incoming connection is rejected
-#
-proc reject_remote_connection {perm} {
-  playSilence 1000;
-  if {$perm} {
-    playMsg "reject_connection";
-  } else {
-    playMsg "reject_connection";
-    playMsg "please_try_again_later"
-  }
-  playSilence 1000;
-}
-
-
-#
-# Executed when the inactivity timer times out
-#
-proc remote_timeout {} {
-  playMsg "timeout";
-  playSilence 1000;
-}
-
-
-#
-# Executed when the squelch state changes
-#
-proc squelch_open {is_open} {
-  # The listen_only_active and CFG_REMOTE_RGR_SOUND global variables are set by
-  # the C++ code
-  variable listen_only_active
-  variable CFG_REMOTE_RGR_SOUND
-  if {$CFG_REMOTE_RGR_SOUND && !$is_open && !$listen_only_active} {
-    playSilence 200
-    playTone 1000 100 100
-  }
-}
-
-
 # end of namespace
 }
 

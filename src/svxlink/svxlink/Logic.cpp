@@ -758,12 +758,17 @@ void Logic::processEvent(const string& event, const Module *module)
     event_handler->processEvent(name() + "::" + module->name() + "::" + event);
   }
   msg_handler->end();
-}
+} /* Logic::processEvent */
 
 
-void Logic::setEventVariable(const string& name, const string& value)
+void Logic::setEventVariable(const string& varname, const string& value)
 {
-  event_handler->setVariable(name, value);
+  std::string fullname(varname);
+  if (varname[0] != ':')
+  {
+    fullname = name() + "::" + varname;
+  }
+  event_handler->setVariable(fullname, value);
 } /* Logic::setEventVariable */
 
 
