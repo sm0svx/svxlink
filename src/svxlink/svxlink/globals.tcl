@@ -34,7 +34,6 @@ proc sourceTclOverrides {filename} {
     "$::langdir/events.d/local/$filename" \
     "$::basedir/events.d/local/$filename" \
     ]
-  uplevel 1 sourceTcl {*}$paths
   foreach path $paths {
     if [file readable $path] {
       uplevel 1 sourceTcl $path

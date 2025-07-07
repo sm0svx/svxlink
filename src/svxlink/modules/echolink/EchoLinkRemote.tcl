@@ -26,6 +26,10 @@ sourceTclWithOverrides "locale.tcl"
 #
 namespace eval ${::logic_name}::${::module_name} {
 
+# Load common EchoLink functions used both here and for local events
+sourceTclWithOverrides "EchoLinkCommon.tcl"
+
+
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
 # as the first argument.

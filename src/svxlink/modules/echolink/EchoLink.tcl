@@ -6,9 +6,6 @@
 
 #
 # This is the namespace in which all functions and variables below will exist.
-# The name must match the configuration variable "NAME" in the
-# [ModuleEchoLink] section in the configuration file. The name may be changed
-# but it must be changed in both places.
 #
 namespace eval EchoLink {
 
@@ -16,33 +13,8 @@ namespace eval EchoLink {
 sourceTclWithOverrides "Module.tcl"
 mixin Module
 
-
-#
-# Spell an EchoLink callsign
-#
-proc spellEchoLinkCallsign {call} {
-  global langdir
-  if [regexp {^(\w+)-L$} $call ignored callsign] {
-    spellWord $callsign
-    playSilence 50
-    playMsg "link"
-  } elseif [regexp {^(\w+)-R$} $call ignored callsign] {
-    spellWord $callsign
-    playSilence 50
-    playMsg "repeater"
-  } elseif [regexp {^\*(.+)\*$} $call ignored name] {
-    playMsg "conference"
-    playSilence 50
-    set lc_name [string tolower $name]
-    if [file exists "$langdir/EchoLink/conf-$lc_name.wav"] {
-      playFile "$langdir/EchoLink/conf-$lc_name.wav"
-    } else {
-      spellEchoLinkCallsign $name
-    }
-  } else {
-    spellWord $call
-  }
-}
+# Load common EchoLink functions used both here and for remote events
+sourceTclWithOverrides "EchoLinkCommon.tcl"
 
 
 #
