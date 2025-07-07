@@ -23,8 +23,30 @@ proc sourceTcl {path} {
 
 #
 # This procedure will take a TCL filename as argument and source that file from
-# one or more paths. All files found will be sourced with the highest priority
-# file sorced last.
+# one or more override paths. All files found will be sourced with the highest
+# priority file sorced last.
+#
+#   filename - The name of a tcl file
+#
+proc sourceTclOverrides {filename} {
+  set paths [list \
+    "$::langdir/events.d/$filename" \
+    "$::langdir/events.d/local/$filename" \
+    "$::basedir/events.d/local/$filename" \
+    ]
+  uplevel 1 sourceTcl {*}$paths
+  foreach path $paths {
+    if [file readable $path] {
+      uplevel 1 sourceTcl $path
+    }
+  }
+}
+
+
+#
+# This procedure will take a TCL filename as argument and source that file from
+# the main and override paths. All files found will be sourced with the highest
+# priority file sorced last.
 #
 #   filename - The name of a tcl file
 #
