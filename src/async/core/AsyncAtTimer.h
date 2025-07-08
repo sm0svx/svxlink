@@ -200,7 +200,7 @@ class AtTimer : public sigc::trackable
      * to delete the timer in the connected slot if it is known to be the
      * only connected slot.
      */
-    sigc::signal<void, AtTimer *> expired;
+    sigc::signal<void(AtTimer*)> expired;
 
   protected:
     

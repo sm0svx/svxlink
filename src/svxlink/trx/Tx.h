@@ -243,15 +243,15 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * for too long. This is to prevent the transmitter from transmitting
      * endlessly if an error occurs.
      */
-    sigc::signal<void> txTimeout;
-    
+    sigc::signal<void()> txTimeout;
+
     /**
      * @brief 	This signal is emitted when the transmitter starts or stops
      *          transmitting
      * @param 	is_transmitting Set to \em true if the transmitter
      *          is transmitting or else \em false.
      */
-    sigc::signal<void, bool> transmitterStateChange;
+    sigc::signal<void(bool)> transmitterStateChange;
 
     /**
      * @brief	A signal that is emitted to publish a state update event
@@ -264,8 +264,8 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * event name must be unique within SvxLink. The recommended format is
      * <context>:<name>, e.g. Tx:tx_state.
      */
-    sigc::signal<void, const std::string&,
-                 const std::string&> publishStateEvent;
+    sigc::signal<void(const std::string&,
+                 const std::string&)> publishStateEvent;
 
   protected:
     void setId(char id) { m_tx_id = id; }
