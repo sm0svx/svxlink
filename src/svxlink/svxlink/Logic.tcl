@@ -607,6 +607,20 @@ proc addMinuteTickSubscriber {func} {
 
 
 #
+# Use this function to remove a function to the list of functions that
+# should be executed once every minute. This is not an event
+# function but rather a management function.
+#
+proc removeMinuteTickSubscriber {func} {
+  variable minute_tick_subscribers
+  set ns [uplevel namespace current]
+  set handler [dict create func $func ns $ns]
+  set idx [lsearch -exact $minute_tick_subscribers $handler];
+  set minute_tick_subscribers [lreplace $minute_tick_subscribers $idx $idx]
+}
+
+
+#
 # Use this function to add a function to the list of functions that
 # should be executed once every second. This is not an event
 # function but rather a management function.
@@ -614,7 +628,22 @@ proc addMinuteTickSubscriber {func} {
 proc addSecondTickSubscriber {func} {
   variable second_tick_subscribers
   set ns [uplevel namespace current]
-  lappend second_tick_subscribers [dict create func $func ns $ns]
+  set handler [dict create func $func ns $ns]
+  lappend second_tick_subscribers $handler
+}
+
+
+#
+# Use this function to remove a function to the list of functions that
+# should be executed once every second. This is not an event
+# function but rather a management function.
+#
+proc removeSecondTickSubscriber {func} {
+  variable second_tick_subscribers
+  set ns [uplevel namespace current]
+  set handler [dict create func $func ns $ns]
+  set idx [lsearch -exact $second_tick_subscribers $handler];
+  set second_tick_subscribers [lreplace $second_tick_subscribers $idx $idx]
 }
 
 
