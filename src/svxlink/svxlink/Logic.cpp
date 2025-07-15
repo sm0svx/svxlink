@@ -433,6 +433,7 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
   rx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
+  rx().signalLevelUpdated.connect(mem_fun(*this, &Logic::signalLevelUpdated));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -1068,6 +1069,7 @@ void Logic::squelchOpen(bool is_open)
     active_module->squelchOpen(is_open);
   }
 
+  signalLevelUpdated(rx().signalStrength());
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
@@ -1860,6 +1862,14 @@ bool Logic::getConfigValue(const std::string& section, const std::string& tag,
 {
   return cfg().getValue(section, tag, value, true);
 } /* Logic::getConfigValue */
+
+
+void Logic::signalLevelUpdated(float siglev)
+{
+  std::ostringstream ss;
+  ss << "siglev_updated " << rx().sqlRxId() << " " << siglev;
+  processEvent(ss.str());
+} /* Logic::signalLevelUpdated */
 
 
 /*

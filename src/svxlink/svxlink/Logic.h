@@ -316,6 +316,7 @@ class Logic : public LogicBase
     void cfgUpdated(const std::string& section, const std::string& tag);
     bool getConfigValue(const std::string& section, const std::string& tag,
                         std::string& value);
+    void signalLevelUpdated(float siglev);
 
 };  /* class Logic */
 

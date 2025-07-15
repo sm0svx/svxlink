@@ -489,6 +489,15 @@ proc squelch_open {rx_id is_open} {
 
 
 #
+# Executed when the signal level is updated for the receiver
+#   rx_id   - The ID of the RX that the signal level was updated on
+#   siglev  - Signal level, ideally 0-100 but may be outside that range
+proc siglev_updated {rx_id siglev} {
+  #printInfo "The signal level on receiver $rx_id is $siglev"
+}
+
+
+#
 # Executed when a DTMF digit has been received
 #   digit     - The detected DTMF digit
 #   duration  - The duration, in milliseconds, of the digit

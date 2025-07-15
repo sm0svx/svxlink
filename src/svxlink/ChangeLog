@@ -15,6 +15,9 @@
 * New config variable MACRO_PREFIX used to set a custom or no prefix for DTMF
   macro commands.
 
+* New TCL event "siglev_updated" that is called when the siglev value is
+  updated on the receiver.
+
 
 
  1.9.1 -- 01 Jul 2025
