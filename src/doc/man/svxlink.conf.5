@@ -594,6 +594,13 @@ This configuration variable is used to specify the maximum number of consecutive
 short squelch openings allowed before shutting the repeater down. A good value
 is in between 5-10.
 .TP
+.B SQL_TIMEOUT
+This is a soft timeout value, in seconds, that can be used to indicate to
+repeater users that they have exceeded the recommended maximum time for a
+transmission. When the time is up, a sound will be emitted once every second.
+When the squelch closes, a message informing about the timeout will be played
+back.
+.TP
 .B ACTIVATE_MODULE_ON_LONG_CMD
 This configuration variable activate a feature that might help users not aware
 of the SvxLink command structure. The idea is to activate the specified module

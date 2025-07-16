@@ -18,6 +18,9 @@
 * New TCL event "siglev_updated" that is called when the siglev value is
   updated on the receiver.
 
+* New configuration variable for RepeaterLogic, SQL_TIMEOUT, to set a soft
+  timeout on transmissions.
+
 
 
  1.9.1 -- 01 Jul 2025

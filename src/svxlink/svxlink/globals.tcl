@@ -1,3 +1,71 @@
+###############################################################################
+#
+# Global procedures and associated variables
+#
+###############################################################################
+
+# Ensure that everything is loaded in the global namespace
+namespace eval :: {
+
+# Internal variable used by the override procedure
+variable overridden_cnt 0
+
+
+#
+# Prefix an in-proc proc declaration with 'local' to ensure that it is not
+# visible outside of the containing procedure.
+#
+#   proc - The literal "proc"
+#   name - The name of the function to declare
+#   args - The argument list for the function to declare
+#   body - The body of the function
+#
+#proc local {"proc" name args body} {
+#  regsub -all @name {
+#    set __@name {}
+#    trace add variable __@name unset {rename @name "" ;#}
+#  } $name xbody
+#  uplevel 1 $xbody
+#  proc $name $args $body
+#}
+
+
+#
+# Prefix a procedure with 'override' to override an existing procedure.
+# The purpose of using this procedure is that it provides the overriding
+# procedure with access to the overridden procedure. The overridden procedure
+# can be called using $SUPER.
+# Even when the $SUPER procedure is not used from the overriding procedure it is
+# good to always use 'override' when overriding a procedure. Then it will be
+# ensured that there actually is a function to override. That is good for
+# future compatibility and for finding bugs.
+#
+#   proc  - The literal "proc"
+#   pname - The name of the function to override
+#   pargs - The argument list for the function to override
+#   pbody - The body of the overriding function
+#
+proc override {pliteral pname pargs pbody} {
+  variable overridden_cnt
+
+  if {$pliteral != "proc"} {
+    error "missing proc literal: should be \"override proc pname pargs pbody\""
+  }
+  if {[llength [uplevel info procs $pname]] == 0} {
+    error "no '$pname' procedure: cannot override a non-existing procedure"
+  }
+  set super_name overridden_[incr overridden_cnt]_$pname
+  set decl "
+    rename $pname $super_name
+    proc $pname {$pargs} {
+      set SUPER $super_name
+      $pbody
+    }"
+  #puts $decl
+  eval uplevel {$decl}
+}
+
+
 #
 # Read and execute (source) a TCL file
 # Check if the given TCL file is readable before trying to source it. Print
@@ -207,3 +275,5 @@ proc printNamespaceTree {{ns ::} {indent "  "}} {
 }
 
 
+# end of namespace
+}

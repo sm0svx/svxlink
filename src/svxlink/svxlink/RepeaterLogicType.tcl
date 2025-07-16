@@ -11,9 +11,10 @@
 # to change it unless you have a good reason
 namespace eval ${::logic_name} {
 
-# Mix in ("inherit") generic logic TCL code
+# Source other TCL modules. Mix in ("inherit") generic logic TCL code
 sourceTclWithOverrides "Logic.tcl"
 mixin Logic
+sourceTclWithOverrides "squelch_timeout.tcl"
 
 
 # This variable indicates if the repeater is up or not
