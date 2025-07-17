@@ -21,6 +21,14 @@
 * New configuration variable for RepeaterLogic, SQL_TIMEOUT, to set a soft
   timeout on transmissions.
 
+* Handle module idle commands in ModulePropagationMonitor.
+
+* Bugfix in ModuleSelCallEnc: If an invalid selcall variant ID was specified
+  the module crashed.
+
+* Bugfix in ModuleTclVoiceMail: If no password was specified on login the
+  module crashed.
+
 
 
  1.9.1 -- 01 Jul 2025

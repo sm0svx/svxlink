@@ -79,6 +79,8 @@ proc module_error {} {
 #   userid - The entered user ID
 #
 proc idle_unknown_userid {userid} {
+  playMsg "name"
+  playSilence 200
   spellNumber $userid
   playMsg "unknown_userid"
 }
@@ -141,7 +143,7 @@ proc login_failed_unknown_userid {userid} {
 #   userid   - User ID
 #   password - The entered password
 #
-proc login_failed_wrong_password {call userid password} {
+proc login_failed_wrong_password {call userid {password ""}} {
   playMsg "wrong_userid_or_password"
   playSilence 500
   playMsg "login"

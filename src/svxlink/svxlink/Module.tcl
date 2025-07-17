@@ -12,6 +12,9 @@ namespace path ::${::logic_name}
 #
 namespace eval Module {
 
+# Enable calling procedures in the logic core namespace without qualification
+namespace path ::${::logic_name}
+
 # Extract the module name from the parent namespace
 set module_name [namespace tail [namespace parent]];
 
@@ -38,6 +41,39 @@ proc playMsg {args} {
 proc printInfo {msg} {
   variable module_name;
   puts "$module_name: $msg";
+}
+
+
+#
+# Play a range of subcommand description files. The file names must be on the
+# format <basename><command number>[ABCD*#]. The last characters are optional.
+# Each matching sound clip will be played in sub command number order, prefixed
+# with the command number.
+#
+#   context   - The context to look for the sound files in (e.g Default,
+#               Parrot etc).
+#   basename  - The common basename for the sound clips to find.
+#   header    - A header sound clip to play first
+#
+proc playSubcommands {context basename {header ""}} {
+  set subcmds [glob -nocomplain "$::langdir/$context/$basename*.{wav,raw,gsm}"]
+  if {[llength $subcmds] > 0} {
+    if {$header != ""} {
+      playSilence 500
+      playMsg $context $header
+    }
+
+    append match_exp {^.*/} $basename {(\d+)([ABCD*#]*)\.}
+    foreach subcmd [lsort $subcmds] {
+      if [regexp $match_exp $subcmd -> number chars] {
+        playSilence 200
+        playNumber $number
+        spellWord $chars
+        playSilence 200
+        playFile $subcmd
+      }
+    }
+  }
 }
 
 
@@ -90,6 +126,22 @@ proc play_help {} {
 #
 proc status_report {} {
   #printInfo "status_report called...";
+}
+
+
+#
+# Called when an illegal command has been entered
+#
+#   cmd - The received command
+#
+proc unknown_command {cmd} {
+  variable module_name
+  if {${::active_module} != ${module_name}} {
+    playMsg "name"
+    playSilence 200
+  }
+  playNumber $cmd
+  playMsg "unknown_command"
 }
 
 

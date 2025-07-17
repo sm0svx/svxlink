@@ -2,18 +2,25 @@
 #
 # This TCL module implement a squelch timeout warning system. If the timeout
 # set by the SQL_TIMEOUT configuration variable is exceeded, a warning sound
-# will be emitted once per second. When the squelch close, a message
-# indicating that a timeout have occurred will be played back.
+# will be emitted once per second.
+# When the squelch close, or alternatively when the roger sound is played, a
+# message indicating that a timeout has occurred will be played back.
 #
 # This file should be sourced into a logic core TCL namespace to enable the
 # functionality.
 #
 ###############################################################################
 
+# Namespace for the squelch timeout feature
+namespace eval squelch_timeout {
+
+# Search for procedures in the parent namespace as well as in the current one
+namespace path [namespace parent]
+
 # The number of seconds until the squelch timeout warning will sound.
 # If SQL_TIMEOUT is not set the rest of this file will be ignored.
-variable squelch_timeout [getConfigValue ${::logic_name} "SQL_TIMEOUT" 0]
-if {$squelch_timeout <= 0} {
+variable sql_timeout [getConfigValue ${::logic_name} "SQL_TIMEOUT" 0]
+if {$sql_timeout <= 0} {
   return
 }
 
@@ -21,7 +28,56 @@ if {$squelch_timeout <= 0} {
 variable rgr_sound_delay [getConfigValue ${::logic_name} "RGR_SOUND_DELAY" -1]
 
 # The number of seconds that have elapsed since squelch open
-variable squelch_timeout_time_elapsed 0
+variable time_elapsed 0
+
+
+#
+# Called once per second, when the squelch is open, to check if the warning
+# sound should be emitted
+#
+proc check {} {
+  variable sql_timeout
+  variable time_elapsed
+
+  #puts "### Squelch timeout time elapsed: $time_elapsed"
+  if {[incr time_elapsed] >= $sql_timeout} {
+    timeout_warning
+  }
+}
+
+
+#
+# Handle end of transmission. Depending of configuration this will be called on
+# squelch close or when the roger sound is played.
+#
+proc end_handler {} {
+  variable sql_timeout
+  variable time_elapsed
+  if {$time_elapsed >= $sql_timeout} {
+    timeout_end
+  }
+  set time_elapsed 0
+}
+
+
+#
+# Called when a squelch timeout warning sound should be emitted
+#
+proc timeout_warning {} {
+  playTone 850 700 100
+}
+
+
+#
+# Called when the squelch timeout condition ends, i.e. when the squelch close
+#
+proc timeout_end {} {
+  playMsg "timeout"
+}
+
+
+# End of namespace squelch_timeout
+}
 
 
 #
@@ -30,16 +86,16 @@ variable squelch_timeout_time_elapsed 0
 #   is_open - Set to 1 if the squelch is open or 0 if it's closed
 #
 override proc squelch_open {rx_id is_open} {
-  variable rgr_sound_delay
+  variable squelch_timeout::rgr_sound_delay
 
   $SUPER $rx_id $is_open
 
   if {$is_open} {
-    addSecondTickSubscriber squelch_timeout_check
+    addSecondTickSubscriber squelch_timeout::check
   } else {
-    removeSecondTickSubscriber squelch_timeout_check
+    removeSecondTickSubscriber squelch_timeout::check
     if {$rgr_sound_delay < 0} {
-      squelch_timeout_end_handler
+      squelch_timeout::end_handler
     }
   }
 }
@@ -52,53 +108,8 @@ override proc squelch_open {rx_id is_open} {
 # This overridden version will reset the squelch timeout time elapsed counter.
 #
 override proc send_rgr_sound {} {
-  squelch_timeout_end_handler
+  squelch_timeout::end_handler
   $SUPER
-}
-
-
-#
-# Called once per second, when the squelch is open, to check if the warning
-# sound should be emitted
-#
-proc squelch_timeout_check {} {
-  variable squelch_timeout
-  variable squelch_timeout_time_elapsed
-
-  #puts "### Squelch timeout time elapsed: $squelch_timeout_time_elapsed"
-  if {[incr squelch_timeout_time_elapsed] >= $squelch_timeout} {
-    squelch_timeout_warn
-  }
-}
-
-
-#
-# Handle end of transmission. Depending of configuration this will be called on
-# squelch close or when the roger sound is played.
-#
-proc squelch_timeout_end_handler {} {
-  variable squelch_timeout
-  variable squelch_timeout_time_elapsed
-  if {$squelch_timeout_time_elapsed >= $squelch_timeout} {
-    squelch_timeout_end
-  }
-  set squelch_timeout_time_elapsed 0
-}
-
-
-#
-# Called when a squelch timeout warning sound should be emitted
-#
-proc squelch_timeout_warn {} {
-  playTone 850 700 100
-}
-
-
-#
-# Called when the squelch timeout condition ends, i.e. when the squelch close
-#
-proc squelch_timeout_end {} {
-  playMsg "timeout"
 }
 
 

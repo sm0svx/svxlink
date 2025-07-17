@@ -18,17 +18,6 @@ mixin Module
 
 
 #
-# Called when an illegal command has been entered
-#
-#   cmd - The received command
-#
-proc unknown_command {cmd} {
-  playNumber $cmd
-  playMsg "unknown_command"
-}
-
-
-#
 # Play an alert sound to get the users attention
 #
 proc playAlertSound {} {

@@ -86,7 +86,7 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "${::logic_name}::${module_name}" "$ev"
+  ::processEvent "${module_name}" "$ev"
 }
 
 

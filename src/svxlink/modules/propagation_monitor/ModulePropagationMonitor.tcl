@@ -37,7 +37,7 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "${::logic_name}::$module_name" "$ev"
+  ::processEvent "$module_name" "$ev"
 }
 
 
@@ -86,6 +86,11 @@ proc dtmfCmdReceived {cmd} {
 #
 proc dtmfCmdReceivedWhenIdle {cmd} {
   #printInfo "DTMF command received while idle: $cmd";
+  if {$cmd == "0"} {
+    processEvent "play_help"
+  } else {
+    processEvent "unknown_command $cmd"
+  }
 }
 
 

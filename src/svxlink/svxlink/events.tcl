@@ -14,23 +14,6 @@
 ###############################################################################
 
 #
-# Process the given event.
-# All TCL modules should use this function instead of calling playMsg etc
-# directly. The module code should only contain the logic, not the handling
-# of the event.
-#
-#   module - The module to process the event in
-#   ev     - The event to process
-#
-# FIXME: This function should be moved to a file that contain common TCL module
-#        code.
-proc processEvent {module ev} {
-  append func $module "::" $ev
-  eval "$func"
-}
-
-
-#
 # Enable features to support legacy code
 #
 proc enableLegacySupport {} {

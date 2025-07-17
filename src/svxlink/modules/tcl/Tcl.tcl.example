@@ -17,17 +17,6 @@ sourceTclWithOverrides "Module.tcl"
 mixin Module
 
 
-#
-# Called when an illegal command has been entered
-#
-#   cmd - The received command
-#
-proc unknown_command {cmd} {
-  playNumber $cmd
-  playMsg "unknown_command"
-}
-
-
 # Override handlers in Module.tcl below if needed.
 # Add your own handlers.
 

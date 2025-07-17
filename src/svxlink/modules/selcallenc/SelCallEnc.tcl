@@ -22,19 +22,17 @@ sourceTclWithOverrides "SelCall.tcl"
 
 #
 # Executed when playing of the help message for this module has been requested.
+# Available variants are passed one per argument on the format ID=NAME.
 #
-proc play_help {} {
-  variable variants
+override proc play_help {args} {
+  $SUPER
 
-  Module::play_help
-
-  # FIXME: We should not read the variants array directly from the module
-  # implementation
-  foreach variant_id [lsort [array names variants]] {
+  foreach var [lrange $args 1 end] {
+    set v [split $var =]
     playSilence 300
-    playNumber $variant_id
+    playNumber [lindex $v 0]
     playSilence 100
-    playMsg $variants($variant_id)
+    playMsg [lindex $v 1]
   }
 }
 
@@ -44,17 +42,9 @@ proc play_standard {std} {
 }
 
 
-proc play_sel_call {cmd} {
-  variable variants
-
-  # FIXME: We should not read the variants array directly from the module
-  # implementation
-  if {[string range $cmd 0 1] > [array size variants]} {
-    playMsg "operation_failed"
-  } else {
-    SelCall::setMode $variants([string range $cmd 0 1])
-    SelCall::play [string range $cmd 2 end]
-  }
+proc play_sel_call {std digits} {
+  SelCall::setMode $std
+  SelCall::play $digits
 }
 
 

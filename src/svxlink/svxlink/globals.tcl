@@ -222,39 +222,6 @@ proc playMsg {context msg {warn 1}} {
 
 
 #
-# Play a range of subcommand description files. The file names must be on the
-# format <basename><command number>[ABCD*#]. The last characters are optional.
-# Each matching sound clip will be played in sub command number order, prefixed
-# with the command number.
-#
-#   context   - The context to look for the sound files in (e.g Default,
-#               Parrot etc).
-#   basename  - The common basename for the sound clips to find.
-#   header    - A header sound clip to play first
-#
-proc playSubcommands {context basename {header ""}} {
-  set subcmds [glob -nocomplain "$::langdir/$context/$basename*.{wav,raw,gsm}"]
-  if {[llength $subcmds] > 0} {
-    if {$header != ""} {
-      playSilence 500
-      playMsg $context $header
-    }
-
-    append match_exp {^.*/} $basename {(\d+)([ABCD*#]*)\.}
-    foreach subcmd [lsort $subcmds] {
-      if [regexp $match_exp $subcmd -> number chars] {
-        playSilence 200
-        playNumber $number
-        spellWord $chars
-        playSilence 200
-        playFile $subcmd
-      }
-    }
-  }
-}
-
-
-#
 # Recursively print the TCL namespace tree
 #
 #   ns      The namespace name
@@ -272,6 +239,27 @@ proc printNamespaceTree {{ns ::} {indent "  "}} {
     puts "### ${indent}${ns}"
     printNamespaceTree $child "$indent  "
   }
+}
+
+
+#
+# Process the given event.
+# All TCL modules should use this function instead of calling playMsg etc
+# directly. The module code should only contain the logic, not the handling
+# of the events.
+#
+#   ev   - An event
+#   args - namespaces
+#
+proc processEvent {args ev} {
+  set cmd ${ev}
+  if {[llength $args] > 0} {
+    set cmd [join ${args} ::]::${cmd}
+  }
+  if {[string range $cmd 0 1] != "::"} {
+    set cmd ::${::logic_name}::${cmd}
+  }
+  eval ${cmd}
 }
 
 

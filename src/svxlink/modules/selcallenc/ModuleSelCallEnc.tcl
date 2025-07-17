@@ -62,7 +62,38 @@ proc printInfo {msg} {
 #
 proc processEvent {ev} {
   variable module_name
-  ::processEvent "${::logic_name}::${module_name}" "$ev"
+  ::processEvent "${module_name}" "$ev"
+}
+
+
+#
+# Get the variant name given the two digit id. If the variant is not found, an
+# empty string is returned.
+#
+#   number - The two digit id number
+#
+proc getVariant {number} {
+  variable variants
+
+  if [info exists variants($number)] {
+    return $variants($number)
+  }
+  return ""
+}
+
+
+#
+# Emit the play_help event on the special format used by this module
+#
+proc playHelp {} {
+  variable variants
+
+  # play_help ID1=NAME1 ID2=NAME2 ...
+  set ev play_help
+  foreach variant_id [lsort [array names variants]] {
+    append ev " $variant_id=$variants($variant_id)"
+  }
+  processEvent "$ev"
 }
 
 
@@ -82,19 +113,6 @@ proc deactivateCleanup {} {
 }
 
 
-# The amplitude of the selcall audio. Set by function setAmplitude.
-#variable amplitude
-
-# Tone array for the selected mode. Set by function setMode.
-#variable tones
-
-# The length of the tones. Set by function setMode.
-#variable tone_length
-
-# The length of the first tone in a sequence. Set by function setMode.
-#variable first_tone_length
-
-
 #
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
@@ -112,18 +130,21 @@ proc dtmfDigitReceived {char duration} {
 #   cmd - The received DTMF command
 #
 proc dtmfCmdReceived {cmd} {
-  variable variants
-
   printInfo "DTMF command received: $cmd";
 
   if {$cmd == "0"} {
-    processEvent "play_help"
-  } elseif {[string length $cmd] == 2} {
-    processEvent "play_standard $variants($cmd)"
-  } elseif {$cmd != ""} {
-    processEvent "play_sel_call $cmd"
-  } else {
+    playHelp
+  } elseif {$cmd == ""} {
     deactivateModule
+  } elseif {[string length $cmd] >= 2 && \
+            [set variant [getVariant [string range $cmd 0 1]]] != ""} {
+    if {[string length $cmd] > 2} {
+      processEvent "play_sel_call $variant [string range $cmd 2 end]"
+    } else {
+      processEvent "play_standard $variant"
+    }
+  } else {
+    processEvent "unknown_command $cmd"
   }
 }
 
@@ -135,16 +156,19 @@ proc dtmfCmdReceived {cmd} {
 #   cmd - The received DTMF command
 #
 proc dtmfCmdReceivedWhenIdle {cmd} {
-  variable variants
-
-  printInfo "DTMF command received received when idle: $cmd";
+  printInfo "DTMF command received when idle: $cmd";
 
   if {$cmd == "0"} {
-    processEvent "play_help"
-  } elseif {[string length $cmd] == 2} {
-    processEvent "play_standard $variants($cmd)"
-  } elseif {$cmd != ""} {
-    processEvent "play_sel_call $cmd"
+    playHelp
+  } elseif {[string length $cmd] >= 2 && \
+            [set variant [getVariant [string range $cmd 0 1]]] != ""} {
+    if {[string length $cmd] > 2} {
+      processEvent "play_sel_call $variant [string range $cmd 2 end]"
+    } else {
+      processEvent "play_standard $variant"
+    }
+  } else {
+    processEvent "unknown_command $cmd"
   }
 }
 
