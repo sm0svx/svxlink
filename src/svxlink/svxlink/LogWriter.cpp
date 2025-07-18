@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <syslog.h>
 
 #include <cstring>
 #include <iostream>
@@ -96,9 +97,49 @@ namespace {
  *
  ****************************************************************************/
 
+class LogWriterWorker
+{
+  public:
+    virtual ~LogWriterWorker(void) {}
+    virtual bool logOpen(void) { return true; }
+    virtual void logClose(void) {}
+    virtual void logReopen(std::string reason) {}
+    virtual bool logWriteTimestamp(void) { return true; }
+    virtual void logWrite(const char *buf) = 0;
+};
+
+
+class LogWriterWorkerFile : public LogWriterWorker
+{
+  public:
+    LogWriterWorkerFile(const std::string& filename,
+                        const std::string& tstamp_format);
+    virtual ~LogWriterWorkerFile(void) {}
+    virtual bool logOpen(void) override;
+    virtual void logClose(void) override;
+    virtual void logReopen(std::string reason) override;
+    virtual bool logWriteTimestamp(void) override;
+    virtual void logWrite(const char *buf) override;
+
+  private:
+    std::string       m_logfile_name;
+    int               m_logfd           = -1;
+    std::string       m_tstamp_format;
+};
+
+
+class LogWriterWorkerSyslog : public LogWriterWorker
+{
+  public:
+    virtual ~LogWriterWorkerSyslog(void) {}
+    virtual void logWrite(const char *buf) override;
+  private:
+    std::string   m_buf;
+};
 
 
 }; /* End of anonymous namespace */
+
 
 /****************************************************************************
  *
@@ -109,7 +150,7 @@ namespace {
 LogWriter::LogWriter(void)
 {
     // Create a pipe to route stdout and stderr through
-  if (pipe(pipefd) == -1)
+  if (pipe(m_pipefd) == -1)
   {
     perror("pipe");
     exit(1);
@@ -125,58 +166,58 @@ LogWriter::~LogWriter(void)
 
 void LogWriter::setTimestampFormat(const std::string& format)
 {
-  tstamp_format = format;
+  m_tstamp_format = format;
 } /* LogWriter::setTimestampFormat */
 
 
-void LogWriter::setFilename(const std::string& name)
+void LogWriter::setDestinationName(const std::string& name)
 {
-  logfile_name = name;
-} /* LogWriter::setFilename */
+  m_dest_name = name;
+} /* LogWriter::setDestinationName */
 
 
 void LogWriter::start(void)
 {
-  logthread = std::thread(&LogWriter::writerThread, this);
+  m_logthread = std::thread(&LogWriter::writerThread, this);
 } /* LogWriter::start */
 
 
 void LogWriter::stop(void)
 {
-  logfileFlush();
+  logFlush();
 
-  if (pipefd[1] != -1)
+  if (m_pipefd[1] != -1)
   {
-    write(pipefd[1], "\0", 1);
-    close(pipefd[1]);
-    pipefd[1] = -1;
+    write(m_pipefd[1], "\0", 1);
+    close(m_pipefd[1]);
+    m_pipefd[1] = -1;
   }
 
-  if (logthread.joinable())
+  if (m_logthread.joinable())
   {
-    logthread.join();
+    m_logthread.join();
   }
 
-  if (pipefd[0] != -1)
+  if (m_pipefd[0] != -1)
   {
-    close(pipefd[0]);
-    pipefd[0] = -1;
+    close(m_pipefd[0]);
+    m_pipefd[0] = -1;
   }
 
-  logfileClose();
+  //worker->logClose();
 } /* LogWriter::stop */
 
 
 void LogWriter::reopenLogfile(void)
 {
-  reopen_logfile = true;
+  m_reopen_log = true;
 } /* LogWriter::reopenLogfile */
 
 
 void LogWriter::redirectStdout(void)
 {
     // Redirect stdout to the logpipe
-  if (dup2(pipefd[1], STDOUT_FILENO) == -1)
+  if (dup2(m_pipefd[1], STDOUT_FILENO) == -1)
   {
     perror("dup2(stdout)");
     exit(1);
@@ -194,50 +235,12 @@ void LogWriter::redirectStdout(void)
 void LogWriter::redirectStderr(void)
 {
     // Redirect stderr to the logpipe
-  if (dup2(pipefd[1], STDERR_FILENO) == -1)
+  if (dup2(m_pipefd[1], STDERR_FILENO) == -1)
   {
     perror("dup2(stderr)");
     exit(1);
   }
 } /* LogWriter::redirectStderr */
-
-
-void LogWriter::writerThread(void)
-{
-  if (!logfileOpen())
-  {
-    abort();
-  }
-
-  for (;;)
-  {
-    char buf[256];
-    auto len = read(pipefd[0], buf, sizeof(buf)-1);
-    if ((len <= 0) || (buf[len-1] == '\0'))
-    {
-      //if (len < 0)
-      //{
-      //  char err[256];
-      //  char* errp = strerror_r(errno, err, sizeof(err));
-      //  std::stringstream ss;
-      //  ss << "*** ERROR: Logpipe read failed with [" << errno
-      //     << "]: " << errp << std::endl;
-      //  logfileWrite(ss.str().c_str());
-      //}
-      break;
-    }
-    buf[len] = 0;
-    logfileWrite(buf);
-    if (reopen_logfile)
-    {
-      logfileReopen("Reopen requested");
-      reopen_logfile = false;
-    }
-  }
-
-  //logfileWrite("### logwriter exited\n");
-} /* LogWriter::writerThread */
-
 
 
 
@@ -255,68 +258,134 @@ void LogWriter::writerThread(void)
  *
  ****************************************************************************/
 
-bool LogWriter::logfileOpen(void)
+void LogWriter::writerThread(void)
 {
-  logfileClose();
-  logfd = open(logfile_name.c_str(), O_WRONLY | O_APPEND | O_CREAT, 00644);
-  if (logfd == -1)
+  LogWriterWorker* worker = nullptr;
+  if (m_dest_name == "syslog:")
   {
-    //std::cerr << "open(\"" << logfile_name << "\"): " << strerror(errno)
+    worker = new LogWriterWorkerSyslog;
+  }
+  else
+  {
+    worker = new LogWriterWorkerFile(m_dest_name, m_tstamp_format);
+  }
+
+  if (!worker->logOpen())
+  {
+    abort();
+  }
+
+  for (;;)
+  {
+    char buf[256];
+    auto len = read(m_pipefd[0], buf, sizeof(buf)-1);
+    if ((len <= 0) || (buf[len-1] == '\0'))
+    {
+      //if (len < 0)
+      //{
+      //  char err[256];
+      //  char* errp = strerror_r(errno, err, sizeof(err));
+      //  std::stringstream ss;
+      //  ss << "*** ERROR: Logpipe read failed with [" << errno
+      //     << "]: " << errp << std::endl;
+      //  worker->logWrite(ss.str().c_str());
+      //}
+      break;
+    }
+    buf[len] = 0;
+    worker->logWrite(buf);
+    if (m_reopen_log)
+    {
+      worker->logReopen("Reopen requested");
+      m_reopen_log = false;
+    }
+  }
+
+  //worker->logWrite("### logwriter exited\n");
+  delete worker;
+  worker = nullptr;
+} /* LogWriter::writerThread */
+
+
+void LogWriter::logFlush(void)
+{
+  std::cout.flush();
+  std::cerr.flush();
+} /* LogWriter::logFlush */
+
+
+namespace {
+
+
+LogWriterWorkerFile::LogWriterWorkerFile(const std::string& filename,
+                                         const std::string& tstamp_format)
+  : m_logfile_name(filename), m_tstamp_format(tstamp_format)
+{
+} /* LogWriterWorkerFile::LogWriterWorkerFile */
+
+
+bool LogWriterWorkerFile::logOpen(void)
+{
+  logClose();
+  m_logfd = open(m_logfile_name.c_str(), O_WRONLY | O_APPEND | O_CREAT, 00644);
+  if (m_logfd == -1)
+  {
+    //std::cerr << "open(\"" << m_logfile_name << "\"): " << strerror(errno)
     //          << std::endl;
     return false;
   }
 
   return true;
-} /* LogWriter::logfileOpen */
+} /* LogWriterWorkerFile::logOpen */
 
 
-void LogWriter::logfileClose(void)
+void LogWriterWorkerFile::logClose(void)
 {
-  if (logfd != -1)
+  if (m_logfd != -1)
   {
-    close(logfd);
-    logfd = -1;
+    close(m_logfd);
+    m_logfd = -1;
   }
-} /* LogWriter::logfileClose */
+} /* LogWriterWorkerFile::logClose */
 
 
-void LogWriter::logfileReopen(std::string reason)
+void LogWriterWorkerFile::logReopen(std::string reason)
 {
   if (!reason.empty())
   {
     reason += ". ";
   }
 
-  logfileWriteTimestamp();
+  logWriteTimestamp();
   std::string msg(reason);
   msg += "Reopening logfile...\n";
-  if (write(logfd, msg.c_str(), msg.size()) == -1)
+  if (write(m_logfd, msg.c_str(), msg.size()) == -1)
   {
     abort();
   }
 
-  if (!logfileOpen())
+  if (!logOpen())
   {
     abort();
   }
 
-  logfileWriteTimestamp();
+  logWriteTimestamp();
   msg = reason;
   msg += "Logfile reopened.\n";
-  if (write(logfd, msg.c_str(), msg.size()) == -1)
+  if (write(m_logfd, msg.c_str(), msg.size()) == -1)
   {
     abort();
   }
-} /* LogWriter::logfileReopen */
+} /* LogWriterWorkerFile::logReopen */
 
 
-bool LogWriter::logfileWriteTimestamp(void)
+bool LogWriterWorkerFile::logWriteTimestamp(void)
 {
-  if (!tstamp_format.empty())
+  if (!m_tstamp_format.empty())
   {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    std::string fmt(tstamp_format);
+    std::string fmt(m_tstamp_format);
     const std::string frac_code("%f");
     size_t pos = fmt.find(frac_code);
     if (pos != std::string::npos)
@@ -329,24 +398,24 @@ bool LogWriter::logfileWriteTimestamp(void)
     char tstr[256];
     size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(),
                            localtime_r(&tv.tv_sec, &tm));
-    ssize_t ret = write(logfd, tstr, tlen);
+    ssize_t ret = write(m_logfd, tstr, tlen);
     if (ret != static_cast<ssize_t>(tlen))
     {
       return false;
     }
-    ret = write(logfd, ": ", 2);
+    ret = write(m_logfd, ": ", 2);
     if (ret != 2)
     {
       return false;
     }
   }
   return true;
-} /* LogWriter::logfileWriteTimestamp */
+} /* LogWriterWorkerFile::logWriteTimestamp */
 
 
-void LogWriter::logfileWrite(const char *buf)
+void LogWriterWorkerFile::logWrite(const char *buf)
 {
-  if (logfd == -1)
+  if (m_logfd == -1)
   {
     return;
   }
@@ -359,9 +428,9 @@ void LogWriter::logfileWrite(const char *buf)
 
     if (print_timestamp)
     {
-      if (!logfileWriteTimestamp())
+      if (!logWriteTimestamp())
       {
-        logfileReopen("Write error");
+        logReopen("Write error");
         return;
       }
       print_timestamp = false;
@@ -378,22 +447,46 @@ void LogWriter::logfileWrite(const char *buf)
     {
       write_len = strlen(ptr);
     }
-    ret = write(logfd, ptr, write_len);
+    ret = write(m_logfd, ptr, write_len);
     if (ret != static_cast<ssize_t>(write_len))
     {
-      logfileReopen("Write error");
+      logReopen("Write error");
       return;
     }
     ptr += write_len;
   }
-} /* LogWriter::logfileWrite */
+} /* LogWriterWorkerFile::logWrite */
 
 
-void LogWriter::logfileFlush(void)
+void LogWriterWorkerSyslog::logWrite(const char* buf)
 {
-  std::cout.flush();
-  std::cerr.flush();
-} /* LogWriter::logfileFlush */
+  m_buf.append(buf);
+
+  std::string::size_type pos;
+  while ((pos = m_buf.find ('\n')) != std::string::npos)
+  {
+    std::string line(m_buf, 0, pos);
+    m_buf.erase(0, pos + 1);
+
+    int loglevel = LOG_INFO;
+    if (line.rfind("*** ERROR:", 0) == 0)
+    {
+      loglevel = LOG_ERR;
+    }
+    else if (line.rfind("*** WARNING:", 0) == 0)
+    {
+      loglevel = LOG_WARNING;
+    }
+    else if (line.rfind("### ", 0) == 0)
+    {
+      loglevel = LOG_DEBUG;
+    }
+    syslog(LOG_DAEMON | loglevel, "%s", line.c_str());
+  }
+} /* LogWriterWorkerSyslog::logWrite */
+
+
+}; /* End of anonymous namespace */
 
 
 /*

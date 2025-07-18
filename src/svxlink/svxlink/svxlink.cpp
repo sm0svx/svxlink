@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 
     if (logfile_name != 0)
     {
-      logwriter.setFilename(logfile_name);
+      logwriter.setDestinationName(logfile_name);
       if (!quiet)
       {
         logwriter.redirectStdout();

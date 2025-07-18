@@ -1,6 +1,6 @@
 /**
 @file   LogWriter.h
-@brief  A class for writing stdout and stderr to a logfile
+@brief  A class for writing stdout and stderr to a logfile or syslog
 @author Tobias Blomberg / SM0SVX
 @date   2025-06-11
 
@@ -102,12 +102,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief  A class for writing stdout and stderr to a logfile
+@brief  A class for writing stdout and stderr to a logfile or syslog
 @author Tobias Blomberg / SM0SVX
 @date   2025-06-11
 
-This is a threaded logging class for routing stdout and stderr to a logfile.
-Each row will be prefixed with a timestamp.
+This is a threaded logging class for routing stdout and stderr to a logfile or
+to syslog.
+
+When writing to a file, each row will be prefixed with a timestamp.
+
+When writing to syslog, the timestamp format in SvxLink is ignored.
 */
 class LogWriter
 {
@@ -133,40 +137,51 @@ class LogWriter
     ~LogWriter(void);
 
     /**
-     * @brief   A_brief_member_function_description
-     * @param   param1 Description_of_param1
-     * @return  Return_value_of_this_member_function
+     * @brief   Set the format used for writing timestamps to file
+     * @param   format A strftime format string
      */
     void setTimestampFormat(const std::string& format);
 
-    void setFilename(const std::string& name);
+    /**
+     * @brief   Set the name of the logging destination
+     * @param   name Either a path to a logfile or the literal "syslog:"
+     */
+    void setDestinationName(const std::string& name);
 
+    /**
+     * @brief   Start the logger thread
+     */
     void start(void);
 
+    /**
+     * @brief   Stop the logger thread
+     */
     void stop(void);
 
+    /**
+     * @brief   Reopen the logfile before writing the next log row
+     */
     void reopenLogfile(void);
 
+    /**
+     * @brief   Call this function to redirect stdout to the logger
+     */
     void redirectStdout(void);
 
+    /**
+     * @brief   Call this function to redirect stderr to the logger
+     */
     void redirectStderr(void);
 
-    void writerThread(void);
-
   private:
-    std::string       logfile_name;
-    int               logfd           = -1;
-    std::string       tstamp_format   = "%c";
-    std::atomic_bool  reopen_logfile;
-    int               pipefd[2]       = {-1, -1};
-    std::thread       logthread;
+    std::string       m_dest_name;
+    std::atomic_bool  m_reopen_log;
+    int               m_pipefd[2]       = {-1, -1};
+    std::thread       m_logthread;
+    std::string       m_tstamp_format   = "%c";
 
-    bool logfileOpen(void);
-    void logfileClose(void);
-    void logfileReopen(std::string reason);
-    bool logfileWriteTimestamp(void);
-    void logfileWrite(const char *buf);
-    void logfileFlush(void);
+    void writerThread(void);
+    void logFlush(void);
 
 }; /* class LogWriter */
 

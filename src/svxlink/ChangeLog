@@ -29,6 +29,9 @@
 * Bugfix in ModuleTclVoiceMail: If no password was specified on login the
   module crashed.
 
+* SvxLink can now log to syslog by specifying --logfile=syslog: (including the
+  colon character)
+
 
 
  1.9.1 -- 01 Jul 2025
