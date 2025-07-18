@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -273,12 +273,13 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     return false;
   }
 
-  string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str) ||
-      event_handler_str.empty())
+  std::string event_handler_str(SVX_SHARE_INSTALL_DIR);
+  event_handler_str += "/events.tcl";
+  cfg().getValue(name(), "EVENT_HANDLER", event_handler_str);
+  if (event_handler_str.empty())
   {
     std::cerr << "*** ERROR: Config variable " << name()
-              << "/EVENT_HANDLER not set or empty" << std::endl;
+              << "/EVENT_HANDLER empty" << std::endl;
     return false;
   }
 

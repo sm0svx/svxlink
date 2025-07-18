@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -184,8 +184,9 @@ bool EventHandler::initialize(void)
   if (Tcl_EvalFile(interp, event_script.c_str()) != TCL_OK)
   {
     const char *trace = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY); 
-    cerr << "*** ERROR[" << logic_name << "]: Failed to load event script\n"
-         << trace << endl;
+    std::cerr << "*** ERROR[" << logic_name << "]: Failed to load event script "
+              << "'" << event_script << "'\n"
+              << trace << std::endl;
     return false;
   }
   

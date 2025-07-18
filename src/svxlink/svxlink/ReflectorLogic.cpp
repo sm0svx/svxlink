@@ -454,12 +454,13 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     }
   }
 
-  string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str) ||
-      event_handler_str.empty())
+  std::string event_handler_str(SVX_SHARE_INSTALL_DIR);
+  event_handler_str += "/events.tcl";
+  cfg().getValue(name(), "EVENT_HANDLER", event_handler_str);
+  if (event_handler_str.empty())
   {
     std::cerr << "*** ERROR: Config variable " << name()
-              << "/EVENT_HANDLER not set or empty" << std::endl;
+              << "/EVENT_HANDLER empty" << std::endl;
     return false;
   }
 
