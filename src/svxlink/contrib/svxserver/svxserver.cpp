@@ -586,7 +586,7 @@ static void stdinHandler(FdWatch *w)
   int cnt = ::read(STDIN_FILENO, buf, 1);
   if (cnt == -1)
   {
-    fprintf(stderr, "*** error reading from stdin\n");
+    fprintf(stderr, "*** ERROR: Reading from stdin failed\n");
     Application::app().quit();
     return;
   }
