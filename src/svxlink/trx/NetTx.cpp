@@ -311,9 +311,10 @@ void NetTx::connectionReady(bool is_ready)
 {
   if (is_ready)
   {
-    cout << name() << ": Connected to remote transmitter at "
-        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
-    
+    std::cout << "NOTICE: " << name() << ": Connected to remote transmitter at "
+              << tcp_con->remoteHost() << ":" << tcp_con->remotePort()
+              << std::endl;
+
     is_connected = true;
     log_disconnect = true;
     

@@ -361,9 +361,10 @@ void NetRx::connectionReady(bool is_ready)
 {
   if (is_ready)
   {
-    cout << name() << ": Connected to remote receiver at "
-        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
-    
+    std::cout << "NOTICE: " << name() << ": Connected to remote receiver at "
+              << tcp_con->remoteHost() << ":" << tcp_con->remotePort()
+              << std::endl;
+
     log_disconnect = true;
 
     if (muteState() != Rx::MUTE_ALL)

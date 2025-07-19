@@ -481,6 +481,10 @@ void LogWriter::LogWriterWorkerSyslog::logWrite(const char* buf)
     {
       loglevel = LOG_WARNING;
     }
+    else if (line.rfind("NOTICE:", 0) == 0)
+    {
+      loglevel = LOG_NOTICE;
+    }
     else if (line.rfind("### ", 0) == 0)
     {
       loglevel = LOG_DEBUG;

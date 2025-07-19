@@ -478,6 +478,8 @@ int main(int argc, char **argv)
     Async::Application::app().quit();
   }
 
+  std::cout << "NOTICE: Initialization done. Starting main application."
+            << std::endl;
   app.exec();
 
   LinkManager::deleteInstance();
@@ -738,7 +740,8 @@ static void sigterm_handler(int signal)
       break;
   }
 
-  std::cout << "\n" << signame << " received. Shutting down application..."
+  std::cout << "\nNOTICE: " << signame
+            << " received. Shutting down application..."
             << std::endl;
   Application::app().quit();
 } /* sigterm_handler */
