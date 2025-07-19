@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 
 /****************************************************************************
@@ -174,11 +175,16 @@ class LogWriter
     void redirectStderr(void);
 
   private:
+    class LogWriterWorker;
+    class LogWriterWorkerFile;
+    class LogWriterWorkerSyslog;
+
     std::string       m_dest_name;
     std::atomic_bool  m_reopen_log;
-    int               m_pipefd[2]       = {-1, -1};
+    int               m_pipefd[2]   {-1, -1};
     std::thread       m_logthread;
-    std::string       m_tstamp_format   = "%c";
+    std::mutex        m_mutex;
+    LogWriterWorker*  m_worker      {nullptr};
 
     void writerThread(void);
     void logFlush(void);

@@ -88,19 +88,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace {
-
-
-/****************************************************************************
- *
- * Local functions
- *
- ****************************************************************************/
-
-class LogWriterWorker
+class LogWriter::LogWriterWorker
 {
   public:
     virtual ~LogWriterWorker(void) {}
+    virtual void setTimestampFormat(const std::string& format) {}
     virtual bool logOpen(void) { return true; }
     virtual void logClose(void) {}
     virtual void logReopen(std::string reason) {}
@@ -109,12 +101,12 @@ class LogWriterWorker
 };
 
 
-class LogWriterWorkerFile : public LogWriterWorker
+class LogWriter::LogWriterWorkerFile : public LogWriter::LogWriterWorker
 {
   public:
-    LogWriterWorkerFile(const std::string& filename,
-                        const std::string& tstamp_format);
+    LogWriterWorkerFile(const std::string& filename);
     virtual ~LogWriterWorkerFile(void) {}
+    virtual void setTimestampFormat(const std::string& format) override;
     virtual bool logOpen(void) override;
     virtual void logClose(void) override;
     virtual void logReopen(std::string reason) override;
@@ -123,12 +115,12 @@ class LogWriterWorkerFile : public LogWriterWorker
 
   private:
     std::string       m_logfile_name;
-    int               m_logfd           = -1;
-    std::string       m_tstamp_format;
+    int               m_logfd           {-1};
+    std::string       m_tstamp_format   {"%c"};
 };
 
 
-class LogWriterWorkerSyslog : public LogWriterWorker
+class LogWriter::LogWriterWorkerSyslog : public LogWriter::LogWriterWorker
 {
   public:
     virtual ~LogWriterWorkerSyslog(void) {}
@@ -138,8 +130,19 @@ class LogWriterWorkerSyslog : public LogWriterWorker
 };
 
 
-}; /* End of anonymous namespace */
+namespace {
 
+
+
+/****************************************************************************
+ *
+ * Local functions
+ *
+ ****************************************************************************/
+
+
+
+}; /* End of anonymous namespace */
 
 /****************************************************************************
  *
@@ -166,7 +169,8 @@ LogWriter::~LogWriter(void)
 
 void LogWriter::setTimestampFormat(const std::string& format)
 {
-  m_tstamp_format = format;
+  const std::lock_guard<std::mutex> lock(m_mutex);
+  m_worker->setTimestampFormat(format);
 } /* LogWriter::setTimestampFormat */
 
 
@@ -204,7 +208,7 @@ void LogWriter::stop(void)
     m_pipefd[0] = -1;
   }
 
-  //worker->logClose();
+  //m_worker->logClose();
 } /* LogWriter::stop */
 
 
@@ -260,19 +264,22 @@ void LogWriter::redirectStderr(void)
 
 void LogWriter::writerThread(void)
 {
-  LogWriterWorker* worker = nullptr;
-  if (m_dest_name == "syslog:")
   {
-    worker = new LogWriterWorkerSyslog;
-  }
-  else
-  {
-    worker = new LogWriterWorkerFile(m_dest_name, m_tstamp_format);
-  }
+    const std::lock_guard<std::mutex> lock(m_mutex);
 
-  if (!worker->logOpen())
-  {
-    abort();
+    if (m_dest_name == "syslog:")
+    {
+      m_worker = new LogWriterWorkerSyslog;
+    }
+    else
+    {
+      m_worker = new LogWriterWorkerFile(m_dest_name);
+    }
+
+    if (!m_worker->logOpen())
+    {
+      abort();
+    }
   }
 
   for (;;)
@@ -281,29 +288,22 @@ void LogWriter::writerThread(void)
     auto len = read(m_pipefd[0], buf, sizeof(buf)-1);
     if ((len <= 0) || (buf[len-1] == '\0'))
     {
-      //if (len < 0)
-      //{
-      //  char err[256];
-      //  char* errp = strerror_r(errno, err, sizeof(err));
-      //  std::stringstream ss;
-      //  ss << "*** ERROR: Logpipe read failed with [" << errno
-      //     << "]: " << errp << std::endl;
-      //  worker->logWrite(ss.str().c_str());
-      //}
       break;
     }
     buf[len] = 0;
-    worker->logWrite(buf);
+    const std::lock_guard<std::mutex> lock(m_mutex);
+    m_worker->logWrite(buf);
     if (m_reopen_log)
     {
-      worker->logReopen("Reopen requested");
+      m_worker->logReopen("Reopen requested");
       m_reopen_log = false;
     }
   }
 
-  //worker->logWrite("### logwriter exited\n");
-  delete worker;
-  worker = nullptr;
+  const std::lock_guard<std::mutex> lock(m_mutex);
+  //m_worker->logWrite("### logwriter exited\n");
+  delete m_worker;
+  m_worker = nullptr;
 } /* LogWriter::writerThread */
 
 
@@ -314,17 +314,21 @@ void LogWriter::logFlush(void)
 } /* LogWriter::logFlush */
 
 
-namespace {
 
-
-LogWriterWorkerFile::LogWriterWorkerFile(const std::string& filename,
-                                         const std::string& tstamp_format)
-  : m_logfile_name(filename), m_tstamp_format(tstamp_format)
+LogWriter::LogWriterWorkerFile::LogWriterWorkerFile(const std::string& filename)
+  : m_logfile_name(filename)
 {
-} /* LogWriterWorkerFile::LogWriterWorkerFile */
+} /* LogWriter::LogWriterWorkerFile::LogWriterWorkerFile */
 
 
-bool LogWriterWorkerFile::logOpen(void)
+void LogWriter::LogWriterWorkerFile::setTimestampFormat(
+    const std::string& format)
+{
+  m_tstamp_format = format;
+} /* LogWriter::LogWriterWorkerFile::setTimestampFormat */
+
+
+bool LogWriter::LogWriterWorkerFile::logOpen(void)
 {
   logClose();
   m_logfd = open(m_logfile_name.c_str(), O_WRONLY | O_APPEND | O_CREAT, 00644);
@@ -336,20 +340,20 @@ bool LogWriterWorkerFile::logOpen(void)
   }
 
   return true;
-} /* LogWriterWorkerFile::logOpen */
+} /* LogWriter::LogWriterWorkerFile::logOpen */
 
 
-void LogWriterWorkerFile::logClose(void)
+void LogWriter::LogWriterWorkerFile::logClose(void)
 {
   if (m_logfd != -1)
   {
     close(m_logfd);
     m_logfd = -1;
   }
-} /* LogWriterWorkerFile::logClose */
+} /* LogWriter::LogWriterWorkerFile::logClose */
 
 
-void LogWriterWorkerFile::logReopen(std::string reason)
+void LogWriter::LogWriterWorkerFile::logReopen(std::string reason)
 {
   if (!reason.empty())
   {
@@ -376,10 +380,10 @@ void LogWriterWorkerFile::logReopen(std::string reason)
   {
     abort();
   }
-} /* LogWriterWorkerFile::logReopen */
+} /* LogWriter::LogWriterWorkerFile::logReopen */
 
 
-bool LogWriterWorkerFile::logWriteTimestamp(void)
+bool LogWriter::LogWriterWorkerFile::logWriteTimestamp(void)
 {
   if (!m_tstamp_format.empty())
   {
@@ -410,10 +414,10 @@ bool LogWriterWorkerFile::logWriteTimestamp(void)
     }
   }
   return true;
-} /* LogWriterWorkerFile::logWriteTimestamp */
+} /* LogWriter::LogWriterWorkerFile::logWriteTimestamp */
 
 
-void LogWriterWorkerFile::logWrite(const char *buf)
+void LogWriter::LogWriterWorkerFile::logWrite(const char *buf)
 {
   if (m_logfd == -1)
   {
@@ -455,10 +459,10 @@ void LogWriterWorkerFile::logWrite(const char *buf)
     }
     ptr += write_len;
   }
-} /* LogWriterWorkerFile::logWrite */
+} /* LogWriter::LogWriterWorkerFile::logWrite */
 
 
-void LogWriterWorkerSyslog::logWrite(const char* buf)
+void LogWriter::LogWriterWorkerSyslog::logWrite(const char* buf)
 {
   m_buf.append(buf);
 
@@ -483,10 +487,8 @@ void LogWriterWorkerSyslog::logWrite(const char* buf)
     }
     syslog(LOG_DAEMON | loglevel, "%s", line.c_str());
   }
-} /* LogWriterWorkerSyslog::logWrite */
+} /* LogWriter::LogWriterWorkerSyslog::logWrite */
 
-
-}; /* End of anonymous namespace */
 
 
 /*
