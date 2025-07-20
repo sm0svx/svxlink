@@ -92,7 +92,7 @@ class LogWriter::LogWriterWorker
 {
   public:
     virtual ~LogWriterWorker(void) {}
-    virtual void setTimestampFormat(const std::string& format) {}
+    virtual void setTimestampFormat(const std::string& fmt) {}
     virtual bool logOpen(void) { return true; }
     virtual void logClose(void) {}
     virtual void logReopen(std::string reason) {}
@@ -106,7 +106,7 @@ class LogWriter::LogWriterWorkerFile : public LogWriter::LogWriterWorker
   public:
     LogWriterWorkerFile(const std::string& filename);
     virtual ~LogWriterWorkerFile(void) {}
-    virtual void setTimestampFormat(const std::string& format) override;
+    virtual void setTimestampFormat(const std::string& fmt) override;
     virtual bool logOpen(void) override;
     virtual void logClose(void) override;
     virtual void logReopen(std::string reason) override;
@@ -167,10 +167,14 @@ LogWriter::~LogWriter(void)
 } /* LogWriter::~LogWriter */
 
 
-void LogWriter::setTimestampFormat(const std::string& format)
+void LogWriter::setTimestampFormat(const std::string& fmt)
 {
   const std::lock_guard<std::mutex> lock(m_mutex);
-  m_worker->setTimestampFormat(format);
+  m_tstamp_format = fmt;
+  if (m_worker != nullptr)
+  {
+    m_worker->setTimestampFormat(fmt);
+  }
 } /* LogWriter::setTimestampFormat */
 
 
@@ -276,6 +280,7 @@ void LogWriter::writerThread(void)
       m_worker = new LogWriterWorkerFile(m_dest_name);
     }
 
+    m_worker->setTimestampFormat(m_tstamp_format);
     if (!m_worker->logOpen())
     {
       abort();
@@ -321,10 +326,9 @@ LogWriter::LogWriterWorkerFile::LogWriterWorkerFile(const std::string& filename)
 } /* LogWriter::LogWriterWorkerFile::LogWriterWorkerFile */
 
 
-void LogWriter::LogWriterWorkerFile::setTimestampFormat(
-    const std::string& format)
+void LogWriter::LogWriterWorkerFile::setTimestampFormat(const std::string& fmt)
 {
-  m_tstamp_format = format;
+  m_tstamp_format = fmt;
 } /* LogWriter::LogWriterWorkerFile::setTimestampFormat */
 
 

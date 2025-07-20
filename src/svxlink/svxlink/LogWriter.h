@@ -141,7 +141,7 @@ class LogWriter
      * @brief   Set the format used for writing timestamps to file
      * @param   format A strftime format string
      */
-    void setTimestampFormat(const std::string& format);
+    void setTimestampFormat(const std::string& fmt);
 
     /**
      * @brief   Set the name of the logging destination
@@ -180,11 +180,12 @@ class LogWriter
     class LogWriterWorkerSyslog;
 
     std::string       m_dest_name;
+    std::string       m_tstamp_format {"%c"};
     std::atomic_bool  m_reopen_log;
-    int               m_pipefd[2]   {-1, -1};
+    int               m_pipefd[2]     {-1, -1};
     std::thread       m_logthread;
     std::mutex        m_mutex;
-    LogWriterWorker*  m_worker      {nullptr};
+    LogWriterWorker*  m_worker        {nullptr};
 
     void writerThread(void);
     void logFlush(void);
