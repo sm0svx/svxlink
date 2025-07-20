@@ -32,6 +32,10 @@
 * SvxLink can now log to syslog by specifying --logfile=syslog: (including the
   colon character)
 
+* New configuration variable ACTIVATE_ON_TG that can be used in a logic
+  linking configuration section to activate the link when a talkgroup is
+  activated i a logic core.
+
 
 
  1.9.1 -- 01 Jul 2025

@@ -1086,6 +1086,12 @@ possible application for this is for example to make the connection of a
 microphone/speaker combination (without DTMF encoder) for brief announcements
 but without having to constantly listen in.
 Example: ACTIVATE_ON_ACTIVITY=MicSpkrLogic
+.TP
+.B ACTIVATE_ON_TG
+Enter a comma separated list of entries on the form logic:tg_regex, which
+should automatically activate the link if the specified talkgroup regular
+expression matches a talkgroup that is activated on the specified logic core.
+Example: ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123
 .
 .SS Local Receiver Section
 .
