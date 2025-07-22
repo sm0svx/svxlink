@@ -36,6 +36,9 @@
   linking configuration section to activate the link when a talkgroup is
   activated i a logic core.
 
+* An APRS status message containing application name and version will now be
+  sent every 24 hours.
+
 
 
  1.9.1 -- 01 Jul 2025

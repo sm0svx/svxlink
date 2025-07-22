@@ -78,6 +78,7 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
+#define SVXVER_STATUS "__SVXVER__"
 
 
 /****************************************************************************
@@ -174,7 +175,8 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
 
    status_timer = new Timer((24 * 60 - 5) * 60 * 1000, Timer::TYPE_PERIODIC);
    status_timer->setEnable(false);
-   status_timer->expired.connect(mem_fun(*this, &AprsTcpClient::sendAprsStatus));
+   status_timer->expired.connect(sigc::hide(sigc::bind(
+       sigc::mem_fun(*this, &AprsTcpClient::sendAprsStatus), SVXVER_STATUS)));
 
    offset_timer = new Timer(10000, Timer::TYPE_ONESHOT);
    offset_timer->setEnable(false);
@@ -235,12 +237,12 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
   sendMsg(objmsg.str());
 
     // Status message for Echolink, connected calls
-  std::string status = addrStr(loc_cfg.objectname) + ">" + timeStr();
+  std::string status;
   for (const auto& call : calls)
   {
     status += call + " ";
   }
-  sendMsg(status);
+  sendAprsStatus(status);
 } /* AprsTcpClient::updateQsoStatus */
 
 
@@ -470,13 +472,29 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 } /* AprsTcpClient::sendAprsBeacon*/
 
 
-void AprsTcpClient::sendAprsStatus(Timer *t)
+void AprsTcpClient::sendAprsStatus(const std::string& status)
 {
-    // Send SvxLink version as status
-  std::string status = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
-                       "SvxLink v" + SVXLINK_APP_VERSION +
-                       " (https://www.svxlink.org)";
-  sendMsg(status);
+  if (status.empty() || (status ==  SVXVER_STATUS))
+  {
+      // Send SvxLink version as status
+    std::string verstatus = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
+                         "SvxLink v" + SVXLINK_APP_VERSION +
+                         " (https://www.svxlink.org)";
+    sendMsg(verstatus);
+  }
+
+  if (status !=  SVXVER_STATUS)
+  {
+    current_status = status;
+  }
+
+  if (!current_status.empty())
+  {
+      // Send given info as status
+    std::string msg = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
+                      current_status;
+    sendMsg(msg);
+  }
 } /* AprsTcpClient::sendAprsStatus*/
 
 
@@ -576,7 +594,7 @@ void AprsTcpClient::startNormalSequence(Timer *t)
   sendAprsBeacon(t);
   beacon_timer->setEnable(true);  // Start the beacon interval
 
-  sendAprsStatus(t);
+  sendAprsStatus(SVXVER_STATUS);
   status_timer->setEnable(true);  // Start the status interval
 } /* AprsTcpClient::startNormalSequence */
 
