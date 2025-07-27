@@ -162,7 +162,7 @@ proc tg_local_activation {new_tg old_tg} {
   variable selected_tg
   variable reflector_connection_established
 
-  #puts "### tg_local_activation"
+  #puts "### tg_local_activation: new_tg=$new_tg old_tg=$old_tg"
   if {$new_tg != $old_tg} {
     set prev_announce_time [clock seconds]
     set prev_announce_tg $new_tg
@@ -239,6 +239,21 @@ proc tg_command_activation {new_tg old_tg} {
   }
   playMsg "Core" "talk_group"
   say_talkgroup $new_tg
+}
+
+
+#
+# Executed when TG activation enters the inhibited state. That happens when
+# there is activity (audio streaming) from another logic core and talkgroup 0
+# is indicated.
+#
+#   new_tg -- Always 0
+#   old_tg -- Always 0
+#
+proc tg_inhibit_activation {new_tg old_tg} {
+  #puts "### tg_inhibit_activation: new_tg=$new_tg old_tg=$old_tg"
+  #playMsg "Core" "talk_group"
+  playMsg "Core" "local"
 }
 
 
@@ -356,14 +371,12 @@ proc tg_qsy_ignored {tg} {
 #   old_tg -- The talk group that was active
 #
 proc tg_selection_timeout {new_tg old_tg} {
-  #puts "### tg_selection_timeout"
-  if {$old_tg != 0} {
-    playSilence 100
-    playTone 880 200 50
-    playTone 659 200 50
-    playTone 440 200 50
-    playSilence 100
-  }
+  #puts "### tg_selection_timeout: new_tg=$new_tg old_tg=$old_tg"
+  playSilence 100
+  playTone 880 200 50
+  playTone 659 200 50
+  playTone 440 200 50
+  playSilence 100
 }
 
 

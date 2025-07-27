@@ -39,6 +39,14 @@
 * An APRS status message containing application name and version will now be
   sent every 24 hours.
 
+* Improved TG inhibit activation in ReflectorLogic. When there is activity
+  (e.g. squelch open) in another logic core, and the talkgroup is indicated as
+  0, remote TG activation as well as local activity activation (e.g. CTCSS to
+  TG) is inhibited. Previously only remote activation was inhibited. By
+  default there now also is an announcement (e.g. "local") when the inhibited
+  state is entered and the usual selection timeout sound when the state is
+  existed.
+
 
 
  1.9.1 -- 01 Jul 2025
