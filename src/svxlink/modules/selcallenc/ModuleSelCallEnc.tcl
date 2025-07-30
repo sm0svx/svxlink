@@ -12,10 +12,8 @@
 #
 namespace eval SelCallEnc {
 
-#
-# Extract the module name from the current namespace
-#
-set module_name [namespace tail [namespace current]];
+# Source base functionality for a TCL module
+sourceTclWithOverrides "TclModule.tcl"
 
 
 #
@@ -40,29 +38,6 @@ array set variants {
   "16" "PCCIR"
   "17" "AUTOA"
   "18" "QC2"
-}
-
-
-#
-# A convenience function for printing out information prefixed by the
-# module name
-#
-#   msg - The message to print
-#
-proc printInfo {msg} {
-  variable module_name
-  puts "$module_name: $msg"
-}
-
-
-#
-# A convenience function for calling an event handler
-#
-#   ev - The event string to execute
-#
-proc processEvent {ev} {
-  variable module_name
-  ::processEvent "${module_name}" "$ev"
 }
 
 
@@ -94,33 +69,6 @@ proc playHelp {} {
     append ev " $variant_id=$variants($variant_id)"
   }
   processEvent "$ev"
-}
-
-
-#
-# Executed when this module is being activated
-#
-proc activateInit {} {
-  printInfo "Module activated"
-}
-
-
-#
-# Executed when this module is being deactivated.
-#
-proc deactivateCleanup {} {
-  #printInfo "Module deactivated"
-}
-
-
-#
-# Executed when a DTMF digit (0-9, A-F, *, #) is received
-#
-#   char - The received DTMF digit
-#   duration - The duration of the received DTMF digit
-#
-proc dtmfDigitReceived {char duration} {
-  #printInfo "DTMF digit $char received with duration $duration milliseconds"
 }
 
 
@@ -173,30 +121,9 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
 }
 
 
-#
-# Executed when the squelch open or close.
-#
-#   is_open - Set to 1 if the squelch is open otherwise it's set to 0
-#
-proc squelchOpen {is_open} {
-  #if {$is_open} {set str "OPEN"} else {set str "CLOSED"};
-  #printInfo "The squelch is $str"
-}
-
-
-#
-# Executed when all announcement messages has been played.
-# Note that this function also may be called even if it wasn't this module
-# that initiated the message playing.
-#
-proc allMsgsWritten {} {
-}
-
-
 # end of namespace
 }
 
 #
 # This file has not been truncated
 #
-
