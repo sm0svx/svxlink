@@ -52,11 +52,11 @@ proc repeater_up {reason} {
     set prev_ident $now;
 
     spellWord $mycall;
-    playMsg "Core" "repeater";
+    playMsg "repeater";
     playSilence 250;
 
     if {$active_module != ""} {
-      playMsg "Core" "active_module";
+      playMsg "active_module";
       playMsg $active_module "name";
     }
   }
@@ -79,7 +79,7 @@ proc repeater_down {reason} {
 
   if {$reason == "SQL_FLAP_SUP"} {
     playSilence 500;
-    playMsg "Core" "interference";
+    playMsg "interference";
     playSilence 500;
     return;
   }
@@ -95,7 +95,7 @@ proc repeater_down {reason} {
   set prev_ident $now;
 
   spellWord $mycall;
-  playMsg "Core" "repeater";
+  playMsg "repeater";
   playSilence 250;
 
   #playMsg "../extra-sounds" "shutdown";
@@ -125,7 +125,7 @@ proc repeater_idle {} {
 #
 proc identify_nag {} {
   playSilence 500;
-  playMsg "Core" "please_identify";
+  playMsg "please_identify";
   playSilence 500;
 }
 

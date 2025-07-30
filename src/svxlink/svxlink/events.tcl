@@ -44,7 +44,7 @@ source "${::basedir}/events.d/globals.tcl"
 
 # Source TCL code for the logic core
 sourceTclWithOverrides "${::logic_type}LogicType.tcl"
-sourceTclWithOverrides "${::logic_name}.tcl"
+sourceTclOverrides "${::logic_name}.tcl"
 
 # Enable support for legacy TCL code
 enableLegacySupport

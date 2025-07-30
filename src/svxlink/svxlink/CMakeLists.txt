@@ -7,7 +7,7 @@ set(SVXLINK_SRCS
 
 # TCL event handler files to install in the events.d subdirectory
 set(SVXLINK_TCL_EVENT_FILES
-  Module.tcl CW.tcl SelCall.tcl locale.tcl Logic.tcl
+  Module.tcl CW.tcl SelCall.tcl locale.tcl LogicBase.tcl Logic.tcl
   SimplexLogicType.tcl RepeaterLogicType.tcl ReflectorLogicType.tcl
   ReflectorV2LogicType.tcl SimplexLogic.tcl RepeaterLogic.tcl ReflectorLogic.tcl
   )

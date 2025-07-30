@@ -114,6 +114,7 @@ proc sourceTclOverrides {filename} {
 # This procedure will take a TCL filename as argument and source that file from
 # the main and override paths. All files found will be sourced with the highest
 # priority file sorced last.
+# If no file is found in any of the paths, the function will error out.
 #
 #   filename - The name of a tcl file
 #
@@ -124,10 +125,15 @@ proc sourceTclWithOverrides {filename} {
     "$::langdir/events.d/local/$filename" \
     "$::basedir/events.d/local/$filename" \
     ]
+  set found 0
   foreach path $paths {
     if [file readable $path] {
       uplevel 1 sourceTcl $path
+      set found 1
     }
+  }
+  if {!$found} {
+    error "Could not source TCL file '$filename'"
   }
 }
 
