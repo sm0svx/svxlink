@@ -51,6 +51,8 @@
   a talker has been active on the talkgroup. The auto-QSY procedure is
   triggered at the first talker stop that occur after an auto-QSY timeout
 
+* Reduced CPU load for the http /status endpoint in SvxReflector.
+
 
 
  1.9.1 -- 01 Jul 2025

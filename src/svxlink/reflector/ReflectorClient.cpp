@@ -242,6 +242,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
 
 ReflectorClient::~ReflectorClient(void)
 {
+  m_status = nullptr;
   auto client_it = client_map.find(m_client_id);
   assert(client_it != client_map.end());
   client_map.erase(client_it);
@@ -346,6 +347,16 @@ void ReflectorClient::setBlock(unsigned blocktime)
 } /* ReflectorClient::setBlock */
 
 
+void ReflectorClient::updateIsTalker(void)
+{
+  if (m_status != nullptr)
+  {
+    auto talker = TGHandler::instance()->talkerForTG(m_current_tg);
+    (*m_status)["isTalker"] = (talker == this);
+  }
+} /* ReflectorClient:;updateIsTalker */
+
+
 std::vector<uint8_t> ReflectorClient::udpCipherIV(void) const
 {
   return UdpCipher::IV{udpCipherIVRand(), 0, m_udp_cipher_iv_cntr};
@@ -360,6 +371,7 @@ void ReflectorClient::certificateUpdated(Async::SslX509& cert)
     sendClientCert(cert);
   }
 } /* ReflectorClient::certificateUpdated */
+
 
 
 /****************************************************************************
@@ -833,7 +845,7 @@ void ReflectorClient::handleSelectTG(std::istream& is)
   }
   if (msg.tg() != m_current_tg)
   {
-    ReflectorClient *talker = TGHandler::instance()->talkerForTG(m_current_tg);
+    auto talker = TGHandler::instance()->talkerForTG(m_current_tg);
     if (talker == this)
     {
       m_reflector->broadcastUdpMsg(MsgUdpFlushSamples(),
@@ -845,19 +857,8 @@ void ReflectorClient::handleSelectTG(std::istream& is)
     {
       sendUdpMsg(MsgUdpFlushSamples());
     }
-    if (TGHandler::instance()->switchTo(this, msg.tg()))
-    {
-      cout << m_callsign << ": Select TG #" << msg.tg() << endl;
-      m_current_tg = msg.tg();
-    }
-    else
-    {
-      // FIXME: Notify the client that the TG selection was not allowed
-      std::cout << m_callsign << ": Not allowed to use TG #"
-                << msg.tg() << std::endl;
-      TGHandler::instance()->switchTo(this, 0);
-      m_current_tg = 0;
-    }
+
+    setTg(msg.tg());
   }
 } /* ReflectorClient::handleSelectTG */
 
@@ -890,7 +891,7 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
   std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
   cout << "]" << endl;
 
-  m_monitored_tgs = tgs;
+  setMonitoredTGs(tgs);
 } /* ReflectorClient::handleTgMonitor */
 
 
@@ -931,8 +932,64 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
   }
   try
   {
+    m_status = &(m_reflector->clientStatus(m_callsign));
+    auto& status = *m_status;
+    status.clear();
     std::istringstream is(jsonstr);
-    is >> m_node_info;
+    is >> status;
+
+    status["protoVer"]["majorVer"] = protoVer().majorVer();
+    status["protoVer"]["minorVer"] = protoVer().minorVer();
+    setMonitoredTGs(m_monitored_tgs);
+    setTg(m_current_tg);
+    if (status.isMember("qth") && status["qth"].isArray())
+    {
+      //std::cout << "### Found qth" << std::endl;
+      Json::Value& qths(status["qth"]);
+      for (Json::Value::ArrayIndex i=0; i<qths.size(); ++i)
+      {
+        Json::Value& qth(qths[i]);
+        if (qth.isMember("rx") && qth["rx"].isObject())
+        {
+          //std::cout << "### Found rx" << std::endl;
+          for (const auto& rx_id_str : qth["rx"].getMemberNames())
+          {
+            //std::cout << "### member=" << *it << std::endl;
+            if (rx_id_str.size() == 1)
+            {
+              char rx_id(rx_id_str[0]);
+              Json::Value& rx(qth["rx"][rx_id_str]);
+              if (rx.isObject())
+              {
+                m_json_rx_map.emplace(rx_id, rx);
+                setRxSiglev(rx_id, 0);
+                setRxEnabled(rx_id, false);
+                setRxSqlOpen(rx_id, false);
+                setRxActive(rx_id, false);
+              }
+            }
+          }
+        }
+        if (qth.isMember("tx") && qth["tx"].isObject())
+        {
+          //std::cout << "### Found tx" << std::endl;
+          for (const auto& tx_id_str : qth["tx"].getMemberNames())
+          {
+            //std::cout << "### member=" << *it << std::endl;
+            if (tx_id_str.size() == 1)
+            {
+              char tx_id(tx_id_str[0]);
+              Json::Value& tx(qth["tx"][tx_id_str]);
+              if (tx.isObject())
+              {
+                m_json_tx_map.emplace(tx_id, tx);
+                setTxTransmit(tx_id, false);
+              }
+            }
+          }
+        }
+      }
+    }
   }
   catch (const Json::Exception& e)
   {
@@ -1253,15 +1310,6 @@ void ReflectorClient::connectionAuthenticated(const std::string& callsign)
     assert(client_callsign_map.find(m_callsign) == client_callsign_map.end());
     client_callsign_map[m_callsign] = this;
 
-    //const auto cert = m_reflector->loadClientCertificate(m_callsign);
-    //const auto peer_cert = m_con->sslPeerCertificate();
-    //if (!cert.isNull() && !peer_cert.isNull() &&
-    //    (cert.publicKey() != peer_cert.publicKey()))
-    //{
-    //  std::cout << m_callsign << ": Requesting CSR from peer" << std::endl;
-    //  sendMsg(MsgClientCsrRequest());
-    //}
-
     MsgServerInfo msg_srv_info(m_client_id, m_supported_codecs);
     m_reflector->nodeList(msg_srv_info.nodes());
     sendMsg(msg_srv_info);
@@ -1274,19 +1322,9 @@ void ReflectorClient::connectionAuthenticated(const std::string& callsign)
 
     if (m_client_proto_ver < ProtoVer(2, 0))
     {
-      if (TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients()))
-      {
-        std::cout << m_callsign << ": Select TG #"
-                  << m_reflector->tgForV1Clients() << std::endl;
-        m_current_tg = m_reflector->tgForV1Clients();
-      }
-      else
-      {
-        std::cout << m_callsign
-                  << ": V1 client not allowed to use default TG #"
-                  << m_reflector->tgForV1Clients() << std::endl;
-      }
+      setTg(m_reflector->tgForV1Clients());
     }
+
     m_reflector->broadcastMsg(MsgNodeJoined(m_callsign), ExceptFilter(this));
   }
   else
@@ -1345,6 +1383,61 @@ void ReflectorClient::renewClientCertificate(void)
   sendClientCert(cert);
   m_con_state = STATE_EXPECT_DISCONNECT;
 } /* ReflectorClient::renewClientCertificate */
+
+
+void ReflectorClient::setMonitoredTGs(const std::set<uint32_t>& tgs)
+{
+  m_monitored_tgs = tgs;
+
+  if (m_status != nullptr)
+  {
+    if (!m_status->isMember("monitoredTGs") ||
+        !(*m_status)["monitoredTGs"].isArray())
+    {
+      (*m_status)["monitoredTGs"] = Json::Value(Json::arrayValue);
+    }
+    Json::Value& monitored_tgs = (*m_status)["monitoredTGs"];
+    monitored_tgs.clear();
+    for (const auto& tg : tgs)
+    {
+      monitored_tgs.append(tg);
+    }
+  }
+} /* ReflectorClient::setMonitoredTGs */
+
+
+void ReflectorClient::setTg(uint32_t tg)
+{
+  if (tg != m_current_tg)
+  {
+    if (TGHandler::instance()->switchTo(this, tg))
+    {
+      std::cout << m_callsign << ": Select TG #" << tg << std::endl;
+    }
+    else
+    {
+      // FIXME: Notify the client that the TG selection was not allowed
+      std::cout << m_callsign << ": Not allowed to use TG #" << tg << std::endl;
+      TGHandler::instance()->switchTo(this, 0);
+      tg = 0;
+    }
+
+    m_current_tg = tg;
+  }
+
+  if (m_status != nullptr)
+  {
+    if (!TGHandler::instance()->showActivity(tg))
+    {
+      tg = 0;
+    }
+    (*m_status)["tg"] = tg;
+    (*m_status)["restrictedTG"] = TGHandler::instance()->isRestricted(tg);
+  }
+
+  updateIsTalker();
+} /* ReflectorClient::setTg */
+
 
 
 /*

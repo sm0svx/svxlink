@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <vector>
 #include <string>
+#include <json/json.h>
 
 
 /****************************************************************************
@@ -210,6 +211,8 @@ class Reflector : public sigc::trackable
     std::string checkCsr(const Async::SslCertSigningReq& req);
     Async::SslX509 csrReceived(Async::SslCertSigningReq& req);
 
+    Json::Value& clientStatus(const std::string& callsign);
+
   protected:
 
   private:
@@ -252,6 +255,7 @@ class Reflector : public sigc::trackable
     std::vector<uint8_t>        m_ca_md;
     std::vector<uint8_t>        m_ca_sig;
     std::string                 m_accept_cert_email;
+    Json::Value                 m_status;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
