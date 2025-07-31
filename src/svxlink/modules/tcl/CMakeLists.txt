@@ -19,10 +19,10 @@ install(
   DESTINATION ${SVX_MODULE_INSTALL_DIR}
 )
 install(
-  FILES ${MODNAME}.tcl.example
+  FILES TclModule.tcl ${MODNAME}.tcl.example
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
 )
 install(
-  FILES TclModule.tcl Module${MODNAME}.tcl.example
+  FILES Module${MODNAME}.tcl.example
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/modules.d
 )
