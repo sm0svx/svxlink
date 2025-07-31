@@ -47,6 +47,10 @@
   state is entered and the usual selection timeout sound when the state is
   existed.
 
+* Improved auto-QSY. The SvxReflector auto-QSY timer is now not started until
+  a talker has been active on the talkgroup. The auto-QSY procedure is
+  triggered at the first talker stop that occur after an auto-QSY timeout
+
 
 
  1.9.1 -- 01 Jul 2025
