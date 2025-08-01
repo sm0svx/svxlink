@@ -1357,11 +1357,9 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   Json::StreamWriter* writer = builder.newStreamWriter();
   writer->write(m_status, &os);
   delete writer;
+
   res.setContent("application/json", os.str());
-  if (req.method == "HEAD")
-  {
-    res.setSendContent(false);
-  }
+  res.setSendContent(req.method == "GET");
   res.setCode(200);
   con->write(res);
 } /* Reflector::requestReceived */
