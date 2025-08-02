@@ -23,6 +23,28 @@ find_package(GSM REQUIRED)
 include_directories(${GSM_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GSM_LIBRARY})
 
+# Find Qt6
+find_package(Qt6Core QUIET)
+if (Qt6Core_FOUND)
+  find_package(Qt6Gui REQUIRED)
+  find_package(Qt6Widgets REQUIRED)
+  find_package(Qt6Network REQUIRED)
+  find_package(Qt6Core5Compat REQUIRED)
+  include_directories(${Qt6Core_INCLUDE_DIRS} ${Qt6Gui_INCLUDE_DIRS}
+                      ${Qt6Widgets_INCLUDE_DIRS} ${Qt6Network_INCLUDE_DIRS}
+                      ${Qt6Core5Compat_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${Qt6Core_LIBRARIES} ${Qt6Gui_LIBRARIES}
+           ${Qt6Widgets_LIBRARIES} ${Qt6Network_LIBRARIES}
+           ${Qt6Core5Compat_LIBRARIES})
+
+  # Generate targets for moc, uic and rcc
+  QT6_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
+  QT6_WRAP_UI(FORMS_HEADERS ${FORMS})
+  QT6_ADD_RESOURCES(RESOURCES_RCC ${RESOURCES})
+endif()
+
+# If not Qt6 was found, try Qt5
+if (NOT Qt6Core_FOUND)
 # Find Qt5
 find_package(Qt5Core QUIET)
 if (Qt5Core_FOUND)
@@ -50,6 +72,7 @@ if (NOT Qt5Core_FOUND)
   QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
   QT4_WRAP_UI(FORMS_HEADERS ${FORMS})
   QT4_ADD_RESOURCES(RESOURCES_RCC ${RESOURCES})
+endif()
 endif()
 
 # We also need to add the current build directory to the include search path

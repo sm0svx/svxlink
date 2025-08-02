@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   QtApplication app(argc, argv);
   
   QTranslator translator;
-  translator.load(QString("qtel_%1").arg(QLocale::system().name()),
+  (void)translator.load(QString("qtel_%1").arg(QLocale::system().name()),
       SHARE_INSTALL_PREFIX "/qtel/translations");
   app.installTranslator(&translator);
 
@@ -161,8 +161,8 @@ int main(int argc, char **argv)
       int button = QMessageBox::critical(0, "Bad configuration",
 	  "There are one or more configuration items that have not been "
 	  "filled in. Please fill in the missing items.",
-	  "Configure", "Quit");
-      if (button == 1)
+	QMessageBox::Abort, QMessageBox::Ok);
+      if (button == QMessageBox::Abort)
       {
       	return 1;
       }

@@ -151,7 +151,7 @@ class HdlcFramer : public sigc::trackable
      * @brief   A signal emitted when there are bits to transmit
      * @param   bits The bits to transmit
      */
-    sigc::signal<void, const std::vector<bool>&> sendBits;
+    sigc::signal<void(const std::vector<bool>&)> sendBits;
 
   private:
     static const size_t DEFAULT_START_FLAG_CNT = 4;

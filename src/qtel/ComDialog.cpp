@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QCheckBox>
 #include <QSlider>
 #include <QTextCodec>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QPixmap>
 #include <QKeyEvent>
 #undef emit
@@ -281,11 +281,11 @@ void ComDialog::init(const QString& remote_name)
 {
   chat_codec = QTextCodec::codecForName(Settings::instance()->chatEncoding().toUtf8());
   
-  if (callsign.contains(QRegExp("-L$")))
+  if (callsign.contains(QRegularExpression("-L$")))
   {
     setWindowIcon(QPixmap(":/icons/images/link.xpm"));
   }
-  else if (callsign.contains(QRegExp("-R$")))
+  else if (callsign.contains(QRegularExpression("-R$")))
   {
     setWindowIcon(QPixmap(":/icons/images/repeater.xpm"));
   }
@@ -818,7 +818,7 @@ bool ComDialog::isChatText(const QString& msg)
     // three characters and a maximum of seven characters, excluding the
     // optional "-L" or "-R". To be classified as a chat message a ">" must
     // directly follow the callsign.
-  QRegExp rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
+  QRegularExpression rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
   return msg.contains(rexp);
 }
 

@@ -4,7 +4,10 @@ set(TRANSLATIONS
   qtel_hu.ts qtel_ja.ts qtel_fr.ts qtel_es.ts
   )
 
-if (Qt5Core_FOUND)
+if (Qt6Core_FOUND)
+    find_package(Qt6LinguistTools REQUIRED)
+  QT6_ADD_TRANSLATION(TRANSLATIONS_QM ${TRANSLATIONS})
+elseif (Qt5Core_FOUND)
   find_package(Qt5LinguistTools REQUIRED)
   QT5_ADD_TRANSLATION(TRANSLATIONS_QM ${TRANSLATIONS})
 elseif (QT4_FOUND)
