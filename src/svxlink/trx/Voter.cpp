@@ -126,7 +126,8 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 		mem_fun(*this, &SatRx::rxSquelchOpen));
 	rx->signalLevelUpdated.connect(
 		mem_fun(*this, &SatRx::rxSignalLevelUpdated));
-        rx->toneDetected.connect(toneDetected.make_slot());
+        rx->toneDetected.connect(
+                mem_fun(*this, &SatRx::onToneDetected));
 
         // FIXME: We should take care of publishStateEvent
 
@@ -224,6 +225,12 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       valve.setOpen(!do_stop);
       if (!do_stop)
       {
+        if (tone_detected >= 0.0f)
+        {
+          toneDetected(tone_detected);
+          tone_detected = -1.0f;
+        }
+
       	DtmfBuf::iterator dit;
       	for (dit=dtmf_buf.begin(); dit!=dtmf_buf.end(); ++dit)
 	{
@@ -277,6 +284,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     bool          enabled;
     Rx::MuteState mute_state;
     unsigned      sql_open_delay;
+    float         tone_detected   {-1.0};
     
     void onDtmfDigitDetected(char digit, int duration)
     {
@@ -301,7 +309,19 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       	selcallSequenceDetected(sequence);
       }
     }
-    
+
+    void onToneDetected(float tone)
+    {
+      if (!valve.isOpen())
+      {
+        tone_detected = tone;
+      }
+      else
+      {
+        toneDetected(tone);
+      }
+    }
+
     void rxSquelchOpen(bool is_open)
     {
       if (is_open)
@@ -345,6 +365,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
         }
         dtmf_buf.clear();
         selcall_buf.clear();
+        tone_detected = -1.0f;
       }
     }
 };

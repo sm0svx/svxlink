@@ -253,6 +253,7 @@ proc tg_command_activation {new_tg old_tg} {
 #
 proc tg_inhibit_activation {new_tg old_tg} {
   #puts "### tg_inhibit_activation: new_tg=$new_tg old_tg=$old_tg"
+  playSilence 100
   playMsg "local"
   #playMsg "talk_group"
 }
@@ -428,11 +429,12 @@ proc local_talker_stop {} {
   variable reflector_connection_established
   #puts "### Local talker stop"
   if {!$reflector_connection_established && ($selected_tg > 0)} {
+    playSilence 200
     for {set i 0} {$i<12} {set i [expr $i+1]} {
       playTone 500 100 12
       playTone 900 100 12
     }
-    playSilence 100
+    playSilence 200
   }
 }
 

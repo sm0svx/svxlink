@@ -806,13 +806,13 @@ void ReflectorLogic::remoteReceivedTgUpdated(LogicBase *logic, uint32_t tg)
   //          << "  m_mute_first_tx_loc=" << m_mute_first_tx_loc
   //          << "  m_tg_select_timeout_cnt=" << m_tg_select_timeout_cnt
   //          << std::endl;
-  if (m_selected_tg == 0)
+  if ((m_selected_tg == 0) && (m_tg_select_timeout_cnt == 0))
   {
     if (tg > 0)
     {
       selectTg(tg, "tg_local_activation", !m_mute_first_tx_loc);
     }
-    else if (m_tg_select_timeout_cnt == 0)
+    else
     {
       std::cout << name() << ": Inhibit TG activation" << std::endl;
       selectTg(tg, "tg_inhibit_activation", false);
@@ -2044,8 +2044,8 @@ bool ReflectorLogic::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
 {
   if (static_cast<size_t>(count) < UdpCipher::AADLEN)
   {
-    std::cout << "### ReflectorLogic::udpCipherDataReceived: Datagram too "
-                 "short to hold associated data" << std::endl;
+    //std::cout << "### ReflectorLogic::udpCipherDataReceived: Datagram too "
+    //             "short to hold associated data" << std::endl;
     return true;
   }
   stringstream ss;

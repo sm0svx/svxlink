@@ -53,6 +53,13 @@
 
 * Reduced CPU load for the http /status endpoint in SvxReflector.
 
+* SvxReflector security fix.
+
+* CTCSS_TO_TG_DELAY default value changed from 1000 to 0.
+
+* Bugfix in the receiver voter. Tone detections was not buffered, like other
+  signalling, until a receiver was selected.
+
 
 
  1.9.1 -- 01 Jul 2025
