@@ -693,4 +693,7 @@ Message</string>
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>browseConnectSound()</slot>
+ </slots>
 </ui>
