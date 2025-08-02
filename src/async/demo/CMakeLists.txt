@@ -25,6 +25,21 @@ foreach(prog ${CPPPROGS})
 endforeach(prog)
 
 if(USE_QT)
+  # Find Qt6
+  find_package(Qt6Core QUIET)
+  if (Qt6Core_FOUND)
+    message("-- Found Qt6 version ${Qt6Core_VERSION_STRING}")
+    find_package(Qt6Gui REQUIRED)
+    find_package(Qt6Widgets REQUIRED)
+    find_package(Qt6Network REQUIRED)
+    include_directories(${Qt6Core_INCLUDE_DIRS} ${Qt6Gui_INCLUDE_DIRS}
+                        ${Qt6Widgets_INCLUDE_DIRS} ${Qt6Network_INCLUDE_DIRS})
+    set(LIBS ${LIBS} ${Qt6Core_LIBRARIES} ${Qt6Gui_LIBRARIES}
+             ${Qt6Widgets_LIBRARIES} ${Qt6Network_LIBRARIES})
+    QT6_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
+  endif()
+
+  if (NOT Qt6Core_FOUND)
   # Find Qt5
   find_package(Qt5Core QUIET)
   if (Qt5Core_FOUND)
@@ -44,6 +59,7 @@ if(USE_QT)
     include(${QT_USE_FILE})
     set(LIBS ${LIBS} ${QT_LIBRARIES})
     QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
+  endif()
   endif()
 
   foreach(prog ${QTPROGS})

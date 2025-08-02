@@ -195,7 +195,7 @@ class Settings : public sigc::trackable
     void setConnectToIp(const QString &host);
     const QString& connectToIp(void) const { return m_connect_to_ip; }
     
-    sigc::signal<void> configurationUpdated;
+    sigc::signal<void()> configurationUpdated;
     
   protected:
     
