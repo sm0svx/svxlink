@@ -352,7 +352,10 @@ void ReflectorClient::updateIsTalker(void)
   if (m_status != nullptr)
   {
     auto talker = TGHandler::instance()->talkerForTG(m_current_tg);
-    (*m_status)["isTalker"] = (talker == this);
+    (*m_status)["isTalker"] = (
+        TGHandler::instance()->showActivity(m_current_tg) &&
+        (talker == this)
+        );
   }
 } /* ReflectorClient:;updateIsTalker */
 
