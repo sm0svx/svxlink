@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <algorithm>
 #include <iterator>
+#include <regex>
 
 
 /****************************************************************************
@@ -236,6 +237,18 @@ bool LinkManager::initialize(Async::Config &cfg,
       {
         std::cerr << "*** WARNING: missing param " << link.name
                   << "/TIMEOUT=??, set to default (30 sec)" << std::endl;
+        timeout = 30;
+      }
+    }
+
+    if (cfg.getValue(link.name, "ACTIVATE_ON_TG", link.auto_activate_on_tg))
+    {
+        // An automatically connected link should be disconnected after a
+        // while so the TIMEOUT configuration variable must be set.
+      if (timeout <= 0)
+      {
+        std::cerr << "*** WARNING: Missing configuration " << link.name
+                  << "/TIMEOUT=??, setting to default (30 sec)" << std::endl;
         timeout = 30;
       }
     }
@@ -446,7 +459,7 @@ void LinkManager::allLogicsStarted(void)
       // If default active, activate the link
     if (link.default_active)
     {
-      activateLink(link);
+      activateLink(link, "DEFAULT_ACTIVE");
     }
   }
 } /* LinkManager::allLogicsStarted */
@@ -482,7 +495,7 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
   {
     if (!link.is_activated)
     {
-      activateLink(link);
+      activateLink(link, "DTMF command");
       ss << "activating_link \"";
       ss << logic_props.announcement_name + "\"";
     }
@@ -771,11 +784,16 @@ void LinkManager::updateConnections(void)
 } /* LinkManager::updateConnections */
 
 
-void LinkManager::activateLink(Link &link)
+void LinkManager::activateLink(Link &link, const std::string& reason)
 {
   if (!link.is_activated)
   {
-    cout << "Activating link " << link.name << endl;
+    std::cout << "Activating link '" << link.name << "'";
+    if (!reason.empty())
+    {
+      std::cout << " due to " << reason;
+    }
+    std::cout << std::endl;
     link.is_activated = true;
     updateConnections();
     checkTimeoutTimer(link);
@@ -783,11 +801,16 @@ void LinkManager::activateLink(Link &link)
 } /* LinkManager::activateLink */
 
 
-void LinkManager::deactivateLink(Link &link)
+void LinkManager::deactivateLink(Link &link, const std::string& reason)
 {
   if (link.is_activated)
   {
-    cout << "Deactivating link " << link.name << endl;
+    std::cout << "Deactivating link " << link.name;
+    if (!reason.empty())
+    {
+      std::cout << " due to " << reason;
+    }
+    std::cout << std::endl;
     link.is_activated = false;
     updateConnections();
     checkTimeoutTimer(link);
@@ -852,7 +875,7 @@ void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 
   if (!link->is_activated && link->default_active)
   {
-    activateLink(*link);
+    activateLink(*link, "TIMEOUT on default activated link");
   }
 } /* LinkManager::linkTimeout */
 
@@ -894,10 +917,10 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const LogicBase *logic)
       StrSet::iterator acit = link.auto_activate.find(logic->name());
       if (acit != link.auto_activate.end())
       {
-        /* cout << "### Activating link " << link_name
-             << " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;
-        */
-        activateLink(link);
+        std::ostringstream ss;
+        ss << "ACTIVATE_ON_ACTIVITY from logic '"
+           << logic->name() << "'";
+        activateLink(link, ss.str());
       }
     }
 
@@ -930,6 +953,33 @@ void LinkManager::onReceivedTgUpdated(LogicBase *src_logic, uint32_t tg)
 {
   //cout << "### LinkManager::onReceivedTgUpdated: logic=" << src_logic->name()
   //     << "  tg=" << tg << endl;
+
+
+    // Loop through all links associated with the logic to see if we should
+    // auto activate any links
+  for (auto& link_spec : links)
+  {
+    Link &link = link_spec.second;
+
+#if 1
+    std::ostringstream tgss;
+    tgss << tg;
+    auto aait = link.auto_activate_on_tg.find(src_logic->name());
+    if (!link.is_activated &&
+        //(link.logic_props.find( != link.logic_props.end()) &&
+        aait != link.auto_activate_on_tg.end() &&
+        std::regex_match(tgss.str(), std::regex(aait->second)))
+    {
+      std::ostringstream ss;
+      ss << "ACTIVATE_ON_TG from logic '"
+         << src_logic->name() << "'"
+         << " which has activated talkgroup " << tgss.str();
+      activateLink(link, ss.str());
+    }
+#endif
+  }
+
+
   const Async::AudioSelector *selector = sinks[src_logic->name()].selector;
   const ConMap& con_map = sinks[src_logic->name()].connectors;
   for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)

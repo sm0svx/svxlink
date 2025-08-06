@@ -135,12 +135,14 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     int			port;
     Async::TcpClient<>* con;
     Async::Timer        *beacon_timer;
+    Async::Timer        *status_timer;
     Async::Timer        *reconnect_timer;
     Async::Timer        *offset_timer;
 
     int			num_connected;
 
     std::string         recv_buf;
+    std::string         current_status;
 
     void  sendMsg(std::string aprsmsg);
     std::string addrStr(const std::string& source) const;
@@ -154,6 +156,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     std::string addresseeStr(const std::string& call) const;
     std::string prependSpaceIfNotEmpty(const std::string& str) const;
     void  sendAprsBeacon(Async::Timer *t);
+    void  sendAprsStatus(const std::string& status);
 
     void  tcpConnected(void);
     void  aprsLogin(void);

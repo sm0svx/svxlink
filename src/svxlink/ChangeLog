@@ -5,9 +5,64 @@
   down when a talkgroup is active, a buzzing sound will be prepended to the
   roger sound.
 
+* Writing to the logfile in SvxLink Server is now done from a separate thread.
+  That will increase the accuracy of the timestamps in some situations.
+  Previously multiple log rows could be lumped together in a block where all
+  rows had the same timestamp. That made it harder to debug some problems.
+
+* Support for hidraw PTT and squelch for the CM119A audio chip added.
+
+* New config variable MACRO_PREFIX used to set a custom or no prefix for DTMF
+  macro commands.
+
+* New TCL event "siglev_updated" that is called when the siglev value is
+  updated on the receiver.
+
+* New configuration variable for RepeaterLogic, SQL_TIMEOUT, to set a soft
+  timeout on transmissions.
+
+* Handle module idle commands in ModulePropagationMonitor.
+
+* Bugfix in ModuleSelCallEnc: If an invalid selcall variant ID was specified
+  the module crashed.
+
+* Bugfix in ModuleTclVoiceMail: If no password was specified on login the
+  module crashed.
+
+* SvxLink can now log to syslog by specifying --logfile=syslog: (including the
+  colon character)
+
+* New configuration variable ACTIVATE_ON_TG that can be used in a logic
+  linking configuration section to activate the link when a talkgroup is
+  activated i a logic core.
+
+* An APRS status message containing application name and version will now be
+  sent every 24 hours.
+
+* Improved TG inhibit activation in ReflectorLogic. When there is activity
+  (e.g. squelch open) in another logic core, and the talkgroup is indicated as
+  0, remote TG activation as well as local activity activation (e.g. CTCSS to
+  TG) is inhibited. Previously only remote activation was inhibited. By
+  default there now also is an announcement (e.g. "local") when the inhibited
+  state is entered and the usual selection timeout sound when the state is
+  existed.
+
+* Improved auto-QSY. The SvxReflector auto-QSY timer is now not started until
+  a talker has been active on the talkgroup. The auto-QSY procedure is
+  triggered at the first talker stop that occur after an auto-QSY timeout
+
+* Reduced CPU load for the http /status endpoint in SvxReflector.
+
+* SvxReflector security fix.
+
+* CTCSS_TO_TG_DELAY default value changed from 1000 to 0.
+
+* Bugfix in the receiver voter. Tone detections was not buffered, like other
+  signalling, until a receiver was selected.
 
 
- 1.9.1 -- ?? ??? 2025
+
+ 1.9.1 -- 01 Jul 2025
 ----------------------
 
 * Fix build errors for newer versions of gcc on some distros

@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
@@ -33,10 +31,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <termios.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
 #include <popt.h>
 #include <locale.h>
 #include <signal.h>
@@ -49,12 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <iostream>
-#include <iomanip>
 #include <algorithm>
 #include <vector>
-#include <cstring>
-#include <set>
-#include <cerrno>
 
 
 /****************************************************************************
@@ -80,10 +70,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "version/SVXLINK.h"
-#include "MsgHandler.h"
 #include "Logic.h"
 #include "LinkManager.h"
-
+#include "LogWriter.h"
 
 
 /****************************************************************************
@@ -97,7 +86,6 @@ using namespace Async;
 using namespace sigc;
 
 
-
 /****************************************************************************
  *
  * Defines & typedefs
@@ -105,7 +93,6 @@ using namespace sigc;
  ****************************************************************************/
 
 #define PROGRAM_NAME "SvxLink"
-
 
 
 /****************************************************************************
@@ -124,16 +111,10 @@ using namespace sigc;
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
-static void stdout_handler(FdWatch *w);
 static void initialize_logics(Config &cfg);
 static void sighup_handler(int signal);
 static void sigterm_handler(int signal);
 static void handle_unix_signal(int signum);
-static bool logfile_open(void);
-static void logfile_reopen(const char *reason);
-static bool logfile_write_timestamp(void);
-static void logfile_write(const char *buf);
-static void logfile_flush(void);
 
 
 /****************************************************************************
@@ -150,18 +131,18 @@ static void logfile_flush(void);
  *
  ****************************************************************************/
 
-static char   	      	  *pidfile_name = NULL;
-static char   	      	  *logfile_name = NULL;
-static char   	      	  *runasuser = NULL;
-static char   	      	  *config = NULL;
-static int    	      	  daemonize = 0;
-static int    	      	  reset = 0;
-static int    	      	  quiet = 0;
-static int    	      	  logfd = -1;
-static vector<LogicBase*> logic_vec;
-static FdWatch	      	  *stdin_watch = 0;
-static FdWatch	      	  *stdout_watch = 0;
-static string         	  tstamp_format;
+namespace {
+  char*                 pidfile_name = nullptr;
+  char*                 logfile_name = nullptr;
+  char*                 runasuser = nullptr;
+  char*                 config = nullptr;
+  int                   daemonize = 0;
+  int                   reset = 0;
+  int                   quiet = 0;
+  vector<LogicBase*>    logic_vec;
+  FdWatch*              stdin_watch = 0;
+  LogWriter             logwriter;
+};
 
 
 /****************************************************************************
@@ -198,7 +179,6 @@ int main(int argc, char **argv)
 
   parse_arguments(argc, const_cast<const char **>(argv));
 
-  int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (quiet || (logfile_name != 0))
   {
@@ -217,57 +197,13 @@ int main(int argc, char **argv)
 
     if (logfile_name != 0)
     {
-        /* Open the logfile */
-      if (!logfile_open())
-      {
-        exit(1);
-      }
-      atexit(logfile_flush);
-
-        /* Create a pipe to route stdout and stderr through */
-      if (pipe(pipefd) == -1)
-      {
-        perror("pipe");
-        exit(1);
-      }
-      int flags = fcntl(pipefd[0], F_GETFL);
-      if (flags == -1)
-      {
-        perror("fcntl(..., F_GETFL)");
-        exit(1);
-      }
-      flags |= O_NONBLOCK;
-      if (fcntl(pipefd[0], F_SETFL, flags) == -1)
-      {
-        perror("fcntl(..., F_SETFL)");
-        exit(1);
-      }
-      stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-      stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
-
+      logwriter.setDestinationName(logfile_name);
       if (!quiet)
       {
-          /* Redirect stdout to the logpipe */
-        if (dup2(pipefd[1], STDOUT_FILENO) == -1)
-        {
-          perror("dup2(stdout)");
-          exit(1);
-        }
-
-          /* Force stdout to line buffered mode */
-        if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-        {
-          perror("setlinebuf");
-          exit(1);
-        }
+        logwriter.redirectStdout();
       }
-
-        /* Redirect stderr to the logpipe */
-      if (dup2(pipefd[1], STDERR_FILENO) == -1)
-      {
-        perror("dup2(stderr)");
-        exit(1);
-      }
+      logwriter.redirectStderr();
+      logwriter.start();
 
         /* Redirect stdin to /dev/null */
       if (dup2(devnull, STDIN_FILENO) == -1)
@@ -344,8 +280,6 @@ int main(int argc, char **argv)
     home_dir = ".";
   }
   
-  tstamp_format = "%c";
-
   Config cfg;
   string cfg_filename;
   if (config != NULL)
@@ -439,9 +373,11 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
-  
+
+  std::string tstamp_format = "%c";
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
-  
+  logwriter.setTimestampFormat(tstamp_format);
+
   cout << PROGRAM_NAME " v" SVXLINK_VERSION
           " Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
@@ -542,24 +478,17 @@ int main(int argc, char **argv)
     Async::Application::app().quit();
   }
 
+  std::cout << "NOTICE: Initialization done. Starting main application."
+            << std::endl;
   app.exec();
 
   LinkManager::deleteInstance();
   LocationInfo::deleteInstance();
 
-  logfile_flush();
-  
   if (stdin_watch != 0)
   {
     delete stdin_watch;
     tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
-  }
-
-  if (stdout_watch != 0)
-  {
-    delete stdout_watch;
-    close(pipefd[0]);
-    close(pipefd[1]);
   }
 
   vector<LogicBase*>::iterator lit;
@@ -568,17 +497,9 @@ int main(int argc, char **argv)
     Async::Plugin::unload(*lit);
   }
   logic_vec.clear();
-  
-  if (logfd != -1)
-  {
-    close(logfd);
-  }
-  
+
   return 0;
-  
 } /* main */
-
-
 
 
 /****************************************************************************
@@ -678,7 +599,7 @@ static void stdinHandler(FdWatch *w)
   int cnt = ::read(STDIN_FILENO, buf, 1);
   if (cnt == -1)
   {
-    fprintf(stderr, "*** error reading from stdin\n");
+    fprintf(stderr, "*** ERROR: Reading from stdin failed\n");
     Application::app().quit();
     return;
   }
@@ -718,22 +639,6 @@ static void stdinHandler(FdWatch *w)
       break;
   }
 }
-
-
-static void stdout_handler(FdWatch *w)
-{
-  ssize_t len =  0;
-  do
-  {
-    char buf[256];
-    len = read(w->fd(), buf, sizeof(buf)-1);
-    if (len > 0)
-    {
-      buf[len] = 0;
-      logfile_write(buf);
-    }
-  } while (len > 0);
-} /* stdout_handler  */
 
 
 static void initialize_logics(Config &cfg)
@@ -814,7 +719,8 @@ static void sighup_handler(int signal)
     cout << "Ignoring SIGHUP\n";
     return;
   }
-  logfile_reopen("SIGHUP received");
+  std::cout << "SIGPIPE received" << std::endl;
+  logwriter.reopenLogfile();
 } /* sighup_handler */
 
 
@@ -830,13 +736,13 @@ static void sigterm_handler(int signal)
       signame = "SIGINT";
       break;
     default:
-      signame = "???";
+      signame = "Unknown signal";
       break;
   }
-  string msg("\n");
-  msg += signame;
-  msg += " received. Shutting down application...\n";
-  logfile_write(msg.c_str());
+
+  std::cout << "\nNOTICE: " << signame
+            << " received. Shutting down application..."
+            << std::endl;
   Application::app().quit();
 } /* sigterm_handler */
 
@@ -856,134 +762,6 @@ static void handle_unix_signal(int signum)
 } /* handle_unix_signal */
 
 
-static bool logfile_open(void)
-{
-  if (logfd != -1)
-  {
-    close(logfd);
-  }
-  
-  logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
-  if (logfd == -1)
-  {
-    cerr << "open(\"" << logfile_name << "\"): " << strerror(errno) << endl;
-    return false;
-  }
-
-  return true;
-  
-} /* logfile_open */
-
-
-static void logfile_reopen(const char *reason)
-{
-  logfile_write_timestamp();
-  string msg(reason);
-  msg += ". Reopening logfile\n";
-  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
-
-  logfile_open();
-
-  logfile_write_timestamp();
-  msg = reason;
-  msg += ". Logfile reopened\n";
-  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
-} /* logfile_reopen */
-
-
-static bool logfile_write_timestamp(void)
-{
-  if (!tstamp_format.empty())
-  {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    string fmt(tstamp_format);
-    const string frac_code("%f");
-    size_t pos = fmt.find(frac_code);
-    if (pos != string::npos)
-    {
-      stringstream ss;
-      ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
-      fmt.replace(pos, frac_code.length(), ss.str());
-    }
-    struct tm tm;
-    char tstr[256];
-    size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(),
-                           localtime_r(&tv.tv_sec, &tm));
-    ssize_t ret = write(logfd, tstr, tlen);
-    if (ret != static_cast<ssize_t>(tlen))
-    {
-      return false;
-    }
-    ret = write(logfd, ": ", 2);
-    if (ret != 2)
-    {
-      return false;
-    }
-  }
-  return true;
-} /* logfile_write_timestamp */
-
-
-static void logfile_write(const char *buf)
-{
-  if (logfd == -1)
-  {
-    cout << buf;
-    return;
-  }
-  
-  const char *ptr = buf;
-  while (*ptr != 0)
-  {
-    static bool print_timestamp = true;
-    ssize_t ret;
-    
-    if (print_timestamp)
-    {
-      if (!logfile_write_timestamp())
-      {
-        logfile_reopen("Write error");
-        return;
-      }
-      print_timestamp = false;
-    }
-
-    size_t write_len = 0;
-    const char *nl = strchr(ptr, '\n');
-    if (nl != 0)
-    {
-      write_len = nl-ptr+1;
-      print_timestamp = true;
-    }
-    else
-    {
-      write_len = strlen(ptr);
-    }
-    ret = write(logfd, ptr, write_len);
-    if (ret != static_cast<ssize_t>(write_len))
-    {
-      logfile_reopen("Write error");
-      return;
-    }
-    ptr += write_len;
-  }
-} /* logfile_write */
-
-
-static void logfile_flush(void)
-{
-  cout.flush();
-  cerr.flush();
-  if (stdout_watch != 0)
-  {
-    stdout_handler(stdout_watch);
-  }
-} /*  logfile_flush */
-
-
-
 /*
  * This file has not been truncated
  */
-

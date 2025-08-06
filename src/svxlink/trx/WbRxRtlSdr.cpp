@@ -377,26 +377,29 @@ void WbRxRtlSdr::findBestCenterFq(void)
 
 void WbRxRtlSdr::rtlReadyStateChanged(void)
 {
-  cout << name() << ": ";
   if (rtl->isReady())
   {
-    cout << "Changed state to READY\n";
+    std::cout << "NOTICE: " << name() << ": "
+              << "Changed state to READY" << std::endl;
 
-    cout << "\tUsing device      : " << rtl->displayName() << endl;
-    cout << "\tTuner type        : " << rtl->tunerTypeString() << endl;
-    vector<int> int_tuner_gains = rtl->getTunerGains();
-    vector<float> tuner_gains;
+    std::cout << name() << ": Using device      : " << rtl->displayName()
+              << std::endl;
+    std::cout << name() << ": Tuner type        : " << rtl->tunerTypeString()
+              << std::endl;
+    std::vector<int> int_tuner_gains = rtl->getTunerGains();
+    std::vector<float> tuner_gains;
     tuner_gains.assign(int_tuner_gains.begin(), int_tuner_gains.end());
-    transform(tuner_gains.begin(), tuner_gains.end(),
-        tuner_gains.begin(), std::bind(divides<float>(), _1, 10.0));
-    cout << "\tValid tuner gains : ";
-    copy(tuner_gains.begin(), tuner_gains.end(),
-        ostream_iterator<float>(cout, " "));
-    cout << endl;
+    std::transform(tuner_gains.begin(), tuner_gains.end(),
+                   tuner_gains.begin(), std::bind(divides<float>(), _1, 10.0));
+    std::cout << name() << ": Valid tuner gains : ";
+    std::copy(tuner_gains.begin(), tuner_gains.end(),
+              ostream_iterator<float>(std::cout, " "));
+    std::cout << std::endl;
   }
   else
   {
-    cout << "Changed state to NOT READY\n";
+    std::cerr << "*** WARNING: " << name() << ": "
+              << "Changed state to NOT READY" << std::endl;
   }
 
   readyStateChanged();

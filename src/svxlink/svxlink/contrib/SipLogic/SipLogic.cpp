@@ -745,8 +745,8 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     return false;
   }
   logic_event_handler = new EventHandler(event_handler_str, name());
-  logic_event_handler->setVariable("is_core_event_handler", "1");
   logic_event_handler->setVariable("logic_name", name().c_str());
+  logic_event_handler->setVariable("logic_type", type());
   logic_event_handler->setVariable("sip_ctrl_pty", dtmf_ctrl_pty_path);
 
   logic_event_handler->playFile.connect(mem_fun(*this, &SipLogic::playLogicFile));
@@ -779,8 +779,8 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   /*************** outgoing to sip ********************/
 
   sip_event_handler = new EventHandler(event_handler_str, name());
-  sip_event_handler->setVariable("is_core_event_handler", "1");
   sip_event_handler->setVariable("logic_name", name().c_str());
+  sip_event_handler->setVariable("logic_type", type());
   sip_event_handler->setVariable("sip_ctrl_pty", dtmf_ctrl_pty_path);
   sip_event_handler->setVariable("sip_proxy_server", m_sipserver);
   sip_event_handler->setVariable("sip_proxy_port", m_sip_port);

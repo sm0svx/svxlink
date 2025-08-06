@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JUNE 2025" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JULY 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -331,6 +331,16 @@ sounds and roger beeps will not have tone sent with them though.
 will always transmit a CTCSS tone as soon as the transmitter is turned on.
 .RE
 .TP
+.B MACRO_PREFIX
+Zero or more DTMF digits a command must start with to be identified as a macro
+command. If a prefix is set, macro commands will have higher priority in the
+command hierarchy. For example, if a module is active the macro will be handled
+as usual by the logic core whereas if no prefix is set the command will go to
+the module. If the user want the core to handle the macro, the command have to
+be prefixed with a star ("force core command").
+Default prefix is 'D'.
+.RE
+.TP
 .B MACROS
 Point out a section that contains the macros that should be used by this logic
 core. See the section description for macros below for more information.
@@ -424,9 +434,9 @@ Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .B CTCSS_TO_TG_DELAY
 The delay for reporting detected talkgroup from when a CTCSS tone is detected.
 If the squelch close before the delay time has expired, no talkgroup will be
-reported. Default: 1000.
+reported. Default: 0.
 
-Example: CTCSS_TO_TG_DELAY=0
+Example: CTCSS_TO_TG_DELAY=1000
 .
 .SS Simplex Logic Section
 .
@@ -583,6 +593,13 @@ interference on the frequency that open the squelch by short bursts.
 This configuration variable is used to specify the maximum number of consecutive
 short squelch openings allowed before shutting the repeater down. A good value
 is in between 5-10.
+.TP
+.B SQL_TIMEOUT
+This is a soft timeout value, in seconds, that can be used to indicate to
+repeater users that they have exceeded the recommended maximum time for a
+transmission. When the time is up, a sound will be emitted once every second.
+When the squelch closes, or alternatively when the roger sound is sent, a
+message informing about the timeout will be played back.
 .TP
 .B ACTIVATE_MODULE_ON_LONG_CMD
 This configuration variable activate a feature that might help users not aware
@@ -1129,6 +1146,12 @@ possible application for this is for example to make the connection of a
 microphone/speaker combination (without DTMF encoder) for brief announcements
 but without having to constantly listen in.
 Example: ACTIVATE_ON_ACTIVITY=MicSpkrLogic
+.TP
+.B ACTIVATE_ON_TG
+Enter a comma separated list of entries on the form logic:tg_regex, which
+should automatically activate the link if the specified talkgroup regular
+expression matches a talkgroup that is activated on the specified logic core.
+Example: ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123
 .
 .SS Local Receiver Section
 .

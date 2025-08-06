@@ -216,15 +216,15 @@ std::string Rx::muteStateToString(MuteState mute_state)
 
 Rx::Rx(Config &cfg, const string& name)
   : m_name(name), m_verbose(true), m_sql_open(false), m_cfg(cfg),
-    m_sql_tmo_timer(0), m_mute_state(MUTE_ALL)
+    /*m_sql_tmo_timer(0),*/ m_mute_state(MUTE_ALL)
 {
 } /* Rx::Rx */
 
 
 Rx::~Rx(void)
 {
-  delete m_sql_tmo_timer;
-  m_sql_tmo_timer = nullptr;
+  //delete m_sql_tmo_timer;
+  //m_sql_tmo_timer = nullptr;
 } /* Rx::~Rx */
 
 
@@ -335,10 +335,10 @@ void Rx::setSquelchState(bool is_open, const std::string& info)
   m_sql_info = info;
   squelchOpen(is_open);
 
-  if (m_sql_tmo_timer != 0)
-  {
-    m_sql_tmo_timer->setEnable(is_open);
-  }
+  //if (m_sql_tmo_timer != 0)
+  //{
+  //  m_sql_tmo_timer->setEnable(is_open);
+  //}
 } /* Rx::setSquelchState */
 
 
@@ -354,12 +354,12 @@ void Rx::setAudioSourceHandler(Async::AudioSource* src)
  *
  ****************************************************************************/
 
-void Rx::sqlTimeout(Timer *t)
-{
-  cerr << "*** WARNING: The squelch was open for too long for receiver "
-       << name() << ". Forcing it closed.\n";
-  setSquelchState(false, "TIMEOUT");
-} /* Rx::sqlTimeout */
+//void Rx::sqlTimeout(Timer *t)
+//{
+//  cerr << "*** WARNING: The squelch was open for too long for receiver "
+//       << name() << ". Forcing it closed.\n";
+//  setSquelchState(false, "TIMEOUT");
+//} /* Rx::sqlTimeout */
 
 
 

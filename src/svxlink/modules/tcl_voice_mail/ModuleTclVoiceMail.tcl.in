@@ -12,17 +12,8 @@
 #
 namespace eval TclVoiceMail {
 
-#
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
-
-#
-# Extract the module name from the current namespace
-#
-set module_name [namespace tail [namespace current]];
+# Source base functionality for a TCL module
+sourceTclWithOverrides "TclModule.tcl"
 
 #
 # The user id of the currently logged in user
@@ -55,7 +46,7 @@ set mail_smtp_url "smtp://127.0.0.1:25";
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
 set cfg_home ""
 if {[info exists ::env(HOME)]} {
-  set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
+  set cfg_home "$::env(HOME)/.svxlink/TclVoiceMail.conf";
 }
 
 
@@ -65,29 +56,6 @@ if {[info exists ::env(HOME)]} {
 #
 set max_subj_time 10000
 set max_mesg_time 120000
-
-
-#
-# A convenience function for printing out information prefixed by the
-# module name
-#
-#   msg - The message to print
-#
-proc printInfo {msg} {
-  variable module_name;
-  puts "$module_name: $msg";
-}
-
-
-#
-# A convenience function for calling an event handler
-#
-#   ev - The event string to execute
-#
-proc processEvent {ev} {
-  variable module_name
-  ::processEvent "$module_name" "$ev"
-}
 
 
 #
@@ -150,16 +118,6 @@ proc deactivateCleanup {} {
   abortRecording
   set userid ""
   setState "idle"
-}
-
-
-#
-# Executed when a DTMF digit (0-9, A-F, *, #) is received
-#
-#   char - The received DTMF digit
-#   duration - The duration of the received DTMF digit
-#
-proc dtmfDigitReceived {char duration} {
 }
 
 
@@ -236,7 +194,6 @@ proc squelchOpen {is_open} {
   variable mail_subj;
   variable mail_msg;
   variable CFG_ID;
-  variable ::Logic::CFG_CALLSIGN;
   variable max_subj_time;
   variable max_mesg_time;
   
@@ -280,15 +237,6 @@ proc squelchOpen {is_open} {
       setState "logged_in";
     }
   }
-}
-
-
-#
-# Executed when all announcement messages has been played.
-# Note that this function also may be called even if it wasn't this module
-# that initiated the message playing.
-#
-proc allMsgsWritten {} {
 }
 
 

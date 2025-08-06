@@ -12,61 +12,8 @@
 #
 namespace eval PropagationMonitor {
 
-#
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
-
-
-#
-# Extract the module name from the current namespace
-#
-set module_name [namespace tail [namespace current]];
-
-
-#
-# A convenience function for printing out information prefixed by the
-# module name
-#
-proc printInfo {msg} {
-  variable module_name;
-  puts "$module_name: $msg";
-}
-
-
-#
-# A convenience function for calling an event handler
-#
-proc processEvent {ev} {
-  variable module_name
-  ::processEvent "$module_name" "$ev"
-}
-
-
-#
-# Executed when this module is being activated
-#
-proc activateInit {} {
-  printInfo "Module activated"
-}
-
-
-#
-# Executed when this module is being deactivated.
-#
-proc deactivateCleanup {} {
-  printInfo "Module deactivated"
-}
-
-
-#
-# Executed when a DTMF digit (0-9, A-F, *, #) is received
-#
-proc dtmfDigitReceived {char duration} {
-  printInfo "DTMF digit $char received with duration $duration milliseconds";
-}
+# Source base functionality for a TCL module
+sourceTclWithOverrides "TclModule.tcl"
 
 
 #
@@ -90,26 +37,11 @@ proc dtmfCmdReceived {cmd} {
 #
 proc dtmfCmdReceivedWhenIdle {cmd} {
   #printInfo "DTMF command received while idle: $cmd";
-}
-
-
-#
-# Executed when the squelch open or close. If it's open is_open is set to 1,
-# otherwise it's set to 0.
-#
-proc squelchOpen {is_open} {
-  if {$is_open} {set str "OPEN"} else {set str "CLOSED"};
-  printInfo "The squelch is $str";
-}
-
-
-#
-# Executed when all announcement messages has been played.
-# Note that this function also may be called even if it wasn't this module
-# that initiated the message playing.
-#
-proc allMsgsWritten {} {
-  #printInfo "all_msgs_written called...";
+  if {$cmd == "0"} {
+    processEvent "play_help"
+  } else {
+    processEvent "unknown_command $cmd"
+  }
 }
 
 
@@ -280,8 +212,7 @@ if {![file exists $CFG_SPOOL_DIR/vhfdx/archive]} {
   file mkdir $CFG_SPOOL_DIR/vhfdx/archive
 }
 
-append func $module_name "::check_for_alerts";
-Logic::addMinuteTickSubscriber $func;
+Logic::addMinuteTickSubscriber check_for_alerts
 
 
 

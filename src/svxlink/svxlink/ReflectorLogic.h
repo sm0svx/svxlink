@@ -346,6 +346,8 @@ class ReflectorLogic : public LogicBase
     void handlePlayTone(int fq, int amp, int duration);
     void handlePlayDtmf(const std::string& digit, int amp, int duration);
     std::string jsonToString(Json::Value eventmessage);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
     bool loadClientCertificate(void);
     void csrAddSubjectNamesFromConfig(void);
 

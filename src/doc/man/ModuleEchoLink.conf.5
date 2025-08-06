@@ -189,6 +189,13 @@ remote station stops talking. It's enabled by default.
 .B REMOTE_RGR_SOUND
 Set this to 1 to enable sending of a roger sound (beep) to remote Echolink
 stations when the squelch closes on the local node. It's disabled by default.
+.TP
+.B REMOTE_EVENT_HANDLER
+The path to the tcl file that handle remote events. The path is normally
+figured out from the EVENT_HANDLER set in the logic core confguration so only
+set this configuration variable if you have a good reason. The file that should
+normally be used to handle remote Echolink events is
+events.d/EchoLinkRemote.tcl.
 .
 .SH REGULAR EXPRESSIONS
 .

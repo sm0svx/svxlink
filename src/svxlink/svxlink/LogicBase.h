@@ -123,7 +123,7 @@ for a logic. The only thing it can do is work with the link manager to
 connect to other logic cores and stream audio into and out of the logic.
 The LogicBase class can be used to implement all sorts of audio sources
 and sinks and not just transceiver based logic cores.
-LogicBase is a pure virtual class so it cannot be instatiated on its own.
+LogicBase is an abstact class so it cannot be instatiated on its own.
 
 @example DummyLogic.h
 */
@@ -150,6 +150,11 @@ class LogicBase : public Async::Plugin, public sigc::trackable
       m_cfg = &cfgobj;
       m_name = logic_name;
 
+      if (!m_cfg->getValue(m_name, "TYPE", m_type) || m_type.empty())
+      {
+        return false;
+      }
+
       if (LinkManager::hasInstance())
       {
           // Register this logic in the link manager
@@ -160,6 +165,8 @@ class LogicBase : public Async::Plugin, public sigc::trackable
     }
 
     const std::string& name(void) const { return m_name; }
+
+    const std::string& type(void) const { return m_type; }
 
     /**
      * @brief 	Get the configuration object associated with this logic core
@@ -340,6 +347,7 @@ class LogicBase : public Async::Plugin, public sigc::trackable
   private:
     Async::Config*     	  m_cfg           = nullptr;
     std::string       	  m_name;
+    std::string           m_type;
     bool      	      	  m_is_idle       = true;
     uint32_t              m_received_tg   = 0;
 

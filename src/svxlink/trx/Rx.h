@@ -330,12 +330,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
     bool                m_verbose;
     bool                m_sql_open;
     Async::Config&      m_cfg;
-    Async::Timer*       m_sql_tmo_timer;
+    //Async::Timer*       m_sql_tmo_timer;
     std::string         m_sql_info;
     MuteState           m_mute_state;
 
-    void sqlTimeout(Async::Timer *t);
-    
+    //void sqlTimeout(Async::Timer *t);
+
 };  /* class Rx */
 
 

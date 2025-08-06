@@ -8,7 +8,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,11 +37,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
+
 #include <string>
 #include <vector>
 #include <list>
 #include <set>
-#include <stdint.h>
 
 
 /****************************************************************************
@@ -54,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -289,18 +291,21 @@ class LinkManager : public sigc::trackable
     };
     typedef std::map<std::string, LogicProperties> LogicPropMap;
     typedef std::set<std::string> StrSet;
+    using StrPairVec = std::vector<SvxLink::SepPair<std::string, std::string>>;
+    using StrPairMap = std::map<std::string, std::string>;
     struct Link
     {
       Link(void)
         : default_active(false), is_activated(false), timeout_timer(0) {}
       ~Link(void) { delete timeout_timer; }
 
-      std::string  name;
-      LogicPropMap logic_props;
-      StrSet       auto_activate;
-      bool         default_active;
-      bool         is_activated;
-      Async::Timer *timeout_timer;
+      std::string   name;
+      LogicPropMap  logic_props;
+      StrSet        auto_activate;
+      StrPairMap    auto_activate_on_tg;
+      bool          default_active;
+      bool          is_activated;
+      Async::Timer  *timeout_timer;
     };
     typedef std::map<std::string, Link> LinkMap;
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
@@ -345,8 +350,8 @@ class LinkManager : public sigc::trackable
     std::vector<std::string> getLinkNames(const std::string& logicname);
     void wantedConnections(LogicConSet &want);
     void updateConnections(void);
-    void activateLink(Link &link);
-    void deactivateLink(Link &link);
+    void activateLink(Link &link, const std::string& reason="");
+    void deactivateLink(Link &link, const std::string& reason="");
     void sendCmdToLogics(Link &link, LogicBase *src_logic,
                          const std::string& cmd);
     /*

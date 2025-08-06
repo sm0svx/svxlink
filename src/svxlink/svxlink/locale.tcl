@@ -13,13 +13,12 @@
 #   word -- The word to spell
 #
 proc spellWord {word} {
-  variable Logic::CFG_PHONETIC_SPELLING
+  set phonetic_spelling [getConfigValue $::logic_name PHONETIC_SPELLING 1]
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
     if {[regexp {[a-z0-9]} $char]} {
-      if {([info exists CFG_PHONETIC_SPELLING]) && \
-          ($CFG_PHONETIC_SPELLING == 0)} {
+      if {$phonetic_spelling == 0} {
         playMsg "Default" "$char";
       } else {
         playMsg "Default" "phonetic_$char";
@@ -176,7 +175,7 @@ proc playNumber {number} {
 # Say the time specified by function arguments "hour" and "minute".
 #
 proc playTime {hour minute} {
-  variable Logic::CFG_TIME_FORMAT
+  set time_format [getConfigValue $::logic_name TIME_FORMAT 12]
 
   # Strip white space and leading zeros. Check ranges.
   if {[scan $hour "%d" hour] != 1 || $hour < 0 || $hour > 23} {
@@ -186,7 +185,7 @@ proc playTime {hour minute} {
     error "playTime: Non digit minute or value out of range: $hour"
   }
 
-  if {[info exists CFG_TIME_FORMAT] && ($CFG_TIME_FORMAT == 24)} {
+  if {$time_format == 24} {
     if {$hour == 0} {
       set hour "00"
     } elseif {[string length $hour] == 1} {

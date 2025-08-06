@@ -252,8 +252,10 @@ bool AnnounceLogic::initialize(Async::Config& cfgobj, const string& logic_name)
   event_handler->playSilence.connect(mem_fun(*this, &AnnounceLogic::playSilence));
   event_handler->playTone.connect(mem_fun(*this, &AnnounceLogic::playTone));
   event_handler->playDtmf.connect(mem_fun(*this, &AnnounceLogic::playDtmf));
-  event_handler->setVariable("is_core_event_handler", "1");
+  event_handler->getConfigValue.connect(
+          sigc::mem_fun(*this, &AnnounceLogic::getConfigValue));
   event_handler->setVariable("logic_name", name().c_str());
+  event_handler->setVariable("logic_type", type());
   event_handler->processEvent("namespace eval " + name() + " {}");
 
   if (!event_handler->initialize())
@@ -410,6 +412,15 @@ bool AnnounceLogic::check_week_of_month(struct tm t)
   }
   return false;
 } /* AnnounceLogic::check_week_of_month */
+
+
+bool AnnounceLogic::getConfigValue(const std::string& section,
+                                   const std::string& tag,
+                                   std::string& value)
+{
+  return cfg().getValue(section, tag, value, true);
+} /* AnnounceLogic::getConfigValue */
+
 
 /*
  * This file has not been truncated

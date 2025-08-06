@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <limits>
 
 
 /****************************************************************************
@@ -184,7 +185,9 @@ class RepeaterLogic : public Logic
     {
       SQL_FLANK_OPEN, SQL_FLANK_CLOSE
     } SqlFlank;
-    
+
+    static const uint32_t TG_RESET = std::numeric_limits<uint32_t>::max();
+
     bool      	    repeater_is_up;
     Async::Timer    up_timer;
     Async::Timer    idle_sound_timer;
