@@ -1,0 +1,211 @@
+Configuration svxlink-usrp with SvxReflector, Analoge_Bridge and MMDVM_Bridge
+=============================================================================
+
+1.) Basic structure
+
+               |.-................. SvxLink ......................|   |........... MMDVM stuff ..........|   |.. freeDMR ..>
+
+|----------|   |---------------|   |--------------|   |-----------|   |---------------|   |--------------|   |-------------|
+|  Radio   |   | SimplexLogic  |   | LogicLinking |   | UsrpLogic |   | Analog_Bridge |   | MMDVM_Bridge |   | DMR-Network |
+|  2m/70cm |<->| RepeaterLogic |<->|              |<->|           |<->|               |<->|              |<->|             |
+|----------|   |---------------|   |--------------|   |-----------|   |---------------|   |--------------|   |-------------|
+                                           |                                  |
+                                           |                                  |
+|----------|   |---------------|   |--------------|                   |---------------|
+| Analogue |   | SvxReflector- |   | Reflector-   |                   | md380-        |
+| Network  |<->|    Server     |<->| Logic        |                   | emulator      |
+|----------|   |---------------|   |--------------|                   |---------------|
+
+
+2.) Configuration
+2.1.) svxLink.conf
+Usually located in /etc/svxlink/svxlink.conf
+
+Below is an example configuration for the svxlink.conf file. Only the most important parameters and
+configuration sections are given 
+
+---
+[GLOBAL]
+LOGICS=RepeaterLogic,ReflectorLogic,UsrpLogic
+LINKS=UsrpLink
+
+[RepeaterLogic]
+TYPE=Repeater
+RX=Rx1
+TX=Tx1
+MODULES=ModuleParrot,ModuleTclVoiceMail,ModulePropagationMonitor,ModuleMetarInfo
+CALLSIGN=DB0ABC
+SHORT_IDENT_INTERVAL=30
+LONG_IDENT_INTERVAL=60
+EVENT_HANDLER=/usr/share/svxlink/events.tcl
+DEFAULT_LANG=de_DE
+RGR_SOUND_DELAY=200
+TX_CTCSS=SQL_OPEN,ANNOUNCEMENT
+FX_GAIN_NORMAL=0
+FX_GAIN_LOW=-12
+#NO_REPEAT=1
+IDLE_TIMEOUT=6
+OPEN_ON_DTMF=*
+OPEN_ON_SQL=1000
+OPEN_SQL_FLANK=OPEN
+
+[UsrpLogic]
+TYPE=Usrp
+USRP_HOST=127.0.0.1
+USRP_TX_PORT=44442 <-------------------------------------------------
+USRP_RX_PORT=44441 <----------------------------------------------  |
+CALL=DB0ABC                                                      |  |
+DMRID=262123                                                     |  |
+RPTID=                                                           |  |
+DEFAULT_CC=1                                                     |  |
+DEFAULT_TG=2629                                                  |  |
+DEFAULT_TS=2                                                     |  |
+#PREAMP=3                                                        |  |
+#FILTER_FROM_USRP=HsBq2/0.01/-18/4000                            |  |
+FILTER_TO_USRP=BpBu1/650-3800                                    |  |
+#NET_PREAMP=3                                                    |  |
+JITTER_BUFFER_DELAY=100                                          |  |
+EVENT_HANDLER=/usr/share/svxlink/events.tcl                      |  |
+                                                                 |  |
+[ReflectorLogic]                                                 |  |
+TYPE=Reflector                                                   |  |
+HOST=10.8.0.1  ---------> to Analogue network, usually a         |  |
+PORT=5302 --------------> SvxReflector server                    |  |
+AUTH_KEY="secret"                                                |  |
+CALLSIGN="DB0ABC                                                 |  |
+#JITTER_BUFFER_DELAY=0                                           |  |
+DEFAULT_TG=9                                                     |  |
+MONITOR_TGS=9                                                    |  |
+ANNOUNCE_REMOTE_MIN_INTERVAL=300                                 |  |
+EVENT_HANDLER=/usr/share/svxlink/events.tcl                      |  |
+NODE_INFO_FILE=/etc/svxlink/node_info.json                       |  |
+MUTE_FIRST_TX_LOC=0                                              |  |
+MUTE_FIRST_TX_REM=0                                              |  |
+                                                                 |  |
+[UsrpLink]                                                       |  |
+NAME=Usrp                                                        |  |
+CONNECT_LOGICS=RepeaterLogic,UsrpLogic,ReflectorLogic            |  |
+DEFAULT_ACTIVE=1                                                 |  |
+---EOF                                                           |  |
+                                                                 |  |
+                                                                 |  |
+2.2.) Analog_Bridge                                              |  |
+Here we have an example for the Analog_Bridge.ini,               |  |
+usually located in /opt/Analog_Bridge/Analog_Bridge.ini          |  |
+For details regarding the configuration paramaters               |  |
+refer to Analog_Bridge manual page.                              |  |
+                                                                 |  |
+---                                                              |  |
+include = dvsm.macro                                             |  |
+                                                                 |  |
+[GENERAL]                                                        |  |
+logLevel = 2                                                     |  |
+exportMetadata = true                                            |  |
+transferRootDir = /tmp                                           |  |
+subscriberFile = /var/lib/dvswitch/subscriber_ids.csv            |  |
+decoderFallBack = true                                           |  |
+useEmulator = false                                              |  |
+emulatorAddress = 127.0.0.1:2460                                 |  |
+pcmPort = 2222                                                   |  |
+                                                                 |  |
+[USRP]                                                           |  |
+address = 127.0.0.1                                              |  |
+txPort = 44441 <--------------------------------------------------  |
+rxPort = 44442 <-----------------------------------------------------
+usrpAudio = AUDIO_UNITY
+usrpGain = 1.10
+usrpAGC = -20,10,100
+tlvAudio = AUDIO_UNITY
+tlvGain = 0.35
+
+[AMBE_AUDIO]
+address = 127.0.0.1
+txPort = 31103 <-----------------------------------------------------
+rxPort = 31100 <--------------------------------------------------  |
+ambeMode = DMR                                                   |  |
+minTxTimeMS = 2500                                               |  |
+gatewayDmrId = 262123                                            |  |
+repeaterID = 26200123                                            |  |
+txTg = 2629                                                      |  |
+txTs = 2                                                         |  |
+colorCode = 1                                                    |  |
+                                                                 |  |
+[MACROS]                                                         |  |
+                                                                 |  |
+[DV3000]                                                         |  |
+;address = 127.0.0.1 -------------------> To                     |  |
+;rxPort = 2460 -------------------------> AMBEServer             |  |
+                                                                 |  |
+address = /dev/ttyUSB4 -----------------> To                     |  |
+baud = 460800 --------------------------> DV3k-stick             |  |
+serial = true                                                    |  |
+---EOF                                                           |  |
+                                                                 |  |
+                                                                 |  |
+2.3.) MMDVM_Bridge                                               |  |
+Usually located in /opt/MMDVM_Bridge/MMDVM_Bridge.ini            |  |
+Here is an example for the MMDVM_Bridge.ini                      |  |
+Only the most important parameters and configuration             |  |
+sections are given                                               |  |
+                                                                 |  |
+---                                                              |  |
+[General]                                                        |  |
+Callsign=DB0ABC                                                  |  |
+Id=262123                                                        |  |
+Timeout=180                                                      |  |
+Duplex=1                                                         |  |
+                                                                 |  |
+[Info]                                                           |  |
+RXFrequency=431025000                                            |  |
+TXFrequency=438625000                                            |  |
+Power=15                                                         |  |
+Latitude=51.000                                                  |  |
+Longitude=12.000                                                 |  |
+Height=123                                                       |  |
+Location=somewhere                                               |  |
+Description=FreeDMR_Germany                                      |  |
+URL=https://svxreflector.org                                     |  |
+                                                                 |  |
+[Log]                                                            |  |
+DisplayLevel=1                                                   |  |
+FileLevel=2                                                      |  |
+FilePath=/var/log/mmdvm                                          |  |
+FileRoot=MMDVM_Bridge                                            |  |
+                                                                 |  |
+[DMR Id Lookup]                                                  |  |
+File=/var/lib/mmdvm/DMRIds.dat                                   |  |
+Time=24                                                          |  |
+                                                                 |  |
+[DMR]                                                            |  |
+Enable=1                                                         |  |
+ColorCode=1                                                      |  |
+EmbeddedLCOnly=1                                                 |  |
+DumpTAData=0                                                     |  |
+                                                                 |  |
+[DMR Network]                                                    |  |
+Enable=1                                                         |  |
+Address=svxreflector.org ---------------> To DMR master server   |  |
+Port=62031 -----------------------------> e.g. freeDMR           |  |
+Jitter=360                                                       |  |
+Local=62032                                                      |  |
+Password=passw0rd                                                |  |
+Slot1=0                                                          |  |
+Slot2=1                                                          |  |
+Debug=1                                                          |  |
+---EOF                                                           |  |
+                                                                 |  |
+                                                                 |  |
+2.4.) DV-Switch                                                  |  |
+Uually located in /opt/MMDVM_Bridge/DVSwitch.ini                 |  |
+Example of DVSwitch.ini                                          |  |
+                                                                 |  |
+---                                                              |  |
+[DMR]                                                            |  |
+address = 127.0.0.1                                              |  |
+txPort = 31100 <--------------------------------------------------  |
+rxPort = 31103 <-----------------------------------------------------
+slot = 2
+exportTG = 2629
+hangTimerInFrames = 0
+talkerAlias = %callsign %location %description
+---EOF
