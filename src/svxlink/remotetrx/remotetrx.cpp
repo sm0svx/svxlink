@@ -524,6 +524,8 @@ int main(int argc, char **argv)
       std::cout << "Initialization done. Exiting." << std::endl;
       Async::Application::app().quit();
     }
+    std::cout << "NOTICE: Initialization done. Starting main application."
+              << std::endl;
     app.exec();
   }
   else
