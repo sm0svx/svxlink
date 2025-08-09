@@ -5,10 +5,11 @@
   down when a talkgroup is active, a buzzing sound will be prepended to the
   roger sound.
 
-* Writing to the logfile in SvxLink Server is now done from a separate thread.
-  That will increase the accuracy of the timestamps in some situations.
-  Previously multiple log rows could be lumped together in a block where all
-  rows had the same timestamp. That made it harder to debug some problems.
+* Writing to the logfile in SvxLink applications are now done from a separate
+  thread.  That will increase the accuracy of the timestamps in some
+  situations.  Previously multiple log rows could be lumped together in a
+  block where all rows had the same timestamp. That made it harder to debug
+  some timing critical problems.
 
 * Support for hidraw PTT and squelch for the CM119A audio chip added.
 
@@ -29,8 +30,8 @@
 * Bugfix in ModuleTclVoiceMail: If no password was specified on login the
   module crashed.
 
-* SvxLink can now log to syslog by specifying --logfile=syslog: (including the
-  colon character)
+* The SvxLink applications can now log to syslog by specifying
+  --logfile=syslog: (including the colon character).
 
 * New configuration variable ACTIVATE_ON_TG that can be used in a logic
   linking configuration section to activate the link when a talkgroup is
