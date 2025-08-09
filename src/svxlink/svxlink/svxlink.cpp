@@ -719,7 +719,7 @@ static void sighup_handler(int signal)
     cout << "Ignoring SIGHUP\n";
     return;
   }
-  std::cout << "SIGPIPE received" << std::endl;
+  std::cout << "SIGHUP received" << std::endl;
   logwriter.reopenLogfile();
 } /* sighup_handler */
 
