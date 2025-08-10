@@ -198,7 +198,7 @@ class ReflectorLogic : public LogicBase
     typedef enum
     {
       STATE_DISCONNECTED, STATE_EXPECT_AUTH_CHALLENGE, STATE_EXPECT_AUTH_OK,
-      STATE_EXPECT_SERVER_INFO, STATE_CONNECTED
+      STATE_AUTHENTICATED, STATE_EXPECT_SERVER_INFO, STATE_CONNECTED
     } ConState;
 
     typedef Async::TcpPrioClient<Async::FramedTcpConnection> FramedTcpClient;

@@ -834,6 +834,11 @@ void ReflectorLogic::remoteReceivedPublishStateEvent(
   //     << endl;
   //sendMsg(MsgStateEvent(logic->name(), event_name, msg));
 
+  if (m_con_state != STATE_CONNECTED)
+  {
+    return;
+  }
+
   if (event_name == "Voter:sql_state")
   {
     //MsgUdpSignalStrengthValues msg;
@@ -1988,6 +1993,14 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
 {
   if (!isConnected())
   {
+    return;
+  }
+  if ((msg.type() >= 100) && (m_con_state < STATE_AUTHENTICATED))
+  {
+    std::cerr << "### " << name()
+         << ": Trying to send user message " << msg.type()
+         << " in unauthenticated state"
+         << std::endl;
     return;
   }
 
