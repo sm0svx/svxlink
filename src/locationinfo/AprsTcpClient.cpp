@@ -176,7 +176,8 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    status_timer = new Timer((24 * 60 - 5) * 60 * 1000, Timer::TYPE_PERIODIC);
    status_timer->setEnable(false);
    status_timer->expired.connect(sigc::hide(sigc::bind(
-       sigc::mem_fun(*this, &AprsTcpClient::sendAprsStatus), SVXVER_STATUS)));
+       sigc::mem_fun(*this, &AprsTcpClient::sendAprsStatus),
+       loc_cfg.sourcecall, SVXVER_STATUS)));
 
    offset_timer = new Timer(10000, Timer::TYPE_ONESHOT);
    offset_timer->setEnable(false);
@@ -242,7 +243,7 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
   {
     status += call + " ";
   }
-  sendAprsStatus(status);
+  sendAprsStatus(loc_cfg.objectname, status);
 } /* AprsTcpClient::updateQsoStatus */
 
 
@@ -472,18 +473,26 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 } /* AprsTcpClient::sendAprsBeacon*/
 
 
-void AprsTcpClient::sendAprsStatus(const std::string& status)
+void AprsTcpClient::sendAprsStatus(const std::string& src,
+                                   const std::string& status)
 {
-  if (status.empty() || (status ==  SVXVER_STATUS))
+  if (src != loc_cfg.sourcecall)
+  {
+    std::string msg = addrStr(src) + ">" + timeStr() + status;
+    sendMsg(msg);
+    return;
+  }
+
+  if (status.empty() || (status == SVXVER_STATUS))
   {
       // Send SvxLink version as status
-    std::string verstatus = addrStr(loc_cfg.sourcecall) + ">" + timeStr() +
+    std::string verstatus = addrStr(src) + ">" + timeStr() +
                          "SvxLink v" + SVXLINK_APP_VERSION +
                          " (https://www.svxlink.org)";
     sendMsg(verstatus);
   }
 
-  if (status !=  SVXVER_STATUS)
+  if (status != SVXVER_STATUS)
   {
     current_status = status;
   }
@@ -594,7 +603,7 @@ void AprsTcpClient::startNormalSequence(Timer *t)
   sendAprsBeacon(t);
   beacon_timer->setEnable(true);  // Start the beacon interval
 
-  sendAprsStatus(SVXVER_STATUS);
+  sendAprsStatus(loc_cfg.sourcecall, SVXVER_STATUS);
   status_timer->setEnable(true);  // Start the status interval
 } /* AprsTcpClient::startNormalSequence */
 

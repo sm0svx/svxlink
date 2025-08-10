@@ -156,7 +156,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     std::string addresseeStr(const std::string& call) const;
     std::string prependSpaceIfNotEmpty(const std::string& str) const;
     void  sendAprsBeacon(Async::Timer *t);
-    void  sendAprsStatus(const std::string& status);
+    void  sendAprsStatus(const std::string& src, const std::string& status);
 
     void  tcpConnected(void);
     void  aprsLogin(void);

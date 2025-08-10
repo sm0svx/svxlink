@@ -1,6 +1,6 @@
 # This file is part of SvxLink -- a voice services system for ham radio
 #
-# Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+# Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,10 +31,18 @@ Environment=CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
 Environment=LOGFILE=@LOCAL_STATE_DIR@/log/svxlink
 EnvironmentFile=@SYSTEMD_DEFAULTS_FILES_DIR@/svxlink
 UMask=0002
-ExecStartPre=/bin/touch ${LOGFILE}
-ExecStartPre=/bin/chmod 0644 ${LOGFILE}
-ExecStartPre=/bin/mkdir -m0775 -p ${STATEDIR}
-ExecStartPre=/bin/sh -c 'chown -R ${RUNASUSER}:$(id -gn ${RUNASUSER}) "${STATEDIR}" "${LOGFILE}"'
+ExecStartPre=/bin/sh -c ' \
+	if echo -n "${LOGFILE}" | grep -q '^/'; then \
+	  touch "${LOGFILE}"; \
+	  chmod u+w "${LOGFILE}"; \
+	  chown ${RUNASUSER}:$(id -gn ${RUNASUSER}) "${LOGFILE}"; \
+	fi; \
+	'
+ExecStartPre=/bin/sh -c ' \
+	mkdir -m0775 -p "${STATEDIR}"; \
+	chmod -R u+rwX "${STATEDIR}"; \
+	chown -R ${RUNASUSER}:$(id -gn ${RUNASUSER}) "${STATEDIR}"; \
+	'
 ExecStart=@BIN_INSTALL_DIR@/svxlink --logfile=${LOGFILE} --config=${CFGFILE} --runasuser=${RUNASUSER}
 ExecStopPost=@BIN_INSTALL_DIR@/svxlink --config=${CFGFILE} --runasuser=${RUNASUSER} --reset --quiet
 ExecReload=/bin/kill -s HUP $MAINPID

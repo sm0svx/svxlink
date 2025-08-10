@@ -2,7 +2,6 @@
 set(SVXLINK_SRCS
   svxlink.cpp MsgHandler.cpp Module.cpp Logic.cpp EventHandler.cpp
   LinkManager.cpp CmdParser.cpp QsoRecorder.cpp DtmfDigitHandler.cpp
-  LogWriter.cpp
   )
 
 # TCL event handler files to install in the events.d subdirectory

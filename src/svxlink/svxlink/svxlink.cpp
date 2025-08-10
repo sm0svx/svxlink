@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <LocationInfo.h>
 #include <common.h>
 #include <config.h>
+#include <LogWriter.h>
 
 
 /****************************************************************************
@@ -72,7 +73,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "version/SVXLINK.h"
 #include "Logic.h"
 #include "LinkManager.h"
-#include "LogWriter.h"
 
 
 /****************************************************************************
@@ -719,7 +719,7 @@ static void sighup_handler(int signal)
     cout << "Ignoring SIGHUP\n";
     return;
   }
-  std::cout << "SIGPIPE received" << std::endl;
+  std::cout << "SIGHUP received" << std::endl;
   logwriter.reopenLogfile();
 } /* sighup_handler */
 

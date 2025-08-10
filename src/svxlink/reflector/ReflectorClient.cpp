@@ -354,7 +354,10 @@ void ReflectorClient::updateIsTalker(void)
   if (m_status != nullptr)
   {
     auto talker = TGHandler::instance()->talkerForTG(m_current_tg);
-    (*m_status)["isTalker"] = (talker == this);
+    (*m_status)["isTalker"] = (
+        TGHandler::instance()->showActivity(m_current_tg) &&
+        (talker == this)
+        );
   }
 } /* ReflectorClient:;updateIsTalker */
 
@@ -512,10 +515,14 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
 
   if ((m_con_state != STATE_CONNECTED) && (header.type() >= 100))
   {
-    std::cout << "*** ERROR[" << idss.str()
-              << "]: User message received in unauthenticated state"
+      // FIXME: This should really be an error and the client should be
+      // disconnected but it will cause too much problems in existing
+      // misbeaving clients at the moment.
+    std::cout << "*** WARNING[" << idss.str()
+              << "]: User message " << header.type()
+              << " received in unauthenticated state"
               << std::endl;
-    sendError("Protocol error");
+    //sendError("Protocol error");
     return;
   }
 

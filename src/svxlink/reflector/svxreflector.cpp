@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncFdWatch.h>
 #include <AsyncConfig.h>
 #include <config.h>
+#include <LogWriter.h>
 
 
 /****************************************************************************
@@ -113,15 +114,9 @@ using namespace Async;
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
-static void stdout_handler(FdWatch *w);
 static void sighup_handler(int signal);
 static void sigterm_handler(int signal);
 static void handle_unix_signal(int signum);
-static bool logfile_open(void);
-static void logfile_reopen(const char *reason);
-static bool logfile_write_timestamp(void);
-static void logfile_write(const char *buf);
-static void logfile_flush(void);
 
 
 /****************************************************************************
@@ -138,15 +133,16 @@ static void logfile_flush(void);
  *
  ****************************************************************************/
 
-static char             *pidfile_name = NULL;
-static char             *logfile_name = NULL;
-static char             *runasuser = NULL;
-static char   	      	*config = NULL;
-static int    	      	daemonize = 0;
-static int    	      	logfd = -1;
-static FdWatch	      	*stdin_watch = 0;
-static FdWatch	      	*stdout_watch = 0;
-static string         	tstamp_format;
+namespace {
+  char*                 pidfile_name = nullptr;
+  char*                 logfile_name = nullptr;
+  char*                 runasuser = nullptr;
+  char*                 config = nullptr;
+  int                   daemonize = 0;
+  int                   quiet = 0;
+  FdWatch*              stdin_watch = 0;
+  LogWriter             logwriter;
+};
 
 
 /****************************************************************************
@@ -182,79 +178,43 @@ int main(int argc, const char *argv[])
 
   parse_arguments(argc, const_cast<const char **>(argv));
 
-  int pipefd[2] = {-1, -1};
   int noclose = 0;
-  if (logfile_name != 0)
+  if (quiet || (logfile_name != 0))
   {
-      /* Open the logfile */
-    if (!logfile_open())
-    {
-      exit(1);
-    }
-
-      /* Create a pipe to route stdout through */
-    if (pipe(pipefd) == -1)
-    {
-      perror("pipe");
-      exit(1);
-    }
-    int flags = fcntl(pipefd[0], F_GETFL);
-    if (flags == -1)
-    {
-      perror("fcntl(..., F_GETFL)");
-      exit(1);
-    }
-    flags |= O_NONBLOCK;
-    if (fcntl(pipefd[0], F_SETFL, flags) == -1)
-    {
-      perror("fcntl(..., F_SETFL)");
-      exit(1);
-    }
-    stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
-
-      /* Redirect stdout to the logpipe */
-    if (dup2(pipefd[1], STDOUT_FILENO) == -1)
-    {
-      perror("dup2(stdout)");
-      exit(1);
-    }
-
-      /* Redirect stderr to the logpipe */
-    if (dup2(pipefd[1], STDERR_FILENO) == -1)
-    {
-      perror("dup2(stderr)");
-      exit(1);
-    }
-
-      // We also need to close stdin but that is not a good idea since we need
-      // the stdin filedescriptor to keep being allocated so that it is not
-      // assigned to some other random filedescriptor allocation. That would
-      // be very bad.
-    int devnull = open("/dev/null", O_RDONLY);
+    int devnull = open("/dev/null", O_RDWR);
     if (devnull == -1)
     {
       perror("open(/dev/null)");
       exit(1);
     }
-    if (dup2(devnull, STDIN_FILENO) == -1)
+
+    if (quiet)
     {
-      perror("dup2(stdin)");
-      exit(1);
+        /* Redirect stdout to /dev/null */
+      dup2(devnull, STDOUT_FILENO);
+    }
+
+    if (logfile_name != 0)
+    {
+      logwriter.setDestinationName(logfile_name);
+      if (!quiet)
+      {
+        logwriter.redirectStdout();
+      }
+      logwriter.redirectStderr();
+      logwriter.start();
+
+        /* Redirect stdin to /dev/null */
+      if (dup2(devnull, STDIN_FILENO) == -1)
+      {
+        perror("dup2(stdin)");
+        exit(1);
+      }
+
+        /* Tell the daemon function call not to close the file descriptors */
+      noclose = 1;
     }
     close(devnull);
-
-      /* Force stdout to line buffered mode */
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-    {
-      perror("setlinebuf");
-      exit(1);
-    }
-
-    atexit(logfile_flush);
-
-      /* Tell the daemon function call not to close the file descriptors */
-    noclose = 1;
   }
 
   if (daemonize)
@@ -318,8 +278,6 @@ int main(int argc, const char *argv[])
   {
     home_dir = ".";
   }
-
-  tstamp_format = "%c";
 
   Config cfg;
   string cfg_filename;
@@ -387,7 +345,8 @@ int main(int argc, const char *argv[])
     while ((dirent = readdir(dir)) != NULL)
     {
       char *dot = strrchr(dirent->d_name, '.');
-      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
+      if ((dot == NULL) || (dirent->d_name[0] == '.') ||
+          (strcmp(dot, ".conf") != 0))
       {
         continue;
       }
@@ -408,14 +367,9 @@ int main(int argc, const char *argv[])
     }
   }
 
+  std::string tstamp_format = "%c";
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
-
-  //std::string pki_dir;
-  //if (!cfg.getValue("GLOBAL", "CERT_PKI_DIR", pki_dir))
-  //{
-  //  pki_dir = main_cfg_dir + "/pki";
-  //  cfg.setValue("GLOBAL", "CERT_PKI_DIR", pki_dir);
-  //}
+  logwriter.setTimestampFormat(tstamp_format);
 
   cout << PROGRAM_NAME " v" SVXREFLECTOR_VERSION
           " Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n";
@@ -443,6 +397,8 @@ int main(int argc, const char *argv[])
   Reflector ref;
   if (ref.initialize(cfg))
   {
+    std::cout << "NOTICE: Initialization done. Starting main application."
+              << std::endl;
     app.exec();
   }
   else
@@ -450,24 +406,10 @@ int main(int argc, const char *argv[])
     cerr << ":-(" << endl;
   }
 
-  logfile_flush();
-
   if (stdin_watch != 0)
   {
     delete stdin_watch;
     tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
-  }
-
-  if (stdout_watch != 0)
-  {
-    delete stdout_watch;
-    close(pipefd[0]);
-    close(pipefd[1]);
-  }
-
-  if (logfd != -1)
-  {
-    close(logfd);
   }
 
   return 0;
@@ -595,22 +537,6 @@ static void stdinHandler(FdWatch *w)
 } /* stdinHandler */
 
 
-static void stdout_handler(FdWatch *w)
-{
-  ssize_t len =  0;
-  do
-  {
-    char buf[256];
-    len = read(w->fd(), buf, sizeof(buf)-1);
-    if (len > 0)
-    {
-      buf[len] = 0;
-      logfile_write(buf);
-    }
-  } while (len > 0);
-} /* stdout_handler  */
-
-
 static void sighup_handler(int signal)
 {
   if (logfile_name == 0)
@@ -618,7 +544,8 @@ static void sighup_handler(int signal)
     cout << "Ignoring SIGHUP\n";
     return;
   }
-  logfile_reopen("SIGHUP received");
+  std::cout << "SIGHUP received" << std::endl;
+  logwriter.reopenLogfile();
 } /* sighup_handler */
 
 
@@ -634,13 +561,13 @@ static void sigterm_handler(int signal)
       signame = "SIGINT";
       break;
     default:
-      signame = "???";
+      signame = "Unknown signal";
       break;
   }
-  string msg("\n");
-  msg += signame;
-  msg += " received. Shutting down application...\n";
-  logfile_write(msg.c_str());
+
+  std::cout << "\nNOTICE: " << signame
+            << " received. Shutting down application..."
+            << std::endl;
   Application::app().quit();
 } /* sigterm_handler */
 
@@ -658,134 +585,6 @@ static void handle_unix_signal(int signum)
       break;
   }
 } /* handle_unix_signal */
-
-
-static bool logfile_open(void)
-{
-  if (logfd != -1)
-  {
-    close(logfd);
-  }
-
-  logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
-  if (logfd == -1)
-  {
-    ostringstream ss;
-    ss << "open(\"" << logfile_name << "\")";
-    perror(ss.str().c_str());
-    return false;
-  }
-
-  return true;
-
-} /* logfile_open */
-
-
-static void logfile_reopen(const char *reason)
-{
-  logfile_write_timestamp();
-  string msg(reason);
-  msg += ". Reopening logfile\n";
-  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
-
-  logfile_open();
-
-  logfile_write_timestamp();
-  msg = reason;
-  msg += ". Logfile reopened\n";
-  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
-} /* logfile_reopen */
-
-
-static bool logfile_write_timestamp(void)
-{
-  if (!tstamp_format.empty())
-  {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    string fmt(tstamp_format);
-    const string frac_code("%f");
-    size_t pos = fmt.find(frac_code);
-    if (pos != string::npos)
-    {
-      stringstream ss;
-      ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
-      fmt.replace(pos, frac_code.length(), ss.str());
-    }
-    struct tm tm;
-    char tstr[256];
-    size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(),
-                           localtime_r(&tv.tv_sec, &tm));
-    ssize_t ret = write(logfd, tstr, tlen);
-    if (ret != static_cast<ssize_t>(tlen))
-    {
-      return false;
-    }
-    ret = write(logfd, ": ", 2);
-    if (ret != 2)
-    {
-      return false;
-    }
-  }
-  return true;
-} /* logfile_write_timestamp */
-
-
-static void logfile_write(const char *buf)
-{
-  if (logfd == -1)
-  {
-    cout << buf;
-    return;
-  }
-
-  const char *ptr = buf;
-  while (*ptr != 0)
-  {
-    static bool print_timestamp = true;
-    ssize_t ret;
-
-    if (print_timestamp)
-    {
-      if (!logfile_write_timestamp())
-      {
-        logfile_reopen("Write error");
-        return;
-      }
-      print_timestamp = false;
-    }
-
-    size_t write_len = 0;
-    const char *nl = strchr(ptr, '\n');
-    if (nl != 0)
-    {
-      write_len = nl-ptr+1;
-      print_timestamp = true;
-    }
-    else
-    {
-      write_len = strlen(ptr);
-    }
-    ret = write(logfd, ptr, write_len);
-    if (ret != static_cast<ssize_t>(write_len))
-    {
-      logfile_reopen("Write error");
-      return;
-    }
-    ptr += write_len;
-  }
-} /* logfile_write */
-
-
-static void logfile_flush(void)
-{
-  cout.flush();
-  cerr.flush();
-  if (stdout_watch != 0)
-  {
-    stdout_handler(stdout_watch);
-  }
-} /*  logfile_flush */
 
 
 /*
