@@ -514,7 +514,8 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
   if ((m_con_state != STATE_CONNECTED) && (header.type() >= 100))
   {
     std::cout << "*** ERROR[" << idss.str()
-              << "]: User message received in unauthenticated state"
+              << "]: User message " << header.type()
+              << " received in unauthenticated state"
               << std::endl;
     sendError("Protocol error");
     return;
