@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "08072024a"
+#define USRPVERSION "19082025"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -275,6 +275,8 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     m_event_handler->playDtmf.connect(
           sigc::mem_fun(*this, &UsrpLogic::handlePlayDtmf));
   }
+  m_event_handler->getConfigValue.connect(
+      sigc::mem_fun(*this, &UsrpLogic::getConfigValue));
   m_event_handler->setConfigValue.connect(
       sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   m_event_handler->setVariable("logic_name", name().c_str());
@@ -1196,6 +1198,13 @@ void UsrpLogic::publishInfo(std::string type, Json::Value event)
   publishStateEvent(type, os.str());
 } /* UsrpLogic::publishInfo */
 
+
+bool UsrpLogic::getConfigValue(const std::string& section,
+                                    const std::string& tag,
+                                    std::string& value)
+{
+  return cfg().getValue(section, tag, value, true);
+} /* UsrpLogic::getConfigValue */
 
 /*
  * This file has not been truncated

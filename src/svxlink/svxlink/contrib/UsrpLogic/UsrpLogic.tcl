@@ -11,6 +11,11 @@
 #
 namespace eval UsrpLogic {
 
+# Source basic logic functionality. Mix in ("inherit") generic logic TCL code
+sourceTclWithOverrides "LogicBase.tcl"
+mixin Logic
+
+
 #
 # Checking to see if this is the correct logic core
 #

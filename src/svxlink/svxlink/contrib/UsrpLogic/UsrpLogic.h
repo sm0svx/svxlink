@@ -264,6 +264,8 @@ class UsrpLogic : public LogicBase
     void onPublishStateEvent(const std::string &event_name, const std::string &msg);
     void sendUserInfo(void);
     void publishInfo(std::string type, Json::Value event);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
     
 };  /* class UsrpLogic */
 
