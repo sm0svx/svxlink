@@ -15,6 +15,9 @@ install(TARGETS UsrpLogic DESTINATION ${SVX_LOGIC_CORE_INSTALL_DIR})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/UsrpLogic.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
 )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/UsrpLogicType.tcl
+  DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
+)
 install_if_not_exists(${CMAKE_CURRENT_SOURCE_DIR}/dv_users.json
   ${SVX_SYSCONF_INSTALL_DIR}
   )

@@ -87,7 +87,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "19082025"
+#define USRPVERSION "20082025"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -280,7 +280,8 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   m_event_handler->setConfigValue.connect(
       sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   m_event_handler->setVariable("logic_name", name().c_str());
-  m_event_handler->processEvent("namespace eval Logic {}");
+  m_event_handler->processEvent(
+      std::string("namespace eval ") + name() + "::Logic {}");
 
   if (!m_event_handler->initialize())
   {
