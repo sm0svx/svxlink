@@ -2,14 +2,18 @@
 #
 # SipLogic event handlers
 #
+# This file is sourced by all reflector logics and contains the TCL code that
+# are in common to all reflector logics.
+#
 ###############################################################################
 
-#
-# This is the namespace in which all functions below will exist. The name
-# must match the corresponding section "[SipLogic]" in the configuration
-# file. The name may be changed but it must be changed in both places.
-#
+# The namespace is automatically set to the logic core name so there is no need
+# to change it unless you have a good reason
 namespace eval ${::logic_name} {
+
+# Source basic logic functionality. Mix in ("inherit") generic logic TCL code
+sourceTclWithOverrides "LogicBase.tcl"
+mixin Logic
 
 #
 # Checking to see if this is the correct logic core

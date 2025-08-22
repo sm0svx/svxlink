@@ -243,6 +243,9 @@ class SipLogic : public LogicBase
     void playSipSilence(int length);
     void playSipTone(int fq, int amp, int len);
     void playSipDtmf(const std::string& digits, int amp, int len);
+    bool getConfigValue(const std::string& section,
+                              const std::string& tag,
+                              std::string& value);
 
 };  /* class SipLogic */
 
