@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFilter.h>
 #include <AsyncTcpClient.h>
 #include <common.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -90,7 +91,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "20082025"
+#define PJSIP_VERSION "21082025"
 
 
 /****************************************************************************
@@ -737,10 +738,12 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   m_logic_con_out->setFlushWait(logic_msg_handler, false);
 
     // the event handler
-  string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  string event_handler_str(SVX_SHARE_INSTALL_DIR);
+  event_handler_str += "/events.tcl";
+  cfg().getValue(name(), "EVENT_HANDLER", event_handler_str);
+  if (event_handler_str.empty())
   {
-    cerr << name() << ":*** ERROR: Config variable EVENT_HANDLER not set"
+    cerr << "*** ERROR: Config variable " << name() << "/EVENT_HANDLER is empty."
          << endl;
     return false;
   }
