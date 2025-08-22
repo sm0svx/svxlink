@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFilter.h>
 #include <AsyncTcpClient.h>
 #include <common.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -90,7 +91,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "14032023"
+#define PJSIP_VERSION "21082025"
 
 
 /****************************************************************************
@@ -737,10 +738,12 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   m_logic_con_out->setFlushWait(logic_msg_handler, false);
 
     // the event handler
-  string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  string event_handler_str(SVX_SHARE_INSTALL_DIR);
+  event_handler_str += "/events.tcl";
+  cfg().getValue(name(), "EVENT_HANDLER", event_handler_str);
+  if (event_handler_str.empty())
   {
-    cerr << name() << ":*** ERROR: Config variable EVENT_HANDLER not set"
+    cerr << "*** ERROR: Config variable " << name() << "/EVENT_HANDLER is empty."
          << endl;
     return false;
   }
@@ -753,11 +756,20 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   logic_event_handler->playSilence.connect(mem_fun(*this, &SipLogic::playLogicSilence));
   logic_event_handler->playTone.connect(mem_fun(*this, &SipLogic::playLogicTone));
   logic_event_handler->playDtmf.connect(mem_fun(*this, &SipLogic::playLogicDtmf));
+
+  logic_event_handler->getConfigValue.connect(
+      sigc::mem_fun(*this, &SipLogic::getConfigValue));
+  logic_event_handler->setConfigValue.connect(
+      sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
+  logic_event_handler->setVariable("logic_name", name());
+  logic_event_handler->setVariable("logic_type", type());
+
   using namespace std::placeholders;
   logic_event_handler->addCommand("initCall",
       std::bind(&SipLogic::initCallHandler, this, _1, _2));
 
-  logic_event_handler->processEvent("namespace eval " + name() + " {}");
+  logic_event_handler->processEvent(std::string("namespace eval ") + name()
+                                    + "::Logic {}");
 
     // Make logic configuration variables available in TCL event handlers
   logic_event_handler->processEvent("namespace eval Logic {}");
@@ -789,7 +801,15 @@ bool SipLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   sip_event_handler->playSilence.connect(mem_fun(*this, &SipLogic::playSipSilence));
   sip_event_handler->playTone.connect(mem_fun(*this, &SipLogic::playSipTone));
   sip_event_handler->playDtmf.connect(mem_fun(*this, &SipLogic::playSipDtmf));
-  sip_event_handler->processEvent("namespace eval " + name() + " {}");
+  sip_event_handler->processEvent(std::string("namespace eval ")
+                                  + name() + "::Logic {}");
+
+  sip_event_handler->getConfigValue.connect(
+      sigc::mem_fun(*this, &SipLogic::getConfigValue));
+  sip_event_handler->setConfigValue.connect(
+      sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
+  sip_event_handler->setVariable("logic_name", name());
+  sip_event_handler->setVariable("logic_type", type());
 
     // Make logic configuration variables available in TCL event handlers
   sip_event_handler->processEvent("namespace eval Logic {}");
@@ -1605,6 +1625,13 @@ void SipLogic::onDnsResultsReady(Async::DnsLookup& dns_lookup)
 {
 } /* SipLogic::onDnsResult */
 
+
+bool SipLogic::getConfigValue(const std::string& section,
+                                    const std::string& tag,
+                                    std::string& value)
+{
+  return cfg().getValue(section, tag, value, true);
+} /* SipLogic::getConfigValue */
 
 /*
  * This file has not been truncated
