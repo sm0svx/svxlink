@@ -360,7 +360,10 @@ void TcpServerBase::addConnection(TcpConnection *con)
 void TcpServerBase::removeConnection(TcpConnection *con)
 {
   auto it = find(m_tcpConnectionList.begin(), m_tcpConnectionList.end(), con);
-  assert(it != m_tcpConnectionList.end());
+  if (it == m_tcpConnectionList.end())
+  {
+    return;
+  }
   m_tcpConnectionList.erase(it);
 
   for (auto& map_item : m_con_throt_map)
