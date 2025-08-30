@@ -61,6 +61,10 @@
 * Bugfix in the receiver voter. Tone detections was not buffered, like other
   signalling, until a receiver was selected.
 
+* Bugfixes in SwSel5Decoder. Thanks to Rui Barreiros for reporting.
+  - Potential buffer overflow fixed
+  - Last defined tone was never detected
+
 
 
  1.9.1 -- 01 Jul 2025

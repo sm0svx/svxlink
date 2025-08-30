@@ -156,7 +156,7 @@ class SwSel5Decoder : public Sel5Decoder
     GoertzelState row_out[36];
 
     /* tone-digit table*/
-    char *sel5_table;
+    std::string tonedef;
 
     /*! Row tone signal level values. */
     float row_energy[16];
@@ -173,8 +173,6 @@ class SwSel5Decoder : public Sel5Decoder
     int active_timer;
     /*! the detected Sel5 sequence */
     std::string dec_digits;
-    /*! the length of the tone definition */
-    int arr_len;
 
     void Sel5Receive(void);
     void Sel5PostProcess(uint8_t hit);
