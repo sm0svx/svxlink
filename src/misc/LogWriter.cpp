@@ -477,15 +477,15 @@ void LogWriter::LogWriterWorkerSyslog::logWrite(const char* buf)
     m_buf.erase(0, pos + 1);
 
     int loglevel = LOG_INFO;
-    if (line.rfind("*** ERROR:", 0) == 0)
+    if (line.rfind("*** ERROR", 0) == 0)
     {
       loglevel = LOG_ERR;
     }
-    else if (line.rfind("*** WARNING:", 0) == 0)
+    else if (line.rfind("*** WARNING", 0) == 0)
     {
       loglevel = LOG_WARNING;
     }
-    else if (line.rfind("NOTICE:", 0) == 0)
+    else if (line.rfind("NOTICE", 0) == 0)
     {
       loglevel = LOG_NOTICE;
     }

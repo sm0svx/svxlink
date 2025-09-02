@@ -129,15 +129,14 @@ using namespace Async;
  ****************************************************************************/
 
 SwSel5Decoder::SwSel5Decoder(Config &cfg, const string &name)
-  : Sel5Decoder(cfg, name), sel5_table(0), samples_left(SEL5_BLOCK_LENGTH),
-    last_hit(0), last_stable(0), stable_timer(0), active_timer(0), arr_len(0)
+  : Sel5Decoder(cfg, name), samples_left(SEL5_BLOCK_LENGTH), last_hit(0),
+    last_stable(0), stable_timer(0), active_timer(0)
 {
 } /* SwSel5Decoder::SwSel5Decoder */
 
 
 SwSel5Decoder::~SwSel5Decoder(void)
 {
-  delete [] sel5_table;
 } /* SwSel5Decoder::~SwSel5Decoder */
 
 
@@ -218,9 +217,9 @@ bool SwSel5Decoder::initialize(void)
                      2188.0f
                    };
 
-  string value;
-  string tonedef = "0123456789";
+  tonedef = "0123456789";
 
+  std::string value;
   cfg().getValue(name(), "SEL5_TYPE", value);
   if (value == "ZVEI1")
   {
@@ -311,16 +310,12 @@ bool SwSel5Decoder::initialize(void)
      tonedef += "ABCDEF";
   }
 
-  arr_len = tonedef.length() - 1;
-  sel5_table = new char[arr_len + 1];
-  strcpy(sel5_table, tonedef.c_str());
-
   cout << "Starting " << value << " decoder" << endl;
 
   memset(row_energy, 0, sizeof(row_energy));
 
   /* Init row detectors */
-  for (int a=0; a<=arr_len; a++)
+  for (size_t a=0; a<tonedef.size(); a++)
   {
      goertzelInit(&row_out[a],    tones[a], SEL5_BANDWIDTH, 0.0f);
      goertzelInit(&row_out[a+20], tones[a], SEL5_BANDWIDTH, 0.5f);
@@ -333,13 +328,12 @@ bool SwSel5Decoder::initialize(void)
 
 int SwSel5Decoder::writeSamples(const float *buf, int len)
 {
-    int k;
     for (int i = 0; i < len; i++)
     {
         float v1;
         float famp = *(buf++);
 
-        for (k=0; k<=arr_len; k++)
+        for (size_t k=0; k<tonedef.size(); k++)
         {
           v1 = row_out[k].v2;
           row_out[k].v2 = row_out[k].v3;
@@ -348,13 +342,13 @@ int SwSel5Decoder::writeSamples(const float *buf, int len)
         }
 
         /* Row result calculators */
-        for (k=0; k<=arr_len; k++)
+        for (size_t k=0; k<tonedef.size(); k++)
         {
           if (--row_out[k].samples_left == 0)
               row_energy[k] = goertzelResult(&row_out[k]);
 
           if (--row_out[k+20].samples_left == 0)
-            row_energy[k] = goertzelResult(&row_out[k+20]);
+              row_energy[k] = goertzelResult(&row_out[k+20]);
         }
 
          /* Now we are at the end of the detection block */
@@ -391,7 +385,7 @@ void SwSel5Decoder::Sel5Receive(void)
     if (best_row >= 0)
     {
         /* Got a hit */
-        hit = sel5_table[best_row];
+        hit = tonedef[best_row];
     }
 
     /* Call the post-processing function. */
@@ -496,12 +490,12 @@ float SwSel5Decoder::goertzelResult(GoertzelState *s)
 
 int SwSel5Decoder::findMaxIndex(const float f[])
 {
+    const int tonedef_size = static_cast<int>(tonedef.size());
     float threshold = 1.0f;
     int idx = -1;
-    int i;
 
     /* Peak search */
-    for (i = 0; i < arr_len; i++)
+    for (int i = 0; i < tonedef_size; i++)
     {
         if (f[i] > threshold)
         {
@@ -515,7 +509,7 @@ int SwSel5Decoder::findMaxIndex(const float f[])
     /* Peak test */
     threshold *= 1.0f / SEL5_RELATIVE_PEAK;
 
-    for (i = 0; i < arr_len; i++)
+    for (int i = 0; i < tonedef_size; i++)
     {
         if (idx != i && f[i] > threshold)
             return -1;
