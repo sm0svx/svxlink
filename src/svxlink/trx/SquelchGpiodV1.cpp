@@ -164,8 +164,7 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
   std::string bias;
   if (cfg.getValue(rx_name, "SQL_GPIOD_BIAS", bias))
   {
-#if (GPIOD_VERSION_MAJOR >= 2) || \
-    ((GPIOD_VERSION_MAJOR == 1) && (GPIOD_VERSION_MINOR >= 5))
+#if ((GPIOD_VERSION_MAJOR == 1) && (GPIOD_VERSION_MINOR >= 5))
     if (bias == "PULLUP")
     {
       req_cfg.flags |= GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP;

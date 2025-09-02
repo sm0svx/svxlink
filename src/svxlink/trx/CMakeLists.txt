@@ -61,21 +61,42 @@ else (RTLSDR_FOUND)
   )
 endif (RTLSDR_FOUND)
 
-# Find GPIOD
-find_package(GPIOD 1 EXACT)
-if (GPIOD_FOUND)
+# Find GPIOD v2 (C++ bindings) first - preferred version
+find_package(PkgConfig)
+if(PkgConfig_FOUND)
+  pkg_check_modules(GPIOD_V2 libgpiodcxx)
+else()
+  set(GPIOD_V2_FOUND FALSE)
+
+  # Find GPIOD v1 (C API) as fallback
+  find_package(GPIOD 1 EXACT)
+endif()
+
+# Use v2 if available, otherwise use v1
+if (GPIOD_V2_FOUND)
+  # Well, libgpiod C++ bindings require C++17....
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(LIBS ${LIBS} ${GPIOD_V2_LIBRARIES})
+  include_directories(${GPIOD_V2_INCLUDE_DIRS})
+  add_definitions(${GPIOD_V2_CFLAGS_OTHER} -DHAS_GPIOD_V2_SUPPORT)
+  set(LIBSRC ${LIBSRC} PttGpiodV2.cpp SquelchGpiodV2.cpp)
+  message(STATUS "Found libgpiod v2 (C++ bindings)")
+elseif (GPIOD_FOUND)
   set(LIBS ${LIBS} ${GPIOD_LIBRARIES})
   include_directories(${GPIOD_INCLUDE_DIRS})
   add_definitions(${GPIOD_DEFINITIONS} -DHAS_GPIOD_SUPPORT)
-  set(LIBSRC ${LIBSRC} PttGpiod.cpp SquelchGpiod.cpp)
-else (GPIOD_FOUND)
+  # Use v1 implementation files
+  set(LIBSRC ${LIBSRC} PttGpiodV1.cpp SquelchGpiodV1.cpp)
+  message(STATUS "Found libgpiod v1 (C API) - using legacy C implementation")
+else()
   message(
-    "--   The gpiod library is an optional dependency.\n"
+    "--   Neither libgpiod v1 nor v2 found.\n"
     "--   Accessing GPIO pins using GPIOD will be unavailable.\n"
     "--   Access through the deprecated sysfs interface will still\n"
     "--   work though."
   )
-endif (GPIOD_FOUND)
+endif()
 
 # Find jsoncpp library
 #find_package(jsoncpp REQUIRED)

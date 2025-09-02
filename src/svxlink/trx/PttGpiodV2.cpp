@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstring>
 #include <cerrno>
+#include <filesystem>
+#include <gpiod.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -50,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttGpiod.h"
+#include "PttGpiodV2.h"
 
 
 
@@ -109,35 +111,32 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 PttGpiod::PttGpiod(void)
+  : m_line_offset(0)
 {
 } /* PttGpiod::PttGpiod */
 
 
 PttGpiod::~PttGpiod(void)
 {
-  if (m_line != nullptr)
-  {
-    gpiod_line_release(m_line);
-    m_line = nullptr;
-  }
-
-  if (m_chip != nullptr)
-  {
-    gpiod_chip_close(m_chip);
-    m_chip = nullptr;
-  }
+  m_line_request->release();
+  m_line_request.reset();
 } /* PttGpiod::~PttGpiod */
 
 
 bool PttGpiod::initialize(Async::Config &cfg, const std::string name)
 {
-  std::string chip("gpiochip0");
+  std::filesystem::path chip_path("/dev/gpiochip0");
+  std::string chip;
+  
   cfg.getValue(name, "PTT_GPIOD_CHIP", chip);
-
-  struct gpiod_line_request_config req_cfg;
-  req_cfg.consumer = "SvxLink";
-  req_cfg.request_type = GPIOD_LINE_REQUEST_DIRECTION_OUTPUT;
-  req_cfg.flags = 0;
+  if(chip.rfind("/dev/", 0)  == 0)
+  {
+    chip_path = chip;
+  } 
+  else 
+  {
+    chip_path = "/dev/" + chip;
+  }
 
   std::string line;
   if (!cfg.getValue(name, "PTT_GPIOD_LINE", line) || line.empty())
@@ -147,48 +146,64 @@ bool PttGpiod::initialize(Async::Config &cfg, const std::string name)
               << std::endl;
     return false;
   }
+
   bool active_low = false;
   if (line[0] == '!')
   {
     active_low = true;
     line.erase(0, 1);
-    req_cfg.flags |= GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW;
   }
 
-  m_chip = gpiod_chip_open_lookup(chip.c_str());
-  if (m_chip == nullptr)
+  try
   {
-    std::cerr << "*** ERROR: Open GPIOD chip \"" << chip
-              << "\" failed for TX " << name << ": "
-              << std::strerror(errno) << std::endl;
-    return false;
-  }
+    // Get the line
+    int line_num = -1;
+    std::istringstream is(line);
+    is >> line_num;
+    
+    if (!is.fail() && is.eof())
+    {
+      // Line is a number
+      if(line_num >= 0)
+        m_line_offset = line_num;
+    }
+    else
+    {
+      // Find line by name
+      line_num = ::gpiod::chip(chip_path)
+                  .get_line_offset_from_name(line);
 
-  int line_num = -1;
-  std::istringstream is(line);
-  is >> line_num;
-  if (!is.fail() && is.eof())
-  {
-    m_line = gpiod_chip_get_line(m_chip, line_num);
-  }
-  else
-  {
-    m_line = gpiod_chip_find_line(m_chip, line.c_str());
-  }
-  if (!m_line)
-  {
-    std::cerr << "*** ERROR: Get GPIOD line \"" << line_num
-              << "\" failed for TX " << name << ": "
-              << std::strerror(errno) << std::endl;
-    return false;
-  }
+      if(line_num >= 0)
+        m_line_offset = line_num;
+    }
 
-  int ret = gpiod_line_request(m_line, &req_cfg, active_low ? 1 : 0);
-  if (ret < 0)
+    if (line_num < 0)
+    {
+      std::cerr << "*** ERROR: Get GPIOD line \"" << line
+                << "\" failed for TX " << name << ": "
+                << std::strerror(errno) << std::endl;
+      return false;
+    }
+
+    m_line_request = std::make_unique<::gpiod::line_request>(
+       ::gpiod::chip(chip_path)
+         .prepare_request()
+         .set_consumer("SvxLink")
+         .add_line_settings(
+           m_line_offset,
+           ::gpiod::line_settings()
+             .set_direction(
+               ::gpiod::line::direction::OUTPUT
+             )
+             .set_active_low(active_low)
+         )
+         .do_request()
+     );
+  }
+  catch (const std::exception& e)
   {
-    std::cerr << "*** ERROR: Set GPIOD line \"" << line_num
-              << "\" to output failed for TX " << name << ": "
-              << std::strerror(errno) << std::endl;
+    std::cerr << "*** ERROR: GPIOD operation failed for TX " << name 
+              << ": " << e.what() << std::endl;
     return false;
   }
 
@@ -198,14 +213,23 @@ bool PttGpiod::initialize(Async::Config &cfg, const std::string name)
 
 bool PttGpiod::setTxOn(bool tx_on)
 {
-  //cerr << "### PttGpiod::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
+  if (!m_line_request)
+  {
+    std::cerr << "*** WARNING: PttGpiod::setTxOn: "
+                 "line request not initialized" << std::endl;
+    return false;
+  }
 
-  int ret = gpiod_line_set_value(m_line, tx_on ? 1 : 0);
-  if (ret < 0)
+  try
+  {
+    m_line_request->set_value(m_line_offset, tx_on ? 
+      ::gpiod::line::value::ACTIVE : ::gpiod::line::value::INACTIVE);
+  }
+  catch (const std::exception& e)
   {
     std::cerr << "*** WARNING: PttGpiod::setTxOn: "
                  "gpiod_line_set_value failed: "
-              << std::strerror(errno) << std::endl;
+              << e.what() << std::endl;
     return false;
   }
 
