@@ -62,7 +62,7 @@ else (RTLSDR_FOUND)
 endif (RTLSDR_FOUND)
 
 # Find GPIOD
-find_package(GPIOD 1 EXACT)
+find_package(GPIOD)
 if (GPIOD_FOUND)
   set(LIBS ${LIBS} ${GPIOD_LIBRARIES})
   include_directories(${GPIOD_INCLUDE_DIRS})

@@ -140,8 +140,14 @@ class PttGpiod : public Ptt
     virtual bool setTxOn(bool tx_on);
 
   private:
-    struct gpiod_chip*  m_chip  = nullptr;
-    struct gpiod_line*  m_line  = nullptr;
+    struct gpiod_chip*          m_chip  = nullptr;
+
+#if GPIOD_VERSION_MAJOR >= 2
+    struct gpiod_line_request*  m_request = nullptr;
+    unsigned int                m_line_offset;
+#else
+    struct gpiod_line*          m_line  = nullptr;
+#endif
 
 };  /* class PttGpiod */
 
