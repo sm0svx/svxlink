@@ -140,8 +140,15 @@ class SquelchGpiod : public Squelch
   private:
     Async::Timer        m_timer;
     //Async::FdWatch      m_watch;
-    struct gpiod_chip*  m_chip  = nullptr;
+
+    struct gpiod_chip*          m_chip  = nullptr;
+
+#if GPIOD_VERSION_MAJOR >= 2
+    struct gpiod_line_request*  m_request = nullptr;
+    unsigned int                m_line_offset;
+#else
     struct gpiod_line*  m_line  = nullptr;
+#endif
 
     //void readGpioValueData(void);
 
