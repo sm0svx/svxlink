@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -166,9 +166,6 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
     line.erase(0, 1);
   }
 
-  std::string bias;
-  cfg.getValue(rx_name, "SQL_GPIOD_BIAS", bias);
-
 #if GPIOD_VERSION_MAJOR >= 2
   m_chip = gpiod_chip_open(chip.c_str());
 #else
@@ -183,11 +180,11 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
     return false;
   }
 
+    // Parse line number or name
   unsigned int line_num;
   std::istringstream is(line);
   is >> line_num;
   bool is_line_num = (!is.fail() && is.eof());
-
   if (is_line_num)
   {
 #if GPIOD_VERSION_MAJOR >= 2
@@ -219,24 +216,27 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
 #endif
   }
 
+  std::string bias;
+  cfg.getValue(rx_name, "SQL_GPIOD_BIAS", bias);
+
 #if GPIOD_VERSION_MAJOR >= 2
-  // Create line settings
+    // Create line settings
   struct gpiod_line_settings* settings = gpiod_line_settings_new();
   if (settings == nullptr)
   {
-    std::cerr << "*** ERROR: Failed to create line settings for RX \"" 
+    std::cerr << "*** ERROR: Failed to create line settings for RX \""
               << rx_name << "\"" << std::endl;
     return false;
   }
 
   gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_INPUT);
-  
+
   if (active_low)
   {
     gpiod_line_settings_set_active_low(settings, true);
   }
 
-  // Handle bias settings
+    // Handle bias settings
   if (!bias.empty())
   {
     if (bias == "PULLUP")
@@ -262,32 +262,32 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
     }
   }
 
-  // Create line config
+    // Create line config
   struct gpiod_line_config* config = gpiod_line_config_new();
   if (config == nullptr)
   {
-    std::cerr << "*** ERROR: Failed to create line config for RX \"" 
+    std::cerr << "*** ERROR: Failed to create line config for RX \""
               << rx_name << "\"" << std::endl;
     gpiod_line_settings_free(settings);
     return false;
   }
 
-  int ret = gpiod_line_config_add_line_settings(config, &m_line_offset, 1, settings);
-
+  int ret = gpiod_line_config_add_line_settings(config, &m_line_offset, 1,
+                                                settings);
   if (ret < 0)
   {
-    std::cerr << "*** ERROR: Failed to add line settings for RX \"" 
+    std::cerr << "*** ERROR: Failed to add line settings for RX \""
               << rx_name << "\": " << std::strerror(errno) << std::endl;
     gpiod_line_config_free(config);
     gpiod_line_settings_free(settings);
     return false;
   }
 
-  // Create request config
+    // Create request config
   struct gpiod_request_config* req_config = gpiod_request_config_new();
   if (req_config == nullptr)
   {
-    std::cerr << "*** ERROR: Failed to create request config for RX \"" 
+    std::cerr << "*** ERROR: Failed to create request config for RX \""
               << rx_name << "\"" << std::endl;
     gpiod_line_config_free(config);
     gpiod_line_settings_free(settings);
@@ -295,7 +295,7 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
   }
   gpiod_request_config_set_consumer(req_config, "SvxLink");
 
-  // Request the line
+    // Request the line
   m_request = gpiod_chip_request_lines(m_chip, req_config, config);
   if (m_request == nullptr)
   {
@@ -308,14 +308,15 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
     return false;
   }
 
-  // Clean up temporary objects
+    // Clean up temporary objects
   gpiod_request_config_free(req_config);
   gpiod_line_config_free(config);
   gpiod_line_settings_free(settings);
 
-  // Set up timer for polling
+    // Set up timer for polling
   m_timer.expired.connect([=](Async::Timer*) {
-        enum gpiod_line_value val = gpiod_line_request_get_value(m_request, m_line_offset);
+        enum gpiod_line_value val =
+          gpiod_line_request_get_value(m_request, m_line_offset);
         if (val == GPIOD_LINE_VALUE_ERROR)
         {
           std::cerr << "*** WARNING: Read GPIOD line \"" << line
@@ -325,9 +326,8 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
         }
         setSignalDetected(val == GPIOD_LINE_VALUE_ACTIVE);
       });
-
 #else
-  // libgpiod v1
+    // libgpiod v1
   struct gpiod_line_request_config req_cfg;
   req_cfg.consumer = "SvxLink";
   req_cfg.request_type = GPIOD_LINE_REQUEST_DIRECTION_INPUT;
