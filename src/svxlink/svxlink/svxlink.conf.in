@@ -13,7 +13,7 @@ TIMESTAMP_FORMAT="%c"
 CARD_SAMPLE_RATE=48000
 #CARD_CHANNELS=1
 #LOCATION_INFO=LocationInfo
-#LINKS=LinkToR4
+#LINKS=ReflectorLink,LinkToR4
 
 [SimplexLogic]
 TYPE=Simplex
@@ -135,7 +135,14 @@ CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic:92:SK3CD
 #DEFAULT_ACTIVE=1
 TIMEOUT=300
 #ACTIVATE_ON_ACTIVITY=RepeaterLogic
-#ACTIVATE_ON_TG=RepeaterLogic:1,SimplexLogic:1
+#ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123
+
+[ReflectorLink]
+CONNECT_LOGICS=SimplexLogic:9:TG,ReflectorLogic
+DEFAULT_ACTIVE=1
+#TIMEOUT=300
+#ACTIVATE_ON_ACTIVITY=RepeaterLogic
+#ACTIVATE_ON_TG=SimplexLogic:240.*,ReflectorLogic:2403|2404|123
 
 [Macros]
 1=EchoLink:9999#

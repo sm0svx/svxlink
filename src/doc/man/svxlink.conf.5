@@ -1039,11 +1039,12 @@ The link is activated/deactivated using DTMF commands and/or automatically
 depending on your configuration.  When the link is active, all audio received
 by one logic will be transmitted by the other logic(s).
 .P
-The name of the logic linking section can be chosen freely. In the example 
-configuration file, there is a section [LinkToR4]. To use a logic linking 
-section in a logic core it must be pointed out by the LINKS configuration 
-variable in the GLOBAL section.
-Example: GLOBAL/LINKS=LinkToR4
+The name of the logic linking section can be chosen freely. In the example
+configuration file, there are a couple of sections: [ReflectorLink] and
+[LinkToR4]. To use a logic linking section in a logic core it must be pointed
+out by the LINKS configuration variable in the GLOBAL section. Multiple links
+are separated with a comma.
+Example: GLOBAL/LINKS=ReflectorLink,LinkToR4
 .TP
 .B CONNECT_LOGICS
 A comma separated list of logic specifications for the logic cores to connect
@@ -1053,10 +1054,10 @@ the logic to include in the link. To manually activate or deactivate the link
 from the just specified logic, "command" is used. The "announcement name" is
 used when announcing link related activities like activation or deactivation.
 Both "command" and "announcement name" may be left empty if no manual control
-is wanted.
+is desired.
 An example config line may look like this:
 
-RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
+  RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
 
 It will include two logics in the link, RepeaterLogic_2m and
 RepeaterLogic_70cm. From the 2m side, the link will be activated when the user
@@ -1091,6 +1092,8 @@ Example: ACTIVATE_ON_ACTIVITY=MicSpkrLogic
 Enter a comma separated list of entries on the form logic:tg_regex, which
 should automatically activate the link if the specified talkgroup regular
 expression matches a talkgroup that is activated on the specified logic core.
+Use CTCSS_TO_TG in a SimplexLogic or RepeaterLogic to make it emit a talkgroup
+for a specific subtone.
 Example: ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123
 .
 .SS Local Receiver Section

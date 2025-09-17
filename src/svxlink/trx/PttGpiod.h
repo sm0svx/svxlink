@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -140,8 +140,13 @@ class PttGpiod : public Ptt
     virtual bool setTxOn(bool tx_on);
 
   private:
-    struct gpiod_chip*  m_chip  = nullptr;
-    struct gpiod_line*  m_line  = nullptr;
+    struct gpiod_chip*          m_chip          = nullptr;
+#if GPIOD_VERSION_MAJOR >= 2
+    struct gpiod_line_request*  m_request       = nullptr;
+    unsigned int                m_line_offset;
+#else
+    struct gpiod_line*          m_line          = nullptr;
+#endif
 
 };  /* class PttGpiod */
 
