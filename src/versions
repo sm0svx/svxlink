@@ -11,7 +11,7 @@ LIBECHOLIB=1.3.5
 LIBASYNC=1.8.99.0
 
 # SvxLink versions
-SVXLINK=1.9.99.28
+SVXLINK=1.9.99.29
 MODULE_HELP=1.0.0.99.0
 MODULE_PARROT=1.1.1.99.1
 MODULE_ECHO_LINK=1.6.0.99.1
@@ -22,16 +22,16 @@ MODULE_SELCALLENC=1.0.0.99.1
 MODULE_DTMF_REPEATER=1.0.2.99.0
 MODULE_METAR_INFO=1.2.2.99.0
 MODULE_FRN=1.1.0.99.0
-MODULE_TRX=1.0.0.99.1
+MODULE_TRX=1.0.0.99.2
 
 # Version for the RemoteTrx application
-REMOTE_TRX=1.5.99.3
+REMOTE_TRX=1.5.99.4
 
 # Version for the signal level calibration utility
-SIGLEV_DET_CAL=1.0.10
+SIGLEV_DET_CAL=1.0.10.99.0
 
 # Version for the deviation calibration utility
-DEVCAL=1.0.4.99.1
+DEVCAL=1.0.4.99.2
 
 # Version for svxserver
 SVXSERVER=0.0.6.99.0

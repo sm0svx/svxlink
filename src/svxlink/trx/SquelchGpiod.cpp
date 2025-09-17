@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstring>
 #include <cerrno>
+#include <sstream>
 
 
 /****************************************************************************
@@ -117,11 +118,19 @@ SquelchGpiod::~SquelchGpiod(void)
   m_timer.setEnable(false);
   //m_watch.setEnabled(false);
 
+#if GPIOD_VERSION_MAJOR >= 2
+  if (m_request != nullptr)
+  {
+    gpiod_line_request_release(m_request);
+    m_request = nullptr;
+  }
+#else
   if (m_line != nullptr)
   {
     gpiod_line_release(m_line);
     m_line = nullptr;
   }
+#endif
 
   if (m_chip != nullptr)
   {
@@ -141,12 +150,6 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
   std::string chip("gpiochip0");
   cfg.getValue(rx_name, "SQL_GPIOD_CHIP", chip);
 
-  struct gpiod_line_request_config req_cfg;
-  req_cfg.consumer = "SvxLink";
-  //req_cfg.request_type = GPIOD_LINE_REQUEST_EVENT_BOTH_EDGES;
-  req_cfg.request_type = GPIOD_LINE_REQUEST_DIRECTION_INPUT;
-  req_cfg.flags = 0;
-
   std::string line;
   if (!cfg.getValue(rx_name, "SQL_GPIOD_LINE", line) || line.empty())
   {
@@ -155,17 +158,189 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
               << std::endl;
     return false;
   }
+
+  bool active_low = false;
   if (line[0] == '!')
   {
+    active_low = true;
     line.erase(0, 1);
-    req_cfg.flags |= GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW;
+  }
+
+#if GPIOD_VERSION_MAJOR >= 2
+  m_chip = gpiod_chip_open(chip.c_str());
+#else
+  m_chip = gpiod_chip_open_lookup(chip.c_str());
+#endif
+
+  if (m_chip == nullptr)
+  {
+    std::cerr << "*** ERROR: Open GPIOD chip \"" << chip
+              << "\" failed for RX \"" << rx_name << "\": "
+              << std::strerror(errno) << std::endl;
+    return false;
+  }
+
+    // Parse line number or name
+  unsigned int line_num;
+  std::istringstream is(line);
+  is >> line_num;
+  bool is_line_num = (!is.fail() && is.eof());
+  if (is_line_num)
+  {
+#if GPIOD_VERSION_MAJOR >= 2
+    m_line_offset = line_num;
+#else
+    m_line = gpiod_chip_get_line(m_chip, line_num);
+#endif
+  }
+  else
+  {
+#if GPIOD_VERSION_MAJOR >= 2
+    m_line_offset = gpiod_chip_get_line_offset_from_name(m_chip, line.c_str());
+    if (m_line_offset < 0)
+    {
+      std::cerr << "*** ERROR: Get GPIOD line \"" << line
+                << "\" failed for RX \"" << rx_name << "\": "
+                << std::strerror(errno) << std::endl;
+      return false;
+    }
+#else
+    m_line = gpiod_chip_find_line(m_chip, line.c_str());
+    if (!m_line)
+    {
+      std::cerr << "*** ERROR: Get GPIOD line \"" << line
+                << "\" failed for RX \"" << rx_name << "\": "
+                << std::strerror(errno) << std::endl;
+      return false;
+    }
+#endif
   }
 
   std::string bias;
-  if (cfg.getValue(rx_name, "SQL_GPIOD_BIAS", bias))
+  cfg.getValue(rx_name, "SQL_GPIOD_BIAS", bias);
+
+#if GPIOD_VERSION_MAJOR >= 2
+    // Create line settings
+  struct gpiod_line_settings* settings = gpiod_line_settings_new();
+  if (settings == nullptr)
   {
-#if (GPIOD_VERSION_MAJOR >= 2) || \
-    ((GPIOD_VERSION_MAJOR == 1) && (GPIOD_VERSION_MINOR >= 5))
+    std::cerr << "*** ERROR: Failed to create line settings for RX \""
+              << rx_name << "\"" << std::endl;
+    return false;
+  }
+
+  gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_INPUT);
+
+  if (active_low)
+  {
+    gpiod_line_settings_set_active_low(settings, true);
+  }
+
+    // Handle bias settings
+  if (!bias.empty())
+  {
+    if (bias == "PULLUP")
+    {
+      gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_PULL_UP);
+    }
+    else if (bias == "PULLDOWN")
+    {
+      gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_PULL_DOWN);
+    }
+    else if (bias == "DISABLE")
+    {
+      gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_DISABLED);
+    }
+    else
+    {
+      std::cerr << "*** ERROR: Config variable " << rx_name
+                << "/SQL_GPIOD_BIAS has an illegal value specified. "
+                   "Valid values are: DISABLE, PULLUP and PULLDOWN."
+                << std::endl;
+      gpiod_line_settings_free(settings);
+      return false;
+    }
+  }
+
+    // Create line config
+  struct gpiod_line_config* config = gpiod_line_config_new();
+  if (config == nullptr)
+  {
+    std::cerr << "*** ERROR: Failed to create line config for RX \""
+              << rx_name << "\"" << std::endl;
+    gpiod_line_settings_free(settings);
+    return false;
+  }
+
+  int ret = gpiod_line_config_add_line_settings(config, &m_line_offset, 1,
+                                                settings);
+  if (ret < 0)
+  {
+    std::cerr << "*** ERROR: Failed to add line settings for RX \""
+              << rx_name << "\": " << std::strerror(errno) << std::endl;
+    gpiod_line_config_free(config);
+    gpiod_line_settings_free(settings);
+    return false;
+  }
+
+    // Create request config
+  struct gpiod_request_config* req_config = gpiod_request_config_new();
+  if (req_config == nullptr)
+  {
+    std::cerr << "*** ERROR: Failed to create request config for RX \""
+              << rx_name << "\"" << std::endl;
+    gpiod_line_config_free(config);
+    gpiod_line_settings_free(settings);
+    return false;
+  }
+  gpiod_request_config_set_consumer(req_config, "SvxLink");
+
+    // Request the line
+  m_request = gpiod_chip_request_lines(m_chip, req_config, config);
+  if (m_request == nullptr)
+  {
+    std::cerr << "*** ERROR: Request GPIOD line \"" << line
+              << "\" failed for RX \"" << rx_name << "\": "
+              << std::strerror(errno) << std::endl;
+    gpiod_request_config_free(req_config);
+    gpiod_line_config_free(config);
+    gpiod_line_settings_free(settings);
+    return false;
+  }
+
+    // Clean up temporary objects
+  gpiod_request_config_free(req_config);
+  gpiod_line_config_free(config);
+  gpiod_line_settings_free(settings);
+
+    // Set up timer for polling
+  m_timer.expired.connect([=](Async::Timer*) {
+        enum gpiod_line_value val =
+          gpiod_line_request_get_value(m_request, m_line_offset);
+        if (val == GPIOD_LINE_VALUE_ERROR)
+        {
+          std::cerr << "*** WARNING: Read GPIOD line \"" << line
+                    << "\" failed for RX \"" << rx_name << "\": "
+                    << std::strerror(errno) << std::endl;
+          return;
+        }
+        setSignalDetected(val == GPIOD_LINE_VALUE_ACTIVE);
+      });
+#else
+    // libgpiod v1
+  struct gpiod_line_request_config req_cfg;
+  req_cfg.consumer = "SvxLink";
+  req_cfg.request_type = GPIOD_LINE_REQUEST_DIRECTION_INPUT;
+  req_cfg.flags = 0;
+
+  if (active_low)
+  {
+    req_cfg.flags |= GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW;
+  }
+
+  if (!bias.empty())
+  {
+#if ((GPIOD_VERSION_MAJOR == 1) && (GPIOD_VERSION_MINOR >= 5))
     if (bias == "PULLUP")
     {
       req_cfg.flags |= GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP;
@@ -196,70 +371,27 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
 #endif
   }
 
-  m_chip = gpiod_chip_open_lookup(chip.c_str());
-  if (m_chip == nullptr)
-  {
-    std::cerr << "*** ERROR: Open GPIOD chip \"" << chip
-              << "\" failed for RX \"" << rx_name << "\": "
-              << std::strerror(errno) << std::endl;
-    return false;
-  }
-
-  int line_num = -1;
-  std::istringstream is(line);
-  is >> line_num;
-  if (!is.fail() && is.eof())
-  {
-    m_line = gpiod_chip_get_line(m_chip, line_num);
-  }
-  else
-  {
-    m_line = gpiod_chip_find_line(m_chip, line.c_str());
-  }
-  if (!m_line)
-  {
-    std::cerr << "*** ERROR: Get GPIOD line \"" << line_num
-              << "\" failed for RX \"" << rx_name << "\": "
-              << std::strerror(errno) << std::endl;
-    return false;
-  }
-
   int ret = gpiod_line_request(m_line, &req_cfg, 0);
   if (ret < 0)
   {
-    std::cerr << "*** ERROR: Set GPIOD line \"" << line_num
+    std::cerr << "*** ERROR: Set GPIOD line \"" << line
               << "\" to input failed for RX \"" << rx_name << "\": "
               << std::strerror(errno) << std::endl;
     return false;
   }
 
-#if 0
-  int fd = gpiod_line_event_get_fd(m_line);
-  if (fd < 0)
-  {
-    std::cerr << "*** ERROR: Retrieve GPIOD line \"" << line_num
-              << "\" file descriptor failed for RX \"" << rx_name << "\": "
-              << std::strerror(errno) << std::endl;
-    return false;
-  }
-
-  m_watch.activity.connect(
-      hide(mem_fun(*this, &SquelchGpiod::readGpioValueData)));
-  m_watch.setFd(fd, Async::FdWatch::FD_WATCH_RD);
-  m_watch.setEnabled(true);
-#endif
-
-  m_timer.expired.connect([&](Async::Timer*) {
+  m_timer.expired.connect([=](Async::Timer*) {
         int val = gpiod_line_get_value(m_line);
         if (val < 0)
         {
-          std::cerr << "*** WARNING: Read GPIOD line \"" << line_num
+          std::cerr << "*** WARNING: Read GPIOD line \"" << line
                     << "\" failed for RX \"" << rx_name << "\": "
                     << std::strerror(errno) << std::endl;
           return;
         }
         setSignalDetected(val > 0);
       });
+#endif
 
   return true;
 } /* SquelchGpiod::initialize */
