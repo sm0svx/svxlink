@@ -1065,7 +1065,7 @@ void Voter::ActiveRxSelected::init(SatRx *srx)
 
 void Voter::ActiveRxSelected::exit(void)
 {
-  runTask(sigc::bind(sigc::mem_fun(activeSrx(), &SatRx::stopOutput), true));
+  runTask(sigc::bind(sigc::mem_fun(*activeSrx(), &SatRx::stopOutput), true));
 } /* Voter::ActiveRxSelected::exit */
 
 
@@ -1117,7 +1117,7 @@ void Voter::SquelchOpen::entry(void)
   }
 
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true, ss.str()));
-  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));
+  runTask(bind(mem_fun(*activeSrx(), &SatRx::stopOutput), false));
   //runTask(mem_fun(voter(), &Voter::publishSquelchState));
 } /* Voter::SquelchOpen::entry */
 
@@ -1161,9 +1161,9 @@ float Voter::SquelchOpen::signalStrength(void)
 
 void Voter::SquelchOpen::changeActiveSrx(SatRx *srx)
 {
-  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), true));
+  runTask(bind(mem_fun(*activeSrx(), &SatRx::stopOutput), true));
   SUPER::changeActiveSrx(srx);
-  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));  
+  runTask(bind(mem_fun(*activeSrx(), &SatRx::stopOutput), false));
 } /* Voter::SquelchOpen::changeActiveSrx */
 
 

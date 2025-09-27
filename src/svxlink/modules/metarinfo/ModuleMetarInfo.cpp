@@ -197,10 +197,10 @@ class ModuleMetarInfo::Http : public sigc::trackable
    } /* ~Http */
 
    // a signal when a metar has been available
-   sigc::signal<void, std::string, size_t> metarInfo;
+   sigc::signal<void(std::string, size_t)> metarInfo;
 
    // a signal when a metar has a timeout
-   sigc::signal<void> metarTimeout;
+   sigc::signal<void()> metarTimeout;
 
 
    // update the html handler periodically

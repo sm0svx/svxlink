@@ -197,7 +197,7 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
     /*
      * @brief A signal that is emitted when all digits have been sent.
      */
-    sigc::signal<void> allDigitsSent;
+    sigc::signal<void()> allDigitsSent;
 
 
   protected:

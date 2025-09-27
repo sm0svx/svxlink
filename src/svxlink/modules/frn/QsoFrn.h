@@ -277,13 +277,13 @@ class QsoFrn
      /**
       * @brief  QSO is erroring out and cannot recover itself
       */
-     sigc::signal<void> error;
+     sigc::signal<void()> error;
 
      /**
       * @brief QSO internal state has been changed
       * @param QSO state enum value
       */
-     sigc::signal<void, State> stateChange;
+     sigc::signal<void(State)> stateChange;
 
  protected:
      /**
@@ -319,21 +319,21 @@ class QsoFrn
      *
      * @param vector of strings populated from FRN
      */
-    sigc::signal<void, const FrnList& > frnListReceived;
+    sigc::signal<void(const FrnList&)> frnListReceived;
 
     /**
      * @brief Emitted when FRN client list is fully populated
      *
      * @param vector of strings populated from FRN
      */
-    sigc::signal<void, const FrnList& > frnClientListReceived;
+    sigc::signal<void(const FrnList&)> frnClientListReceived;
 
     /**
      * @brief Emitted when started receiving voice from client
      *
      * @param string with client xml data
      */
-    sigc::signal<void, const std::string& > rxVoiceStarted;
+    sigc::signal<void(const std::string&)> rxVoiceStarted;
 
      /**
      * @brief Called when started receiving voice from the client

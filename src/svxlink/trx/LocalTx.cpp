@@ -605,7 +605,8 @@ bool LocalTx::initialize(void)
       // Create the AFSK modulator
     fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
                                 afsk_level);
-    hdlc_framer->sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
+    hdlc_framer->sendBits.connect(
+        sigc::mem_fun(*fsk_mod, &AfskModulator::sendBits));
 
       // Frequency sampling filter with passband center 5500Hz, about 400Hz
       // wide and about 40dB stop band attenuation
@@ -663,7 +664,7 @@ bool LocalTx::initialize(void)
     fsk_mod_ib = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
                                 afsk_level);
     hdlc_framer_ib->sendBits.connect(
-        mem_fun(fsk_mod_ib, &AfskModulator::sendBits));
+        sigc::mem_fun(*fsk_mod_ib, &AfskModulator::sendBits));
 
     AudioPacer *pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256, 0);
     fsk_mod_ib->registerSink(pacer);

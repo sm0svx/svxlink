@@ -90,8 +90,8 @@ class SquelchCombine::Node
     virtual bool isOpen(void) const = 0;
     virtual std::string activityInfo(void) const = 0;
     virtual SquelchStates& squelchStates(SquelchStates& states) = 0;
-    sigc::signal<void, bool> squelchOpen;
-    sigc::signal<void, float> toneDetected;
+    sigc::signal<void(bool)> squelchOpen;
+    sigc::signal<void(float)> toneDetected;
 
   private:
     std::string m_name;

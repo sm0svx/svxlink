@@ -221,19 +221,19 @@ class AudioStreamStateDetector
      * @param is_active Is \em true if the stream is active
      * @param is_idle 	Is \em  true if the stream is idle
      */
-    sigc::signal<void, bool, bool> sigStreamStateChanged;
+    sigc::signal<void(bool, bool)> sigStreamStateChanged;
 
     /**
      * @brief A signal that is emitted when stream activity state changes
      * @param is_active Is \em true if the stream is active
      */
-    sigc::signal<void, bool> sigStreamIsActive;
+    sigc::signal<void(bool)> sigStreamIsActive;
 
     /**
      * @brief A signal that is emitted when stream idle state changes
      * @param is_idle Is \em  true if the stream is idle
      */
-    sigc::signal<void, bool> sigStreamIsIdle;
+    sigc::signal<void(bool)> sigStreamIsIdle;
 
   private:
     AudioStreamStateDetector(const AudioStreamStateDetector&);
