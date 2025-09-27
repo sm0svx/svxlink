@@ -297,7 +297,7 @@ configure_file(${CMAKE_SOURCE_DIR}/config.h.in
   )
 
 # Find the Sigc++ library
-find_package(SIGC 3 REQUIRED)
+find_package(SIGC REQUIRED)
 include_directories(${SIGC_INCLUDE_DIRS})
 add_definitions(${SIGC_DEFINITIONS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SIGC_CXX_FLAGS}")
