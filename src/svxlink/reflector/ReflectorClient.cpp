@@ -242,6 +242,7 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
 
 ReflectorClient::~ReflectorClient(void)
 {
+  m_status = nullptr;
   auto client_it = client_map.find(m_client_id);
   assert(client_it != client_map.end());
   client_map.erase(client_it);
@@ -254,15 +255,16 @@ ReflectorClient::~ReflectorClient(void)
 } /* ReflectorClient::~ReflectorClient */
 
 
-void ReflectorClient::setRemoteUdpPort(uint16_t port)
+void ReflectorClient::setRemoteUdpSource(const ReflectorClient::ClientSrc& src)
 {
   assert(m_remote_udp_port == 0);
-  m_remote_udp_port = port;
+  m_remote_udp_port = src.second;
   if (m_client_proto_ver >= ProtoVer(3, 0))
   {
-    m_client_src = newClientSrc(this);
+    m_client_src = src;
+    client_src_map[src] = this;
   }
-} /* ReflectorClient::setRemoteUdpPort */
+} /* ReflectorClient::setRemoteUdpSource */
 
 
 int ReflectorClient::sendMsg(const ReflectorMsg& msg)
@@ -345,6 +347,19 @@ void ReflectorClient::setBlock(unsigned blocktime)
 } /* ReflectorClient::setBlock */
 
 
+void ReflectorClient::updateIsTalker(void)
+{
+  if (m_status != nullptr)
+  {
+    auto talker = TGHandler::instance()->talkerForTG(m_current_tg);
+    (*m_status)["isTalker"] = (
+        TGHandler::instance()->showActivity(m_current_tg) &&
+        (talker == this)
+        );
+  }
+} /* ReflectorClient:;updateIsTalker */
+
+
 std::vector<uint8_t> ReflectorClient::udpCipherIV(void) const
 {
   return UdpCipher::IV{udpCipherIVRand(), 0, m_udp_cipher_iv_cntr};
@@ -359,6 +374,7 @@ void ReflectorClient::certificateUpdated(Async::SslX509& cert)
     sendClientCert(cert);
   }
 } /* ReflectorClient::certificateUpdated */
+
 
 
 /****************************************************************************
@@ -387,15 +403,6 @@ ReflectorClient::ClientId ReflectorClient::newClientId(ReflectorClient* client)
   client_map[id] = client;
   return id;
 } /* ReflectorClient::newClientId */
-
-
-ReflectorClient::ClientSrc ReflectorClient::newClientSrc(ReflectorClient* client)
-{
-  ClientSrc src{std::make_pair(client->m_con->remoteHost(),
-                               client->m_remote_udp_port)};
-  client_src_map[src] = client;
-  return src;
-} /* ReflectorClient::newClientSrc */
 
 
 void ReflectorClient::onSslConnectionReady(TcpConnection *con)
@@ -450,9 +457,17 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
     return;
   }
 
+    // Set cert renewal timer to expire one minute after the actual renewal
+    // time to avoid a race condition. Also delay renewal to at least 10
+    // minutes after node connection to reduce problems with renewal loops.
+    // Renewal loops may occur if the client does not accept a new certificate
+    // for some reason and upon reconnection continue to use the old
+    // certificate, in which case the reflector will send the new cert again,
+    // and so on. This may happen if the real-time clock is not correctly set
+    // on the node.
   time_t renew_time = std::max(
-      std::time(NULL) + 600,
-      Reflector::timeToRenewCert(peer_cert));
+      std::time(NULL) + 10*60,
+      Reflector::timeToRenewCert(peer_cert) + 60);
   m_renew_cert_timer.setTimeout(renew_time);
   m_renew_cert_timer.start();
 
@@ -464,34 +479,48 @@ void ReflectorClient::onSslConnectionReady(TcpConnection *con)
 void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
                                       std::vector<uint8_t>& data)
 {
-  int len = data.size();
-  //cout << "### ReflectorClient::onFrameReceived: len=" << len << endl;
-
-  assert(len >= 0);
-
   if ((m_con_state == STATE_DISCONNECTED) ||
       (m_con_state == STATE_EXPECT_DISCONNECT))
   {
     return;
   }
 
-  char *buf = reinterpret_cast<char*>(&data.front());
+  int len = data.size();
+  assert(len >= 0);
+  auto buf = reinterpret_cast<const char*>(data.data());
   stringstream ss;
   ss.write(buf, len);
+
+  std::stringstream idss;
+  if (m_callsign.empty())
+  {
+    idss << m_con->remoteHost() << ":" << m_con->remotePort();
+  }
+  else
+  {
+    idss << m_callsign;
+  }
 
   ReflectorMsg header;
   if (!header.unpack(ss))
   {
-    if (!m_callsign.empty())
-    {
-      cout << m_callsign << ": ";
-    }
-    else
-    {
-      cout << m_con->remoteHost() << ":" << m_con->remotePort() << " ";
-    }
-    cout << "ERROR: Unpacking failed for TCP message header" << endl;
-    sendError("Protocol message header too short");
+    std::cout << "*** ERROR[" << idss.str()
+              << "]: Unpacking failed for TCP message header"
+              << std::endl;
+    sendError("Protocol error");
+    return;
+  }
+
+  if ((m_con_state != STATE_CONNECTED) && (header.type() >= 100))
+  {
+      // FIXME: This should really be an error and the client should be
+      // disconnected but it will cause too much problems in existing
+      // misbeaving clients at the moment.
+    std::cout << "*** WARNING[" << idss.str()
+              << "]: User message " << header.type()
+              << " received in unauthenticated state"
+              << std::endl;
+    //sendError("Protocol error");
     return;
   }
 
@@ -833,7 +862,7 @@ void ReflectorClient::handleSelectTG(std::istream& is)
   }
   if (msg.tg() != m_current_tg)
   {
-    ReflectorClient *talker = TGHandler::instance()->talkerForTG(m_current_tg);
+    auto talker = TGHandler::instance()->talkerForTG(m_current_tg);
     if (talker == this)
     {
       m_reflector->broadcastUdpMsg(MsgUdpFlushSamples(),
@@ -845,19 +874,8 @@ void ReflectorClient::handleSelectTG(std::istream& is)
     {
       sendUdpMsg(MsgUdpFlushSamples());
     }
-    if (TGHandler::instance()->switchTo(this, msg.tg()))
-    {
-      cout << m_callsign << ": Select TG #" << msg.tg() << endl;
-      m_current_tg = msg.tg();
-    }
-    else
-    {
-      // FIXME: Notify the client that the TG selection was not allowed
-      std::cout << m_callsign << ": Not allowed to use TG #"
-                << msg.tg() << std::endl;
-      TGHandler::instance()->switchTo(this, 0);
-      m_current_tg = 0;
-    }
+
+    setTg(msg.tg());
   }
 } /* ReflectorClient::handleSelectTG */
 
@@ -890,7 +908,7 @@ void ReflectorClient::handleTgMonitor(std::istream& is)
   std::copy(tgs.begin(), tgs.end(), std::ostream_iterator<uint32_t>(cout, " "));
   cout << "]" << endl;
 
-  m_monitored_tgs = tgs;
+  setMonitoredTGs(tgs);
 } /* ReflectorClient::handleTgMonitor */
 
 
@@ -909,7 +927,7 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
     }
     //std::cout << "### handleNodeInfo: udpSrcPort()=" << msg.udpSrcPort()
     //          << " JSON=" << msg.json() << std::endl;
-    //setRemoteUdpPort(msg.udpSrcPort());
+    //setRemoteUdpSource(msg.udpSrcPort());
     setUdpCipherIVRand(msg.ivRand());
     setUdpCipherKey(msg.udpCipherKey());
     jsonstr = msg.json();
@@ -931,8 +949,64 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
   }
   try
   {
+    m_status = &(m_reflector->clientStatus(m_callsign));
+    auto& status = *m_status;
+    status.clear();
     std::istringstream is(jsonstr);
-    is >> m_node_info;
+    is >> status;
+
+    status["protoVer"]["majorVer"] = protoVer().majorVer();
+    status["protoVer"]["minorVer"] = protoVer().minorVer();
+    setMonitoredTGs(m_monitored_tgs);
+    setTg(m_current_tg);
+    if (status.isMember("qth") && status["qth"].isArray())
+    {
+      //std::cout << "### Found qth" << std::endl;
+      Json::Value& qths(status["qth"]);
+      for (Json::Value::ArrayIndex i=0; i<qths.size(); ++i)
+      {
+        Json::Value& qth(qths[i]);
+        if (qth.isMember("rx") && qth["rx"].isObject())
+        {
+          //std::cout << "### Found rx" << std::endl;
+          for (const auto& rx_id_str : qth["rx"].getMemberNames())
+          {
+            //std::cout << "### member=" << *it << std::endl;
+            if (rx_id_str.size() == 1)
+            {
+              char rx_id(rx_id_str[0]);
+              Json::Value& rx(qth["rx"][rx_id_str]);
+              if (rx.isObject())
+              {
+                m_json_rx_map.emplace(rx_id, rx);
+                setRxSiglev(rx_id, 0);
+                setRxEnabled(rx_id, false);
+                setRxSqlOpen(rx_id, false);
+                setRxActive(rx_id, false);
+              }
+            }
+          }
+        }
+        if (qth.isMember("tx") && qth["tx"].isObject())
+        {
+          //std::cout << "### Found tx" << std::endl;
+          for (const auto& tx_id_str : qth["tx"].getMemberNames())
+          {
+            //std::cout << "### member=" << *it << std::endl;
+            if (tx_id_str.size() == 1)
+            {
+              char tx_id(tx_id_str[0]);
+              Json::Value& tx(qth["tx"][tx_id_str]);
+              if (tx.isObject())
+              {
+                m_json_tx_map.emplace(tx_id, tx);
+                setTxTransmit(tx_id, false);
+              }
+            }
+          }
+        }
+      }
+    }
   }
   catch (const Json::Exception& e)
   {
@@ -1253,15 +1327,6 @@ void ReflectorClient::connectionAuthenticated(const std::string& callsign)
     assert(client_callsign_map.find(m_callsign) == client_callsign_map.end());
     client_callsign_map[m_callsign] = this;
 
-    //const auto cert = m_reflector->loadClientCertificate(m_callsign);
-    //const auto peer_cert = m_con->sslPeerCertificate();
-    //if (!cert.isNull() && !peer_cert.isNull() &&
-    //    (cert.publicKey() != peer_cert.publicKey()))
-    //{
-    //  std::cout << m_callsign << ": Requesting CSR from peer" << std::endl;
-    //  sendMsg(MsgClientCsrRequest());
-    //}
-
     MsgServerInfo msg_srv_info(m_client_id, m_supported_codecs);
     m_reflector->nodeList(msg_srv_info.nodes());
     sendMsg(msg_srv_info);
@@ -1274,19 +1339,9 @@ void ReflectorClient::connectionAuthenticated(const std::string& callsign)
 
     if (m_client_proto_ver < ProtoVer(2, 0))
     {
-      if (TGHandler::instance()->switchTo(this, m_reflector->tgForV1Clients()))
-      {
-        std::cout << m_callsign << ": Select TG #"
-                  << m_reflector->tgForV1Clients() << std::endl;
-        m_current_tg = m_reflector->tgForV1Clients();
-      }
-      else
-      {
-        std::cout << m_callsign
-                  << ": V1 client not allowed to use default TG #"
-                  << m_reflector->tgForV1Clients() << std::endl;
-      }
+      setTg(m_reflector->tgForV1Clients());
     }
+
     m_reflector->broadcastMsg(MsgNodeJoined(m_callsign), ExceptFilter(this));
   }
   else
@@ -1329,22 +1384,77 @@ void ReflectorClient::sendAuthChallenge(void)
          MsgAuthChallenge::LENGTH);
   sendMsg(challenge_msg);
   m_con_state = STATE_EXPECT_AUTH_RESPONSE;
-}
+} /* ReflectorClient::sendAuthChallenge */
 
 
 void ReflectorClient::renewClientCertificate(void)
 {
-  std::cout << m_callsign << ": Renew client certificate" << std::endl;
   auto cert = m_con->sslPeerCertificate();
-  if (cert.isNull() || !m_reflector->signClientCert(cert, "CRT_RENEWED"))
+  if (cert.isNull() || !m_reflector->renewedClientCert(cert))
   {
-    std::cerr << "*** WARNING: Certificate resigning for '"
+    std::cerr << "*** WARNING: Certificate renewal for '"
               << m_callsign << "' failed" << std::endl;
     return;
   }
+  std::cout << m_callsign << ": Send renewed client certificate" << std::endl;
   sendClientCert(cert);
   m_con_state = STATE_EXPECT_DISCONNECT;
 } /* ReflectorClient::renewClientCertificate */
+
+
+void ReflectorClient::setMonitoredTGs(const std::set<uint32_t>& tgs)
+{
+  m_monitored_tgs = tgs;
+
+  if (m_status != nullptr)
+  {
+    if (!m_status->isMember("monitoredTGs") ||
+        !(*m_status)["monitoredTGs"].isArray())
+    {
+      (*m_status)["monitoredTGs"] = Json::Value(Json::arrayValue);
+    }
+    Json::Value& monitored_tgs = (*m_status)["monitoredTGs"];
+    monitored_tgs.clear();
+    for (const auto& tg : tgs)
+    {
+      monitored_tgs.append(tg);
+    }
+  }
+} /* ReflectorClient::setMonitoredTGs */
+
+
+void ReflectorClient::setTg(uint32_t tg)
+{
+  if (tg != m_current_tg)
+  {
+    if (TGHandler::instance()->switchTo(this, tg))
+    {
+      std::cout << m_callsign << ": Select TG #" << tg << std::endl;
+    }
+    else
+    {
+      // FIXME: Notify the client that the TG selection was not allowed
+      std::cout << m_callsign << ": Not allowed to use TG #" << tg << std::endl;
+      TGHandler::instance()->switchTo(this, 0);
+      tg = 0;
+    }
+
+    m_current_tg = tg;
+  }
+
+  if (m_status != nullptr)
+  {
+    if (!TGHandler::instance()->showActivity(tg))
+    {
+      tg = 0;
+    }
+    (*m_status)["tg"] = tg;
+    (*m_status)["restrictedTG"] = TGHandler::instance()->isRestricted(tg);
+  }
+
+  updateIsTalker();
+} /* ReflectorClient::setTg */
+
 
 
 /*

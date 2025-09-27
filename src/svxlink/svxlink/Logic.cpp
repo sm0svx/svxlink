@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -170,7 +170,7 @@ Logic::Logic(void)
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
     dtmf_ctrl_pty(0),                       command_pty(0),
-    m_ctcss_to_tg_timer(-1),                m_ctcss_to_tg_last_fq(0.0f)
+    m_ctcss_to_tg_timer(-1),                m_ctcss_to_tg_last_fq(-1.0f)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -209,12 +209,13 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     return false;
   }
 
-  string event_handler_str;
-  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  std::string event_handler_str(SVX_SHARE_INSTALL_DIR);
+  event_handler_str += "/events.tcl";
+  cfg().getValue(name(), "EVENT_HANDLER", event_handler_str);
+  if (event_handler_str.empty())
   {
-    cerr << "*** ERROR: Config variable " << name()
-      	 << "/EVENT_HANDLER not set\n";
-    cleanup();
+    std::cerr << "*** ERROR: Config variable " << name()
+              << "/EVENT_HANDLER empty" << std::endl;
     return false;
   }
 
@@ -322,15 +323,29 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     long_cmd_module = module;
   }
 
-  string macro_section;
+  cfg().getValue(name(), "MACRO_PREFIX", m_macro_prefix);
+  std::string macro_section;
   if (cfg().getValue(name(), "MACROS", macro_section))
   {
-    list<string> macro_list = cfg().listSection(macro_section);
-    list<string>::iterator mlit;
-    for (mlit=macro_list.begin(); mlit!=macro_list.end(); ++mlit)
+    const auto& macro_list = cfg().listSection(macro_section);
+    for (const auto& macro : macro_list)
     {
-      cfg().getValue(macro_section, *mlit, value);
-      macros[atoi(mlit->c_str())] = value;
+      std::string macro_expansion;
+      cfg().getValue(macro_section, macro, macro_expansion);
+      macros[atoi(macro.c_str())] = macro_expansion;
+      //std::cout << "### Add macro command: '" << macro << "'='"
+      //          << macro_expansion << "'" << std::endl;
+      MacroCmd *cmd = new MacroCmd(&cmd_parser, m_macro_prefix + macro, this);
+      if (!cmd->addToParser())
+      {
+        std::cerr << "*** ERROR: Failed to add macro command "
+                  << "'" << macro << "' in logic '" << name() << "'. "
+                  << "This is probably due to having set up a macro command "
+                  << "which overlap with an already existing command "
+                  << std::endl;
+        delete cmd;
+        return false;
+      }
     }
   }
 
@@ -406,7 +421,12 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
     return false;
   }
   rx().squelchOpen.connect([&](bool is_open) {
-        if (!is_open)
+        if (is_open)
+        {
+          m_ctcss_to_tg_last_fq = 0.0f;
+          m_ctcss_to_tg_timer.setEnable(true);
+        }
+        else
         {
           //std::cout << "### Logic::[]: Disable CTCSS to TG timer"
           //          << std::endl;
@@ -419,6 +439,7 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
   rx().publishStateEvent.connect(mem_fun(*this, &Logic::onPublishStateEvent));
+  rx().signalLevelUpdated.connect(mem_fun(*this, &Logic::signalLevelUpdated));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -611,6 +632,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
           mem_fun(*this, &Logic::onPublishStateEvent));
   event_handler->playDtmf.connect(mem_fun(*this, &Logic::playDtmf));
   event_handler->injectDtmf.connect(mem_fun(*this, &Logic::injectDtmf));
+  event_handler->getConfigValue.connect(
+          sigc::mem_fun(*this, &Logic::getConfigValue));
   event_handler->setConfigValue.connect(
           sigc::mem_fun(cfg(), &Async::Config::setValue<std::string>));
   event_handler->setVariable("mycall", m_callsign);
@@ -618,8 +641,8 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
-  event_handler->setVariable("is_core_event_handler", "1");
-  event_handler->setVariable("logic_name", name().c_str());
+  event_handler->setVariable("logic_name", name());
+  event_handler->setVariable("logic_type", type());
 
   updateTxCtcss(true, TX_CTCSS_ALWAYS);
 
@@ -637,12 +660,12 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   }
   event_handler->setVariable("loaded_modules", loaded_modules);
 
-  event_handler->processEvent("namespace eval Logic {}");
+  event_handler->processEvent("namespace eval " + name() + "::Logic {}");
   list<string> cfgvars = cfg().listSection(name());
   list<string>::const_iterator cfgit;
   for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
   {
-    string var = "Logic::CFG_" + *cfgit;
+    string var = name() + "::Logic::CFG_" + *cfgit;
     string value;
     cfg().getValue(name(), *cfgit, value);
     event_handler->setVariable(var, value);
@@ -676,7 +699,7 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
-  int ctcss_to_tg_delay = 1000;
+  int ctcss_to_tg_delay = 0;
   cfg().getValue(name(), "CTCSS_TO_TG_DELAY", ctcss_to_tg_delay);
   m_ctcss_to_tg_timer.setTimeout(ctcss_to_tg_delay);
   m_ctcss_to_tg_timer.expired.connect([&](Async::Timer* t)
@@ -684,17 +707,22 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
         //std::cout << "### ctcss_to_tg_timer expired: m_ctcss_to_tg_last_fq="
         //          << m_ctcss_to_tg_last_fq << std::endl;
         t->setEnable(false);
+        if (m_ctcss_to_tg_last_fq < 0.0f)
+        {
+          return;
+        }
         uint16_t uint_fq = static_cast<uint16_t>(
             round(10.0f*m_ctcss_to_tg_last_fq));
         auto it = m_ctcss_to_tg.find(uint_fq);
+        uint32_t tg = 0;
         if (it != m_ctcss_to_tg.end())
         {
-          uint32_t tg = it->second;
+          tg = it->second;
           //cout << "### Map CTCSS " << m_ctcss_to_tg_last_fq << " to TG #"
           //     << tg << endl;
-          setReceivedTg(tg);
         }
-        m_ctcss_to_tg_last_fq = 0.0f;
+        setReceivedTg(tg);
+        m_ctcss_to_tg_last_fq = -1.0f;
       });
 
   typedef std::vector<SvxLink::SepPair<float, uint32_t> > CtcssToTgVec;
@@ -739,15 +767,20 @@ void Logic::processEvent(const string& event, const Module *module)
   }
   else
   {
-    event_handler->processEvent(string(module->name()) + "::" + event);
+    event_handler->processEvent(name() + "::" + module->name() + "::" + event);
   }
   msg_handler->end();
-}
+} /* Logic::processEvent */
 
 
-void Logic::setEventVariable(const string& name, const string& value)
+void Logic::setEventVariable(const string& varname, const string& value)
 {
-  event_handler->setVariable(name, value);
+  std::string fullname(varname);
+  if (varname[0] != ':')
+  {
+    fullname = name() + "::" + varname;
+  }
+  event_handler->setVariable(fullname, value);
 } /* Logic::setEventVariable */
 
 
@@ -938,7 +971,7 @@ void Logic::selcallSequenceDetected(std::string sequence)
 {
   if ((sequence.compare(sel5_from) >= 0) && (sequence.compare(sel5_to) <= 0))
   {
-    string s = "D" + sequence + "#";
+    string s = m_macro_prefix + sequence + "#";
     processMacroCmd(s);
   }
   else
@@ -1047,11 +1080,16 @@ void Logic::squelchOpen(bool is_open)
     active_module->squelchOpen(is_open);
   }
 
+  signalLevelUpdated(rx().signalStrength());
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
 
-  if (!is_open)
+  if (is_open)
+  {
+    exec_cmd_on_sql_close_timer.setEnable(false);
+  }
+  else
   {
     const string &received_digits = dtmf_digit_handler->command();
     if (!dtmf_digit_handler->antiFlutterActive() &&
@@ -1067,11 +1105,6 @@ void Logic::squelchOpen(bool is_open)
       }
     }
     processCommandQueue();
-    setReceivedTg(0);
-  }
-  else
-  {
-    exec_cmd_on_sql_close_timer.setEnable(false);
   }
 
   if (LocationInfo::has_instance())
@@ -1082,7 +1115,6 @@ void Logic::squelchOpen(bool is_open)
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
 
   checkIdle();
-
 } /* Logic::squelchOpen */
 
 
@@ -1326,7 +1358,8 @@ void Logic::loadModule(const string& module_cfg_name)
   cfg().getValue(module_cfg_name, "NAME", plugin_name);
 
     // Define the module namespace so that we can set some variables in it
-  event_handler->processEvent("namespace eval " + plugin_name + " {}");
+  event_handler->processEvent(
+      "namespace eval " + name() + "::" + plugin_name + " {}");
 
   cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
 
@@ -1488,7 +1521,8 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
       processCommand(rest, true);
     }
   }
-  else if (cmd[0] == 'D')
+  else if (!m_macro_prefix.empty() &&
+           (cmd.substr(0, m_macro_prefix.size()) == m_macro_prefix))
   {
     processMacroCmd(cmd);
   }
@@ -1533,8 +1567,9 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 void Logic::processMacroCmd(const string& macro_cmd)
 {
   cout << name() << ": Processing macro command: " << macro_cmd << "...\n";
-  assert(!macro_cmd.empty() && (macro_cmd[0] == 'D'));
-  string cmd(macro_cmd, 1);
+  std::string prefix(macro_cmd, 0, m_macro_prefix.size());
+  assert(!macro_cmd.empty() && (prefix == m_macro_prefix));
+  string cmd(macro_cmd, m_macro_prefix.size());
   if (cmd.empty())
   {
     cerr << "*** Macro error in logic " << name() << ": Empty command.\n";
@@ -1816,7 +1851,7 @@ void Logic::cfgUpdated(const std::string& section, const std::string& tag)
     std::string value;
     if (cfg().getValue(name(), tag, value))
     {
-      event_handler->setVariable("Logic::CFG_" + tag, value);
+      event_handler->setVariable(name() + "::Logic::CFG_" + tag, value);
       processEvent("config_updated CFG_" + tag + " \"" + value + "\"");
     }
     if (tag == "ONLINE")
@@ -1829,6 +1864,21 @@ void Logic::cfgUpdated(const std::string& section, const std::string& tag)
     }
   }
 } /* Logic::cfgUpdated */
+
+
+bool Logic::getConfigValue(const std::string& section, const std::string& tag,
+                           std::string& value)
+{
+  return cfg().getValue(section, tag, value, true);
+} /* Logic::getConfigValue */
+
+
+void Logic::signalLevelUpdated(float siglev)
+{
+  std::ostringstream ss;
+  ss << "siglev_updated " << rx().sqlRxId() << " " << siglev;
+  processEvent(ss.str());
+} /* Logic::signalLevelUpdated */
 
 
 /*

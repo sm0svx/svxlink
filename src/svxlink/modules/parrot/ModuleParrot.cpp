@@ -191,7 +191,8 @@ bool ModuleParrot::initialize(void)
   string fifo_len;
   if (!cfg().getValue(cfgName(), "FIFO_LEN", fifo_len))
   {
-    cerr << "*** Error: Config variable " << cfgName() << "/FIFO_LEN not set\n";
+    std::cerr << "*** ERROR: Config variable " << cfgName()
+              << "/FIFO_LEN not set" << std::endl;
     return false;
   }
   int repeat_delay = -1;

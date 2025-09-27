@@ -1,3 +1,10 @@
+ 1.3.5 -- 03 May 2025
+----------------------
+
+* Async::TcpConnection::DR_RECV_BUFFER_OVERFLOW was removed
+
+
+
  1.3.4 -- 25 Feb 2024
 ----------------------
 

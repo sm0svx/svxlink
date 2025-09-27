@@ -46,19 +46,19 @@
 ARG FROM=debian:latest
 
 FROM ${FROM}
-MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
+MAINTAINER Tobias Blomberg <sm0svx@svxlink.org>
 
 # Install required packages and set up the svxlink user
 RUN apt-get update && \
-    apt-get -y install git cmake g++ make libsigc++-2.0-dev libgsm1-dev \
-                       libpopt-dev tcl8.6-dev libgcrypt20-dev libspeex-dev \
-                       libasound2-dev alsa-utils vorbis-tools qtbase5-dev \
-                       qttools5-dev qttools5-dev-tools libopus-dev \
-                       librtlsdr-dev libjsoncpp-dev libcurl4-openssl-dev \
-                       libgpiod-dev libogg-dev ladspa-sdk libssl-dev curl sudo
-#RUN apt-get -y install groff doxygen
+    apt-get -y install git cmake g++ make doxygen groff curl sudo \
+                       libsigc++-2.0-dev libgsm1-dev libpopt-dev tcl8.6-dev \
+                       libgcrypt20-dev libspeex-dev libasound2-dev alsa-utils \
+                       vorbis-tools qtbase5-dev qttools5-dev \
+                       qttools5-dev-tools libopus-dev librtlsdr-dev \
+                       libjsoncpp-dev libcurl4-openssl-dev libgpiod-dev \
+                       libogg-dev ladspa-sdk libssl-dev
 
-ARG SOUNDS_VER="19.09.99.3"
+ARG SOUNDS_VER="24.02"
 ARG SOUNDS_LANG="en_US"
 ARG SOUNDS_VOICE="heather"
 ARG SOUNDS_RATE="16k"

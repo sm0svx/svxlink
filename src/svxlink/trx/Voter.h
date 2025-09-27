@@ -280,9 +280,10 @@ class Voter : public Rx
 	void stopTimer(void);
 	
       private:
-	void entry() {}
-	void init(Voter *voter);
-	void exit(void);
+        void entry() {}
+        void init(void) {}
+        void init(Voter *voter);
+        void exit(void);
 	
 	void eventTimerExpired(Async::Timer *t);
     };
@@ -317,9 +318,10 @@ class Voter : public Rx
       virtual void satSquelchOpen(SatRx *srx, bool is_open);
 
       private:
-	void entry(void);
-	void init(SatRx *srx);
-	void exit(void);
+        void entry(void);
+        void init(void) {}
+        void init(SatRx *srx);
+        void exit(void);
 	
     };
 
@@ -340,8 +342,9 @@ class Voter : public Rx
 	virtual void changeActiveSrx(SatRx *srx);
 	
       private:
-	void init(SatRx *srx);
-	void exit(void);
+        void init(void) {}
+        void init(SatRx *srx);
+        void exit(void);
     };
 
     SUBSTATE(SquelchOpen, ActiveRxSelected) {
@@ -398,9 +401,10 @@ class Voter : public Rx
 	virtual void timerExpired(void);
 
       private:
-	void entry(void);
-	void init(SatRx *srx);
-	void exit(void);
+        void entry(void);
+        void init(void) {}
+        void init(SatRx *srx);
+        void exit(void);
     };
     
     typedef std::list<Macho::IEvent<Top>*> EventQueue;

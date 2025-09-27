@@ -31,7 +31,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cassert>
-#include <json/json.h>
 #include <unistd.h>
 #include <algorithm>
 #include <fstream>
@@ -255,6 +254,7 @@ Reflector::Reflector(void)
                     << std::endl;
         }
       });
+  m_status["nodes"] = Json::Value(Json::objectValue);
 } /* Reflector::Reflector */
 
 
@@ -406,6 +406,8 @@ void Reflector::broadcastMsg(const ReflectorMsg& msg,
 bool Reflector::sendUdpDatagram(ReflectorClient *client,
     const ReflectorUdpMsg& msg)
 {
+  auto udp_addr = client->remoteUdpHost();
+  auto udp_port = client->remoteUdpPort();
   if (client->protoVer() >= ProtoVer(3, 0))
   {
     ReflectorUdpMsg header(msg.type());
@@ -419,11 +421,10 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client,
     if (!aad.pack(aadss))
     {
       std::cout << "*** WARNING: Packing associated data failed for UDP "
-                   "datagram to " << client->remoteHost() << ":"
-                << client->remotePort() << std::endl;
+                   "datagram to " << udp_addr << ":" << udp_port << std::endl;
       return false;
     }
-    return m_udp_sock->write(client->remoteHost(), client->remoteUdpPort(),
+    return m_udp_sock->write(udp_addr, udp_port,
                              aadss.str().data(), aadss.str().size(),
                              ss.str().data(), ss.str().size());
   }
@@ -434,7 +435,7 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client,
     ostringstream ss;
     assert(header.pack(ss) && msg.pack(ss));
     return m_udp_sock->UdpSocket::write(
-        client->remoteHost(), client->remoteUdpPort(),
+        udp_addr, udp_port,
         ss.str().data(), ss.str().size());
   }
 } /* Reflector::sendUdpDatagram */
@@ -497,6 +498,26 @@ Reflector::loadClientCsr(const std::string& callsign)
   (void)csr.readPemFile(m_csrs_dir + "/" + callsign + ".csr");
   return csr;
 } /* Reflector::loadClientPendingCsr */
+
+
+bool Reflector::renewedClientCert(Async::SslX509& cert)
+{
+  if (cert.isNull())
+  {
+    return false;
+  }
+
+  std::string callsign(cert.commonName());
+  Async::SslX509 new_cert = loadClientCertificate(callsign);
+  if (!new_cert.isNull() &&
+      ((new_cert.publicKey() != cert.publicKey()) ||
+       (timeToRenewCert(new_cert) <= std::time(NULL))))
+  {
+    return signClientCert(cert, "CRT_RENEWED");
+  }
+  cert = std::move(new_cert);
+  return !cert.isNull();
+} /* Reflector::renewedClientCert */
 
 
 bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
@@ -699,12 +720,10 @@ bool Reflector::reqEmailOk(const Async::SslCertSigningReq& req) const
   san.forEach(
       [&](int type, std::string value)
       {
-        if (type == GEN_EMAIL)
-        {
-          email_cnt += 1;
-          email_ok &= emailOk(value);
-        }
-      });
+        email_cnt += 1;
+        email_ok &= emailOk(value);
+      },
+      GEN_EMAIL);
   email_ok &= (email_cnt > 0) || emailOk("");
   return email_ok;
 } /* Reflector::reqEmailOk */
@@ -714,13 +733,14 @@ std::string Reflector::checkCsr(const Async::SslCertSigningReq& req)
 {
   if (!callsignOk(req.commonName()))
   {
-    return std::string(
-        "Certificate signing request with invalid callsign: '");
+    return std::string("Certificate signing request with invalid callsign '") +
+           req.commonName() + "'";
   }
   if (!reqEmailOk(req))
   {
     return std::string(
-        "Certificate signing request with invalid CERT_EMAIL");
+             "Certificate signing request with no or invalid CERT_EMAIL"
+           );
   }
   return "";
 } /* Reflector::checkCsr */
@@ -801,6 +821,16 @@ Async::SslX509 Reflector::csrReceived(Async::SslCertSigningReq& req)
 } /* Reflector::csrReceived */
 
 
+Json::Value& Reflector::clientStatus(const std::string& callsign)
+{
+  if (!m_status.isMember(callsign))
+  {
+    m_status["nodes"][callsign] = Json::Value(Json::objectValue);
+  }
+  return m_status["nodes"][callsign];
+} /* Reflector::clientStatus */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -849,6 +879,7 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
 
   if (!client->callsign().empty())
   {
+    m_status["nodes"].removeMember(client->callsign());
     broadcastMsg(MsgNodeLeft(client->callsign()),
         ReflectorClient::ExceptFilter(client));
   }
@@ -1031,6 +1062,14 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
            << std::endl;
       return;
     }
+
+    if (addr != client->remoteHost())
+    {
+      cerr << "*** WARNING[" << client->callsign()
+           << "]: Incoming UDP packet has the wrong source ip, "
+           << addr << " instead of " << client->remoteHost() << endl;
+      return;
+    }
   }
 
   //auto client = ReflectorClient::lookup(std::make_pair(addr, port));
@@ -1045,16 +1084,9 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   //  }
   //}
 
-  if (addr != client->remoteHost())
-  {
-    cerr << "*** WARNING[" << client->callsign()
-         << "]: Incoming UDP packet has the wrong source ip, "
-         << addr << " instead of " << client->remoteHost() << endl;
-    return;
-  }
   if (client->remoteUdpPort() == 0)
   {
-    client->setRemoteUdpPort(port);
+    client->setRemoteUdpSource(std::make_pair(addr, port));
     client->sendUdpMsg(MsgUdpHeartbeat());
   }
   if (port != client->remoteUdpPort())
@@ -1260,6 +1292,7 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
   if (old_talker != 0)
   {
     cout << old_talker->callsign() << ": Talker stop on TG #" << tg << endl;
+    old_talker->updateIsTalker();
     broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()),
         ReflectorClient::mkAndFilter(
           ge_v2_client_filter,
@@ -1278,6 +1311,7 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
   if (new_talker != 0)
   {
     cout << new_talker->callsign() << ": Talker start on TG #" << tg << endl;
+    new_talker->updateIsTalker();
     broadcastMsg(MsgTalkerStart(tg, new_talker->callsign()),
         ReflectorClient::mkAndFilter(
           ge_v2_client_filter,
@@ -1289,7 +1323,7 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
       broadcastMsg(MsgTalkerStartV1(new_talker->callsign()), v1_client_filter);
     }
   }
-} /* Reflector::setTalker */
+} /* Reflector::onTalkerUpdated */
 
 
 void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
@@ -1316,102 +1350,16 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     return;
   }
 
-  Json::Value status;
-  status["nodes"] = Json::Value(Json::objectValue);
-  for (const auto& item : m_client_con_map)
-  {
-    ReflectorClient* client = item.second;
-    if (client->conState() != ReflectorClient::STATE_CONNECTED)
-    {
-      continue;
-    }
-
-    Json::Value node(client->nodeInfo());
-    //node["addr"] = client->remoteHost().toString();
-    node["protoVer"]["majorVer"] = client->protoVer().majorVer();
-    node["protoVer"]["minorVer"] = client->protoVer().minorVer();
-    auto tg = client->currentTG();
-    if (!TGHandler::instance()->showActivity(tg))
-    {
-      tg = 0;
-    }
-    node["tg"] = tg;
-    node["restrictedTG"] = TGHandler::instance()->isRestricted(tg);
-    Json::Value tgs = Json::Value(Json::arrayValue);
-    const std::set<uint32_t>& monitored_tgs = client->monitoredTGs();
-    for (std::set<uint32_t>::const_iterator mtg_it=monitored_tgs.begin();
-         mtg_it!=monitored_tgs.end(); ++mtg_it)
-    {
-      tgs.append(*mtg_it);
-    }
-    node["monitoredTGs"] = tgs;
-    bool is_talker = TGHandler::instance()->talkerForTG(tg) == client;
-    node["isTalker"] = is_talker;
-
-    if (node.isMember("qth") && node["qth"].isArray())
-    {
-      //std::cout << "### Found qth" << std::endl;
-      Json::Value& qths(node["qth"]);
-      for (Json::Value::ArrayIndex i=0; i<qths.size(); ++i)
-      {
-        Json::Value& qth(qths[i]);
-        if (qth.isMember("rx") && qth["rx"].isObject())
-        {
-          //std::cout << "### Found rx" << std::endl;
-          Json::Value::Members rxs(qth["rx"].getMemberNames());
-          for (Json::Value::Members::const_iterator it=rxs.begin(); it!=rxs.end(); ++it)
-          {
-            //std::cout << "### member=" << *it << std::endl;
-            const std::string& rx_id_str(*it);
-            if (rx_id_str.size() == 1)
-            {
-              char rx_id(rx_id_str[0]);
-              Json::Value& rx(qth["rx"][rx_id_str]);
-              if (client->rxExist(rx_id))
-              {
-                rx["siglev"] = client->rxSiglev(rx_id);
-                rx["enabled"] = client->rxEnabled(rx_id);
-                rx["sql_open"] = client->rxSqlOpen(rx_id);
-                rx["active"] = client->rxActive(rx_id);
-              }
-            }
-          }
-        }
-        if (qth.isMember("tx") && qth["tx"].isObject())
-        {
-          //std::cout << "### Found tx" << std::endl;
-          Json::Value::Members txs(qth["tx"].getMemberNames());
-          for (Json::Value::Members::const_iterator it=txs.begin(); it!=txs.end(); ++it)
-          {
-            //std::cout << "### member=" << *it << std::endl;
-            const std::string& tx_id_str(*it);
-            if (tx_id_str.size() == 1)
-            {
-              char tx_id(tx_id_str[0]);
-              Json::Value& tx(qth["tx"][tx_id_str]);
-              if (client->txExist(tx_id))
-              {
-                tx["transmit"] = client->txTransmit(tx_id);
-              }
-            }
-          }
-        }
-      }
-    }
-    status["nodes"][client->callsign()] = node;
-  }
   std::ostringstream os;
   Json::StreamWriterBuilder builder;
   builder["commentStyle"] = "None";
   builder["indentation"] = ""; //The JSON document is written on a single line
   Json::StreamWriter* writer = builder.newStreamWriter();
-  writer->write(status, &os);
+  writer->write(m_status, &os);
   delete writer;
+
   res.setContent("application/json", os.str());
-  if (req.method == "HEAD")
-  {
-    res.setSendContent(false);
-  }
+  res.setSendContent(req.method == "GET");
   res.setCode(200);
   con->write(res);
 } /* Reflector::requestReceived */
@@ -1545,6 +1493,7 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
                "Usage: NODE BLOCK <callsign> <blocktime seconds>";
       goto write_status;
     }
+    std::transform(subcmd.begin(), subcmd.end(), subcmd.begin(), ::toupper);
     if (subcmd == "BLOCK")
     {
       auto node = ReflectorClient::lookup(callsign);

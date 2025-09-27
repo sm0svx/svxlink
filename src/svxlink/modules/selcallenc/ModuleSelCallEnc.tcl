@@ -12,18 +12,8 @@
 #
 namespace eval SelCallEnc {
 
-#
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
-
-
-#
-# Extract the module name from the current namespace
-#
-set module_name [namespace tail [namespace current]];
+# Source base functionality for a TCL module
+sourceTclWithOverrides "TclModule.tcl"
 
 
 #
@@ -52,65 +42,33 @@ array set variants {
 
 
 #
-# A convenience function for printing out information prefixed by the
-# module name
+# Get the variant name given the two digit id. If the variant is not found, an
+# empty string is returned.
 #
-#   msg - The message to print
+#   number - The two digit id number
 #
-proc printInfo {msg} {
-  variable module_name
-  puts "$module_name: $msg"
+proc getVariant {number} {
+  variable variants
+
+  if [info exists variants($number)] {
+    return $variants($number)
+  }
+  return ""
 }
 
 
 #
-# A convenience function for calling an event handler
+# Emit the play_help event on the special format used by this module
 #
-#   ev - The event string to execute
-#
-proc processEvent {ev} {
-  variable module_name
-  ::processEvent "$module_name" "$ev"
-}
+proc playHelp {} {
+  variable variants
 
-
-#
-# Executed when this module is being activated
-#
-proc activateInit {} {
-  #printInfo "Module activated"
-}
-
-
-#
-# Executed when this module is being deactivated.
-#
-proc deactivateCleanup {} {
-  #printInfo "Module deactivated"
-}
-
-
-# The amplitude of the selcall audio. Set by function setAmplitude.
-#variable amplitude
-
-# Tone array for the selected mode. Set by function setMode.
-#variable tones
-
-# The length of the tones. Set by function setMode.
-#variable tone_length
-
-# The length of the first tone in a sequence. Set by function setMode.
-#variable first_tone_length
-
-
-#
-# Executed when a DTMF digit (0-9, A-F, *, #) is received
-#
-#   char - The received DTMF digit
-#   duration - The duration of the received DTMF digit
-#
-proc dtmfDigitReceived {char duration} {
-  #printInfo "DTMF digit $char received with duration $duration milliseconds"
+  # play_help ID1=NAME1 ID2=NAME2 ...
+  set ev play_help
+  foreach variant_id [lsort [array names variants]] {
+    append ev " $variant_id=$variants($variant_id)"
+  }
+  processEvent "$ev"
 }
 
 
@@ -120,18 +78,21 @@ proc dtmfDigitReceived {char duration} {
 #   cmd - The received DTMF command
 #
 proc dtmfCmdReceived {cmd} {
-  variable variants
-
   printInfo "DTMF command received: $cmd";
 
   if {$cmd == "0"} {
-    processEvent "play_help"
-  } elseif {[string length $cmd] == 2} {
-    processEvent "play_standard $variants($cmd)"
-  } elseif {$cmd != ""} {
-    processEvent "play_sel_call $cmd"
-  } else {
+    playHelp
+  } elseif {$cmd == ""} {
     deactivateModule
+  } elseif {[string length $cmd] >= 2 && \
+            [set variant [getVariant [string range $cmd 0 1]]] != ""} {
+    if {[string length $cmd] > 2} {
+      processEvent "play_sel_call $variant [string range $cmd 2 end]"
+    } else {
+      processEvent "play_standard $variant"
+    }
+  } else {
+    processEvent "unknown_command $cmd"
   }
 }
 
@@ -143,37 +104,20 @@ proc dtmfCmdReceived {cmd} {
 #   cmd - The received DTMF command
 #
 proc dtmfCmdReceivedWhenIdle {cmd} {
-  variable variants
-
-  printInfo "DTMF command received received when idle: $cmd";
+  printInfo "DTMF command received when idle: $cmd";
 
   if {$cmd == "0"} {
-    processEvent "play_help"
-  } elseif {[string length $cmd] == 2} {
-    processEvent "play_standard $variants($cmd)"
-  } elseif {$cmd != ""} {
-    processEvent "play_sel_call $cmd"
+    playHelp
+  } elseif {[string length $cmd] >= 2 && \
+            [set variant [getVariant [string range $cmd 0 1]]] != ""} {
+    if {[string length $cmd] > 2} {
+      processEvent "play_sel_call $variant [string range $cmd 2 end]"
+    } else {
+      processEvent "play_standard $variant"
+    }
+  } else {
+    processEvent "unknown_command $cmd"
   }
-}
-
-
-#
-# Executed when the squelch open or close.
-#
-#   is_open - Set to 1 if the squelch is open otherwise it's set to 0
-#
-proc squelchOpen {is_open} {
-  #if {$is_open} {set str "OPEN"} else {set str "CLOSED"};
-  #printInfo "The squelch is $str"
-}
-
-
-#
-# Executed when all announcement messages has been played.
-# Note that this function also may be called even if it wasn't this module
-# that initiated the message playing.
-#
-proc allMsgsWritten {} {
 }
 
 
@@ -183,4 +127,3 @@ proc allMsgsWritten {} {
 #
 # This file has not been truncated
 #
-

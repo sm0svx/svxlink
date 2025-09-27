@@ -20,7 +20,9 @@ if(PJSIP_FOUND)
 
   # Install plugin, TCL event handler and config file
   install(TARGETS SipLogic DESTINATION ${SVX_LOGIC_CORE_INSTALL_DIR})
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/SipLogic.tcl
+  install(
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/SipLogicType.tcl
+          ${CMAKE_CURRENT_SOURCE_DIR}/SipLogic.tcl
     DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
     )
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SipLogic.conf.in

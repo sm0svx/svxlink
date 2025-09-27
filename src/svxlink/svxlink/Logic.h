@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2022  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2025  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -211,6 +211,8 @@ class Logic : public LogicBase
 
     CmdParser *cmdParser(void) { return &cmd_parser; }
 
+    void processMacroCmd(const std::string &macro_cmd);
+
   protected:
     /**
      * @brief 	Destructor
@@ -290,13 +292,13 @@ class Logic : public LogicBase
     Async::Pty                      *command_pty;
     Async::Timer                    m_ctcss_to_tg_timer;
     float                           m_ctcss_to_tg_last_fq;
+    std::string                     m_macro_prefix                {"D"};
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
     void unloadModules(void);
     void processCommandQueue(void);
     void processCommand(const std::string &cmd, bool force_core_cmd=false);
-    void processMacroCmd(const std::string &macro_cmd);
     void putCmdOnQueue(void);
     void sendRgrSound(void);
     void timeoutNextMinute(void);
@@ -312,6 +314,9 @@ class Logic : public LogicBase
                              const std::string &msg);
     void detectedTone(float fq);
     void cfgUpdated(const std::string& section, const std::string& tag);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
+    void signalLevelUpdated(float siglev);
 
 };  /* class Logic */
 

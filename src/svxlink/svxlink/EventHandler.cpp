@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -131,7 +131,8 @@ EventHandler::EventHandler(const string& event_script, const string& logic_name)
   
   if (Tcl_Init(interp) != TCL_OK)
   {
-    cerr << event_script << " in logic " << logic_name << ": "
+    cerr << event_script << " in logic " << logic_name
+         << " faild to initialize the TCL interpreter: "
          << Tcl_GetStringResult(interp) << endl;
     Tcl_DeleteInterp(interp);
     interp = 0;
@@ -149,10 +150,12 @@ EventHandler::EventHandler(const string& event_script, const string& logic_name)
                     this, NULL);
   Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
   Tcl_CreateCommand(interp, "injectDtmf", injectDtmfHandler, this, NULL);
+  Tcl_CreateCommand(interp, "getConfigValue", getConfigValueHandler,
+                    this, NULL);
   Tcl_CreateCommand(interp, "setConfigValue", setConfigValueHandler,
                     this, NULL);
 
-  setVariable("script_path", event_script);
+  //setVariable("script_path", event_script);
 
 } /* EventHandler::EventHandler */
 
@@ -180,8 +183,10 @@ bool EventHandler::initialize(void)
   
   if (Tcl_EvalFile(interp, event_script.c_str()) != TCL_OK)
   {
-    cerr << event_script << " in logic " << logic_name << ": "
-         << Tcl_GetStringResult(interp) << endl;
+    const char *trace = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY); 
+    std::cerr << "*** ERROR[" << logic_name << "]: Failed to load event script "
+              << "'" << event_script << "'\n"
+              << trace << std::endl;
     return false;
   }
   
@@ -211,7 +216,8 @@ void EventHandler::setVariable(const string& name, const string& value)
   if (Tcl_SetVar(interp, name.c_str(), value.c_str(), TCL_LEAVE_ERR_MSG)
   	== NULL)
   {
-    cerr << event_script << " in logic " << logic_name << ": "
+    cerr << event_script << " in logic " << logic_name
+         << " failed setting variable \"" << name << "=" << value << "\": "
          << Tcl_GetStringResult(interp) << endl;
   }
   Tcl_Release(interp);
@@ -229,9 +235,9 @@ bool EventHandler::processEvent(const string& event)
   Tcl_Preserve(interp);
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
-    cerr << "*** ERROR: Unable to handle event: " << event
-         << " in logic " << logic_name << " ("
-         << Tcl_GetStringResult(interp) << ")" << endl;
+    const char *trace = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY); 
+    std::cerr << "*** ERROR[" << logic_name << "]: Unable to handle event "
+              << "\"" << event << "\"\n" << trace << std::endl;
     success = false;
   }
   Tcl_Release(interp);
@@ -453,6 +459,39 @@ int EventHandler::injectDtmfHandler(ClientData cdata, Tcl_Interp *irp,
 } /* EventHandler::injectDtmfHandler */
 
 
+int EventHandler::getConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
+                                        int argc, const char *argv[])
+{
+  if((argc < 3) || (argc > 4))
+  {
+    static char msg[] = "Usage: getConfigValue <section> <tag> [default]";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  std::string section(argv[1]);
+  std::string tag(argv[2]);
+  std::string value;
+  if (argc > 3)
+  {
+    value = argv[3];
+  }
+  EventHandler *self = static_cast<EventHandler*>(cdata);
+  if (!self->getConfigValue(section, tag, value))
+  {
+    static char msg[] = "getConfigValue: Failed to read configuration variable";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+  //std::cout << "### EventHandler::getConfigValueHandler: " << section << "/"
+  //          << tag << "=" << value << std::endl;
+  char* cvalue = Tcl_Alloc(value.size()+1);
+  strcpy(cvalue, value.c_str());
+  Tcl_SetResult(irp, cvalue, TCL_DYNAMIC);
+
+  return TCL_OK;
+} /* EventHandler::getConfigValueHandler */
+
+
 int EventHandler::setConfigValueHandler(ClientData cdata, Tcl_Interp *irp,
                                         int argc, const char *argv[])
 {
@@ -482,7 +521,7 @@ int EventHandler::genericCommandHandler(ClientData cdata, Tcl_Interp *irp,
   if (!msg.empty())
   {
     auto msg_alloc_len = msg.size()+1;
-    char* msg_copy = Tcl_Alloc(msg_alloc_len);
+    char* msg_copy = static_cast<char*>(Tcl_Alloc(msg_alloc_len));
     memcpy(msg_copy, msg.c_str(), msg_alloc_len);
     Tcl_SetResult(irp, msg_copy, TCL_DYNAMIC);
     return TCL_ERROR;

@@ -487,7 +487,7 @@ void TcpConnection::recvHandler(FdWatch *watch)
   //          << std::endl;
 
   size_t recv_buf_size = m_recv_buf.size();
-  int cnt = read(sock, &m_recv_buf[recv_buf_size],
+  int cnt = read(sock, m_recv_buf.data()+recv_buf_size,
                  m_recv_buf.capacity()-recv_buf_size);
   //std::cout << "###   cnt=" << cnt << std::endl;
   if (cnt <= -1)
@@ -615,13 +615,6 @@ int TcpConnection::rawWrite(const void* buf, int count)
 } /* TcpConnection::rawWrite */
 
 
-void TcpConnection::sslPrintErrors(const char* fname)
-{
-  std::cerr << "*** ERROR: OpenSSL \"" << fname << "\" failed: ";
-  ERR_print_errors_fp(stderr);
-} /* TcpConnection::sslPrintErrors */
-
-
 TcpConnection::SslStatus TcpConnection::sslGetStatus(int n)
 {
   int err = SSL_get_error(m_ssl, n);
@@ -656,7 +649,7 @@ int TcpConnection::sslRecvHandler(char* src, int count)
     //std::cout << "### BIO_write: n=" << n << std::endl;
     if (n <= 0)
     {
-      sslPrintErrors("BIO_write");
+      SslContext::sslPrintErrors("BIO_write");
       return 0;
     }
 
@@ -667,7 +660,7 @@ int TcpConnection::sslRecvHandler(char* src, int count)
     {
       if (sslDoHandshake() == SSLSTATUS_FAIL)
       {
-        sslPrintErrors("sslDoHandshake");
+        SslContext::sslPrintErrors("sslDoHandshake");
         return -1;
       }
       if ((m_ssl == nullptr) || !SSL_is_init_finished(m_ssl))
@@ -699,7 +692,7 @@ int TcpConnection::sslRecvHandler(char* src, int count)
 
     if (status == SSLSTATUS_FAIL)
     {
-      sslPrintErrors("SSL_read/SSL_pending");
+      SslContext::sslPrintErrors("SSL_read/SSL_pending");
       return -1;
     }
 
@@ -715,7 +708,7 @@ int TcpConnection::sslRecvHandler(char* src, int count)
         }
         else if (!BIO_should_retry(m_ssl_wr_bio))
         {
-          sslPrintErrors("BIO_should_retry");
+          SslContext::sslPrintErrors("BIO_should_retry");
           return -1;
         }
       } while (n > 0);

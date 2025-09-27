@@ -13,8 +13,8 @@
 
 # Create the hostaudio group if GID is specified
 if [ -n "$HOSTAUDIO_GID" ]; then
-  groupadd -g $HOSTAUDIO_GID hostaudio
-  usermod -G $HOSTAUDIO_GID svxlink
+  sudo groupadd -g $HOSTAUDIO_GID hostaudio
+  sudo usermod -G $HOSTAUDIO_GID svxlink
 fi
 
 # Set up the sudo command line

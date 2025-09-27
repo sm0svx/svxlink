@@ -433,7 +433,6 @@ set mycall "SM0XXX";
 set report_ctcss 136.5;
 set active_module "EchoLink";
 set script_path [lindex $argv 0];
-set is_core_event_handler 1;
 
 source [lindex $argv 0];
 

@@ -13,7 +13,7 @@ STATEDIR=@SVX_LOCAL_STATE_DIR@
 # Specify which configuration file to use
 CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/svxlink.conf
 
-# Where to place the log file
+# An absolute path to a logfile or "syslog:" for logging to syslog
 LOGFILE=@LOCAL_STATE_DIR@/log/svxlink
 
 # Disable Alsa zerofill if set to 0 (see manual page)

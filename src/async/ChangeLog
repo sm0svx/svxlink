@@ -1,4 +1,20 @@
- 1.8.0 -- ?? ??? ????
+ 1.9.0 -- ?? ??? ????
+----------------------
+
+* Async::AudioStreamStateDetector facelift
+
+
+
+ 1.8.1 -- 01 Jul 2025
+----------------------
+
+* Bugfix in Async::TcpConnection: Illegal cast of pointer to receive buffer.
+
+* Async::Config: Now specifically handling the "char" case for getValue.
+
+
+
+ 1.8.0 -- 03 May 2025
 ----------------------
 
 * Code cleanup of Async::Pty, fixing a small memory leak.
@@ -16,6 +32,9 @@
   getValue function.
 
 * Async::AudioDevice: Reopen the audio device on failure
+
+* Async::DnsLookup: The addresses method will now return the list of hosts in
+  random order for each call.
 
 
 

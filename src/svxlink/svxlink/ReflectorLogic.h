@@ -205,7 +205,7 @@ class ReflectorLogic : public LogicBase
       STATE_EXPECT_CA_BUNDLE,
       STATE_EXPECT_SSL_CON_READY,
       STATE_EXPECT_AUTH_ANSWER,
-      STATE_EXPECT_AUTH_OK,
+      STATE_AUTHENTICATED,
       STATE_EXPECT_SERVER_INFO,
       STATE_EXPECT_START_UDP_ENCRYPTION,
       STATE_EXPECT_UDP_HEARTBEAT,
@@ -332,7 +332,7 @@ class ReflectorLogic : public LogicBase
     bool setAudioCodec(const std::string& codec_name);
     bool codecIsAvailable(const std::string &codec_name);
     void tgSelectTimerExpired(void);
-    void onLogicConInStreamStateChanged(bool is_active, bool is_idle);
+    void onLogicConInStreamIsIdle(bool is_idle);
     void onLogicConOutStreamStateChanged(bool is_active, bool is_idle);
     void selectTg(uint32_t tg, const std::string& event, bool unmute);
     void processEvent(const std::string& event);
@@ -345,6 +345,8 @@ class ReflectorLogic : public LogicBase
     void handlePlaySilence(int duration);
     void handlePlayTone(int fq, int amp, int duration);
     void handlePlayDtmf(const std::string& digit, int amp, int duration);
+    bool getConfigValue(const std::string& section, const std::string& tag,
+                        std::string& value);
     bool loadClientCertificate(void);
     void csrAddSubjectNamesFromConfig(void);
 

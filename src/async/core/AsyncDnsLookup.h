@@ -10,7 +10,7 @@ for usage instructions.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg
+Copyright (C) 2003-2025 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ An example of how to use the Async::DnsLookup class
 
 #include <vector>
 #include <memory>
+#include <random>
 
 
 /****************************************************************************
@@ -288,6 +289,9 @@ class DnsLookup : public sigc::trackable
      * Use this function to retrieve all the IP-addresses associated with
      * the hostname in the query. Use the lookupFailed() function to find out
      * if the query was successful or not.
+     *
+     * The order of the hosts in the returned vector will be randomized on each
+     * call to this function.
      */
     std::vector<IpAddress> addresses(void);
 
@@ -341,10 +345,11 @@ class DnsLookup : public sigc::trackable
   private:
     typedef std::vector<DnsResourceRecord*> RRListP;
 
-    std::string               m_label;
-    Type                      m_type          = Type::A;
-    DnsLookupWorker*          m_worker        = 0;
-    RRList<DnsResourceRecord> m_static_rrs;
+    std::string                 m_label;
+    Type                        m_type          = Type::A;
+    DnsLookupWorker*            m_worker        = 0;
+    RRList<DnsResourceRecord>   m_static_rrs;
+    std::default_random_engine  m_rng;
 
     void onResultsReady(void);
     const RRListP& resourceRecordsP(void) const;

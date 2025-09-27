@@ -14,6 +14,15 @@ set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
 target_link_libraries(Module${MODNAME} ${LIBS})
 
 # Install targets
-install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})
-install(FILES ${MODNAME}.tcl.example DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d)
-install(FILES Module${MODNAME}.tcl.example DESTINATION ${SVX_SHARE_INSTALL_DIR}/modules.d)
+install(
+  TARGETS Module${MODNAME}
+  DESTINATION ${SVX_MODULE_INSTALL_DIR}
+)
+install(
+  FILES TclModule.tcl ${MODNAME}.tcl.example
+  DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
+)
+install(
+  FILES Module${MODNAME}.tcl.example
+  DESTINATION ${SVX_SHARE_INSTALL_DIR}/modules.d
+)

@@ -1,0 +1,161 @@
+= SvxLink release 25.05 -- 03 May 2025
+
+The largest change in this release is the authentication system used in the
+SvxReflector server, which now uses X.509 certificates instead of an AUTH_KEY.
+This has also enabled the use of encryption for both the TCP and UDP reflector
+network connections.
+
+Support for the LADSPA audio processing framework has been extended. Audio
+processing can now be applied to the TX as well as the RX. There now also is a
+more verbose way to configure plugins where the configuration parameters is
+kept in their own configuration section. That also enables changing LADSPA
+parameters at runtime.
+
+A new 'NODE BLOCK' PTY command has been added to the reflector server. It can
+be used to temporarily block nodes at runtime for a specified duration.
+
+The APRS (LocationInfo) code has been reworked to be more standards compliant.
+It is also now usable for non-echolink nodes. Especially, a lot of time has
+been spent making the QSY command, available in some transceivers, work as
+expected. This means that someone receiving a SvxLink APRS object over the air
+should be able to easily QSY to the announced frequency with the push of a
+button. The system will also automatically set up parameters like CTCSS and
+repeater shift.
+
+SvxLink is now more resilient to audio device failures, which will be
+automatically reopened if they occur. A specific case where USB audio device
+failures have been seen is on the Raspberry Pi, which can experience power
+dips. This will be logged in the system log, and on some systems, the power dip
+may cause the audio dongle to reset. This can cause TX hangs on systems using
+RemoteTrx.
+
+As usual, a number of bugs have been fixed. For a full list of changes and more
+details, see below. For more information on configuration of new features, see
+the manual pages.
+
+'''
+
+== Complete ChangeLog for SvxLink Server version 1.9.0
+
+* Change reflector config at runtime.
+  Contribution from DL1HRC/Adi, following an idea from DJ1JAY/Jens to change
+  some SvxReflector parameters at runtime.
+
+* The reflector connection is now authenticated using X.509 certificates. Both
+  the server and the client requires authentication. The AUTH_KEY
+  authentication method that were previously used is deprecated. The
+  certificate generation process is mostly automated. The contents of the
+  certificate can be customized using the configuration variables with name
+  prefix CERT_. Default values are good in most cases. CERT_EMAIL may be good
+  to specify so that the SvxLink node owner can be contacted. Ask the
+  reflector sysop what the convention is.
+  Both the TCP and UDP connections are encrypted. The default is to use
+  the AES128 cipher in GCM mode.
+  The reflector server need to be updated to use this version of SvxLink on a
+  reflector client. If the server is older and only support the version 2
+  protocol, you must use TYPE=ReflectorV2 in the ReflectorLogic config.
+  All PKI (Public Key Infrastructure) files will be stored in the directory
+  given by the CERT_PKI_DIR configuration variable. The path defaults to
+  something like /var/lib/svxlink/pki but the exact default path depend on
+  build configuration. In any case, that path need to be created and made
+  writable for SvxLink. That should be done automatically by "make install".
+  Building SvxLink also require a new dependency on OpenSSL so the development
+  package for that library need to be installed (e.g. install package
+  libssl-dev if on a Debian based distro).
+
+* The SvxReflector now check the callsign for a connecting node against the
+  ACCEPT_CALLSIGN and REJECT_CALLSIGN configuration variables. That is done
+  for both AUTH_KEY connections and certificate connections.
+
+* It's now possible to apply LADSPA plugin audio processing to the transmitted
+  audio. Plugins are set up using the LADSPA_PLUGINS configuration variable.
+
+* Added a more verbose way to configure LADSPA plugins where the available
+  input controls are specified by name in their own configuration section.
+
+* Add --version command line option to applications svxlink, remotetrx,
+  devcal and svxreflector.
+
+* Add connection throttling to SvxReflector. The throttling is per IP. A token
+  bucket of size ten is used to throttle the connection rate. The bucket is
+  filled with one connection per ten seconds up until the bucket size is
+  reached.
+
+* New reflector PTY command:
+  NODE BLOCK <callsign> <blocktime seconds>
+  The node will be blocked until it has been silent for the number of
+  specified seconds.
+
+* LocationInfo APRS code reworked
+  - All packets changed destination to the SvxLink specific one, "APSVX1"
+  - An APRS object is now emitted for the base callsign
+  - SYMBOL for the base callsign object can be specified in the configuration
+  - Compatibility: Telemetry now emitted with the base callsign as from-address
+  - Compatibility: Telemetry now use EQNS message to scale values
+  - Compatibility: Removed the SvxLink logic name from telemetry packets
+  - The STATISTICS_LOGIC configuration variable must be used to specify the
+    name of the logic core from where the APRS telemetry should be taken.
+  - CALLSIGN can be specified without the EL/ER-prefix in which case no
+    Echolink object will be emitted
+  - SOURCE_CALLSIGN can be used to specify the source address
+  - LOGIN_CALLSIGN can be used to specify the APRS-IS login callsign
+  - PHG is now included in the object packets
+  - PATH should now normally be left unset in which case default is TCPIP*
+  - Extended frequency range implemented according to UNOFFICIAL APRS
+    Protocol Reference 1.2 Chapter 18
+  - If LocationInfo TONE is not set, Toff is sent
+  - Added NARROW config variable to indicate if a node is using narrow FM
+  - APRS packet parsing code added
+  - Received directed message packets are now acked
+  - FILTER can be specified in configuration
+  - TX_OFFSET (repeater shift) can be specified in configuration
+  - Limit the APRS comment to 36 characters as per protocol spec
+  - The DEBUG configuration variable can be set to print APRS packets
+  - TONE should now be specified including the decimal
+
+* Add commandline option --reset to svxlink and remotetrx. It was added to get
+  an easy way to reset all SvxLink hardware to initial state. The default
+  systemd unit will run the application with that option set after the main
+  application has exited.
+
+* Add command line option --quiet to svxlink and remotetrx. Suppress output of
+  info messages. Warning and error messages will still be output.
+
+* Bugfix in RemoteTrx: If the AUTH_KEY contained whitespace it ended up to be
+  completely empty, thus no authentication was enabled.
+
+
+
+== Complete ChangeLog for Qtel version 1.2.5
+
+No changes in this release.
+
+
+
+== Complete ChangeLog for EchoLib version 1.3.5
+
+* Async::TcpConnection::DR_RECV_BUFFER_OVERFLOW was removed
+
+
+
+== Complete ChangeLog for the Async library version 1.8.0
+
+* Code cleanup of Async::Pty, fixing a small memory leak.
+
+* TLS connection support added. Build require OpenSSL development files.
+
+* Async::Exec: Now possible to set up environment variables.
+
+* Async::Config now have a mechanism for subscribing to changes for specific
+  configuration variables.
+
+* Add connection rate throttling, using token buckets, to Async::TcpServer.
+
+* Async::Config bugfix: Add parameter missing_ok to the string specific
+  getValue function.
+
+* Async::AudioDevice: Reopen the audio device on failure
+
+* Async::DnsLookup: The addresses method will now return the list of hosts in
+  random order for each call.
+

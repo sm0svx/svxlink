@@ -12,75 +12,28 @@
 #
 namespace eval SelCallEnc {
 
-#
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
+# Load Module core handlers
+sourceTclWithOverrides "Module.tcl"
+mixin Module
 
-#
-# Extract the module name from the current namespace
-#
-set module_name [namespace tail [namespace current]];
+# Source the SelCall sending functions
+sourceTclWithOverrides "SelCall.tcl"
 
-#
-# An "overloaded" playMsg that eliminates the need to write the module name
-# as the first argument.
-#
-#   msg - The message to play
-#
-proc playMsg {msg} {
-  variable module_name
-  ::playMsg $module_name $msg
-}
-
-
-#
-# Executed when this module is being activated
-#
-proc activating_module {} {
-  variable module_name
-  Module::activating_module $module_name
-}
-
-#
-# Executed when this module is being deactivated.
-#
-proc deactivating_module {} {
-  variable module_name
-  Module::deactivating_module $module_name
-}
-
-#
-# Exectuted when the inactivity timeout for this module has been expired.
-#
-proc timeout {} {
-  variable module_name
-  Module::timeout $module_name
-}
 
 #
 # Executed when playing of the help message for this module has been requested.
+# Available variants are passed one per argument on the format ID=NAME.
 #
-proc play_help {} {
-  variable module_name
-  variable variants
+override proc play_help {args} {
+  $SUPER
 
-  Module::play_help $module_name
-  
-  # FIXME: We should not read the variants array directly from the module implementation
-  foreach variant_id [lsort [array names variants]] {
+  foreach var [lrange $args 1 end] {
+    set v [split $var =]
     playSilence 300
-    playNumber $variant_id
+    playNumber [lindex $v 0]
     playSilence 100
-    playMsg $variants($variant_id)
+    playMsg [lindex $v 1]
   }
-}
-
-
-proc status_report {} {
-  #printInfo "status report called..."
 }
 
 
@@ -89,16 +42,9 @@ proc play_standard {std} {
 }
 
 
-proc play_sel_call {cmd} {
-  variable variants
-
-  # FIXME: We should not read the variants array directly from the module implementation
-  if {[string range $cmd 0 1] > [array size variants]} {
-    playMsg "operation_failed"
-  } else {
-    SelCall::setMode $variants([string range $cmd 0 1])
-    SelCall::play [string range $cmd 2 end]
-  }
+proc play_sel_call {std digits} {
+  SelCall::setMode $std
+  SelCall::play $digits
 }
 
 

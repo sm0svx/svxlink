@@ -6,113 +6,15 @@
 
 #
 # This is the namespace in which all functions and variables below will exist.
-# The name must match the configuration variable "NAME" in the
-# [ModuleEchoLink] section in the configuration file. The name may be changed
-# but it must be changed in both places.
 #
 namespace eval EchoLink {
 
-#
-# Check if this module is loaded in the current logic core
-#
-if {![info exists CFG_ID]} {
-  return;
-}
+# Load Module core handlers
+sourceTclWithOverrides "Module.tcl"
+mixin Module
 
-#
-# Extract the module name from the current namespace
-#
-set module_name [namespace tail [namespace current]];
-
-#
-# An "overloaded" playMsg that eliminates the need to write the module name
-# as the first argument.
-#
-proc playMsg {msg} {
-  variable module_name;
-  ::playMsg $module_name $msg;
-}
-
-
-#
-# A convenience function for printing out information prefixed by the
-# module name
-#
-proc printInfo {msg} {
-  variable module_name;
-  puts "$module_name: $msg";
-}
-
-
-#
-# This variable is updated by the EchoLink module when a station connects or
-# disconnects. It contains the number of currently connected stations.
-#
-variable num_connected_stations 0;
-
-
-#
-# Executed when this module is being activated
-#
-proc activating_module {} {
-  variable module_name;
-  Module::activating_module $module_name;
-}
-
-
-#
-# Executed when this module is being deactivated.
-#
-proc deactivating_module {} {
-  variable module_name;
-  Module::deactivating_module $module_name;
-}
-
-
-#
-# Executed when the inactivity timeout for this module has expired.
-#
-proc timeout {} {
-  variable module_name;
-  Module::timeout $module_name;
-}
-
-
-#
-# Executed when playing of the help message for this module has been requested.
-#
-proc play_help {} {
-  variable module_name;
-  Module::play_help $module_name;
-}
-
-
-#
-# Spell an EchoLink callsign
-#
-proc spellEchoLinkCallsign {call} {
-  global langdir
-  if [regexp {^(\w+)-L$} $call ignored callsign] {
-    spellWord $callsign
-    playSilence 50
-    playMsg "link"
-  } elseif [regexp {^(\w+)-R$} $call ignored callsign] {
-    spellWord $callsign
-    playSilence 50
-    playMsg "repeater"
-  } elseif [regexp {^\*(.+)\*$} $call ignored name] {
-    playMsg "conference"
-    playSilence 50
-    set lc_name [string tolower $name]
-    if [file exists "$langdir/EchoLink/conf-$lc_name.wav"] {
-      playFile "$langdir/EchoLink/conf-$lc_name.wav"
-    } else {
-      spellEchoLinkCallsign $name
-    }
-  } else {
-    spellWord $call
-  }
-}
+# Load common EchoLink functions used both here and for remote events
+sourceTclWithOverrides "EchoLinkCommon.tcl"
 
 
 #
@@ -157,7 +59,7 @@ proc status_report {} {
   variable num_connected_stations;
   variable module_name;
   global active_module;
-  
+
   if {$active_module == $module_name} {
     playNumber $num_connected_stations;
     playMsg "connected_stations";
@@ -464,8 +366,7 @@ proc reject_outgoing_connection {call} {
 #   call - The callsign of the remote station
 #
 proc is_receiving {rx call} {
-  variable CFG_LOCAL_RGR_SOUND
-  if {[getVar CFG_LOCAL_RGR_SOUND 1] && !$rx} {
+  if {[getConfigValue $::logic_name LOCAL_RGR_SOUND 1] && !$rx} {
     playTone 1000 100 100
   }
 }
@@ -505,59 +406,6 @@ proc info_received {call msg} {
 #
 proc config_updated {tag value} {
   #puts "Configuration variable updated: $tag=$value"
-}
-
-
-#-----------------------------------------------------------------------------
-# The events below are for remote EchoLink announcements. Sounds are not
-# played over the local transmitter but are sent to the remote station.
-#-----------------------------------------------------------------------------
-
-#
-# Executed when an incoming connection is accepted
-#
-proc remote_greeting {call} {
-  playSilence 1000;
-  playMsg "greeting";
-}
-
-
-#
-# Executed when an incoming connection is rejected
-#
-proc reject_remote_connection {perm} {
-  playSilence 1000;
-  if {$perm} {
-    playMsg "reject_connection";
-  } else {
-    playMsg "reject_connection";
-    playMsg "please_try_again_later"
-  }
-  playSilence 1000;
-}
-
-
-#
-# Executed when the inactivity timer times out
-#
-proc remote_timeout {} {
-  playMsg "timeout";
-  playSilence 1000;
-}
-
-
-#
-# Executed when the squelch state changes
-#
-proc squelch_open {is_open} {
-  # The listen_only_active and CFG_REMOTE_RGR_SOUND global variables are set by
-  # the C++ code
-  variable listen_only_active
-  variable CFG_REMOTE_RGR_SOUND
-  if {$CFG_REMOTE_RGR_SOUND && !$is_open && !$listen_only_active} {
-    playSilence 200
-    playTone 1000 100 100
-  }
 }
 
 

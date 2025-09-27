@@ -170,11 +170,14 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
   : loc_cfg(loc_cfg), server(server), port(port), dns(0), beacon_timer(0),
     curr_status(StationData::STAT_UNKNOWN), num_connected(0)
 {
-   beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000,
-                            Timer::TYPE_PERIODIC);
-   beacon_timer->setEnable(false);
-   beacon_timer->expired.connect(
-     mem_fun(*this, &AprsUdpClient::sendLocationInfo));
+  if (!loc_cfg.prefix.empty())
+  {
+    beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000,
+                             Timer::TYPE_PERIODIC);
+    beacon_timer->setEnable(false);
+    beacon_timer->expired.connect(
+        mem_fun(*this, &AprsUdpClient::sendLocationInfo));
+  }
 } /* AprsUdpClient::AprsUdpClient */
 
 
@@ -208,8 +211,9 @@ void AprsUdpClient::updateDirectoryStatus(StationData::Status status)
 } /* AprsUdpClient::updateDirectoryStatus */
 
 
-void AprsUdpClient::updateQsoStatus(int action, const string& call,
-  const string& info, list<string>& call_list)
+void AprsUdpClient::updateQsoStatus(int action, const std::string& call,
+                                    const std::string& info,
+                                    const std::list<std::string>& calls)
 {
     // Check if system is properly initialized
   if (!beacon_timer)
@@ -221,8 +225,8 @@ void AprsUdpClient::updateQsoStatus(int action, const string& call,
   beacon_timer->reset();
 
     // Update QSO connection status
-  num_connected = call_list.size();
-  curr_call = num_connected ? call_list.back() : "";
+  num_connected = calls.size();
+  curr_call = num_connected ? calls.back() : "";
 
     // Build and send the packet
   sendLocationInfo();

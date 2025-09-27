@@ -10,7 +10,7 @@ RUNASUSER=@SVXLINK_USER@
 # Specify which configuration file to use
 CFGFILE=@SVX_SYSCONF_INSTALL_DIR@/remotetrx.conf
 
-# Where to place the log file
+# An absolute path to a logfile or "syslog:" for logging to syslog
 LOGFILE=@LOCAL_STATE_DIR@/log/remotetrx
 
 # Disable Alsa zerofill if set to 0 (see manual page)

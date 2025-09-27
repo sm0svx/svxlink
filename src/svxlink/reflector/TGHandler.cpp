@@ -166,10 +166,6 @@ bool TGHandler::switchTo(ReflectorClient *client, uint32_t tg)
       std::ostringstream ss;
       ss << "TG#" << tg;
       m_cfg->getValue(ss.str(), "AUTO_QSY_AFTER", tg_info->auto_qsy_after_s);
-      if (tg_info->auto_qsy_after_s > 0)
-      {
-        tg_info->auto_qsy_time = time(NULL) + tg_info->auto_qsy_after_s;
-      }
       m_id_map[tg] = tg_info;
     }
     tg_info->clients.insert(client);
@@ -228,12 +224,18 @@ void TGHandler::setTalkerForTG(uint32_t tg, ReflectorClient* new_talker)
   id_map_it->second->talker = new_talker;
   talkerUpdated(tg, old_talker, new_talker);
 
-  time_t now = time(NULL);
-  if ((new_talker == 0) && (tg_info->auto_qsy_time > 0) &&
-      (now > tg_info->auto_qsy_time))
+  if (tg_info->auto_qsy_after_s > 0)
   {
-    requestAutoQsy(tg_info->id);
-    tg_info->auto_qsy_time = now + tg_info->auto_qsy_after_s;
+    time_t now = time(NULL);
+    if ((new_talker == 0) && (now > tg_info->auto_qsy_time))
+    {
+      requestAutoQsy(tg_info->id);
+      tg_info->auto_qsy_time = now + tg_info->auto_qsy_after_s;
+    }
+    else if (tg_info->auto_qsy_time <= 0)
+    {
+      tg_info->auto_qsy_time = now + tg_info->auto_qsy_after_s;
+    }
   }
   //printTGStatus();
 } /* TGHandler::setTalkerForTG */
@@ -346,12 +348,6 @@ void TGHandler::checkTimers(Async::Timer *t)
         tg_info->talker->setBlock(m_sql_timeout_blocktime);
         setTalkerForTG(tg_info->id, 0);
       }
-    }
-    else if ((tg_info->auto_qsy_time > 0) &&
-        (now.tv_sec > tg_info->auto_qsy_time))
-    {
-      requestAutoQsy(tg_info->id);
-      tg_info->auto_qsy_time = now.tv_sec + tg_info->auto_qsy_after_s;
     }
   }
 } /* TGHandler::checkTimers */

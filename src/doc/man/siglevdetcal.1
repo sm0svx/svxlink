@@ -1,4 +1,4 @@
-.TH SIGLEVDETCAL 1 "AUGUST 2021" Linux "User Manuals"
+.TH SIGLEVDETCAL 1 "MAY 2025" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -15,6 +15,9 @@ is the SvxLink signal level detector calibration utility. It is used to assist
 in the setup of the SIGLEV_SLOPE and SIGLEV_OFFSET configuration variables for a
 local receiver. The signal level detector need to be calibrated if a voter or
 the SIGLEV squelch detector is going to be used.
+.P
+The siglevdetcal utility will also measure the CTCSS tone SNR offset so that
+the CTCSS_SNR_OFFSETS configuration variable can be set up to a proper value.
 .P
 The calibration procedure is quite simple and everything is more or less
 explained at run-time. The procedure is outlined below.
@@ -60,6 +63,7 @@ when the remotetrx server starts.
 ASYNC_AUDIO_ALSA_ZEROFILL
 Set this environment variable to 0 to stop the Alsa audio code from writing
 zeros to the audio device when there is no audio to write available.
+.TP
 ASYNC_AUDIO_UDP_ZEROFILL
 Set this environment variable to 1 to enable the UDP audio code to write zeros
 to the UDP connection when there is no audio to write available.

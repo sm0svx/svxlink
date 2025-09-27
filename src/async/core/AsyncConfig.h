@@ -190,6 +190,21 @@ class Config
                   std::string& value, bool missing_ok = false) const;
 
     /**
+     * @brief 	Get the char value of the given configuration variable
+     * @param 	section    The name of the section where the configuration
+     *	      	      	   variable is located
+     * @param 	tag   	   The name of the configuration variable to get
+     * @param 	value 	   The value is returned in this argument. Any previous
+     *	      	      	   contents is wiped
+     * @return	Returns \em true on success or else \em false on failure
+     *
+     * This function is used to get the value for a configuration variable
+     * of type "char". It is an error if the size of the value is anything but
+     * 1 byte.
+     */
+    bool getValue(const std::string& section, const std::string& tag,
+                  char& value, bool missing_ok = false) const;
+    /**
      * @brief 	Get the value of the given configuration variable.
      * @param 	section    The name of the section where the configuration
      *	      	      	   variable is located

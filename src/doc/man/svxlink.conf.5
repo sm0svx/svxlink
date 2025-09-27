@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "FEBRUARI 2025" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JULY 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -331,6 +331,16 @@ sounds and roger beeps will not have tone sent with them though.
 will always transmit a CTCSS tone as soon as the transmitter is turned on.
 .RE
 .TP
+.B MACRO_PREFIX
+Zero or more DTMF digits a command must start with to be identified as a macro
+command. If a prefix is set, macro commands will have higher priority in the
+command hierarchy. For example, if a module is active the macro will be handled
+as usual by the logic core whereas if no prefix is set the command will go to
+the module. If the user want the core to handle the macro, the command have to
+be prefixed with a star ("force core command").
+Default prefix is 'D'.
+.RE
+.TP
 .B MACROS
 Point out a section that contains the macros that should be used by this logic
 core. See the section description for macros below for more information.
@@ -424,9 +434,9 @@ Example: CTCSS_TO_TG=127.3:9993,136.5:9995
 .B CTCSS_TO_TG_DELAY
 The delay for reporting detected talkgroup from when a CTCSS tone is detected.
 If the squelch close before the delay time has expired, no talkgroup will be
-reported. Default: 1000.
+reported. Default: 0.
 
-Example: CTCSS_TO_TG_DELAY=0
+Example: CTCSS_TO_TG_DELAY=1000
 .
 .SS Simplex Logic Section
 .
@@ -584,6 +594,13 @@ This configuration variable is used to specify the maximum number of consecutive
 short squelch openings allowed before shutting the repeater down. A good value
 is in between 5-10.
 .TP
+.B SQL_TIMEOUT
+This is a soft timeout value, in seconds, that can be used to indicate to
+repeater users that they have exceeded the recommended maximum time for a
+transmission. When the time is up, a sound will be emitted once every second.
+When the squelch closes, or alternatively when the roger sound is sent, a
+message informing about the timeout will be played back.
+.TP
 .B ACTIVATE_MODULE_ON_LONG_CMD
 This configuration variable activate a feature that might help users not aware
 of the SvxLink command structure. The idea is to activate the specified module
@@ -634,12 +651,12 @@ specified for a link, selecting talk group 888 will be achieved by entering
 the command 91888#.
 .P
 The reflector connection will be authenticated using X.509 certificates. Both
-the server and the client requires authentication. The AUTH_KEY authentication
-method that were previously used is deprecated. The certificate generation
+the server and the client require authentication. The AUTH_KEY authentication
+method that was previously used is deprecated. The certificate generation
 process is mostly automated. The contents of the certificate can be customized
-using the configuration variables with name prefix CERT_. Default values are
-good in most cases. CERT_EMAIL may be good to specify so that the SvxLink node
-owner can be contacted. Ask the reflector sysop what the convention is.
+using the configuration variables with the name prefix CERT_. Default values
+are good in most cases. CERT_EMAIL may be good to specify so that the SvxLink
+node owner can be contacted. Ask the reflector sysop what the convention is.
 .TP
 .B TYPE
 The type for a reflector logic core is always
@@ -687,7 +704,9 @@ authenticating to the SvxReflector server.
 .TP
 .B AUTH_KEY
 The authentication key, or password, used when authenticating to the
-SvxReflector server.
+SvxReflector server. When connecting to a modern reflector server, certificates
+are used instead of an AUTH_KEY. Then this configuration variable should be
+left unset.
 .TP
 .B JITTER_BUFFER_DELAY
 A jitter buffer is used to prevent gaps in the audio when the network
@@ -794,11 +813,6 @@ Default is -1 (disabled).
 .TP
 .B VERBOSE
 Set to 0 to suppress reflector leave/join printouts.
-.P
-It is also possible to set audio codec parameters using the same configuration
-variables as documented for networked receivers and transmitters. For example,
-to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
-to something lower than 9.
 .TP
 .B CERT_PKI_DIR
 The path to the directory where PKI (Public Key Infrastructure) files will be
@@ -887,6 +901,11 @@ A comma separated list of email addresses where the SvxLink node owners can be
 reached.
 
 Example: CERT_EMAIL=mycall1@example.com,mycall2@example.com
+.P
+It is also possible to set audio codec parameters using the same configuration
+variables as documented for networked receivers and transmitters. For example,
+to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
+to something lower than 9.
 .
 .SS QSO Recorder Section
 .
@@ -1020,11 +1039,12 @@ The link is activated/deactivated using DTMF commands and/or automatically
 depending on your configuration.  When the link is active, all audio received
 by one logic will be transmitted by the other logic(s).
 .P
-The name of the logic linking section can be chosen freely. In the example 
-configuration file, there is a section [LinkToR4]. To use a logic linking 
-section in a logic core it must be pointed out by the LINKS configuration 
-variable in the GLOBAL section.
-Example: GLOBAL/LINKS=LinkToR4
+The name of the logic linking section can be chosen freely. In the example
+configuration file, there are a couple of sections: [ReflectorLink] and
+[LinkToR4]. To use a logic linking section in a logic core it must be pointed
+out by the LINKS configuration variable in the GLOBAL section. Multiple links
+are separated with a comma.
+Example: GLOBAL/LINKS=ReflectorLink,LinkToR4
 .TP
 .B CONNECT_LOGICS
 A comma separated list of logic specifications for the logic cores to connect
@@ -1034,10 +1054,10 @@ the logic to include in the link. To manually activate or deactivate the link
 from the just specified logic, "command" is used. The "announcement name" is
 used when announcing link related activities like activation or deactivation.
 Both "command" and "announcement name" may be left empty if no manual control
-is wanted.
+is desired.
 An example config line may look like this:
 
-RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
+  RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
 
 It will include two logics in the link, RepeaterLogic_2m and
 RepeaterLogic_70cm. From the 2m side, the link will be activated when the user
@@ -1067,6 +1087,14 @@ possible application for this is for example to make the connection of a
 microphone/speaker combination (without DTMF encoder) for brief announcements
 but without having to constantly listen in.
 Example: ACTIVATE_ON_ACTIVITY=MicSpkrLogic
+.TP
+.B ACTIVATE_ON_TG
+Enter a comma separated list of entries on the form logic:tg_regex, which
+should automatically activate the link if the specified talkgroup regular
+expression matches a talkgroup that is activated on the specified logic core.
+Use CTCSS_TO_TG in a SimplexLogic or RepeaterLogic to make it emit a talkgroup
+for a specific subtone.
+Example: ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123
 .
 .SS Local Receiver Section
 .
@@ -1500,7 +1528,7 @@ where the SIGLEV squelch is configured.
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. The available choices are:
-"NONE", "NOISE", "TONE", "AFSK" or "SIM", "CONST". Depending on other
+"NONE", "NOISE" (default), "TONE", "AFSK", "SIM" or "CONST". Depending on other
 configuration there may be more choices available. For example, if a Ddr
 receiver is used there will also be a DDR signal level detector available.  The
 signal level detector is only needed when using multiple receivers in a voter
@@ -2729,11 +2757,16 @@ manual page.
 .
 .SS LocationInfo
 .
+The LocationInfo configuration section is used to specify information that
+should be sent into the APRS network and also to the Echolink link status page.
+The use of location info is activated by setting the LOCATION_INFO
+configuration variable in the GLOBAL section. The following configuration
+variables can be used in the LocationInfo configuration section.
 .TP
 .B STATUS_SERVER_LIST
 Enter a space separated list of EchoLink status servers that should be used
 to send node status beacons. Your node information can be found
-on http://www.echolink.org/links.jsp.
+on https://www.echolink.org/links.jsp.
 The format is host:port. Host - hostname or IP address, port - UDP port.
 Don't change the default unless you know what you are doing. If you don't
 want to update the EchoLink status server, comment out this configuration
@@ -2747,10 +2780,10 @@ STATUS_SERVER_LIST=aprs.echolink.org:5199
 This configuration variable specifies connection parameters for connecting
 to an APRS server network using the TCP protocol. In this case, the positioning
 information is forwarded to the worldwide APRS network. Have a look at
-http://aprs.fi/.
+https://aprs.fi/.
 
 To choose a suitable APRS server from the so called tier 2 network, have a
-look at http://www.aprs2.net/. Either choose a specific server or one of the
+look at https://www.aprs2.net/. Either choose a specific server or one of the
 regional addresses. The regional addresses bundle all APRS servers within a
 region so that a random tier 2 server is chosen within the region. There are
 five regions defined: noam.aprs2.net - North America, euro.aprs2.net - Europe,
@@ -2799,24 +2832,40 @@ CALLSIGN=EL-DL1ABC    # callsign for a link
 .br
 CALLSIGN=DB0ABC-1     # callsign (with SSID 1) for node without Echolink
 .TP
+.B SOURCE_CALLSIGN
+Specify the callsign to use as the APRS source address. That callsign must
+comply with the AX.25 source callsign specification. If this configuration
+variable is not specified, the callsign will be extracted from the CALLSIGN
+config variable. Any EL- or ER- prefix will be stripped off.
+
+Example:
+.br
+SOURCE_CALLSIGN=DB0ABC-1
+.TP
 .B LOGIN_CALLSIGN
 Specify the callsign to use to log in to the APRS-IS network. The login
 callsign must comply with the APRS-IS specification found at
 https://www.aprs-is.net/connecting.aspx. If this configuration variable is not
-specified, the callsign will be extracted from the CALLSIGN config variable.
-Any EL- or ER- prefix will be stripped off.
+specified, the callsign will be the same as the source callsign.
 
 Example:
 .br
-LOGIN_CALLSIGN=DB0ABC-70
+LOGIN_CALLSIGN=DB0ABC-2M
 .TP
 .B FREQUENCY
-The tx-frequency of the link/repeater in MHz. For repeaters, information about
-the RX/TX shift in the COMMENT configuration variable may be useful.
+The tx-frequency of the link/repeater in MHz. For repeaters, the TX_OFFSET
+configuration variable should be used to specify the repeater shift.
 
 Example:
 .br
 FREQUENCY=430.050     # tx-frequency is 430.050 MHz
+.TP
+.B FREQUENCY_SEPARATOR
+Use the specified character to separate the PHG from the frequency.
+Unfortunately different tranceivers understand different APRS formats. For
+example the Yaesu FTM-510D require that no separator is used and the Kenwood
+TM-D710 require a separator (e.g. "/") to be present. The default is to use a
+slash as the separator charachter.
 .TP
 .B TX_OFFSET
 The tx offset is the number of kHz from the FREQUENCY where the node is
@@ -2830,6 +2879,12 @@ kHz. So if the configuration parameter is set to -600 kHz, it will be sent as
 .TP
 .B TX_POWER
 The power of your transmitter in watts.
+
+The maximum power allowed in the APRS protocol is 81 watts so if a power grater
+than that is specified it will be set to that maximum value. However, the
+advice is to set it to the actual power if the protocol evolves to handle
+higher powers in the future. So if your transmitter outputs 200 watts, set it
+to that.
 
 Example:
 .br
@@ -2848,8 +2903,8 @@ Example:
 ANTENNA_GAIN=5        # antenna gain is 5 dBd
 .TP
 .B ANTENNA_HEIGHT
-The height of the link-/repeater antenna in meters or feet above the terrain,
-not sealevel.
+The height of the link-/repeater antenna in meters or feet above the terrain
+(HAAT), NOT sealevel.
 
 Example:
 .br
@@ -2878,7 +2933,8 @@ control the way the forwarding of your packets inside the RF APRS network is
 done. In some cases it has to be changed according to local requirements.
 Please contact your local APRS sysop for further information. Changes should be
 made only according to the NEWn-N paradigm. Set it to WIDE1-1 if you are unsure
-of its setting.
+of its setting. But once again, leave it unset if you are not sure that it need
+to be set.
 
 Examples:
 .br
@@ -2888,13 +2944,14 @@ PATH=WIDE1-1,WIDE2-2
 .TP
 .B BEACON_INTERVAL
 The interval, in minutes, with which beacons will be sent to the APRS network.
-A good value is 10 minutes. If your beacon is gated via RF, please increase
-the interval a bit to keep the APRS traffic on RF produced by the APRS RF gate
-as low as possible. Intervals shorter than 10 minutes will be changed to 10.
+A good value is 10 minutes. If your beacon is gated via RF in a crowded area,
+it may be necessary to increase the interval a bit to keep the APRS traffic on
+RF produced by the APRS RF gate as low as possible. Intervals shorter than 10
+minutes will be changed to 10.
 
 Example:
 .br
-BEACON_INTERVAL=30    # APRS-beacons will be sent every 30 minutes.
+BEACON_INTERVAL=20    # APRS-beacons will be sent every 20 minutes.
 .TP
 .B SYMBOL
 Specify which APRS symbol that should be displayed on maps. Symbols are
@@ -2903,7 +2960,7 @@ table to use and the second one select the actual symbol to use from the
 selected table. So for example "/-" is a house and "/r" mean a repeater tower.
 For all details abount APRS symbols, have a look at the latest documentation:
 https://www.aprs.org/symbols/symbolsX.txt.
-The specified symbol is only applied to the base callsign and not on the
+The specified symbol is only applied to the base callsign and not to the
 Echolink one.
 
 Example:
@@ -2916,14 +2973,14 @@ repeater. If you don't use tone control set it to 0.
 
 Examples:
 .br
-TONE=136      # we are using a CTCSS-tone of 136.5 Hz
+TONE=136.5    # we are using a CTCSS-tone of 136.5 Hz
 .br
 TONE=0        # we don't use CTCSS sub-audible or call tones
 .br
 TONE=1750     # the link/repeater use a tone burst of 1750 Hz
 .TP
 .B STATISTICS_INTERVAL
-Defines the interval in minutes in that an aprs statistics (telemetry) are sent
+Defines the interval in minutes in that an APRS statistics (telemetry) are sent
 into the aprs network. Range: 5-60 minutes, default is 10 minutes
 .TP
 .B STATISTICS_LOGIC
@@ -2944,14 +3001,24 @@ text.
 
 Example:
 .br
-COMMENT=[svx] Running SvxLink by SM0SVX
+COMMENT=SvxLink by SM0SVX
 .TP
 .B PTY_PATH
 Specify a path to a communications PTY that can be used by external
-applications to inject APRS packets into the APRS-IS network.
+applications to inject APRS packets into the APRS-IS network. A source callsign
+specified with XXXXXX (6 X:es) will be replaced with the configured source
+callsign.
+
+Example:
+.EX
+PTY_PATH=/dev/shm/locationinfo
+
+$ echo 'XXXXXX>APSVX1,TCPIP*:>Testing SvxLink APRS' > /dev/shm/locationinfo
+.EE
 .TP
 .B DEBUG
-Set to 1 to print which APRS packets that are sent into the APRS-IS network.
+Set to 1 to print which APRS packets that are sent into or received from the
+APRS network.
 .
 .SH AUDIO DEVICE SPECIFICATIONS
 .
@@ -2994,14 +3061,17 @@ with the highest signal strength. The choice is made directly after squelch
 open. For the voter to make a correct choice, the signal level detector must be
 calibrated on each receiver.
 
-To use the noise signal level detector, first set SIGLEV_DET=NOISE.
+To use the noise signal level detector, first set SIGLEV_DET=NOISE or, since
+NOISE is the default, just make sure that it's unset.
 There are two configuration variables that is used to calibrate the detector.
 They are SIGLEV_SLOPE and SIGLEV_OFFSET in a local receiver section. The slope
 is the gain of the detector and the offset is used to adjust the detector so
 that when there is no input signal, the detector will return 0. The goal is to
 adjust the detector so that when no signal is received, a value of 0 is produced
 and when full signal strength is received, a value of 100 is produced. It will
-never be exakt but that does not matter.
+never be exact but that does not matter as long as each receiver produce a
+measurement that roughly has the same siglev value as the other receivers for a
+certain signal level.
 
 The calibration is normally done by using the
 .BR siglevdetcal (1)
@@ -3013,7 +3083,7 @@ Before starting the siglevdetcal application, pull the PTT cable since the PTT
 might get triggered during the calibration procedure.
 
 The siglevdetcal utility will also measure the CTCSS tone SNR offset so that
-the CTCSS_SNR_OFFSETS config variable can be set up to a proper value.
+the CTCSS_SNR_OFFSETS configuration variable can be set up to a proper value.
 
 If the siglevdetcal application cannot be used for some reason, the manual
 procedure below might be used. This procedure will only work for a
@@ -3033,8 +3103,8 @@ Open the squelch so that there is only noise coming into SvxLink.
 Use a second transceiver to make a short, unmodulated transmission. Release the
 PTT when the "Squelch OPEN" message is printed. Repeat this for about five times.
 .IP 5 4
-Calculate the mean diff (open level - close level) and the mean lower 
-(squelch close) value. Make sure to use at least four significant digits in your
+Calculate the mean diff (open level - close level) and the mean lower (squelch
+close) value. Make sure to use at least four significant digits in your
 calculations.
 .IP 6 4
 SIGLEV_SLOPE = 100 / (mean diff)

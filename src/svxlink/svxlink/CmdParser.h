@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -208,7 +208,13 @@ class Command : public sigc::trackable
      * @return	Returns the command string
      */
     const std::string& cmdStr(void) const { return cmd; }
-    
+
+    /**
+     * @brief   Find out if this command require an exact match
+     * @return  Returns \em true if an exact match is required
+     */
+    bool exactMatch(void) const { return m_exact_match; }
+
     /**
      * @brief	Execute this command
      * @param	subcmd The sub command of the executed command
@@ -241,11 +247,17 @@ class Command : public sigc::trackable
       assert(cmd.empty());
       cmd = cmd_str;
     }
-    
+
+    void setExactMatch(bool exact_match=true)
+    {
+      m_exact_match = exact_match;
+    }
+
   private:
-    CmdParser 	*parser;
+    CmdParser*  parser        {nullptr};
     std::string cmd;
-    
+    bool        m_exact_match {false};
+
 };  /* class Command */
 
 

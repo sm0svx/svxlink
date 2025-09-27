@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -144,8 +144,8 @@ RepeaterLogic::RepeaterLogic(void)
     open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
     sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
-    ident_nag_min_time(2000), ident_nag_timer(-1), delayed_tg_activation(0),
-    open_on_ctcss_timer(-1)
+    ident_nag_min_time(2000), ident_nag_timer(-1),
+    delayed_tg_activation(TG_RESET), open_on_ctcss_timer(-1)
 {
   up_timer.expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
   open_on_sql_timer.expired.connect(
@@ -485,8 +485,8 @@ void RepeaterLogic::setReceivedTg(uint32_t tg)
   }
   else
   {
-    //std::cout << "### RepeaterLogic::setReceivedTg: Delayed TG activation"
-    //          << std::endl;
+    //std::cout << "### RepeaterLogic::setReceivedTg: Delayed TG activation tg="
+    //          << tg << std::endl;
     delayed_tg_activation = tg;
   }
 } /* RepeaterLogic::setReceivedTg */
@@ -577,10 +577,10 @@ void RepeaterLogic::setUp(bool up, string reason)
       ident_nag_timer.setEnable(true);
     }
 
-    if (delayed_tg_activation > 0)
+    if (delayed_tg_activation != TG_RESET)
     {
       Logic::setReceivedTg(delayed_tg_activation);
-      delayed_tg_activation = 0;
+      delayed_tg_activation = TG_RESET;
     }
   }
   else
@@ -694,7 +694,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
         //Logic::setReceivedTg(delayed_tg_activation);
         Logic::squelchOpen(false);
       }
-      delayed_tg_activation = 0;
+      delayed_tg_activation = TG_RESET;
     }
   }
 } /* RepeaterLogic::squelchOpen */

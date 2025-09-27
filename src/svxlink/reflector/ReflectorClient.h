@@ -130,24 +130,6 @@ class ReflectorClient : public sigc::trackable
       STATE_CONNECTED
     } ConState;
 
-    struct Rx
-    {
-      std::string name;
-      //char        id;
-      uint8_t     siglev;
-      bool        enabled;
-      bool        sql_open;
-      bool        active;
-    };
-    typedef std::map<char, Rx> RxMap;
-
-    struct Tx
-    {
-      std::string name;
-      bool        transmit;
-    };
-    typedef std::map<char, Tx> TxMap;
-
     class Filter
     {
       public:
@@ -344,20 +326,35 @@ class ReflectorClient : public sigc::trackable
     }
 
     /**
+     * @brief   Return the remote UDP IP
+     * @return  Returns the source IP used by the client for UDP
+     */
+    const Async::IpAddress& remoteUdpHost(void) const
+    {
+      const auto& addr = m_client_src.first;
+      if (addr.isEmpty())
+      {
+        return remoteHost();
+      }
+      return addr;
+    }
+
+    /**
      * @brief   Return the remote port number
-     * @return  Returns the local port number used by the client
+     * @return  Returns the source port used by the client for UDP
      */
     uint16_t remoteUdpPort(void) const { return m_remote_udp_port; }
 
     /**
-     * @brief   Set the remote port number
-     * @param   The port number used by the client
+     * @brief   Set the remote UDP source (IP, port)
+     * @param   src A ClientSrc
      *
-     * The Reflector use this function to set the port number used by the
-     * client so that UDP packets can be send to the client and check that
-     * incoming packets originate from the correct port.
+     * The Reflector use this function to set the (IP, port number) used by the
+     * client so that UDP packets can be sent to the client, incoming UDP
+     * packets can be associated with the correct client object and to check
+     * that incoming packets originate from the correct source.
      */
-    void setRemoteUdpPort(uint16_t port);
+    void setRemoteUdpSource(const ClientSrc& src);
 
     /**
      * @brief   Get the callsign for this connection
@@ -459,37 +456,27 @@ class ReflectorClient : public sigc::trackable
     std::vector<char> rxIdList(void) const
     {
       std::vector<char> ids;
-      ids.reserve(m_rx_map.size());
-      for (RxMap::const_iterator it=m_rx_map.begin(); it!=m_rx_map.end(); ++it)
+      ids.reserve(m_json_rx_map.size());
+      for (const auto& rx : m_json_rx_map)
       {
-        ids.push_back(it->first);
+        ids.push_back(rx.first);
       }
       return ids;
     }
-    bool rxExist(char rx_id) const
+    void setRxSiglev(char id, uint8_t siglev)
     {
-      return m_rx_map.find(rx_id) != m_rx_map.end();
+      setRxParam(id, "siglev", siglev);
     }
-    const std::string& rxName(char id) { return m_rx_map[id].name; }
-    void setRxSiglev(char id, uint8_t siglev) { m_rx_map[id].siglev = siglev; }
-    uint8_t rxSiglev(char id) { return m_rx_map[id].siglev; }
-    void setRxEnabled(char id, bool enab) { m_rx_map[id].enabled = enab; }
-    bool rxEnabled(char id) { return m_rx_map[id].enabled; }
-    void setRxSqlOpen(char id, bool open) { m_rx_map[id].sql_open = open; }
-    bool rxSqlOpen(char id) { return m_rx_map[id].sql_open; }
-    void setRxActive(char id, bool active) { m_rx_map[id].active = active; }
-    bool rxActive(char id) { return m_rx_map[id].active; }
-    //RxMap& rxMap(void) { return m_rx_map; }
-    //const RxMap& rxMap(void) const { return m_rx_map; }
+    void setRxEnabled(char id, bool enab) { setRxParam(id, "enabled", enab); }
+    void setRxSqlOpen(char id, bool open) { setRxParam(id, "sql_open", open); }
+    void setRxActive(char id, bool active) { setRxParam(id, "active", active); }
 
-    bool txExist(char tx_id) const
+    void setTxTransmit(char id, bool transmit)
     {
-      return m_tx_map.find(tx_id) != m_tx_map.end();
+      setTxParam(id, "transmit", transmit);
     }
-    void setTxTransmit(char id, bool transmit) { m_tx_map[id].transmit = transmit; }
-    bool txTransmit(char id) { return m_tx_map[id].transmit; }
 
-    const Json::Value& nodeInfo(void) const { return m_node_info; }
+    void updateIsTalker(void);
 
     uint32_t udpCipherIVCntrNext() { return m_udp_cipher_iv_cntr++; }
     std::vector<uint8_t> udpCipherIV(void) const;
@@ -516,6 +503,8 @@ class ReflectorClient : public sigc::trackable
     using ClientMap           = std::map<ClientId, ReflectorClient*>;
     using ClientSrcMap        = std::map<ClientSrc, ReflectorClient*>;
     using ClientCallsignMap   = std::map<std::string, ReflectorClient*>;
+    using JsonRxMap           = std::map<char, Json::Value&>;
+    using JsonTxMap           = std::map<char, Json::Value&>;
 
     static const uint16_t MIN_MAJOR_VER = 0;
     static const uint16_t MIN_MINOR_VER = 6;
@@ -543,7 +532,6 @@ class ReflectorClient : public sigc::trackable
     ClientSrc                   m_client_src;
     uint16_t                    m_remote_udp_port;
     Async::Config*              m_cfg;
-    //uint16_t                    m_next_udp_tx_seq;
     UdpCipher::IVCntr           m_next_udp_rx_seq;
     Async::Timer                m_heartbeat_timer;
     unsigned                    m_heartbeat_tx_cnt;
@@ -557,16 +545,15 @@ class ReflectorClient : public sigc::trackable
     std::vector<std::string>    m_supported_codecs;
     uint32_t                    m_current_tg;
     std::set<uint32_t>          m_monitored_tgs;
-    RxMap                       m_rx_map;
-    TxMap                       m_tx_map;
-    Json::Value                 m_node_info;
+    JsonRxMap                   m_json_rx_map;
+    JsonTxMap                   m_json_tx_map;
     std::vector<uint8_t>        m_udp_cipher_iv_rand;
     std::vector<uint8_t>        m_udp_cipher_key;
     UdpCipher::IVCntr           m_udp_cipher_iv_cntr;
     Async::AtTimer              m_renew_cert_timer;
+    Json::Value*                m_status                {nullptr};
 
     static ClientId newClientId(ReflectorClient* client);
-    static ClientSrc newClientSrc(ReflectorClient* client);
 
     ReflectorClient(const ReflectorClient&);
     ReflectorClient& operator=(const ReflectorClient&);
@@ -595,6 +582,28 @@ class ReflectorClient : public sigc::trackable
     bool sendClientCert(const Async::SslX509& cert);
     void sendAuthChallenge(void);
     void renewClientCertificate(void);
+    void setMonitoredTGs(const std::set<uint32_t>& tgs);
+    void setTg(uint32_t tg);
+
+    template <typename T>
+    void setRxParam(char id, const std::string& name, const T& value)
+    {
+      auto it = m_json_rx_map.find(id);
+      if (it != m_json_rx_map.end())
+      {
+        (it->second)[name] = value;
+      }
+    }
+
+    template <typename T>
+    void setTxParam(char id, const std::string& name, const T& value)
+    {
+      auto it = m_json_tx_map.find(id);
+      if (it != m_json_tx_map.end())
+      {
+        (it->second)[name] = value;
+      }
+    }
 
 };  /* class ReflectorClient */
 

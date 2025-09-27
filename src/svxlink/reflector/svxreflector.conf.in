@@ -19,6 +19,7 @@ COMMAND_PTY=/dev/shm/reflector_ctrl
 #REJECT_CALLSIGN=""
 #ACCEPT_CERT_EMAIL="\\w+(?:[-._+]\\w+)*@\\w+(?:\\.\\w+)*"
 #CERT_PKI_DIR=pki/
+#CERT_CA_BUNDLE=ca-bundle.crt
 #CERT_CA_KEYS_DIR=private/
 #CERT_CA_PENDING_CSRS_DIR=pending_csrs/
 #CERT_CA_CSRS_DIR=csrs/
