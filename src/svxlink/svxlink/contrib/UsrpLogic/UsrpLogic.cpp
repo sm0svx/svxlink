@@ -88,7 +88,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "22082025"
+#define USRPVERSION "25092025"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -183,24 +183,15 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
          << endl;
     return false;
   }
-  if (debug > LOGERROR)
-  {
-    cout << "    USRP_HOST=" << m_usrp_host << endl;
-  }
+  log(LOGERROR, "    USRP_HOST=" + m_usrp_host);
 
   m_usrp_port = 41234;
   cfg().getValue(name(), "USRP_TX_PORT", m_usrp_port);
-  if (debug > LOGERROR)
-  {
-    cout << "    USRP_TX_PORT=" << m_usrp_port << endl;
-  }
+  log(LOGERROR, "    USRP_TX_PORT=" + to_string(m_usrp_port));
 
   m_usrp_rx_port = 41233;
   cfg().getValue(name(), "USRP_RX_PORT", m_usrp_rx_port);
-  if (debug > LOGERROR)
-  {
-    cout << "    USRP_RX_PORT=" << m_usrp_rx_port << endl;
-  }
+  log(LOGERROR, "    USRP_RX_PORT=" + to_string(m_usrp_rx_port));
 
   m_udp_rxsock = new UdpSocket(m_usrp_rx_port);
   m_udp_rxsock->dataReceived.connect(
@@ -223,8 +214,10 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   if (!cfg().getValue(name(), "DMRID", m_dmrid))
   {
     m_dmrid = 0;
-    cout << "+++ WARNING: No " << name() << "/DMRID= configured, "
-         << "using " << m_dmrid << endl;
+    std::string m_err = "+++ WARNING: No " + name();
+        m_err += "/DMRID= configured, using ";
+        m_err +=  m_dmrid;
+    log(LOGWARN, m_err);
   }
 
   if (!cfg().getValue(name(), "RPTID", m_rptid))
@@ -432,7 +425,7 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   std::string user_info_file;
   if (cfg().getValue(name(), "DV_USER_INFOFILE", user_info_file))
   {
-    cout << "+++ Reading users data from \"" << user_info_file << "\"" << endl;
+    log(LOGDEBUG, "+++ Reading users data from " + user_info_file);
     std::ifstream user_info_is(user_info_file.c_str(), std::ios::in);
     if (user_info_is.good())
     {
@@ -496,12 +489,12 @@ bool UsrpLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
       m_user.last_activity = mktime(&mtime);
       m_user.sent_last_sds = mktime(&mtime);
       userdata[m_user.id] = m_user;
-      if (debug >= LOGINFO)
-      {
-        cout << "id=" << m_user.id << ",call=" << m_user.call << ",name="
-             << m_user.name << ",mode=" << m_user.mode << ",location="
-             << m_user.location << ",comment=" << m_user.comment << endl;
-      }
+
+      stringstream m_err;
+      m_err << "id=" + m_user.id << ",call=" << m_user.call << ",name="
+            << m_user.name << ",mode=" << m_user.mode << ",location="
+            << m_user.location << ",comment=" << m_user.comment;
+      log(LOGINFO, m_err.str());
     }
   }
 
@@ -580,8 +573,9 @@ void UsrpLogic::flushEncodedAudio(void)
 void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void *buf, int count)
 {
-  //cout << "incoming packet from " << addr.toString() << ", len=" << count
-  //     << endl;
+  stringstream ss;
+  ss << "incoming packet from " << addr.toString() << ", len=" << count;
+  log(LOGDEBUG, ss.str());
   stringstream si;
   si.write(reinterpret_cast<const char*>(buf), count);
   UsrpHeaderMsg usrp;
@@ -610,8 +604,10 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       UsrpAudioMsg usrpaudio;
       if (!usrpaudio.unpack(si))
       {
-        cout << "*** WARNING[" << name()
-             << "]: Unpacking failed for UDP UsrpAudioMsg" << endl;
+        ss.str("");
+        ss << "+++ WARNING[" << name()
+           << "]: Unpacking failed for UDP UsrpAudioMsg";
+        log(LOGERROR, ss.str());
         return;
       }
       handleVoiceStream(usrpaudio);
@@ -640,8 +636,10 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       UsrpTlvMetaMsg usrptlvmsg;
       if (!usrptlvmsg.unpack(stlv))
       {
-        cout << "*** WARNING[" << name()
-             << "]: Unpacking failed for UDP stream to UsrpTlvMetaMsg" << endl;
+        ss.str("");
+        ss << "*** WARNING[" << name()
+           << "]: Unpacking failed for UDP stream to UsrpTlvMetaMsg";
+        log(LOGERROR, ss.str());
         return;
       }
       m_last_call = usrptlvmsg.getCallsign();
@@ -700,8 +698,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
         if (!reader->parse(metadata.c_str(), metadata.c_str() + metadata.size(), 
               &value, &jsonReaderError))
         {
-          cout << "*** ERROR: Failed to parse json: " 
-               << jsonReaderError << endl;
+          log(LOGERROR, "*** ERROR: Failed to parse json: " + jsonReaderError);
           return;
         }
         else
@@ -729,7 +726,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
 
     if (m_last_tg > 0 && m_last_call.length() > 0)
     {
-      stringstream ss;
+      ss.str("");
       ss << "usrp_stationdata_received " << m_last_call << " "
          << m_last_tg << " " << m_last_dmrid;
       processEvent(ss.str());
@@ -737,7 +734,7 @@ void UsrpLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
   }
   else
   {
-    cout << "*** unknown type of message:" << utype << endl;
+    log(LOGERROR, "*** unknown type of message:" + to_string(utype));
   }
 } /* UsrpLogic::udpDatagramReceived */
 
@@ -803,8 +800,10 @@ void UsrpLogic::handleMetaData(std::string metadata)
   if (!reader->parse(metadata.c_str(), metadata.c_str() + metadata.size(), 
        &user_arr, &jsonReaderError))
   {
-    cout << "*** Error: parsing StateEvent message ("
-         << jsonReaderError << ")" << endl;
+    stringstream ss;
+    ss << "*** Error: parsing StateEvent message ("
+       << jsonReaderError << ")";
+    log(LOGERROR, ss.str());
     return;
   }
 
@@ -814,7 +813,7 @@ void UsrpLogic::handleMetaData(std::string metadata)
     Json::Value& t_userdata = user_arr[i];
     ss << t_userdata.get("digital","").asString();
   }
-  cout << "+++ Metadata received: " << ss.str() << endl;
+  log(LOGINFO, "+++ Metadata received: " + ss.str());
 
 } /* UsrpLogic::handleMetaData */
 
@@ -856,7 +855,7 @@ void UsrpLogic::sendStopMsg(void)
   stringstream ss;
   ss << "transmission_stop " << m_selected_tg;
   processEvent(ss.str());
-  
+
   callsign = m_callsign; // reset to own callsign
 } /* UsrpLogic::sendStopMsg */
 
@@ -942,7 +941,7 @@ void UsrpLogic::handleTimerTick(Async::Timer *t)
     timersub(&now, &m_last_talker_timestamp, &diff);
     if (diff.tv_sec > 3)
     {
-      cout << name() << ": Last talker audio timeout" << endl;
+      log(LOGINFO, name() + ": Last talker audio timeout");
       m_dec->flushEncodedSamples();
       timerclear(&m_last_talker_timestamp);
     }
@@ -979,9 +978,10 @@ bool UsrpLogic::setAudioCodec(void)
   m_dec = Async::AudioDecoder::create("S16");
   if (m_dec == 0)
   {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to initialize audio decoder" 
-         << endl;
+    stringstream ss;
+    ss << "*** ERROR[" << name()
+         << "]: Failed to initialize audio decoder";
+    log(LOGERROR, ss.str());
     m_dec = Async::AudioDecoder::create("DUMMY");
     assert(m_dec != 0);
     return false;
@@ -1042,8 +1042,10 @@ void UsrpLogic::switchMode(uint8_t mode)
   ostringstream os;
   if (!usrp.pack(os))
   {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to pack UDP Usrp message\n";
+    stringstream ss;
+    ss << "*** ERROR[" << name()
+         << "]: Failed to pack UDP Usrp message";
+    log(LOGERROR, ss.str());
     return;
   }
 
@@ -1105,24 +1107,20 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
   Json::CharReaderBuilder rbuilder;
   std::unique_ptr<Json::CharReader> const reader(rbuilder.newCharReader());
   std::string jsonReaderError;
-  
+
   if (!reader->parse(msg.c_str(), msg.c_str() + msg.size(), &user_arr,
                  &jsonReaderError))
   {
-    if (debug >= LOGERROR)
-    {
-      cout << "*** Error: parsing StateEvent message (" 
-           << jsonReaderError << ")" << endl;
-    }
+    stringstream ss;
+    ss << "*** Error: parsing StateEvent message (" << jsonReaderError << ")";
+    log(LOGERROR, ss.str());
     return;
   }
 
   if (event_name == "DvUsers:info")
   {
-    if (debug >= LOGINFO)
-    {
-      cout << "Download userdata from Reflector (DvUsers:info):" << endl;
-    }
+    stringstream ss;
+    log(LOGINFO, "Download userdata from Reflector (DvUsers:info):");
     for (Json::Value::ArrayIndex i = 0; i != user_arr.size(); i++)
     {
       User m_user;
@@ -1136,14 +1134,12 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
       m_user.aprs_tab = static_cast<char>(t_userdata.get("tab", 47).asInt());
       m_user.comment = t_userdata.get("comment","").asString();
       m_user.last_activity = t_userdata.get("last_activity",0).asUInt();
-
       userdata[m_user.id] = m_user;
-      if (debug >= LOGINFO)
-      {
-        cout << "id:" << m_user.id << ",call=" << m_user.call << ",name="
+
+      ss << "id:" << m_user.id << ",call=" << m_user.call << ",name="
              << m_user.name << ",location=" << m_user.location 
-             << ", comment=" << m_user.comment << endl;
-      }
+             << ", comment=" << m_user.comment;
+      log(LOGDEBUG, ss.str());
     }
   }
   else if (event_name == "EchoLink:talker_state")
@@ -1151,12 +1147,12 @@ void UsrpLogic::onPublishStateEvent(const string &event_name, const string &msg)
     talker.callsign = user_arr.get("callsign","N0CALL").asString();
     talker.name = user_arr.get("name","No EL-Name").asString();
     talker.isTalking = user_arr.get("isTalking",false).asBool();
-    if (debug >= LOGINFO)
-    {
-      cout << "Get userinfo from EchoLink module("
-           << talker.callsign << "," << talker.name
-           << (talker.isTalking ? ",1" : ",0") << ")" << endl;
-    }
+
+    stringstream ss;
+    ss << "Get userinfo from EchoLink module(" << talker.callsign
+       << "," << talker.name << (talker.isTalking ? ",1" : ",0")
+       << ")";
+    log(LOGINFO, ss.str());
   }
 } /* UsrpLogic::onPublishStateEvent */
 
@@ -1210,6 +1206,15 @@ bool UsrpLogic::getConfigValue(const std::string& section,
 {
   return cfg().getValue(section, tag, value, true);
 } /* UsrpLogic::getConfigValue */
+
+
+void UsrpLogic::log(uint8_t logtype, std::string logmessage)
+{
+  if (debug >= logtype)
+  {
+    cout << logmessage << endl;
+  }
+} /* UsrpLogic::log */
 
 /*
  * This file has not been truncated
