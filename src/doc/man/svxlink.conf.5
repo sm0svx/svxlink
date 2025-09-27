@@ -813,11 +813,6 @@ Default is -1 (disabled).
 .TP
 .B VERBOSE
 Set to 0 to suppress reflector leave/join printouts.
-.P
-It is also possible to set audio codec parameters using the same configuration
-variables as documented for networked receivers and transmitters. For example,
-to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
-to something lower than 9.
 .TP
 .B CERT_PKI_DIR
 The path to the directory where PKI (Public Key Infrastructure) files will be
@@ -906,6 +901,11 @@ A comma separated list of email addresses where the SvxLink node owners can be
 reached.
 
 Example: CERT_EMAIL=mycall1@example.com,mycall2@example.com
+.P
+It is also possible to set audio codec parameters using the same configuration
+variables as documented for networked receivers and transmitters. For example,
+to lighten the encoder CPU load for the Opus encoder, set OPUS_ENC_COMPLEXITY
+to something lower than 9.
 .
 .SS QSO Recorder Section
 .
