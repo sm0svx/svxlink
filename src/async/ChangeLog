@@ -3,6 +3,10 @@
 
 * Async::AudioStreamStateDetector facelift
 
+* Add support for sigc++3
+
+* Add support for Qt6 contributed by DL1JBE
+
 
 
  1.8.1 -- 01 Jul 2025
