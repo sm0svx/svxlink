@@ -186,8 +186,8 @@ bool NetUplink::initialize(void)
   string listen_port;
   if (!cfg.getValue(name, "LISTEN_PORT", listen_port))
   {
-    cerr << "*** ERROR: Configuration variable " << name
-      	 << "/LISTEN_PORT is missing.\n";
+    std::cerr << "*** ERROR: Configuration variable " << name
+              << "/LISTEN_PORT is missing." << std::endl;
     return false;
   }
 
@@ -328,7 +328,8 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
       break;
     case STATE_CON_SETUP:
     case STATE_READY:
-      cout << name << ": Only one client allowed. Disconnecting...\n";
+      std::cout << name << ": Only one client allowed. Disconnecting..."
+                << std::endl;
       // Fall through
     case STATE_DISC_CLEANUP:
       incoming_con->disconnect();
@@ -399,8 +400,8 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 
   if (recv_exp == 0)
   {
-    cerr << "*** ERROR: Unexpected TCP data received in NetUplink "
-         << name << ". Throwing it away...\n";
+    std::cerr << "*** ERROR: Unexpected TCP data received in NetUplink "
+              << name << ". Throwing it away..." << std::endl;
     return size;
   }
   
@@ -412,8 +413,8 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
     unsigned read_cnt = min(static_cast<unsigned>(size), recv_exp-recv_cnt);
     if (recv_cnt+read_cnt > sizeof(recv_buf))
     {
-      cerr << "*** ERROR: TCP receive buffer overflow in NetUplink "
-           << name << ". Disconnecting...\n";
+      std::cerr << "*** ERROR: TCP receive buffer overflow in NetUplink "
+                << name << ". Disconnecting..." << std::endl;
       forceDisconnect();
       return orig_size;
     }
@@ -439,9 +440,9 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 	}
 	else
 	{
-	  cerr << "*** ERROR: Illegal message header received in NetUplink "
-               << name << ". Header length too small (" << msg->size()
-               << ")\n";
+          std::cerr << "*** ERROR: Illegal message header received in "
+                    << "NetUplink " << name << ". Header length too small ("
+                    << msg->size() << ")" << std::endl;
           forceDisconnect();
 	  return orig_size;
 	}
@@ -476,8 +477,8 @@ void NetUplink::handleMsg(Msg *msg)
         MsgAuthResponse *resp_msg = reinterpret_cast<MsgAuthResponse *>(msg);
         if (!resp_msg->verify(auth_key, auth_challenge))
         {
-          cerr << "*** ERROR: Authentication error in NetUplink "
-               << name << ".\n";
+          std::cerr << "*** ERROR: Authentication error in NetUplink "
+                    << name << "." << std::endl;
           forceDisconnect();
           return;
         }
@@ -490,7 +491,8 @@ void NetUplink::handleMsg(Msg *msg)
       }
       else
       {
-        cerr << "*** ERROR: Protocol error in NetUplink " << name << ".\n";
+        std::cerr << "*** ERROR: Protocol error in NetUplink " << name << "."
+                  << std::endl;
         forceDisconnect();
       }
       return;
@@ -517,7 +519,8 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetRxFq::TYPE:
     {
       MsgSetRxFq *fq_msg = reinterpret_cast<MsgSetRxFq*>(msg);
-      cout << rx->name() << ": SetRxFq(" << fq_msg->fq() << ")\n";
+      std::cout << rx->name() << ": SetRxFq(" << fq_msg->fq() << ")"
+                << std::endl;
       rx->setFq(fq_msg->fq());
       break;
     }
@@ -525,8 +528,9 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetRxModulation::TYPE:
     {
       MsgSetRxModulation *mod_msg = reinterpret_cast<MsgSetRxModulation*>(msg);
-      cout << rx->name() << ": SetRxModulation("
-           << Modulation::toString(mod_msg->modulation()) << ")\n";
+      std::cout << rx->name() << ": SetRxModulation("
+                << Modulation::toString(mod_msg->modulation()) << ")"
+                << std::endl;
       rx->setModulation(mod_msg->modulation());
       break;
     }
@@ -534,9 +538,9 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);
-      cout << rx->name() << ": SetMuteState("
-           << Rx::muteStateToString(mute_msg->muteState())
-      	   << ")\n";
+      std::cout << rx->name() << ": SetMuteState("
+                << Rx::muteStateToString(mute_msg->muteState())
+                << ")" << std::endl;
       rx->setMuteState(mute_msg->muteState());
       break;
     }
@@ -544,9 +548,9 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgAddToneDetector::TYPE:
     {
       MsgAddToneDetector *atd = reinterpret_cast<MsgAddToneDetector*>(msg);
-      cout << rx->name() << ": AddToneDetector(" << atd->fq()
-      	   << ", " << atd->bw()
-	   << ", " << atd->requiredDuration() << ")\n";
+      std::cout << rx->name() << ": AddToneDetector(" << atd->fq()
+                << ", " << atd->bw()
+                << ", " << atd->requiredDuration() << ")" << std::endl;
       rx->addToneDetector(atd->fq(), atd->bw(), atd->thresh(),
       	      	      	  atd->requiredDuration());
       break;
@@ -595,8 +599,8 @@ void NetUplink::handleMsg(Msg *msg)
                 mem_fun(*audio_enc, &AudioEncoder::allEncodedSamplesFlushed));
         //audio_enc->registerSource(rx);
 	rx_splitter->addSink(audio_enc);
-        cout << name << ": Using CODEC \"" << audio_enc->name()
-             << "\" to encode RX audio\n";
+        std::cout << name << ": Using CODEC \"" << audio_enc->name()
+                  << "\" to encode RX audio" << std::endl;
 	
 	MsgRxAudioCodecSelect::Opts opts;
 	codec_msg->options(opts);
@@ -609,8 +613,9 @@ void NetUplink::handleMsg(Msg *msg)
       }
       else
       {
-        cerr << "*** ERROR: Received request for unknown RX audio codec ("
-             << codec_msg->name() << ") in NetUplink " << name << "\n";
+        std::cerr << "*** ERROR: Received request for unknown RX audio codec ("
+                  << codec_msg->name() << ") in NetUplink " << name
+                  << std::endl;
       }
       break;
     }
@@ -626,8 +631,8 @@ void NetUplink::handleMsg(Msg *msg)
         audio_dec->registerSink(fifo);
         audio_dec->allEncodedSamplesFlushed.connect(
             mem_fun(*this, &NetUplink::allEncodedSamplesFlushed));
-        cout << name << ": Using CODEC \"" << audio_dec->name()
-             << "\" to decode TX audio\n";
+        std::cout << name << ": Using CODEC \"" << audio_dec->name()
+                  << "\" to decode TX audio" << std::endl;
 	
 	MsgRxAudioCodecSelect::Opts opts;
 	codec_msg->options(opts);
@@ -640,8 +645,9 @@ void NetUplink::handleMsg(Msg *msg)
       }
       else
       {
-        cerr << "*** ERROR: Received request for unknown TX audio codec ("
-             << codec_msg->name() << ") in NetUplink " << name << "\n";
+        std::cerr << "*** ERROR: Received request for unknown TX audio codec ("
+                  << codec_msg->name() << ") in NetUplink " << name
+                  << std::endl;
       }
       break;
     }
@@ -678,7 +684,8 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetTxFq::TYPE:
     {
       MsgSetTxFq *fq_msg = reinterpret_cast<MsgSetTxFq*>(msg);
-      cout << tx->name() << ": SetTxFq(" << fq_msg->fq() << ")\n";
+      std::cout << tx->name() << ": SetTxFq(" << fq_msg->fq() << ")"
+                << std::endl;
       tx->setFq(fq_msg->fq());
       break;
     }
@@ -686,8 +693,9 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetTxModulation::TYPE:
     {
       MsgSetTxModulation *mod_msg = reinterpret_cast<MsgSetTxModulation*>(msg);
-      cout << tx->name() << ": SetTxModulation("
-           << Modulation::toString(mod_msg->modulation()) << ")\n";
+      std::cout << tx->name() << ": SetTxModulation("
+                << Modulation::toString(mod_msg->modulation()) << ")"
+                << std::endl;
       tx->setModulation(mod_msg->modulation());
       break;
     }
@@ -709,14 +717,14 @@ void NetUplink::sendMsg(Msg *msg)
     int written = con->write(msg, msg->size());
     if (written == -1)
     {
-      cerr << "*** ERROR: TCP transmit error in NetUplink \"" << name
-           << "\": " << strerror(errno) << ".\n";
+      std::cerr << "*** ERROR: TCP transmit error in NetUplink \"" << name
+                << "\": " << strerror(errno) << "." << std::endl;
       forceDisconnect();
     }
     else if (written != static_cast<int>(msg->size()))
     {
-      cerr << "*** ERROR: TCP transmit buffer overflow in NetUplink "
-           << name << ".\n";
+      std::cerr << "*** ERROR: TCP transmit buffer overflow in NetUplink "
+                << name << "." << std::endl;
       forceDisconnect();
     }
   }
@@ -823,7 +831,8 @@ void NetUplink::heartbeat(Timer *t)
   
   if (diff_ms > 15000)
   {
-    cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name << "\n";
+    std::cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name
+              << std::endl;
     forceDisconnect();
   }
   
@@ -853,14 +862,14 @@ void NetUplink::setFallbackActive(bool activate)
   rx->reset();
   if (activate)
   {
-    cout << name << ": Activating fallback repeater mode\n";
+    std::cout << name << ": Activating fallback repeater mode" << std::endl;
     tx->setTxCtrlMode(Tx::TX_AUTO);
     tx_selector->selectSource(loopback_con);
     rx->setMuteState(Rx::MUTE_NONE);
   }
   else
   {
-    cout << name << ": Deactivating fallback repeater mode\n";
+    std::cout << name << ": Deactivating fallback repeater mode" << std::endl;
     tx->setTxCtrlMode(Tx::TX_OFF);
     tx_selector->selectSource(fifo);
   }
