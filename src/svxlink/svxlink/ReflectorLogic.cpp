@@ -1278,7 +1278,8 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
       (m_con_state != STATE_EXPECT_CERT) &&
       (m_con_state != STATE_EXPECT_AUTH_RESPONSE) */)
   {
-    cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthChallenge\n";
+    std::cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthChallenge"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1294,7 +1295,8 @@ void ReflectorLogic::handleMsgAuthChallenge(std::istream& is)
   const uint8_t *challenge = msg.challenge();
   if (challenge == 0)
   {
-    cerr << "*** ERROR[" << name() << "]: Illegal challenge received\n";
+    std::cerr << "*** ERROR[" << name() << "]: Illegal challenge received"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1310,7 +1312,8 @@ void ReflectorLogic::handleMsgAuthOk(void)
 {
   if (m_con_state != STATE_EXPECT_AUTH_ANSWER)
   {
-    cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthOk\n";
+    std::cerr << "*** ERROR[" << name() << "]: Unexpected MsgAuthOk"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1554,7 +1557,8 @@ void ReflectorLogic::handleMsgClientCert(std::istream& is)
   MsgClientCert msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgClientCert\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgClientCert"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1634,14 +1638,16 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
 {
   if (m_con_state != STATE_EXPECT_SERVER_INFO)
   {
-    cerr << "*** ERROR[" << name() << "]: Unexpected MsgServerInfo\n";
+    std::cerr << "*** ERROR[" << name() << "]: Unexpected MsgServerInfo"
+              << std::endl;
     disconnect();
     return;
   }
   MsgServerInfo msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgServerInfo\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgServerInfo"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1830,7 +1836,8 @@ void ReflectorLogic::handleMsgNodeList(std::istream& is)
   MsgNodeList msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeList\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeList"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1854,7 +1861,8 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
   MsgNodeJoined msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeJoined\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeJoined"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1870,7 +1878,8 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
   MsgNodeLeft msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeLeft\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgNodeLeft"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1886,7 +1895,8 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
   MsgTalkerStart msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgTalkerStart\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgTalkerStart"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1929,7 +1939,8 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
   MsgTalkerStop msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgTalkerStop\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgTalkerStop"
+              << std::endl;
     disconnect();
     return;
   }
@@ -1947,7 +1958,8 @@ void ReflectorLogic::handleMsgRequestQsy(std::istream& is)
   MsgRequestQsy msg;
   if (!msg.unpack(is))
   {
-    cerr << "*** ERROR[" << name() << "]: Could not unpack MsgRequestQsy\n";
+    std::cerr << "*** ERROR[" << name() << "]: Could not unpack MsgRequestQsy"
+              << std::endl;
     disconnect();
     return;
   }
@@ -2028,8 +2040,8 @@ void ReflectorLogic::sendMsg(const ReflectorMsg& msg)
   ReflectorMsg header(msg.type());
   if (!header.pack(ss) || !msg.pack(ss))
   {
-    cerr << "*** ERROR[" << name()
-         << "]: Failed to pack reflector TCP message\n";
+    std::cerr << "*** ERROR[" << name()
+              << "]: Failed to pack reflector TCP message" << std::endl;
     disconnect();
     return;
   }
@@ -2200,7 +2212,8 @@ void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       MsgUdpAudio msg;
       if (!msg.unpack(ss))
       {
-        cerr << "*** WARNING[" << name() << "]: Could not unpack MsgUdpAudio\n";
+        std::cerr << "*** WARNING[" << name()
+                  << "]: Could not unpack MsgUdpAudio" << std::endl;
         return;
       }
       if (!msg.audioData().empty())

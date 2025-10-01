@@ -139,9 +139,11 @@ class MyMessageBox : public QMessageBox
   
   public:
     MyMessageBox(const QString& caption, const QString& text)
-      : QMessageBox(caption, text, QMessageBox::Critical, QMessageBox::Ok,
-      	      	    Qt::NoButton, Qt::NoButton)
+      : QMessageBox()
     {
+      setWindowTitle(caption);
+      setText(text);
+      setIcon(QMessageBox::Critical);
       setAttribute(Qt::WA_DeleteOnClose);
     }
     

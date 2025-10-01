@@ -179,7 +179,7 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
      * This signal will be emitted when the registered audio sink is ready
      * to accept more samples.
      */
-    sigc::signal<void> sigResumeOutput;
+    sigc::signal<void()> sigResumeOutput;
 
     /**
      * @brief Signal that is emitted when the connected sink is done flushing
@@ -187,7 +187,7 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
      * This signal will be emitted when all samples have been flushed in the
      * registered sink.
      */
-    sigc::signal<void> sigAllSamplesFlushed;
+    sigc::signal<void()> sigAllSamplesFlushed;
     
 };  /* class SigCAudioSource */
 

@@ -297,11 +297,11 @@ configure_file(${CMAKE_SOURCE_DIR}/config.h.in
   )
 
 # Find the Sigc++ library
-find_package(SIGC2 REQUIRED)
-include_directories(${SIGC2_INCLUDE_DIRS})
-add_definitions(${SIGC2_DEFINITIONS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SIGC2_CXX_FLAGS}")
-set(LIBS ${LIBS} ${SIGC2_LIBRARIES})
+find_package(SIGC REQUIRED)
+include_directories(${SIGC_INCLUDE_DIRS})
+add_definitions(${SIGC_DEFINITIONS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SIGC_CXX_FLAGS}")
+set(LIBS ${LIBS} ${SIGC_LIBRARIES})
 
 find_package(LADSPA)
 if(LADSPA_FOUND)

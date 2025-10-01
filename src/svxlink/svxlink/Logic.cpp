@@ -697,7 +697,7 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   dtmf_digit_handler->commandComplete.connect(
       mem_fun(*this, &Logic::putCmdOnQueue));
   exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
-      mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
+      mem_fun(*dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
   int ctcss_to_tg_delay = 0;
   cfg().getValue(name(), "CTCSS_TO_TG_DELAY", ctcss_to_tg_delay);

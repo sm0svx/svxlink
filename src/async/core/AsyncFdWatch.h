@@ -204,7 +204,7 @@ class FdWatch : public sigc::trackable
      * @brief Signal to indicate that the descriptor is active
      * @param watch Pointer to the watch object
      */
-    sigc::signal<void, FdWatch*> activity;
+    sigc::signal<void(FdWatch*)> activity;
     
     
   protected:

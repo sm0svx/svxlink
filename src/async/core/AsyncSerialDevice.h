@@ -166,7 +166,7 @@ class SerialDevice : public sigc::trackable
      * received on the serial port. The buffer is always null-terminated
      * but the null is not included in the count.
      */
-    sigc::signal<void, char*, int> charactersReceived;
+    sigc::signal<void(char*, int)> charactersReceived;
     
     
   protected:

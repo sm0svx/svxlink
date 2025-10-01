@@ -185,14 +185,14 @@ class UdpSocket : public sigc::trackable
      * @param 	buf   The buffer containing the read data
      * @param 	count The number of bytes read
      */
-    sigc::signal<void, const IpAddress&, uint16_t, void*, int> dataReceived;
+    sigc::signal<void(const IpAddress&, uint16_t, void*, int)> dataReceived;
     
     /**
      * @brief 	A signal that is emitted when the send buffer is full
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if the buffer full condition has been cleared
      */
-    sigc::signal<void, bool> sendBufferFull;
+    sigc::signal<void(bool)> sendBufferFull;
     
   protected:
     virtual void onDataReceived(const IpAddress& ip, uint16_t port, void* buf,

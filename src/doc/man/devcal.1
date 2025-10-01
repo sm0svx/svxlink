@@ -113,7 +113,7 @@ modulated or not. Use your own transceiver or a repeater for example. If the
 frequency calibration is unknown for the transmitter being used it may be wise
 to test with multiple transmitters. The command line may look like this:
 
-  devcal -Mw /path/to/svxlink.conf RxRtl
+  devcal -Mw /path/to/svxlink.conf DevcalRtlRx
 
 The utility will print, among other things, the carrier frequency error. It may look something like:
 
@@ -200,7 +200,7 @@ single tone, it seems. If using DTMF, try using the code "A" (1633Hz) or "3"
 
 Use the DVB-T dongle to measure the deviation of the 1750Hz tone.
 
-  devcal -M -f1750 /path/to/svxlink.conf RxRtl
+  devcal -M -f1750 /path/to/svxlink.conf DevcalRtlRx
 
 Start transmitting with the calibration transmitter and wait for the values to
 stablilize. Take a note of the value for "tone dev". It may be something like

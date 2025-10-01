@@ -296,12 +296,12 @@ class RtlSdr : public sigc::trackable
      * dongle. The format is a vector of complex floats (I/Q) with a range from
      * -1 to 1.
      */
-    sigc::signal<void, std::vector<Sample> > iqReceived;
-    
+    sigc::signal<void(std::vector<Sample>)> iqReceived;
+
     /**
      * @brief   A signal that is emitted when the ready state changes
      */
-    sigc::signal<void> readyStateChanged;
+    sigc::signal<void()> readyStateChanged;
 
   protected:
     /**

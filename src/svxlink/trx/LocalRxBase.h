@@ -221,8 +221,8 @@ class LocalRxBase : public Rx
      * tone has been calculated. The signal will only be emitted when
      * CTCSS_MODE is set to 2, 3 or 4.
      */
-    sigc::signal<void, float, float> ctcssSnrUpdated;
-    
+    sigc::signal<void(float, float)> ctcssSnrUpdated;
+
   protected:
     /**
      * @brief   Open the audio input source

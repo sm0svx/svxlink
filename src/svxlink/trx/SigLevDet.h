@@ -204,7 +204,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      * level measurement. How often the signal is emitted is set up by calling
      * the setCountiuousUpdateInterval function.
      */
-    sigc::signal<void, float> signalLevelUpdated;
+    sigc::signal<void(float)> signalLevelUpdated;
     
   protected:
     /**

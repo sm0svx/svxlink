@@ -136,7 +136,7 @@ class HdlcDeframer : public sigc::trackable
      * @brief 	Signal that is emitted when a complete frame have been received
      * @param 	frame The received frame bytes
      */
-    sigc::signal<void, std::vector<uint8_t>&> frameReceived;
+    sigc::signal<void(std::vector<uint8_t>&)> frameReceived;
 
   private:
     typedef enum {

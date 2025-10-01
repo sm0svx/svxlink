@@ -258,7 +258,7 @@ bool LinkManager::initialize(Async::Config &cfg,
       link.timeout_timer = new Timer(1000 * timeout);
       link.timeout_timer->setEnable(false);
       link.timeout_timer->expired.connect(sigc::bind(
-          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
+          mem_fun(*LinkManager::instance(), &LinkManager::linkTimeout),
           &link));
     }
 

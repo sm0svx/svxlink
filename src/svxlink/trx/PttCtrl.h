@@ -142,9 +142,9 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
      * @param do_transmit Turn the transmitter on if \em true or else
      *	      	      	  turn it off
      */
-    sigc::signal<void, bool> transmitterStateChange;
+    sigc::signal<void(bool)> transmitterStateChange;
 
-    sigc::signal<bool, bool> preTransmitterStateChange;
+    sigc::signal<bool(bool)> preTransmitterStateChange;
     
     
   private:

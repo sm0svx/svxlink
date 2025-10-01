@@ -51,7 +51,7 @@ int main(void)
 
     // Start a timer that periodically calls function write_to_stream
   Async::Timer t(1000, Async::Timer::TYPE_PERIODIC);
-  sigc::slot<void, ostream*> timer_handler = sigc::ptr_fun(&write_to_stream);
+  sigc::slot<void(ostream*)> timer_handler = sigc::ptr_fun(&write_to_stream);
   t.expired.connect(sigc::hide(sigc::bind(timer_handler, &os)));
 
   app.exec();

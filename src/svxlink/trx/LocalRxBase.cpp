@@ -361,7 +361,7 @@ bool LocalRxBase::initialize(void)
   siglevdet->signalLevelUpdated.connect(
       mem_fun(*this, &LocalRxBase::onSignalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
-  dataReceived.connect(mem_fun(siglevdet, &SigLevDet::frameReceived));
+  dataReceived.connect(mem_fun(*siglevdet, &SigLevDet::frameReceived));
 
     // Add a passthrough element to use as a connector between the splitter and
     // the rest of the audio pipe
@@ -488,7 +488,7 @@ bool LocalRxBase::initialize(void)
     ob_afsk_deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceived));
     sync->bitsReceived.connect(
-        mem_fun(ob_afsk_deframer, &HdlcDeframer::bitsReceived));
+        mem_fun(*ob_afsk_deframer, &HdlcDeframer::bitsReceived));
   }
 
   bool ib_afsk_enable = false;
@@ -514,7 +514,7 @@ bool LocalRxBase::initialize(void)
     ib_afsk_deframer->frameReceived.connect(
         mem_fun(*this, &LocalRxBase::dataFrameReceivedIb));
     sync->bitsReceived.connect(
-        mem_fun(ib_afsk_deframer, &HdlcDeframer::bitsReceived));
+        mem_fun(*ib_afsk_deframer, &HdlcDeframer::bitsReceived));
   }
 
     // Create a new audio splitter to handle tone detectors

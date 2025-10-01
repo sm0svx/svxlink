@@ -186,20 +186,20 @@ class EventHandler : public sigc::trackable
      * @return	This is the return value from the called TCL function
      */
     const std::string eventResult(void) const;
-    
+
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back an audio file
      * @param 	filename The name of the file to plat
      */
-    sigc::signal<void, const std::string&> playFile;
-    
+    sigc::signal<void(const std::string&)> playFile;
+
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back silence
      * @param 	duration  The duration of the silence in milliseconds
      */
-    sigc::signal<void, int>   	      	    playSilence;
+    sigc::signal<void(int)> playSilence;
 
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
@@ -208,8 +208,8 @@ class EventHandler : public sigc::trackable
      * @param 	amp   	  The tone amplitude to use (0-1000)
      * @param 	duration  The duration of the tone in milliseconds
      */
-    sigc::signal<void, int, int, int>      playTone;
-    
+    sigc::signal<void(int, int, int)> playTone;
+
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back a dtmf digit
@@ -217,7 +217,7 @@ class EventHandler : public sigc::trackable
      * @param 	amp   	  The tone amplitude to use (0-1000)
      * @param 	duration  The duration of the tone in milliseconds
      */
-    sigc::signal<void, const std::string&, int, int> playDtmf;
+    sigc::signal<void(const std::string&, int, int)> playDtmf;
 
     /**
      * @brief 	A signal that is emitted when the TCL script want to start
@@ -225,19 +225,19 @@ class EventHandler : public sigc::trackable
      * @param 	filename The name of the file to record the audio to
      * @param   max_time The maximum recording time in milliseconds
      */
-    sigc::signal<void, const std::string&, unsigned> recordStart;
-    
+    sigc::signal<void(const std::string&, unsigned)> recordStart;
+
     /**
      * @brief 	A signal that is emitted when the TCL script want to stop
      *	      	the current recording
      */
-    sigc::signal<void>       	      	    recordStop;
-    
+    sigc::signal<void()> recordStop;
+
     /**
      * @brief 	A signal that is emitted when the TCL script want to deactivate
      *	      	the currently active module
      */
-    sigc::signal<void>       	      	    deactivateModule;
+    sigc::signal<void()> deactivateModule;
 
     /**
      * @brief   A signal that is emitted when the TCL script want to publish
@@ -245,16 +245,16 @@ class EventHandler : public sigc::trackable
      * @param   event_name The name of the event (<context>:<name>)
      * @param   event_msg  The event message
      */
-    sigc::signal<void, const std::string&,
-                 const std::string&> publishStateEvent;
-    
+    sigc::signal<void(const std::string&,
+                 const std::string&)> publishStateEvent;
+
     /**
      * @brief 	A signal that is emitted when the TCL script want to inject
      *	      	DTMF digits in the command queue
      * @param 	digits    The dtmf-digits as character (0-9, A-D, *, #)
      * @param 	duration  The duration of each digit in milliseconds
      */
-    sigc::signal<void, const std::string&, int> injectDtmf;
+    sigc::signal<void(const std::string&, int)> injectDtmf;
 
     /**
      * @brief 	A signal that is emitted when the TCL script want to set
@@ -263,8 +263,8 @@ class EventHandler : public sigc::trackable
      * @param 	tag     The name of the configureation variable
      * @param 	value   The new value for the configuration variable
      */
-    sigc::signal<void, const std::string&, const std::string&,
-                 const std::string&> setConfigValue;
+    sigc::signal<void(const std::string&, const std::string&,
+                 const std::string&)> setConfigValue;
 
     /**
      * @brief 	A signal that is emitted when the TCL script want to get
@@ -272,8 +272,8 @@ class EventHandler : public sigc::trackable
      * @param 	section The name of the configuration section
      * @param 	tag     The name of the configureation variable
      */
-    sigc::signal<bool, const std::string&,
-                 const std::string&, std::string&> getConfigValue;
+    sigc::signal<bool(const std::string&,
+                 const std::string&, std::string&)> getConfigValue;
 
   protected:
 

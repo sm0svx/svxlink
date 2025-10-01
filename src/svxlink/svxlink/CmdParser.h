@@ -231,7 +231,7 @@ class Command : public sigc::trackable
      *
      * This signal is emitted unless the operator() is reimplemented.
      */
-    sigc::signal<void, Command *, const std::string&> handleCmd;
+    sigc::signal<void(Command *, const std::string&)> handleCmd;
 
   protected:
     /**

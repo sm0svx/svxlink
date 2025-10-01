@@ -173,12 +173,12 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    sigc::signal<void,const void *,int> writeEncodedSamples;
-    
+    sigc::signal<void(const void*, int)> writeEncodedSamples;
+
     /**
      * @brief This signal is emitted when the source calls flushSamples
      */
-    sigc::signal<void> flushEncodedSamples;
+    sigc::signal<void()> flushEncodedSamples;
     
   
   protected:

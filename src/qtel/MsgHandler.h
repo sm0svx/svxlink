@@ -206,7 +206,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     /**
      * @brief 	A signal that is emitted when all messages has been written
      */
-    sigc::signal<void>       	    allMsgsWritten;
+    sigc::signal<void()>       	    allMsgsWritten;
     
     /**
      * @brief Resume audio output to the sink

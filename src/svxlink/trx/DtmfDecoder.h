@@ -163,14 +163,14 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * @brief 	A signal that is emitted when a DTMF digit is first detected
      * @param 	digit The detected digit
      */
-    sigc::signal<void, char> digitActivated;
+    sigc::signal<void(char)> digitActivated;
 
     /*
      * @brief 	A signal that is emitted when a DTMF digit is no longer present
      * @param 	digit 	  The detected digit
      * @param 	duration  The time that the digit was active
      */
-    sigc::signal<void, char, int> digitDeactivated;
+    sigc::signal<void(char, int)> digitDeactivated;
     
     
   protected:

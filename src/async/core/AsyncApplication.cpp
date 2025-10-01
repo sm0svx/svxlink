@@ -158,7 +158,7 @@ Application::~Application(void)
 } /* Application::~Application */
 
 
-void Application::runTask(sigc::slot<void> task)
+void Application::runTask(sigc::slot<void()> task)
 {
   task_list.push_back(task);
   task_timer->setEnable(true);
