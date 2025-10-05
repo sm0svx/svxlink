@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2021 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define USRPSOFT "SvxLink-Usrp"
-#define USRPVERSION "25092025"
+#define USRPVERSION "05102025"
 
 #define LOGERROR 0
 #define LOGWARN 1
@@ -1184,8 +1184,8 @@ void UsrpLogic::sendUserInfo(void)
 
 void UsrpLogic::publishInfo(std::string type, Json::Value event)
 {
-  // if it is not allowed to handle information about users then all userinfo traffic 
-  // will be ignored
+  // if it is not allowed to handle information about users then all userinfo
+  // traffic will be ignored
   if (!share_userinfo) return;
 
    // sending own Dv user information to the reflectorlogic network

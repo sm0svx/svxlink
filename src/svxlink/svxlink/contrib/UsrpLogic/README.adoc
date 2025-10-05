@@ -12,7 +12,7 @@ Provides a Logic to connect to MMDVM services with USRP protocol.
 
 This branch only works if you have the following things:
 
-- DV3000 USB-stick (hardware transcoder) or 
+- DV3000 USB-stick (hardware transcoder) or
 - md380-emu service
 
 Here are quick-and-dirty installation/update documentation, keep in
@@ -66,6 +66,6 @@ Remove the [UsrpLogic]-section from svxlink.conf but let the LOGICS- and LINKS
 definitions with "Usrp" untouched.
 
 == Documentation ==
-- manpage svxlink.conf.5
-- German pdf is available here: https://github.com/dl1hrc/documentation
-
+- manpages UsrpLogic.conf.5 svxlink.conf.5
+- German pdf (not up to date anymore) is available here: 
+  https://github.com/dl1hrc/documentation

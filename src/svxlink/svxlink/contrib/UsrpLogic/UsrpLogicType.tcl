@@ -18,9 +18,9 @@ mixin Logic
 #
 # Checking to see if this is the correct logic core
 #
-if {$logic_name != [namespace tail [namespace current]]} {
-  return;
-}
+#if {$logic_name != [namespace tail [namespace current]]} {
+#  return;
+#}
 
 
 #
@@ -28,7 +28,6 @@ if {$logic_name != [namespace tail [namespace current]]} {
 #   cmd - The command string
 #
 proc unknown_command {cmd} {
-  Logic::unknown_command $cmd;
 }
 
 
@@ -36,7 +35,6 @@ proc unknown_command {cmd} {
 # Executed when a received command fails
 #
 proc command_failed {cmd} {
-  Logic::command_failed $cmd;
 }
 
 
