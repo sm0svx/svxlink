@@ -31,6 +31,7 @@ LINK_IDLE_TIMEOUT=300
 #COMMAND_PTY=/dev/shm/echolink_ctrl
 #LOCAL_RGR_SOUND=1
 #REMOTE_RGR_SOUND=0
+#REMOTE_EVENT_HANDLER=@SVX_SHARE_INSTALL_DIR@/events.d/EchoLinkRemote.tcl
 DESCRIPTION="You have connected to a SvxLink node,\n"
 	    "a voice services system for Linux with EchoLink\n"
 	    "support.\n"

@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <MsgHandler.h>
 #include <EventHandler.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -176,21 +177,21 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   }
   m_qso.setLocalInfo(description);
 
-  string event_handler_script;
+  std::string event_handler_script(SVX_SHARE_INSTALL_DIR);
   if (cfg.getValue(module->logicName(), "EVENT_HANDLER", event_handler_script))
   {
     std::size_t slashpos = event_handler_script.find_last_of("/");
     event_handler_script = event_handler_script.substr(0, slashpos);
-    event_handler_script += "/events.d/EchoLinkRemote.tcl";
   }
+  event_handler_script += "/events.d/EchoLinkRemote.tcl";
   cfg.getValue(module->cfgName(), "REMOTE_EVENT_HANDLER", event_handler_script);
-  if (event_handler_script.empty())
-  {
-    std::cerr << "*** ERROR: Config variable " << module->logicName()
-              << "/EVENT_HANDLER or " << module->cfgName()
-              << "/REMOTE_EVENT_HANDLER not set" << std::endl;
-    return;
-  }
+  //if (event_handler_script.empty())
+  //{
+  //  std::cerr << "*** ERROR: Config variable " << module->logicName()
+  //            << "/EVENT_HANDLER or " << module->cfgName()
+  //            << "/REMOTE_EVENT_HANDLER not set" << std::endl;
+  //  return;
+  //}
 
   string idle_timeout_str;
   if (cfg.getValue(cfg_name, "LINK_IDLE_TIMEOUT", idle_timeout_str))

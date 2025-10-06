@@ -38,12 +38,18 @@ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
 set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
 target_link_libraries(Module${MODNAME} ${LIBS})
 
+# Generate config file with correct paths
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Module${MODNAME}.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Module${MODNAME}.conf
+  @ONLY
+  )
+
 # Install targets
 install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})
 install(
   FILES ${MODNAME}.tcl ${MODNAME}Remote.tcl ${MODNAME}Common.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d
   )
-install_if_not_exists(Module${MODNAME}.conf
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/Module${MODNAME}.conf
   ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d
   )
