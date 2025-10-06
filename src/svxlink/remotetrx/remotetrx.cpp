@@ -234,7 +234,12 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  int noclose = 0;
+  if (daemonize && (daemon(1, 0) == -1))
+  {
+    perror("daemon");
+    exit(1);
+  }
+
   if (quiet || (logfile_name != 0))
   {
     int devnull = open("/dev/null", O_RDWR);
@@ -266,20 +271,8 @@ int main(int argc, char **argv)
         perror("dup2(stdin)");
         exit(1);
       }
-
-        /* Tell the daemon function call not to close the file descriptors */
-      noclose = 1;
     }
     close(devnull);
-  }
-
-  if (daemonize)
-  {
-    if (daemon(0, noclose) == -1)
-    {
-      perror("daemon");
-      exit(1);
-    }
   }
 
   if (pidfile_name != NULL)
