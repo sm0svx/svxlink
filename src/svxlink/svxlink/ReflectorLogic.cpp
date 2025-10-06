@@ -537,6 +537,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   prev_src = 0;
 
   cfg().getValue(name(), "DEFAULT_TG", m_default_tg);
+
   if (!cfg().getValue(name(), "TG_SELECT_TIMEOUT", 1U,
                       std::numeric_limits<unsigned>::max(),
                       m_tg_select_timeout, true))
@@ -547,7 +548,7 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
     return false;
   }
 
-  m_tg_select_inhibit_timeout = m_tg_select_timeout;
+  m_tg_select_inhibit_timeout = (m_default_tg == 0) ? m_tg_select_timeout : 0;
   if (!cfg().getValue(name(), "TG_SELECT_INHIBIT_TIMEOUT", 0U,
                       std::numeric_limits<unsigned>::max(),
                       m_tg_select_inhibit_timeout, true))
