@@ -629,6 +629,11 @@ Setting it to 0 or commenting it out disables the feature.
 This is the minimum time, in milliseconds, that a transmission must last to
 be considered as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.
+.TP
+.B DTMF_IGNORE_WHEN_NOT_UP
+If set to 1 (default), all received DTMF will be ignored when the repeater is
+down (in inactive state). Those using a very short IDLE_TIMEOUT may need to set
+this config variable to 0 to get the desired behavior.
 .
 .SS ReflectorLogic
 .

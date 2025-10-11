@@ -278,33 +278,20 @@ bool RepeaterLogic::initialize(Async::Config& cfgobj, const std::string& logic_n
   {
     idle_sound_timer.setTimeout(idle_sound_interval);
   }
-  
-  if (cfg().getValue(name(), "NO_REPEAT", str))
-  {
-    no_repeat = atoi(str.c_str()) != 0;
-  }
-  
-  if (cfg().getValue(name(), "SQL_FLAP_SUP_MIN_TIME", str))
-  {
-    sql_flap_sup_min_time = atoi(str.c_str());
-  }
-  
-  if (cfg().getValue(name(), "SQL_FLAP_SUP_MAX_COUNT", str))
-  {
-    sql_flap_sup_max_cnt = atoi(str.c_str());
-  }
-  
+
+  cfg().getValue(name(), "NO_REPEAT", no_repeat);
+  cfg().getValue(name(), "SQL_FLAP_SUP_MIN_TIME", sql_flap_sup_min_time);
+  cfg().getValue(name(), "SQL_FLAP_SUP_MAX_COUNT", sql_flap_sup_max_cnt);
+
   int ident_nag_timeout;
   if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", ident_nag_timeout))
   {
     ident_nag_timer.setTimeout(1000 * ident_nag_timeout);
   }
-  
-  if (cfg().getValue(name(), "IDENT_NAG_MIN_TIME", str))
-  {
-    ident_nag_min_time = atoi(str.c_str());
-  }
-  
+
+  cfg().getValue(name(), "IDENT_NAG_MIN_TIME", ident_nag_min_time);
+  cfg().getValue(name(), "DTMF_IGNORE_WHEN_NOT_UP", m_dtmf_ignore_when_not_up);
+
   rx().toneDetected.connect(mem_fun(*this, &RepeaterLogic::detectedTone));
   
   if (required_1750_duration > 0)
@@ -394,7 +381,7 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
       open_reason = "DTMF";
       activateOnOpenOrClose(SQL_FLANK_CLOSE);
     }
-    else
+    else if (m_dtmf_ignore_when_not_up)
     {
       cout << name() << ": Ignoring DTMF digit \"" << digit
            << "\" since the repeater is not up\n";

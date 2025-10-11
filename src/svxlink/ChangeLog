@@ -70,6 +70,8 @@
 
 * Add support for sigc++3
 
+* Add new config variable DTMF_IGNORE_WHEN_NOT_UP.
+
 
 
  1.9.1 -- 01 Jul 2025
