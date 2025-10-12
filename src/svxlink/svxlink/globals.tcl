@@ -10,6 +10,68 @@ namespace eval :: {
 # Internal variable used by the override procedure
 variable overridden_cnt 0
 
+# Set up a variable used to identify the source of printouts
+variable print_prefix ${::logic_name}
+if [info exists ::module_name] {
+  set print_prefix ${::module_name}
+}
+
+
+#
+# A convenience function for printing out a debug message prefixed by the
+# logic or module name
+#
+#   msg The message to print
+#
+proc printDebug {msg} {
+  puts "### ${::print_prefix}: ${msg}"
+}
+
+
+#
+# A convenience function for printing out information prefixed by the
+# logic or module name
+#
+#   msg The message to print
+#
+proc printInfo {msg} {
+  puts "${::print_prefix}: ${msg}"
+}
+printInfo "Loading [file normalize [info script]]"
+
+
+#
+# A convenience function for printing out a notice prefixed by the
+# logic or module name
+#
+#   msg The message to print
+#
+proc printNotice {msg} {
+  puts "NOTICE[${::print_prefix}]: ${msg}"
+}
+
+
+#
+# A convenience function for printing out a warning message prefixed by a tag
+# containing the logic or module name
+#
+#   msg The message to print
+#
+proc printWarning {msg} {
+  puts "*** WARNING[${::print_prefix}]: ${msg}"
+}
+
+
+#
+# A convenience function for printing out a error message prefixed by a tag
+# containing the logic or module name
+#
+#   msg The message to print
+#
+proc printError {msg} {
+  puts "*** ERROR[${::print_prefix}]: ${msg}"
+}
+
 
 #
 # Prefix an in-proc proc declaration with 'local' to ensure that it is not
@@ -81,10 +143,10 @@ proc sourceTcl {path} {
   set script_dir [file dirname [info script]]
   set path [file join "$script_dir" "$path"]
   if [file readable $path] {
-    puts "$::logic_name: Loading $path"
+    printInfo "Loading $path"
     uplevel 1 source $path
   } else {
-    puts "*** WARNING: Could not load TCL event file: $path"
+    printWarning "Could not load TCL event file: $path"
   }
 }
 
@@ -175,7 +237,7 @@ proc mixin {ns} {
 #
 proc findFirstFileOf {args} {
   foreach path [glob -nocomplain {*}$args] {
-    #puts "### $path"
+    #printDebug "$path"
     if [file readable $path] {
       return $path
     }
@@ -219,7 +281,7 @@ proc playMsg {context msg {warn 1}} {
     playFile "$filename"
   } else {
     if {$warn} {
-      puts "*** WARNING: Could not find audio clip \"$msg\" in context \"$context\"";
+      printWarning "Could not find audio clip '$msg' in context '$context'"
     }
     return 0
   }
@@ -235,14 +297,14 @@ proc playMsg {context msg {warn 1}} {
 #
 proc printNamespaceTree {{ns ::} {indent "  "}} {
   if {$ns == "::"} {
-    puts "### TCL namespace tree:"
+    printDebug "TCL namespace tree:"
   }
   foreach child [namespace children $ns] {
     if {$child == "::tcl" || $child == "::oo" || $child == "::zlib"} {
       continue
     }
     set ns [namespace tail $child]
-    puts "### ${indent}${ns}"
+    printDebug "${indent}${ns}"
     printNamespaceTree $child "$indent  "
   }
 }

@@ -13,6 +13,9 @@
 #
 ###############################################################################
 
+puts "${::logic_name}: Loading [file normalize [info script]]"
+
+
 #
 # Enable features to support legacy code
 #
@@ -49,7 +52,7 @@ sourceTclOverrides "${::logic_name}.tcl"
 # Enable support for legacy TCL code
 enableLegacySupport
 
-puts "$logic_name: Event handler script successfully loaded.";
+printInfo "Event handler script successfully loaded.";
 
 #printNamespaceTree
 

@@ -117,8 +117,8 @@ proc setPitch {new_fq} {
 proc setAmplitude {new_amplitude} {
   if {$new_amplitude > 0} {
     set db_str [format "%.2f" [expr 20.0 * log10($new_amplitude / 1000.0)]]
-    puts "*** WARNING: Deprecated CW amplitude specification: $new_amplitude."
-    puts "             Use the equivalent $db_str (dB) instead."
+    printWarning "Deprecated CW amplitude specification: $new_amplitude.\
+                  Use the equivalent $db_str (dB) instead."
     variable amplitude $new_amplitude
   } else {
     variable amplitude [expr round(1000.0 * pow(10.0, $new_amplitude / 20.0))]
