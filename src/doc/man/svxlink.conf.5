@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JULY 2025" Linux "File Formats"
+.TH SVXLINK.CONF 5 "OCTOBER 2025" Linux "File Formats"
 .
 .SH NAME
 .
@@ -2867,10 +2867,10 @@ FREQUENCY=430.050     # tx-frequency is 430.050 MHz
 .TP
 .B FREQUENCY_SEPARATOR
 Use the specified character to separate the PHG from the frequency.
-Unfortunately different tranceivers understand different APRS formats. For
+Unfortunately different transceivers understand different APRS formats. For
 example the Yaesu FTM-510D require that no separator is used and the Kenwood
 TM-D710 require a separator (e.g. "/") to be present. The default is to use a
-slash as the separator charachter.
+slash as the separator character.
 .TP
 .B TX_OFFSET
 The tx offset is the number of kHz from the FREQUENCY where the node is
@@ -2963,7 +2963,7 @@ Specify which APRS symbol that should be displayed on maps. Symbols are
 specified using two characters where the first one determines which symbol
 table to use and the second one select the actual symbol to use from the
 selected table. So for example "/-" is a house and "/r" mean a repeater tower.
-For all details abount APRS symbols, have a look at the latest documentation:
+For all details about APRS symbols, have a look at the latest documentation:
 https://www.aprs.org/symbols/symbolsX.txt.
 The specified symbol is only applied to the base callsign and not to the
 Echolink one.
@@ -2990,7 +2990,7 @@ into the aprs network. Range: 5-60 minutes, default is 10 minutes
 .TP
 .B STATISTICS_LOGIC
 The name of the logic core that statistics (telemetry) should be sent for. If
-this configuration varible is not set, telemetry will be sent for all logics.
+this configuration variable is not set, telemetry will be sent for all logics.
 That will probably lead to unpredictable results but it depend on what logic
 core types that are loaded in SvxLink.
 
