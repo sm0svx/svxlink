@@ -38,10 +38,10 @@ proc playMsg {args} {
 # A convenience function for printing out information prefixed by the
 # module name
 #
-proc printInfo {msg} {
-  variable module_name;
-  puts "$module_name: $msg";
-}
+#proc printInfo {msg} {
+#  variable module_name;
+#  puts "$module_name: $msg";
+#}
 
 
 #

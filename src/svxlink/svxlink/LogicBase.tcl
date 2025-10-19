@@ -36,9 +36,9 @@ proc playMsg {args} {
 # A convenience function for printing out information prefixed by the
 # module name
 #
-proc printInfo {msg} {
-  puts "${::logic_name}: ${msg}"
-}
+#proc printInfo {msg} {
+#  puts "${::logic_name}: ${msg}"
+#}
 
 
 

@@ -210,6 +210,7 @@ class RepeaterLogic : public Logic
     Async::Timer    ident_nag_timer;
     uint32_t        delayed_tg_activation;
     Async::Timer    open_on_ctcss_timer;
+    bool            m_dtmf_ignore_when_not_up {true};
 
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);

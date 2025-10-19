@@ -559,8 +559,8 @@ proc every_second {} {
 # Deprecated: Use the addMinuteTickSubscriber function instead
 #
 proc addTimerTickSubscriber {func} {
-  puts "*** WARNING: Calling deprecated TCL event handler addTimerTickSubcriber."
-  puts "             Use addMinuteTickSubscriber instead"
+  printWarning "Calling deprecated TCL event handler addTimerTickSubcriber.\
+                Use addMinuteTickSubscriber instead"
   addMinuteTickSubscriber $func
 }
 

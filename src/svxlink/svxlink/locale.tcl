@@ -61,7 +61,7 @@ proc spellNumber {number} {
 #
 proc playTwoDigitNumber {number} {
   if {[string length $number] != 2} {
-    puts "*** WARNING: Function playTwoDigitNumber received a non two digit number: $number";
+    printWarning "Function playTwoDigitNumber received a non two digit number: $number";
     return;
   }
   
@@ -85,7 +85,7 @@ proc playTwoDigitNumber {number} {
 #
 proc playThreeDigitNumber {number} {
   if {[string length $number] != 3} {
-    puts "*** WARNING: Function playThreeDigitNumber received a non three digit number: $number";
+    printWarning "Function playThreeDigitNumber received a non three digit number: $number";
     return;
   }
   
@@ -132,7 +132,7 @@ proc playThreeDigitNumber {number} {
 proc playNumber {number} {
   if {![regexp {^\s*([+-])?(\d*)(?:\.(\d+))?\s*$} $number \
         -> sign integer fraction]} {
-    puts "*** ERROR\[playNumber\]: Invalid number '$number'"
+    printError "Invalid number '$number' in playNumber"
     return
   }
 

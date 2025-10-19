@@ -4,6 +4,8 @@
 #
 ###############################################################################
 
+puts "${::module_name}: Loading [file normalize [info script]]"
+
 # Set up some global variables
 set basedir [file dirname [file dirname [info script]]];
 set lang [getConfigValue ${::logic_name} DEFAULT_LANG "en_US"]
@@ -11,7 +13,6 @@ set lang [getConfigValue ${::module_name} REMOTE_LANG ${::lang}]
 set langdir "${::basedir}/sounds/${::lang}"
 
 # Load a base of global functions
-puts "${::logic_name}: Loading ${::basedir}/events.d/globals.tcl"
 source "${::basedir}/events.d/globals.tcl"
 
 # Source locale handling code
@@ -47,13 +48,13 @@ proc playMsg {args} {
 
 #
 # A convenience function for printing out information prefixed by the
-# module name
+# logic and module name
 #
 #   msg - The message to print
 #
-proc printInfo {msg} {
-  puts "${::module_name}: $msg";
-}
+#proc printInfo {msg} {
+#  puts "${::module_name}: $msg";
+#}
 
 
 #

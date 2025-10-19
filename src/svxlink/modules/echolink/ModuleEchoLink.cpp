@@ -2101,7 +2101,6 @@ bool ModuleEchoLink::numConCheck(const std::string &callsign)
   if (cit != num_con_map.end())
   {
       // Get an alias (reference) to the callsign and NumConStn objects
-    const string &t_callsign = (*cit).first;
     NumConStn &stn = (*cit).second;
 
       // Calculate time difference from last connection
@@ -2114,8 +2113,9 @@ bool ModuleEchoLink::numConCheck(const std::string &callsign)
     {
       ++stn.num_con;
       stn.last_con = con_time;
-      cout << "### Station " << t_callsign << ", count " << stn.num_con << " of "
-           << num_con_max << " possible number of connects" << endl;
+      //const string &t_callsign = (*cit).first;
+      //cout << "### Station " << t_callsign << ", count " << stn.num_con << " of "
+      //     << num_con_max << " possible number of connects" << endl;
     }
 
       // Number of connects are too high
@@ -2135,8 +2135,8 @@ bool ModuleEchoLink::numConCheck(const std::string &callsign)
   else
   {
       // Insert initial entry on first connect
-    cout << "### Register incoming station, count 1 of " << num_con_max
-         << " possible number of connects" << endl;
+    //cout << "### Register incoming station, count 1 of " << num_con_max
+    //     << " possible number of connects" << endl;
     num_con_map.insert(make_pair(callsign, NumConStn(1, con_time)));
   }
 
@@ -2155,7 +2155,6 @@ void ModuleEchoLink::numConUpdate(void)
   while (cit != num_con_map.end())
   {
       // Get an alias (reference) to the callsign and NumConStn objects
-    const string &t_callsign = (*cit).first;
     const NumConStn &stn = (*cit).second;
 
     struct timeval remove_at = stn.last_con;
@@ -2171,15 +2170,16 @@ void ModuleEchoLink::numConUpdate(void)
       // If the entry have timed out, delete it
     if (timercmp(&remove_at, &now, <))
     {
-      cout << "### Delete " << t_callsign << " from watchlist" << endl;
+      //const string &t_callsign = (*cit).first;
+      //cout << "### Delete " << t_callsign << " from watchlist" << endl;
       num_con_map.erase(cit++);
     }
     else
     {
-      if (stn.num_con > num_con_max)
-      {
-        cout << "### " << t_callsign << " is blocked" << endl;
-      }
+      //if (stn.num_con > num_con_max)
+      //{
+      //  cout << "### " << t_callsign << " is blocked" << endl;
+      //}
       ++cit;
     }
   }

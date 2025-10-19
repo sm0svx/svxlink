@@ -361,7 +361,7 @@ void NetRx::connectionReady(bool is_ready)
 {
   if (is_ready)
   {
-    std::cout << "NOTICE: " << name() << ": Connected to remote receiver at "
+    std::cout << "NOTICE[" << name() << "]: Connected to remote receiver at "
               << tcp_con->remoteHost() << ":" << tcp_con->remotePort()
               << std::endl;
 
@@ -416,10 +416,12 @@ void NetRx::connectionReady(bool is_ready)
   {
     if (log_disconnect)
     {
-      cout << name() << ": Disconnected from remote receiver "
-          << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
-          << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
-          << "\n";
+      const auto& disc_reason = tcp_con->disconnectReason();
+      std::cout << "*** ERROR[" << name()
+                << "]: Disconnected from remote receiver at "
+                << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
+                << TcpConnection::disconnectReasonStr(disc_reason)
+                << std::endl;
     }
 
     log_disconnect = !log_disconnects_once;
