@@ -47,7 +47,7 @@ printInfo "Loading [file normalize [info script]]"
 #   msg The message to print
 #
 proc printNotice {msg} {
-  puts "NOTICE[${::print_prefix}]: ${msg}"
+  puts "NOTICE\[${::print_prefix}\]: ${msg}"
 }
 
 
@@ -58,7 +58,7 @@ proc printNotice {msg} {
 #   msg The message to print
 #
 proc printWarning {msg} {
-  puts "*** WARNING[${::print_prefix}]: ${msg}"
+  puts "*** WARNING\[${::print_prefix}\]: ${msg}"
 }
 
 
@@ -69,7 +69,7 @@ proc printWarning {msg} {
 #   msg The message to print
 #
 proc printError {msg} {
-  puts "*** ERROR[${::print_prefix}]: ${msg}"
+  puts "*** ERROR\[${::print_prefix}\]: ${msg}"
 }
 
 
