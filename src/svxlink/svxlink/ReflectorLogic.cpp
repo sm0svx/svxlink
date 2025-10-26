@@ -1129,10 +1129,11 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
     return;
   }
 
-  if ((header.type() > 100) && !isTcpLoggedIn())
+  if ((header.type() >= 100) && (m_con_state < STATE_AUTHENTICATED))
   {
-    cerr << "*** ERROR[" << name() << "]: Unexpected protocol message received"
-         << endl;
+    std::cerr << "*** ERROR[" << name()
+              << "]: Unexpected protocol message received with type="
+              << header.type() << std::endl;
     disconnect();
     return;
   }
@@ -2093,7 +2094,7 @@ bool ReflectorLogic::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
 void ReflectorLogic::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                                          void* aad, void *buf, int count)
 {
-  if (!isTcpLoggedIn())
+  if (m_con_state < STATE_EXPECT_START_UDP_ENCRYPTION)
   {
     return;
   }
