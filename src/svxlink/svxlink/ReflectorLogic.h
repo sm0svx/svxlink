@@ -324,7 +324,6 @@ class ReflectorLogic : public LogicBase
     void disconnect(void);
     void reconnect(void);
     bool isConnected(void) const;
-    bool isTcpLoggedIn(void) const { return m_con_state >= STATE_TCP_CONNECTED; }
     bool isLoggedIn(void) const { return m_con_state == STATE_CONNECTED; }
     void allEncodedSamplesFlushed(void);
     void flushTimeout(Async::Timer *t=0);

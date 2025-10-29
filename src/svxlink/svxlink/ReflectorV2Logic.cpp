@@ -849,7 +849,7 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
     return;
   }
 
-  if ((header.type() > 100) && !isLoggedIn())
+  if ((header.type() >= 100) && (m_con_state < STATE_AUTHENTICATED))
   {
     cerr << "*** ERROR[" << name() << "]: Unexpected protocol message received"
          << endl;
