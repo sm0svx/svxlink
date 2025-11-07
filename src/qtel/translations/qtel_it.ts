@@ -5,56 +5,56 @@
     <name>ComDialog</name>
     <message>
         <source>INFO</source>
-        <translation>Informazione</translation>
+        <translation>INFO</translation>
     </message>
     <message>
         <source>Connected to </source>
-        <translation>Connesso con </translation>
+        <translation>Connesso a </translation>
     </message>
     <message>
         <source>Connecting to </source>
-        <translation>Connesso con </translation>
+        <translation>Connessione in corso a </translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation>Contatto disconnesso</translation>
+        <translation>Disconnesso</translation>
     </message>
     <message>
         <source>Qtel Error</source>
-        <translation>Qtel errore</translation>
+        <translation>Errore di Qtel</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
-        <translation>Date della staziona non trovato al server. 
-	Non e possibile collegare a</translation>
+        <translation>Impossibile trovare i dati della stazione nel server.
+Impossibile collegarsi a</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
-        <translation>Impossibile connettere il host</translation>
+        <translation>Impossibile connettersi all’host remoto</translation>
     </message>
     <message>
         <source>Could not open mic audio device</source>
-        <translation>Impossibile aprire il device audio (microfono)</translation>
+        <translation>Impossibile aprire il dispositivo audio del microfono</translation>
     </message>
     <message>
         <source>Could not open speaker audio device</source>
-        <translation>Impossibile aprire il device audio (altoparlante)</translation>
+        <translation>Impossibile aprire il dispositivo audio degli altoparlanti</translation>
     </message>
     <message>
         <source>Could not create connection to</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossibile collegarsi a</translation>
     </message>
 </context>
 <context>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Dialogo della comunicazione</translation>
+        <translation>Finestra di comunicazione</translation>
     </message>
     <message>
         <source>Station Information</source>
-        <translation>Informaziona della stazione</translation>
+        <translation>Informazioni sulla stazione</translation>
     </message>
     <message>
         <source>?</source>
@@ -74,7 +74,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Time:</source>
-        <translation>Tempo:</translation>
+        <translation>Ora:</translation>
     </message>
     <message>
         <source>PTT</source>
@@ -82,15 +82,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Chat/Info</source>
-        <translation>Notificatio/Informazione</translation>
+        <translation>Chat/Info</translation>
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>&amp;Connesso</translation>
+        <translation>&amp;Connetti</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Disconnesso</translation>
+        <translation>&amp;Disconnetti</translation>
     </message>
     <message>
         <source>RX</source>
@@ -114,30 +114,30 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>VOX Enabled</source>
-        <translation>Attivato VOX</translation>
+        <translation>VOX attivato</translation>
     </message>
     <message>
         <source>Threshold:</source>
-        <translation>Valore limite:</translation>
+        <translation>Soglia:</translation>
     </message>
     <message>
         <source>Delay:</source>
-        <translation>Protrazione:</translation>
+        <translation>Ritardo:</translation>
     </message>
     <message>
         <source>dB Level:</source>
-        <translation>Valore [dB]:</translation>
+        <translation>Livello dB:</translation>
     </message>
 </context>
 <context>
     <name>EchoLinkDirectoryModel</name>
     <message>
         <source>Callsign</source>
-        <translation>Segnale di chiamata</translation>
+        <translation>Nominativo</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Luogo/Descrizione</translation>
+        <translation>Località/Descrizione</translation>
     </message>
     <message>
         <source>Status</source>
@@ -149,7 +149,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>Numero del nodo</translation>
+        <translation>ID del nodo</translation>
     </message>
     <message>
         <source>IP Address</source>
@@ -160,43 +160,43 @@ Can&apos;t create connection to</source>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
-        <translation>Notificare la partenza di server catalogo...</translation>
+        <translation>Disconnessione in corso dal server...</translation>
     </message>
     <message>
         <source>Station list has been refreshed</source>
-        <translation>Catalogo della stazione aggiornata</translation>
+        <translation>L’elenco delle stazioni è stato aggiornato</translation>
     </message>
     <message>
         <source>Refreshing station list...</source>
-        <translation>Aggiornare la lista delle stazione...</translation>
+        <translation>Aggiornamento in corso dell’elenco delle stazioni...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
-        <translation>Qtel - Aggiungere stazione da...</translation>
+        <translation>Qtel - Aggiungi stazione...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
-        <translation>Segnale di chiamata della stazione d&apos;aggiungere</translation>
+        <translation>Inserisci il nominativo della stazione da aggiungere</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: Connesso con indirizzo IP</translation>
+        <translation>Qtel: connetti all’indirizzo IP</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Inserire indirizzo IP o host:</translation>
+        <translation>Inserisci un indirizzo IP o un nome host:</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation>Segnalibro</translation>
+        <translation>Preferiti</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation>Links</translation>
+        <translation>Link</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation>Relé </translation>
+        <translation>Ripetitori</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -208,7 +208,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation>Da Qtel</translation>
+        <translation>Informazioni su Qtel</translation>
     </message>
     <message>
         <source>Qtel v</source>
@@ -217,7 +217,7 @@ Can&apos;t create connection to</source>
     <message>
         <source> - Qt EchoLink client.
 </source>
-        <translation> - Qt EchoLink cliente.
+        <translation> - Client EchoLink basato su Qt.
 </translation>
     </message>
     <message>
@@ -226,7 +226,7 @@ Can&apos;t create connection to</source>
 Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
         <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
-Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero, e ognuno è libero di ridistribuirlo secondo i termini e le condizioni della GNU GPL (General Public License) versione 2 o successiva.</translation>
+Qtel è fornito SENZA ALCUNA GARANZIA. Questo è un software libero e sei libero di ridistribuirlo in conformità con i termini e le condizioni della GNU GPL (General Public License) versione 2 o successive.</translation>
     </message>
 </context>
 <context>
@@ -237,11 +237,11 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>Links</source>
-        <translation>Links</translation>
+        <translation>Link</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation>Relé </translation>
+        <translation>Ripetitori</translation>
     </message>
     <message>
         <source>Stations</source>
@@ -249,11 +249,11 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation>Segnalibro</translation>
+        <translation>Preferiti</translation>
     </message>
     <message>
         <source>Time</source>
-        <translation>Tempo</translation>
+        <translation>Ora</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -265,55 +265,55 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>About</source>
-        <translation>Su</translation>
+        <translation>Informazioni</translation>
     </message>
     <message>
         <source>&amp;About...</source>
-        <translation>&amp;Su...</translation>
+        <translation>&amp;Informazioni...</translation>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation>Da Qtel</translation>
+        <translation>informazioni su Qtel</translation>
     </message>
     <message>
         <source>Quit</source>
-        <translation>Finire</translation>
+        <translation>Esci</translation>
     </message>
     <message>
         <source>&amp;Quit</source>
-        <translation>&amp;Finire</translation>
+        <translation>&amp;Esci</translation>
     </message>
     <message>
         <source>Quit the Qtel application</source>
-        <translation>Finire Qtel</translation>
+        <translation>Esci dall’applicazione Qtel</translation>
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation>Impostazione per Qtel...</translation>
+        <translation>Impostazioni di Qtel...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
-        <translation>Aprire il dialogo delle impostazioni per Qtel</translation>
+        <translation>Apri le impostazioni di Qtel</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
-        <translation>&amp;Catalogo delle stazione</translation>
+        <translation>&amp;Directory</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation>Aggiornare</translation>
+        <translation>Aggiorna</translation>
     </message>
     <message>
         <source>&amp;Refresh</source>
-        <translation>&amp;Aggiornare</translation>
+        <translation>&amp;Aggiorna</translation>
     </message>
     <message>
         <source>Refresh station list</source>
-        <translation>Aggiornare la lista delle stazione</translation>
+        <translation>Aggiorna l&apos;elenco delle stazioni</translation>
     </message>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - il Qt-Cliente del EchoLink</translation>
+        <translation>Qtel - il client EchoLink basato su Qt</translation>
     </message>
     <message>
         <source>Busy</source>
@@ -325,11 +325,11 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>View as busy</source>
-        <translation>Indicare da occupato</translation>
+        <translation>Mostra come occupato</translation>
     </message>
     <message>
         <source>View as busy in directory server</source>
-        <translation>Indicare da occupato nel catalogo delle stazione</translation>
+        <translation>Mostra come occupato nel server</translation>
     </message>
     <message>
         <source>Messages</source>
@@ -337,15 +337,15 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>Accept</source>
-        <translation>Accettare</translation>
+        <translation>Accetta</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Sgombrare</translation>
+        <translation>Cancella</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Segnale di chiamata</translation>
+        <translation>Nominativo</translation>
     </message>
     <message>
         <source>Name</source>
@@ -353,35 +353,35 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>Connect to IP...</source>
-        <translation>Collegare con indirizzo IP...</translation>
+        <translation>Connetti all&apos;IP...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
-        <translation>Collegare con la stazione...</translation>
+        <translation>Connetti alla stazione selezionata...</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
-        <translation>Conttati in arrivo</translation>
+        <translation>Connessioni in arrivo</translation>
     </message>
     <message>
         <source>&amp;Station</source>
-        <translation>&amp;Stazioni</translation>
+        <translation>&amp;Stazione</translation>
     </message>
     <message>
         <source>S&amp;ettings</source>
-        <translation>&amp;Impostazione</translation>
+        <translation>I&amp;mpostazioni</translation>
     </message>
     <message>
         <source>Connect to &amp;selected...</source>
-        <translation>Collegare con la &amp;stazione...</translation>
+        <translation>Connetti alla stazione &amp;selezionata...</translation>
     </message>
     <message>
         <source>Connect to &amp;IP...</source>
-        <translation>Collegare con &amp;IP...</translation>
+        <translation>Connetti a &amp;IP...</translation>
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
-        <translation>Qtel &amp;Impostazione...</translation>
+        <translation>&amp;Impostazioni di Qtel...</translation>
     </message>
     <message>
         <source>F5</source>
@@ -389,11 +389,11 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>Add Selected To &amp;Bookmarks</source>
-        <translation>&amp;Aggiungi selezionati al segnalibro</translation>
+        <translation>Aggiungi la stazione selezionata ai &amp;preferiti</translation>
     </message>
     <message>
         <source>Add the selected station in the station list to the bookmarks menu</source>
-        <translation>Aggiungere la stazione selezionata nell&apos;elenco delle stazioni al menu dei segnalibri</translation>
+        <translation>Aggiungi la stazione selezionata nell’elenco stazioni al menu preferiti</translation>
     </message>
     <message>
         <source>Ctrl+U</source>
@@ -401,15 +401,15 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>&amp;Remove Selected From Bookmarks</source>
-        <translation>&amp;Rimuovi selezionati da Preferiti</translation>
+        <translation>&amp;Rimuovi la stazione selezionata dai preferiti”</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks list</source>
-        <translation>Rimuovere la stazione selezionata dalla lista dei segnalibri</translation>
+        <translation>Rimuovi la stazione selezionata dall’elenco dei preferiti</translation>
     </message>
     <message>
         <source>Add &amp;Named Station To Bookmarks</source>
-        <translation>Aggiungi Stazione &amp;nome ai segnalibri</translation>
+        <translation>Aggiungi la stazione &amp;denominata ai preferiti</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
@@ -417,38 +417,38 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>Connect to the selected station</source>
-        <translation>Collegare la stazione selezionata</translation>
+        <translation>Connetti alla stazione selezionata</translation>
     </message>
     <message>
         <source>Connect to local station using IP address or hostname</source>
-        <translation>Connettersi alla stazione locale utilizzando l&apos;indirizzo IP o hostname</translation>
+        <translation>Connetti alla stazione locale usando un indirizzo IP o un nome host</translation>
     </message>
     <message>
         <source>Immediately refresh the station list</source>
-        <translation>Aggiorna subito la lista delle stazioni</translation>
+        <translation>Aggiorna subito l’elenco delle stazioni</translation>
     </message>
     <message>
         <source>Add selected station to the bookmarks</source>
-        <translation>Aggiungi stazione selezionata ai segnalibri</translation>
+        <translation>Aggiungi la stazione selezionata ai preferiti</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks</source>
-        <translation>Rimuovere la stazione selezionata dai segnalibri</translation>
+        <translation>Rimuovi la stazione selezionata dai preferiti</translation>
     </message>
     <message>
         <source>Add a station to the bookmarks by entering a callsign</source>
-        <translation>Aggiungere una stazione ai segnalibri inserendo un segnale di chiamata</translation>
+        <translation>Aggiungi una stazione ai preferiti inserendo un nominativo</translation>
     </message>
     <message>
         <source>Show the about dialog</source>
-        <translation>Mostra il dialogo su</translation>
+        <translation>Mostra la finestra delle informazioni</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Impostazione</translation>
+        <translation>Qtel: impostazioni</translation>
     </message>
     <message>
         <source>OK</source>
@@ -456,25 +456,25 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
     </message>
     <message>
         <source>User Info</source>
-        <translation>Informazioni della stazione</translation>
+        <translation>Informazioni utente</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Informazioni della stazione</translation>
+        <translation>Informazioni utente</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Informazione/Messagio
-</translation>
+        <translation>Informazioni
+Messaggio</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Luogo/Posizione</translation>
+        <translation>Località</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Segnale di chiamata</translation>
+        <translation>Nominativo</translation>
     </message>
     <message>
         <source>Password</source>
@@ -482,7 +482,7 @@ Message</source>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Ricrivere il password</translation>
+        <translation>Reinserisci la password</translation>
     </message>
     <message>
         <source>Name</source>
@@ -490,7 +490,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Caratteristica del server catalogo</translation>
+        <translation>Impostazioni del server</translation>
     </message>
     <message>
         <source>Server</source>
@@ -498,11 +498,11 @@ Message</source>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancellare</translation>
+        <translation>Annulla</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Intervallo attualizzazione</translation>
+        <translation>Intervallo di aggiornamento</translation>
     </message>
     <message>
         <source>min</source>
@@ -510,15 +510,15 @@ Message</source>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Intervallo mentre attualizzazione (in minuti)</translation>
+        <translation>Intervallo, in minuti, tra un aggiornamento e l’altro dell’elenco delle stazioni</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Registrare da occupato durante il lancio della programma</translation>
+        <translation>Segna come occupato all’avvio del programma</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Indicare da occupato durante il lancio della programma</translation>
+        <translation>Avvia come occupato</translation>
     </message>
     <message>
         <source>Sound</source>
@@ -530,27 +530,27 @@ Message</source>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Puntare casella per attivare full duplex modo</translation>
+        <translation>Seleziona questa casella per abilitare il funzionamento in full duplex</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Suono mentre</translation>
+        <translation>Suono di connessione</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Suono per un passando contatto</translation>
+        <translation>Il suono da riprodurre alle connessioni EchoLink in arrivo</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Navigare...</translation>
+        <translation>Sfoglia...</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>16-bit 8kHz dato del audio (*.raw)</translation>
+        <translation>File audio RAW (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Sceliere file dell&apos;audio</translation>
+        <translation>Scegli un file audio per il suono di connessione</translation>
     </message>
     <message>
         <source>QSO</source>
@@ -558,7 +558,7 @@ Message</source>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation>Codice del chat:</translation>
+        <translation>Codifica chat:</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -566,7 +566,7 @@ Message</source>
     </message>
     <message>
         <source>Japanese</source>
-        <translation>Giapponese </translation>
+        <translation>Giapponese</translation>
     </message>
     <message>
         <source>Korean</source>
@@ -614,11 +614,11 @@ Message</source>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation>Ebraico, ordinato visuale</translation>
+        <translation>Ebraico, ordinamento visivo</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation>Ebraico, ordinato logico</translation>
+        <translation>Ebraico, ordinamento logico</translation>
     </message>
     <message>
         <source>Turkish</source>
@@ -634,95 +634,95 @@ Message</source>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation>Qtel: password invalido</translation>
+        <translation>Qtel: password errata</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
-        <translation>Password divercere</translation>
+        <translation>Le password non corrispondono</translation>
     </message>
     <message>
         <source>Sound Settings</source>
-        <translation>Impostazione del suono</translation>
+        <translation>Impostazioni audio</translation>
     </message>
     <message>
         <source>Mic audio device</source>
-        <translation>Device audio (microfono)</translation>
+        <translation>Dispositivo audio del microfono</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation>Device audio (per esempio alsa:default)</translation>
+        <translation>Dispositivo audio da utilizzare (es. alsa:default)</translation>
     </message>
     <message>
         <source>Speaker audio device</source>
-        <translation>Device audio (altoparlante)</translation>
+        <translation>Dispositivo audio dell&apos;altoparlante</translation>
     </message>
     <message>
         <source>QSO Dialog Settings</source>
-        <translation>Impostazione del QSO</translation>
+        <translation>Impostazioni della finestra QSO</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Rete</translation>
     </message>
     <message>
         <source>Servers</source>
-        <translation type="unfinished"></translation>
+        <translation>Server</translation>
     </message>
     <message>
         <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Un elenco separato da spazi dei nomi host o degli indirizzi IP dei server di EchoLink da utilizzare</translation>
     </message>
     <message>
         <source>EchoLink Proxy Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Impostazioni proxy EchoLink</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Abilita</translation>
     </message>
     <message>
         <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
-        <translation type="unfinished"></translation>
+        <translation>Se abiliti il proxy EchoLink, devi fornire il nome host o l’indirizzo IP del server proxy.</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink proxy server to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Il nome host o l’indirizzo IP del server proxy EchoLink da utilizzare</translation>
     </message>
     <message>
         <source>TCP Port</source>
-        <translation type="unfinished"></translation>
+        <translation>Porta TCP</translation>
     </message>
     <message>
         <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
-        <translation type="unfinished"></translation>
+        <translation>La porta TCP a cui connettersi sul server proxy EchoLink, predefinita 8100</translation>
     </message>
     <message>
         <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
-        <translation type="unfinished"></translation>
+        <translation>La password del PROXY EchoLink, non la tua normale password EchoLink. Lascia vuoto per usare un proxy pubblico.</translation>
     </message>
     <message>
         <source>Sampling Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Frequenza di campionamento</translation>
     </message>
     <message>
         <source>EchoLink proxy configuration problem</source>
-        <translation type="unfinished"></translation>
+        <translation>Problema di configurazione del proxy EchoLink</translation>
     </message>
     <message>
         <source>EchoLink proxy enabled but no server given</source>
-        <translation type="unfinished"></translation>
+        <translation>Proxy EchoLink abilitato ma nessun server specificato</translation>
     </message>
     <message>
         <source>Bind address</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo di binding</translation>
     </message>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;È possibile specificare un indirizzo di binding per obbligare Qtel a usare una specifica interfaccia di rete se il computer ne ha più di una. Inserisci l’indirizzo IP dell’interfaccia a cui effettuare il binding.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Nessuno</translation>
     </message>
 </context>
 </TS>
