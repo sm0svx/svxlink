@@ -904,22 +904,23 @@ class SslX509
     }
 
     /**
-     * @brief   Print this certificate to std::cout
-     * @param   prefix A prefix to add to each printed row
+     * @brief   Get the certificate as a string
+     * @return  Returns the certificate as a string
      */
-    void print(const std::string& prefix="") const
+    std::string toString(const std::string& prefix="") const
     {
       if (isNull())
       {
-        std::cout << "NULL" << std::endl;
-        return;
+        return std::string(prefix + "NULL");
       }
 
       int ext_idx = X509_get_ext_by_NID(m_cert, NID_subject_alt_name, -1);
       auto ext = X509_get_ext(m_cert, ext_idx);
       auto sanstr = SslX509ExtSubjectAltName(ext).toString();
       const auto md = digest();
-      std::cout
+      std::ostringstream ss;
+
+      ss
         //<< prefix << "Version          : " << (version()+1) << "\n"
         << prefix << "Serial No.       : " << serialNumberString() << "\n"
         << prefix << "Issuer           : " << issuerNameString() << "\n"
@@ -932,9 +933,9 @@ class SslX509
         ;
       if (!sanstr.empty())
       {
-        std::cout << prefix << "Subject Alt Name : " << sanstr << "\n";
+        ss << prefix << "Subject Alt Name : " << sanstr << "\n";
       }
-      //std::cout << prefix << "SHA256 Digest    : " << std::accumulate(
+      //ss << prefix << "SHA256 Digest    : " << std::accumulate(
       //    md.begin(),
       //    md.end(),
       //    std::ostringstream() << std::hex << std::setfill('0'),
@@ -943,6 +944,16 @@ class SslX509
       //      if (!ss.str().empty()) { ss << ":"; }
       //      return std::move(ss) << std::setw(2) << unsigned(x);
       //    }).str() + "\n"
+      return ss.str();
+    }
+
+    /**
+     * @brief   Print this certificate to std::cout
+     * @param   prefix A prefix to add to each printed row
+     */
+    void print(const std::string& prefix="") const
+    {
+      std::cout << toString(prefix);
       std::cout << std::flush;
     }
 

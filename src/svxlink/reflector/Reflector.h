@@ -96,6 +96,28 @@ class ReflectorUdpMsg;
  *
  ****************************************************************************/
 
+/**
+ * @brief Structure to hold certificate or CSR information around 
+ * 
+ * - Signed certificates (is_signed=true, has valid_until/not_after)
+ * - Pending CSRs (is_signed=false, has received_time)
+ */
+struct CertInfo
+{
+  std::string callsign;              // Common Name
+  std::vector<std::string> emails;   // Email addresses from Subject Alternative Name
+  bool is_signed;                    // true=signed cert, false=pending CSR
+  
+  // For signed certificates:
+  std::string valid_until;           // Human-readable expiry date
+  time_t not_after;                  // Unix timestamp for expiry (0 if pending)
+  
+  // For pending CSRs:
+  time_t received_time;              // Unix timestamp when CSR received (0 if signed)
+  
+  CertInfo() : is_signed(false), not_after(0), received_time(0) {}
+};
+
 
 
 /****************************************************************************
@@ -289,6 +311,12 @@ class Reflector : public sigc::trackable
     bool removeClientCert(const std::string& cn);
     void runCAHook(const Async::Exec::Environment& env);
 
+    // List certs 
+    std::vector<CertInfo> getAllCerts(bool signedCerts = true, 
+                                      bool pendingCerts = true);
+
+    std::string formatCerts(bool signedCerts = true, 
+                            bool pendingCerts = true);
 };  /* class Reflector */
 
 
