@@ -316,6 +316,7 @@ talkgroup. Those parameters are placed in a configuration section named
   [TG#9999]
   AUTO_QSY_AFTER=300
   ALLOW=S[A-M]\\\\d.*|LA8PV
+  ALLOW_MONITOR=S[A-M]3.*
   SHOW_ACTIVITY=0
 
 The following configuration variables are valid in a talkgroup configuration
@@ -338,6 +339,17 @@ for ECMAScript with the exception that the backslash special patterns (e.g.
 An example that match most Swedish callsigns and a specific Norwegian one is
 "S[A-M]\\\\d.*|LA8PV". That expression will for example match LA8PV, SM0SVX,
 SK3W, SA7ABC etc.
+.TP
+.B ALLOW_MONTOR
+A regular expression that must match the whole callsign of the nodes that try
+to monitor this talkgroup.  The regular expression standard used is the same as
+for ECMAScript with the exception that the backslash special patterns (e.g.
+\\s, \\d etc) must be expressed with double backslash notation (e.g. \\\\s,
+\\\\d etc).
+
+An example that match most Swedish callsigns in district 3 is
+"S[A-M]3.*". That expression will for example match SA3ABC, SM3XYZ, SK3GK,
+SH3YZX etc.
 .TP
 .B SHOW_ACTIVITY
 If set to 0, do not indicate in the http status message when the talkgroup is
