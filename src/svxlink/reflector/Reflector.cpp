@@ -2274,8 +2274,6 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
   // Get signed certificates
   if (signedCerts)
   {
-    std::cout << "### Reflector::getAllCerts: Getting signed certificates in directory '" << m_certs_dir << "'" << std::endl;
-
     DIR* dir = opendir(m_certs_dir.c_str());
     if (dir != nullptr)
     {
@@ -2284,19 +2282,19 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
       {
         std::string filename(entry->d_name);
 
-        std::cout << "### Reflector::getAllCerts: filename='" << filename << "'" << std::endl;
-
         if (filename.length() > 4 && 
             filename.substr(filename.length() - 4) == ".crt")
         {
           std::string callsign = filename.substr(0, filename.length() - 4);
-          std::cout << "### Reflector::getAllCerts: callsign='" << callsign << "'" << std::endl;
-          // Skip CA certificates
-          if (callsign.find("svxreflector") != std::string::npos)
-          {
-            std::cout << "### Reflector::getAllCerts: Skipping CA certificate '" << callsign << "'" << std::endl;
+
+          // Skip reflector CA certificates
+          // this can change, because it's dependent of COMMON_NAME in config.....
+          // but old COMMON_NAME used will still linger in the directory, so we can only ignore
+          // the current COMMON_NAME defined in the config file.....
+          std::string commonName;
+          m_cfg->getValue("SERVER_CERT", "COMMON_NAME", commonName);
+          if (!commonName.empty() && callsign.find(commonName) != std::string::npos)
             continue;
-          }
 
           Async::SslX509 cert = loadClientCertificate(callsign);
           if (!cert.isNull())
@@ -2307,9 +2305,6 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
             info.valid_until = cert.notAfterLocaltimeString();
             info.not_after = cert.notAfter();
             info.received_time = 0;
-            std::cout << "### Reflector::getAllCerts: info.valid_until='" << info.valid_until << "'" << std::endl;
-            std::cout << "### Reflector::getAllCerts: info.not_after='" << info.not_after << "'" << std::endl;
-            std::cout << "### Reflector::getAllCerts: info.received_time='" << info.received_time << "'" << std::endl;
             
             certs.push_back(info);
           }
@@ -2322,8 +2317,6 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
   // Get pending CSRs
   if (pendingCerts)
   {
-    std::cout << "### Reflector::getAllCerts: Getting pending CSRs in directory '" << m_pending_csrs_dir << "'" << std::endl;
-
     DIR* dir = opendir(m_pending_csrs_dir.c_str());
     if (dir != nullptr)
     {
@@ -2331,13 +2324,13 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
       while ((entry = readdir(dir)) != nullptr)
       {
         std::string filename(entry->d_name);
-        std::cout << "### Reflector::getAllCerts: filename='" << filename << "'" << std::endl;
+
         if (filename.length() > 4 && 
             filename.substr(filename.length() - 4) == ".csr")
         {
           std::string callsign = filename.substr(0, filename.length() - 4);
-          std::cout << "### Reflector::getAllCerts: callsign='" << callsign << "'" << std::endl;
           Async::SslCertSigningReq csr = loadClientPendingCsr(callsign);
+
           if (!csr.isNull())
           {
             CertInfo info;
@@ -2345,10 +2338,9 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
             info.is_signed = false;
             info.valid_until = "";
             info.not_after = 0;
-            std::cout << "### Reflector::getAllCerts: info.valid_until='" << info.valid_until << "'" << std::endl;
-            std::cout << "### Reflector::getAllCerts: info.not_after='" << info.not_after << "'" << std::endl;
-            std::cout << "### Reflector::getAllCerts: info.received_time='" << info.received_time << "'" << std::endl;
+
             // Extract email addresses, might be useful to contact user or check against a database
+
             const auto san = csr.extensions().subjectAltName();
             if (!san.isNull())
             {
@@ -2359,8 +2351,6 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
                   },
                   GEN_EMAIL);
             }
-
-            std::cout << "### Reflector::getAllCerts: info.emails='" << info.emails.size() << "'" << std::endl;
 
             // Get file timestamp
             std::string csr_path = m_pending_csrs_dir + "/" + callsign + ".csr";
@@ -2373,7 +2363,6 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
             {
               info.received_time = 0;
             }
-            std::cout << "### Reflector::getAllCerts: info.received_time='" << info.received_time << "'" << std::endl;
 
             certs.push_back(info);
           }
@@ -2383,8 +2372,6 @@ std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts
     }
   }
   
-  std::cout << "### Reflector::getAllCerts: certs.size()='" << certs.size() << "'" << std::endl;
-
   return certs;
 } /* Reflector::getAllCerts */
 
