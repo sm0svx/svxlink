@@ -72,6 +72,12 @@
 
 * Add new config variable DTMF_IGNORE_WHEN_NOT_UP.
 
+* Changes in the reflector server command PTY commands:
+  - Implemented CA LS and CA RM
+  - Renamed CA PENDING to CA LSP and implemented it
+  - Added CA LSC to list certificates only
+  - Responses are now sent to the PTY when appropriate
+
 
 
  1.9.1 -- 01 Jul 2025

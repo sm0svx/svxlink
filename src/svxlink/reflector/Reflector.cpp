@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -649,12 +649,15 @@ std::string Reflector::issuingCertPem(void) const
 } /* Reflector::issuingCertPem */
 
 
-bool Reflector::callsignOk(const std::string& callsign) const
+bool Reflector::callsignOk(const std::string& callsign, bool verbose) const
 {
     // Empty check
   if (callsign.empty())
   {
-    std::cout << "*** WARNING: The callsign is empty" << std::endl;
+    if (verbose)
+    {
+      std::cout << "*** WARNING: The callsign is empty" << std::endl;
+    }
     return false;
   }
 
@@ -669,9 +672,12 @@ bool Reflector::callsignOk(const std::string& callsign) const
   const std::regex accept_callsign_re(accept_cs_re_str);
   if (!std::regex_match(callsign, accept_callsign_re))
   {
-    std::cerr << "*** WARNING: The callsign '" << callsign
-              << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
-              << std::endl;
+    if (verbose)
+    {
+      std::cerr << "*** WARNING: The callsign '" << callsign
+                << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
+                << std::endl;
+    }
     return false;
   }
 
@@ -683,9 +689,12 @@ bool Reflector::callsignOk(const std::string& callsign) const
     const std::regex reject_callsign_re(reject_cs_re_str);
     if (std::regex_match(callsign, reject_callsign_re))
     {
-      std::cerr << "*** WARNING: The callsign '" << callsign
-                << "' has been rejected by configuration (REJECT_CALLSIGN)."
-                << std::endl;
+      if (verbose)
+      {
+        std::cerr << "*** WARNING: The callsign '" << callsign
+                  << "' has been rejected by configuration (REJECT_CALLSIGN)."
+                  << std::endl;
+      }
       return false;
     }
   }
@@ -1450,36 +1459,33 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
     if (!value.empty())
     {
       m_cfg->setValue(section, tag, value);
-      // User should know what happened with the configuration change
-      m_cmd_pty->write("Trying to set config : " + section + "/" + tag + "=" + value + "\n");
+      m_cmd_pty->write("Trying to set config : " + section + "/" +
+                       tag + "=" + value + "\n");
     }
     else if (!tag.empty())
     {
-      // User should be the one to get the reply, not the console
-      m_cmd_pty->write("Get config : " + section + "/" + 
+      m_cmd_pty->write("Get config : " + section + "/" +
                        tag + "=\"" + m_cfg->getValue(section, tag) + "\"\n");
     }
     else if (!section.empty())
     {
-      // User should be the one to get the reply, not the console
       m_cmd_pty->write("Section: \n\t" + section + "\n");
       for (const auto& tag : m_cfg->listSection(section))
       {
-          m_cmd_pty->write("\t" + tag + "=\"" + m_cfg->getValue(section, tag) + "\"\n");
+          m_cmd_pty->write("\t" + tag +
+                           "=\"" + m_cfg->getValue(section, tag) + "\"\n");
       }
     }
     else
     {
       for (const auto& section : m_cfg->listSections())
       {
-        // And again, it's the user who should get the reply, not the console
         m_cmd_pty->write("Section: \n\t" + section + "\n");
-
         for (const auto& tag : m_cfg->listSection(section))
         {
-          m_cmd_pty->write("\t\t" + tag + "=\"" + m_cfg->getValue(section, tag) + "\"\n");
+          m_cmd_pty->write("\t\t" + tag +
+                           "=\"" + m_cfg->getValue(section, tag) + "\"\n");
         }
-
         m_cmd_pty->write("\n");
       }
     }
@@ -1518,7 +1524,7 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
     if (!(ss >> subcmd))
     {
       errss << "Invalid CA PTY command '" << cmdline << "'. "
-               "Usage: CA PENDING|SIGN <callsign>|LS|RM <callsign>";
+               "Usage: CA LS|LSC|LSP|SIGN <callsign>|RM <callsign>";
       goto write_status;
     }
     std::transform(subcmd.begin(), subcmd.end(), subcmd.begin(), ::toupper);
@@ -1537,6 +1543,10 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
         m_cmd_pty->write("---------- Signed Client Certificate ----------\n");
         m_cmd_pty->write(cert.toString());
         m_cmd_pty->write("-----------------------------------------------\n");
+        std::cout << "---------- Signed Client Certificate ----------\n"
+                  << cert.toString()
+                  << "-----------------------------------------------"
+                  << std::endl;
       }
       else
       {
@@ -1552,11 +1562,11 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
                  "Usage: CA RM <callsign>";
         goto write_status;
       }
-      if (removeClientCert(cn))
-
+      if (removeClientCertFiles(cn))
       {
-        // The client should know what happened with the certificate removal
-        m_cmd_pty->write(cn + ": Removed client certificate and CSR\n");
+        std::string msg(cn + ": Removed client certificate and CSR");
+        m_cmd_pty->write(msg + "\n");
+        std::cout << msg << std::endl;
       }
       else
       {
@@ -1565,32 +1575,40 @@ void Reflector::ctrlPtyDataReceived(const void *buf, size_t count)
     }
     else if (subcmd == "LS")
     {
-      // Lists all certs, pending or not, should we add a list signed only option ?
+        // List all certs and pending CSRs
       std::string certs = formatCerts();
       m_cmd_pty->write(certs);
-      std::cout << certs;
     }
-    else if (subcmd == "PENDING")
+    else if (subcmd == "LSC")
     {
-      // Lists only pending certs
+        // List only certificates
+      std::string certs = formatCerts(true, false);
+      m_cmd_pty->write(certs);
+    }
+    else if (subcmd == "LSP")
+    {
+        // List only pending CSRs
       std::string certs = formatCerts(false, true);
       m_cmd_pty->write(certs);
-      std::cout << certs;
     }
+    // FIXME: Implement when we have CRL support
+    //else if (subcmd == "REVOKE")
+    //{
+    //}
     else
     {
       errss << "Invalid CA PTY command '" << cmdline << "'. "
-               "Usage: CA PENDING|SIGN <callsign>|LS|RM <callsign>";
+               "Usage: CA LS|LSC|LSP|SIGN <callsign>|RM <callsign>";
       goto write_status;
     }
   }
   else
   {
     errss << "Valid commands are: CFG, NODE, CA\n"
-          << "Usage: \n"
+          << "Usage:\n"
           << "CFG <section> <tag> <value>\n"
           << "NODE BLOCK <callsign> <blocktime seconds>\n"
-          << "CA PENDING|SIGN <callsign>|LS|PENDING|RM <callsign>\n"
+          << "CA LS|LSC|LSP|SIGN <callsign>|RM <callsign>\n"
           << "\nEmpty CFG lists all configuration";
   }
 
@@ -2220,11 +2238,35 @@ bool Reflector::buildPath(const std::string& sec,    const std::string& tag,
 } /* Reflector::buildPath */
 
 
-bool Reflector::removeClientCert(const std::string& cn)
+bool Reflector::removeClientCertFiles(const std::string& cn)
 {
-  std::cout << "### Reflector::removeClientCert: cn=" << cn << std::endl;
-  return true;
-} /* Reflector::removeClientCert */
+  //std::cout << "### Reflector::removeClientCertFiles: cn=" << cn << std::endl;
+
+  std::vector<std::string> paths = {
+    m_csrs_dir + "/" + cn + ".csr",
+    m_pending_csrs_dir + "/" + cn + ".csr",
+    m_certs_dir + "/" + cn + ".crt"
+  };
+
+  bool success = true;
+  size_t path_unlink_cnt = 0;
+  for (const auto& path : paths)
+  {
+    if (unlink(path.c_str()) == 0)
+    {
+      path_unlink_cnt += 1;
+    }
+    else if (errno != ENOENT)
+    {
+      success = false;
+      auto errstr = SvxLink::strError(errno);
+      std::cerr << "*** WARNING: Failed to remove file '" << path << "': "
+                << errstr << std::endl;
+    }
+  }
+
+  return success && (path_unlink_cnt > 0);
+} /* Reflector::removeClientCertFiles */
 
 
 void Reflector::runCAHook(const Async::Exec::Environment& env)
@@ -2266,204 +2308,208 @@ void Reflector::runCAHook(const Async::Exec::Environment& env)
   }
 } /* Reflector::runCAHook */
 
-// Returns all certs, signed or pending
-std::vector<CertInfo> Reflector::getAllCerts(bool signedCerts, bool pendingCerts)
+
+std::vector<CertInfo> Reflector::getAllCerts(void)
 {
   std::vector<CertInfo> certs;
-  
-  // Get signed certificates
-  if (signedCerts)
+
+  DIR* dir = opendir(m_certs_dir.c_str());
+  if (dir != nullptr)
   {
-    DIR* dir = opendir(m_certs_dir.c_str());
-    if (dir != nullptr)
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr)
     {
-      struct dirent* entry;
-      while ((entry = readdir(dir)) != nullptr)
+      std::string filename(entry->d_name);
+      if (filename.length() > 4 &&
+          filename.substr(filename.length() - 4) == ".crt")
       {
-        std::string filename(entry->d_name);
-
-        if (filename.length() > 4 && 
-            filename.substr(filename.length() - 4) == ".crt")
+        std::string callsign = filename.substr(0, filename.length() - 4);
+        Async::SslX509 cert = loadClientCertificate(callsign);
+        if (!cert.isNull() && callsignOk(callsign, false))
         {
-          std::string callsign = filename.substr(0, filename.length() - 4);
+          CertInfo info;
+          info.callsign = cert.commonName();
+          info.is_signed = true;
+          info.valid_until = cert.notAfterLocaltimeString();
+          info.not_after = cert.notAfter();
+          info.received_time = 0;
 
-          // Skip reflector CA certificates
-          // this can change, because it's dependent of COMMON_NAME in config.....
-          // but old COMMON_NAME used will still linger in the directory, so we can only ignore
-          // the current COMMON_NAME defined in the config file.....
-          std::string commonName;
-          m_cfg->getValue("SERVER_CERT", "COMMON_NAME", commonName);
-          if (!commonName.empty() && callsign.find(commonName) != std::string::npos)
-            continue;
-
-          Async::SslX509 cert = loadClientCertificate(callsign);
-          if (!cert.isNull())
-          {
-            CertInfo info;
-            info.callsign = callsign;
-            info.is_signed = true;
-            info.valid_until = cert.notAfterLocaltimeString();
-            info.not_after = cert.notAfter();
-            info.received_time = 0;
-            
-            certs.push_back(info);
-          }
+          certs.push_back(info);
         }
       }
-      closedir(dir);
     }
-  }
-  
-  // Get pending CSRs
-  if (pendingCerts)
-  {
-    DIR* dir = opendir(m_pending_csrs_dir.c_str());
-    if (dir != nullptr)
-    {
-      struct dirent* entry;
-      while ((entry = readdir(dir)) != nullptr)
-      {
-        std::string filename(entry->d_name);
+    closedir(dir);
 
-        if (filename.length() > 4 && 
-            filename.substr(filename.length() - 4) == ".csr")
+    std::sort(certs.begin(), certs.end(),
+        [](const CertInfo& a, const CertInfo& b)
         {
-          std::string callsign = filename.substr(0, filename.length() - 4);
-          Async::SslCertSigningReq csr = loadClientPendingCsr(callsign);
-
-          if (!csr.isNull())
-          {
-            CertInfo info;
-            info.callsign = callsign;
-            info.is_signed = false;
-            info.valid_until = "";
-            info.not_after = 0;
-
-            // Extract email addresses, might be useful to contact user or check against a database
-
-            const auto san = csr.extensions().subjectAltName();
-            if (!san.isNull())
-            {
-              san.forEach(
-                  [&](int type, std::string value)
-                  {
-                    info.emails.push_back(value);
-                  },
-                  GEN_EMAIL);
-            }
-
-            // Get file timestamp
-            std::string csr_path = m_pending_csrs_dir + "/" + callsign + ".csr";
-            struct stat st;
-            if (stat(csr_path.c_str(), &st) == 0)
-            {
-              info.received_time = st.st_mtime;
-            }
-            else
-            {
-              info.received_time = 0;
-            }
-
-            certs.push_back(info);
-          }
-        }
-      }
-      closedir(dir);
-    }
+          return a.callsign < b.callsign;
+        });
   }
-  
+
   return certs;
 } /* Reflector::getAllCerts */
 
-std::string Reflector::formatCerts(bool signedCerts, 
-                                   bool pendingCerts)
+
+std::vector<CertInfo> Reflector::getAllPendingCSRs(void)
 {
-  std::ostringstream ss;
-  ss << "---------- ";
+  std::vector<CertInfo> certs;
 
-  if(signedCerts && pendingCerts)
-    ss << "All";
-  else if(signedCerts && !pendingCerts)
-    ss << "Signed";
-  else if(!signedCerts && pendingCerts)
-    ss << "Pending";
-
-  ss << " Certificates ----------\n";
-
-  auto certs = getAllCerts(signedCerts, pendingCerts);
-
-  if(certs.empty())
+  DIR* dir = opendir(m_pending_csrs_dir.c_str());
+  if (dir != nullptr)
   {
-    ss << "\n(No certificates)\n";
-  }
-  else
-  {
-    std::vector<CertInfo> signed_certs_list;
-    std::vector<CertInfo> pending_certs_list;
-
-    // I'm not really sure if this is faster than 
-    // calling getAllCerts twice.....
-    std::partition_copy(
-      certs.begin(), 
-      certs.end(), 
-      std::back_inserter(signed_certs_list),
-      std::back_inserter(pending_certs_list),
-      [](const CertInfo& cert) { return cert.is_signed; }
-    );
-
-    if(signedCerts)
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr)
     {
-      ss << "Signed Certificates:\n";
-
-      if(signed_certs_list.empty())
-        ss << "\t(none)\n";
-      else
+      std::string filename(entry->d_name);
+      if (filename.length() > 4 &&
+          filename.substr(filename.length() - 4) == ".csr")
       {
-        for (const auto& info : signed_certs_list)
+        std::string callsign = filename.substr(0, filename.length() - 4);
+        Async::SslCertSigningReq csr = loadClientPendingCsr(callsign);
+        if (!csr.isNull())
         {
-          ss << "\t" << info.callsign << " - Valid until: " 
-             << info.valid_until << "\n";
-        }    
-      }
-    }
+          CertInfo info;
+          info.callsign = csr.commonName();
+          info.is_signed = false;
+          info.valid_until = "";
+          info.not_after = 0;
 
-    if(pendingCerts)
-    {
-      ss << "Pending CSRs (awaiting signature):\n";
-
-      if(pending_certs_list.empty())
-        ss << "\t(none)\n";
-      else
-      {
-        for (const auto& info : pending_certs_list)
-        {
-          ss << "\t" << info.callsign;
-          if (!info.emails.empty())
+            // Extract email addresses, might be useful to contact user or
+            // check against a database
+          const auto san = csr.extensions().subjectAltName();
+          if (!san.isNull())
           {
-            // Join all emails in one string quickly
-            // de we even ever use emails ?!?!?
-            std::string emails_str = std::accumulate(
-              std::next(info.emails.begin()), 
-              info.emails.end(),
-              info.emails.empty() ? std::string() : info.emails[0],
-              [](const std::string& a, const std::string& b)
-              {
-                return a + ", " + b;
-              });
-          
-            ss << " - Email: " << info.emails[0];
+            san.forEach(
+                [&](int type, std::string value)
+                {
+                  info.emails.push_back(value);
+                },
+                GEN_EMAIL);
           }
-          ss << "\n";
+
+            // Get file timestamp
+          std::string csr_path = m_pending_csrs_dir + "/" + callsign + ".csr";
+          struct stat st;
+          if (stat(csr_path.c_str(), &st) == 0)
+          {
+            info.received_time = st.st_mtime;
+          }
+          else
+          {
+            info.received_time = 0;
+          }
+
+          certs.push_back(info);
         }
       }
     }
+    closedir(dir);
+
+    std::sort(certs.begin(), certs.end(),
+        [](const CertInfo& a, const CertInfo& b)
+        {
+          return a.callsign < b.callsign;
+        });
   }
-  
+
+  return certs;
+} /* Reflector::getAllPendingCSRs */
+
+
+std::string Reflector::formatCerts(bool signedCerts, bool pendingCerts)
+{
+  std::ostringstream ss;
+
+  if (signedCerts && pendingCerts)
+  {
+    ss << "------------ All Certificates/CSRs ------------\n";
+  }
+  else if (signedCerts && !pendingCerts)
+  {
+    ss << "------------- Signed Certificates -------------\n";
+  }
+  else if (!signedCerts && pendingCerts)
+  {
+    ss << "---------------- Pending CSRs -----------------\n";
+  }
+  else
+  {
+    return "ERR:Neither certificates nor CSRs requested\n";
+  }
+
+  auto signed_certs_list = getAllCerts();
+  auto pending_certs_list = getAllPendingCSRs();
+  if (signedCerts)
+  {
+    ss << "Signed Certificates:\n";
+
+    if (signed_certs_list.empty())
+    {
+      ss << "\t(none)\n";
+    }
+    else
+    {
+      size_t max_cn_len = 0;
+      for (const auto& info : signed_certs_list)
+      {
+        if (info.callsign.size() > max_cn_len)
+        {
+          max_cn_len = info.callsign.size();
+        }
+      }
+      for (const auto& info : signed_certs_list)
+      {
+        ss << "\t" << std::left << std::setw(max_cn_len) << info.callsign
+           << "  Valid until: " << info.valid_until << "\n";
+      }
+    }
+  }
+
+  if (pendingCerts)
+  {
+    ss << "Pending CSRs (awaiting signing):\n";
+
+    if (pending_certs_list.empty())
+    {
+      ss << "\t(none)\n";
+    }
+    else
+    {
+      size_t max_cn_len = 0;
+      for (const auto& info : pending_certs_list)
+      {
+        if (info.callsign.size() > max_cn_len)
+        {
+          max_cn_len = info.callsign.size();
+        }
+      }
+      for (const auto& info : pending_certs_list)
+      {
+        ss << "\t" << std::left << std::setw(max_cn_len) << info.callsign;
+        if (!info.emails.empty())
+        {
+            // Join all emails in one string
+          std::string emails_str = std::accumulate(
+            std::next(info.emails.begin()),
+            info.emails.end(),
+            info.emails.empty() ? std::string() : info.emails[0],
+            [](const std::string& a, const std::string& b)
+            {
+              return a + ", " + b;
+            });
+          ss << "  Email: " << emails_str;
+        }
+        ss << "\n";
+      }
+    }
+  }
+
   ss << "-----------------------------------------------\n";
   return ss.str();
 } /* Reflector::formatCerts */
 
+
 /*
  * This file has not been truncated
  */
-

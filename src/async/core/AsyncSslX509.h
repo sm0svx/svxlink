@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -905,6 +905,7 @@ class SslX509
 
     /**
      * @brief   Get the certificate as a string
+     * @param   prefix A string to prefix each row with
      * @return  Returns the certificate as a string
      */
     std::string toString(const std::string& prefix="") const
