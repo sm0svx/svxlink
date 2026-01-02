@@ -72,6 +72,9 @@
 
 * Add new config variable DTMF_IGNORE_WHEN_NOT_UP.
 
+* New reflector server talkgroup configuration, ALLOW_MONITOR, to set which
+  callsigns are allowed to monitor a specific talkgroup.
+
 
 
  1.9.1 -- 01 Jul 2025

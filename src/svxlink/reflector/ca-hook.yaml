@@ -34,7 +34,7 @@
 EMAIL_DEBUG: true
 
 # The SMTP server to send the message to
-EMAIL_SMTP_SERVER: "localhost"
+EMAIL_SMTP_SERVER: "127.0.0.1"
 
 # Use the following email sender address ("From")
 EMAIL_FROM: "SvxReflector <reflector@example.com>"

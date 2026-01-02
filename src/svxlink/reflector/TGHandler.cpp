@@ -289,6 +289,36 @@ bool TGHandler::allowTgSelection(ReflectorClient *client, uint32_t tg)
 } /* TGHandler::allowTgSelection */
 
 
+bool TGHandler::allowTgMonitoring(ReflectorClient *client, uint32_t tg)
+{
+  if (!allowTgSelection(client, tg))
+  {
+    return false;
+  }
+
+  std::ostringstream ss;
+  ss << "TG#" << tg;
+  try
+  {
+    std::string allow;
+    if (m_cfg->getValue(ss.str(), "ALLOW_MONITOR", allow))
+    {
+      if (!std::regex_match(client->callsign(), std::regex(allow)))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+  catch (std::regex_error& e)
+  {
+    std::cerr << "*** WARNING: Regular expression parsing error in "
+              << ss.str() << "/ALLOW_MONITOR: " << e.what() << std::endl;
+  }
+  return false;
+} /* TGHandler::allowTgMonitoring */
+
+
 bool TGHandler::showActivity(uint32_t tg) const
 {
   std::ostringstream ss;
