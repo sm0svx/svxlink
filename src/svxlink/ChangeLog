@@ -78,6 +78,9 @@
   - Added CA LSC to list certificates only
   - Responses are now sent to the PTY when appropriate
 
+* New reflector server talkgroup configuration, ALLOW_MONITOR, to set which
+  callsigns are allowed to monitor a specific talkgroup.
+
 
 
  1.9.1 -- 01 Jul 2025
