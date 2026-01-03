@@ -1,4 +1,4 @@
-.TH SVXREFLECTOR.CONF 5 "MAY 2025" Linux "File Formats"
+.TH SVXREFLECTOR.CONF 5 "JANUARI 2026" Linux "File Formats"
 .
 .SH NAME
 .
@@ -144,16 +144,8 @@ Example: HTTP_SRV_PORT=8080
 .B COMMAND_PTY
 Configure a path for a pseudo tty device to send runtime commands to the
 svxreflector. The device may be defined as COMMAND_PTY=/dev/shm/reflector_ctrl.
-To change the value of a configuration variable you may send a command to the
-device like this:
-
-  echo CFG section varname value > /dev/shm/reflector_ctrl
-  e.g.
-  echo CFG GLOBAL SQL_TIMEOUT_BLOCKTIME 60 > /dev/shm/reflector_ctrl
-
-To sign a client certificate:
-
-  echo CA SIGN callsign > /dev/shm/reflector_ctrl
+See the "COMMAND PTY" section below for more information on how to use the
+command PTY.
 .TP
 .B ACCEPT_CALLSIGN
 A regular expression for verifying that a received login callsign has the
@@ -354,6 +346,56 @@ SH3YZX etc.
 .B SHOW_ACTIVITY
 If set to 0, do not indicate in the http status message when the talkgroup is
 in use by a node. Default is 1 = show activity.
+.
+.SH COMMAND PTY
+.
+If a command PTY has been set up using the COMMAND_PTY configuration variable
+it is possible to use the commands described below to control some functions in
+the reflector server. The commands can be sent to the PTY by using the
+following shell command:
+
+.B "  echo THE COMMAND >/dev/shm/reflector_ctrl"
+
+Valid commands are:
+.TP
+.B CFG <section> <tag> <value>
+Read or set configuration. Configuration variables that is set is not persisted
+so the new setting will be lost on next restart. If the command is used without
+arguments, the full configuration will be listed. If only a section is given,
+that section will be listed. If both section and tag is given, only that
+specific configuration variable will be listed. If in addition a value is
+given, that specific configuration variable will be set to that value.
+.TP
+.B NODE BLOCK <callsign> <blocktime seconds>
+Temporarily block a node from being a talker for the given number of seconds.
+The node will still be able to choose the talkgroup and listen to the audio but
+will not be able to participate in the QSO. This command is good to use when a
+node is disturbing a QSO for whatever reason. The blocktime till be reset to
+the given value each time the node try to send audio to the reflector. Setting
+a blocktime of 0 will remove the block. The block is also removed if the node
+disconnects.
+.TP
+.B CA LS|LSC|LSP|SIGN <callsign>|RM <callsign>
+The
+.B CA
+command is used to manipulate the Certificate Authority part of the reflector
+server.
+.br
+.B CA LS
+is used to list all certificates and pending CSRs (Certificate Signing Requests).
+.br
+.BR "CA LSC" " and " "CA LSP"
+are used to list only the certificates or pending CSRs respectively.
+.br
+.B CA SIGN
+is used to sign a pending CSR for the given callsign. Note that the callsign is
+case-sensitive.
+.br
+.B CA RM
+Remove all certificate files associated with the given callsign. Note that it
+is NOT sufficient to remove the files to stop the given callsign from logging
+in. If the node already has a valid certificate, it can be used to log in. To
+stop a node from logging in, use the REJECT_CALLSIGN configuration variable.
 .
 .SH FILES
 .
