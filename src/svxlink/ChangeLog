@@ -72,7 +72,8 @@
 
 * Add new config variable DTMF_IGNORE_WHEN_NOT_UP.
 
-* Changes in the reflector server command PTY commands:
+* Changes in the reflector server command PTY commands based on PR from
+  Rui Barreiros:
   - Implemented CA LS and CA RM
   - Renamed CA PENDING to CA LSP and implemented it
   - Added CA LSC to list certificates only
