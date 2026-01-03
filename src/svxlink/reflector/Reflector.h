@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2024 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -95,6 +95,28 @@ class ReflectorUdpMsg;
  * Defines & typedefs
  *
  ****************************************************************************/
+
+/**
+ * @brief Structure to hold certificate or CSR information
+ *
+ * - Signed certificates (is_signed=true, has valid_until/not_after)
+ * - Pending CSRs (is_signed=false, has received_time)
+ */
+struct CertInfo
+{
+  std::string callsign;            // Common Name
+  std::vector<std::string> emails; // Email addresses from SAN
+  bool is_signed;                  // true=signed cert, false=pending CSR
+
+    // For signed certificates:
+  std::string valid_until;         // Human-readable expiry date
+  time_t not_after;                // Unix timestamp for expiry (0 if pending)
+
+    // For pending CSRs:
+  time_t received_time;            // Unix timestamp when CSR received (0 if cert)
+
+  CertInfo() : is_signed(false), not_after(0), received_time(0) {}
+};
 
 
 
@@ -205,7 +227,7 @@ class Reflector : public sigc::trackable
     std::string clientCertPem(const std::string& callsign) const;
     std::string caBundlePem(void) const;
     std::string issuingCertPem(void) const;
-    bool callsignOk(const std::string& callsign) const;
+    bool callsignOk(const std::string& callsign, bool verbose=true) const;
     bool reqEmailOk(const Async::SslCertSigningReq& req) const;
     bool emailOk(const std::string& email) const;
     std::string checkCsr(const Async::SslCertSigningReq& req);
@@ -286,9 +308,11 @@ class Reflector : public sigc::trackable
                       X509_STORE_CTX *x509_store_ctx);
     bool buildPath(const std::string& sec, const std::string& tag,
                    const std::string& defdir, std::string& defpath);
-    bool removeClientCert(const std::string& cn);
+    bool removeClientCertFiles(const std::string& cn);
     void runCAHook(const Async::Exec::Environment& env);
-
+    std::vector<CertInfo> getAllCerts(void);
+    std::vector<CertInfo> getAllPendingCSRs(void);
+    std::string formatCerts(bool signedCerts=true, bool pendingCerts=true);
 };  /* class Reflector */
 
 

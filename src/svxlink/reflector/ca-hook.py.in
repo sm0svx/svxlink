@@ -46,11 +46,13 @@ def load_config() -> None:
     """
     global config
     FILENAME = "ca-hook.yaml"
-    path = "@SVX_SYSCONF_INSTALL_DIR@/" + FILENAME
+    path = f"@SVX_SYSCONF_INSTALL_DIR@/{FILENAME}"
     if os.path.exists(FILENAME):
         path = FILENAME
     elif home := os.getenv("HOME"):
-        path = f"{home}/.svxlink/" + FILENAME
+        p = f"{home}/.svxlink/{FILENAME}"
+        if os.path.exists(p):
+            path = p
     with open(path, "r") as f:
         config = yaml.safe_load(f)
 

@@ -165,6 +165,8 @@ class TGHandler : public sigc::trackable
 
     bool allowTgSelection(ReflectorClient *client, uint32_t tg);
 
+    bool allowTgMonitoring(ReflectorClient *client, uint32_t tg);
+
     bool showActivity(uint32_t tg) const;
 
     bool isRestricted(uint32_t tg) const;
