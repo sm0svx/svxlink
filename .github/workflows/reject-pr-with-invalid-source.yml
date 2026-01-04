@@ -1,11 +1,10 @@
-name: Close PRs where souce branch is master
+name: Close PRs From master
 
 on:
   pull_request:
     types: [opened, reopened, synchronize]
 
 permissions:
-  pull-requests: write
   contents: read
 
 jobs:
@@ -13,7 +12,9 @@ jobs:
     if: github.event.pull_request.head.ref == 'master'
     runs-on: ubuntu-latest
     steps:
-      - name: Close PR and comment
+      - name: Close PR and comment (uses fine-grained token)
+        env:
+          GITHUB_TOKEN_FOR_WRITE: ${{ secrets.ACTIONS_BOT_TOKEN }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -21,8 +22,10 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN_FOR_WRITE);
+
             // Post a comment explaining why the PR is being closed
-            await github.rest.issues.createComment({
+            await octokit.rest.issues.createComment({
               owner,
               repo,
               issue_number: prNumber,
@@ -30,7 +33,7 @@ jobs:
             });
 
             // Close the PR
-            await github.rest.pulls.update({
+            await octokit.rest.pulls.update({
               owner,
               repo,
               pull_number: prNumber,
