@@ -72,6 +72,13 @@
 
 * Add new config variable DTMF_IGNORE_WHEN_NOT_UP.
 
+* Changes in the reflector server command PTY commands based on PR from
+  Rui Barreiros:
+  - Implemented CA LS and CA RM
+  - Renamed CA PENDING to CA LSP and implemented it
+  - Added CA LSC to list certificates only
+  - Responses are now sent to the PTY when appropriate
+
 * New reflector server talkgroup configuration, ALLOW_MONITOR, to set which
   callsigns are allowed to monitor a specific talkgroup.
 
