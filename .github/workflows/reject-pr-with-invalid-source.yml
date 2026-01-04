@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Close PR and comment (uses fine-grained token)
         env:
-          GITHUB_TOKEN_FOR_WRITE: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          WRITE_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -22,10 +22,11 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
-            const octokit = github.getOctokit(process.env.GITHUB_TOKEN_FOR_WRITE);
+            // Create a new Octokit client using the PAT from secrets
+            const client = github.getOctokit(process.env.WRITE_TOKEN);
 
             // Post a comment explaining why the PR is being closed
-            await octokit.rest.issues.createComment({
+            await client.rest.issues.createComment({
               owner,
               repo,
               issue_number: prNumber,
@@ -33,7 +34,7 @@ jobs:
             });
 
             // Close the PR
-            await octokit.rest.pulls.update({
+            await client.rest.pulls.update({
               owner,
               repo,
               pull_number: prNumber,
