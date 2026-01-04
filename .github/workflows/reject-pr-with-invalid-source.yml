@@ -1,4 +1,4 @@
-name: Close PRs From master
+name: Close PRs where souce branch is master
 
 on:
   pull_request:
