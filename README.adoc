@@ -1,6 +1,9 @@
 SvxLink
 =======
 
+DUMMY COMMIT
+Test if a PR made from branch master as source will be rejected.
+
 image:https://github.com/sm0svx/svxlink/actions/workflows/codeql-analysis.yml/badge.svg["CodeQL", link="https://github.com/sm0svx/svxlink/actions/workflows/codeql-analysis.yml"]
 //image:https://travis-ci.org/sm0svx/svxlink.svg?branch=master["Build Status", link="https://travis-ci.org/sm0svx/svxlink"]
 image:https://badges.gitter.im/Join%20Chat.svg[link="https://gitter.im/sm0svx/svxlink?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
