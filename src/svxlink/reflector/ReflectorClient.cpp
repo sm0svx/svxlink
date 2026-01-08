@@ -38,6 +38,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cerrno>
 #include <ctime>
 #include <iterator>
+#include <fstream>
+#include <iostream>
 
 
 /****************************************************************************
@@ -1092,11 +1094,33 @@ void ReflectorClient::handleStateEvent(std::istream& is)
     sendError("Illegal MsgStateEvent protocol message received");
     return;
   }
-  cout << "### ReflectorClient::handleStateEvent:"
-       << " src=" << msg.src()
-       << " name=" << msg.name()
-       << " msg=" << msg.msg()
-       << std::endl;
+  //cout << "### ReflectorClient::handleStateEvent:"
+   //    << " src=" << msg.src()
+   //    << " name=" << msg.name()
+   //    << " msg=" << msg.msg()
+ //      << std::endl;
+  
+  Json::Value eventmessage;
+  Json::CharReaderBuilder rbuilder;
+  std::unique_ptr<Json::CharReader> const reader(rbuilder.newCharReader());
+  std::string jsonReaderError;
+
+  if (!reader->parse(msg.msg().c_str(), msg.msg().c_str() + msg.msg().size(),
+              &eventmessage, &jsonReaderError))
+  {
+    cout << "*** Error: parsing StateEvent message (" 
+         << jsonReaderError << ")" << endl;
+    return;
+  }
+
+  if (msg.name() == "DvUsers:info")
+  {
+    m_reflector->updateUserdata(eventmessage);
+  }
+  else if (msg.name() == "QsoInfo:state")
+  {
+    m_reflector->updateQsostate(eventmessage);
+  }
 } /* ReflectorClient::handleStateEvent */
 
 

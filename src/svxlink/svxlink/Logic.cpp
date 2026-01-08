@@ -886,6 +886,7 @@ bool Logic::activateModule(Module *module)
     audio_to_module_splitter->enableSink(module, true);
     module->activate();
     event_handler->setVariable("active_module", module->name());
+    active_module->publishStateEvent.connect(mem_fun(*this, &Logic::talkerInfo));
     return true;
   }
 
@@ -1864,6 +1865,12 @@ void Logic::cfgUpdated(const std::string& section, const std::string& tag)
     }
   }
 } /* Logic::cfgUpdated */
+
+
+void Logic::talkerInfo(const std::string &event_name, const std::string &msg)
+{
+  publishStateEvent(event_name, msg);
+} /* Logic::talkerInfo */
 
 
 bool Logic::getConfigValue(const std::string& section, const std::string& tag,
