@@ -25,7 +25,7 @@ MODULE_FRN=1.1.0.99.1
 MODULE_TRX=1.0.0.99.4
 
 # Version for the RemoteTrx application
-REMOTE_TRX=1.5.99.6
+REMOTE_TRX=1.5.99.7
 
 # Version for the signal level calibration utility
 SIGLEV_DET_CAL=1.0.10.99.1

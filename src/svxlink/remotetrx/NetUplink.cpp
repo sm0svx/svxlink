@@ -318,9 +318,10 @@ void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
 
 void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
-  cout << name << ": Client connected: " << incoming_con->remoteHost() << ":"
-       << incoming_con->remotePort() << endl;
-  
+  std::cout << "NOTICE[" << name << "]: Client connected: "
+            << incoming_con->remoteHost() << ":"
+            << incoming_con->remotePort() << std::endl;
+
   switch (state)
   {
     case STATE_DISC:
@@ -376,8 +377,12 @@ void NetUplink::disconnectCleanup(void)
 void NetUplink::clientDisconnected(TcpConnection *the_con,
                                    TcpConnection::DisconnectReason reason)
 {
-  cout << name << ": Client disconnected: " << the_con->remoteHost() << ":"
-       << the_con->remotePort() << endl;
+  std::cout << "NOTICE[" << name << "]: Client disconnected: "
+            << the_con->remoteHost() << ":"
+            << the_con->remotePort() << ": "
+            << TcpConnection::disconnectReasonStr(reason)
+            << std::endl;
+
   con = 0;
   setState(STATE_DISC_CLEANUP);
   Application::app().runTask(mem_fun(*this, &NetUplink::disconnectCleanup));
