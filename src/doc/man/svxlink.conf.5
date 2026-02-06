@@ -1100,6 +1100,24 @@ expression matches a talkgroup that is activated on the specified logic core.
 Use CTCSS_TO_TG in a SimplexLogic or RepeaterLogic to make it emit a talkgroup
 for a specific subtone.
 Example: ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123
+.TP
+.B AUDIO_MODE
+Set the audio handling mode for the link. When multiple linked logics have
+simultaneous incoming traffic (a "pile-up"), this setting determines how the
+audio is handled. Valid values are:
+.RS
+.IP FIRST 10
+(Default) The first source to transmit wins. Other sources are ignored until
+the first source stops, at which point the link rejoins any ongoing traffic.
+This is the traditional SvxLink behavior.
+.IP MIX 10
+Mix all active sources together. All users on any linked logic will hear all
+traffic from all other linked logics simultaneously. This is useful when you
+want users to be aware that another station is calling, even if someone else
+is already transmitting.
+.RE
+.IP
+Example: AUDIO_MODE=MIX
 .
 .SS Local Receiver Section
 .

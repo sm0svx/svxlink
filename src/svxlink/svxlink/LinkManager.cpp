@@ -57,6 +57,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
+#include <AsyncAudioValve.h>
+#include <AsyncAudioMixer.h>
 
 
 /****************************************************************************
@@ -263,6 +265,26 @@ bool LinkManager::initialize(Async::Config &cfg,
     }
 
     cfg.getValue(link.name, "DEFAULT_ACTIVE", link.default_active);
+
+      // Parse AUDIO_MODE configuration (default: FIRST)
+    std::string audio_mode_str;
+    if (cfg.getValue(link.name, "AUDIO_MODE", audio_mode_str))
+    {
+      if (audio_mode_str == "FIRST")
+      {
+        link.audio_mode = LinkAudioMode::FIRST;
+      }
+      else if (audio_mode_str == "MIX")
+      {
+        link.audio_mode = LinkAudioMode::MIX;
+      }
+      else
+      {
+        std::cerr << "*** WARNING: Unknown AUDIO_MODE \"" << audio_mode_str
+                  << "\" in link " << link.name
+                  << ". Valid options: FIRST, MIX. Using FIRST." << std::endl;
+      }
+    }
   }
 
   if(!init_ok)
@@ -294,31 +316,52 @@ void LinkManager::addLogic(LogicBase *logic)
   sources[logic->name()].splitter = splitter;
 
     // Create a selector for the logic being added to receive audio from all
-    // other sinks.
+    // other sinks. Used in FIRST mode.
   AudioSelector *selector = new AudioSelector;
   selector->registerSink(logic->logicConIn());
+
+    // Create a mixer for MIX mode. The mixer output will be connected
+    // to the logic input when MIX mode connections are activated.
+  AudioMixer *mixer = new AudioMixer;
 
     // Register the new logic sink
   sinks[logic->name()].sink = logic->logicConIn();
   sinks[logic->name()].selector = selector;
+  sinks[logic->name()].mixer = mixer;
 
     // Now create a connection from the new logic source to each sink.
   for (SinkMap::iterator it=sinks.begin(); it != sinks.end(); ++it)
   {
+      // Passthrough for FIRST mode (selector path)
     AudioPassthrough *connector = new AudioPassthrough;
     splitter->addSink(connector, true);
     AudioSelector *other_selector = (*it).second.selector;
     other_selector->addSource(connector);
     (*it).second.connectors[logic->name()] = connector;
+
+      // Valve for MIX mode (mixer path)
+    AudioValve *valve = new AudioValve;
+    valve->setOpen(false);  // Initially closed
+    splitter->addSink(valve, true);
+    (*it).second.mixer->addSource(valve);
+    (*it).second.valves[logic->name()] = valve;
   }
 
     // Now create a connection from each existing logic source to the new sink.
   for (SourceMap::iterator it=sources.begin(); it!=sources.end(); ++it)
   {
+      // Passthrough for FIRST mode (selector path)
     AudioPassthrough *connector = new AudioPassthrough;
     (*it).second.splitter->addSink(connector, true);
     selector->addSource(connector);
     sinks[logic->name()].connectors[(*it).first] = connector;
+
+      // Valve for MIX mode (mixer path)
+    AudioValve *valve = new AudioValve;
+    valve->setOpen(false);  // Initially closed
+    (*it).second.splitter->addSink(valve, true);
+    mixer->addSource(valve);
+    sinks[logic->name()].valves[(*it).first] = valve;
   }
 
     // Create new object containing metadata for this logic core
@@ -396,6 +439,8 @@ void LinkManager::deleteLogic(LogicBase *logic)
   for (SinkMap::iterator smit=sinks.begin(); smit!=sinks.end(); ++smit)
   {
     SinkInfo &sink_info = (*smit).second;
+
+      // Remove passthrough from selector
     ConMap::iterator cmit = sink_info.connectors.find(logic->name());
     assert(cmit != sink_info.connectors.end());
     AudioPassthrough *connector = (*cmit).second;
@@ -403,13 +448,27 @@ void LinkManager::deleteLogic(LogicBase *logic)
     sink_info.connectors.erase(logic->name());
     splitter->removeSink(connector);
     //delete connector;
+
+      // Close and remove valve for mixer (can't remove from mixer, just close it)
+    ValveMap::iterator vmit = sink_info.valves.find(logic->name());
+    if (vmit != sink_info.valves.end())
+    {
+      vmit->second->setOpen(false);
+      splitter->removeSink(vmit->second);
+      delete vmit->second;
+      sink_info.valves.erase(vmit);
+    }
   }
   delete splitter;
   sources.erase(logic->name());
-  
+
     // Delete the logic sink and all connections associated with it
-  AudioSelector *selector = sinks[logic->name()].selector;
-  ConMap &cons = sinks[logic->name()].connectors;
+  SinkInfo &sink_to_delete = sinks[logic->name()];
+  AudioSelector *selector = sink_to_delete.selector;
+  AudioMixer *mixer = sink_to_delete.mixer;
+
+    // Clean up connectors (passthroughs for selector)
+  ConMap &cons = sink_to_delete.connectors;
   for (ConMap::iterator cmit = cons.begin(); cmit != cons.end(); ++cmit)
   {
     AudioPassthrough *connector = (*cmit).second;
@@ -418,7 +477,20 @@ void LinkManager::deleteLogic(LogicBase *logic)
     sources[source_name].splitter->removeSink(connector);
     //delete connector;
   }
+
+    // Clean up valves (for mixer)
+  ValveMap &valves = sink_to_delete.valves;
+  for (ValveMap::iterator vmit = valves.begin(); vmit != valves.end(); ++vmit)
+  {
+    AudioValve *valve = vmit->second;
+    valve->setOpen(false);
+    const string &source_name = vmit->first;
+    sources[source_name].splitter->removeSink(valve);
+    delete valve;
+  }
+
   delete selector;
+  delete mixer;
   sinks.erase(logic->name());
 
     // Finally remove the logic from the logic_map
@@ -516,9 +588,17 @@ string LinkManager::cmdReceived(LinkRef link, LogicBase *logic,
 
 LogicBase *LinkManager::currentTalkerFor(const std::string& logic_name)
 {
-  AudioSelector *selector = sinks[logic_name].selector;
-  AudioSource *selected = selector->selectedSource();
-  const ConMap& con_map = sinks[logic_name].connectors;
+  SinkInfo& sink = sinks[logic_name];
+
+    // In MIX mode, there's no single current talker
+  if (sink.mixer->isRegistered())
+  {
+    return nullptr;
+  }
+
+    // FIRST mode - find the selected source
+  AudioSource *selected = sink.selector->selectedSource();
+  const ConMap& con_map = sink.connectors;
   for (ConMap::const_iterator it = con_map.begin(); it != con_map.end(); ++it)
   {
     if (it->second == selected)
@@ -527,7 +607,7 @@ LogicBase *LinkManager::currentTalkerFor(const std::string& logic_name)
       return logic_map.at(it->first).logic;
     }
   }
-  return 0;
+  return nullptr;
 } /* LinkManager::currentTalkerFor */
 
 
@@ -757,6 +837,9 @@ void LinkManager::updateConnections(void)
       // Disconnect the audio path from source logic to sink logic
     sink.selector->disableAutoSelect(sink.connectors.at(src_name));
 
+      // Close the mixer valve for this connection
+    sink.valves.at(src_name)->setOpen(false);
+
       // Delete the link connect information
     current_cons.erase(*it);
   }
@@ -776,11 +859,29 @@ void LinkManager::updateConnections(void)
     const string &src_name = it->first;
     const string &sink_name = it->second;
     SinkInfo &sink = sinks.at(sink_name);
-    sink.selector->enableAutoSelect(sink.connectors.at(src_name), 0);
+
+      // Get the effective audio mode for this connection
+    LinkAudioMode mode = getEffectiveMode(src_name, sink_name);
+
+    if (mode == LinkAudioMode::FIRST)
+    {
+        // FIRST mode: use selector, close mixer valve
+      sink.selector->enableAutoSelect(sink.connectors.at(src_name), 0);
+      sink.valves.at(src_name)->setOpen(false);
+    }
+    else // MIX mode
+    {
+        // MIX mode: disable selector, open mixer valve
+      sink.selector->disableAutoSelect(sink.connectors.at(src_name));
+      sink.valves.at(src_name)->setOpen(true);
+    }
 
       // Store all connections in "current_cons" (current connections)
     current_cons.insert(*it);
   }
+
+    // Update mixer routing based on active MIX connections
+  updateMixerRouting();
 } /* LinkManager::updateConnections */
 
 
@@ -1015,6 +1116,81 @@ void LinkManager::onPublishStateEvent(LogicBase *src_logic,
     }
   }
 } /* LinkManager::onPublishStateEvent */
+
+
+LinkAudioMode LinkManager::getEffectiveMode(const std::string& src_name,
+                                             const std::string& sink_name)
+{
+    // Determine if a connection should use MIX mode.
+    // MIX mode takes precedence if any active link that includes both
+    // source and sink logics uses MIX mode.
+  for (const auto& link_pair : links)
+  {
+    const Link& link = link_pair.second;
+    if (!link.is_activated)
+    {
+      continue;
+    }
+
+    bool has_src = link.logic_props.count(src_name) > 0;
+    bool has_sink = link.logic_props.count(sink_name) > 0;
+
+    if (has_src && has_sink && link.audio_mode == LinkAudioMode::MIX)
+    {
+      return LinkAudioMode::MIX;
+    }
+  }
+  return LinkAudioMode::FIRST;
+} /* LinkManager::getEffectiveMode */
+
+
+void LinkManager::updateMixerRouting(void)
+{
+    // Connect/disconnect mixer to logic input based on active MIX connections.
+    // If a sink has any open mixer valves, route the mixer output to the logic.
+    // Otherwise, route the selector output to the logic.
+  for (auto& sink_pair : sinks)
+  {
+    SinkInfo& sink = sink_pair.second;
+
+      // Check if this sink has any MIX-mode connections active (any valve open)
+    bool has_mix_connection = false;
+    for (const auto& valve_pair : sink.valves)
+    {
+      if (valve_pair.second->isOpen())
+      {
+        has_mix_connection = true;
+        break;
+      }
+    }
+
+      // Route mixer or selector to logic input
+    if (has_mix_connection)
+    {
+        // Disconnect selector, connect mixer
+      if (sink.selector->isRegistered())
+      {
+        sink.selector->unregisterSink();
+      }
+      if (!sink.mixer->isRegistered())
+      {
+        sink.mixer->registerSink(sink.sink);
+      }
+    }
+    else
+    {
+        // Disconnect mixer, connect selector
+      if (sink.mixer->isRegistered())
+      {
+        sink.mixer->unregisterSink();
+      }
+      if (!sink.selector->isRegistered())
+      {
+        sink.selector->registerSink(sink.sink);
+      }
+    }
+  }
+} /* LinkManager::updateMixerRouting */
 
 
 /*

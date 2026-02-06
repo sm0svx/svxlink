@@ -76,6 +76,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class AudioPassthrough;
+  class AudioValve;
+  class AudioMixer;
 };
 class LogicBase;
 
@@ -109,6 +111,14 @@ class LogicBase;
  * Exported Global Types
  *
  ****************************************************************************/
+
+/**
+ * @brief Audio mode for link connections
+ *
+ * FIRST: First source to transmit wins (current behavior)
+ * MIX: Mix all active sources together
+ */
+enum class LinkAudioMode { FIRST, MIX };
 
 
 /****************************************************************************
@@ -296,7 +306,8 @@ class LinkManager : public sigc::trackable
     struct Link
     {
       Link(void)
-        : default_active(false), is_activated(false), timeout_timer(0) {}
+        : default_active(false), is_activated(false), timeout_timer(0),
+          audio_mode(LinkAudioMode::FIRST) {}
       ~Link(void) { delete timeout_timer; }
 
       std::string   name;
@@ -306,6 +317,7 @@ class LinkManager : public sigc::trackable
       bool          default_active;
       bool          is_activated;
       Async::Timer  *timeout_timer;
+      LinkAudioMode audio_mode;
     };
     typedef std::map<std::string, Link> LinkMap;
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
@@ -315,11 +327,14 @@ class LinkManager : public sigc::trackable
       Async::AudioSplitter    *splitter;
     };
     typedef std::map<std::string, Async::AudioPassthrough *> ConMap;
+    typedef std::map<std::string, Async::AudioValve *> ValveMap;
     struct SinkInfo
     {
       Async::AudioSink      *sink;
-      Async::AudioSelector  *selector;
-      ConMap                connectors;
+      Async::AudioSelector  *selector;      // Used in FIRST mode
+      Async::AudioMixer     *mixer;         // Used in MIX mode
+      ConMap                connectors;     // Passthroughs for selector
+      ValveMap              valves;         // Valves for mixer
     };
     typedef std::map<std::string, SourceInfo> SourceMap;
     typedef std::map<std::string, SinkInfo>   SinkMap;
@@ -364,6 +379,9 @@ class LinkManager : public sigc::trackable
     void onReceivedTgUpdated(LogicBase *src_logic, uint32_t tg);
     void onPublishStateEvent(LogicBase *src_logic,
         const std::string& event_name, const std::string& msg);
+    LinkAudioMode getEffectiveMode(const std::string& src_name,
+                                   const std::string& sink_name);
+    void updateMixerRouting(void);
 
 };  /* class LinkManager */
 
