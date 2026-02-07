@@ -1143,6 +1143,14 @@ a PRIORITY link transmission. A very negative value like -60 provides
 near-silence. Default is -60.
 .IP
 Example: PRIORITY_MUTE_DB=-40
+.TP
+.B PRIORITY_HANGTIME
+The time in milliseconds that priority preemption continues after a PRIORITY
+source stops transmitting. This prevents non-priority sources from briefly
+interrupting between priority transmissions. During hangtime, non-priority
+sources remain muted. Default is 0 (no hangtime, preemption ends immediately).
+.IP
+Example: PRIORITY_HANGTIME=2000
 .
 .SS Local Receiver Section
 .

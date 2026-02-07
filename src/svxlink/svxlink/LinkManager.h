@@ -311,8 +311,13 @@ class LinkManager : public sigc::trackable
       Link(void)
         : default_active(false), is_activated(false), timeout_timer(0),
           audio_mode(LinkAudioMode::FIRST), duck_level_db(-12.0f),
-          priority_mute_db(-60.0f) {}
-      ~Link(void) { delete timeout_timer; }
+          priority_mute_db(-60.0f), priority_hangtime(0),
+          priority_hangtime_timer(0), priority_was_active(false) {}
+      ~Link(void)
+      {
+        delete timeout_timer;
+        delete priority_hangtime_timer;
+      }
 
       std::string   name;
       LogicPropMap  logic_props;
@@ -324,6 +329,9 @@ class LinkManager : public sigc::trackable
       LinkAudioMode audio_mode;
       float         duck_level_db;
       float         priority_mute_db;
+      int           priority_hangtime;        // Hangtime in ms (0 = disabled)
+      Async::Timer  *priority_hangtime_timer; // Active during priority hangtime
+      bool          priority_was_active;      // Track if priority was active
     };
     typedef std::map<std::string, Link> LinkMap;
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
@@ -398,10 +406,13 @@ class LinkManager : public sigc::trackable
                                 const std::string& sink_name);
     void updatePriorityForSink(const std::string& sink_name);
     bool isPrioritySourceActive(const std::string& sink_name);
+    bool isPriorityHangtimeActive(const std::string& sink_name);
     float getEffectivePriorityMuteLevel(const std::string& src_name,
                                         const std::string& sink_name);
     bool isSourceFromPriorityLink(const std::string& src_name,
                                   const std::string& sink_name);
+    void checkPriorityHangtime(void);
+    void onPriorityHangtimeExpired(Async::Timer *t, Link *link);
 
 };  /* class LinkManager */
 
