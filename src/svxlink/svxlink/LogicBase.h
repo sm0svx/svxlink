@@ -283,6 +283,12 @@ class LogicBase : public Async::Plugin, public sigc::trackable
     sigc::signal<void(bool)> idleStateChanged;
 
     /**
+     * @brief   A signal emitted when the squelch state changes
+     * @param   is_open \em True if squelch is open, \em false if closed
+     */
+    sigc::signal<void(bool)> squelchStateChanged;
+
+    /**
      * @brief   A signal that is emitted when the received talk group changes
      * @param   tg The new talk group
      */

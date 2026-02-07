@@ -1075,6 +1075,8 @@ void Logic::squelchOpen(bool is_open)
 {
   //std::cout << "### Logic::squelchOpen: is_open=" << is_open << std::endl;
 
+  squelchStateChanged(is_open);
+
   if (active_module != 0)
   {
     active_module->squelchOpen(is_open);

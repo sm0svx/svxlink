@@ -1115,9 +1115,21 @@ Mix all active sources together. All users on any linked logic will hear all
 traffic from all other linked logics simultaneously. This is useful when you
 want users to be aware that another station is calling, even if someone else
 is already transmitting.
+.IP DUCK 10
+Like MIX mode, but incoming link audio is reduced (ducked) when the local
+squelch is open. This allows local traffic to be heard clearly at full volume
+while still being aware of remote activity at a reduced level. Use DUCK_LEVEL_DB
+to configure the amount of reduction.
 .RE
 .IP
-Example: AUDIO_MODE=MIX
+Example: AUDIO_MODE=DUCK
+.TP
+.B DUCK_LEVEL_DB
+The amount of gain reduction (in dB) to apply to incoming link audio when
+AUDIO_MODE is set to DUCK and the local squelch is open. A negative value
+reduces the volume. Default is -12 (reduce by 12dB, approximately 1/4 volume).
+.IP
+Example: DUCK_LEVEL_DB=-18
 .
 .SS Local Receiver Section
 .

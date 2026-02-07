@@ -59,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioMixer.h>
+#include <AsyncAudioAmp.h>
 
 
 /****************************************************************************
@@ -278,13 +279,20 @@ bool LinkManager::initialize(Async::Config &cfg,
       {
         link.audio_mode = LinkAudioMode::MIX;
       }
+      else if (audio_mode_str == "DUCK")
+      {
+        link.audio_mode = LinkAudioMode::DUCK;
+      }
       else
       {
         std::cerr << "*** WARNING: Unknown AUDIO_MODE \"" << audio_mode_str
                   << "\" in link " << link.name
-                  << ". Valid options: FIRST, MIX. Using FIRST." << std::endl;
+                  << ". Valid options: FIRST, MIX, DUCK. Using FIRST." << std::endl;
       }
     }
+
+      // Parse DUCK_LEVEL_DB configuration (default: -12 dB)
+    cfg.getValue(link.name, "DUCK_LEVEL_DB", link.duck_level_db);
   }
 
   if(!init_ok)
@@ -339,12 +347,16 @@ void LinkManager::addLogic(LogicBase *logic)
     other_selector->addSource(connector);
     (*it).second.connectors[logic->name()] = connector;
 
-      // Valve for MIX mode (mixer path)
+      // Valve + Amp for MIX/DUCK mode (mixer path)
     AudioValve *valve = new AudioValve;
     valve->setOpen(false);  // Initially closed
     splitter->addSink(valve, true);
-    (*it).second.mixer->addSource(valve);
+    AudioAmp *amp = new AudioAmp;
+    amp->setGain(0);  // Normal gain initially
+    valve->registerSink(amp, true);
+    (*it).second.mixer->addSource(amp);
     (*it).second.valves[logic->name()] = valve;
+    (*it).second.amps[logic->name()] = amp;
   }
 
     // Now create a connection from each existing logic source to the new sink.
@@ -356,12 +368,16 @@ void LinkManager::addLogic(LogicBase *logic)
     selector->addSource(connector);
     sinks[logic->name()].connectors[(*it).first] = connector;
 
-      // Valve for MIX mode (mixer path)
+      // Valve + Amp for MIX/DUCK mode (mixer path)
     AudioValve *valve = new AudioValve;
     valve->setOpen(false);  // Initially closed
     (*it).second.splitter->addSink(valve, true);
-    mixer->addSource(valve);
+    AudioAmp *amp = new AudioAmp;
+    amp->setGain(0);  // Normal gain initially
+    valve->registerSink(amp, true);
+    mixer->addSource(amp);
     sinks[logic->name()].valves[(*it).first] = valve;
+    sinks[logic->name()].amps[(*it).first] = amp;
   }
 
     // Create new object containing metadata for this logic core
@@ -379,6 +395,11 @@ void LinkManager::addLogic(LogicBase *logic)
   logic_info.received_publish_state_event_con = logic->publishStateEvent.connect(
       sigc::bind<0>(
         sigc::mem_fun(*this, &LinkManager::onPublishStateEvent), logic));
+
+    // Connect squelch state signal for DUCK mode
+  logic_info.squelch_state_changed_con = logic->squelchStateChanged.connect(
+      sigc::bind(
+        sigc::mem_fun(*this, &LinkManager::onSquelchStateChanged), logic));
 
     // Add the logic core to the logic map
   logic_map.emplace(logic->name(), logic_info);
@@ -433,6 +454,10 @@ void LinkManager::deleteLogic(LogicBase *logic)
   logic_info.received_tg_update_con.disconnect();
   assert(logic_info.received_publish_state_event_con.connected());
   logic_info.received_publish_state_event_con.disconnect();
+  if (logic_info.squelch_state_changed_con.connected())
+  {
+    logic_info.squelch_state_changed_con.disconnect();
+  }
 
     // Delete the logic source splitter and all connections associated with it
   AudioSplitter *splitter = sources[logic->name()].splitter;
@@ -449,7 +474,7 @@ void LinkManager::deleteLogic(LogicBase *logic)
     splitter->removeSink(connector);
     //delete connector;
 
-      // Close and remove valve for mixer (can't remove from mixer, just close it)
+      // Close and remove valve and amp for mixer
     ValveMap::iterator vmit = sink_info.valves.find(logic->name());
     if (vmit != sink_info.valves.end())
     {
@@ -457,6 +482,14 @@ void LinkManager::deleteLogic(LogicBase *logic)
       splitter->removeSink(vmit->second);
       delete vmit->second;
       sink_info.valves.erase(vmit);
+    }
+
+      // Remove amp for mixer
+    AmpMap::iterator amit = sink_info.amps.find(logic->name());
+    if (amit != sink_info.amps.end())
+    {
+      delete amit->second;
+      sink_info.amps.erase(amit);
     }
   }
   delete splitter;
@@ -487,6 +520,13 @@ void LinkManager::deleteLogic(LogicBase *logic)
     const string &source_name = vmit->first;
     sources[source_name].splitter->removeSink(valve);
     delete valve;
+  }
+
+    // Clean up amps (for mixer DUCK mode)
+  AmpMap &amps = sink_to_delete.amps;
+  for (AmpMap::iterator amit = amps.begin(); amit != amps.end(); ++amit)
+  {
+    delete amit->second;
   }
 
   delete selector;
@@ -869,9 +909,9 @@ void LinkManager::updateConnections(void)
       sink.selector->enableAutoSelect(sink.connectors.at(src_name), 0);
       sink.valves.at(src_name)->setOpen(false);
     }
-    else // MIX mode
+    else // MIX or DUCK mode - both use mixer
     {
-        // MIX mode: disable selector, open mixer valve
+        // MIX/DUCK mode: disable selector, open mixer valve
       sink.selector->disableAutoSelect(sink.connectors.at(src_name));
       sink.valves.at(src_name)->setOpen(true);
     }
@@ -880,7 +920,7 @@ void LinkManager::updateConnections(void)
     current_cons.insert(*it);
   }
 
-    // Update mixer routing based on active MIX connections
+    // Update mixer routing based on active MIX/DUCK connections
   updateMixerRouting();
 } /* LinkManager::updateConnections */
 
@@ -1121,9 +1161,10 @@ void LinkManager::onPublishStateEvent(LogicBase *src_logic,
 LinkAudioMode LinkManager::getEffectiveMode(const std::string& src_name,
                                              const std::string& sink_name)
 {
-    // Determine if a connection should use MIX mode.
-    // MIX mode takes precedence if any active link that includes both
-    // source and sink logics uses MIX mode.
+    // Determine the effective audio mode for a connection.
+    // DUCK takes precedence over MIX, and both use the mixer path.
+  LinkAudioMode mode = LinkAudioMode::FIRST;
+
   for (const auto& link_pair : links)
   {
     const Link& link = link_pair.second;
@@ -1135,12 +1176,21 @@ LinkAudioMode LinkManager::getEffectiveMode(const std::string& src_name,
     bool has_src = link.logic_props.count(src_name) > 0;
     bool has_sink = link.logic_props.count(sink_name) > 0;
 
-    if (has_src && has_sink && link.audio_mode == LinkAudioMode::MIX)
+    if (has_src && has_sink)
     {
-      return LinkAudioMode::MIX;
+        // DUCK takes precedence over MIX
+      if (link.audio_mode == LinkAudioMode::DUCK)
+      {
+        return LinkAudioMode::DUCK;
+      }
+      else if (link.audio_mode == LinkAudioMode::MIX &&
+               mode != LinkAudioMode::DUCK)
+      {
+        mode = LinkAudioMode::MIX;
+      }
     }
   }
-  return LinkAudioMode::FIRST;
+  return mode;
 } /* LinkManager::getEffectiveMode */
 
 
@@ -1191,6 +1241,73 @@ void LinkManager::updateMixerRouting(void)
     }
   }
 } /* LinkManager::updateMixerRouting */
+
+
+void LinkManager::onSquelchStateChanged(bool is_open, LogicBase *logic)
+{
+    // Update ducking for this logic's incoming connections
+  updateDuckingForSink(logic->name(), is_open);
+} /* LinkManager::onSquelchStateChanged */
+
+
+void LinkManager::updateDuckingForSink(const std::string& sink_name,
+                                        bool local_squelch_open)
+{
+  SinkMap::iterator sink_it = sinks.find(sink_name);
+  if (sink_it == sinks.end())
+  {
+    return;
+  }
+
+  SinkInfo& sink = sink_it->second;
+
+  for (auto& amp_pair : sink.amps)
+  {
+    const std::string& src_name = amp_pair.first;
+    AudioAmp* amp = amp_pair.second;
+
+      // Check if this connection uses DUCK mode
+    LinkAudioMode mode = getEffectiveMode(src_name, sink_name);
+
+    if (mode == LinkAudioMode::DUCK)
+    {
+      if (local_squelch_open)
+      {
+          // Duck incoming audio when local squelch is open
+        float duck_level = getEffectiveDuckLevel(src_name, sink_name);
+        amp->setGain(duck_level);
+      }
+      else
+      {
+          // Restore normal gain when local squelch closes
+        amp->setGain(0);
+      }
+    }
+  }
+} /* LinkManager::updateDuckingForSink */
+
+
+float LinkManager::getEffectiveDuckLevel(const std::string& src_name,
+                                          const std::string& sink_name)
+{
+  float duck_level = -12.0f;  // Default
+
+  for (const auto& link_pair : links)
+  {
+    const Link& link = link_pair.second;
+    if (!link.is_activated) continue;
+
+    bool has_src = link.logic_props.count(src_name) > 0;
+    bool has_sink = link.logic_props.count(sink_name) > 0;
+
+    if (has_src && has_sink && link.audio_mode == LinkAudioMode::DUCK)
+    {
+      duck_level = link.duck_level_db;
+      break;
+    }
+  }
+  return duck_level;
+} /* LinkManager::getEffectiveDuckLevel */
 
 
 /*
