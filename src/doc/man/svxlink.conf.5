@@ -1120,9 +1120,15 @@ Like MIX mode, but incoming link audio is reduced (ducked) when the local
 squelch is open. This allows local traffic to be heard clearly at full volume
 while still being aware of remote activity at a reduced level. Use DUCK_LEVEL_DB
 to configure the amount of reduction.
+.IP PRIORITY 10
+Like MIX mode, but when a source from a PRIORITY link is transmitting, sources
+from non-PRIORITY links are reduced to PRIORITY_MUTE_DB level (near silence by
+default). This is useful for emergency broadcast systems where critical traffic
+must take precedence over normal traffic. If multiple PRIORITY sources transmit
+simultaneously, they are mixed together.
 .RE
 .IP
-Example: AUDIO_MODE=DUCK
+Example: AUDIO_MODE=PRIORITY
 .TP
 .B DUCK_LEVEL_DB
 The amount of gain reduction (in dB) to apply to incoming link audio when
@@ -1130,6 +1136,13 @@ AUDIO_MODE is set to DUCK and the local squelch is open. A negative value
 reduces the volume. Default is -12 (reduce by 12dB, approximately 1/4 volume).
 .IP
 Example: DUCK_LEVEL_DB=-18
+.TP
+.B PRIORITY_MUTE_DB
+The gain reduction (in dB) applied to non-priority sources when preempted by
+a PRIORITY link transmission. A very negative value like -60 provides
+near-silence. Default is -60.
+.IP
+Example: PRIORITY_MUTE_DB=-40
 .
 .SS Local Receiver Section
 .

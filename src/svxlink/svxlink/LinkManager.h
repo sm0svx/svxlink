@@ -119,8 +119,9 @@ class LogicBase;
  * FIRST: First source to transmit wins (current behavior)
  * MIX: Mix all active sources together
  * DUCK: Like MIX but incoming link audio is reduced when local squelch is open
+ * PRIORITY: Like MIX but preempts non-PRIORITY links when transmitting
  */
-enum class LinkAudioMode { FIRST, MIX, DUCK };
+enum class LinkAudioMode { FIRST, MIX, DUCK, PRIORITY };
 
 
 /****************************************************************************
@@ -309,7 +310,8 @@ class LinkManager : public sigc::trackable
     {
       Link(void)
         : default_active(false), is_activated(false), timeout_timer(0),
-          audio_mode(LinkAudioMode::FIRST), duck_level_db(-12.0f) {}
+          audio_mode(LinkAudioMode::FIRST), duck_level_db(-12.0f),
+          priority_mute_db(-60.0f) {}
       ~Link(void) { delete timeout_timer; }
 
       std::string   name;
@@ -321,6 +323,7 @@ class LinkManager : public sigc::trackable
       Async::Timer  *timeout_timer;
       LinkAudioMode audio_mode;
       float         duck_level_db;
+      float         priority_mute_db;
     };
     typedef std::map<std::string, Link> LinkMap;
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
@@ -345,13 +348,14 @@ class LinkManager : public sigc::trackable
     typedef std::map<std::string, SinkInfo>   SinkMap;
     struct LogicInfo
     {
-      LogicInfo(LogicBase* logic) : logic(logic), is_muted(false) {}
+      LogicInfo(LogicBase* logic) : logic(logic), is_muted(false), squelch_open(false) {}
       LogicBase         *logic;
       sigc::connection  idle_state_changed_con;
       sigc::connection  received_tg_update_con;
       sigc::connection  received_publish_state_event_con;
       sigc::connection  squelch_state_changed_con;
       bool              is_muted;
+      bool              squelch_open;
     };
     typedef std::map<std::string, LogicInfo> LogicMap;
 
@@ -392,6 +396,12 @@ class LinkManager : public sigc::trackable
     void updateDuckingForSink(const std::string& sink_name, bool local_squelch_open);
     float getEffectiveDuckLevel(const std::string& src_name,
                                 const std::string& sink_name);
+    void updatePriorityForSink(const std::string& sink_name);
+    bool isPrioritySourceActive(const std::string& sink_name);
+    float getEffectivePriorityMuteLevel(const std::string& src_name,
+                                        const std::string& sink_name);
+    bool isSourceFromPriorityLink(const std::string& src_name,
+                                  const std::string& sink_name);
 
 };  /* class LinkManager */
 

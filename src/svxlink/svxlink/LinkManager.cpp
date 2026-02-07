@@ -283,16 +283,24 @@ bool LinkManager::initialize(Async::Config &cfg,
       {
         link.audio_mode = LinkAudioMode::DUCK;
       }
+      else if (audio_mode_str == "PRIORITY")
+      {
+        link.audio_mode = LinkAudioMode::PRIORITY;
+      }
       else
       {
         std::cerr << "*** WARNING: Unknown AUDIO_MODE \"" << audio_mode_str
                   << "\" in link " << link.name
-                  << ". Valid options: FIRST, MIX, DUCK. Using FIRST." << std::endl;
+                  << ". Valid options: FIRST, MIX, DUCK, PRIORITY. Using FIRST."
+                  << std::endl;
       }
     }
 
       // Parse DUCK_LEVEL_DB configuration (default: -12 dB)
     cfg.getValue(link.name, "DUCK_LEVEL_DB", link.duck_level_db);
+
+      // Parse PRIORITY_MUTE_DB configuration (default: -60 dB)
+    cfg.getValue(link.name, "PRIORITY_MUTE_DB", link.priority_mute_db);
   }
 
   if(!init_ok)
@@ -909,9 +917,9 @@ void LinkManager::updateConnections(void)
       sink.selector->enableAutoSelect(sink.connectors.at(src_name), 0);
       sink.valves.at(src_name)->setOpen(false);
     }
-    else // MIX or DUCK mode - both use mixer
+    else // MIX, DUCK, or PRIORITY mode - all use mixer
     {
-        // MIX/DUCK mode: disable selector, open mixer valve
+        // MIX/DUCK/PRIORITY mode: disable selector, open mixer valve
       sink.selector->disableAutoSelect(sink.connectors.at(src_name));
       sink.valves.at(src_name)->setOpen(true);
     }
@@ -920,7 +928,7 @@ void LinkManager::updateConnections(void)
     current_cons.insert(*it);
   }
 
-    // Update mixer routing based on active MIX/DUCK connections
+    // Update mixer routing based on active MIX/DUCK/PRIORITY connections
   updateMixerRouting();
 } /* LinkManager::updateConnections */
 
@@ -1178,13 +1186,18 @@ LinkAudioMode LinkManager::getEffectiveMode(const std::string& src_name,
 
     if (has_src && has_sink)
     {
-        // DUCK takes precedence over MIX
-      if (link.audio_mode == LinkAudioMode::DUCK)
+        // PRIORITY takes highest precedence, then DUCK, then MIX
+      if (link.audio_mode == LinkAudioMode::PRIORITY)
       {
-        return LinkAudioMode::DUCK;
+        return LinkAudioMode::PRIORITY;
+      }
+      else if (link.audio_mode == LinkAudioMode::DUCK &&
+               mode != LinkAudioMode::PRIORITY)
+      {
+        mode = LinkAudioMode::DUCK;
       }
       else if (link.audio_mode == LinkAudioMode::MIX &&
-               mode != LinkAudioMode::DUCK)
+               mode != LinkAudioMode::PRIORITY && mode != LinkAudioMode::DUCK)
       {
         mode = LinkAudioMode::MIX;
       }
@@ -1245,8 +1258,21 @@ void LinkManager::updateMixerRouting(void)
 
 void LinkManager::onSquelchStateChanged(bool is_open, LogicBase *logic)
 {
+    // Update squelch state tracking
+  LogicMap::iterator it = logic_map.find(logic->name());
+  if (it != logic_map.end())
+  {
+    it->second.squelch_open = is_open;
+  }
+
     // Update ducking for this logic's incoming connections
   updateDuckingForSink(logic->name(), is_open);
+
+    // Update priority preemption for all sinks
+  for (auto& sink_pair : sinks)
+  {
+    updatePriorityForSink(sink_pair.first);
+  }
 } /* LinkManager::onSquelchStateChanged */
 
 
@@ -1308,6 +1334,134 @@ float LinkManager::getEffectiveDuckLevel(const std::string& src_name,
   }
   return duck_level;
 } /* LinkManager::getEffectiveDuckLevel */
+
+
+bool LinkManager::isSourceFromPriorityLink(const std::string& src_name,
+                                            const std::string& sink_name)
+{
+    // Check if this source-sink pair is in a PRIORITY mode link
+  for (const auto& link_pair : links)
+  {
+    const Link& link = link_pair.second;
+    if (!link.is_activated) continue;
+    if (link.audio_mode != LinkAudioMode::PRIORITY) continue;
+
+    if (link.logic_props.count(src_name) > 0 &&
+        link.logic_props.count(sink_name) > 0)
+    {
+      return true;
+    }
+  }
+  return false;
+} /* LinkManager::isSourceFromPriorityLink */
+
+
+bool LinkManager::isPrioritySourceActive(const std::string& sink_name)
+{
+    // Check if any PRIORITY source is currently transmitting to this sink
+  SinkMap::iterator sink_it = sinks.find(sink_name);
+  if (sink_it == sinks.end()) return false;
+
+  for (const auto& amp_pair : sink_it->second.amps)
+  {
+    const std::string& src_name = amp_pair.first;
+
+      // Check if this source's squelch is open
+    LogicMap::iterator it = logic_map.find(src_name);
+    if (it == logic_map.end() || !it->second.squelch_open) continue;
+
+      // Check if this source is from a PRIORITY link to this sink
+    if (isSourceFromPriorityLink(src_name, sink_name))
+    {
+      return true;
+    }
+  }
+  return false;
+} /* LinkManager::isPrioritySourceActive */
+
+
+float LinkManager::getEffectivePriorityMuteLevel(const std::string& src_name,
+                                                  const std::string& sink_name)
+{
+  for (const auto& link_pair : links)
+  {
+    const Link& link = link_pair.second;
+    if (!link.is_activated) continue;
+
+      // Find any PRIORITY link that includes this sink
+    if (link.audio_mode == LinkAudioMode::PRIORITY &&
+        link.logic_props.count(sink_name) > 0)
+    {
+      return link.priority_mute_db;
+    }
+  }
+  return -60.0f;
+} /* LinkManager::getEffectivePriorityMuteLevel */
+
+
+void LinkManager::updatePriorityForSink(const std::string& sink_name)
+{
+  SinkMap::iterator sink_it = sinks.find(sink_name);
+  if (sink_it == sinks.end()) return;
+
+  SinkInfo& sink = sink_it->second;
+  bool priority_active = isPrioritySourceActive(sink_name);
+
+    // Check if sink logic's squelch is open (for DUCK interaction)
+  bool sink_squelch_open = false;
+  LogicMap::iterator sink_logic_it = logic_map.find(sink_name);
+  if (sink_logic_it != logic_map.end())
+  {
+    sink_squelch_open = sink_logic_it->second.squelch_open;
+  }
+
+    // Handle all connections (both FIRST mode via selector and mixer-based modes)
+  for (auto& con_pair : sink.connectors)
+  {
+    const std::string& src_name = con_pair.first;
+    LinkAudioMode mode = getEffectiveMode(src_name, sink_name);
+    bool is_priority_src = isSourceFromPriorityLink(src_name, sink_name);
+
+    if (mode == LinkAudioMode::FIRST)
+    {
+        // FIRST mode: use selector enable/disable for priority preemption
+      if (priority_active && !is_priority_src)
+      {
+          // Disable this source in the selector when preempted by priority
+        sink.selector->disableAutoSelect(con_pair.second);
+      }
+      else
+      {
+          // Re-enable in selector (normal operation)
+        sink.selector->enableAutoSelect(con_pair.second, 0);
+      }
+    }
+    else
+    {
+        // MIX/DUCK/PRIORITY mode: use amp gain for priority preemption
+      AudioAmp* amp = sink.amps.at(src_name);
+
+        // Determine base gain level (may be ducked if sink squelch is open)
+      float base_gain = 0;
+      if (sink_squelch_open && (mode == LinkAudioMode::DUCK || mode == LinkAudioMode::PRIORITY))
+      {
+        base_gain = getEffectiveDuckLevel(src_name, sink_name);
+      }
+
+      if (priority_active && !is_priority_src)
+      {
+          // A PRIORITY source is active and this is NOT a priority source - mute it
+        float mute_level = getEffectivePriorityMuteLevel(src_name, sink_name);
+        amp->setGain(mute_level);
+      }
+      else
+      {
+          // No priority preemption (or this IS the priority source) - use base gain
+        amp->setGain(base_gain);
+      }
+    }
+  }
+} /* LinkManager::updatePriorityForSink */
 
 
 /*
