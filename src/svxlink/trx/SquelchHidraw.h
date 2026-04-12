@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -61,10 +62,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
 
 
 /****************************************************************************
@@ -143,16 +140,20 @@ class SquelchHidraw : public Squelch
   protected:
 
   private:
-    int             fd;
-    Async::FdWatch  *watch;
-    bool            active_low;
-    char            pin;
+    int             m_fd            {-1};
+    Async::FdWatch* m_watch         {nullptr};
+    bool            m_active_low    {false};
+    char            m_pin           {0};
+    Async::Config*  m_cfg           {nullptr};
+    std::string     m_rx_name;
+    Async::Timer    m_reopen_timer  {5000, Async::Timer::TYPE_PERIODIC, false};
 
     SquelchHidraw(const SquelchHidraw&);
     SquelchHidraw& operator=(const SquelchHidraw&);
-    void hidrawActivity(Async::FdWatch *watch);
+    bool openDevice(void);
+    void hidrawActivity(void);
 
-};  /* class SquelchGpio */
+};  /* class SquelchHidraw */
 
 
 //} /* namespace */

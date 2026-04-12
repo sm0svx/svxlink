@@ -7,7 +7,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,12 +33,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cstring>
-#include <cerrno>
 #include <unistd.h>
 #include <fcntl.h>
 #include <linux/hidraw.h>
 #include <sys/ioctl.h>
+
+#include <cstring>
+#include <cerrno>
 
 
 /****************************************************************************
@@ -48,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncFdWatch.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -119,18 +121,24 @@ using namespace Async;
  ****************************************************************************/
 
 SquelchHidraw::SquelchHidraw(void)
-  : fd(-1), watch(0), active_low(false), pin(0)
 {
+  m_reopen_timer.expired.connect(sigc::hide_return(sigc::hide(
+      sigc::mem_fun(*this, &SquelchHidraw::openDevice)
+      )));
 } /* SquelchHidraw::SquelchHidraw */
 
 
 SquelchHidraw::~SquelchHidraw(void)
 {
-  delete watch;
-  if (fd >= 0)
+  m_reopen_timer.setEnable(false);
+
+  delete m_watch;
+  m_watch = nullptr;
+
+  if (m_fd >= 0)
   {
-    close(fd);
-    fd = -1;
+    close(m_fd);
+    m_fd = -1;
   }
 } /* SquelchHidraw::~SquelchHidraw */
 
@@ -145,30 +153,55 @@ For further information:
 */
 bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
 {
-  if (!Squelch::initialize(cfg, rx_name))
+  m_cfg = &cfg;
+  m_rx_name = rx_name;
+
+  if (!Squelch::initialize(cfg, m_rx_name))
   {
     return false;
   }
 
+  return openDevice();
+} /* SquelchHidraw::initialize */
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+bool SquelchHidraw::openDevice(void)
+{
   string devicename;
-  if (!cfg.getValue(rx_name, "HID_DEVICE", devicename))
+  if (!m_cfg->getValue(m_rx_name, "HID_DEVICE", devicename))
   {
-    cerr << "*** ERROR: Config variable " << devicename <<
-            "/HID_DEVICE not set" << endl;
+    std::cerr << "*** ERROR: Config variable " << m_rx_name
+              << "/HID_DEVICE not set"
+              << std::endl;
     return false;
   }
 
   string sql_pin;
-  if (!cfg.getValue(rx_name, "HID_SQL_PIN", sql_pin) || sql_pin.empty())
+  if (!m_cfg->getValue(m_rx_name, "HID_SQL_PIN", sql_pin) || sql_pin.empty())
   {
-    cerr << "*** ERROR: Config variable " << rx_name
-         << "/HID_SQL_PIN not set or invalid\n";
+    std::cerr << "*** ERROR: Config variable " << m_rx_name
+              << "/HID_SQL_PIN not set or invalid"
+              << std::endl;
     return false;
   }
 
   if ((sql_pin.size() > 1) && (sql_pin[0] == '!'))
   {
-    active_low = true;
+    m_active_low = true;
     sql_pin.erase(0, 1);
   }
 
@@ -181,22 +214,26 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   map<string, char>::iterator it = pin_mask.find(sql_pin);
   if (it == pin_mask.end())
   {
-    cerr << "*** ERROR: Invalid value for " << rx_name << "/HID_SQL_PIN="
+    cerr << "*** ERROR: Invalid value for " << m_rx_name << "/HID_SQL_PIN="
          << sql_pin << ", must be VOL_UP, VOL_DN, MUTE_PLAY, MUTE_REC" << endl;
     return false;
   }
-  pin = (*it).second;
+  m_pin = (*it).second;
 
-  if ((fd = open(devicename.c_str(), O_RDWR, 0)) < 0)
+  if (m_fd >= 0)
   {
-    cout << "*** ERROR: Could not open event device " << devicename
-         << " specified in " << rx_name << "/HID_DEVICE: "
-         << strerror(errno) << endl;
+    close(m_fd);
+  }
+  if ((m_fd = ::open(devicename.c_str(), O_RDWR, 0)) < 0)
+  {
+    std::cout << "*** ERROR: Could not open event device " << devicename
+              << " specified in " << m_rx_name << "/HID_DEVICE: "
+              << SvxLink::strError(errno) << std::endl;
     return false;
   }
 
   struct hidraw_devinfo hiddevinfo;
-  if ((ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
+  if ((ioctl(m_fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
       (hiddevinfo.vendor == 0x0d8c))
   {
     cout << "--- Hidraw sound chip is ";
@@ -232,51 +269,44 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   }
   else
   {
-    cout << "*** ERROR: unknown/unsupported sound chip detected...\n";
+    std::cerr << "*** ERROR: Unknown/unsupported sound chip detected..."
+              << std::endl;
     return false;
   }
 
-  watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
-  assert(watch != 0);
-  watch->activity.connect(mem_fun(*this, &SquelchHidraw::hidrawActivity));
+  delete m_watch;
+  m_watch = new Async::FdWatch(m_fd, Async::FdWatch::FD_WATCH_RD);
+  assert(m_watch != 0);
+  m_watch->activity.connect(sigc::hide(
+      sigc::mem_fun(*this, &SquelchHidraw::hidrawActivity)
+      ));
+
+  m_reopen_timer.setEnable(false);
 
   return true;
-}
+} /* SquelchHidraw::openDevice */
 
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
 
 /**
  * @brief  Called when state of Hidraw port has been changed
- *
  */
-void SquelchHidraw::hidrawActivity(FdWatch *watch)
+void SquelchHidraw::hidrawActivity(void)
 {
   char buf[5];
-  int rd = read(fd, buf, sizeof(buf));
+  int rd = read(m_fd, buf, sizeof(buf));
   if (rd < 0)
   {
-    cerr << "*** ERROR: reading HID_DEVICE\n";
+    std::cerr << "*** ERROR: Failed to read HID_DEVICE: "
+              << SvxLink::strError(errno)
+              << std::endl;
+    setSignalDetected(false);
+    m_reopen_timer.setEnable(true);
     return;
   }
 
-  bool pin_high = buf[0] & pin;
-  setSignalDetected(pin_high != active_low);
+  bool pin_high = buf[0] & m_pin;
+  setSignalDetected(pin_high != m_active_low);
 } /* SquelchHidraw::hidrawActivity */
-
 
 
 /*
