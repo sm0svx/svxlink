@@ -300,6 +300,7 @@ void SquelchHidraw::hidrawActivity(void)
               << SvxLink::strError(errno)
               << std::endl;
     setSignalDetected(false);
+    m_watch->setEnabled(false);
     m_reopen_timer.setEnable(true);
     return;
   }
