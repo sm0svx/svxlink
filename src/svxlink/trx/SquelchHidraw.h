@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTimer.h>
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -141,7 +142,7 @@ class SquelchHidraw : public Squelch
 
   private:
     int             m_fd            {-1};
-    Async::FdWatch* m_watch         {nullptr};
+    Async::FdWatch  m_watch;
     bool            m_active_low    {false};
     char            m_pin           {0};
     Async::Config*  m_cfg           {nullptr};
@@ -151,6 +152,7 @@ class SquelchHidraw : public Squelch
     SquelchHidraw(const SquelchHidraw&);
     SquelchHidraw& operator=(const SquelchHidraw&);
     bool openDevice(void);
+    void closeDevice(void);
     void hidrawActivity(void);
 
 };  /* class SquelchHidraw */
