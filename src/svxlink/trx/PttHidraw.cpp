@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <common.h>
 
 
 /****************************************************************************
@@ -64,7 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace Async;
 
 
 
@@ -115,52 +115,90 @@ using namespace Async;
  ****************************************************************************/
 
 PttHidraw::PttHidraw(void)
-  : active_low(false), fd(-1), pin(0)
 {
 } /* PttHidraw::PttHidraw */
 
 
 PttHidraw::~PttHidraw(void)
 {
-  if (fd >= 0)
-  {
-    close(fd);
-    fd = -1;
-  }
+  closeDevice();
 } /* PttHidraw::~PttHidraw */
 
 
-bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
+bool PttHidraw::initialize(Async::Config& cfg, const std::string name)
 {
+  m_cfg = &cfg;
+  m_tx_name = name;
 
-  map<string, char> pin_mask;
-  pin_mask["GPIO1"] = 0x01;
-  pin_mask["GPIO2"] = 0x02;
-  pin_mask["GPIO3"] = 0x04;
-  pin_mask["GPIO4"] = 0x08;
+  return openDevice();
+} /* PttHidraw::initialize */
 
-  string hidraw_pin;
-  if (!cfg.getValue(name, "HID_PTT_PIN", hidraw_pin) || hidraw_pin.empty())
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+bool PttHidraw::openDevice(void)
+{
+  static const std::map<string, char> pin_mask{
+    {"GPIO1", 0x01},
+    {"GPIO2", 0x02},
+    {"GPIO3", 0x04},
+    {"GPIO4", 0x08}
+  };
+
+  std::string hidraw_dev;
+  if (!m_cfg->getValue(m_tx_name, "HID_DEVICE", hidraw_dev) ||
+      hidraw_dev.empty())
   {
-    cerr << "*** ERROR: Config variable " << name << "/HID_PTT_PIN not set\n";
+    std::cerr << "*** ERROR: Config variable " << m_tx_name
+              << "/HID_DEVICE not set"
+              << std::endl;
     return false;
   }
 
-  string hidraw_dev;
-  if (!cfg.getValue(name, "HID_DEVICE", hidraw_dev) || hidraw_dev.empty())
+  std::string hidraw_pin;
+  if (!m_cfg->getValue(m_tx_name, "HID_PTT_PIN", hidraw_pin) ||
+      hidraw_pin.empty())
   {
-    cerr << "*** ERROR: Config variable " << name << "/HID_DEVICE not set\n";
+    std::cerr << "*** ERROR: Config variable " << m_tx_name
+              << "/HID_PTT_PIN not set"
+              << std::endl;
     return false;
   }
 
-  if ((fd = open(hidraw_dev.c_str(), O_WRONLY, 0)) < 0)
+  auto it = pin_mask.find(hidraw_pin);
+  if (it == pin_mask.end())
   {
-    cerr << "*** ERROR: Can't open port " << hidraw_dev << endl;
+    std::cerr << "*** ERROR: Wrong value for " << m_tx_name << "/HID_PTT_PIN="
+              << hidraw_pin << ", valid values are GPIO1, GPIO2, GPIO3, GPIO4"
+              << std::endl;
+    return false;
+  }
+  m_pin = (*it).second;
+
+  if ((m_fd = ::open(hidraw_dev.c_str(), O_WRONLY, 0)) < 0)
+  {
+    std::cerr << "*** ERROR: Can't open HIDRAW device '" << hidraw_dev
+              << "': " << SvxLink::strError(errno)
+              << std::endl;
+    closeDevice();
     return false;
   }
 
   struct hidraw_devinfo hiddevinfo;
-  if ((ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
+  if ((::ioctl(m_fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
       (hiddevinfo.vendor == 0x0d8c))
   {
     cout << "--- Hidraw sound chip is ";
@@ -197,59 +235,61 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
   else
   {
     cerr << "*** ERROR: unknown/unsupported sound chip detected...\n";
+    closeDevice();
     return false;
   }
 
   if (hidraw_pin[0] == '!')
   {
-    active_low = true;
+    m_active_low = true;
     hidraw_pin.erase(0, 1);
   }
 
-  map<string, char>::iterator it = pin_mask.find(hidraw_pin);
-  if (it == pin_mask.end())
-  {
-    cerr << "*** ERROR: Wrong value for " << name << "/HID_PIN=" << hidraw_pin
-         << ", valid are GPIO1, GPIO2, GPIO3, GPIO4" << endl;
-    return false;
-  }
-  pin = (*it).second;
-
   return true;
-} /* PttHidraw::initialize */
+} /* PttHidraw::openDevice */
+
+
+void PttHidraw::closeDevice(void)
+{
+  m_active_low = false;
+  m_pin = 0;
+
+  if (m_fd >= 0)
+  {
+    ::close(m_fd);
+    m_fd = -1;
+  }
+} /* PttHidraw::closeDevice */
 
 
 bool PttHidraw::setTxOn(bool tx_on)
 {
   //cerr << "### PttHidraw::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
 
-  char a[5] = {'\000', '\000',
-              (tx_on ^ active_low ? pin : '\000'), pin, '\000'};
+  const char a[5] = {
+    '\000',
+    '\000',
+    (tx_on ^ m_active_low ? m_pin : '\000'),
+    m_pin,
+    '\000'
+  };
 
-  if (write(fd, a, sizeof(a)) == -1)
+  if ((m_fd < 0) && !openDevice())
   {
+    return false;
+  }
+
+  if (::write(m_fd, a, sizeof(a)) == -1)
+  {
+    std::cerr << "*** ERROR: Failed to write to HIDRAW device: "
+              << SvxLink::strError(errno)
+              << std::endl;
+    closeDevice();
     return false;
   }
 
   return true;
 } /* PttHidraw::setTxOn */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
 
 
 /*

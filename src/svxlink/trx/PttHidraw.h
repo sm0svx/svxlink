@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ class PttHidraw : public Ptt
     /**
      * @brief 	Destructor
      */
-    ~PttHidraw(void);
+    virtual ~PttHidraw(void);
 
     /**
      * @brief 	Initialize the PTT hardware
@@ -129,25 +129,29 @@ class PttHidraw : public Ptt
      * @param   name The name of the config section to read config from
      * @returns Returns \em true on success or else \em false
      */
-    virtual bool initialize(Async::Config &cfg, const std::string name);
+    virtual bool initialize(Async::Config& cfg,
+                            const std::string name) override;
 
     /**
      * @brief 	Set the state of the PTT, TX on or off
      * @param 	tx_on Set to \em true to turn the transmitter on
      * @returns Returns \em true on success or else \em false
      */
-    virtual bool setTxOn(bool tx_on);
+    virtual bool setTxOn(bool tx_on) override;
 
   protected:
 
   private:
-    bool active_low;
-
-    int   fd;
-    char  pin;
+    bool            m_active_low  {false};
+    int             m_fd          {-1};
+    char            m_pin         {0};
+    Async::Config*  m_cfg         {nullptr};
+    std::string     m_tx_name;
 
     PttHidraw(const PttHidraw&);
     PttHidraw& operator=(const PttHidraw&);
+    bool openDevice(void);
+    void closeDevice(void);
 
 };  /* class PttHidraw */
 
