@@ -63,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "ReflectorClient.h"
 #include "Reflector.h"
 #include "TGHandler.h"
+#include "RemoteUserAuth.h"
 
 
 /****************************************************************************
@@ -765,9 +766,30 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
   //}
 
   string auth_key = lookupUserKey(msg.callsign());
+
+  if (m_reflector->remoteAuthEnabled())
+  {
+    char digest_hex[MsgAuthResponse::DIGEST_LEN * 2 + 1];
+    for (size_t i=0; i<MsgAuthResponse::DIGEST_LEN; ++i)
+    {
+      sprintf(&digest_hex[i*2], "%02x", msg.digest()[i]);
+    }
+    
+    char challenge_hex[MsgAuthChallenge::LENGTH * 2 + 1];
+    for (size_t i=0; i<MsgAuthChallenge::LENGTH; ++i)
+    {
+      sprintf(&challenge_hex[i*2], "%02x", m_auth_challenge[i]);
+    }
+
+    //std::cout << msg.callsign() << ": Starting remote authentication..." << std::endl;
+    m_reflector->remoteUserAuth()->checkUser(msg.callsign(), digest_hex, challenge_hex,
+        sigc::bind(sigc::mem_fun(*this, &ReflectorClient::onRemoteAuthDone), msg, auth_key));
+    return;
+  }
+
   if (!auth_key.empty() && msg.verify(auth_key, m_auth_challenge))
   {
-    std::cout << msg.callsign() << ": Received valid auth key" << std::endl;
+    std::cout << msg.callsign() << ": Received valid auth key (local)" << std::endl;
     connectionAuthenticated(msg.callsign());
   }
   else
@@ -778,6 +800,35 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
     sendError("Access denied");
   }
 } /* ReflectorClient::handleMsgAuthResponse */
+
+// RemoteUserAuth callback
+void ReflectorClient::onRemoteAuthDone(bool success, const string& message, 
+                                       const MsgAuthResponse& msg, const string& auth_key)
+{
+  if (success)
+  {
+    std::cout << msg.callsign() << ": Remote authentication successful: " << message << std::endl;
+    connectionAuthenticated(msg.callsign());
+  }
+  else
+  {
+    std::cout << msg.callsign() << ": Remote authentication failed: " << message 
+              << ". Falling back to local authentication." << std::endl;
+    
+    if (!auth_key.empty() &&msg.verify(auth_key, m_auth_challenge))
+    {
+      std::cout << msg.callsign() << ": Received valid auth key (local fallback)" << std::endl;
+      connectionAuthenticated(msg.callsign());
+    }
+    else
+    {
+      std::cerr << "*** ERROR[" << m_con->remoteHost() << ":"
+                << m_con->remotePort() << "]: Authentication failed for user '"
+                << msg.callsign() << "'" << std::endl;
+      sendError("Access denied");
+    }
+  }
+}
 
 
 void ReflectorClient::handleMsgClientCsr(std::istream& is)

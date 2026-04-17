@@ -71,6 +71,12 @@ CERT_CA_HOOK=@SVX_SHARE_INSTALL_DIR@/ca-hook.py
 #MyNodes="Change this key now!"
 #SM3XYZ="A strong password"
 
+[REMOTE_USER_AUTH]
+USER_AUTH_ENABLE=0
+USER_AUTH_URL=http://localhost:8000/api/v1/auth/user
+USER_AUTH_TOKEN=your_secret_token_here
+USER_AUTH_FORCE_VALID_SSL=0
+
 #[TG#9999]
 #AUTO_QSY_AFTER=300
 #ALLOW=S[A-M]\\\\d.*|LA8PV
