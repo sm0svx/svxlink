@@ -512,18 +512,18 @@ int main(int argc, char **argv)
 
   if (!trx_handlers.empty())
   {
-    if (reset)
+    if (!reset)
     {
-      std::cout << "Initialization done. Exiting." << std::endl;
-      Async::Application::app().quit();
+      std::cout << "NOTICE: Initialization done. Starting main application."
+                << std::endl;
+      app.exec();
+      std::cout << "NOTICE: Exiting" << std::endl;
     }
-    std::cout << "NOTICE: Initialization done. Starting main application."
-              << std::endl;
-    app.exec();
   }
   else
   {
-    cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
+    std::cerr << "*** ERROR: No trxs successfully initialized. Bailing out..."
+              << std::endl;
   }
 
   for (vector<TrxHandler*>::iterator it = trx_handlers.begin();
