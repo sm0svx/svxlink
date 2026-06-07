@@ -31,6 +31,11 @@ set_target_properties(svxreflector PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
+# Reflector protocol message pack/unpack round-trip test
+add_executable(ReflectorMsgTest ReflectorMsgTest.cpp)
+target_link_libraries(ReflectorMsgTest ${LIBS})
+add_test(NAME ReflectorMsgTest COMMAND ReflectorMsgTest)
+
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxreflector.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxreflector.conf
