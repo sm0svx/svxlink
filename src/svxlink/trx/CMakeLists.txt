@@ -112,5 +112,15 @@ add_executable(TrxFactoryTest TrxFactoryTest.cpp)
 target_link_libraries(TrxFactoryTest ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
 add_test(NAME TrxFactoryTest COMMAND TrxFactoryTest)
 
+# Squelch detector tests (SquelchOpen, SquelchVox)
+add_executable(SquelchTest SquelchTest.cpp)
+target_link_libraries(SquelchTest ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
+add_test(NAME SquelchTest COMMAND SquelchTest)
+
+# Signal level detector tests (SigLevDetConst)
+add_executable(SigLevDetTest SigLevDetTest.cpp)
+target_link_libraries(SigLevDetTest ${LIBNAME} asynccpp asyncaudio asynccore svxmisc)
+add_test(NAME SigLevDetTest COMMAND SigLevDetTest)
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
