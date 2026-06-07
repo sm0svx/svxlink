@@ -103,5 +103,9 @@ add_test(NAME DtmfEncoderTest COMMAND DtmfEncoderTest)
 add_executable(GoertzelTest GoertzelTest.cpp)
 add_test(NAME GoertzelTest COMMAND GoertzelTest)
 
+# Modulation fromString/toString test (compile the small source directly).
+add_executable(ModulationTest ModulationTest.cpp Modulation.cpp)
+add_test(NAME ModulationTest COMMAND ModulationTest)
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
