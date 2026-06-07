@@ -63,6 +63,10 @@ add_executable(ConfigTest ConfigTest.cpp)
 target_link_libraries(ConfigTest ${LIBNAME})
 add_test(NAME ConfigTest COMMAND ConfigTest)
 
+# Unit test for the Async::Msg serialization framework (header-only)
+add_executable(AsyncMsgTest AsyncMsgTest.cpp)
+add_test(NAME AsyncMsgTest COMMAND AsyncMsgTest)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)
