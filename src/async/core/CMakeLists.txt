@@ -58,6 +58,11 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(${LIBNAME}_static ${LIBS})
 endif(BUILD_STATIC_LIBS)
 
+# Unit test for Async::Config
+add_executable(ConfigTest ConfigTest.cpp)
+target_link_libraries(ConfigTest ${LIBNAME})
+add_test(NAME ConfigTest COMMAND ConfigTest)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)
