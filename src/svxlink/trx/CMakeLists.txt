@@ -99,5 +99,9 @@ add_executable(DtmfEncoderTest DtmfEncoderTest.cpp)
 target_link_libraries(DtmfEncoderTest ${LIBNAME} asynccore asyncaudio)
 add_test(NAME DtmfEncoderTest COMMAND DtmfEncoderTest)
 
+# Goertzel is header-only; the test needs no libraries.
+add_executable(GoertzelTest GoertzelTest.cpp)
+add_test(NAME GoertzelTest COMMAND GoertzelTest)
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
