@@ -99,6 +99,11 @@ add_executable(CmdParserTest CmdParserTest.cpp CmdParser.cpp)
 target_link_libraries(CmdParserTest asynccore)
 add_test(NAME CmdParserTest COMMAND CmdParserTest)
 
+# Build the DtmfDigitHandler unit test (needs Async::Timer/CppApplication)
+add_executable(DtmfDigitHandlerTest DtmfDigitHandlerTest.cpp DtmfDigitHandler.cpp)
+target_link_libraries(DtmfDigitHandlerTest asynccpp asynccore)
+add_test(NAME DtmfDigitHandlerTest COMMAND DtmfDigitHandlerTest)
+
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
