@@ -94,6 +94,11 @@ foreach(logic_name ${SVXLINK_LOGIC_CORES})
   #target_link_libraries(${logic_name}Logic ${LIBS})
 endforeach()
 
+# Build the CmdParser unit test (pure logic, only needs sigc++ via asynccore)
+add_executable(CmdParserTest CmdParserTest.cpp CmdParser.cpp)
+target_link_libraries(CmdParserTest asynccore)
+add_test(NAME CmdParserTest COMMAND CmdParserTest)
+
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
