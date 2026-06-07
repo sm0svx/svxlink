@@ -167,6 +167,16 @@ add_executable(AudioReaderTest AudioReaderTest.cpp)
 target_link_libraries(AudioReaderTest asynccpp asyncaudio asynccore)
 add_test(NAME AudioReaderTest COMMAND AudioReaderTest)
 
+# Unit test for AudioFilter frequency response
+add_executable(AudioFilterTest AudioFilterTest.cpp)
+target_link_libraries(AudioFilterTest asynccpp asyncaudio asynccore)
+add_test(NAME AudioFilterTest COMMAND AudioFilterTest)
+
+# Unit test for AudioFsf frequency sampling filter
+add_executable(AudioFsfTest AudioFsfTest.cpp)
+target_link_libraries(AudioFsfTest asynccpp asyncaudio asynccore)
+add_test(NAME AudioFsfTest COMMAND AudioFsfTest)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)
