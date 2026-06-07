@@ -107,5 +107,10 @@ add_test(NAME GoertzelTest COMMAND GoertzelTest)
 add_executable(ModulationTest ModulationTest.cpp Modulation.cpp)
 add_test(NAME ModulationTest COMMAND ModulationTest)
 
+# Rx/Tx factory creation tests
+add_executable(TrxFactoryTest TrxFactoryTest.cpp)
+target_link_libraries(TrxFactoryTest ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
+add_test(NAME TrxFactoryTest COMMAND TrxFactoryTest)
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
