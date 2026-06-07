@@ -122,5 +122,10 @@ add_executable(SigLevDetTest SigLevDetTest.cpp)
 target_link_libraries(SigLevDetTest ${LIBNAME} asynccpp asyncaudio asynccore svxmisc)
 add_test(NAME SigLevDetTest COMMAND SigLevDetTest)
 
+# Pre-/de-emphasis filter tests (Emphasis.h is header-only)
+add_executable(EmphasisTest EmphasisTest.cpp)
+target_link_libraries(EmphasisTest asynccpp asyncaudio asynccore)
+add_test(NAME EmphasisTest COMMAND EmphasisTest)
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
