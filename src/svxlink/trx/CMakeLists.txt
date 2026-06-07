@@ -127,5 +127,10 @@ add_executable(EmphasisTest EmphasisTest.cpp)
 target_link_libraries(EmphasisTest asynccpp asyncaudio asynccore)
 add_test(NAME EmphasisTest COMMAND EmphasisTest)
 
+# Resampler tests (AudioInterpolator / AudioDecimator with project coeffs)
+add_executable(ResamplerTest ResamplerTest.cpp)
+target_link_libraries(ResamplerTest asynccpp asyncaudio asynccore)
+add_test(NAME ResamplerTest COMMAND ResamplerTest)
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
