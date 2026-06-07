@@ -104,6 +104,11 @@ add_executable(DtmfDigitHandlerTest DtmfDigitHandlerTest.cpp DtmfDigitHandler.cp
 target_link_libraries(DtmfDigitHandlerTest asynccpp asynccore)
 add_test(NAME DtmfDigitHandlerTest COMMAND DtmfDigitHandlerTest)
 
+# Smoke test: every TCL event script loads cleanly under tclsh
+add_test(NAME tcl_event_scripts_load
+  COMMAND ${CMAKE_COMMAND} -E env python3
+          ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/test_tcl_loads.py)
+
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
