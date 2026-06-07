@@ -67,6 +67,11 @@ add_test(NAME ConfigTest COMMAND ConfigTest)
 add_executable(AsyncMsgTest AsyncMsgTest.cpp)
 add_test(NAME AsyncMsgTest COMMAND AsyncMsgTest)
 
+# Unit test for the Async::StateMachine framework (header-only)
+add_executable(StateMachineTest StateMachineTest.cpp)
+target_link_libraries(StateMachineTest ${LIBNAME})
+add_test(NAME StateMachineTest COMMAND StateMachineTest)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)
