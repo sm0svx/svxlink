@@ -147,6 +147,26 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(${LIBNAME}_static ${LIBS})
 endif(BUILD_STATIC_LIBS)
 
+# Unit test for basic audio pipe components
+add_executable(AudioPipeTest AudioPipeTest.cpp)
+target_link_libraries(AudioPipeTest asynccpp asyncaudio asynccore)
+add_test(NAME AudioPipeTest COMMAND AudioPipeTest)
+
+# Unit test for AudioClipper
+add_executable(AudioClipperTest AudioClipperTest.cpp)
+target_link_libraries(AudioClipperTest asynccpp asyncaudio asynccore)
+add_test(NAME AudioClipperTest COMMAND AudioClipperTest)
+
+# Unit test for AudioDelayLine
+add_executable(AudioDelayLineTest AudioDelayLineTest.cpp)
+target_link_libraries(AudioDelayLineTest asynccpp asyncaudio asynccore)
+add_test(NAME AudioDelayLineTest COMMAND AudioDelayLineTest)
+
+# Unit test for AudioReader synchronous pull reads
+add_executable(AudioReaderTest AudioReaderTest.cpp)
+target_link_libraries(AudioReaderTest asynccpp asyncaudio asynccore)
+add_test(NAME AudioReaderTest COMMAND AudioReaderTest)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)
