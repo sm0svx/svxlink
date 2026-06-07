@@ -92,6 +92,12 @@ target_link_libraries(${LIBNAME} ${LIBS})
 
 add_executable(DtmfDecoderTest DtmfDecoderTest.cpp)
 target_link_libraries(DtmfDecoderTest ${LIBNAME} asynccore asyncaudio)
+add_test(NAME DtmfDecoderTest COMMAND DtmfDecoderTest)
+
+# DtmfEncoder -> DtmfDecoder clean round-trip test
+add_executable(DtmfEncoderTest DtmfEncoderTest.cpp)
+target_link_libraries(DtmfEncoderTest ${LIBNAME} asynccore asyncaudio)
+add_test(NAME DtmfEncoderTest COMMAND DtmfEncoderTest)
 
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
