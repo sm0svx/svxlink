@@ -356,6 +356,22 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     }
 
     /**
+     * @brief   Update the squelch info while a signal is detected
+     * @param   info Info about what is keeping the squelch open
+     *
+     * Use this when the cause of the detected signal changes while the
+     * signal stays detected, e.g. when another CTCSS tone takes over. Does
+     * nothing if no signal is detected.
+     */
+    inline void updateSignalDetectedInfo(const std::string& info)
+    {
+      if (m_signal_detected)
+      {
+        m_signal_detected_info = info;
+      }
+    }
+
+    /**
      * @brief 	Return the state of the signal detector
      * @return	Return \em true if a signal is detected
      */
