@@ -293,6 +293,16 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
 
 QsoImpl::~QsoImpl(void)
 {
+    // Stop the EchoLink::Qso member from calling back into this object. It
+    // is destroyed after the destructor body has run, when members it would
+    // reach through the callbacks (e.g. station) are already gone, and its
+    // destructor emits a final stateChange when it disconnects.
+  m_qso.infoMsgReceived.clear();
+  m_qso.chatMsgReceived.clear();
+  m_qso.stateChange.clear();
+  m_qso.isReceiving.clear();
+  m_qso.audioReceivedRaw.clear();
+
   AudioSink::clearHandler();
   AudioSource::clearHandler();
   delete event_handler;
