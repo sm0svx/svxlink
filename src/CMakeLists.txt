@@ -23,7 +23,7 @@
 ##############################################################################
 cmake_minimum_required(VERSION 3.7...3.30)
 project(svxlink C CXX)
-#enable_testing()
+enable_testing()
 
 # The path to the project global include directory
 set(PROJECT_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
@@ -41,6 +41,9 @@ set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 # Add project local CMake module directory
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+# Conflict-free unit-test auto-discovery helper (svxlink_add_tests)
+include(SvxLinkAddTests)
 
 # Optional parts
 option(USE_QT "Build Qt applications and libs" ON)

@@ -116,6 +116,18 @@ class TcpServerBase : public sigc::trackable
 {
   public:
     /**
+     * @brief   Parse a numeric TCP port string with range validation
+     * @param   port_str The string to parse
+     * @return  The port number (1-65535) if port_str is a valid numeric
+     *          port, or -1 if it is not a purely-numeric, in-range port
+     *
+     * This rejects out-of-range values (e.g. "70000") instead of silently
+     * truncating them to a 16-bit port. A return value of -1 means the
+     * caller should fall back to a service-name lookup.
+     */
+    static int parsePort(const std::string& port_str);
+
+    /**
      * @brief 	Default constuctor
      * @param 	port_str A port number or service name to listen to
      * @param 	bind_ip The IP to bind the server to
