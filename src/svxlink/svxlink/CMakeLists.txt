@@ -94,20 +94,21 @@ foreach(logic_name ${SVXLINK_LOGIC_CORES})
   #target_link_libraries(${logic_name}Logic ${LIBS})
 endforeach()
 
-# Build the CmdParser unit test (pure logic, only needs sigc++ via asynccore)
-add_executable(CmdParserTest CmdParserTest.cpp CmdParser.cpp)
-target_link_libraries(CmdParserTest asynccore)
-add_test(NAME CmdParserTest COMMAND CmdParserTest)
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+# CmdParserTest and DtmfDigitHandlerTest compile an extra source each; those
+# are declared in <Name>.deps.cmake sidecars next to the test.
+svxlink_add_tests(LIBS asynccpp asynccore)
 
-# Build the DtmfDigitHandler unit test (needs Async::Timer/CppApplication)
-add_executable(DtmfDigitHandlerTest DtmfDigitHandlerTest.cpp DtmfDigitHandler.cpp)
-target_link_libraries(DtmfDigitHandlerTest asynccpp asynccore)
-add_test(NAME DtmfDigitHandlerTest COMMAND DtmfDigitHandlerTest)
-
-# Smoke test: every TCL event script loads cleanly under tclsh
-add_test(NAME tcl_event_scripts_load
-  COMMAND ${CMAKE_COMMAND} -E env python3
-          ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/test_tcl_loads.py)
+# Smoke test: every TCL event script loads cleanly under tclsh. The test
+# exits with code 77 (reported as skipped) if no tclsh can be found.
+if(BUILD_TESTING)
+  add_test(NAME tcl_event_scripts_load
+    COMMAND ${CMAKE_COMMAND} -E env python3
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/test_tcl_loads.py
+            ${TCL_TCLSH})
+  set_tests_properties(tcl_event_scripts_load PROPERTIES SKIP_RETURN_CODE 77)
+endif()
 
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in

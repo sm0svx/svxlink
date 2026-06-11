@@ -58,19 +58,9 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(${LIBNAME}_static ${LIBS})
 endif(BUILD_STATIC_LIBS)
 
-# Unit test for Async::Config
-add_executable(ConfigTest ConfigTest.cpp)
-target_link_libraries(ConfigTest ${LIBNAME})
-add_test(NAME ConfigTest COMMAND ConfigTest)
-
-# Unit test for the Async::Msg serialization framework (header-only)
-add_executable(AsyncMsgTest AsyncMsgTest.cpp)
-add_test(NAME AsyncMsgTest COMMAND AsyncMsgTest)
-
-# Unit test for the Async::StateMachine framework (header-only)
-add_executable(StateMachineTest StateMachineTest.cpp)
-target_link_libraries(StateMachineTest ${LIBNAME})
-add_test(NAME StateMachineTest COMMAND StateMachineTest)
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+svxlink_add_tests(LIBS ${LIBNAME})
 
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
