@@ -72,11 +72,12 @@ using namespace Async;
  ****************************************************************************/
 
 // Constants, this could later on be configurable...
-static const int  MAX_RETRIES            = 2;
-static const long CONNECT_TIMEOUT_SECS   = 5;
-static const long LOW_SPEED_TIME_SECS    = 10;
-static const long LOW_SPEED_LIMIT_BPS    = 100;
-static const long TIMEOUT_SECS           = 10;
+static const int    MAX_RETRIES            = 2;
+static const long   CONNECT_TIMEOUT_SECS   = 5;
+static const long   LOW_SPEED_TIME_SECS    = 10;
+static const long   LOW_SPEED_LIMIT_BPS    = 100;
+static const long   TIMEOUT_SECS           = 10;
+static const size_t MAX_RESPONSE_SIZE_BYTES = 1024; // 1kb ought to be enough .....
 
 
 /****************************************************************************
@@ -248,6 +249,8 @@ void RemoteUserAuth::checkUser(const string& username, const string& digest,
   curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, CONNECT_TIMEOUT_SECS);
   curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, LOW_SPEED_TIME_SECS);
   curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, LOW_SPEED_LIMIT_BPS);
+  curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE,
+                   static_cast<curl_off_t>(MAX_RESPONSE_SIZE_BYTES));
   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 
   if (!m_force_valid_ssl)
@@ -591,6 +594,13 @@ size_t RemoteUserAuth::writeCallback(void *contents, size_t size, size_t nmemb,
 {
   size_t realsize = size * nmemb;
   Request* req = static_cast<Request*>(userp);
+  if (req->response_data.size() + realsize > MAX_RESPONSE_SIZE_BYTES)
+  {
+    cerr << "*** ERROR[" << req->username
+         << "]: Remote auth response exceeds maximum allowed size ("
+         << MAX_RESPONSE_SIZE_BYTES << " bytes), aborting" << endl;
+    return 0; // Returning != realsize causes curl to abort with CURLE_WRITE_ERROR
+  }
   req->response_data.append(static_cast<char*>(contents), realsize);
   return realsize;
 } /* RemoteUserAuth::writeCallback */

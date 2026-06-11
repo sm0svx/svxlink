@@ -73,9 +73,10 @@ CERT_CA_HOOK=@SVX_SHARE_INSTALL_DIR@/ca-hook.py
 
 [REMOTE_USER_AUTH]
 USER_AUTH_ENABLE=0
-USER_AUTH_URL=http://localhost:8000/api/v1/auth/user
+USER_AUTH_URL=https://localhost:8000/api/v1/auth/user
 USER_AUTH_TOKEN=your_secret_token_here
-USER_AUTH_FORCE_VALID_SSL=0
+# Set to 0 only for local testing against a non-TLS/self-signed endpoint
+USER_AUTH_FORCE_VALID_SSL=1
 
 #[TG#9999]
 #AUTO_QSY_AFTER=300

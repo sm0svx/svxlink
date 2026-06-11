@@ -769,6 +769,16 @@ void ReflectorClient::handleMsgAuthResponse(std::istream& is)
 
   if (m_reflector->remoteAuthEnabled())
   {
+    if (msg.digestSize() != MsgAuthResponse::DIGEST_LEN)
+    {
+      std::cerr << "*** ERROR[" << m_con->remoteHost() << ":"
+                << m_con->remotePort()
+                << "]: Bad digest length in MsgAuthResponse from '"
+                << msg.callsign() << "'" << std::endl;
+      sendError("Access denied");
+      return;
+    }
+
     char digest_hex[MsgAuthResponse::DIGEST_LEN * 2 + 1];
     for (size_t i=0; i<MsgAuthResponse::DIGEST_LEN; ++i)
     {
