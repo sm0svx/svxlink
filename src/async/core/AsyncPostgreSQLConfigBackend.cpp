@@ -101,7 +101,8 @@ static ConfigBackendSpecificFactory<PostgreSQLConfigBackend> postgresql_factory;
  ****************************************************************************/
 
 PostgreSQLConfigBackend::PostgreSQLConfigBackend(void)
-  : ConfigBackend(true, 300000), m_conn(nullptr), m_last_check_time("1970-01-01 00:00:00")
+  : ConfigBackend(true, 300000), m_conn(nullptr), m_conn_poll(nullptr),
+    m_last_check_time("1970-01-01 00:00:00")
 {
 } /* PostgreSQLConfigBackend::PostgreSQLConfigBackend */
 
@@ -133,6 +134,7 @@ bool PostgreSQLConfigBackend::open(const string& source)
 
 void PostgreSQLConfigBackend::close(void)
 {
+  closePollConnection();
   if (m_conn != nullptr)
   {
     PQfinish(m_conn);
@@ -141,6 +143,41 @@ void PostgreSQLConfigBackend::close(void)
   m_connection_string.clear();
   m_connection_info.clear();
 } /* PostgreSQLConfigBackend::close */
+
+bool PostgreSQLConfigBackend::openPollConnection(void)
+{
+  closePollConnection();
+
+  if (!isOpen())
+  {
+    return false;
+  }
+
+  m_conn_poll = PQconnectdb(m_connection_string.c_str());
+  if (PQstatus(m_conn_poll) != CONNECTION_OK)
+  {
+    cerr << "*** ERROR: Failed to open PostgreSQL poll connection: "
+         << getLastError(m_conn_poll) << endl;
+    closePollConnection();
+    return false;
+  }
+
+  return true;
+} /* PostgreSQLConfigBackend::openPollConnection */
+
+void PostgreSQLConfigBackend::closePollConnection(void)
+{
+  if (m_conn_poll != nullptr)
+  {
+    PQfinish(m_conn_poll);
+    m_conn_poll = nullptr;
+  }
+} /* PostgreSQLConfigBackend::closePollConnection */
+
+bool PostgreSQLConfigBackend::pollForExternalChanges(void)
+{
+  return checkForExternalChangesUsing(m_conn_poll);
+} /* PostgreSQLConfigBackend::pollForExternalChanges */
 
 bool PostgreSQLConfigBackend::isOpen(void) const
 {
@@ -351,19 +388,30 @@ bool PostgreSQLConfigBackend::finalizeInitialization(void)
 
 bool PostgreSQLConfigBackend::checkForExternalChanges(void)
 {
-  if (!isOpen())
+  return checkForExternalChangesUsing(m_conn);
+} /* PostgreSQLConfigBackend::checkForExternalChanges */
+
+bool PostgreSQLConfigBackend::checkForExternalChangesUsing(PGconn* conn)
+{
+  if (!isOpen() || conn == nullptr)
   {
     return false;
+  }
+
+  std::string last_check_time;
+  {
+    std::lock_guard<std::mutex> lock(m_last_check_mutex);
+    last_check_time = m_last_check_time;
   }
 
   // Query for all records updated since last check
   std::string table_name = getFullTableName("config");
   std::string sql = "SELECT section, tag, value, updated_at FROM " + table_name + " "
                     "WHERE updated_at > $1 ORDER BY updated_at";
-  
-  const char* params[1] = { m_last_check_time.c_str() };
-  
-  PGresult* result = PQexecParams(m_conn,
+
+  const char* params[1] = { last_check_time.c_str() };
+
+  PGresult* result = PQexecParams(conn,
                                   sql.c_str(),
                                   1,      // number of parameters
                                   nullptr, // parameter types (NULL = infer)
@@ -374,13 +422,14 @@ bool PostgreSQLConfigBackend::checkForExternalChanges(void)
 
   if (PQresultStatus(result) != PGRES_TUPLES_OK)
   {
-    cerr << "*** ERROR: Failed to execute change detection query: " << PQerrorMessage(m_conn) << endl;
+    cerr << "*** ERROR: Failed to execute change detection query: "
+         << getLastError(conn) << endl;
     PQclear(result);
     return false;
   }
 
   bool changes_detected = false;
-  std::string latest_timestamp = m_last_check_time;
+  std::string latest_timestamp = last_check_time;
   int rows = PQntuples(result);
 
   for (int i = 0; i < rows; i++)
@@ -403,11 +452,12 @@ bool PostgreSQLConfigBackend::checkForExternalChanges(void)
   // Update last check time to the latest timestamp seen
   if (changes_detected)
   {
+    std::lock_guard<std::mutex> lock(m_last_check_mutex);
     m_last_check_time = latest_timestamp;
   }
 
   return changes_detected;
-} /* PostgreSQLConfigBackend::checkForExternalChanges */
+} /* PostgreSQLConfigBackend::checkForExternalChangesUsing */
 
 /****************************************************************************
  *
@@ -544,9 +594,14 @@ std::string PostgreSQLConfigBackend::escapeString(const std::string& str) const
 
 std::string PostgreSQLConfigBackend::getLastError(void) const
 {
-  if (m_conn != nullptr)
+  return getLastError(m_conn);
+} /* PostgreSQLConfigBackend::getLastError */
+
+std::string PostgreSQLConfigBackend::getLastError(PGconn* conn) const
+{
+  if (conn != nullptr)
   {
-    return PQerrorMessage(m_conn);
+    return PQerrorMessage(conn);
   }
   return "PostgreSQL connection not initialized";
 } /* PostgreSQLConfigBackend::getLastError */
@@ -599,23 +654,26 @@ void PostgreSQLConfigBackend::initializeLastCheckTime(void)
   }
 
   int nrows = PQntuples(result);
-  if (nrows > 0)
   {
-    char* max_timestamp = PQgetvalue(result, 0, 0);
-    if (max_timestamp != nullptr && max_timestamp[0] != '\0')
+    std::lock_guard<std::mutex> lock(m_last_check_mutex);
+    if (nrows > 0)
     {
-      m_last_check_time = std::string(max_timestamp);
+      char* max_timestamp = PQgetvalue(result, 0, 0);
+      if (max_timestamp != nullptr && max_timestamp[0] != '\0')
+      {
+        m_last_check_time = std::string(max_timestamp);
+      }
+      else
+      {
+        // Database is empty or all updated_at are NULL
+        m_last_check_time = "1970-01-01 00:00:00";
+      }
     }
     else
     {
-      // Database is empty or all updated_at are NULL
+      // No rows returned
       m_last_check_time = "1970-01-01 00:00:00";
     }
-  }
-  else
-  {
-    // No rows returned
-    m_last_check_time = "1970-01-01 00:00:00";
   }
 
   PQclear(result);

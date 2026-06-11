@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <mysql/mysql.h>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 /****************************************************************************
  *
@@ -101,7 +102,8 @@ static ConfigBackendSpecificFactory<MySQLConfigBackend> mysql_factory;
  ****************************************************************************/
 
 MySQLConfigBackend::MySQLConfigBackend(void)
-  : ConfigBackend(true, 300000), m_mysql(nullptr), m_last_check_time("1970-01-01 00:00:00")
+  : ConfigBackend(true, 300000), m_mysql(nullptr), m_mysql_poll(nullptr),
+    m_last_check_time("1970-01-01 00:00:00")
 {
   m_conn_params.port = 3306; // Default MySQL port
 } /* MySQLConfigBackend::MySQLConfigBackend */
@@ -125,42 +127,23 @@ bool MySQLConfigBackend::open(const string& source)
     return false;
   }
   
-  m_mysql = mysql_init(nullptr);
-  if (m_mysql == nullptr)
+  if (!connectMysql(m_mysql))
   {
-    cerr << "*** ERROR: Failed to initialize MySQL connection" << endl;
-    return false;
-  }
-  
-  // Set connection timeout
-  unsigned int timeout = 10;
-  mysql_options(m_mysql, MYSQL_OPT_CONNECT_TIMEOUT, &timeout);
-  
-  // Enable automatic reconnection
-  bool reconnect = true;
-  mysql_options(m_mysql, MYSQL_OPT_RECONNECT, &reconnect);
-  
-  if (mysql_real_connect(m_mysql,
-                         m_conn_params.host.c_str(),
-                         m_conn_params.user.c_str(),
-                         m_conn_params.password.c_str(),
-                         m_conn_params.database.c_str(),
-                         m_conn_params.port,
-                         nullptr, 0) == nullptr)
-  {
-    cerr << "*** ERROR: Failed to connect to MySQL database: " << getLastError() << endl;
+    cerr << "*** ERROR: Failed to connect to MySQL database: "
+         << getLastError(m_mysql) << endl;
     close();
     return false;
   }
-    
+
   // Note: Tables will be created later after table prefix is set
   // createTables() is now called from initializeDatabase()
-  
+
   return true;
 } /* MySQLConfigBackend::open */
 
 void MySQLConfigBackend::close(void)
 {
+  closePollConnection();
   if (m_mysql != nullptr)
   {
     mysql_close(m_mysql);
@@ -168,6 +151,40 @@ void MySQLConfigBackend::close(void)
   }
   m_connection_string.clear();
 } /* MySQLConfigBackend::close */
+
+bool MySQLConfigBackend::openPollConnection(void)
+{
+  closePollConnection();
+
+  if (!isOpen())
+  {
+    return false;
+  }
+
+  if (!connectMysql(m_mysql_poll))
+  {
+    cerr << "*** ERROR: Failed to open MySQL poll connection: "
+         << getLastError(m_mysql_poll) << endl;
+    closePollConnection();
+    return false;
+  }
+
+  return true;
+} /* MySQLConfigBackend::openPollConnection */
+
+void MySQLConfigBackend::closePollConnection(void)
+{
+  if (m_mysql_poll != nullptr)
+  {
+    mysql_close(m_mysql_poll);
+    m_mysql_poll = nullptr;
+  }
+} /* MySQLConfigBackend::closePollConnection */
+
+bool MySQLConfigBackend::pollForExternalChanges(void)
+{
+  return checkForExternalChangesUsing(m_mysql_poll);
+} /* MySQLConfigBackend::pollForExternalChanges */
 
 bool MySQLConfigBackend::isOpen(void) const
 {
@@ -379,34 +396,46 @@ bool MySQLConfigBackend::finalizeInitialization(void)
 
 bool MySQLConfigBackend::checkForExternalChanges(void)
 {
-  if (!isOpen())
+  return checkForExternalChangesUsing(m_mysql);
+} /* MySQLConfigBackend::checkForExternalChanges */
+
+bool MySQLConfigBackend::checkForExternalChangesUsing(MYSQL* mysql)
+{
+  if (!isOpen() || mysql == nullptr)
   {
     return false;
   }
 
+  std::string last_check_time;
+  {
+    std::lock_guard<std::mutex> lock(m_last_check_mutex);
+    last_check_time = m_last_check_time;
+  }
+
   // Query for all records updated since last check
   std::string table_name = getFullTableName("config");
-  string escaped_last_check = escapeString(m_last_check_time);
+  string escaped_last_check = escapeString(last_check_time, mysql);
   ostringstream query;
   query << "SELECT section, tag, value, updated_at FROM " << table_name << " "
         << "WHERE updated_at > '" << escaped_last_check << "' "
         << "ORDER BY updated_at";
 
-  if (mysql_query(m_mysql, query.str().c_str()) != 0)
+  if (mysql_query(mysql, query.str().c_str()) != 0)
   {
-    cerr << "*** ERROR: Failed to execute change detection query: " << getLastError() << endl;
+    cerr << "*** ERROR: Failed to execute change detection query: "
+         << getLastError(mysql) << endl;
     return false;
   }
 
-  MYSQL_RES* result = mysql_store_result(m_mysql);
+  MYSQL_RES* result = mysql_store_result(mysql);
   if (!result)
   {
-    cerr << "*** ERROR: Failed to store result: " << getLastError() << endl;
+    cerr << "*** ERROR: Failed to store result: " << getLastError(mysql) << endl;
     return false;
   }
 
   bool changes_detected = false;
-  std::string latest_timestamp = m_last_check_time;
+  std::string latest_timestamp = last_check_time;
   MYSQL_ROW row;
 
   while ((row = mysql_fetch_row(result)))
@@ -424,11 +453,12 @@ bool MySQLConfigBackend::checkForExternalChanges(void)
   // Update last check time to the latest timestamp seen
   if (changes_detected)
   {
+    std::lock_guard<std::mutex> lock(m_last_check_mutex);
     m_last_check_time = latest_timestamp;
   }
 
   return changes_detected;
-} /* MySQLConfigBackend::checkForExternalChanges */
+} /* MySQLConfigBackend::checkForExternalChangesUsing */
 
 /****************************************************************************
  *
@@ -441,6 +471,36 @@ bool MySQLConfigBackend::checkForExternalChanges(void)
  * Private member functions
  *
  ****************************************************************************/
+
+bool MySQLConfigBackend::connectMysql(MYSQL*& mysql)
+{
+  mysql = mysql_init(nullptr);
+  if (mysql == nullptr)
+  {
+    return false;
+  }
+
+  unsigned int timeout = 10;
+  mysql_options(mysql, MYSQL_OPT_CONNECT_TIMEOUT, &timeout);
+
+  bool reconnect = true;
+  mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect);
+
+  if (mysql_real_connect(mysql,
+                         m_conn_params.host.c_str(),
+                         m_conn_params.user.c_str(),
+                         m_conn_params.password.c_str(),
+                         m_conn_params.database.c_str(),
+                         m_conn_params.port,
+                         nullptr, 0) == nullptr)
+  {
+    mysql_close(mysql);
+    mysql = nullptr;
+    return false;
+  }
+
+  return true;
+} /* MySQLConfigBackend::connectMysql */
 
 bool MySQLConfigBackend::parseConnectionString(const std::string& conn_str, ConnectionParams& params)
 {
@@ -465,7 +525,15 @@ bool MySQLConfigBackend::parseConnectionString(const std::string& conn_str, Conn
     }
     else if (key == "port")
     {
-      params.port = static_cast<unsigned int>(stoul(value));
+      try
+      {
+        params.port = static_cast<unsigned int>(stoul(value));
+      }
+      catch (const std::exception&)
+      {
+        cerr << "*** ERROR: Invalid port in MySQL connection string" << endl;
+        return false;
+      }
     }
     else if (key == "user")
     {
@@ -517,25 +585,36 @@ bool MySQLConfigBackend::createTables(void)
 
 std::string MySQLConfigBackend::escapeString(const std::string& str) const
 {
-  if (!isOpen() || str.empty())
+  return escapeString(str, m_mysql);
+} /* MySQLConfigBackend::escapeString */
+
+std::string MySQLConfigBackend::escapeString(const std::string& str, MYSQL* mysql) const
+{
+  if (mysql == nullptr || str.empty())
   {
     return str;
   }
-  
+
   char* escaped = new char[str.length() * 2 + 1];
-  unsigned long escaped_length = mysql_real_escape_string(m_mysql, escaped, str.c_str(), str.length());
-  
+  unsigned long escaped_length =
+      mysql_real_escape_string(mysql, escaped, str.c_str(), str.length());
+
   string result(escaped, escaped_length);
   delete[] escaped;
-  
+
   return result;
 } /* MySQLConfigBackend::escapeString */
 
 std::string MySQLConfigBackend::getLastError(void) const
 {
-  if (m_mysql != nullptr)
+  return getLastError(m_mysql);
+} /* MySQLConfigBackend::getLastError */
+
+std::string MySQLConfigBackend::getLastError(MYSQL* mysql) const
+{
+  if (mysql != nullptr)
   {
-    return mysql_error(m_mysql);
+    return mysql_error(mysql);
   }
   return "MySQL connection not initialized";
 } /* MySQLConfigBackend::getLastError */
@@ -566,14 +645,17 @@ void MySQLConfigBackend::initializeLastCheckTime(void)
   }
 
   MYSQL_ROW row = mysql_fetch_row(result);
-  if (row != nullptr && row[0] != nullptr)
   {
-    m_last_check_time = std::string(row[0]);
-  }
-  else
-  {
-    // Database is empty or all updated_at are NULL
-    m_last_check_time = "1970-01-01 00:00:00";
+    std::lock_guard<std::mutex> lock(m_last_check_mutex);
+    if (row != nullptr && row[0] != nullptr)
+    {
+      m_last_check_time = std::string(row[0]);
+    }
+    else
+    {
+      // Database is empty or all updated_at are NULL
+      m_last_check_time = "1970-01-01 00:00:00";
+    }
   }
 
   mysql_free_result(result);

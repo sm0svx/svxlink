@@ -27,7 +27,7 @@ GNU General Public License for more details.
 #include "AsyncConfigBackend.h"
 #include <iostream>
 #include <sstream>
-#include <algorithm>
+#include <stdexcept>
 
 namespace Async
 {
@@ -46,7 +46,8 @@ std::optional<ConfigSource> ConfigSource::parse(const std::string& url)
 
   if (source.backend_type == BACKEND_UNKNOWN)
   {
-    std::cerr << "*** ERROR: Unknown backend type in URL: " << url << std::endl;
+    std::cerr << "*** ERROR: Unknown backend type in configuration source URL"
+              << std::endl;
     std::cerr << "*** Available backends: " << ConfigBackendFactory::validFactories() << std::endl;
     return std::nullopt;
   }
@@ -77,7 +78,7 @@ std::optional<ConfigSource> ConfigSource::parse(const std::string& url)
     // For database backends, parse URL
     if (!parseDatabaseURL(url, source.connection_info))
     {
-      std::cerr << "*** ERROR: Failed to parse database URL: " << url << std::endl;
+      std::cerr << "*** ERROR: Failed to parse database URL" << std::endl;
       return std::nullopt;
     }
   }
@@ -188,7 +189,15 @@ bool ConfigSource::parseDatabaseURL(const std::string& url,
   if (colon_pos != std::string::npos)
   {
     host = hostport.substr(0, colon_pos);
-    port = std::stoi(hostport.substr(colon_pos + 1));
+    try
+    {
+      port = std::stoi(hostport.substr(colon_pos + 1));
+    }
+    catch (const std::exception&)
+    {
+      std::cerr << "*** ERROR: Invalid port in database URL" << std::endl;
+      return false;
+    }
   }
   else
   {

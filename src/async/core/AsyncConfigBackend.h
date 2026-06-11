@@ -314,6 +314,31 @@ class ConfigBackend : public sigc::trackable
                            const std::string& tag,
                            const std::string& value);
 
+    /**
+     * @brief   Check for external changes from the auto-poll thread
+     * @return  true if changes were detected, false otherwise
+     *
+     * Called periodically by the background poll thread. Database backends
+     * that use a dedicated poll connection should override this method.
+     * The default implementation delegates to checkForExternalChanges().
+     */
+    virtual bool pollForExternalChanges(void);
+
+    /**
+     * @brief   Open a dedicated database connection for the poll thread
+     * @return  true on success, false on failure
+     *
+     * Called by startAutoPolling() before the poll thread is started.
+     */
+    virtual bool openPollConnection(void);
+
+    /**
+     * @brief   Close the dedicated poll-thread database connection
+     *
+     * Called by stopAutoPolling() after the poll thread has exited.
+     */
+    virtual void closePollConnection(void);
+
   protected:
     /**
      * @brief   Get the full table name with prefix

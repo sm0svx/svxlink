@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <list>
+#include <mutex>
 
 /****************************************************************************
  *
@@ -227,18 +228,25 @@ class PostgreSQLConfigBackend : public ConfigBackend
     virtual bool finalizeInitialization(void) override;
 
   protected:
+    virtual bool pollForExternalChanges(void) override;
+    virtual bool openPollConnection(void) override;
+    virtual void closePollConnection(void) override;
 
   private:
     PGconn*     m_conn;
+    PGconn*     m_conn_poll;
     std::string m_connection_string;
     std::string m_connection_info;
     std::string m_last_check_time;
+    mutable std::mutex m_last_check_mutex;
 
     bool createTables(void);
+    bool checkForExternalChangesUsing(PGconn* conn);
     bool executeQuery(const std::string& query) const;
     PGresult* executeQueryWithResult(const std::string& query) const;
     std::string escapeString(const std::string& str) const;
     std::string getLastError(void) const;
+    std::string getLastError(PGconn* conn) const;
     void parseConnectionInfo(const std::string& conn_str);
     void initializeLastCheckTime(void);
 

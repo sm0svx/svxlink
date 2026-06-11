@@ -303,6 +303,8 @@ class Config
      * @param 	tag   	   The name of the configuration variable to get
      * @param 	value 	   The value is returned in this argument. Any previous
      *	      	      	   contents is wiped
+     * @param	missing_ok If set to \em true, return \em true if the
+     *                     configuration variable is missing
      * @return	Returns \em true on success or else \em false on failure
      *
      * This function is used to get the value for a configuration variable
@@ -318,6 +320,8 @@ class Config
      * @param 	tag   	   The name of the configuration variable to get
      * @param 	value 	   The value is returned in this argument. Any previous
      *	      	      	   contents is wiped
+     * @param	missing_ok If set to \em true, return \em true if the
+     *                     configuration variable is missing
      * @return	Returns \em true on success or else \em false on failure
      *
      * This function is used to get the value for a configuration variable

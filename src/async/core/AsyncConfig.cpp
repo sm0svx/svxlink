@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <map>
 #include <vector>
+#include <stdexcept>
 
 
 /****************************************************************************
@@ -196,7 +197,7 @@ bool Config::openDirect(const string& source)
   m_backend = createConfigBackend(source);
   if (m_backend == nullptr)
   {
-    cerr << "*** ERROR: Failed to create configuration backend for: " << source << endl;
+    cerr << "*** ERROR: Failed to create configuration backend" << endl;
     return false;
   }
 
@@ -361,7 +362,17 @@ bool Config::parseDbConfFile(const std::string& file_path, DbConf& conf)
               (value == "1" || value == "true" || value == "TRUE" ||
                value == "yes"  || value == "YES");
         else if (key == "POLL_INTERVAL")
-          conf.poll_interval_seconds = static_cast<unsigned int>(stoul(value));
+        {
+          try
+          {
+            conf.poll_interval_seconds = static_cast<unsigned int>(stoul(value));
+          }
+          catch (const std::exception&)
+          {
+            cerr << "*** ERROR: Invalid POLL_INTERVAL in db.conf: " << value << endl;
+            return false;
+          }
+        }
       }
     }
   }
@@ -372,8 +383,7 @@ bool Config::parseDbConfFile(const std::string& file_path, DbConf& conf)
     return false;
   }
 
-  cout << "Database configuration: TYPE=" << conf.type
-       << ", SOURCE=" << conf.source;
+  cout << "Database configuration: TYPE=" << conf.type;
   if (!conf.table_prefix.empty())
     cout << ", TABLE_PREFIX=" << conf.table_prefix;
   cout << endl;

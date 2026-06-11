@@ -79,6 +79,20 @@ bool ConfigBackend::checkForExternalChanges(void)
   return false;
 } /* ConfigBackend::checkForExternalChanges */
 
+bool ConfigBackend::pollForExternalChanges(void)
+{
+  return checkForExternalChanges();
+} /* ConfigBackend::pollForExternalChanges */
+
+bool ConfigBackend::openPollConnection(void)
+{
+  return true;
+} /* ConfigBackend::openPollConnection */
+
+void ConfigBackend::closePollConnection(void)
+{
+} /* ConfigBackend::closePollConnection */
+
 void ConfigBackend::startAutoPolling(unsigned int interval_ms)
 {
   if (interval_ms == 0)
@@ -101,6 +115,18 @@ void ConfigBackend::startAutoPolling(unsigned int interval_ms)
 
   m_fd_watch = new Async::FdWatch(m_wakeup_pipe[0], Async::FdWatch::FD_WATCH_RD);
   m_fd_watch->activity.connect(sigc::mem_fun(*this, &ConfigBackend::onWakeupPipe));
+
+  if (!openPollConnection())
+  {
+    std::cerr << "*** ERROR: ConfigBackend: Failed to open poll connection"
+              << std::endl;
+    delete m_fd_watch;
+    m_fd_watch = nullptr;
+    ::close(m_wakeup_pipe[0]);
+    ::close(m_wakeup_pipe[1]);
+    m_wakeup_pipe[0] = m_wakeup_pipe[1] = -1;
+    return;
+  }
 
   std::cout << "Starting async config polling (interval "
             << interval_ms << " ms)" << std::endl;
@@ -137,6 +163,8 @@ void ConfigBackend::stopAutoPolling(void)
     ::close(m_wakeup_pipe[1]);
     m_wakeup_pipe[0] = m_wakeup_pipe[1] = -1;
   }
+
+  closePollConnection();
 
   // Discard any queued changes that never made it to the event loop
   {
@@ -175,7 +203,7 @@ void ConfigBackend::pollThreadFunc(unsigned int interval_ms)
     if (status == std::cv_status::timeout)
     {
       lock.unlock();
-      checkForExternalChanges();
+      pollForExternalChanges();
       lock.lock();
     }
   }
@@ -213,7 +241,7 @@ void ConfigBackend::notifyValueChanged(const std::string& section,
   }
 
   std::cout << "Configuration changed: [" << section << "]/" << tag
-            << " = " << value << std::endl;
+            << std::endl;
 
   if (m_wakeup_pipe[1] != -1)
   {
@@ -243,7 +271,7 @@ ConfigBackendPtr createConfigBackend(const std::string& url)
   auto parsed = ConfigSource::parse(url);
   if (!parsed)
   {
-    std::cerr << "*** ERROR: Invalid configuration source URL: " << url << std::endl;
+    std::cerr << "*** ERROR: Invalid configuration source URL" << std::endl;
     return nullptr;
   }
 
@@ -263,8 +291,8 @@ ConfigBackendPtr createConfigBackendByType(const std::string& backend_type,
   
   if (!backend->open(connection_info))
   {
-    std::cerr << "*** ERROR: Failed to open backend of type '" << backend_type 
-              << "' with connection info: " << connection_info << std::endl;
+    std::cerr << "*** ERROR: Failed to open '" << backend_type
+              << "' configuration backend" << std::endl;
     return nullptr;
   }
   

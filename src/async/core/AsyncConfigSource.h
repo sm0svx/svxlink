@@ -10,8 +10,8 @@ parse configuration source URLs and detect the backend type.
 Supports:
   - file://path/to/file.conf
   - sqlite://path/to/db.sqlite
-  - mysql://user:pass@host:port/database
-  - postgresql://user:pass@host:port/database
+  - mysql://user:pass@@host:port/database
+  - postgresql://user:pass@@host:port/database
 
 \verbatim
 Async - A library for programming event driven applications

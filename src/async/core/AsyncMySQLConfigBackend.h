@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <list>
+#include <mutex>
 
 /****************************************************************************
  *
@@ -226,6 +227,9 @@ class MySQLConfigBackend : public ConfigBackend
     virtual bool finalizeInitialization(void) override;
 
   protected:
+    virtual bool pollForExternalChanges(void) override;
+    virtual bool openPollConnection(void) override;
+    virtual void closePollConnection(void) override;
 
   private:
     struct ConnectionParams
@@ -238,14 +242,20 @@ class MySQLConfigBackend : public ConfigBackend
     };
 
     MYSQL*           m_mysql;
+    MYSQL*           m_mysql_poll;
     ConnectionParams m_conn_params;
     std::string      m_connection_string;
     std::string      m_last_check_time;
+    mutable std::mutex m_last_check_mutex;
 
     bool parseConnectionString(const std::string& conn_str, ConnectionParams& params);
     bool createTables(void);
+    bool connectMysql(MYSQL*& mysql);
+    bool checkForExternalChangesUsing(MYSQL* mysql);
     std::string escapeString(const std::string& str) const;
+    std::string escapeString(const std::string& str, MYSQL* mysql) const;
     std::string getLastError(void) const;
+    std::string getLastError(MYSQL* mysql) const;
     void initializeLastCheckTime(void);
 
 }; /* class MySQLConfigBackend */
