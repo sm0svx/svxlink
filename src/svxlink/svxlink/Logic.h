@@ -313,7 +313,7 @@ class Logic : public LogicBase
     void onPublishStateEvent(const std::string &event_name,
                              const std::string &msg);
     void detectedTone(float fq);
-    void cfgUpdated(const std::string& section, const std::string& tag);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
     bool getConfigValue(const std::string& section, const std::string& tag,
                         std::string& value);
     void signalLevelUpdated(float siglev);

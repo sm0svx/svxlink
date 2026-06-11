@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -164,12 +165,12 @@ class LADSPAPluginLoader
                             << subsec << "'" << std::endl;
                   return false;
                 }
-                cfg.subscribeValue(subsec, port_name, 0,
-                    [=](LADSPA_Data val)
-                    {
-                      plug->setControl(port_num, val);
-                      //plug->print(std::string("### ") + sec + ": ");
-                    });
+                m_subscriptions.push_back(
+                    cfg.subscribeValue(subsec, port_name, 0,
+                        [=](LADSPA_Data val)
+                        {
+                          plug->setControl(port_num, val);
+                        }));
               }
             }
           }
@@ -239,6 +240,7 @@ class LADSPAPluginLoader
   private:
     Async::AudioSink*   m_chain_sink  = nullptr;
     Async::AudioSource* m_chain_src   = nullptr;
+    std::vector<Async::Config::Subscription> m_subscriptions;
 
 };  /* class LADSPAPluginLoader */
 

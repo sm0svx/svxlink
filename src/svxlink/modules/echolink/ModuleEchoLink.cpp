@@ -412,8 +412,7 @@ bool ModuleEchoLink::initialize(void)
         sigc::mem_fun(*this, &ModuleEchoLink::onCommandPtyInput));
   }
 
-  cfg().valueUpdated.connect(
-      sigc::mem_fun(*this, &ModuleEchoLink::cfgValueUpdated));
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ModuleEchoLink::cfgUpdated));
 
   return true;
   
@@ -2235,35 +2234,121 @@ bool ModuleEchoLink::setAcceptOutgoingRegex(void)
 } /* ModuleEchoLink::setAcceptOutgoingRegex */
 
 
-void ModuleEchoLink::cfgValueUpdated(const std::string& section,
-    const std::string& tag)
+void ModuleEchoLink::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
 {
-  if (section != cfgName())
-  {
-    return;
-  }
+  // Call base class to handle TIMEOUT and MUTE_LOGIC_LINKING
+  Module::cfgUpdated(section, tag, value);
 
-  if (tag == CFG_DROP_INCOMING)
+  if (section == cfgName())
   {
-    setDropIncomingRegex();
+    if (tag == CFG_DROP_INCOMING)
+    {
+      setDropIncomingRegex();
+    }
+    else if (tag == CFG_REJECT_INCOMING)
+    {
+      setRejectIncomingRegex();
+    }
+    else if (tag == CFG_ACCEPT_INCOMING)
+    {
+      setAcceptIncomingRegex();
+    }
+    else if (tag == CFG_REJECT_OUTGOING)
+    {
+      setRejectOutgoingRegex();
+    }
+    else if (tag == CFG_ACCEPT_OUTGOING)
+    {
+      setAcceptOutgoingRegex();
+    }
+    else if (tag == "AUTOCON_TIME")
+    {
+      int autocon_time_secs = autocon_time / 1000;
+      if (cfg().getValue(cfgName(), "AUTOCON_TIME", autocon_time_secs))
+      {
+        autocon_time = 1000 * max(autocon_time_secs, 5); // At least five seconds
+        if (autocon_timer != 0)
+        {
+          autocon_timer->setTimeout(autocon_time);
+        }
+      }
+    }
+    else if (tag == "LOCATION")
+    {
+      string new_location;
+      if (cfg().getValue(cfgName(), "LOCATION", new_location))
+      {
+        if (new_location.size() > Directory::MAX_DESCRIPTION_SIZE)
+        {
+          cerr << "*** WARNING: The value of " << cfgName() << "/LOCATION is too "
+               << "long. Maximum length is " << Directory::MAX_DESCRIPTION_SIZE
+               << " characters.\n";
+          new_location.resize(Directory::MAX_DESCRIPTION_SIZE);
+        }
+        location = new_location;
+        if (dir != 0)
+        {
+          updateDescription();
+        }
+      }
+    }
+    else if (tag == "SYSOPNAME")
+    {
+      cfg().getValue(cfgName(), "SYSOPNAME", sysop_name);
+    }
+    else if (tag == "DESCRIPTION")
+    {
+      cfg().getValue(cfgName(), "DESCRIPTION", description);
+    }
+    else if (tag == "MAX_CONNECTIONS")
+    {
+      string value_str;
+      if (cfg().getValue(cfgName(), "MAX_CONNECTIONS", value_str))
+      {
+        unsigned new_max_connections = atoi(value_str.c_str());
+        if (new_max_connections >= max_qsos)
+        {
+          max_connections = new_max_connections;
+        }
+        else
+        {
+          cerr << "*** ERROR: The value of " << cfgName() << "/MAX_CONNECTIONS ("
+               << new_max_connections << ") must be greater or equal to the value of "
+               << cfgName() << "/MAX_QSOS (" << max_qsos << ").\n";
+        }
+      }
+    }
+    else if (tag == "MAX_QSOS")
+    {
+      string value_str;
+      if (cfg().getValue(cfgName(), "MAX_QSOS", value_str))
+      {
+        unsigned new_max_qsos = atoi(value_str.c_str());
+        if (new_max_qsos <= max_connections)
+        {
+          max_qsos = new_max_qsos;
+        }
+        else
+        {
+          cerr << "*** ERROR: The value of " << cfgName() << "/MAX_QSOS ("
+               << new_max_qsos << ") must be less or equal to the value of "
+               << cfgName() << "/MAX_CONNECTIONS (" << max_connections << ").\n";
+        }
+      }
+    }
+    else if (tag == "REJECT_CONF")
+    {
+      cfg().getValue(cfgName(), "REJECT_CONF", reject_conf);
+    }
+    else if (tag == "ALLOW_IP")
+    {
+      cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
+    }
+    // Note: SERVERS, CALLSIGN, PASSWORD, PROXY_SERVER, PROXY_PORT, PROXY_PASSWORD,
+    //       BIND_ADDR, DROP_ALL_INCOMING, COMMAND_PTY require restart
+    // Note: CHECK_NR_CONNECTS is complex and affects timer creation/deletion
   }
-  else if (tag == CFG_REJECT_INCOMING)
-  {
-    setRejectIncomingRegex();
-  }
-  else if (tag == CFG_ACCEPT_INCOMING)
-  {
-    setAcceptIncomingRegex();
-  }
-  else if (tag == CFG_REJECT_OUTGOING)
-  {
-    setRejectOutgoingRegex();
-  }
-  else if (tag == CFG_ACCEPT_OUTGOING)
-  {
-    setAcceptOutgoingRegex();
-  }
-} /* ModuleEchoLink::cfgValueUpdated */
+} /* ModuleEchoLink::cfgUpdated */
 
 
 /*

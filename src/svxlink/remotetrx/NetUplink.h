@@ -239,6 +239,8 @@ class NetUplink : public Uplink
     void forceDisconnect(void);
     void setState(State new_state) { state = new_state; }
 
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
+
 };  /* class NetUplink */
 
 

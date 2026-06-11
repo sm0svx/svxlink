@@ -1,0 +1,10 @@
+# SVXLink Database Configuration - SQLite Backend
+# This configuration uses a local SQLite database file
+
+[DATABASE]
+# Backend type: file, sqlite, mysql, postgresql
+TYPE=sqlite
+
+# For SQLite backend, SOURCE is the path to the database file
+# The database and tables will be created automatically if they don't exist
+SOURCE=/var/lib/svxlink/config.db

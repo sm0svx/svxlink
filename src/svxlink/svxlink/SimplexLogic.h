@@ -139,6 +139,10 @@ class SimplexLogic : public Logic
     bool  mute_rx_on_tx;
     bool  mute_tx_on_rx;
     bool  rgr_sound_always;
+
+    Async::Config::Subscription m_sub_mute_rx_on_tx;
+    Async::Config::Subscription m_sub_mute_tx_on_rx;
+    Async::Config::Subscription m_sub_rgr_sound_always;
     
 };  /* class SimplexLogic */
 

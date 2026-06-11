@@ -40,7 +40,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <signal.h>
 #include <termios.h>
-#include <dirent.h>
 #include <popt.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -144,7 +143,9 @@ static char             *pidfile_name = NULL;
 static char             *logfile_name = NULL;
 static char             *runasuser = NULL;
 static char   	      	*config = NULL;
+static char   	      	*dbconfig = NULL;
 static int    	      	daemonize = 0;
+static int              init_db = 0;
 static int    	      	logfd = -1;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
@@ -345,89 +346,33 @@ int main(int argc, char **argv)
   tstamp_format = "%c";
 
   Config cfg;
-  string cfg_filename;
-  if (config != NULL)
+  if (!cfg.openWithFallback(config ? string(config) : "",
+                             dbconfig ? string(dbconfig) : "",
+                             "svxserver.conf"))
   {
-    cfg_filename = string(config);
-    if (!cfg.open(cfg_filename))
-    {
-      cerr << "*** ERROR: Could not open configuration file: "
-      	   << config << endl;
-      exit(1);
-    }
+    cerr << "*** ERROR: " << cfg.getLastError() << endl;
+    exit(1);
   }
-  else
-  {
-    cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/svxserver.conf";
-    if (!cfg.open(cfg_filename))
-    {
-      cfg_filename = "/etc/svxlink/svxserver.conf";
-      if (!cfg.open(cfg_filename))
-      {
-	cfg_filename = "/etc/svxserver.conf";
-	if (!cfg.open(cfg_filename))
-	{
-	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
-      	       << "\t" << home_dir << "/.svxlink/svxserver.conf\n"
-      	       << "\t/etc/svxlink/svxserver.conf\n"
-	       << "\t/etc/svxserver.conf\n"
-	       << "Possible reasons for failure are: None of the files exist,\n"
-	       << "you do not have permission to read the file or there was a\n"
-	       << "syntax error in the file\n";
-	  exit(1);
-	}
-      }
-    }
-  }
-  string main_cfg_filename(cfg_filename);
 
-  string cfg_dir;
-  if (cfg.getValue("GLOBAL", "CFG_DIR", cfg_dir))
-  {
-    if (cfg_dir[0] != '/')
-    {
-      int slash_pos = main_cfg_filename.rfind('/');
-      if (slash_pos != -1)
-      {
-      	cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
-      }
-      else
-      {
-      	cfg_dir = string("./") + cfg_dir;
-      }
-    }
+  cout << "Configuration loaded from: " << cfg.getMainConfigFile()
+       << " (" << cfg.getBackendType() << " backend)" << endl;
 
-    DIR *dir = opendir(cfg_dir.c_str());
-    if (dir == NULL)
+  if (init_db)
+  {
+    if (cfg.getBackendType() == "file")
     {
-      cerr << "*** ERROR: Could not read from directory spcified by "
-      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+      cerr << "*** ERROR: --init-db requires a database backend"
+              " (use --dbconfig or set up db.conf)" << endl;
       exit(1);
     }
-
-    struct dirent *dirent;
-    while ((dirent = readdir(dir)) != NULL)
+    if (!cfg.listSections().empty())
     {
-      char *dot = strrchr(dirent->d_name, '.');
-      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
-      {
-      	continue;
-      }
-      cfg_filename = cfg_dir + "/" + dirent->d_name;
-      if (!cfg.open(cfg_filename))
-       {
-	 cerr << "*** ERROR: Could not open configuration file: "
-	      << cfg_filename << endl;
-	 exit(1);
-       }
+      cout << "*** WARNING: --init-db: database is not empty, skipping import" << endl;
     }
-
-    if (closedir(dir) == -1)
+    else
     {
-      cerr << "*** ERROR: Error closing directory specified by"
-      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
-      exit(1);
+      if (!cfg.importFromConfigFile("svxserver.conf"))
+        cerr << "*** WARNING: --init-db: could not import from svxserver.conf" << endl;
     }
   }
 
@@ -441,7 +386,7 @@ int main(int argc, char **argv)
           "terms and conditions in the\n";
   cout << "GNU GPL (General Public License) version 2 or later.\n";
 
-  cout << "\nUsing configuration file: " << main_cfg_filename << endl;
+  cout << "\nUsing configuration file: " << cfg.getMainConfigFile() << endl;
 
 
   struct termios org_termios;
@@ -535,6 +480,10 @@ static void parse_arguments(int argc, const char **argv)
             "Specify the user to run SvxLink as", "<username>"},
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
+    {"dbconfig", 0, POPT_ARG_STRING, &dbconfig, 0,
+	    "Specify the database configuration file to use", "<filename>"},
+    {"init-db", 0, POPT_ARG_NONE, &init_db, 0,
+	    "Initialize an empty database backend from the installed svxserver.conf", NULL},
     /*
     {"int_arg", 'i', POPT_ARG_INT, &int_arg, 0,
 	    "Description of int argument", "<an int>"},

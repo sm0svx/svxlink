@@ -1844,16 +1844,10 @@ void Logic::detectedTone(float fq)
 } /* Logic::detectedTone */
 
 
-void Logic::cfgUpdated(const std::string& section, const std::string& tag)
+void Logic::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
 {
   if (section == name())
-  {
-    std::string value;
-    if (cfg().getValue(name(), tag, value))
-    {
-      event_handler->setVariable(name() + "::Logic::CFG_" + tag, value);
-      processEvent("config_updated CFG_" + tag + " \"" + value + "\"");
-    }
+  {    
     if (tag == "ONLINE")
     {
       bool online;
@@ -1862,6 +1856,57 @@ void Logic::cfgUpdated(const std::string& section, const std::string& tag)
         setOnline(online);
       }
     }
+    else if (tag == "EXEC_CMD_ON_SQL_CLOSE")
+    {
+      int exec_cmd_on_sql_close = -1;
+      if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
+      {
+        exec_cmd_on_sql_close_timer.setTimeout(exec_cmd_on_sql_close);
+      }
+    }
+    else if (tag == "RGR_SOUND_DELAY")
+    {
+      int rgr_sound_delay = -1;
+      if (cfg().getValue(name(), "RGR_SOUND_DELAY", rgr_sound_delay))
+      {
+        rgr_sound_timer.setTimeout(rgr_sound_delay);
+      }
+    }
+    else if (tag == "REPORT_CTCSS")
+    {
+      cfg().getValue(name(), "REPORT_CTCSS", report_ctcss);
+      char str[256];
+      sprintf(str, "%.1f", report_ctcss);
+      event_handler->setVariable("report_ctcss", str);
+    }
+    else if (tag == "FX_GAIN_NORMAL")
+    {
+      // This only updates when audioStreamStateChange is called
+      cfg().getValue(name(), "FX_GAIN_NORMAL", fx_gain_normal);
+    }
+    else if (tag == "FX_GAIN_LOW")
+    {
+      // This only updates when audioStreamStateChange is called
+      cfg().getValue(name(), "FX_GAIN_LOW", fx_gain_low);
+    }
+    else if (tag == "CTCSS_TO_TG_DELAY")
+    {
+      int ctcss_to_tg_delay = 0;
+      if (cfg().getValue(name(), "CTCSS_TO_TG_DELAY", ctcss_to_tg_delay))
+      {
+        m_ctcss_to_tg_timer.setTimeout(ctcss_to_tg_delay);
+      }
+    }
+    // Note: RX, TX, CALLSIGN, EVENT_HANDLER changes would require restart
+    // Note: MACRO_PREFIX, SEL5_MACRO_RANGE, ACTIVATE_MODULE_ON_LONG_CMD changes
+    //       would require command parser re-initialization
+    // Note: TX_CTCSS changes would require updating tx_ctcss_mask, which is complex
+
+    // Always signal TCL scripts that a configuration change happened
+    // This allows TCL scripts to refresh their local variables from Config
+    std::ostringstream event;
+    event << "config_updated \"" << section << "\" \"" << tag << "\" \"" << value << "\"";
+    processEvent(event.str());
   }
 } /* Logic::cfgUpdated */
 

@@ -73,6 +73,39 @@ proc startup {} {
   addMinuteTickSubscriber checkPeriodicIdentify
 }
 
+#
+# Executed when a config variable changes
+#
+proc config_updated {section tag value} {
+  printInfo "Configuration variable $section $tag changed to $value"
+
+  variable long_ident_interval
+  variable short_ident_interval
+  variable short_voice_id_enable
+  variable short_cw_id_enable
+  variable short_announce_enable
+  variable short_announce_file
+  variable long_voice_id_enable
+  variable long_cw_id_enable
+  variable long_announce_enable
+  variable long_announce_file
+  variable ident_only_after_tx
+
+  set long_ident_interval [getConfigValue ${::logic_name} LONG_IDENT_INTERVAL 0]
+  set short_ident_interval [getConfigValue ${::logic_name} SHORT_IDENT_INTERVAL $long_ident_interval]
+
+  set short_voice_id_enable [getConfigValue ${::logic_name} SHORT_VOICE_ID_ENABLE 1]
+  set short_cw_id_enable [getConfigValue ${::logic_name} SHORT_CW_ID_ENABLE 0]
+  set short_announce_enable [getConfigValue ${::logic_name} SHORT_ANNOUNCE_ENABLE 0]
+  set short_announce_file [getConfigValue ${::logic_name} SHORT_ANNOUNCE_FILE ""]
+
+  set long_voice_id_enable [getConfigValue ${::logic_name} LONG_VOICE_ID_ENABLE 1]
+  set long_cw_id_enable [getConfigValue ${::logic_name} LONG_CW_ID_ENABLE 0]
+  set long_announce_enable [getConfigValue ${::logic_name} LONG_ANNOUNCE_ENABLE 0]
+  set long_announce_file [getConfigValue ${::logic_name} LONG_ANNOUNCE_FILE ""]
+
+  set ident_only_after_tx [getConfigValue ${::logic_name} IDENT_ONLY_AFTER_TX 0]
+}
 
 #
 # Executed when a specified module could not be found
@@ -749,16 +782,6 @@ proc logic_online {online} {
     }
   }
 }
-
-
-#
-# Executed when a configuration variable is updated at runtime in the logic
-# core
-#
-proc config_updated {tag value} {
-  #printInfo "Configuration variable updated: $tag=$value"
-}
-
 
 #
 # Executed when a DTMF command is received from another linked logic core

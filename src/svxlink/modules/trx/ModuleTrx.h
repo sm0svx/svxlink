@@ -172,6 +172,7 @@ class ModuleTrx : public Module
     //void allMsgsWritten(void);
     void rxTimeout(Async::Timer *t);
     void rxSquelchOpen(bool is_open);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value) override;
 
 };  /* class ModuleTrx */
 

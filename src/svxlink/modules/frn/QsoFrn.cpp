@@ -994,6 +994,23 @@ void QsoFrn::onDelayedReconnect(Async::Timer *timer)
   reconnect();
 }
 
+void QsoFrn::updateConfig(Async::Config& cfg, const std::string& cfg_name)
+{
+  cfg.getValue(cfg_name, "FRN_DEBUG", opt_frn_debug);
+  cfg.getValue(cfg_name, "DISABLE_RF", is_rf_disabled);
+  cfg.getValue(cfg_name, "SERVER", opt_server);
+  cfg.getValue(cfg_name, "PORT", opt_port);
+  cfg.getValue(cfg_name, "SERVER_BACKUP", opt_server_backup);
+  cfg.getValue(cfg_name, "PORT_BACKUP", opt_port_backup);
+  cfg.getValue(cfg_name, "EMAIL_ADDRESS", opt_email_address);
+  cfg.getValue(cfg_name, "DYN_PASSWORD", opt_dyn_password);
+  cfg.getValue(cfg_name, "CALLSIGN_AND_USER", opt_callsign_and_user);
+  cfg.getValue(cfg_name, "CLIENT_TYPE", opt_client_type);
+  cfg.getValue(cfg_name, "BAND_AND_CHANNEL", opt_band_and_channel);
+  cfg.getValue(cfg_name, "DESCRIPTION", opt_description);
+} /* QsoFrn::updateConfig */
+
+
 /*
  * This file has not been truncated
  */

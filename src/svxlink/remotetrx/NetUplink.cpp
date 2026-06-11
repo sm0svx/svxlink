@@ -895,6 +895,54 @@ void NetUplink::forceDisconnect(void)
   clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* NetUplink::forceDisconnect */
 
+void NetUplink::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == name)
+  {
+    if (tag == "FALLBACK_REPEATER")
+    {
+      cfg.getValue(name, "FALLBACK_REPEATER", fallback_enabled, true);
+      if (fallback_enabled)
+      {
+        setFallbackActive(true);
+      }
+      else
+      {
+        rx->setMuteState(Rx::MUTE_CONTENT);
+      }
+    }
+    else if (tag == "AUTH_KEY")
+    {
+      auth_key = value;
+    }
+    else if (tag == "MUTE_TX_ON_RX")
+    {
+      int mute_tx_on_rx = -1;
+      cfg.getValue(name, "MUTE_TX_ON_RX", mute_tx_on_rx);
+      if (mute_tx_on_rx >= 0)
+      {
+        if(mute_tx_timer != 0)
+        {
+          mute_tx_timer->setTimeout(mute_tx_on_rx);
+        }
+        else
+        {
+          mute_tx_timer = new Timer(mute_tx_on_rx);
+          mute_tx_timer->setEnable(false);
+          mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
+        }
+      }
+      else
+      {
+        if(mute_tx_timer != 0)
+        {
+          delete mute_tx_timer;
+          mute_tx_timer = 0;
+        }
+      }
+    }
+  }
+} /* NetUplink::cfgUpdated */
 
 /*
  * This file has not been truncated

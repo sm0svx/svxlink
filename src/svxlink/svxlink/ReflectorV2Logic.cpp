@@ -462,6 +462,8 @@ bool ReflectorLogic::initialize(Async::Config& cfgobj, const std::string& logic_
   cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL",
       m_udp_heartbeat_tx_cnt_reset);
 
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ReflectorLogic::cfgUpdated));
+
   connect();
 
   return true;
@@ -571,7 +573,7 @@ void ReflectorLogic::remoteCmdReceived(LogicBase* src_logic,
           }
           else
           {
-            std::cerr << "*** WARNING: Not allowed to add a temporary montior "
+            std::cerr << "*** WARNING: Not allowed to add a temporary monitor "
                          "for TG #" << tg << " which is being permanently "
                          "monitored" << std::endl;
             os << "command_failed " << cmd;
@@ -1904,6 +1906,87 @@ bool ReflectorLogic::getConfigValue(const std::string& section,
 {
   return cfg().getValue(section, tag, value, true);
 } /* ReflectorLogic::getConfigValue */
+
+
+void ReflectorLogic::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == name())
+  {
+    // Runtime-updatable boolean values
+    if (tag == "MUTE_FIRST_TX_LOC")
+    {
+      // TODO -- TO BE IMPLEMENTED
+      cfg().getValue(name(), "MUTE_FIRST_TX_LOC", m_mute_first_tx_loc);
+    }
+    else if (tag == "MUTE_FIRST_TX_REM")
+    {
+      // TODO -- TO BE IMPLEMENTED
+      cfg().getValue(name(), "MUTE_FIRST_TX_REM", m_mute_first_tx_rem);
+    }
+    else if (tag == "VERBOSE")
+    {
+      cfg().getValue(name(), "VERBOSE", m_verbose);
+    }
+    else if (tag == "TMP_MONITOR_TIMEOUT")
+    {
+      // Only updates on the next call to monitor tg, the current monitoring remains unchanged
+      cfg().getValue(name(), "TMP_MONITOR_TIMEOUT", m_tmp_monitor_timeout);
+    }
+    else if (tag == "UDP_HEARTBEAT_INTERVAL")
+    {
+      cfg().getValue(name(), "UDP_HEARTBEAT_INTERVAL", m_udp_heartbeat_tx_cnt_reset);
+    }
+    else if (tag == "DEFAULT_TG")
+    {
+      cfg().getValue(name(), "DEFAULT_TG", m_default_tg);
+    }
+    else if (tag == "TG_SELECT_TIMEOUT")
+    {
+      unsigned new_timeout;
+      if (cfg().getValue(name(), "TG_SELECT_TIMEOUT", 1U,
+                         std::numeric_limits<unsigned>::max(),
+                         new_timeout, true))
+      {
+        m_tg_select_timeout = new_timeout;
+        // Update current timeout counter if TG is selected
+        if (m_selected_tg > 0)
+        {
+          m_tg_select_timeout_cnt = m_tg_select_timeout;
+        }
+      }
+      else
+      {
+        std::cerr << "*** ERROR[" << name()
+                  << "]: Illegal value for TG_SELECT_TIMEOUT: " << value
+                  << std::endl;
+      }
+    }
+    else if (tag == "TG_SELECT_INHIBIT_TIMEOUT")
+    {
+      unsigned new_timeout;
+      if (cfg().getValue(name(), "TG_SELECT_INHIBIT_TIMEOUT", 0U,
+                         std::numeric_limits<unsigned>::max(),
+                         new_timeout, true))
+      {
+        m_tg_select_inhibit_timeout = new_timeout;
+      }
+      else
+      {
+        std::cerr << "*** ERROR[" << name()
+                  << "]: Illegal value for TG_SELECT_INHIBIT_TIMEOUT: " << value
+                  << std::endl;
+      }
+    }
+    else if (tag == "QSY_PENDING_TIMEOUT")
+    {
+      int qsy_pending_timeout = -1;
+      cfg().getValue(name(), "QSY_PENDING_TIMEOUT", qsy_pending_timeout);
+      m_qsy_pending_timer.setTimeout(
+        (qsy_pending_timeout > 0) ? (1000 * qsy_pending_timeout) : -1);
+    }
+    // Note: Anything else requires a restart.....
+  }
+} /* ReflectorLogic::cfgUpdated */
 
 
 /*

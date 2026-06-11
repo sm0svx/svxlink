@@ -285,6 +285,7 @@ class ReflectorLogic : public LogicBase
 
     ReflectorLogic(const ReflectorLogic&);
     ReflectorLogic& operator=(const ReflectorLogic&);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
     void onConnected(void);
     void onDisconnected(Async::TcpConnection *con,
                         Async::TcpConnection::DisconnectReason reason);

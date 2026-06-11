@@ -16,7 +16,7 @@ int main()
   CppApplication app;
   Config cfg;
   string cfg_file = "tx_test.cfg";
-  if (!cfg.open(cfg_file))
+  if (!cfg.openDirect("file://" + cfg_file))
   {
     cout << "*** ERROR: Could not open config file " << cfg_file << "\n";
     exit(1);

@@ -298,7 +298,7 @@ class Reflector : public sigc::trackable
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
     void ctrlPtyDataReceived(const void *buf, size_t count);
-    void cfgUpdated(const std::string& section, const std::string& tag);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
     bool loadCertificateFiles(void);
     bool loadServerCertificateFiles(void);
     bool generateKeyFile(Async::SslKeypair& pkey, const std::string& keyfile);

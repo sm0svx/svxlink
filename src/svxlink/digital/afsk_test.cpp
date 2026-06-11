@@ -331,6 +331,26 @@ class StdInSourceDev : public StdInSource
 
 int main(int argc, const char **argv)
 {
+  string cli_config;
+  string cli_dbconfig;
+
+  for (int i = 1; i < argc; i++)
+  {
+    if (strcmp(argv[i], "--config") == 0 && i + 1 < argc)
+      cli_config = argv[++i];
+    else if (strcmp(argv[i], "--dbconfig") == 0 && i + 1 < argc)
+      cli_dbconfig = argv[++i];
+    else if (strcmp(argv[i], "--help") == 0)
+    {
+      cout << "Usage: " << argv[0]
+           << " [--config <file>] [--dbconfig <file>]\n\n"
+           << "Audio is read from stdin (raw signed 16-bit mono).\n"
+           << "If no config option is given, standard locations are\n"
+           << "searched for db.conf and then svxlink.conf.\n";
+      exit(0);
+    }
+  }
+
   // 1200Bd AMPR
 #if 1
   unsigned baudrate = 1200;
@@ -436,13 +456,11 @@ int main(int argc, const char **argv)
   prev_src = &deemph_filt;
   */
 
-  string cfg_filename(getenv("HOME"));
-  cfg_filename += "/.svxlink/svxlink.conf";
   Async::Config cfg;
-  if (!cfg.open(cfg_filename))
+  if (!cfg.openWithFallback(cli_config, cli_dbconfig, "svxlink.conf") &&
+      (!cli_config.empty() || !cli_dbconfig.empty()))
   {
-    cout << "*** ERROR: Could not open configuration file: "
-         << cfg_filename << endl;
+    cerr << "*** ERROR: " << cfg.getLastError() << endl;
     exit(1);
   }
 
