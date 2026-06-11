@@ -147,6 +147,10 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(${LIBNAME}_static ${LIBS})
 endif(BUILD_STATIC_LIBS)
 
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+svxlink_add_tests(LIBS asynccpp asyncaudio asynccore)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)
