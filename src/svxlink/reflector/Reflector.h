@@ -80,6 +80,7 @@ namespace Async
 
 class ReflectorMsg;
 class ReflectorUdpMsg;
+class RemoteUserAuth;
 
 
 /****************************************************************************
@@ -233,6 +234,9 @@ class Reflector : public sigc::trackable
     std::string checkCsr(const Async::SslCertSigningReq& req);
     Async::SslX509 csrReceived(Async::SslCertSigningReq& req);
 
+    bool remoteAuthEnabled(void) const { return m_remote_auth_enable; }
+    RemoteUserAuth* remoteUserAuth(void) const { return m_remote_user_auth; }
+
     Json::Value& clientStatus(const std::string& callsign);
 
   protected:
@@ -278,6 +282,8 @@ class Reflector : public sigc::trackable
     std::vector<uint8_t>        m_ca_sig;
     std::string                 m_accept_cert_email;
     Json::Value                 m_status;
+    bool                        m_remote_auth_enable;
+    RemoteUserAuth*             m_remote_user_auth;
 
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
