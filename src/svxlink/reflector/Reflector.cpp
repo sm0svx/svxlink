@@ -832,7 +832,7 @@ Async::SslX509 Reflector::csrReceived(Async::SslCertSigningReq& req)
   Async::SslX509 cert = loadClientCertificate(callsign);
   if (!cert.isNull() &&
       ((cert.publicKey() != req.publicKey()) ||
-       (timeToRenewCert(cert) <= std::time(NULL))))
+       (std::time(NULL) > cert.notAfter())))
   {
     cert.set(nullptr);
   }

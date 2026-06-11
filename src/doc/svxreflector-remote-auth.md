@@ -1,16 +1,12 @@
 # SvxReflector remote user authentication
 
-When `[REMOTE_USER_AUTH]` / `USER_AUTH_ENABLE=1` is set in `svxreflector.conf`, the reflector still runs the normal challenge–response login with each node: it sends a random **challenge** (20 bytes), the node answers with an **HMAC digest** and its **callsign**. Before accepting that answer locally (using `[USERS]` / `[PASSWORDS]`), the reflector can ask a **remote HTTP service** whether this login should be allowed.
+When `[REMOTE_USER_AUTH]` / `USER_AUTH_ENABLE=1` is set in `svxreflector.conf`, the reflector will ask a **remote HTTP service** whether this login should be allowed, if it's not able to contact that service, or if the service replies negatively, it'll fallback to the usual local verification using the credentials defined in `[USERS]` / `[PASSWORDS]`.
 
-The HTTP call is done asynchronously (libcurl multi interface) so the main event loop is not blocked.
+## Order of checks during login
 
-## Order of checks
-
-1. If remote auth is enabled and configured, the reflector POSTs `username`, `digest`, and `challenge` (see below) to `USER_AUTH_URL` with a `Bearer` token.
-2. If the JSON response has `"success": true`, the client is accepted **without** re-checking the digest against the local password file.
-3. If remote auth fails (network error, HTTP error, `success` not true, invalid JSON, etc.), the reflector **falls back** to the usual local verification: the digest must match `HMAC-SHA1(password, challenge)` for the password group configured under `[PASSWORDS]` for that user in `[USERS]`.
-
-So remote auth is an extra gate or a way to centralise accounts; local passwords still work as a backup unless you remove them.
+1. If remote auth is enabled and configured, the reflector POSTs `username`, `digest`, and `challenge` (see below) to `USER_AUTH_URL` with a `Bearer` token (used to authenticate svxreflector with the authentication service).
+2. If the JSON response has `"success": true`, the client is accepted.
+3. If remote auth fails (network error, HTTP error, `success` not true, invalid JSON, etc.), the reflector **falls back** to the usual local verification.
 
 ## Cryptography (what your server must implement)
 
@@ -79,7 +75,7 @@ TLS certificate verification on the reflector side is controlled by `USER_AUTH_F
 
 ## Minimal PHP example
 
-Below is a single-file illustration (not production-hardened: no rate limiting, no proper routing, use HTTPS in production). It shows bearer validation and HMAC-SHA1 verification matching the reflector protocol.
+Below is a single-file illustration (not production-hardened). It shows bearer validation and HMAC-SHA1 verification matching the reflector protocol.
 
 ```php
 <?php
@@ -168,4 +164,4 @@ echo json_encode([
 ]);
 ```
 
-Replace `USERS` with your own lookup (SQL, LDAP, etc.). The important part is: **`hash_hmac('sha1', $challengeBinary, $password)`** must match the `digest` sent by the node.
+Replace `USERS` with your own lookup (SQL, LDAP, etc.). 
