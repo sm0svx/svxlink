@@ -94,15 +94,11 @@ foreach(logic_name ${SVXLINK_LOGIC_CORES})
   #target_link_libraries(${logic_name}Logic ${LIBS})
 endforeach()
 
-# Build the CmdParser unit test (pure logic, only needs sigc++ via asynccore)
-add_executable(CmdParserTest CmdParserTest.cpp CmdParser.cpp)
-target_link_libraries(CmdParserTest asynccore)
-add_test(NAME CmdParserTest COMMAND CmdParserTest)
-
-# Build the DtmfDigitHandler unit test (needs Async::Timer/CppApplication)
-add_executable(DtmfDigitHandlerTest DtmfDigitHandlerTest.cpp DtmfDigitHandler.cpp)
-target_link_libraries(DtmfDigitHandlerTest asynccpp asynccore)
-add_test(NAME DtmfDigitHandlerTest COMMAND DtmfDigitHandlerTest)
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+# CmdParserTest and DtmfDigitHandlerTest compile an extra source each; those
+# are declared in <Name>.deps.cmake sidecars next to the test.
+svxlink_add_tests(LIBS asynccpp asynccore)
 
 # Smoke test: every TCL event script loads cleanly under tclsh
 add_test(NAME tcl_event_scripts_load

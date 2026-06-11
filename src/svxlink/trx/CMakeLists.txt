@@ -90,47 +90,13 @@ set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})
 target_link_libraries(${LIBNAME} ${LIBS})
 
-add_executable(DtmfDecoderTest DtmfDecoderTest.cpp)
-target_link_libraries(DtmfDecoderTest ${LIBNAME} asynccore asyncaudio)
-add_test(NAME DtmfDecoderTest COMMAND DtmfDecoderTest)
-
-# DtmfEncoder -> DtmfDecoder clean round-trip test
-add_executable(DtmfEncoderTest DtmfEncoderTest.cpp)
-target_link_libraries(DtmfEncoderTest ${LIBNAME} asynccore asyncaudio)
-add_test(NAME DtmfEncoderTest COMMAND DtmfEncoderTest)
-
-# Goertzel is header-only; the test needs no libraries.
-add_executable(GoertzelTest GoertzelTest.cpp)
-add_test(NAME GoertzelTest COMMAND GoertzelTest)
-
-# Modulation fromString/toString test (compile the small source directly).
-add_executable(ModulationTest ModulationTest.cpp Modulation.cpp)
-add_test(NAME ModulationTest COMMAND ModulationTest)
-
-# Rx/Tx factory creation tests
-add_executable(TrxFactoryTest TrxFactoryTest.cpp)
-target_link_libraries(TrxFactoryTest ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
-add_test(NAME TrxFactoryTest COMMAND TrxFactoryTest)
-
-# Squelch detector tests (SquelchOpen, SquelchVox)
-add_executable(SquelchTest SquelchTest.cpp)
-target_link_libraries(SquelchTest ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
-add_test(NAME SquelchTest COMMAND SquelchTest)
-
-# Signal level detector tests (SigLevDetConst)
-add_executable(SigLevDetTest SigLevDetTest.cpp)
-target_link_libraries(SigLevDetTest ${LIBNAME} asynccpp asyncaudio asynccore svxmisc)
-add_test(NAME SigLevDetTest COMMAND SigLevDetTest)
-
-# Pre-/de-emphasis filter tests (Emphasis.h is header-only)
-add_executable(EmphasisTest EmphasisTest.cpp)
-target_link_libraries(EmphasisTest asynccpp asyncaudio asynccore)
-add_test(NAME EmphasisTest COMMAND EmphasisTest)
-
-# Resampler tests (AudioInterpolator / AudioDecimator with project coeffs)
-add_executable(ResamplerTest ResamplerTest.cpp)
-target_link_libraries(ResamplerTest asynccpp asyncaudio asynccore)
-add_test(NAME ResamplerTest COMMAND ResamplerTest)
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+# trx is a static library, so linking it into a test that does not reference
+# its objects is harmless (the linker only pulls archive members that resolve
+# an otherwise-unresolved symbol). Tests needing extra sources use a
+# <Name>.deps.cmake sidecar (e.g. ModulationTest compiles Modulation.cpp).
+svxlink_add_tests(LIBS ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
 
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})

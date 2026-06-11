@@ -147,35 +147,9 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(${LIBNAME}_static ${LIBS})
 endif(BUILD_STATIC_LIBS)
 
-# Unit test for basic audio pipe components
-add_executable(AudioPipeTest AudioPipeTest.cpp)
-target_link_libraries(AudioPipeTest asynccpp asyncaudio asynccore)
-add_test(NAME AudioPipeTest COMMAND AudioPipeTest)
-
-# Unit test for AudioClipper
-add_executable(AudioClipperTest AudioClipperTest.cpp)
-target_link_libraries(AudioClipperTest asynccpp asyncaudio asynccore)
-add_test(NAME AudioClipperTest COMMAND AudioClipperTest)
-
-# Unit test for AudioDelayLine
-add_executable(AudioDelayLineTest AudioDelayLineTest.cpp)
-target_link_libraries(AudioDelayLineTest asynccpp asyncaudio asynccore)
-add_test(NAME AudioDelayLineTest COMMAND AudioDelayLineTest)
-
-# Unit test for AudioReader synchronous pull reads
-add_executable(AudioReaderTest AudioReaderTest.cpp)
-target_link_libraries(AudioReaderTest asynccpp asyncaudio asynccore)
-add_test(NAME AudioReaderTest COMMAND AudioReaderTest)
-
-# Unit test for AudioFilter frequency response
-add_executable(AudioFilterTest AudioFilterTest.cpp)
-target_link_libraries(AudioFilterTest asynccpp asyncaudio asynccore)
-add_test(NAME AudioFilterTest COMMAND AudioFilterTest)
-
-# Unit test for AudioFsf frequency sampling filter
-add_executable(AudioFsfTest AudioFsfTest.cpp)
-target_link_libraries(AudioFsfTest asynccpp asyncaudio asynccore)
-add_test(NAME AudioFsfTest COMMAND AudioFsfTest)
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+svxlink_add_tests(LIBS asynccpp asyncaudio asynccore)
 
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
