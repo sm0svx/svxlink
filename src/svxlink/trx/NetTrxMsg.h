@@ -374,8 +374,17 @@ class MsgAudioCodecSelect : public Msg
       }
     }
     
-    const char *name(void) const { return m_codec_name; }
-  
+    std::string name(void) const
+    {
+      const char *end = reinterpret_cast<const char*>(
+          std::memchr(m_codec_name, 0, sizeof(m_codec_name)));
+      if (end == NULL)
+      {
+        end = m_codec_name+sizeof(m_codec_name);
+      }
+      return std::string(m_codec_name, end);
+    }
+
   private:
     char    m_codec_name[32];
     uint8_t m_option_cnt;
@@ -585,7 +594,16 @@ class MsgSel5 : public Msg
       m_digits[MAX_DIGITS] = 0;
       setSize(size() - MAX_DIGITS + strlen(m_digits));
     }
-    std::string digits(void) const { return m_digits; }
+    std::string digits(void) const
+    {
+      const char *end = reinterpret_cast<const char*>(
+          std::memchr(m_digits, 0, MAX_DIGITS));
+      if (end == NULL)
+      {
+        end = m_digits+MAX_DIGITS;
+      }
+      return std::string(m_digits, end);
+    }
 
   private:
     char m_digits[MAX_DIGITS + 1];
@@ -652,7 +670,16 @@ class MsgSendDtmf : public Msg
       m_digits[MAX_DIGITS] = 0;
       setSize(size() - MAX_DIGITS + strlen(m_digits));
     }
-    std::string digits(void) const { return m_digits; }
+    std::string digits(void) const
+    {
+      const char *end = reinterpret_cast<const char*>(
+          std::memchr(m_digits, 0, MAX_DIGITS));
+      if (end == NULL)
+      {
+        end = m_digits+MAX_DIGITS;
+      }
+      return std::string(m_digits, end);
+    }
     unsigned duration(void) const { return m_duration; }
   
   private:
