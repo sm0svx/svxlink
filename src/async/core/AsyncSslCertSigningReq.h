@@ -292,17 +292,17 @@ class SslCertSigningReq
     bool addSubjectName(const std::string& field, const std::string& value)
     {
       assert(m_req != nullptr);
-      X509_NAME* name = X509_REQ_get_subject_name(m_req);
+      X509_NAME* name = X509_NAME_new();
       if (name == nullptr)
       {
-        name = X509_NAME_new();
+        return false;
       }
-      assert(name != nullptr);
       bool success = (X509_NAME_add_entry_by_txt(name, field.c_str(),
             MBSTRING_UTF8,
             reinterpret_cast<const unsigned char*>(value.c_str()),
             value.size(), -1, 0) == 1);
       success = success && (X509_REQ_set_subject_name(m_req, name) == 1);
+      X509_NAME_free(name);
       return success;
     }
 
@@ -404,8 +404,8 @@ class SslCertSigningReq
       //int lastpos = X509_NAME_get_index_by_NID(subj, NID_commonName, -1);
       if (lastpos >= 0)
       {
-        X509_NAME_ENTRY *e = X509_NAME_get_entry(subj, lastpos);
-        ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
+        const X509_NAME_ENTRY *e = X509_NAME_get_entry(subj, lastpos);
+        const ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
         cn = reinterpret_cast<const char*>(ASN1_STRING_get0_data(d));
       }
       return cn;
