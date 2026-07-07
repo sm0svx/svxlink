@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -372,7 +372,7 @@ int main(int argc, char **argv)
   logwriter.setTimestampFormat(tstamp_format);
 
   cout << PROGRAM_NAME " v" SVXLINK_VERSION
-          " Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX\n\n";
+          " Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the terms "
@@ -460,20 +460,16 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
 
-  if (reset)
+  if (!reset)
   {
-    std::cout << "Initialization done. Exiting." << std::endl;
-    Async::Application::app().quit();
+    std::cout << "NOTICE: Initialization done. Starting main application."
+              << std::endl;
+    app.exec();
+    std::cout << "NOTICE: Exiting" << std::endl;
   }
-
-  std::cout << "NOTICE: Initialization done. Starting main application."
-            << std::endl;
-  app.exec();
 
   LinkManager::deleteInstance();
   LocationInfo::deleteInstance();

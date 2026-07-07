@@ -1,4 +1,4 @@
- 1.10.0 -- ?? ??? ????
+ 1.10.0 -- 23 May 2026
 -----------------------
 
 * Improved announcements for reflector connection state. If the connection is
@@ -35,7 +35,7 @@
 
 * New configuration variable ACTIVATE_ON_TG that can be used in a logic
   linking configuration section to activate the link when a talkgroup is
-  activated i a logic core.
+  activated in a logic core.
 
 * An APRS status message containing application name and version will now be
   sent every 24 hours.
