@@ -834,7 +834,7 @@ void ReflectorLogic::onDisconnected(TcpConnection *con,
 void ReflectorLogic::onFrameReceived(FramedTcpConnection *con,
                                      std::vector<uint8_t>& data)
 {
-  char *buf = reinterpret_cast<char*>(&data.front());
+  char *buf = reinterpret_cast<char*>(data.data());
   int len = data.size();
 
   stringstream ss;
