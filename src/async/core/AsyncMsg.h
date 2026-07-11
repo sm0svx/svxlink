@@ -133,6 +133,7 @@ An example of how to use the AsyncMsg class
 #include <limits>
 #include <endian.h>
 #include <stdint.h>
+#include <utility>
 
 
 /****************************************************************************
@@ -477,19 +478,20 @@ class MsgPacker<std::vector<I>>
     static bool unpack(std::istream& is, std::vector<I>& vec)
     {
       uint16_t vec_size;
-      MsgPacker<uint16_t>::unpack(is, vec_size);
-      if (vec_size > std::numeric_limits<uint16_t>::max())
+      if (!MsgPacker<uint16_t>::unpack(is, vec_size))
       {
         return false;
       }
       //std::cout << "unpack<vector>(" << vec_size << ")" << std::endl;
-      vec.resize(vec_size);
-      for (auto& item : vec)
+      vec.clear();
+      for (uint16_t i=0; i<vec_size; ++i)
       {
+        I item;
         if (!MsgPacker<I>::unpack(is, item))
         {
           return false;
         }
+        vec.push_back(std::move(item));
       }
       return true;
     }
@@ -586,19 +588,24 @@ class MsgPacker<std::map<Tag,Value>>
     static bool unpack(std::istream& is, std::map<Tag,Value>& m)
     {
       uint16_t map_size;
-      MsgPacker<uint16_t>::unpack(is, map_size);
-      if (map_size > std::numeric_limits<uint16_t>::max())
+      if (!MsgPacker<uint16_t>::unpack(is, map_size))
       {
         return false;
       }
       //std::cout << "unpack<map>(" << map_size << ")" << std::endl;
       m.clear();
-      for (int i=0; i<map_size; ++i)
+      for (uint16_t i=0; i<map_size; ++i)
       {
         Tag tag;
         Value val;
-        MsgPacker<Tag>::unpack(is, tag);
-        MsgPacker<Value>::unpack(is, val);
+        if (!MsgPacker<Tag>::unpack(is, tag))
+        {
+          return false;
+        }
+        if (!MsgPacker<Value>::unpack(is, val))
+        {
+          return false;
+        }
         m[tag] = val;
       }
       return true;
