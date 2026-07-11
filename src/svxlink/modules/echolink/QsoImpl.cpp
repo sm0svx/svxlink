@@ -342,6 +342,9 @@ bool QsoImpl::connect(void)
     delete destroy_timer;
     destroy_timer = 0;
   }
+    // This object may be reused for a new outgoing connection after an
+    // earlier incoming connection from the same station was rejected.
+  reject_qso = false;
   return m_qso.connect();
 } /* QsoImpl::connect */
 
