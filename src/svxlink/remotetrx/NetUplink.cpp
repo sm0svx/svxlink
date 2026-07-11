@@ -430,6 +430,12 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
     
     if (recv_cnt == recv_exp)
     {
+        // Clear any bytes past the just-received message so a handler that
+        // casts to a message struct larger than was actually sent reads
+        // zeroes instead of stale bytes left in the reused receive buffer by
+        // a previous (e.g. audio) message.
+      memset(recv_buf + recv_cnt, 0, sizeof(recv_buf) - recv_cnt);
+
       if (recv_exp == sizeof(Msg))
       {
       	Msg *msg = reinterpret_cast<Msg*>(recv_buf);
