@@ -181,7 +181,7 @@ class LogWriter
 
     std::string       m_dest_name;
     std::string       m_tstamp_format {"%c"};
-    std::atomic_bool  m_reopen_log;
+    std::atomic_bool  m_reopen_log  {false};
     int               m_pipefd[2]     {-1, -1};
     std::thread       m_logthread;
     std::mutex        m_mutex;
