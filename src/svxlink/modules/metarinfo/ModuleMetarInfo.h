@@ -141,6 +141,7 @@ class ModuleMetarInfo : public Module
     std::string icao;
     std::string icao_default;
     std::string longmsg;
+    std::string apikey;
 
     bool remarks;
     bool debug;

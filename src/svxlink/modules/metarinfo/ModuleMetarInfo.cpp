@@ -1,7 +1,7 @@
 /*
 @file	 ModuleMetarInfo.cpp
 @brief   gives out a METAR report
-@author  Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@author  Steve Koehler / DH1DM & Adi Bier / DL1HRC & Robert Middelmann / VK5TRM
 @date	 2020-04-19
 
 \verbatim
@@ -42,7 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <queue>
 #include <regex.h>
-
+#include <iomanip>
+#include <cmath>
 
 /****************************************************************************
  *
@@ -197,10 +198,10 @@ class ModuleMetarInfo::Http : public sigc::trackable
    } /* ~Http */
 
    // a signal when a metar has been available
-   sigc::signal<void(std::string, size_t)> metarInfo;
+   sigc::signal<void, std::string, size_t> metarInfo;
 
    // a signal when a metar has a timeout
-   sigc::signal<void()> metarTimeout;
+   sigc::signal<void> metarTimeout;
 
 
    // update the html handler periodically
@@ -264,12 +265,26 @@ class ModuleMetarInfo::Http : public sigc::trackable
      return written;
    } /* callback */
 
-   void AddRequest(const char* uri)
+      void AddRequest(const char* uri)
    {
      CURL* curl = curl_easy_init();
+     
+     // Set the URL
      curl_easy_setopt(curl, CURLOPT_URL, uri);
+     
+     // Set the callback to handle data
      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &Http::callback);
      curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
+
+     // --- ADD THIS BLOCK START ---
+     // Identify your application to the server (Required by aprs.fi API)
+     // Format: "AppName/Version (ContactURL)"
+     curl_easy_setopt(curl, CURLOPT_USERAGENT, "SvxLinkMetarModule/1.0 (https://github.com/svxlink/svxlink)");
+     
+     // Optional: If you want to force HTTPS verification (recommended for production)
+     // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+     // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+     // --- ADD THIS BLOCK END ---
 
      if (!pending_curl)
      {
@@ -492,12 +507,21 @@ void ModuleMetarInfo::flushSamples(void)
  */
 bool ModuleMetarInfo::initialize(void)
 {
-
   string value;
   StrList apset;
   std::string tp;
   html = "";
 
+  // --- Initialize the new API key variable ---
+  apikey = ""; // Initialize to empty
+
+  // --- Initialize the new type variable ---
+  type = ""; // Initialize to empty
+
+  // --- Initialize the new link variable (for API use) ---
+  link = ""; // Initialize to empty
+
+  // --- Load existing string mappings ---
   repstr["shra"] = "ra sh ";
   repstr["shsn"] = "sn sh ";
   repstr["shpl"] = "pl sh ";
@@ -522,38 +546,38 @@ bool ModuleMetarInfo::initialize(void)
   shdesig["fm"]= "from";
   shdesig["tl"]= "until";
 
+  // --- Call base class initialize ---
   if (!Module::initialize())
   {
     return false;
   }
 
+  // --- Load AIRPORTS ---
   if (!cfg().getValue(cfgName(), "AIRPORTS", value))
   {
       cout << "*** ERROR: Config variable " << cfgName()
            << "/AIRPORTS not set or wrong, example: AIRPORTS=EDDP,EDDS,EDDB\n";
       return false;
   }
-
-  // split the line
   splitStr(apset, value, ",");
-
   for (StrList::const_iterator it = apset.begin(); it != apset.end(); it++)
   {
      tp = *it;
-     if (tp.length() != 4)
+     if (tp.length() < 3 || tp.length() > 9)
      {
         cout << "*** ERROR: Config variable " << cfgName()
              << "/AIRPORTS: "<< tp << " is not valid.\n";
         return false;
      }
-     // all to upcase
      transform(tp.begin(),tp.end(),tp.begin(),(int(*)(int))toupper);
      aplist.push_back(tp);
   }
 
+  // --- Load STARTDEFAULT ---
   if (cfg().getValue(cfgName(), "STARTDEFAULT", value))
   {
-     if (value.length() == 4) icao_default = value;
+     if (value.length() >= 3 && value.length() <= 9)
+        icao_default = value;
      else
      {
         cout << "**** WARNING: Config variable " << cfgName()
@@ -562,31 +586,33 @@ bool ModuleMetarInfo::initialize(void)
      }
   }
 
-  // still  development
+  // --- Load REMARKS ---
   if (cfg().getValue(cfgName(), "REMARKS", value))
   {
     remarks = true;
   }
 
+  // --- Load DEBUG ---
   if (cfg().getValue(cfgName(), "DEBUG", value))
   {
     debug = true;
   }
-  
-  if (!cfg().getValue(cfgName(), "TYPE", type))
+
+  // --- Load TYPE ---
+ if (!cfg().getValue(cfgName(), "TYPE", type))
   {
     cout << "**** WARNING: Config variable " << cfgName() 
          << "/TYPE is not set.\n";
     return false;
   }
-
-  if (type != "TXT" && type != "XML")
+  if (type != "TXT" && type != "XML" && type != "JSON")
   {
     cout << "**** WARNING: Config variable " << cfgName() 
-         << "/TYPE: " << type << " is not valid.\n";
+         << "/TYPE: " << type << " is not valid. Must be TXT, XML, or JSON.\n";
     return false;
   }
 
+  // --- Load SERVER ---
   if (!cfg().getValue(cfgName(), "SERVER", server))
   {
     cout << "**** WARNING: Config variable " << cfgName() 
@@ -594,20 +620,35 @@ bool ModuleMetarInfo::initialize(void)
     return false;      
   }
 
-  cfg().getValue(cfgName(), "LINK", link);
+  // --- Load LINK ---
+  if (cfg().getValue(cfgName(), "LINK", link))
+  {
+    // If LINK is provided, use it. Otherwise, leave it empty.
+    // The openConnection function will handle the URL construction.
+  }
 
-  // long messages or short messages
-  // nosig -> "nosig"  == short message
-  //       -> "no significant change" == long message
+  // --- Load APIKEY (Only needed for JSON/HTTPS API) ---
+  if (cfg().getValue(cfgName(), "APIKEY", value))
+  {
+    apikey = value;
+    cout << "API Key loaded: " << apikey.substr(0, 4) << "..." << endl; // Mask for security
+  }
+  else if (type == "JSON")
+  {
+    // If type is JSON, APIKEY is required.
+    cout << "**** ERROR: Config variable " << cfgName() 
+         << "/APIKEY is required for TYPE=JSON.\n";
+    return false;
+  }
+
+  // --- Load LONGMESSAGES ---
   if (cfg().getValue(cfgName(), "LONGMESSAGES", value))
   {
      longmsg = "_long ";  // taking "cavok_long" instead of "cavok"
   }
 
   return true;
-
 } /* initialize */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -858,19 +899,29 @@ void ModuleMetarInfo::openConnection(void)
   closeConnection();
 
   http = new Http();
-
   html = "";
+
+  // Construct the API URL
+  // Endpoint: https://api.aprs.fi/api/get?name=ICAO&what=wx&apikey=KEY&format=json
   std::string path = server;
-              path += link;
-              path += icao;
+  path += "/api/get?name=";
+  path += icao;
+  path += "&what=wx";
+  
+  // Get API key from config (ensure it's loaded)
+  // You need to add a member variable or read it again here if not stored
+  // Assuming 'apikey' is a member variable loaded in initialize()
+  path += "&apikey=";
+  path += apikey; 
+  
+  path += "&format=json"; // Request JSON
 
   http->AddRequest(path.c_str());
-  cout << path << endl;
+  cout << "Fetching METAR from: " << path << endl;
+
   http->metarInfo.connect(mem_fun(*this, &ModuleMetarInfo::onData));
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
-
-} /* openConnection */
-
+}
 
 void ModuleMetarInfo::closeConnection(void)
 {
@@ -886,64 +937,305 @@ void ModuleMetarInfo::onTimeout(void)
   say(temp);
 } /* ModuleMetarInfo::onTimeout */
 
-
+/*
+ * onData: handle data returned from server, including custom APRS XML
+ */
 void ModuleMetarInfo::onData(std::string metarinput, size_t count)
 {
   std::string metar = "";
   html += metarinput;
 
-  // switching between the newer xml-service by aviationweather and the old 
-  // noaa.gov version. With the standard TXT format anybody will be able to 
-  // create it's own METAR report from it's own weather station
-
-  if (type == "XML")
+  // --- 1. JSON PARSING (APRS.fi API) ---
+  if (type == "JSON")
   {
-    if (debug)
-    {
-      cout << "requesting XML metar version from " << server << "/" << endl;
-    }
+    cout << "[METAR JSON] Parsing APRS.fi JSON response..." << endl;
 
-    if (html.find("<data num_results=\"0\" />") != string::npos)
-    {
-      stringstream temp;
-      cout << "Metar information not available" << endl;
-      temp << "metar_not_valid";
-      say(temp);
-      return;
-    }
+    // Helper to extract value from simple JSON
+    auto getJsonVal = [&](const std::string& key, const std::string& input) -> std::string {
+        std::string searchKey = "\"" + key + "\"";
+        size_t pos = input.find(searchKey);
+        if (pos == std::string::npos) return "";
+        pos = input.find(":", pos);
+        if (pos == std::string::npos) return "";
+        pos++; 
+        while (pos < input.length() && (input[pos] == ' ' || input[pos] == '\n')) pos++;
+        if (pos >= input.length()) return "";
 
-    // check day and time, if not in limit throw information away
-    // e.g.: 2016-08-10T08:20:00Z
-    std::string met_utc = getXmlParam("observation_time", html);
+        if (input[pos] == '"') {
+            size_t start = pos + 1;
+            size_t end = input.find('"', start);
+            if (end == std::string::npos) return "";
+            return input.substr(start, end - start);
+        } else {
+            size_t start = pos;
+            size_t end = pos;
+            while (end < input.length() && input[end] != ',' && input[end] != '}' && input[end] != ']' && input[end] != '\n') {
+                end++;
+            }
+            std::string val = input.substr(start, end - start);
+            size_t first = val.find_first_not_of(" ");
+            if (first == std::string::npos) return "";
+            return val.substr(first);
+        }
+    };
 
-    // look for raw metar data
-    metar = getXmlParam("raw_text", html);
-
-    if (metar.length() > 0)
-    {
-      if (debug)
-      {
-        cout << "XML-METAR: " << metar << endl;
-      }
-
-      if (met_utc.length() == 20 && !isvalidUTC(met_utc))
-      {
+    // Check for API errors
+    if (html.find("\"result\":\"fail\"") != std::string::npos) {
+        cout << "[METAR JSON] API Error: " << getJsonVal("description", html) << endl;
         stringstream temp;
-        cout << "Metar information outdated" << endl;
         temp << "metar_not_valid";
         say(temp);
+        html = "";
         return;
-      }
     }
+
+    // Locate first entry
+    size_t entryStart = html.find("{\"name\":");
+    if (entryStart == std::string::npos) {
+        cout << "[METAR JSON] No station entry found." << endl;
+        html = "";
+        return;
+    }
+    size_t entryEnd = html.find("}", entryStart);
+    if (entryEnd == std::string::npos) { html = ""; return; }
+    std::string entry = html.substr(entryStart, entryEnd - entryStart + 1);
+
+    // Extract Data
+    std::string name = getJsonVal("name", entry);
+    std::string unixTime = getJsonVal("time", entry);
+    std::string tempStr = getJsonVal("temp", entry);
+    std::string pressureStr = getJsonVal("pressure", entry);
+    std::string windDirStr = getJsonVal("wind_direction", entry);
+    std::string windSpeedStr = getJsonVal("wind_speed", entry);
+    std::string windGustStr = getJsonVal("wind_gust", entry);
+    std::string humidityStr = getJsonVal("humidity", entry);
+
+    // Time Conversion
+    std::string metarTime = "081200Z";
+    if (!unixTime.empty()) {
+        time_t rawTime = (time_t)atol(unixTime.c_str());
+        struct tm *timeInfo = gmtime(&rawTime);
+        if (timeInfo) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%02d%02d%02dZ", timeInfo->tm_mday, timeInfo->tm_hour, timeInfo->tm_min);
+            metarTime = buf;
+        }
+    }
+
+    // Wind Conversion (m/s -> knots)
+    std::string windPart = "00000KT ";
+    if (!windDirStr.empty() && !windSpeedStr.empty()) {
+        float ws_ms = atof(windSpeedStr.c_str());
+        int wd = atoi(windDirStr.c_str());
+        int ws_kt = (int)(ws_ms * 1.94384 + 0.5);
+
+        if (ws_kt == 0) {
+            windPart = "00000KT ";
+        } else {
+            char windBuf[16];
+            snprintf(windBuf, sizeof(windBuf), "%03d%02dKT ", wd, ws_kt);
+            windPart = windBuf;
+            if (!windGustStr.empty()) {
+                float gust_ms = atof(windGustStr.c_str());
+                int gust_kt = (int)(gust_ms * 1.94384 + 0.5);
+                if (gust_kt > ws_kt) {
+                    char gustBuf[20];
+                    snprintf(gustBuf, sizeof(gustBuf), "G%02dKT ", gust_kt);
+                    windPart = std::string(windPart.substr(0, windPart.length()-3)) + gustBuf;
+                }
+            }
+        }
+    }
+
+    // Temp/Dewpoint Calculation
+    std::string tempPart = "/// /// ";
+    if (!tempStr.empty()) {
+        double t = atof(tempStr.c_str());
+        int t_int = (int)(t + 0.5); // Round for METAR integer display
+        
+        // Format Temperature
+        std::string tempStrOut;
+        if (t_int < 0) {
+            tempStrOut = "M" + std::to_string(-t_int);
+        } else {
+            tempStrOut = std::to_string(t_int);
+        }
+
+        // Calculate Dewpoint if Humidity is available
+        std::string dpStrOut = "///";
+        if (!humidityStr.empty()) {
+            double rh = atof(humidityStr.c_str());
+            if (rh > 0 && rh <= 100) {
+                // Magnus Formula for Dewpoint
+                double alpha = (17.625 * t) / (243.04 + t);
+                double beta = log(rh / 100.0) + alpha;
+                double td = (243.04 * beta) / (17.625 - beta);
+                
+                int td_int = (int)(td + 0.5); // Round to nearest integer
+                
+                if (td_int < 0) {
+                    dpStrOut = "M" + std::to_string(-td_int);
+                } else {
+                    dpStrOut = std::to_string(td_int);
+                }
+            }
+        }
+
+        tempPart = tempStrOut + "/" + dpStrOut;
+    }
+
+    // Pressure
+    std::string pressurePart = "";
+    if (!pressureStr.empty()) {
+        int qnh = (int)(atof(pressureStr.c_str()) + 0.5);
+        pressurePart = "Q" + std::to_string(qnh);
+    }
+
+    // Visibility & Clouds (Default)
+    std::string visCloudPart = "9999 SKC ";
+
+    // Construct METAR
+    std::string final_icao = name.empty() ? icao : name;
+    stringstream metar_ss;
+    metar_ss << final_icao << " " << metarTime << " " << windPart << visCloudPart << tempPart << pressurePart;
+    metar = metar_ss.str();
+
+    cout << "[METAR JSON] Final METAR: " << metar << endl;
+    handleMetar(metar);
+    html = "";
+    return;
   }
-  // the TXT version of METAR
+
+  // --- 2. XML PARSING (Legacy APRS or Custom XML) ---
+  else if (type == "XML")
+  {
+    cout << "[APRS XML] Parsing custom weather XML..." << endl;
+
+    // Helper to extract text between tags
+    auto getXmlParam = [&](const std::string& token) -> std::string {
+        if (html.empty()) return "";
+        std::string start = "<" + token + ">";
+        std::string stop = "</" + token + ">";
+        size_t an = html.find(start);
+        if (an == std::string::npos) return "";
+        size_t en = html.find(stop, an);
+        if (en == std::string::npos) return "";
+        return html.substr(an + start.length(), en - (an + start.length()));
+    };
+
+    // 1. Extract Fields
+    std::string station_name = getXmlParam("name");
+    std::string time_raw = getXmlParam("time");
+    std::string temp_raw = getXmlParam("temp");
+    std::string pressure_raw = getXmlParam("pressure");
+    std::string wind_dir_raw = getXmlParam("wind_direction");
+    std::string wind_spd_raw = getXmlParam("wind_speed");
+    std::string humidity_raw = getXmlParam("humidity");
+    // Convert to ICAO (strip suffix like -13 from VK5TRM-13 to get VK5TRM)
+    std::string icao_code = station_name;
+    size_t dash_pos = icao_code.find('-');
+    if (dash_pos != std::string::npos) {
+        icao_code = icao_code.substr(0, dash_pos);
+    }
+    // Ensure uppercase
+    std::transform(icao_code.begin(), icao_code.end(), icao_code.begin(), ::toupper);
+
+    // 2. Construct METAR String
+    std::stringstream metar_ss;
+    metar_ss << icao_code << " ";
+
+    // Time: Convert Unix timestamp to METAR format (DDHHMMZ)
+    // Example: 1783579504 -> 091200Z (You need to convert Unix time to day/hour/min)
+    if (!time_raw.empty()) {
+        time_t unix_time = std::stol(time_raw);
+        struct tm *tm_info = gmtime(&unix_time);
+        char time_buf[10];
+        snprintf(time_buf, sizeof(time_buf), "%02d%02d%02dZ", 
+                 tm_info->tm_mday, tm_info->tm_hour, tm_info->tm_min);
+        metar_ss << time_buf << " ";
+    } else {
+        metar_ss << "081200Z "; // Fallback
+    }
+
+    // Wind: Direction + Speed + KT
+    // Note: APRS wind_speed is likely in m/s or km/h? 
+    // If it's m/s, multiply by 1.94384 to get knots. 
+    // If it's km/h, multiply by 0.539957.
+    // Assuming m/s based on typical APRS sensor data (2.7 m/s ~ 5 kt)
+    if (!wind_dir_raw.empty() && !wind_spd_raw.empty()) {
+        int dir = std::stoi(wind_dir_raw);
+        double spd_mps = std::stod(wind_spd_raw);
+        int spd_kt = static_cast<int>(spd_mps * 1.94384 + 0.5); // Convert to knots
+        
+        if (spd_kt == 0) {
+            metar_ss << "00000KT ";
+        } else {
+            metar_ss << std::setfill('0') << std::setw(3) << dir 
+                     << std::setfill('0') << std::setw(2) << spd_kt << "KT ";
+        }
+    } else {
+        metar_ss << "00000KT ";
+    }
+
+    // Visibility: Default to 10km (9999) as APRS XML doesn't usually provide it
+    metar_ss << "9999 ";
+
+    // Clouds: Default to SKC (Sky Clear) as APRS XML doesn't provide it
+    metar_ss << "SKC ";
+
+    // Temp/Dewpoint Calculation
+    if (!temp_raw.empty()) {
+        double temp_val = std::stod(temp_raw);
+        int temp_int = static_cast<int>(temp_val + 0.5); // Round for METAR
+
+        // Format Temperature
+        if (temp_int < 0) {
+            metar_ss << "M" << std::setfill('0') << std::setw(2) << std::abs(temp_int) << "/";
+        } else {
+            metar_ss << std::setfill('0') << std::setw(2) << temp_int << "/";
+        }
+
+        // Calculate Dewpoint if Humidity is available
+        std::string dpOut = "//";
+        if (!humidity_raw.empty()) {
+            double rh = std::stod(humidity_raw);
+            if (rh > 0 && rh <= 100) {
+                // Magnus Formula
+                double alpha = (17.625 * temp_val) / (243.04 + temp_val);
+                double beta = log(rh / 100.0) + alpha;
+                double td = (243.04 * beta) / (17.625 - beta);
+                int td_int = static_cast<int>(td + 0.5);
+
+                if (td_int < 0) {
+                    dpOut = "M" + std::to_string(std::abs(td_int));
+                } else {
+                    dpOut = std::to_string(td_int);
+                }
+            }
+        }
+        metar_ss << dpOut << " ";
+    } else {
+        metar_ss << "/// /// ";
+    }
+
+    // Pressure: Convert hPa to QNH (usually already in hPa)
+    if (!pressure_raw.empty()) {
+        int qnh = static_cast<int>(std::stod(pressure_raw) + 0.5);
+        metar_ss << "Q" << std::setfill('0') << std::setw(4) << qnh;
+    }
+
+    std::string constructed_metar = metar_ss.str();
+    cout << "[APRS XML] Constructed METAR: " << constructed_metar << endl;
+
+    // 3. Pass to handler
+    handleMetar(constructed_metar);
+    html = "";
+    return;
+}
+
+  // The TXT version of METAR
   else 
   {
-    // This is a METAR-report:
-    //
-    // 2009/04/07 13:20
-    // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
-
     size_t found;
     StrList values;
     std::stringstream temp;
@@ -952,6 +1244,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
 
     // split \n -> <SPACE>
     while ((found = html.find('\n')) != string::npos) html[found] = ' ';
+    
     if (html.find("404 Not Found") != string::npos)
     {
       cout << "ERROR 404 from webserver -> no such airport\n";
@@ -964,7 +1257,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     values.pop_back();
     std::string metartime = values.back();  // and the time at UTC
 
-     // check of valid metar file format
+    // check of valid metar file format
     std::string reg = "^[0-9]{4}/[0-9]{2}/[0-9]{2}";
     if (!rmatch(metartime, reg))
     {
@@ -997,31 +1290,22 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
   }
 
   handleMetar(metar);
-
   html = "";
-} /* onDataReceived */
+}
 
-
+// This matches the header declaration in ModuleMetarInfo.h
 std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)
 {
-  std::string start = "<";
-  std::string stop = "</";
-  start += token;
-  start += ">";
-  stop += token;
-  stop += ">";
-
-  size_t an, en;
-
-  an = input.find(start);
-  en = input.find(stop);
+  std::string start = "<" + token + ">";
+  std::string stop = "</" + token + ">";
+  size_t an = input.find(start);
+  size_t en = input.find(stop, an);
 
   if (an != std::string::npos && en != std::string::npos)
   {
      an += token.length() + 2;
      return input.substr(an, en - an);
   }
-
   return "";
 } /* getXmlParam */
 
