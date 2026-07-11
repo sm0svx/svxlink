@@ -251,6 +251,27 @@ bool LinkManager::initialize(Async::Config &cfg,
                   << "/TIMEOUT=??, setting to default (30 sec)" << std::endl;
         timeout = 30;
       }
+
+        // Validate and precompile the ACTIVATE_ON_TG regex patterns here so
+        // that an invalid pattern is caught at configuration time instead of
+        // crashing the application when the first TG update event arrives,
+        // and so that the pattern is not recompiled on every TG update.
+      for (const auto &item : link.auto_activate_on_tg)
+      {
+        try
+        {
+          link.auto_activate_on_tg_regex.emplace(item.first,
+                                                 std::regex(item.second));
+        }
+        catch (const std::regex_error &e)
+        {
+          std::cerr << "*** ERROR: Invalid ACTIVATE_ON_TG pattern \""
+                    << item.second << "\" for logic \"" << item.first
+                    << "\" in link \"" << link.name << "\": " << e.what()
+                    << std::endl;
+          init_ok = false;
+        }
+      }
     }
 
     if (timeout > 0)
@@ -964,11 +985,11 @@ void LinkManager::onReceivedTgUpdated(LogicBase *src_logic, uint32_t tg)
 #if 1
     std::ostringstream tgss;
     tgss << tg;
-    auto aait = link.auto_activate_on_tg.find(src_logic->name());
+    auto aait = link.auto_activate_on_tg_regex.find(src_logic->name());
     if (!link.is_activated &&
         //(link.logic_props.find( != link.logic_props.end()) &&
-        aait != link.auto_activate_on_tg.end() &&
-        std::regex_match(tgss.str(), std::regex(aait->second)))
+        aait != link.auto_activate_on_tg_regex.end() &&
+        std::regex_match(tgss.str(), aait->second))
     {
       std::ostringstream ss;
       ss << "ACTIVATE_ON_TG from logic '"
