@@ -6,7 +6,7 @@ VERSION 1.2.0.0 (12 Mar 2018)
 VERSION 1.2.1.99.2 (19 Apr 2020)
 VERSION 1.3.0.0.0 (10 July 2026) 
 CHANGES:
-- Suppor for getting information from APRS from aprs.fi in JSON or findu.com in XML
+- Support for getting information from APRS from aprs.fi in JSON or findu.com in XML
 - make airport announcement more flexible, porting code from c++ to tcl
 
 
@@ -124,12 +124,12 @@ The path on the webserver where the MEATAR file can be found, e.g.
 LINK=data/observations/metar/stations
 
 APIKEY=YOUR_APIKEY
-Create an account with APRS.fi if you don't aready have on 
+Create an account with APRS.fi if you don't aready have one
 and get your API key from you account settings page. 
 
 
 IMPORTANT NOTICE:
-At the moment ONLY TWO combination are known to work:
+At the moment ONLY FOUR combination are known to work:
 
 1) the text file based method:
 TYPE=TXT
