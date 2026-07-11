@@ -135,7 +135,7 @@ bool CmdParser::addCmd(Command *cmd)
 bool CmdParser::removeCmd(Command *cmd)
 {
   CmdMap::iterator cmd_it = cmds.find(cmd->cmdStr());
-  bool cmd_exist = (cmd_it != cmds.end());
+  bool cmd_exist = (cmd_it != cmds.end()) && (cmd_it->second == cmd);
   if (cmd_exist)
   {
     cmds.erase(cmd_it);
