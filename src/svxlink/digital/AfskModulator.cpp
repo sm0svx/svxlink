@@ -284,6 +284,8 @@ AfskModulator::~AfskModulator(void)
 {
   AudioSource::clearHandler();
   delete sigc_src;
+  delete [] sin_lookup;
+  delete [] exp_lookup;
 } /* AfskModulator::~AfskModulator */
 
 
@@ -379,6 +381,7 @@ void AfskModulator::writeToSink(void)
         if (bitclock >= sample_rate)
         {
           bitclock -= sample_rate;
+          bool last_bit = bitbuf.front();
           bitbuf.pop_front();
           if (bitbuf.empty())
           {
@@ -387,7 +390,7 @@ void AfskModulator::writeToSink(void)
               fade_dir = -1;
               for (unsigned sym=0; sym<FADE_SYMBOLS; ++sym)
               {
-                bitbuf.push_back(bitbuf.back());
+                bitbuf.push_back(last_bit);
               }
             }
             else
