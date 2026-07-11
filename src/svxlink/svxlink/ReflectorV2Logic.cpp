@@ -1552,7 +1552,11 @@ void ReflectorLogic::handleTimerTick(Async::Timer *t)
     }
   }
 
-  if (--m_udp_heartbeat_tx_cnt == 0)
+  if (m_udp_heartbeat_tx_cnt > 0)
+  {
+    --m_udp_heartbeat_tx_cnt;
+  }
+  if (m_udp_heartbeat_tx_cnt == 0)
   {
     sendUdpMsg(MsgUdpHeartbeat());
   }
