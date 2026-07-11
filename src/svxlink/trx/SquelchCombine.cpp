@@ -468,6 +468,25 @@ int SquelchCombine::processSamples(const float *samples, int count)
  *
  ****************************************************************************/
 
+namespace {
+  /**
+   * @brief   Check if the front of a token deque matches the given token
+   * @param   tokens The token deque to check
+   * @param   tok    The token to compare the front of the deque against
+   * @return  Return \em true if the deque is non-empty and its front token
+   *          equals \em tok, or \em false otherwise
+   *
+   * Calling front() on an empty deque is undefined behavior. This helper is
+   * used to safely check the next token when parsing a SQL_COMBINE
+   * expression, e.g. an empty/whitespace-only value or an expression with
+   * unbalanced parentheses may leave the token deque empty mid-parse.
+   */
+  bool tokenFrontIs(const std::deque<std::string>& tokens, const std::string& tok)
+  {
+    return !tokens.empty() && (tokens.front() == tok);
+  }
+}
+
 void SquelchCombine::onSquelchOpen(bool is_open)
 {
   if (is_open != signalDetected())
@@ -546,7 +565,7 @@ SquelchCombine::Node* SquelchCombine::parseInstExpression(void)
   {
     m_tokens.pop_front();
     Node* expr = parseExpression();
-    if ((expr == nullptr) || (m_tokens.front() != ")"))
+    if ((expr == nullptr) || !tokenFrontIs(m_tokens, ")"))
     {
       delete expr;
       return nullptr;
@@ -571,7 +590,7 @@ SquelchCombine::Node* SquelchCombine::parseInstExpression(void)
 SquelchCombine::Node* SquelchCombine::parseUnaryOpExpression(void)
 {
   bool is_negation_op = false;
-  if (m_tokens.front() == "!")
+  if (tokenFrontIs(m_tokens, "!"))
   {
     is_negation_op = true;
     m_tokens.pop_front();
