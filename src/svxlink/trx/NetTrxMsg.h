@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -437,11 +438,35 @@ class MsgSetMuteState : public Msg
   public:
     static const unsigned TYPE = 200;
     MsgSetMuteState(Rx::MuteState new_mute_state)
-      : Msg(TYPE, sizeof(MsgSetMuteState)), m_mute_state(new_mute_state) {}
-    Rx::MuteState muteState(void) const { return m_mute_state; }
+      : Msg(TYPE, sizeof(MsgSetMuteState)),
+        m_mute_state(static_cast<int32_t>(new_mute_state)) {}
+
+    /**
+     * @brief   Check if the received mute state is a valid Rx::MuteState
+     * @return  Returns \em true if the mute state is in range
+     */
+    bool isValid(void) const
+    {
+      return (m_mute_state >= Rx::MUTE_NONE) && (m_mute_state <= Rx::MUTE_ALL);
+    }
+
+    /**
+     * @brief   Get the mute state
+     * @return  Returns the mute state. Only meaningful if isValid() is true.
+     */
+    Rx::MuteState muteState(void) const
+    {
+      return static_cast<Rx::MuteState>(m_mute_state);
+    }
   
   private:
-    Rx::MuteState  m_mute_state;
+      // The value comes from the network, so it is stored as a fixed-width
+      // integer rather than as an Rx::MuteState, which might not be able to
+      // hold an out-of-range value. The size is the same, so the message
+      // format does not change.
+    int32_t  m_mute_state;
+    static_assert(sizeof(int32_t) == sizeof(Rx::MuteState),
+                  "MsgSetMuteState wire format would change");
     
 }; /* MsgSetMuteState */
 
