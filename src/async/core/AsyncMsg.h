@@ -428,14 +428,17 @@ class MsgPacker<std::string>
       uint16_t str_len;
       if (MsgPacker<uint16_t>::unpack(is, str_len))
       {
-        if (str_len > std::numeric_limits<uint16_t>::max())
+        if (str_len == 0)
         {
-          return false;
+          val.clear();
+          return true;
         }
-        char buf[str_len];
-        if (is.read(buf, str_len))
+          // Heap buffer sized from the (bounded) wire length -- never a
+          // variable-length array on the stack
+        std::vector<char> buf(str_len);
+        if (is.read(buf.data(), str_len))
         {
-          val.assign(buf, str_len);
+          val.assign(buf.data(), str_len);
           //std::cout << "unpack<string>(" << val << ")" << std::endl;
           return true;
         }
