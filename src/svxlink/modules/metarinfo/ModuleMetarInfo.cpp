@@ -1094,10 +1094,21 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     // Visibility & Clouds (Default)
     std::string visCloudPart = "9999 SKC ";
 
-    // Construct METAR
+  // Construct METAR
     std::string final_icao = name.empty() ? icao : name;
+    
+    // --- FIX: Strip suffix (e.g., -13) from ICAO if present ---
+    if (!final_icao.empty()) {
+        size_t dash_pos = final_icao.find('-');
+        if (dash_pos != std::string::npos) {
+            final_icao = final_icao.substr(0, dash_pos);
+        }
+    }
+ // --- ADD THIS LINE: Sync the member variable ---
+    icao = final_icao; 
+    // ------------------------------------------------
     stringstream metar_ss;
-    metar_ss << final_icao << " " << metarTime << " " << windPart << visCloudPart << tempPart << pressurePart;
+    metar_ss << final_icao << " " << metarTime << " " << windPart << visCloudPart << tempPart << " " << pressurePart;
     metar = metar_ss.str();
 
     cout << "[METAR JSON] Final METAR: " << metar << endl;
@@ -1447,14 +1458,39 @@ int ModuleMetarInfo::handleMetar(std::string input)
               }
             break;
 
-         case TEMPERATURE:
-            validTemp(tempstr, current);
-            temp << "temperature " << tempstr;
-            say(temp);
-            validDp(tempstr, current);
-            temp << "dewpoint " << tempstr;
-            say(temp);
-            break;
+case TEMPERATURE:
+{
+    // The token is the full "11/8"
+    // First, validate the full token to ensure it's correct
+    std::string temp_dew_str = current;
+    
+    // Now, process the temperature and dewpoint separately
+    std::string temp_out;
+    std::string dew_out;
+    
+    // Extract the temperature part (before '/')
+    size_t slash_pos = temp_dew_str.find('/');
+    if (slash_pos != std::string::npos) {
+        std::string temp_part = temp_dew_str.substr(0, slash_pos);
+        std::string dew_part = temp_dew_str.substr(slash_pos + 1);
+        
+        // Process temperature
+        validTemp(temp_out, temp_part);  // Pass only the temp part
+        temp << "temperature " << temp_out;
+        say(temp);
+        
+        // Process dewpoint
+        validDp(dew_out, dew_part);      // Pass only the dew part
+        temp << "dewpoint " << dew_out;
+        say(temp);
+    } else {
+        // Fallback: no slash, probably just temperature
+        validTemp(temp_out, temp_dew_str);
+        temp << "temperature " << temp_out;
+        say(temp);
+    }
+    break;
+}
 
          case QNH:
             isQnh(tempstr, current);
@@ -2549,13 +2585,21 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
   return true;
 } /* ispObscurance */
 
-
 void ModuleMetarInfo::say(stringstream &tmp)
 {
    if (debug) cout << tmp.str() << endl;  // debug
-   processEvent(tmp.str());
+   // Process the event immediately
+   if (!tmp.str().empty()) {
+       processEvent(tmp.str());
+   }
    tmp.str("");
-} /* say */
+}
+
+void ModuleMetarInfo::onSayTimeout(Async::Timer *timer)
+{
+   // Placeholder function to ensure the timer is handled
+   // This prevents warnings about unused timer
+}
 
 
 // special split function
@@ -2600,7 +2644,6 @@ int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
   return L.size();
 
 } /* ModuleMetarInfo::splitEmptyStr */
-
 
 /*
  * This file has not been truncated
