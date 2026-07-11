@@ -1114,6 +1114,13 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
 {
   //std::cout << "### ReflectorLogic::onFrameReceived: data.size()="
   //          << data.size() << std::endl;
+  if (data.empty())
+  {
+    std::cerr << "*** ERROR[" << name()
+              << "]: Received an empty TCP frame" << std::endl;
+    disconnect();
+    return;
+  }
   char *buf = reinterpret_cast<char*>(&data.front());
   int len = data.size();
 
