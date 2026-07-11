@@ -44,9 +44,11 @@ An example of how to use the Async::SslKeypair class
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
 #include <openssl/pem.h>
+#include <openssl/x509.h>
 
 #include <cassert>
 #include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -114,6 +116,56 @@ namespace Async
  ****************************************************************************/
 
 /**
+ * @brief   Convert an ASN1_STRING to a std::string
+ * @param   str The ASN1_STRING to convert
+ * @return  Returns the string data as a std::string
+ *
+ * The data in an ASN1_STRING is not guaranteed to be NUL terminated and may
+ * also contain embedded NUL bytes, both of which would be mishandled by the
+ * std::string(const char*) constructor. This helper instead builds the
+ * string from the data pointer and the explicit length.
+ */
+inline std::string asn1StringToStdString(const ASN1_STRING* str)
+{
+  if (str == nullptr)
+  {
+    return std::string();
+  }
+  const auto* data = ASN1_STRING_get0_data(str);
+  return std::string(reinterpret_cast<const char*>(data),
+                      ASN1_STRING_length(str));
+}
+
+/**
+ * @brief   Get an X509_NAME as a one line, human readable, string
+ * @param   nm The X509_NAME to convert
+ * @return  Returns the name as a string
+ */
+inline std::string x509NameOnelineString(const X509_NAME* nm)
+{
+  std::string str;
+  if (nm != nullptr)
+  {
+    BIO *mem = BIO_new(BIO_s_mem());
+    assert(mem != nullptr);
+      // Print all subject names on one line. Don't escape multibyte chars.
+    int len = X509_NAME_print_ex(mem, nm, 0,
+        XN_FLAG_ONELINE & ~ASN1_STRFLGS_ESC_MSB);
+    if (len > 0)
+    {
+      std::vector<char> buf(len+1);
+      len = BIO_read(mem, buf.data(), buf.size());
+      if (len > 0)
+      {
+        str = std::string(buf.data(), len);
+      }
+    }
+    BIO_free(mem);
+  }
+  return str;
+}
+
+/**
 @brief  A class representing private and public keys
 @author Tobias Blomberg / SM0SVX
 @date   2024-07-11
@@ -165,6 +217,7 @@ class SslKeypair
     SslKeypair& operator=(SslKeypair& other)
     {
       EVP_PKEY_up_ref(other.m_pkey);
+      EVP_PKEY_free(m_pkey);
       m_pkey = other.m_pkey;
       return *this;
     }

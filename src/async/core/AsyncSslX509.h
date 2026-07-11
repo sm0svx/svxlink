@@ -356,7 +356,7 @@ class SslX509
       {
         X509_NAME_ENTRY *e = X509_NAME_get_entry(subj, lastpos);
         ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
-        cn = reinterpret_cast<const char*>(ASN1_STRING_get0_data(d));
+        cn = asn1StringToStdString(d);
       }
       return cn;
     }
@@ -755,27 +755,7 @@ class SslX509
      */
     std::string issuerNameString(void) const
     {
-      std::string str;
-      const X509_NAME* nm = issuerName();
-      if (nm != nullptr)
-      {
-        BIO *mem = BIO_new(BIO_s_mem());
-        assert(mem != nullptr);
-          // Print all subject names on one line. Don't escape multibyte chars.
-        int len = X509_NAME_print_ex(mem, nm, 0,
-            XN_FLAG_ONELINE & ~ASN1_STRFLGS_ESC_MSB);
-        if (len > 0)
-        {
-          char buf[len+1];
-          len = BIO_read(mem, buf, sizeof(buf));
-          if (len > 0)
-          {
-            str = std::string(buf, len);
-          }
-        }
-        BIO_free(mem);
-      }
-      return str;
+      return x509NameOnelineString(issuerName());
     }
 
     /**
@@ -784,27 +764,7 @@ class SslX509
      */
     std::string subjectNameString(void) const
     {
-      std::string str;
-      const X509_NAME* nm = subjectName();
-      if (nm != nullptr)
-      {
-        BIO *mem = BIO_new(BIO_s_mem());
-        assert(mem != nullptr);
-          // Print all subject names on one line. Don't escape multibyte chars.
-        int len = X509_NAME_print_ex(mem, nm, 0,
-            XN_FLAG_ONELINE & ~ASN1_STRFLGS_ESC_MSB);
-        if (len > 0)
-        {
-          char buf[len+1];
-          len = BIO_read(mem, buf, sizeof(buf));
-          if (len > 0)
-          {
-            str = std::string(buf, len);
-          }
-        }
-        BIO_free(mem);
-      }
-      return str;
+      return x509NameOnelineString(subjectName());
     }
 
     /**
@@ -848,8 +808,7 @@ class SslX509
     bool sign(SslKeypair& pkey)
     {
       auto md = EVP_sha256();
-      auto md_size = EVP_MD_size(md);
-      return (X509_sign(m_cert, pkey, md) != md_size);
+      return (X509_sign(m_cert, pkey, md) > 0);
     }
 
     /**
