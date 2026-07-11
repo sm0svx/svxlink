@@ -640,7 +640,38 @@ bool ModuleMetarInfo::initialize(void)
          << "/APIKEY is required for TYPE=JSON.\n";
     return false;
   }
-
+  // --- Load MAPPING from Config ---
+  string mapStr;
+  if (cfg().getValue(cfgName(), "MAPPING", mapStr)) {
+      std::cout << "[METAR] Loading callsign mappings..." << std::endl;
+      
+      // Split by comma to get pairs
+      StrList pairs;
+      splitStr(pairs, mapStr, ",");
+      
+      for (StrList::const_iterator it = pairs.begin(); it != pairs.end(); ++it) {
+          std::string pair = *it;
+          size_t colonPos = pair.find(':');
+          
+          if (colonPos != std::string::npos) {
+              std::string callsign = pair.substr(0, colonPos);
+              std::string icao = pair.substr(colonPos + 1);
+              
+              // Normalize to uppercase
+              transform(callsign.begin(), callsign.end(), callsign.begin(), ::toupper);
+              transform(icao.begin(), icao.end(), icao.begin(), ::toupper);
+              
+              callsignToIcaoMap[callsign] = icao;
+              
+              if (debug) {
+                  std::cout << "  Mapped " << callsign << " -> " << icao << std::endl;
+              }
+          }
+      }
+  } else {
+      if (debug) std::cout << "[METAR] No MAPPING config found." << std::endl;
+   return false;
+  }
   // --- Load LONGMESSAGES ---
   if (cfg().getValue(cfgName(), "LONGMESSAGES", value))
   {
@@ -901,23 +932,39 @@ void ModuleMetarInfo::openConnection(void)
   http = new Http();
   html = "";
 
-  // Construct the API URL
-  // Endpoint: https://api.aprs.fi/api/get?name=ICAO&what=wx&apikey=KEY&format=json
+  // Use the full, unmodified callsign (e.g., VK5TRM-13) for API and mapping lookup
+  std::string fullCallsign = icao;
+
+  // Default target ICAO is the full callsign if no mapping is found
+  std::string targetIcao = fullCallsign;
+
+  // Look up the full callsign in the map
+  if (callsignToIcaoMap.find(fullCallsign) != callsignToIcaoMap.end()) {
+      targetIcao = callsignToIcaoMap[fullCallsign];
+      if (debug) {
+          cout << "[METAR] Mapped full callsign '" << fullCallsign << "' to ICAO '" << targetIcao << "'" << endl;
+      }
+  } else {
+      // No mapping found
+      if (debug) {
+          cout << "[METAR] No mapping found for full callsign '" << fullCallsign << "'. Using as-is for METAR." << endl;
+      }
+  }
+
+  // --- FIX: Construct the URL with BOTH name= AND what=wx ---
   std::string path = server;
-  path += "/api/get?name=";
-  path += icao;
-  path += "&what=wx";
-  
-  // Get API key from config (ensure it's loaded)
-  // You need to add a member variable or read it again here if not stored
-  // Assuming 'apikey' is a member variable loaded in initialize()
+  path += "/api/get?name=";          // Request by callsign
+  path += fullCallsign;              // e.g., VK5TRM-13
+  path += "&what=wx";                // Request METAR data
   path += "&apikey=";
-  path += apikey; 
-  
-  path += "&format=json"; // Request JSON
+  path += apikey;
+  path += "&format=json";
 
   http->AddRequest(path.c_str());
-  cout << "Fetching METAR from: " << path << endl;
+  cout << "Fetching METAR from APRS.fi for: " << fullCallsign << " (Reporting as: " << targetIcao << ")" << endl;
+
+  // Update the member variable 'icao' to the MAPPED ICAO for announcement
+  icao = targetIcao;
 
   http->metarInfo.connect(mem_fun(*this, &ModuleMetarInfo::onData));
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
@@ -957,7 +1004,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
         if (pos == std::string::npos) return "";
         pos = input.find(":", pos);
         if (pos == std::string::npos) return "";
-        pos++; 
+        pos++;
         while (pos < input.length() && (input[pos] == ' ' || input[pos] == '\n')) pos++;
         if (pos >= input.length()) return "";
 
@@ -1051,9 +1098,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     std::string tempPart = "/// /// ";
     if (!tempStr.empty()) {
         double t = atof(tempStr.c_str());
-        int t_int = (int)(t + 0.5); // Round for METAR integer display
-        
-        // Format Temperature
+        int t_int = (int)(t + 0.5);
         std::string tempStrOut;
         if (t_int < 0) {
             tempStrOut = "M" + std::to_string(-t_int);
@@ -1061,18 +1106,14 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
             tempStrOut = std::to_string(t_int);
         }
 
-        // Calculate Dewpoint if Humidity is available
         std::string dpStrOut = "///";
         if (!humidityStr.empty()) {
             double rh = atof(humidityStr.c_str());
             if (rh > 0 && rh <= 100) {
-                // Magnus Formula for Dewpoint
                 double alpha = (17.625 * t) / (243.04 + t);
                 double beta = log(rh / 100.0) + alpha;
                 double td = (243.04 * beta) / (17.625 - beta);
-                
-                int td_int = (int)(td + 0.5); // Round to nearest integer
-                
+                int td_int = (int)(td + 0.5);
                 if (td_int < 0) {
                     dpStrOut = "M" + std::to_string(-td_int);
                 } else {
@@ -1080,7 +1121,6 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
                 }
             }
         }
-
         tempPart = tempStrOut + "/" + dpStrOut;
     }
 
@@ -1094,28 +1134,23 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     // Visibility & Clouds (Default)
     std::string visCloudPart = "9999 SKC ";
 
-  // Construct METAR
-    std::string final_icao = name.empty() ? icao : name;
-    
-    // --- FIX: Strip suffix (e.g., -13) from ICAO if present ---
-    if (!final_icao.empty()) {
-        size_t dash_pos = final_icao.find('-');
-        if (dash_pos != std::string::npos) {
-            final_icao = final_icao.substr(0, dash_pos);
-        }
+    // --- Construct METAR using the MAPPED ICAO (stored in 'icao') ---
+    std::string final_icao = icao; // This is the ICAO code from the mapping (e.g., YPAD)
+
+    if (debug) {
+        cout << "[METAR JSON] Using ICAO for METAR string: " << final_icao << " (Original API station: " << name << ")" << endl;
     }
- // --- ADD THIS LINE: Sync the member variable ---
-    icao = final_icao; 
-    // ------------------------------------------------
+
     stringstream metar_ss;
     metar_ss << final_icao << " " << metarTime << " " << windPart << visCloudPart << tempPart << " " << pressurePart;
     metar = metar_ss.str();
 
     cout << "[METAR JSON] Final METAR: " << metar << endl;
+
     handleMetar(metar);
     html = "";
-    return;
   }
+  // --- END JSON PARSING ---
 
   // --- 2. XML PARSING (Legacy APRS or Custom XML) ---
   else if (type == "XML")
@@ -1142,21 +1177,24 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     std::string wind_dir_raw = getXmlParam("wind_direction");
     std::string wind_spd_raw = getXmlParam("wind_speed");
     std::string humidity_raw = getXmlParam("humidity");
-    // Convert to ICAO (strip suffix like -13 from VK5TRM-13 to get VK5TRM)
+
+    // --- IMPORTANT: We do NOT modify station_name to strip -SSID ---
+    // We will use the MAPPED ICAO for the METAR string, not the station_name.
     std::string icao_code = station_name;
-    size_t dash_pos = icao_code.find('-');
-    if (dash_pos != std::string::npos) {
-        icao_code = icao_code.substr(0, dash_pos);
-    }
-    // Ensure uppercase
-    std::transform(icao_code.begin(), icao_code.end(), icao_code.begin(), ::toupper);
 
     // 2. Construct METAR String
     std::stringstream metar_ss;
-    metar_ss << icao_code << " ";
+
+    // Use the MAPPED ICAO (from openConnection) as the first field
+    std::string final_icao = icao; // Set in openConnection() — e.g., YPAD
+
+    if (debug) {
+        cout << "[APRS XML] Using ICAO for METAR string: " << final_icao << " (Original XML station: " << station_name << ")" << endl;
+    }
+
+    metar_ss << final_icao << " ";
 
     // Time: Convert Unix timestamp to METAR format (DDHHMMZ)
-    // Example: 1783579504 -> 091200Z (You need to convert Unix time to day/hour/min)
     if (!time_raw.empty()) {
         time_t unix_time = std::stol(time_raw);
         struct tm *tm_info = gmtime(&unix_time);
@@ -1169,15 +1207,11 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     }
 
     // Wind: Direction + Speed + KT
-    // Note: APRS wind_speed is likely in m/s or km/h? 
-    // If it's m/s, multiply by 1.94384 to get knots. 
-    // If it's km/h, multiply by 0.539957.
-    // Assuming m/s based on typical APRS sensor data (2.7 m/s ~ 5 kt)
     if (!wind_dir_raw.empty() && !wind_spd_raw.empty()) {
         int dir = std::stoi(wind_dir_raw);
         double spd_mps = std::stod(wind_spd_raw);
-        int spd_kt = static_cast<int>(spd_mps * 1.94384 + 0.5); // Convert to knots
-        
+        int spd_kt = static_cast<int>(spd_mps * 1.94384 + 0.5);
+
         if (spd_kt == 0) {
             metar_ss << "00000KT ";
         } else {
@@ -1188,35 +1222,31 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
         metar_ss << "00000KT ";
     }
 
-    // Visibility: Default to 10km (9999) as APRS XML doesn't usually provide it
+    // Visibility: Default to 10km (9999)
     metar_ss << "9999 ";
 
-    // Clouds: Default to SKC (Sky Clear) as APRS XML doesn't provide it
+    // Clouds: Default to SKC (Sky Clear)
     metar_ss << "SKC ";
 
     // Temp/Dewpoint Calculation
     if (!temp_raw.empty()) {
         double temp_val = std::stod(temp_raw);
-        int temp_int = static_cast<int>(temp_val + 0.5); // Round for METAR
+        int temp_int = static_cast<int>(temp_val + 0.5);
 
-        // Format Temperature
         if (temp_int < 0) {
             metar_ss << "M" << std::setfill('0') << std::setw(2) << std::abs(temp_int) << "/";
         } else {
             metar_ss << std::setfill('0') << std::setw(2) << temp_int << "/";
         }
 
-        // Calculate Dewpoint if Humidity is available
         std::string dpOut = "//";
         if (!humidity_raw.empty()) {
             double rh = std::stod(humidity_raw);
             if (rh > 0 && rh <= 100) {
-                // Magnus Formula
                 double alpha = (17.625 * temp_val) / (243.04 + temp_val);
                 double beta = log(rh / 100.0) + alpha;
                 double td = (243.04 * beta) / (17.625 - beta);
                 int td_int = static_cast<int>(td + 0.5);
-
                 if (td_int < 0) {
                     dpOut = "M" + std::to_string(std::abs(td_int));
                 } else {
@@ -1229,7 +1259,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
         metar_ss << "/// /// ";
     }
 
-    // Pressure: Convert hPa to QNH (usually already in hPa)
+    // Pressure: Convert hPa to QNH
     if (!pressure_raw.empty()) {
         int qnh = static_cast<int>(std::stod(pressure_raw) + 0.5);
         metar_ss << "Q" << std::setfill('0') << std::setw(4) << qnh;
@@ -1238,13 +1268,13 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     std::string constructed_metar = metar_ss.str();
     cout << "[APRS XML] Constructed METAR: " << constructed_metar << endl;
 
-    // 3. Pass to handler
+    // Pass to handler
     handleMetar(constructed_metar);
     html = "";
-    return;
-}
+  }
+  // --- END XML PARSING ---
 
-  // The TXT version of METAR
+  // --- 3. TXT PARSING (Legacy) ---
   else 
   {
     size_t found;
@@ -1253,9 +1283,8 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
 
     splitStr(values, html, "\n");
 
-    // split \n -> <SPACE>
     while ((found = html.find('\n')) != string::npos) html[found] = ' ';
-    
+
     if (html.find("404 Not Found") != string::npos)
     {
       cout << "ERROR 404 from webserver -> no such airport\n";
@@ -1278,6 +1307,8 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
       return;
     }
 
+    // Use the MAPPED ICAO (from openConnection) to validate and report
+    // We assume the TXT file expects the ICAO code from the config, not the full callsign
     if ((metar.find(icao)) == string::npos)
     {
       cout << "ERROR: wrong Metarfile format, second line must begin with the correct "
@@ -1298,12 +1329,12 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
       say(temp);
       return;
     }
+
+    handleMetar(metar);
+    html = "";
   }
-
-  handleMetar(metar);
-  html = "";
+  // --- END TXT PARSING ---
 }
-
 // This matches the header declaration in ModuleMetarInfo.h
 std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)
 {
@@ -1319,7 +1350,6 @@ std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)
   }
   return "";
 } /* getXmlParam */
-
 
 int ModuleMetarInfo::handleMetar(std::string input)
 {
