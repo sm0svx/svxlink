@@ -281,6 +281,13 @@ class SquelchSerial : public Squelch
           do_set = false;
           ++it;
         }
+        if (pins.end() - it < 3)
+        {
+          std::cerr << "*** ERROR: Illegal (incomplete) pin name for the "
+                    << rx_name << "/SERIAL_SET_PINS configuration variable. "
+                    << "Accepted values are \"[!]RTS\" and/or \"[!]DTR\".\n";
+          return false;
+        }
         std::string pin_name(it, it+3);
         it += 3;
         if (pin_name == "RTS")
