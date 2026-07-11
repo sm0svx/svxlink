@@ -1502,6 +1502,7 @@ namespace UdpCipher
   using ClientId  = ReflectorUdpMsg::ClientId;
 
   static constexpr const char*  NAME      = "AES-128-GCM";
+  static constexpr const size_t KEYLEN    = 16;
   static constexpr const size_t AADLEN    = 4;
   static constexpr const size_t TAGLEN    = 8;
   static constexpr const size_t IVLEN     = 12;
