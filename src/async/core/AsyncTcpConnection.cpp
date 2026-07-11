@@ -212,6 +212,10 @@ TcpConnection& TcpConnection::operator=(TcpConnection&& other)
 
   m_ssl = other.m_ssl;
   other.m_ssl = nullptr;
+  if (m_ssl != nullptr)
+  {
+    ssl_con_map[m_ssl] = this;
+  }
 
   m_ssl_rd_bio = other.m_ssl_rd_bio;
   other.m_ssl_rd_bio = nullptr;
