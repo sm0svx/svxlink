@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     if (pidfile == 0)
     {
       char err[256];
-      sprintf(err, "fopen(\"%s\")", pidfile_name);
+      snprintf(err, sizeof(err), "fopen(\"%s\")", pidfile_name);
       perror(err);
       fflush(stderr);
       exit(1);
