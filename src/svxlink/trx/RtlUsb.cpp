@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncFdWatch.h>
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -242,8 +243,13 @@ class RtlUsb::SampleBuffer : public sigc::trackable
       int r = read(signal_pipe[0], read_buf, sizeof(read_buf));
       if (r == 0)
       {
-        closeReadPipe();
-        writePipeClosed();
+          // Closing the read pipe (which deletes the FdWatch) and emitting
+          // writePipeClosed (which may end up deleting this SampleBuffer)
+          // must not be done here since we are currently executing inside
+          // the FdWatch activity callback for this very object. Defer the
+          // cleanup to run after we have returned from the callback.
+        Application::app().runTask(
+            mem_fun(*this, &SampleBuffer::handleWritePipeClosed));
         return;
       }
       else if (r <= 0)
@@ -264,6 +270,16 @@ class RtlUsb::SampleBuffer : public sigc::trackable
         lockMutex();
       }
       unlockMutex();
+    }
+
+      // Deferred cleanup, run outside of the FdWatch activity callback since
+      // it may end up destroying this SampleBuffer object (through the
+      // writePipeClosed signal) as well as the FdWatch that invoked
+      // removeSamples in the first place.
+    void handleWritePipeClosed(void)
+    {
+      closeReadPipe();
+      writePipeClosed();
     }
 };
 
