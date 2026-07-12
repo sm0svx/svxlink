@@ -414,7 +414,12 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client,
   {
     ReflectorUdpMsg header(msg.type());
     ostringstream ss;
-    assert(header.pack(ss) && msg.pack(ss));
+    if (!header.pack(ss) || !msg.pack(ss))
+    {
+      std::cout << "*** WARNING: Packing UDP datagram failed for "
+                << udp_addr << ":" << udp_port << std::endl;
+      return false;
+    }
 
     m_udp_sock->setCipherIV(client->udpCipherIV());
     m_udp_sock->setCipherKey(client->udpCipherKey());
@@ -435,7 +440,12 @@ bool Reflector::sendUdpDatagram(ReflectorClient *client,
     ReflectorUdpMsgV2 header(msg.type(), client->clientId(),
         client->udpCipherIVCntrNext() & 0xffff);
     ostringstream ss;
-    assert(header.pack(ss) && msg.pack(ss));
+    if (!header.pack(ss) || !msg.pack(ss))
+    {
+      std::cout << "*** WARNING: Packing UDP datagram failed for "
+                << udp_addr << ":" << udp_port << std::endl;
+      return false;
+    }
     return m_udp_sock->UdpSocket::write(
         udp_addr, udp_port,
         ss.str().data(), ss.str().size());
@@ -911,7 +921,12 @@ bool Reflector::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
 
   stringstream ss;
   ss.write(reinterpret_cast<const char *>(buf), UdpCipher::AADLEN);
-  assert(m_aad.unpack(ss));
+  if (!m_aad.unpack(ss))
+  {
+    std::cout << "### Reflector::udpCipherDataReceived: "
+                 "Could not unpack AAD; ignoring datagram" << std::endl;
+    return true;
+  }
 
   ReflectorClient* client = nullptr;
   if (m_aad.iv_cntr == 0)
@@ -1017,14 +1032,19 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     if (aad.iv_cntr == 0) // Client UDP registration
     {
       UdpCipher::InitialAAD iaad;
-      assert(aadss.seekg(0));
+      aadss.seekg(0);
       if (!iaad.unpack(aadss))
       {
         std::cout << "### Reflector::udpDatagramReceived: "
                      "Could not unpack iaad" << std::endl;
         return;
       }
-      assert(iaad.iv_cntr == 0);
+      if (iaad.iv_cntr != 0)
+      {
+        std::cout << "### Reflector::udpDatagramReceived: "
+                     "Unexpected non-zero iv_cntr in initial AAD" << std::endl;
+        return;
+      }
       //std::cout << "### Reflector::udpDatagramReceived: iaad.client_id="
       //          << iaad.client_id << std::endl;
       client = ReflectorClient::lookup(iaad.client_id);
