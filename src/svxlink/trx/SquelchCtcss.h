@@ -470,20 +470,24 @@ class SquelchCtcss : public Squelch
         if (m_active_det == det)
         {
           m_active_det = 0;
-          //for (const auto& d : m_dets)
-          //{
-          //  if (d->isActivated())
-          //  {
-          //    //std::cout << "### ANOTHER TONE ALREADY ACTIVE" << std::endl;
-          //    m_active_det = d;
-          //    //setSignalDetected(false, ss.str());
-          //    ss.str(std::string());
-          //    ss << std::setprecision(1) << std::fixed << d->toneFq()
-          //       << ":" << static_cast<int>(std::roundf(d->lastSnr()));
-          //    setSignalDetected(true, ss.str());
-          //    return;
-          //  }
-          //}
+            // If another configured CTCSS tone is still present, hand the
+            // "signal detected" state over to it instead of closing the
+            // squelch. Only one active detector was tracked, so when it
+            // dropped the squelch closed even though a second valid tone was
+            // still active. (det itself just deactivated, so it is skipped.)
+          for (const auto& d : m_dets)
+          {
+            if (d->isActivated())
+            {
+              m_active_det = d;
+              ss.str(std::string());
+              ss << std::setprecision(1) << std::fixed << d->toneFq()
+                 << ":" << static_cast<int>(std::roundf(
+                       d->lastSnr() - m_ctcss_snr_offsets[d->toneFq()]));
+              setSignalDetected(true, ss.str());
+              return;
+            }
+          }
           setSignalDetected(false, ss.str());
         }
       }
