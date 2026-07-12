@@ -626,7 +626,7 @@ inline void Qso::handleByePacket(unsigned char *buf, int len)
 inline void Qso::handleSdesPacket(unsigned char *buf, int len)
 {
   char remote_id[256];
-  if(parseSDES(remote_id, buf, RTCP_SDES_NAME))
+  if(parseSDES(remote_id, buf, len, RTCP_SDES_NAME))
   {
     //printData(reinterpret_cast<unsigned char*>(remote_id), strlen(remote_id));
 #if 0
@@ -657,7 +657,7 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     }
   }
   char priv[256];
-  if(parseSDES(priv, buf, RTCP_SDES_PRIV))
+  if(parseSDES(priv, buf, len, RTCP_SDES_PRIV))
   {
     setRemoteParams(priv);
   }
