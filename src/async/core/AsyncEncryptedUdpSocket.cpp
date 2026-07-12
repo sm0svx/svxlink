@@ -355,7 +355,8 @@ void EncryptedUdpSocket::onDataReceived(const IpAddress& ip, uint16_t port,
   auto inbuf = static_cast<unsigned char*>(buf);
 
   /* Allow enough space in output buffer for additional block */
-  unsigned char outbuf[count + EVP_MAX_BLOCK_LENGTH];
+  std::vector<unsigned char> outbuf_storage(count + EVP_MAX_BLOCK_LENGTH);
+  unsigned char* outbuf = outbuf_storage.data();
 
   auto key_length = EVP_CIPHER_CTX_key_length(m_cipher_ctx);
   //auto iv_length = EVP_CIPHER_CTX_iv_length(m_cipher_ctx);
