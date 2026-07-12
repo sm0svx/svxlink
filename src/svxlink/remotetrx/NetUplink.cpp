@@ -299,9 +299,12 @@ void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
 
   MsgProtoVer *ver_msg = new MsgProtoVer;
   sendMsg(ver_msg);
-  
+
   if (auth_key.empty())
   {
+    std::cerr << "*** WARNING: Using an empty AUTH_KEY will allow anyone to "
+                 "connect"
+              << std::endl;
     MsgAuthOk *auth_msg = new MsgAuthOk;
     sendMsg(auth_msg);
     setState(STATE_READY);
@@ -663,7 +666,18 @@ void NetUplink::handleMsg(Msg *msg)
       if (!tx_muted && (audio_dec != 0))
       {
         MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
-        audio_dec->writeEncodedSamples(audio_msg->buf(), audio_msg->size());
+        int audio_size = audio_msg->size();
+          // Reject a payload length that is out of range or inconsistent with
+          // the number of bytes actually received for this message, otherwise
+          // the decoder would read past the receive buffer.
+        if ((audio_size < 0) || (audio_size > MsgAudio::BUFSIZE) ||
+            (msg->size() != sizeof(Msg) + sizeof(int) + audio_size))
+        {
+          std::cerr << "*** ERROR: Invalid MsgAudio size received. Ignoring."
+                    << std::endl;
+          break;
+        }
+        audio_dec->writeEncodedSamples(audio_msg->buf(), audio_size);
       }
       break;
     }

@@ -4,6 +4,12 @@
 * Security: Fix stack buffer overflow in EchoLink StationData::setData.
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: RemoteTrx NetUplink unvalidated audio length (OOB read).
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: Emit warning if AUTH_KEY is unset in RemoteTrx NetUplink.
+  Suggested by: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
