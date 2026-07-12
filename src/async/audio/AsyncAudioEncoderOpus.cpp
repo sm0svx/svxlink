@@ -218,8 +218,16 @@ void AudioEncoderOpus::printCodecParams(void)
 float AudioEncoderOpus::setFrameSize(float new_frame_size_ms)
 {
     // The frame size may be 2.5, 5, 10, 20, 40 or 60 ms
-  frame_size =
+  int new_frame_size =
     static_cast<int>(new_frame_size_ms * INTERNAL_SAMPLE_RATE / 1000);
+  if (new_frame_size <= 0)
+  {
+    cerr << "*** WARNING AudioEncoderOpus: Ignoring invalid FRAME_SIZE ("
+         << new_frame_size_ms << " ms). The frame size must be a positive "
+            "Opus value such as 2.5, 5, 10, 20, 40 or 60 ms.\n";
+    return frameSize();
+  }
+  frame_size = new_frame_size;
   delete [] sample_buf;
   sample_buf = new float[frame_size];
   return new_frame_size_ms;
