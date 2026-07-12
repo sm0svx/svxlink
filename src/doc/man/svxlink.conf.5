@@ -382,7 +382,9 @@ Define a DTMF command that is used to switch the node between online and
 offline mode. When in the off-state, the transmitter will not be turned on by
 any event. If a module is active when the node is brought offline, it will be
 deactivated and no module activation will be allowed in offline mode. No other
-commands than the online command will be accepted in the offline state.
+commands than the online command will be accepted in the offline state. Audio
+is neither sent to nor received from linked logics, e.g. a reflector, while
+the node is offline.
 
 If the command for example is set to 998877 then 9988771 will set the node
 online and 9988770 will set it offline. If a module is active or if the

@@ -232,6 +232,14 @@ class LogicBase : public Async::Plugin, public sigc::trackable
     virtual void playFile(const std::string& path) {}
 
     /**
+     * @brief   Called by the link manager when all logic cores have started
+     *
+     * At this point all logic cores have been registered in the link
+     * manager, so it is safe to e.g. set the logic linking mute state.
+     */
+    virtual void allLogicsStarted(void) {}
+
+    /**
      * @brief   Play the a length of silence
      * @param   length The length, in milliseconds, of silence to play
      */
