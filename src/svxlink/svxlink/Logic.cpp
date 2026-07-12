@@ -1003,6 +1003,19 @@ Async::AudioSink *Logic::logicConIn(void)
 } /* Logic::logicConIn */
 
 
+void Logic::allLogicsStarted(void)
+{
+    // A logic core that starts out offline (ONLINE=0) must be muted in the
+    // logic linking layer, just like one that is taken offline later on.
+    // That is done here and not in initialize(), since the link manager
+    // needs all logic cores to be registered first.
+  if (!is_online)
+  {
+    setMuteLinking(true);
+  }
+} /* Logic::allLogicsStarted */
+
+
 void Logic::setOnline(bool online)
 {
   if (online == is_online)
@@ -1017,11 +1030,13 @@ void Logic::setOnline(bool online)
   if (online)
   {
     tx().setTxCtrlMode(currently_set_tx_ctrl_mode);
+    setMuteLinking(false);
   }
   else
   {
     tx().setTxCtrlMode(Tx::TX_OFF);
     deactivateModule(0);
+    setMuteLinking(true);
   }
   stringstream ss;
   ss << "logic_online ";

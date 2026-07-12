@@ -455,6 +455,19 @@ void LinkManager::allLogicsStarted(void)
         ++prop_it;
       }
     }
+  }
+
+    // Now that all logic cores are registered, and the links only refer to
+    // logic cores that exist, let the logic cores set up their initial
+    // linking state (e.g. muting an offline logic core)
+  for (auto& logic_item : logic_map)
+  {
+    logic_item.second.logic->allLogicsStarted();
+  }
+
+  for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
+  {
+    Link &link = it->second;
 
       // If default active, activate the link
     if (link.default_active)

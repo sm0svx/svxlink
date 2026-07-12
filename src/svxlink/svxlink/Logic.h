@@ -201,6 +201,11 @@ class Logic : public LogicBase
     bool isWritingMessage(void);
     virtual void setOnline(bool online);
 
+    /**
+     * @brief   Called by the link manager when all logic cores have started
+     */
+    virtual void allLogicsStarted(void) override;
+
     virtual Async::AudioSink *logicConIn(void);
     virtual Async::AudioSource *logicConOut(void);
 
