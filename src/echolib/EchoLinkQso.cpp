@@ -692,6 +692,11 @@ void Qso::handleAudioInput(unsigned char *buf, int len)
     return;
   }
   
+  if (len <= 0)
+  {
+    return;
+  }
+
   if(buf[0] != 0xc0) /* Not an audio packet */
   {
     handleNonAudioPacket(buf, len);
@@ -707,13 +712,20 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 {
   //printData(buf, len);
 
+  if (len < 7)
+  {
+    cerr << "Ignoring short non-audio packet received:\n";
+    printData(buf, len);
+    return;
+  }
+
   if(memcmp(buf+1, "NDATA", 5) == 0)
   {
     if (buf[6] == 0x0d) // Remote station info / conference status
     {
       char *info_buf = reinterpret_cast<char *>(buf);
       char *null = (char *)memchr(info_buf, 0, len);
-      if (null == 0)
+      if (null == 0 || null < info_buf + 7)
       {
       	cerr << "Malformed info packet received:\n";
 	printData(buf, len);
@@ -736,7 +748,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
     {
       char *chat_buf = reinterpret_cast<char *>(buf);
       char *null = (char *)memchr(buf, 0, len);
-      if (null == 0)
+      if (null == 0 || null < chat_buf + 6)
       {
       	cerr << "Malformed chat packet received:\n";
 	printData(buf, len);
