@@ -963,7 +963,13 @@ bool Reflector::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
     //          << m_aad.iv_cntr << std::endl;
     m_udp_sock->setCipherIV(UdpCipher::IV{client->udpCipherIVRand(),
                                           client->clientId(), m_aad.iv_cntr});
-    m_udp_sock->setCipherKey(client->udpCipherKey());
+    if (!m_udp_sock->setCipherKey(client->udpCipherKey()))
+    {
+      std::cout << "*** WARNING: Reflector: client " << addr << ":" << port
+                << " supplied a UDP cipher key of invalid length; "
+                   "ignoring datagram" << std::endl;
+      return true;
+    }
     m_udp_sock->setCipherAADLength(UdpCipher::AADLEN);
   }
   else
