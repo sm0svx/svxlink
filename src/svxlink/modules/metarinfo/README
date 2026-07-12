@@ -125,10 +125,10 @@ LINK=data/observations/metar/stations
 
 APIKEY=YOUR_APIKEY
 Create an account with APRS.fi if you don't aready have one
-and get your API key from you account settings page. 
+and get your API key from your account settings page. 
 
-MAPPING=YLOX:VK5TRM-13,YRMK:VK5TRM-14
-Mapping from a local fake ICAO (airport) to real weather station APRS callsign in format ICAO:callsign
+MAPPING=ICAO:APRS_CALL-SSID,ICAO:CALL-SSID
+Mapping from a local ICAO (airport) to real weather station APRS callsign or CWOP station
 
 IMPORTANT NOTICE:
 At the moment ONLY FOUR combination are known to work:
@@ -152,6 +152,8 @@ LINK=/cgi-bin/wxxml.cgi?call=
 TYPE=JSON
 SERVER=https://api.aprs.fi
 APIKEY=YOUR_APIKEY
+LINK=/api/get?what=wx
+MAPPING=ICAO:APRS_CALL-SSID,ICAO:CWOP_STAIION
 
 PROBLEMS AND BUGS:
 cat problems > dl1hrc [at] gmx.de
