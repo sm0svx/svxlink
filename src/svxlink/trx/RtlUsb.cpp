@@ -154,7 +154,7 @@ class RtlUsb::SampleBuffer : public sigc::trackable
       block_size = new_block_size;
       while (!block_queue.empty())
       {
-        delete block_queue.front();
+        delete [] block_queue.front();
         block_queue.pop();
       }
       delete [] buf;
