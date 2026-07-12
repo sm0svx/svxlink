@@ -43,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
+#include <cerrno>
 
 
 /****************************************************************************
@@ -121,6 +123,27 @@ using namespace Async;
  *
  ****************************************************************************/
 
+int TcpServerBase::parsePort(const std::string& port_str)
+{
+  if (port_str.empty())
+  {
+    return -1;
+  }
+  char *endptr = 0;
+  errno = 0;
+  long val = strtol(port_str.c_str(), &endptr, 10);
+  if ((*endptr != '\0') || (errno != 0))
+  {
+    return -1;  // Not a pure number -- caller falls back to service lookup
+  }
+  if ((val < 1) || (val > 65535))
+  {
+    return -1;  // Out of range -- reject instead of truncating to 16 bits
+  }
+  return static_cast<int>(val);
+} /* TcpServerBase::parsePort */
+
+
 TcpServerBase::TcpServerBase(const string& port_str,
                              const Async::IpAddress &bind_ip)
   : m_sock(-1), m_rd_watch(0), m_con_throt_timer(-1, Timer::TYPE_PERIODIC)
@@ -157,21 +180,22 @@ TcpServerBase::TcpServerBase(const string& port_str,
     return;
   }
 
-  char *endptr = 0;
   struct servent *se;
-  uint16_t port = strtol(port_str.c_str(), &endptr, 10);
-  if (*endptr != '\0')
+  uint16_t port;
+  int parsed_port = parsePort(port_str);
+  if (parsed_port > 0)
   {
-    if ((se = getservbyname(port_str.c_str(), "tcp")) != NULL)
-    {
-      port = ntohs(se->s_port);
-    }
-    else
-    {
-      cerr << "Could not find service " << port_str << endl;
-      cleanup();
-      return;
-    }
+    port = static_cast<uint16_t>(parsed_port);
+  }
+  else if ((se = getservbyname(port_str.c_str(), "tcp")) != NULL)
+  {
+    port = ntohs(se->s_port);
+  }
+  else
+  {
+    cerr << "Could not find service " << port_str << endl;
+    cleanup();
+    return;
   }
 
   struct sockaddr_in addr = { 0 };
