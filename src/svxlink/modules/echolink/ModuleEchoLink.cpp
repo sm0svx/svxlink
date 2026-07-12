@@ -537,8 +537,25 @@ void ModuleEchoLink::onCommandPtyInput(const void *buf, size_t count)
 
 void ModuleEchoLink::moduleCleanup(void)
 {
-  //FIXME: Delete qso objects
-  
+    // Tear down any still-active QSO objects before the audio pipeline they
+    // are attached to (splitter/selector) is deleted further down. The
+    // QsoImpl destructor only releases its own resources and does not touch
+    // the qsos list, so iterating here is safe.
+  talker = 0;
+  for (QsoImpl *qso : qsos)
+  {
+    if (splitter != 0)
+    {
+      splitter->removeSink(qso);
+    }
+    if (selector != 0)
+    {
+      selector->removeSource(qso);
+    }
+    delete qso;
+  }
+  qsos.clear();
+
   delete num_con_update_timer;
   num_con_update_timer = 0;
 
