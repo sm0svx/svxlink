@@ -661,7 +661,7 @@ bool ModuleMetarInfo::initialize(void)
               transform(callsign.begin(), callsign.end(), callsign.begin(), ::toupper);
               transform(icao.begin(), icao.end(), icao.begin(), ::toupper);
               
-              callsignToIcaoMap[callsign] = icao;
+              callsignMap[callsign] = icao;
               
               if (debug) {
                   std::cout << "  Mapped " << callsign << " -> " << icao << std::endl;
@@ -932,39 +932,29 @@ void ModuleMetarInfo::openConnection(void)
   http = new Http();
   html = "";
 
-  // Use the full, unmodified callsign (e.g., VK5TRM-13) for API and mapping lookup
-  std::string fullCallsign = icao;
+  // --- APPLY CALLSIGN MAPPING HERE ---
+  std::string final_icao = icao; // Start with the original icao (could be YLOX)
 
-  // Default target ICAO is the full callsign if no mapping is found
-  std::string targetIcao = fullCallsign;
+  // Convert to uppercase for comparison
+  std::string checkCallsign = icao;
+  transform(checkCallsign.begin(), checkCallsign.end(), checkCallsign.begin(), ::toupper);
 
-  // Look up the full callsign in the map
-  if (callsignToIcaoMap.find(fullCallsign) != callsignToIcaoMap.end()) {
-      targetIcao = callsignToIcaoMap[fullCallsign];
-      if (debug) {
-          cout << "[METAR] Mapped full callsign '" << fullCallsign << "' to ICAO '" << targetIcao << "'" << endl;
-      }
-  } else {
-      // No mapping found
-      if (debug) {
-          cout << "[METAR] No mapping found for full callsign '" << fullCallsign << "'. Using as-is for METAR." << endl;
-      }
+  // Check if this callsign is in our mapping
+  if (callsignMap.find(checkCallsign) != callsignMap.end()) {
+    final_icao = callsignMap[checkCallsign];
+    cout << "[METAR] Mapped " << icao << " -> " << final_icao << endl;
   }
+  // -------------------------------------
 
-  // --- FIX: Construct the URL with BOTH name= AND what=wx ---
+  // Construct the API URL using the FINAL ICAO (which might be the mapped value)
   std::string path = server;
-  path += "/api/get?name=";          // Request by callsign
-  path += fullCallsign;              // e.g., VK5TRM-13
-  path += "&what=wx";                // Request METAR data
-  path += "&apikey=";
-  path += apikey;
+  path += "/api/get?name=" + final_icao;  // <-- Use final_icao, NOT icao
+  path += "&what=wx";
+  path += "&apikey=" + apikey; 
   path += "&format=json";
 
   http->AddRequest(path.c_str());
-  cout << "Fetching METAR from APRS.fi for: " << fullCallsign << " (Reporting as: " << targetIcao << ")" << endl;
-
-  // Update the member variable 'icao' to the MAPPED ICAO for announcement
-  icao = targetIcao;
+  cout << "Fetching METAR from: " << path << endl;
 
   http->metarInfo.connect(mem_fun(*this, &ModuleMetarInfo::onData));
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
@@ -1095,34 +1085,53 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     }
 
     // Temp/Dewpoint Calculation
-    std::string tempPart = "/// /// ";
-    if (!tempStr.empty()) {
-        double t = atof(tempStr.c_str());
-        int t_int = (int)(t + 0.5);
-        std::string tempStrOut;
-        if (t_int < 0) {
-            tempStrOut = "M" + std::to_string(-t_int);
-        } else {
-            tempStrOut = std::to_string(t_int);
-        }
+     std::string tempPart = "/// ///";
 
-        std::string dpStrOut = "///";
-        if (!humidityStr.empty()) {
-            double rh = atof(humidityStr.c_str());
-            if (rh > 0 && rh <= 100) {
-                double alpha = (17.625 * t) / (243.04 + t);
-                double beta = log(rh / 100.0) + alpha;
-                double td = (243.04 * beta) / (17.625 - beta);
-                int td_int = (int)(td + 0.5);
-                if (td_int < 0) {
-                    dpStrOut = "M" + std::to_string(-td_int);
-                } else {
-                    dpStrOut = std::to_string(td_int);
+    if (!tempStr.empty()) {
+    double t = atof(tempStr.c_str());
+    int t_int = (int)(t + 0.5);
+    std::string tempStrOut;
+
+    if (t_int < 0) {
+        tempStrOut = "M";
+        int t_abs = -t_int;
+        if (t_abs < 10) {
+            tempStrOut += "0";
+        }
+        tempStrOut += std::to_string(t_abs);
+    } else {
+        tempStrOut = std::to_string(t_int);
+        if (t_int < 10) {
+            tempStrOut = "0" + tempStrOut;
+        }
+    }
+
+    std::string dpStrOut = "///";
+    if (!humidityStr.empty()) {
+        double rh = atof(humidityStr.c_str());
+        if (rh > 0 && rh <= 100) {
+            double alpha = (17.625 * t) / (243.04 + t);
+            double beta = log(rh / 100.0) + alpha;
+            double td = (243.04 * beta) / (17.625 - beta);
+            int td_int = (int)(td + 0.5);
+
+            if (td_int < 0) {
+                dpStrOut = "M";
+                int td_abs = -td_int;
+                if (td_abs < 10) {
+                    dpStrOut += "0";
+                }
+                dpStrOut += std::to_string(td_abs);
+            } else {
+                dpStrOut = std::to_string(td_int);
+                if (td_int < 10) {
+                    dpStrOut = "0" + dpStrOut;
                 }
             }
         }
-        tempPart = tempStrOut + "/" + dpStrOut;
     }
+    tempPart = tempStrOut + "/" + dpStrOut;
+}
 
     // Pressure
     std::string pressurePart = "";
@@ -2436,46 +2445,73 @@ void ModuleMetarInfo::isTime(std::string &retval, std::string token)
    retval = ss.str();
 } /* isTime */
 
-
 void ModuleMetarInfo::validTemp(std::string &retval, std::string token)
 {
-   stringstream ss;
+    stringstream ss;
 
-   // temp is not measured
-   if (token.substr(0,2) == "//")
-   {
-       ss << "not";
-   }
-   else
-   {
-   if (token.substr(0,1) == "m")
-   {
-        ss << "-";
-      token.erase(0,1);
-   }
-     ss << atoi(token.substr(0,2).c_str());
-   }
-   retval = ss.str();
-} /* validTemp */
-
+    // Check for "not measured"
+    if (token.length() >= 2 && token.substr(token.length() - 2, 2) == "//")
+    {
+        ss << "not";
+    }
+    else
+    {
+        // Check for minus sign at the START (standard METAR: M05, M12)
+        if (!token.empty() && (token[0] == 'M' || token[0] == 'm'))
+        {
+            ss << "-";
+            // Strip the 'M' and convert the rest
+            std::string numPart = token.substr(1);
+            if (!numPart.empty())
+            {
+                ss << atoi(numPart.c_str());
+            }
+        }
+        else
+        {
+            // Just convert the whole token
+            if (!token.empty())
+            {
+                ss << atoi(token.c_str());
+            }
+        }
+    }
+    retval = ss.str();
+}
 
 void ModuleMetarInfo::validDp(std::string &retval, std::string token)
 {
-   stringstream ss;
+    stringstream ss;
 
-   // dewpoint is not reported?
-   if (token.substr(token.length()-2,2) == "//")
-   {
-       ss << "not";
-   }
-   else
-   {
-     if (token.substr(token.length()-3,1) == "m") ss << "-";
-     ss << atoi(token.substr(token.length()-2,2).c_str());
-   }
-   retval = ss.str();
-} /* validDp */
-
+    // Check for "not measured"
+    if (token.length() >= 2 && token.substr(token.length() - 2, 2) == "//")
+    {
+        ss << "not";
+    }
+    else
+    {
+        // Check for minus sign at the START (standard METAR: M05, M12)
+        if (!token.empty() && (token[0] == 'M' || token[0] == 'm'))
+        {
+            ss << "-";
+            // Strip the 'M' and convert the rest
+            std::string numPart = token.substr(1);
+            if (!numPart.empty())
+            {
+                ss << atoi(numPart.c_str());
+            }
+        }
+        else
+        {
+            // Just convert the whole token
+            if (!token.empty())
+            {
+                ss << atoi(token.c_str());
+            }
+        }
+    }
+    retval = ss.str();
+}
 
 bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
 {
