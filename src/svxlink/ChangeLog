@@ -1,3 +1,11 @@
+ 1.10.1 -- ?? Jul 2026
+-----------------------
+
+* Security: Fix stack buffer overflow in EchoLink StationData::setData.
+  Credit: Mark Rose <markrose@markrose.ca>
+
+
+
  1.10.0 -- 23 May 2026
 -----------------------
 

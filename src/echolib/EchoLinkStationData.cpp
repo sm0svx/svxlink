@@ -214,8 +214,13 @@ void StationData::setData(const char *data)
     end_desc = data + strlen(data);
   }
   
-  strncpy(str, data, end_desc-data);
-  str[end_desc-data] = 0;
+  size_t desc_len = static_cast<size_t>(end_desc - data);
+  if (desc_len > MAXDATA - 1)
+  {
+    desc_len = MAXDATA - 1;
+  }
+  strncpy(str, data, desc_len);
+  str[desc_len] = 0;
   m_description = str;
   removeTrailingSpaces(m_description);
   
