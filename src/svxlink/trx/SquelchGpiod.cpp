@@ -204,14 +204,15 @@ bool SquelchGpiod::initialize(Async::Config& cfg, const std::string& rx_name)
   else
   {
 #if GPIOD_VERSION_MAJOR >= 2
-    m_line_offset = gpiod_chip_get_line_offset_from_name(m_chip, line.c_str());
-    if (m_line_offset < 0)
+    int line_offset = gpiod_chip_get_line_offset_from_name(m_chip, line.c_str());
+    if (line_offset < 0)
     {
       std::cerr << "*** ERROR: Get GPIOD line \"" << line
                 << "\" failed for RX \"" << rx_name << "\": "
                 << std::strerror(errno) << std::endl;
       return false;
     }
+    m_line_offset = line_offset;
 #else
     m_line = gpiod_chip_find_line(m_chip, line.c_str());
     if (!m_line)
