@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -949,6 +949,8 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
   }
   try
   {
+    m_json_rx_map.clear();
+    m_json_tx_map.clear();
     m_status = &(m_reflector->clientStatus(m_callsign));
     auto& status = *m_status;
     status.clear();

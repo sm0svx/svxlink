@@ -16,6 +16,10 @@
 * Security: LocationInfo: Avoid buffer overflow in APRS message construction
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: SvxReflector: Fix use-after-free from stale cached JSON on
+  repeated MsgNodeInfo
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
