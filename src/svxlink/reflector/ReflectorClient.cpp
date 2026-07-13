@@ -1207,11 +1207,14 @@ void ReflectorClient::handleMsgError(std::istream& is)
 
 void ReflectorClient::sendError(const std::string& msg)
 {
-  sendMsg(MsgError(msg));
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
-  m_disc_timer.setEnable(true);
-  m_con_state = STATE_EXPECT_DISCONNECT;
+  sendMsg(MsgError(msg));
+  if (m_con_state != STATE_DISCONNECTED)
+  {
+    m_disc_timer.setEnable(true);
+    m_con_state = STATE_EXPECT_DISCONNECT;
+  }
 } /* ReflectorClient::sendError */
 
 
@@ -1227,8 +1230,11 @@ void ReflectorClient::disconnect(void)
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
   m_con->disconnect();
-  m_con_state = STATE_DISCONNECTED;
-  m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
+  if (m_con_state != STATE_DISCONNECTED)
+  {
+    m_con_state = STATE_DISCONNECTED;
+    m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
+  }
 } /* ReflectorClient::disconnect */
 
 

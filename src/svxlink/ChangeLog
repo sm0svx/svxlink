@@ -20,6 +20,10 @@
   repeated MsgNodeInfo
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: SvxReflector: Reentrant delete client → use-after-free on
+  this via sendError() write-failure path
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
