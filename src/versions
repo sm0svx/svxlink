@@ -1,5 +1,5 @@
 # Project release version
-PROJECT=26.05.0.99.5
+PROJECT=26.05.0.99.6
 
 # Version for the Qtel application
 QTEL=1.3.0
@@ -8,7 +8,7 @@ QTEL=1.3.0
 LIBECHOLIB=1.3.6.99.0
 
 # Version for the Async library
-LIBASYNC=1.9.0
+LIBASYNC=1.9.0.99.0
 
 # SvxLink versions
 SVXLINK=1.10.0.99.0
