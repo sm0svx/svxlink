@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -212,20 +212,6 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
 
   num_connected = calls.size();
 
-  char msg[80];
-  switch(action)
-  {
-    case 0:
-      sprintf(msg, "connection to %s closed", call.c_str());
-      break;
-    case 1:
-      sprintf(msg, "connection to %s (%s)", call.c_str(), info.c_str());
-      break;
-    case 2:
-      sprintf(msg, "incoming connection %s (%s)", call.c_str(), info.c_str());
-      break;
-  }
-
     // Object message for Echolink
     // ;EL-242660*111111z4900.05NE00823.29E0QSO status message
   std::ostringstream objmsg;
@@ -233,7 +219,7 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
          << ";" << addresseeStr(loc_cfg.objectname) << "*"
          << "111111z"
          << posStr("E0")
-         << msg
+         << qsoStatusMsg(action, call, info)
          ;
   sendMsg(objmsg.str());
 
@@ -250,9 +236,7 @@ void AprsTcpClient::updateQsoStatus(int action, const std::string& call,
 // updates state of a 3rd party
 void AprsTcpClient::update3rdState(const string& call, const string& info)
 {
-   char aprsmsg[20 + info.length()];
-   sprintf(aprsmsg, "%s>%s", call.c_str(), info.c_str());
-   sendMsg(aprsmsg);
+   sendMsg(thirdPartyMsg(call, info));
 } /* AprsTcpClient::update3rdState */
 
 
@@ -260,7 +244,6 @@ void AprsTcpClient::igateMessage(const string& info)
 {
   sendMsg(info);
 } /* AprsTcpClient::igateMessage */
-
 
 
 /****************************************************************************
@@ -276,6 +259,45 @@ void AprsTcpClient::igateMessage(const string& info)
  * Private member functions
  *
  ****************************************************************************/
+
+/**
+ * @brief   Build the QSO status text for an APRS object message
+ * @param   action 0=connection closed, 1=connected, 2=incoming connection
+ * @param   call   The remote callsign
+ * @param   info   Remote station info (free text, untrusted/unbounded)
+ * @return  The status text
+ *
+ * Static and allocation-safe (returns a std::string) so that long,
+ * remote-supplied callsign/info values cannot overflow a fixed buffer.
+ */
+std::string AprsTcpClient::qsoStatusMsg(int action, const std::string& call,
+                                        const std::string& info)
+{
+  switch (action)
+  {
+    case 0:
+      return "connection to " + call + " closed";
+    case 1:
+      return "connection to " + call + " (" + info + ")";
+    case 2:
+      return "incoming connection " + call + " (" + info + ")";
+  }
+  return std::string();
+} /* AprsTcpClient::qsoStatusMsg */
+
+
+/**
+ * @brief   Build the 3rd-party state text ("call>info")
+ * @param   call The callsign
+ * @param   info The info/state text (untrusted/unbounded)
+ * @return  The text
+ */
+std::string AprsTcpClient::thirdPartyMsg(const std::string& call,
+                                         const std::string& info)
+{
+  return call + ">" + info;
+} /* AprsTcpClient::thirdPartyMsg */
+
 
 std::string AprsTcpClient::addrStr(const std::string& source) const
 {

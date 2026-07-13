@@ -13,6 +13,9 @@
 * Security: Fix out-of-bounds reads in EchoLink RTCP/SDES packet parsing
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: LocationInfo: Avoid buffer overflow in APRS message construction
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
