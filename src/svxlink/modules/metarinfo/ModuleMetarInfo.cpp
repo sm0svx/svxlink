@@ -605,7 +605,7 @@ bool ModuleMetarInfo::initialize(void)
          << "/TYPE is not set.\n";
     return false;
   }
-  if (type != "TXT" && type != "XML" && type != "JSON")
+  if (type != "TXT" && type != "XML" && type != "JSON" && type != "APRS_XML")
   {
     cout << "**** WARNING: Config variable " << cfgName() 
          << "/TYPE: " << type << " is not valid. Must be TXT, XML, or JSON.\n";
@@ -1160,9 +1160,28 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     html = "";
   }
   // --- END JSON PARSING ---
+  // switching between the newer xml-service by aviationweather and the old 
+  // noaa.gov version. With the standard TXT format anybody will be able to 
+  // create it's own METAR report from it's own weather station
+
+  else if (type == "XML")
+  {
+    if (debug)
+    {
+      cout << "requesting XML metar version from " << server << "/" << endl;
+    }
+
+    if (html.find("<data num_results=\"0\" />") != string::npos)
+    {
+      stringstream temp;
+      cout << "Metar information not available" << endl;
+      temp << "metar_not_valid";
+      say(temp);
+      return;
+    }
 
   // --- 2. XML PARSING (Legacy APRS or Custom XML) ---
-  else if (type == "XML")
+  else if (type == "APRS_XML")
   {
     cout << "[APRS XML] Parsing custom weather XML..." << endl;
 
@@ -1341,8 +1360,8 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
 
     handleMetar(metar);
     html = "";
-  }
-  // --- END TXT PARSING ---
+    }
+  }// --- END TXT PARSING ---
 }
 // This matches the header declaration in ModuleMetarInfo.h
 std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)

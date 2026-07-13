@@ -110,7 +110,7 @@ LONGMESSAGES=1
 If set to 1, it gives out e.g. "Ceiling and visibility OK" instead of just
 "cavok". Comment out if you don't want it.
 
-TYPE=(XML||TXT||JSON)
+TYPE=(XML ||APRS_XML||TXT||JSON)
 Configure the type of service
 
 SERVER=xxxx
@@ -143,8 +143,8 @@ TYPE=XML
 SERVER=aviationweather.gov
 LINK=/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=
 
-3) XML service from findu.com
-TYPE=XML
+3) APRS_XML service from findu.com
+TYPE=APRS_XML
 SERVER=http://www.findu.com
 LINK=/cgi-bin/wxxml.cgi?call=
 
