@@ -669,9 +669,11 @@ bool ModuleMetarInfo::initialize(void)
           }
       }
   } else {
-      if (debug) std::cout << "[METAR] No MAPPING config found." << std::endl;
-   return false;
+      // If MAPPING is not configured, we simply don't load any mappings.
+      // The module will proceed and treat the input directly as an ICAO code.
+      if (debug) std::cout << "[METAR] No MAPPING config found. Using input as ICAO directly." << std::endl;
   }
+
   // --- Load LONGMESSAGES ---
   if (cfg().getValue(cfgName(), "LONGMESSAGES", value))
   {
