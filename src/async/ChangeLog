@@ -2,7 +2,11 @@
 ----------------------
 
 * Security: Async HTTP server: unbounded request-line/header accumulation may
-  lead to memory-exhaustion DoS
+  lead to memory-exhaustion DoS.
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: Audio decoders: attacker-sized stack VLA from encoded-frame
+  length → stack exhaustion (network) lead to memory-exhaustion DoS.
   Credit: Mark Rose <markrose@markrose.ca>
 
 

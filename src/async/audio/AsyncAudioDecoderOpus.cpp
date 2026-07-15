@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AsyncAudioEncoderOpus.h"
 #include "AsyncAudioDecoderOpus.h"
 
 
@@ -115,10 +116,9 @@ using namespace Async;
  ****************************************************************************/
 
 AudioDecoderOpus::AudioDecoderOpus(void)
-  : frame_size(0)
 {
   int error;
-  dec = opus_decoder_create(INTERNAL_SAMPLE_RATE, 1, &error);
+  m_dec = opus_decoder_create(INTERNAL_SAMPLE_RATE, 1, &error);
   if (error != OPUS_OK)
   {
     cerr << "*** ERROR: Could not initialize Opus decoder\n";
@@ -129,7 +129,7 @@ AudioDecoderOpus::AudioDecoderOpus(void)
 
 AudioDecoderOpus::~AudioDecoderOpus(void)
 {
-  opus_decoder_destroy(dec);
+  opus_decoder_destroy(m_dec);
 } /* AudioDecoderOpus::~AudioDecoderOpus */
 
 
@@ -164,7 +164,7 @@ void AudioDecoderOpus::printCodecParams(void) const
 float AudioDecoderOpus::setGain(float new_gain)
 {
   opus_int32 gaini = static_cast<opus_int32>(256.0f * new_gain);
-  opus_decoder_ctl(dec, OPUS_SET_GAIN(gaini));
+  opus_decoder_ctl(m_dec, OPUS_SET_GAIN(gaini));
   return gain();
 } /* AudioDecoderOpus::setGain */
 
@@ -173,7 +173,7 @@ float AudioDecoderOpus::gain(void) const
 {
   opus_int32 gaini;
     // coverity[ptr_arith]
-  opus_decoder_ctl(dec, OPUS_GET_GAIN(&gaini));
+  opus_decoder_ctl(m_dec, OPUS_GET_GAIN(&gaini));
   return gaini / 256.0f;
 } /* AudioDecoderOpus::gain */
 #endif
@@ -181,41 +181,50 @@ float AudioDecoderOpus::gain(void) const
 
 void AudioDecoderOpus::reset(void)
 {
-  opus_decoder_ctl(dec, OPUS_RESET_STATE);
+  opus_decoder_ctl(m_dec, OPUS_RESET_STATE);
 } /* AudioDecoderOpus::reset */
 
 
 void AudioDecoderOpus::writeEncodedSamples(void *buf, int size)
 {
-  unsigned char *packet = reinterpret_cast<unsigned char *>(buf);
-  
-  int frame_cnt = opus_packet_get_nb_frames(packet, size);
+  if ((size <= 0) || (size > AudioEncoderOpus::MAX_ENCODED_FRAME_SIZE))
+  {
+    std::cerr << "*** WARNING: AudioDecoderOpus received an encoded frame with "
+                 "an out of range size (" << size << " bytes). Discarding it."
+              << std::endl;
+    return;
+  }
+
+  const unsigned char* const packet = reinterpret_cast<unsigned char*>(buf);
+
+  const int frame_cnt = opus_packet_get_nb_frames(packet, size);
   if (frame_cnt == 0)
   {
     return;
   }
   else if (frame_cnt < 0)
   {
-    cerr << "*** ERROR: Opus decoder error: " << opus_strerror(frame_size)
-         << endl;
+    std::cerr << "*** ERROR: Opus decoder error: " << opus_strerror(frame_cnt)
+              << std::endl;
     return;
   }
-  frame_size = opus_packet_get_samples_per_frame(packet, INTERNAL_SAMPLE_RATE);
+  const int frame_size =
+    opus_packet_get_samples_per_frame(packet, INTERNAL_SAMPLE_RATE);
   if (frame_size == 0)
   {
     return;
   }
   else if (frame_size < 0)
   {
-    cerr << "*** ERROR: Opus decoder error: " << opus_strerror(frame_size)
-         << endl;
+    std::cerr << "*** ERROR: Opus decoder error: " << opus_strerror(frame_size)
+              << std::endl;
     return;
   }
   int channels = opus_packet_get_nb_channels(packet);
   if (channels <= 0)
   {
-    cerr << "*** ERROR: Opus decoder error: " << opus_strerror(channels)
-         << endl;
+    std::cerr << "*** ERROR: Opus decoder error: " << opus_strerror(channels)
+              << std::endl;
     return;
   }
   else if (channels != 1)
@@ -224,19 +233,31 @@ void AudioDecoderOpus::writeEncodedSamples(void *buf, int size)
             "channel can be handled\n";
     return;
   }
-  //cout << "### frame_cnt=" << frame_cnt << " frame_size=" << frame_size;
-  float samples[frame_cnt*frame_size];
-  frame_size = opus_decode_float(dec, packet, size, samples,
-                                 frame_cnt*frame_size, 0);
-  //cout << " " << frame_size << endl;
-  if (frame_size > 0)
+    // A well-formed Opus packet decodes to at most MAX_DECODED_SAMPLES mono
+    // samples. Guard against malformed packets whose advertised frame_cnt /
+    // frame_size would exceed that, then decode into a fixed-size stack buffer,
+    // passing the real buffer capacity to opus_decode_float() as the output
+    // frame-size limit so it can never overrun the buffer.
+  if ((frame_cnt * frame_size) > MAX_DECODED_SAMPLES)
   {
-    sinkWriteSamples(samples, frame_size);
+    std::cerr << "*** WARNING: AudioDecoderOpus packet advertises more samples "
+                 "than a valid Opus packet can contain. Discarding it."
+              << std::endl;
+    return;
   }
-  else if (frame_size < 0)
+
+  float samples[MAX_DECODED_SAMPLES];
+  const int decoded_samples = opus_decode_float(m_dec, packet, size, samples,
+                                                MAX_DECODED_SAMPLES, 0);
+  if (decoded_samples > 0)
   {
-    cerr << "**** ERROR: Opus decoder error: " << opus_strerror(frame_size)
-         << endl;
+    sinkWriteSamples(samples, decoded_samples);
+  }
+  else if (decoded_samples < 0)
+  {
+    std::cerr << "**** ERROR: Opus decoder error: "
+              << opus_strerror(decoded_samples)
+              << std::endl;
   }
 } /* AudioDecoderOpus::writeEncodedSamples */
 

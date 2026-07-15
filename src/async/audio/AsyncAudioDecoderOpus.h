@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -113,6 +113,13 @@ class AudioDecoderOpus : public AudioDecoder
 {
   public:
     /**
+     * The largest number of mono samples a single Opus packet can decode to:
+     * Opus limits a packet to 120 ms of audio, so at the internal sample rate
+     * this is an upper bound that no valid packet exceeds.
+     */
+    static const int MAX_DECODED_SAMPLES = 120 * INTERNAL_SAMPLE_RATE / 1000;
+
+    /**
      * @brief 	Default constuctor
      */
     AudioDecoderOpus(void);
@@ -164,19 +171,20 @@ class AudioDecoderOpus : public AudioDecoder
      * @brief 	Write encoded samples into the decoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
+     *
+     * The maximum buffer size this function accepts is specified by
+     * AudioEncoderOpus::MAX_ENCODED_FRAME_SIZE, which specifies the size
+     * recommended by the Opus documentation as an upper bound for a single
+     * packet.
      */
-    virtual void writeEncodedSamples(void *buf, int size);
-    
+    virtual void writeEncodedSamples(void *buf, int size) override;
 
-  protected:
-    
   private:
-    OpusDecoder *dec;
-    int         frame_size;
-    
+    OpusDecoder* m_dec {nullptr};
+
     AudioDecoderOpus(const AudioDecoderOpus&);
     AudioDecoderOpus& operator=(const AudioDecoderOpus&);
-    
+
 };  /* class AudioDecoderOpus */
 
 

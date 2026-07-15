@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -114,13 +114,13 @@ using namespace Async;
 
 AudioDecoderSpeex::AudioDecoderSpeex(void)
 {
-  speex_bits_init(&bits);
+  speex_bits_init(&m_bits);
 #if INTERNAL_SAMPLE_RATE == 16000
-  dec_state = speex_decoder_init(&speex_wb_mode);
+  m_dec_state = speex_decoder_init(&speex_wb_mode);
 #else
-  dec_state = speex_decoder_init(&speex_nb_mode);
+  m_dec_state = speex_decoder_init(&speex_nb_mode);
 #endif
-  speex_decoder_ctl(dec_state, SPEEX_GET_FRAME_SIZE, &frame_size);
+  speex_decoder_ctl(m_dec_state, SPEEX_GET_FRAME_SIZE, &m_frame_size);
   
   //enableEnhancer(false);
 } /* AudioDecoderSpeex::AudioDecoderSpeex */
@@ -128,8 +128,8 @@ AudioDecoderSpeex::AudioDecoderSpeex(void)
 
 AudioDecoderSpeex::~AudioDecoderSpeex(void)
 {
-  speex_bits_destroy(&bits);
-  speex_decoder_destroy(dec_state);
+  speex_bits_destroy(&m_bits);
+  speex_decoder_destroy(m_dec_state);
 } /* AudioDecoderSpeex::~AudioDecoderSpeex */
 
 
@@ -160,7 +160,7 @@ void AudioDecoderSpeex::printCodecParams(void) const
 bool AudioDecoderSpeex::enableEnhancer(bool enable)
 {
   int enh = enable ? 1 : 0;
-  speex_decoder_ctl(dec_state, SPEEX_SET_ENH, &enh);
+  speex_decoder_ctl(m_dec_state, SPEEX_SET_ENH, &enh);
   return enhancerEnabled();
 } /* AudioDecoderSpeex::enableEnhancer */
 
@@ -168,31 +168,37 @@ bool AudioDecoderSpeex::enableEnhancer(bool enable)
 bool AudioDecoderSpeex::enhancerEnabled(void) const
 {
   int enh;
-  speex_decoder_ctl(dec_state, SPEEX_GET_ENH, &enh);
+  speex_decoder_ctl(m_dec_state, SPEEX_GET_ENH, &enh);
   return (enh != 0);
 } /* AudioDecoderSpeex::enhancerEnabled */
 
 
-
-
 void AudioDecoderSpeex::writeEncodedSamples(void *buf, int size)
 {
-  char *ptr = (char *)buf;
-  
-  speex_bits_read_from(&bits, ptr, size);
-  float samples[frame_size];
+  if (size < 0)
+  {
+    std::cerr << "*** WARNING: Async::AudioDecoderSpeex received an encoded "
+                 "frame with a negative size (" << size << " bytes). "
+                 "Discarding it."
+              << std::endl;
+    return;
+  }
+
+  char* const bytes = static_cast<char*>(buf);
+  speex_bits_read_from(&m_bits, bytes, size);
+  float samples[m_frame_size];
 #if SPEEX_MAJOR > 1 || (SPEEX_MAJOR == 1 && SPEEX_MINOR >= 1)
-  while (speex_decode(dec_state, &bits, samples) == 0)
+  while (speex_decode(m_dec_state, &m_bits, samples) == 0)
 #else
-  while ((speex_decode(dec_state, &bits, samples) == 0) &&
-         (speex_bits_remaining(&bits) > 0))
+  while ((speex_decode(m_dec_state, &m_bits, samples) == 0) &&
+         (speex_bits_remaining(&m_bits) > 0))
 #endif
   {
-    for (int i=0; i<frame_size; ++i)
+    for (int i=0; i<m_frame_size; ++i)
     {
-      samples[i] = samples [i] / 32767.0;
+      samples[i] = samples[i] / 32768.0f;
     }
-    sinkWriteSamples(samples, frame_size);
+    sinkWriteSamples(samples, m_frame_size);
   }
 } /* AudioDecoderSpeex::writeEncodedSamples */
 

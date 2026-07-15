@@ -9,7 +9,7 @@ A module (plugin) to request the latest METAR (weather) information from
 by using ICAO shortcuts.
 Look at http://en.wikipedia.org/wiki/METAR for further information
 
-Copyright (C) 2009-2019 Tobias Blomberg / SM0SVX
+Copyright (C) 2009-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1794,7 +1794,7 @@ int ModuleMetarInfo::checkToken(std::string token)
     mre["(becmg|nosig)"]                             = FORECAST;
     mre["^(all|ws|clr|rwy|skc|nsc|tempo|ocnl|frq|nsw|cons)$"] = WORDSNOEXT;
     mre["^(fm|tl|at)([0-9]{4})z$"]                     = TIME;
-    mre["^((few|sct|bkn|ovc)[0-9]{3})(///)?(ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)?"] = CLOUDSVALID;
+    mre["^((few|sct|bkn|ovc)(\\d{3}|///)(ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)?"] = CLOUDSVALID;
     mre["^r[0-3][0-9](ll|l|c|r|rr)?/(p|m)?([0-9]{4})(v(p|m)[0-9]{4})?(u|d|n)?(ft)?$"] = RVR;
     mre["^r[0-8][0-9](ll|l|c|r|rr)?/([0-9]|/|c)([1259]|/|l)([0-9]|/|r)([0-9]|/|d)([0-9]|/){2}$"] = ALLRWYSTATE;
     mre["^vv[0-9]{3}$"]                              = VERTICALVIEW;
