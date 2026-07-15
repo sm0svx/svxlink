@@ -24,6 +24,10 @@
   this via sendError() write-failure path
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Bugfix in ModuleMetarInfo: bkn///cb was not output if the altitude was
+  missing
+  By Adi/DL1HRC
+
 
 
  1.10.0 -- 23 May 2026
