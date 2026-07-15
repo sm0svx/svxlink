@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <stdint.h>
+#include <iostream>
 
 
 /****************************************************************************
@@ -125,14 +126,32 @@ AudioDecoderS16::~AudioDecoderS16(void)
 
 void AudioDecoderS16::writeEncodedSamples(void *buf, int size)
 {
-  int16_t *s16_samples = reinterpret_cast<int16_t *>(buf);
-  int count = size / sizeof(int16_t);
-  float samples[count];
-  for (int i=0; i<count; ++i)
+  if (size < 0)
   {
-    samples[i] = static_cast<float>(s16_samples[i]) / 32768.0;
+    std::cerr << "*** WARNING: Async::AudioDecoderS16 received an encoded "
+                 "frame with negative size (" << size << " bytes). "
+                 "Discarding it."
+              << std::endl;
+    return;
   }
-  sinkWriteSamples(samples, count);
+
+    // Decode through a fixed-size stack buffer in chunks to avoid a VLA whose
+    // size is controlled by the input.
+  static const size_t CHUNK_SAMPLES = 512;
+  float samples[CHUNK_SAMPLES];
+  size_t pos = 0;
+  const size_t count = static_cast<size_t>(size) / sizeof(int16_t);
+  const int16_t* const s16_samples = static_cast<int16_t*>(buf);
+  while (pos < count)
+  {
+    size_t n = std::min(count - pos, CHUNK_SAMPLES);
+    for (size_t i=0; i<n; ++i)
+    {
+      samples[i] = static_cast<float>(s16_samples[pos+i]) / 32768.0f;
+    }
+    sinkWriteSamples(samples, n);
+    pos += n;
+  }
 } /* AudioDecoderS16::writeEncodedSamples */
 
 

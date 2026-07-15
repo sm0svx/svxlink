@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -112,6 +112,9 @@ This class implements an audio encoder that use the Opus audio codec.
 class AudioEncoderOpus : public AudioEncoder
 {
   public:
+    /** The maximum size of an encoded frame that the encoder will output */
+    static const int MAX_ENCODED_FRAME_SIZE = 4000;
+
     /**
      * @brief 	Default constuctor
      */

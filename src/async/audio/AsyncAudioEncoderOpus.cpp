@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -638,7 +638,7 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
     if (buf_len == frame_size)
     {
       buf_len = 0;
-      unsigned char output_buf[4000];
+      unsigned char output_buf[MAX_ENCODED_FRAME_SIZE];
       opus_int32 nbytes = opus_encode_float(enc, sample_buf, frame_size,
                                             output_buf, sizeof(output_buf));
       //cout << "### frame_size=" << frame_size << " nbytes=" << nbytes << endl;

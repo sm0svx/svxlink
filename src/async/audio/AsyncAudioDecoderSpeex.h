@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -139,13 +139,13 @@ class AudioDecoderSpeex : public AudioDecoder
      * @brief Print codec parameter settings
      */
     virtual void printCodecParams(void) const;
-    
+
     /**
      * @brief 	Get the frame size for the decoder
      * @return	Returns the decoder frame size
      */
-    int frameSize(void) const { return frame_size; }
-  
+    int frameSize(void) const { return m_frame_size; }
+
     /**
      * @brief 	Enable or disable the perceptual enhancer
      * @param 	enable Set to \em true to enable or \em false to disable
@@ -165,16 +165,13 @@ class AudioDecoderSpeex : public AudioDecoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    virtual void writeEncodedSamples(void *buf, int size);
-    
+    virtual void writeEncodedSamples(void *buf, int size) override;
 
-  protected:
-    
   private:
-    SpeexBits bits;
-    void      *dec_state;
-    int       frame_size;
-    
+    SpeexBits m_bits;
+    void*     m_dec_state;
+    int       m_frame_size;
+
     AudioDecoderSpeex(const AudioDecoderSpeex&);
     AudioDecoderSpeex& operator=(const AudioDecoderSpeex&);
     
