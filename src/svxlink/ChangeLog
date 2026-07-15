@@ -28,6 +28,10 @@
   missing
   By Adi/DL1HRC
 
+* Security: SvxReflector client: TCL command injection via server-supplied
+  talker callsign
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
