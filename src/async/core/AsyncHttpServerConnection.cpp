@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2022 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -79,6 +79,70 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace
+{
+  /**
+   * @brief The maximum allowed length of a single HTTP start line or
+   *        header line
+   *
+   * This limit protects against an unauthenticated client streaming an
+   * unbounded amount of data without a terminating CRLF, which would
+   * otherwise make m_row grow without bound.
+   */
+  constexpr size_t MAX_HTTP_LINE_LEN = 8192;
+
+  /**
+   * @brief The maximum number of headers accepted for a single request
+   */
+  constexpr size_t MAX_HTTP_HEADER_COUNT = 100;
+
+  /**
+   * @brief   Accumulate one CRLF terminated line from streaming data
+   * @param   data        The newly received data
+   * @param   data_pos    Position to resume scanning from, updated in place
+   * @param   row         The line accumulator, updated in place
+   * @param   row_complete Set to \em true if a full line was found
+   * @return  Returns \em false if the accumulated line exceeds
+   *          #MAX_HTTP_LINE_LEN, otherwise \em true
+   *
+   * This function factors out the line assembly logic shared between the
+   * start line and header parsing states. It also handles the case where
+   * the CRLF delimiter is split across two separate calls to
+   * onDataReceived, e.g. the '\r' being the last byte of one buffer and
+   * the '\n' being the first byte of the next.
+   */
+  bool appendHttpLine(const std::string& data, size_t& data_pos,
+                       std::string& row, bool& row_complete)
+  {
+    row_complete = false;
+
+    if (!row.empty() && (row.back() == '\r') &&
+        (data_pos < data.size()) && (data[data_pos] == '\n'))
+    {
+      row.pop_back();
+      data_pos += 1;
+      row_complete = true;
+    }
+    else
+    {
+      size_t eol = data.find("\r\n", data_pos);
+      size_t len = eol;
+      if (len != std::string::npos)
+      {
+        len -= data_pos;
+      }
+      row.append(data.substr(data_pos, len));
+      data_pos = eol;
+      if (eol != std::string::npos)
+      {
+        data_pos += 2;
+        row_complete = true;
+      }
+    }
+
+    return row.size() <= MAX_HTTP_LINE_LEN;
+  } /* appendHttpLine */
+} /* anonymous namespace */
 
 
 /****************************************************************************
@@ -285,34 +349,30 @@ int HttpServerConnection::onDataReceived(void *buf, int count)
   {
     if (m_state == STATE_EXPECT_START_LINE)
     {
-      size_t eol = data.find("\r\n", data_pos);
-      size_t len = eol;
-      if (len != std::string::npos)
+      bool row_complete = false;
+      if (!appendHttpLine(data, data_pos, m_row, row_complete))
       {
-        len -= data_pos;
+        std::cerr << "*** ERROR: HTTP request line too long" << std::endl;
+        disconnect();
+        break;
       }
-      m_row.append(data.substr(data_pos, len));
-      data_pos = eol;
-      if (eol != std::string::npos)
+      if (row_complete)
       {
-        data_pos += 2;
         handleStartLine();
         m_row.clear();
       }
     }
     else if (m_state == STATE_EXPECT_HEADER)
     {
-      size_t eol = data.find("\r\n", data_pos);
-      size_t len = eol;
-      if (len != std::string::npos)
+      bool row_complete = false;
+      if (!appendHttpLine(data, data_pos, m_row, row_complete))
       {
-        len -= data_pos;
+        std::cerr << "*** ERROR: HTTP header line too long" << std::endl;
+        disconnect();
+        break;
       }
-      m_row.append(data.substr(data_pos, len));
-      data_pos = eol;
-      if (eol != std::string::npos)
+      if (row_complete)
       {
-        data_pos += 2;
         handleHeader();
         m_row.clear();
       }
@@ -389,6 +449,13 @@ void HttpServerConnection::handleHeader(void)
   if (m_row.empty())
   {
     m_state = STATE_REQ_COMPLETE;
+    return;
+  }
+
+  if (m_req.headers.size() >= MAX_HTTP_HEADER_COUNT)
+  {
+    std::cerr << "*** ERROR: Too many HTTP headers received" << std::endl;
+    disconnect();
     return;
   }
 

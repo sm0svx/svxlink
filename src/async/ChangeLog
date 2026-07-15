@@ -1,3 +1,12 @@
+ 1.9.1 -- ?? Jul 2026
+----------------------
+
+* Security: Async HTTP server: unbounded request-line/header accumulation may
+  lead to memory-exhaustion DoS
+  Credit: Mark Rose <markrose@markrose.ca>
+
+
+
  1.9.0 -- 23 May 2026
 ----------------------
 

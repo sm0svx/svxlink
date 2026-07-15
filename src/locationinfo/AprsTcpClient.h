@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -143,6 +143,11 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
 
     std::string         recv_buf;
     std::string         current_status;
+
+    static std::string qsoStatusMsg(int action, const std::string& call,
+                                    const std::string& info);
+    static std::string thirdPartyMsg(const std::string& call,
+                                     const std::string& info);
 
     void  sendMsg(std::string aprsmsg);
     std::string addrStr(const std::string& source) const;

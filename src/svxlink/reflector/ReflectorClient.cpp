@@ -6,7 +6,7 @@
 
 \verbatim
 SvxReflector - An audio reflector for connecting SvxLink Servers
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -949,6 +949,8 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
   }
   try
   {
+    m_json_rx_map.clear();
+    m_json_tx_map.clear();
     m_status = &(m_reflector->clientStatus(m_callsign));
     auto& status = *m_status;
     status.clear();
@@ -1205,11 +1207,14 @@ void ReflectorClient::handleMsgError(std::istream& is)
 
 void ReflectorClient::sendError(const std::string& msg)
 {
-  sendMsg(MsgError(msg));
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
-  m_disc_timer.setEnable(true);
-  m_con_state = STATE_EXPECT_DISCONNECT;
+  sendMsg(MsgError(msg));
+  if (m_con_state != STATE_DISCONNECTED)
+  {
+    m_disc_timer.setEnable(true);
+    m_con_state = STATE_EXPECT_DISCONNECT;
+  }
 } /* ReflectorClient::sendError */
 
 
@@ -1225,8 +1230,11 @@ void ReflectorClient::disconnect(void)
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
   m_con->disconnect();
-  m_con_state = STATE_DISCONNECTED;
-  m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
+  if (m_con_state != STATE_DISCONNECTED)
+  {
+    m_con_state = STATE_DISCONNECTED;
+    m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
+  }
 } /* ReflectorClient::disconnect */
 
 

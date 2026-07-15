@@ -4,6 +4,26 @@
 * Security: Fix stack buffer overflow in EchoLink StationData::setData.
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: RemoteTrx NetUplink unvalidated audio length (OOB read).
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: Emit warning if AUTH_KEY is unset in RemoteTrx NetUplink.
+  Suggested by: Mark Rose <markrose@markrose.ca>
+
+* Security: Fix out-of-bounds reads in EchoLink RTCP/SDES packet parsing
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: LocationInfo: Avoid buffer overflow in APRS message construction
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: SvxReflector: Fix use-after-free from stale cached JSON on
+  repeated MsgNodeInfo
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: SvxReflector: Reentrant delete client → use-after-free on
+  this via sendError() write-failure path
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026

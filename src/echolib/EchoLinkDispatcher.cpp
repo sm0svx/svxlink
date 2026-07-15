@@ -334,7 +334,7 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, uint16_t port,
     if(isRTCPSdespacket(recv_buf, len)) // May be an incoming connection
     {
       char remote_id[256];
-      if(parseSDES(remote_id, recv_buf, RTCP_SDES_NAME))
+      if(parseSDES(remote_id, recv_buf, len, RTCP_SDES_NAME))
       {
 	//printData(remote_id, strlen(remote_id));
 	char strtok_buf[256];
@@ -348,7 +348,7 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, uint16_t port,
 	    remote_name = "";
 	  }
 	  char priv[256];
-	  parseSDES(priv, recv_buf, RTCP_SDES_PRIV);
+	  parseSDES(priv, recv_buf, len, RTCP_SDES_PRIV);
 	  incomingConnection(ip, remote_call, remote_name, priv);
 	}
       }
