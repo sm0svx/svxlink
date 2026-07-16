@@ -32,6 +32,10 @@
   talker callsign
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: NetRx: unvalidated MsgAudio length → out-of-bounds read
+  (network)
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
