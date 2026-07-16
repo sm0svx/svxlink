@@ -1,5 +1,5 @@
 # Project release version
-PROJECT=26.05.0.99.8
+PROJECT=26.05.0.99.9
 
 # Version for the Qtel application
 QTEL=1.3.0
@@ -11,7 +11,7 @@ LIBECHOLIB=1.3.6.99.0
 LIBASYNC=1.9.0.99.1
 
 # SvxLink versions
-SVXLINK=1.10.0.99.0
+SVXLINK=1.10.0.99.1
 MODULE_HELP=1.0.1
 MODULE_PARROT=1.1.2
 MODULE_ECHO_LINK=1.6.1.99.1
