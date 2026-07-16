@@ -504,18 +504,30 @@ void NetRx::handleMsg(Msg *msg)
       }
       break;
     }
-    
+
     case MsgAudio::TYPE:
     {
       if ((muteState() == Rx::MUTE_NONE) && sql_is_open)
       {
-	MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
-	unflushed_samples = true;
-        audio_dec->writeEncodedSamples(audio_msg->buf(), audio_msg->size());
+        MsgAudio *audio_msg = static_cast<MsgAudio*>(msg);
+        int audio_size = audio_msg->size();
+        if ((audio_size < 0) || (audio_size > MsgAudio::BUFSIZE) ||
+            (msg->size() < sizeof(MsgAudio) - MsgAudio::BUFSIZE + audio_size))
+        {
+          std::cerr << name() << ": *** ERROR: Invalid MsgAudio size received ("
+                    << audio_size << " bytes). Ignoring."
+                    << std::endl;
+          break;
+        }
+        if (audio_size > 0)
+        {
+          unflushed_samples = true;
+          audio_dec->writeEncodedSamples(audio_msg->buf(), audio_size);
+        }
       }
       break;
     }
-    
+
     case MsgSel5::TYPE:
     {
       if (muteState() == Rx::MUTE_NONE)
