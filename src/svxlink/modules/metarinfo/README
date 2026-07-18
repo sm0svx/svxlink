@@ -147,12 +147,12 @@ LINK=/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&f
 TYPE=APRS_XML
 SERVER=http://www.findu.com
 LINK=/cgi-bin/wxxml.cgi?call=
+MAPPING=ICAO:APRS_CALL-SSID,ICAO:CWOP_STAIION
 
 4) JSON service from APRS.fi
 TYPE=JSON
 SERVER=https://api.aprs.fi
 APIKEY=YOUR_APIKEY
-LINK=/api/get?what=wx
 MAPPING=ICAO:APRS_CALL-SSID,ICAO:CWOP_STAIION
 
 PROBLEMS AND BUGS:
