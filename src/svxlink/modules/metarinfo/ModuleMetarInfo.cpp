@@ -9,7 +9,7 @@ A module (plugin) to request the latest METAR (weather) information from
 by using ICAO shortcuts.
 Look at http://en.wikipedia.org/wiki/METAR for further information
 
-Copyright (C) 2009-2026 Tobias Blomberg / SM0SVX
+Copyright (C) 2009-2019 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -934,29 +934,52 @@ void ModuleMetarInfo::openConnection(void)
   http = new Http();
   html = "";
 
-  // --- APPLY CALLSIGN MAPPING HERE ---
-  std::string final_icao = icao; // Start with the original icao (could be YLOX)
-
-  // Convert to uppercase for comparison
+  // --- 1. Apply Callsign Mapping ---
+  std::string final_icao = icao; 
   std::string checkCallsign = icao;
   transform(checkCallsign.begin(), checkCallsign.end(), checkCallsign.begin(), ::toupper);
 
-  // Check if this callsign is in our mapping
   if (callsignMap.find(checkCallsign) != callsignMap.end()) {
     final_icao = callsignMap[checkCallsign];
     cout << "[METAR] Mapped " << icao << " -> " << final_icao << endl;
   }
-  // -------------------------------------
 
-  // Construct the API URL using the FINAL ICAO (which might be the mapped value)
-  std::string path = server;
-  path += "/api/get?name=" + final_icao;  // <-- Use final_icao, NOT icao
-  path += "&what=wx";
-  path += "&apikey=" + apikey; 
-  path += "&format=json";
-
-  http->AddRequest(path.c_str());
-  cout << "Fetching METAR from: " << path << endl;
+  // --- 2. Construct URL based on TYPE ---
+  std::string path = ""; 
+  std::string lowerServer = server;
+  std::transform(lowerServer.begin(), lowerServer.end(), lowerServer.begin(), ::tolower);
+    
+// Check BOTH: Is it JSON AND is it APRS.fi?
+if (type == "JSON" && lowerServer.find("aprs.fi") != std::string::npos) {
+    // SUCCESS: Build APRS.fi JSON URL
+    path = server + "/api/get?name=" + final_icao + "&what=wx&apikey=" + apikey + "&format=json";
+    cout << "[METAR] Using APRS.fi JSON API URL." << endl;
+} 
+else {
+    // FALLBACK: This runs if:
+    // 1. Type is NOT JSON, OR
+    // 2. Type IS JSON but server is NOT aprs.fi
+    if (!link.empty()) {
+        path = server + link + final_icao;
+        cout << "[METAR] Constructing fallback URL using link: " << path << endl;
+    } else {
+        path = server + "/" + final_icao;
+        cout << "[METAR] Constructing default fallback URL: " << path << endl;
+    }
+}
+  // --- 3. Add the Request ---
+  // Only proceed if a valid path was constructed
+  if (!path.empty()) {
+    http->AddRequest(path.c_str());
+    cout << "Fetching METAR from: " << path << endl;
+  } else {
+    cout << "[METAR] ERROR: Failed to construct URL. Aborting request." << endl;
+    // Trigger timeout/error handling immediately
+    onTimeout(); 
+    delete http;
+    http = 0;
+    return;
+  }
 
   http->metarInfo.connect(mem_fun(*this, &ModuleMetarInfo::onData));
   http->metarTimeout.connect(mem_fun(*this, &ModuleMetarInfo::onTimeout));
@@ -1794,7 +1817,7 @@ int ModuleMetarInfo::checkToken(std::string token)
     mre["(becmg|nosig)"]                             = FORECAST;
     mre["^(all|ws|clr|rwy|skc|nsc|tempo|ocnl|frq|nsw|cons)$"] = WORDSNOEXT;
     mre["^(fm|tl|at)([0-9]{4})z$"]                     = TIME;
-    mre["^((few|sct|bkn|ovc)(\\d{3}|///)(ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)?"] = CLOUDSVALID;
+    mre["^((few|sct|bkn|ovc)[0-9]{3})(///)?(ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)?"] = CLOUDSVALID;
     mre["^r[0-3][0-9](ll|l|c|r|rr)?/(p|m)?([0-9]{4})(v(p|m)[0-9]{4})?(u|d|n)?(ft)?$"] = RVR;
     mre["^r[0-8][0-9](ll|l|c|r|rr)?/([0-9]|/|c)([1259]|/|l)([0-9]|/|r)([0-9]|/|d)([0-9]|/){2}$"] = ALLRWYSTATE;
     mre["^vv[0-9]{3}$"]                              = VERTICALVIEW;
