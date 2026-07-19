@@ -119,6 +119,11 @@ namespace NetTrxMsg
 @brief	Base class for remote transceiver network messages
 @author Tobias Blomberg / SM0SVX
 @date   2006-04-14
+
+NOTE: This class must not be made virtual since that would add a vptr to a
+vtable (virtual function table) thus increasing the size of the class which
+will cause the vptr to be transmitted with the message over the network. One
+limitation of that is that message classes cannot be used with polymorphism.
 */
 class Msg
 {
@@ -129,12 +134,7 @@ class Msg
      * @param 	size The message size
      */
     Msg(unsigned type, unsigned size) : m_type(type), m_size(size) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~Msg(void) {}
-  
+
     /**
      * @brief 	Get the message type
      * @return	Returns the message type
