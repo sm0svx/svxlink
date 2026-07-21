@@ -235,6 +235,12 @@ class Reflector : public sigc::trackable
 
     Json::Value& clientStatus(const std::string& callsign);
 
+    /**
+     * @brief   Called from the ReflectorClient class
+     */
+    void clientDisconnectCleanup(Async::FramedTcpConnection *con,
+                            Async::FramedTcpConnection::DisconnectReason reason);
+
   protected:
 
   private:
@@ -282,8 +288,6 @@ class Reflector : public sigc::trackable
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
     void clientConnected(Async::FramedTcpConnection *con);
-    void clientDisconnected(Async::FramedTcpConnection *con,
-                            Async::FramedTcpConnection::DisconnectReason reason);
     bool udpCipherDataReceived(const Async::IpAddress& addr, uint16_t port,
                                void *buf, int count);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,

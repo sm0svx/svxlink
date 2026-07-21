@@ -202,6 +202,8 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
       sigc::mem_fun(*this, &ReflectorClient::onSslConnectionReady));
   m_con->frameReceived.connect(
       sigc::mem_fun(*this, &ReflectorClient::onFrameReceived));
+  m_con->disconnected.connect(
+      sigc::mem_fun(*this, &ReflectorClient::onRemoteDisconnected));
   m_disc_timer.expired.connect(
       sigc::mem_fun(*this, &ReflectorClient::onDiscTimeout));
   m_heartbeat_timer.expired.connect(
@@ -1225,17 +1227,33 @@ void ReflectorClient::onDiscTimeout(Timer *t)
 } /* ReflectorClient::onDiscTimeout */
 
 
-void ReflectorClient::disconnect(void)
+void ReflectorClient::disconnectCleanup(
+    Async::FramedTcpConnection::DisconnectReason reason)
 {
+  m_disc_timer.setEnable(false);
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
-  m_con->disconnect();
   if (m_con_state != STATE_DISCONNECTED)
   {
     m_con_state = STATE_DISCONNECTED;
-    m_con->disconnected(m_con, FramedTcpConnection::DR_ORDERED_DISCONNECT);
+    m_reflector->clientDisconnectCleanup(m_con, reason);
   }
+} /* ReflectorClient::disconnectCleanup */
+
+
+void ReflectorClient::disconnect(void)
+{
+  m_con->disconnect();
+  disconnectCleanup(FramedTcpConnection::DR_ORDERED_DISCONNECT);
 } /* ReflectorClient::disconnect */
+
+
+void ReflectorClient::onRemoteDisconnected(Async::FramedTcpConnection *con,
+                           Async::FramedTcpConnection::DisconnectReason reason)
+{
+  assert(con == m_con);
+  disconnectCleanup(reason);
+} /* ReflectorClient::onRemoteDisconnected */
 
 
 void ReflectorClient::handleHeartbeat(Async::Timer *t)

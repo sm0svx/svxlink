@@ -810,7 +810,10 @@ void TcpPrioClientBase::connectionEstablished(void)
 
 void TcpPrioClientBase::onDisconnected(TcpConnection::DisconnectReason reason)
 {
-  machine()->onDisconnected();
+  if (reason != TcpConnection::DR_ORDERED_DISCONNECT)
+  {
+    machine()->onDisconnected();
+  }
 } /* TcpPrioClientBase::onDisconnected */
 
 

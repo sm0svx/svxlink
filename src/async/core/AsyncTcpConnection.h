@@ -235,8 +235,12 @@ class TcpConnection : virtual public sigc::trackable
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    virtual void disconnect(void) { closeConnection(); }
-    
+    virtual void disconnect(void)
+    {
+      closeConnection();
+      onDisconnected(DR_ORDERED_DISCONNECT);
+    }
+
     /**
      * @brief 	Write data to the TCP connection
      * @param 	buf   The buffer containing the data to send
@@ -449,7 +453,10 @@ class TcpConnection : virtual public sigc::trackable
      */
     virtual void onDisconnected(DisconnectReason reason)
     {
-      emitDisconnected(reason);
+      if (reason != DR_ORDERED_DISCONNECT)
+      {
+        emitDisconnected(reason);
+      }
     }
 
     /**

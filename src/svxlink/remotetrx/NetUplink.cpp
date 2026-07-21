@@ -394,12 +394,8 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
 
 int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 {
-  //cout << "NetRx::tcpDataReceived: size=" << size << endl;
-  
-  //Msg *msg = reinterpret_cast<Msg*>(data);
-  //cout << "Received a TCP message with type " << msg->type()
-  //     << " and size " << msg->size() << endl;
-  
+  //std::cout << "NetRx::tcpDataReceived: size=" << size << std::endl;
+
     // Discard data if we are not in one of the "connected" states
   if ((state != STATE_CON_SETUP) && (state != STATE_READY))
   {

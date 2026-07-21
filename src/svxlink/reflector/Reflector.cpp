@@ -287,8 +287,6 @@ bool Reflector::initialize(Async::Config &cfg)
   m_srv->setConnectionThrottling(10, 0.1, 1000);
   m_srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
-  m_srv->clientDisconnected.connect(
-      mem_fun(*this, &Reflector::clientDisconnected));
 
   if (!loadCertificateFiles())
   {
@@ -842,31 +840,7 @@ Json::Value& Reflector::clientStatus(const std::string& callsign)
 } /* Reflector::clientStatus */
 
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-void Reflector::clientConnected(Async::FramedTcpConnection *con)
-{
-  std::cout << con->remoteHost() << ":" << con->remotePort()
-       << ": Client connected" << endl;
-  ReflectorClient *client = new ReflectorClient(this, con, m_cfg);
-  con->verifyPeer.connect(sigc::mem_fun(*this, &Reflector::onVerifyPeer));
-  m_client_con_map[con] = client;
-} /* Reflector::clientConnected */
-
-
-void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
+void Reflector::clientDisconnectCleanup(Async::FramedTcpConnection *con,
                            Async::FramedTcpConnection::DisconnectReason reason)
 {
   ReflectorClientConMap::iterator it = m_client_con_map.find(con);
@@ -895,7 +869,31 @@ void Reflector::clientDisconnected(Async::FramedTcpConnection *con,
         ReflectorClient::ExceptFilter(client));
   }
   Application::app().runTask([=]{ delete client; });
-} /* Reflector::clientDisconnected */
+} /* Reflector::clientDisconnectCleanup */
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+void Reflector::clientConnected(Async::FramedTcpConnection *con)
+{
+  std::cout << con->remoteHost() << ":" << con->remotePort()
+       << ": Client connected" << endl;
+  ReflectorClient *client = new ReflectorClient(this, con, m_cfg);
+  con->verifyPeer.connect(sigc::mem_fun(*this, &Reflector::onVerifyPeer));
+  m_client_con_map[con] = client;
+} /* Reflector::clientConnected */
 
 
 bool Reflector::udpCipherDataReceived(const IpAddress& addr, uint16_t port,
