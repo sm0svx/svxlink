@@ -1,3 +1,11 @@
+ 1.3.7 -- ?? Jul 2026
+----------------------
+
+* Security: EchoLink proxy message-length integer truncation
+  Credit: Mark Rose <markrose@markrose.ca>
+
+
+
  1.3.6 -- 23 May 2026
 ----------------------
 
