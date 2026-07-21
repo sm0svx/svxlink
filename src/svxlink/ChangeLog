@@ -42,6 +42,10 @@
 
 * Bugfix: Fix memory handling problem in RemoteTrx
 
+* Security: RtlTcp: malformed rtl_tcp greeting triggers `exit(1)` → full
+  daemon denial of service
+  Credit: Mark Rose <markrose@markrose.ca>
+
 
 
  1.10.0 -- 23 May 2026
