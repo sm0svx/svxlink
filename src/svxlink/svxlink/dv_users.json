@@ -1,0 +1,6 @@
+[
+  { "id" : "2620055", "mode" : "DMR", "name" : "Adi", "call" : "DL1HRC-1", "location" : "Leuna", "symbol" : "\\r", "comment" : "DMR ID" },
+  { "id" : "9031", "mode" : "NXDN", "name" : "Adi", "call" : "DL1HRC-2", "location" : "Leuna", "symbol" : "\\r", "comment" : "SvxLink Sysop" },
+  { "id" : "09011638300023403", "mode" : "TETRA", "name" : "Adi", "call" : "DL1HRC-3", "location" : "Leuna", "symbol" : "\\E", "comment" : "SvxLink Sysop" },
+  { "id" : "123456", "mode" : "SPECIAL", "name" : "Adi", "call" : "DL1HRC-4", "location" : "Leuna", "symbol" : "\\r", "comment" : "SvxLink Sysop" }
+]
