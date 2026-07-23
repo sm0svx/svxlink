@@ -158,7 +158,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      * disconnected, nothing will be done. The disconnected signal is not
      * emitted when this function is called
      */
-    virtual void disconnect(void)
+    virtual void disconnect(void) override
     {
       //std::cout << "### TcpPrioClient::disconnect" << std::endl;
       TcpPrioClientBase::disconnect();
@@ -174,7 +174,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      * This function is used internally to close the connection to the remote
      * peer.
      */
-    virtual void closeConnection(void)
+    virtual void closeConnection(void) override
     {
       ConT::closeConnection();
       TcpPrioClientBase::closeConnection();
@@ -186,7 +186,7 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
      *
      * This function will be called when the connection has been terminated.
      */
-    virtual void onDisconnected(TcpConnection::DisconnectReason reason)
+    virtual void onDisconnected(TcpConnection::DisconnectReason reason) override
     {
       //std::cout << "### TcpPrioClient::onDisconnected:"
       //          << std::endl;
@@ -208,7 +208,8 @@ class TcpPrioClient : public ConT, public TcpPrioClientBase
       return new TcpClient<ConT>;
     }
 
-    virtual void emitDisconnected(TcpConnection::DisconnectReason reason)
+    virtual void emitDisconnected(
+        TcpConnection::DisconnectReason reason) override
     {
       ConT::emitDisconnected(reason);
     }

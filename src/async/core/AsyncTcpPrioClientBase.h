@@ -313,7 +313,7 @@ class TcpPrioClientBase : public TcpClientBase
      *
      * This function will be called when the connection has been terminated.
      */
-    virtual void onDisconnected(TcpConnection::DisconnectReason reason);
+    void onDisconnected(TcpConnection::DisconnectReason reason);
 
     /**
      * @brief   Allocate a new TcpClient object

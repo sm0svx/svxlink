@@ -6,7 +6,7 @@
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -453,14 +453,14 @@ int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
     msg_len |= static_cast<uint32_t>(*buf++) << 16;
     msg_len |= static_cast<uint32_t>(*buf++) << 24;
 
-    int total_msg_size = MSG_HEADER_SIZE + msg_len;
-    if (len < total_msg_size)
+    if (msg_len > static_cast<uint32_t>(len - MSG_HEADER_SIZE))
     {
       break;
     }
 
     handleProxyMessageBlock(msg_type, remote_ip, msg_len, buf);
     buf += msg_len;
+    int total_msg_size = MSG_HEADER_SIZE + static_cast<int>(msg_len);
     len -= total_msg_size;
     total_processed += total_msg_size;
   }

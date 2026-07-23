@@ -2,27 +2,27 @@
 -----------------------
 
 * Security: Fix stack buffer overflow in EchoLink StationData::setData.
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Security: RemoteTrx NetUplink unvalidated audio length (OOB read).
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Security: Emit warning if AUTH_KEY is unset in RemoteTrx NetUplink.
-  Suggested by: Mark Rose <markrose@markrose.ca>
+  Suggested by: Mark Rose
 
 * Security: Fix out-of-bounds reads in EchoLink RTCP/SDES packet parsing
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Security: LocationInfo: Avoid buffer overflow in APRS message construction
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Security: SvxReflector: Fix use-after-free from stale cached JSON on
   repeated MsgNodeInfo
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Security: SvxReflector: Reentrant delete client → use-after-free on
   this via sendError() write-failure path
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Bugfix in ModuleMetarInfo: bkn///cb was not output if the altitude was
   missing
@@ -30,11 +30,26 @@
 
 * Security: SvxReflector client: TCL command injection via server-supplied
   talker callsign
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
 
 * Security: NetRx: unvalidated MsgAudio length → out-of-bounds read
   (network)
-  Credit: Mark Rose <markrose@markrose.ca>
+  Credit: Mark Rose
+
+* Security: RemoteTrx NetUplink: server-initiated disconnect leaks the
+  connection object → unbounded resource exhaustion (network DoS)
+  Credit: Mark Rose
+
+* Bugfix: Fix memory handling problem in RemoteTrx
+
+* Security: RtlTcp: malformed rtl_tcp greeting triggers `exit(1)` → full
+  daemon denial of service
+  Credit: Mark Rose
+
+* Security: FRN module: unvalidated server-supplied list item count →
+  unbounded memory growth (DoS)
+  Credit: Mark Rose
+  Approved by: sh123
 
 
 

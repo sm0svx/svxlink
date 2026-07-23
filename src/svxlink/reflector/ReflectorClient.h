@@ -575,7 +575,10 @@ class ReflectorClient : public sigc::trackable
     void handleMsgError(std::istream& is);
     void sendError(const std::string& msg);
     void onDiscTimeout(Async::Timer *t);
+    void disconnectCleanup(Async::FramedTcpConnection::DisconnectReason reason);
     void disconnect(void);
+    void onRemoteDisconnected(Async::FramedTcpConnection *con,
+                           Async::FramedTcpConnection::DisconnectReason reason);
     void handleHeartbeat(Async::Timer *t);
     std::string lookupUserKey(const std::string& callsign);
     void connectionAuthenticated(const std::string& callsign);
