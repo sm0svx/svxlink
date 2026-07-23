@@ -1,7 +1,7 @@
 /**
 @file	 ModuleMetarInfo.h
 @brief   A_brief_description_of_this_module
-@author  Adi Bier / DL1HRC
+@author  Adi Bier / DL1HRC  & Robert Middelmann / VK5TRM
 @date	 2009-04-28
 
 \verbatim
@@ -128,7 +128,7 @@ class ModuleMetarInfo : public Module
     ModuleMetarInfo(void *dl_handle, Logic *logic, const std::string& cfg_name);
     virtual ~ModuleMetarInfo(void);
     const char *compiledForVersion(void) const { return SVXLINK_APP_VERSION; }
-
+    void onSayTimeout(Async::Timer *timer); 
   protected:
     virtual void resumeOutput(void);
     virtual void allSamplesFlushed(void);
@@ -141,6 +141,8 @@ class ModuleMetarInfo : public Module
     std::string icao;
     std::string icao_default;
     std::string longmsg;
+    std::string apikey;
+    std::map<std::string, std::string> callsignMap;
 
     bool remarks;
     bool debug;

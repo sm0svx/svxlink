@@ -42,7 +42,7 @@ been activated.
 Gives out some debug information.
 .TP
 .B TYPE
-The format type of getting weather information. Valid values are XML and TXT
+The format type of getting weather information. Valid values are XML,APRS_XML,JSON and TXT
 .TP
 .B LINK
 The path on the weather server, e.g. data/observations/metar/stations
@@ -57,6 +57,14 @@ of your interest. You can request the Metars in the order of configuration, e.g.
 AIRPORTS=EDDP,ESSB,KLAX
 If the module has been activated send 1# to get the Metar for EDDP, 2# for ESSB, 3# 
 for KLAX and so on.
+.TP
+.B APIKEY=YOUR_APIKEY
+Create an account with APRS.fi if you don't aready have one
+and get your API key from you account settings page.
+.TP
+.B MAPPING=MAPPING=ICAO:APRS_CALL-SSID,ICAO:CALL-SSID
+Mapping from a local ICAO (airport) to real weather station APRS callsign in list
+format with a , in between .I ICAO:APRS_CALL-SSID,ICAO:CWOP_STATION
 .
 .SH FILES
 .
