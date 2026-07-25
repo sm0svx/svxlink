@@ -1205,127 +1205,34 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
       return;
     }
 
-  // --- 2. XML PARSING (Legacy APRS or Custom XML) ---
-  else if (type == "APRS_XML")
-  {
-    cout << "[APRS XML] Parsing custom weather XML..." << endl;
+    // check day and time, if not in limit throw information away
+    // e.g.: 2016-08-10T08:20:00Z
+    std::string met_utc = getXmlParam("observation_time", html);
 
-    // Helper to extract text between tags
-    auto getXmlParam = [&](const std::string& token) -> std::string {
-        if (html.empty()) return "";
-        std::string start = "<" + token + ">";
-        std::string stop = "</" + token + ">";
-        size_t an = html.find(start);
-        if (an == std::string::npos) return "";
-        size_t en = html.find(stop, an);
-        if (en == std::string::npos) return "";
-        return html.substr(an + start.length(), en - (an + start.length()));
-    };
+    // look for raw metar data
+    metar = getXmlParam("raw_text", html);
 
-    // 1. Extract Fields
-    std::string station_name = getXmlParam("name");
-    std::string time_raw = getXmlParam("time");
-    std::string temp_raw = getXmlParam("temp");
-    std::string pressure_raw = getXmlParam("pressure");
-    std::string wind_dir_raw = getXmlParam("wind_direction");
-    std::string wind_spd_raw = getXmlParam("wind_speed");
-    std::string humidity_raw = getXmlParam("humidity");
+    if (metar.length() > 0)
+    {
+      if (debug)
+      {
+        cout << "XML-METAR: " << metar << endl;
+      }
 
-    // --- IMPORTANT: We do NOT modify station_name to strip -SSID ---
-    // We will use the MAPPED ICAO for the METAR string, not the station_name.
-    std::string icao_code = station_name;
-
-    // 2. Construct METAR String
-    std::stringstream metar_ss;
-
-    // Use the MAPPED ICAO (from openConnection) as the first field
-    std::string final_icao = icao; // Set in openConnection() — e.g., YPAD
-
-    if (debug) {
-        cout << "[APRS XML] Using ICAO for METAR string: " << final_icao << " (Original XML station: " << station_name << ")" << endl;
-    }
-
-    metar_ss << final_icao << " ";
-
-    // Time: Convert Unix timestamp to METAR format (DDHHMMZ)
-    if (!time_raw.empty()) {
-        time_t unix_time = std::stol(time_raw);
-        struct tm *tm_info = gmtime(&unix_time);
-        char time_buf[10];
-        snprintf(time_buf, sizeof(time_buf), "%02d%02d%02dZ", 
-                 tm_info->tm_mday, tm_info->tm_hour, tm_info->tm_min);
-        metar_ss << time_buf << " ";
-    } else {
-        metar_ss << "081200Z "; // Fallback
-    }
-
-    // Wind: Direction + Speed + KT
-    if (!wind_dir_raw.empty() && !wind_spd_raw.empty()) {
-        int dir = std::stoi(wind_dir_raw);
-        double spd_mps = std::stod(wind_spd_raw);
-        int spd_kt = static_cast<int>(spd_mps * 1.94384 + 0.5);
-
-        if (spd_kt == 0) {
-            metar_ss << "00000KT ";
-        } else {
-            metar_ss << std::setfill('0') << std::setw(3) << dir 
-                     << std::setfill('0') << std::setw(2) << spd_kt << "KT ";
-        }
-    } else {
-        metar_ss << "00000KT ";
-    }
-
-    // Visibility: Default to 10km (9999)
-    metar_ss << "9999 ";
-
-    // Clouds: Default to SKC (Sky Clear)
-    metar_ss << "SKC ";
-
-    // Temp/Dewpoint Calculation
-    if (!temp_raw.empty()) {
-        double temp_val = std::stod(temp_raw);
-        int temp_int = static_cast<int>(temp_val + 0.5);
-
-        if (temp_int < 0) {
-            metar_ss << "M" << std::setfill('0') << std::setw(2) << std::abs(temp_int) << "/";
-        } else {
-            metar_ss << std::setfill('0') << std::setw(2) << temp_int << "/";
-        }
-
-        std::string dpOut = "//";
-        if (!humidity_raw.empty()) {
-            double rh = std::stod(humidity_raw);
-            if (rh > 0 && rh <= 100) {
-                double alpha = (17.625 * temp_val) / (243.04 + temp_val);
-                double beta = log(rh / 100.0) + alpha;
-                double td = (243.04 * beta) / (17.625 - beta);
-                int td_int = static_cast<int>(td + 0.5);
-                if (td_int < 0) {
-                    dpOut = "M" + std::to_string(std::abs(td_int));
-                } else {
-                    dpOut = std::to_string(td_int);
-                }
-            }
-        }
-        metar_ss << dpOut << " ";
-    } else {
-        metar_ss << "/// /// ";
-    }
-
-    // Pressure: Convert hPa to QNH
-    if (!pressure_raw.empty()) {
-        int qnh = static_cast<int>(std::stod(pressure_raw) + 0.5);
-        metar_ss << "Q" << std::setfill('0') << std::setw(4) << qnh;
-    }
-
-    std::string constructed_metar = metar_ss.str();
-    cout << "[APRS XML] Constructed METAR: " << constructed_metar << endl;
-
-    // Pass to handler
-    handleMetar(constructed_metar);
+      if (met_utc.length() == 20 && !isvalidUTC(met_utc))
+      {
+        stringstream temp;
+        cout << "Metar information outdated" << endl;
+        temp << "metar_not_valid";
+        say(temp);
+        return;
+      }
+    
+    handleMetar(metar);
     html = "";
+    }
+
   }
-  // --- END XML PARSING ---
 
   // --- 3. TXT PARSING (Legacy) ---
   else 
@@ -1386,21 +1293,29 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     handleMetar(metar);
     html = "";
     }
-  }// --- END TXT PARSING ---
-}
+  } /* onDataReceived */
+
 // This matches the header declaration in ModuleMetarInfo.h
 std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)
 {
-  std::string start = "<" + token + ">";
-  std::string stop = "</" + token + ">";
-  size_t an = input.find(start);
-  size_t en = input.find(stop, an);
+  std::string start = "<";
+  std::string stop = "</";
+  start += token;
+  start += ">";
+  stop += token;
+  stop += ">";
+
+  size_t an, en;
+
+  an = input.find(start);
+  en = input.find(stop);
 
   if (an != std::string::npos && en != std::string::npos)
   {
      an += token.length() + 2;
      return input.substr(an, en - an);
   }
+
   return "";
 } /* getXmlParam */
 
