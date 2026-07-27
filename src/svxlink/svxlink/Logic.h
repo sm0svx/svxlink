@@ -314,10 +314,10 @@ class Logic : public LogicBase
                              const std::string &msg);
     void detectedTone(float fq);
     void cfgUpdated(const std::string& section, const std::string& tag);
+    void talkerInfo(const std::string &event_name, const std::string &msg);
     bool getConfigValue(const std::string& section, const std::string& tag,
                         std::string& value);
     void signalLevelUpdated(float siglev);
-
 };  /* class Logic */
 
 
