@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Sun May  4 14:24:08 2025 -->
+<!-- CreationDate: Mon Jul 27 14:02:20 2026 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -24,6 +24,7 @@
 <a href="#SYNOPSIS">SYNOPSIS</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#OPTIONS">OPTIONS</a><br>
+<a href="#REFLECTOR SERVER CONNECTION">REFLECTOR SERVER CONNECTION</a><br>
 <a href="#FILES">FILES</a><br>
 <a href="#ENVIRONMENT">ENVIRONMENT</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
@@ -135,6 +136,53 @@ messages, just warnings and errors.</p>
 <p style="margin-left:18%;">Print the application version
 then exit.</p>
 
+<h2>REFLECTOR SERVER CONNECTION
+<a name="REFLECTOR SERVER CONNECTION"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">The SvxReflector
+server is an application that provide a hub for multiple
+SvxLink nodes to connect to for performing audio streaming
+between the nodes.</p>
+
+<p style="margin-left:9%; margin-top: 1em">The SvxReflector
+system features separation of audio streams in talkgroups so
+that multiple QSOs can be routed through the reflector
+server without interfering with each other.</p>
+
+<p style="margin-left:9%; margin-top: 1em">Authentication
+to the reflector server is done using X.509 certificates. It
+is a complex technology but most details are hidden for a
+SvxLink node sysop. However, the node sysop need to know a
+few things for smooth operations of the node.</p>
+
+<p style="margin-left:9%; margin-top: 1em">When a SvxLink
+node connect to the reflector server for the first time, it
+will request a signed certificate. Signing a certificate is
+a manual process on the SvxReflector side so it may take a
+while for the reflector sysop to perform the signing. The
+node will not be able to connect to the reflector until the
+certificate has been signed but it will retry continuously.
+When the reflector sysop has signed the certificate it will
+be sent to the node when it connects the next time. After
+that the node is granted access to the reflector.</p>
+
+<p style="margin-left:9%; margin-top: 1em">A certificate
+has a limited lifetime. In SvxLink that is fixed to three
+months. When there is one third left of the lifetime a new
+certificate will be signed automatically by the reflector
+server. No manual interaction is needed by the node sysop
+nor the reflector sysop. However, if the certificate pass
+its end of life a new manual signing process is needed.</p>
+
+<p style="margin-left:9%; margin-top: 1em">During the
+certificate creation process there are a number of important
+files generated. Ensure that you back up these files. For
+example, you will at least need to restore the key-file
+after reinstalling the node OS. See FILES below for more
+information about these files.</p>
+
 <h2>FILES
 <a name="FILES"></a>
 </h2>
@@ -158,6 +206,36 @@ See <b>svxlink.conf</b>(5) for further details.</p>
 
 <p style="margin-left:18%;">Additional configuration files.
 Typically one configuration file per module.</p>
+
+
+<p style="margin-left:9%;"><i>/var/lib/svxlink/pki/MYCALL.key</i></p>
+
+<p style="margin-left:18%;">Key file used for
+authenticating to a SvxReflector server. Make sure that you
+don&rsquo;t loose this file since you then will not be able
+to log in to the reflector server. This file must also be
+kept secret since anyone possessing it can log in to the
+reflector server in the name of the key owner.</p>
+
+
+<p style="margin-left:9%;"><i>/var/lib/svxlink/pki/MYCALL.csr</i></p>
+
+<p style="margin-left:18%;">File containing the certificate
+signing request for the SvxReflector authentication
+certificate. This file is auto generated if missing and
+updated if SvxLink certificate configuration has changed. It
+can be used to sign a certificate &quot;out-of-band&quot; if
+the reflector server owner has such a procedure. Otherwise
+it&rsquo;s just used internally by SvxLink.</p>
+
+
+<p style="margin-left:9%;"><i>/var/lib/svxlink/pki/MYCALL.crt</i></p>
+
+<p style="margin-left:18%;">File containing the certificate
+used to authenticate to the SvxReflector server. It&rsquo;s
+good to back this file up as well but if it&rsquo;s lost,
+the reflector server _may_ be able to send it to the SvxLink
+node upon connect.</p>
 
 <h2>ENVIRONMENT
 <a name="ENVIRONMENT"></a>

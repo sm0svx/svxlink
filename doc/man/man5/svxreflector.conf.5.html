@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Sun May  4 14:24:09 2025 -->
+<!-- CreationDate: Mon Jul 27 14:02:21 2026 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -28,6 +28,7 @@
 <a href="#ROOT_CA, ISSUING_CA and SERVER_CERT sections">ROOT_CA, ISSUING_CA and SERVER_CERT sections</a><br>
 <a href="#USERS and PASSWORDS sections">USERS and PASSWORDS sections</a><br>
 <a href="#Talkgroup Configuration Sections">Talkgroup Configuration Sections</a><br>
+<a href="#COMMAND PTY">COMMAND PTY</a><br>
 <a href="#FILES">FILES</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
 <a href="#REPORTING BUGS">REPORTING BUGS</a><br>
@@ -313,21 +314,9 @@ HTTP_SRV_PORT=8080</p>
 <p style="margin-left:18%;">Configure a path for a pseudo
 tty device to send runtime commands to the svxreflector. The
 device may be defined as
-COMMAND_PTY=/dev/shm/reflector_ctrl. To change the value of
-a configuration variable you may send a command to the
-device like this:</p>
-
-<p style="margin-left:18%; margin-top: 1em">echo CFG
-section varname value &gt; /dev/shm/reflector_ctrl <br>
-e.g. <br>
-echo CFG GLOBAL SQL_TIMEOUT_BLOCKTIME 60 &gt;
-/dev/shm/reflector_ctrl</p>
-
-<p style="margin-left:18%; margin-top: 1em">To sign a
-client certificate:</p>
-
-<p style="margin-left:18%; margin-top: 1em">echo CA SIGN
-callsign &gt; /dev/shm/reflector_ctrl</p>
+COMMAND_PTY=/dev/shm/reflector_ctrl. See the &quot;COMMAND
+PTY&quot; section below for more information on how to use
+the command PTY.</p>
 
 <p style="margin-left:9%;"><b>ACCEPT_CALLSIGN</b></p>
 
@@ -616,6 +605,7 @@ Example:</p>
 <p style="margin-left:9%; margin-top: 1em">[TG#9999] <br>
 AUTO_QSY_AFTER=300 <br>
 ALLOW=S[A-M]\\d.*|LA8PV <br>
+ALLOW_MONITOR=S[A-M]3.* <br>
 SHOW_ACTIVITY=0</p>
 
 <p style="margin-left:9%; margin-top: 1em">The following
@@ -656,11 +646,86 @@ match most Swedish callsigns and a specific Norwegian one is
 &quot;S[A-M]\\d.*|LA8PV&quot;. That expression will for
 example match LA8PV, SM0SVX, SK3W, SA7ABC etc.</p>
 
+<p style="margin-left:9%;"><b>ALLOW_MONTOR</b></p>
+
+<p style="margin-left:18%;">A regular expression that must
+match the whole callsign of the nodes that try to monitor
+this talkgroup. The regular expression standard used is the
+same as for ECMAScript with the exception that the backslash
+special patterns (e.g. \s, \d etc) must be expressed with
+double backslash notation (e.g. \\s, \\d etc).</p>
+
+<p style="margin-left:18%; margin-top: 1em">An example that
+match most Swedish callsigns in district 3 is
+&quot;S[A-M]3.*&quot;. That expression will for example
+match SA3ABC, SM3XYZ, SK3GK, SH3YZX etc.</p>
+
 <p style="margin-left:9%;"><b>SHOW_ACTIVITY</b></p>
 
 <p style="margin-left:18%;">If set to 0, do not indicate in
 the http status message when the talkgroup is in use by a
 node. Default is 1 = show activity.</p>
+
+<h2>COMMAND PTY
+<a name="COMMAND PTY"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">If a command PTY
+has been set up using the COMMAND_PTY configuration variable
+it is possible to use the commands described below to
+control some functions in the reflector server. The commands
+can be sent to the PTY by using the following shell
+command:</p>
+
+<p style="margin-left:9%; margin-top: 1em"><b>echo THE
+COMMAND &gt;/dev/shm/reflector_ctrl</b></p>
+
+<p style="margin-left:9%; margin-top: 1em">Valid commands
+are: <b><br>
+CFG &lt;section&gt; &lt;tag&gt; &lt;value&gt;</b></p>
+
+<p style="margin-left:18%;">Read or set configuration.
+Configuration variables that is set is not persisted so the
+new setting will be lost on next restart. If the command is
+used without arguments, the full configuration will be
+listed. If only a section is given, that section will be
+listed. If both section and tag is given, only that specific
+configuration variable will be listed. If in addition a
+value is given, that specific configuration variable will be
+set to that value.</p>
+
+<p style="margin-left:9%;"><b>NODE BLOCK &lt;callsign&gt;
+&lt;blocktime seconds&gt;</b></p>
+
+<p style="margin-left:18%;">Temporarily block a node from
+being a talker for the given number of seconds. The node
+will still be able to choose the talkgroup and listen to the
+audio but will not be able to participate in the QSO. This
+command is good to use when a node is disturbing a QSO for
+whatever reason. The blocktime till be reset to the given
+value each time the node try to send audio to the reflector.
+Setting a blocktime of 0 will remove the block. The block is
+also removed if the node disconnects.</p>
+
+<p style="margin-left:9%;"><b>CA LS|LSC|LSP|SIGN
+&lt;callsign&gt;|RM &lt;callsign&gt;</b></p>
+
+<p style="margin-left:18%;">The <b>CA</b> command is used
+to manipulate the Certificate Authority part of the
+reflector server. <b><br>
+CA LS</b> is used to list all certificates and pending CSRs
+(Certificate Signing Requests). <b><br>
+CA LSC</b> and <b>CA LSP</b> are used to list only the
+certificates or pending CSRs respectively. <b><br>
+CA SIGN</b> is used to sign a pending CSR for the given
+callsign. Note that the callsign is case-sensitive. <b><br>
+CA RM</b> Remove all certificate files associated with the
+given callsign. Note that it is NOT sufficient to remove the
+files to stop the given callsign from logging in. If the
+node already has a valid certificate, it can be used to log
+in. To stop a node from logging in, use the REJECT_CALLSIGN
+configuration variable.</p>
 
 <h2>FILES
 <a name="FILES"></a>

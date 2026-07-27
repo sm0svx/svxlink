@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Sun May  4 14:24:08 2025 -->
+<!-- CreationDate: Mon Jul 27 14:02:20 2026 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -657,8 +657,8 @@ configured in the transmitter configuration section.</p>
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="9%"></td>
-<td width="10%">
+<td width="18%"></td>
+<td width="1%">
 
 
 <p>&bull;</p></td>
@@ -670,8 +670,8 @@ configured in the transmitter configuration section.</p>
 squelch is open. This is only useful on a repeater. On a
 simplex node it doesn&rsquo;t make much sense.</p></td></tr>
 <tr valign="top" align="left">
-<td width="9%"></td>
-<td width="10%">
+<td width="18%"></td>
+<td width="1%">
 
 
 <p>&bull;</p></td>
@@ -682,8 +682,8 @@ simplex node it doesn&rsquo;t make much sense.</p></td></tr>
 <p><b>LOGIC</b> will transmit CTCSS tone when there is
 incoming traffic from another logic core.</p></td></tr>
 <tr valign="top" align="left">
-<td width="9%"></td>
-<td width="10%">
+<td width="18%"></td>
+<td width="1%">
 
 
 <p>&bull;</p></td>
@@ -694,8 +694,8 @@ incoming traffic from another logic core.</p></td></tr>
 <p><b>MODULE</b> will transmit CTCSS tone when there is
 incoming traffic from a module.</p></td></tr>
 <tr valign="top" align="left">
-<td width="9%"></td>
-<td width="10%">
+<td width="18%"></td>
+<td width="1%">
 
 
 <p>&bull;</p></td>
@@ -707,8 +707,8 @@ incoming traffic from a module.</p></td></tr>
 announcement is being played. Repeater idle sounds and roger
 beeps will not have tone sent with them though.</p></td></tr>
 <tr valign="top" align="left">
-<td width="9%"></td>
-<td width="10%">
+<td width="18%"></td>
+<td width="1%">
 
 
 <p>&bull;</p></td>
@@ -718,21 +718,36 @@ beeps will not have tone sent with them though.</p></td></tr>
 
 <p><b>ALWAYS</b> will always transmit a CTCSS tone as soon
 as the transmitter is turned on.</p></td></tr>
+</table>
+
+<p style="margin-left:9%;"><b>MACRO_PREFIX</b></p>
+
+<p style="margin-left:18%;">Zero or more DTMF digits a
+command must start with to be identified as a macro command.
+If a prefix is set, macro commands will have higher priority
+in the command hierarchy. For example, if a module is active
+the macro will be handled as usual by the logic core whereas
+if no prefix is set the command will go to the module. If
+the user want the core to handle the macro, the command have
+to be prefixed with a star (&quot;force core command&quot;).
+Default prefix is &rsquo;D&rsquo;.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
 <td width="9%"></td>
-<td width="10%">
+<td width="8%">
 
 
 <p><b>MACROS</b></p></td>
-<td width="4%"></td>
-<td width="77%">
-</td></tr>
-</table>
+<td width="1%"></td>
+<td width="82%">
 
-<p style="margin-left:18%; margin-top: 1em">Point out a
-section that contains the macros that should be used by this
-logic core. See the section description for macros below for
-more information.</p>
+
+<p>Point out a section that contains the macros that should
+be used by this logic core. See the section description for
+macros below for more information.</p></td></tr>
+</table>
 
 <p style="margin-left:9%;"><b>FX_GAIN_NORMAL</b></p>
 
@@ -868,71 +883,10 @@ CTCSS_TO_TG=127.3:9993,136.5:9995</p>
 <p style="margin-left:18%;">The delay for reporting
 detected talkgroup from when a CTCSS tone is detected. If
 the squelch close before the delay time has expired, no
-talkgroup will be reported. Default: 1000.</p>
+talkgroup will be reported. Default: 0.</p>
 
 <p style="margin-left:18%; margin-top: 1em">Example:
-CTCSS_TO_TG_DELAY=0</p>
-
-<h3>Simplex Logic Section
-<a name="Simplex Logic Section"></a>
-</h3>
-
-
-<p style="margin-left:9%; margin-top: 1em">The Simplex
-Logic section contains configuration data for a simplex
-logic core. The name of the section, which in the example
-configuration file is <b>SimplexLogic</b>, must have a
-corresponding list item in the GLOBAL/LOGICS config variable
-for this logic core to be activated. The name
-&quot;SimplexLogic&quot; is not magic. It could be called
-what ever you like but it must match the namespace name in
-the SimplexLogic.tcl script. The configuration variables
-below are those that are specific for a simplex logic
-core.</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="9%"></td>
-<td width="5%">
-
-
-<p><b>TYPE</b></p></td>
-<td width="4%"></td>
-<td width="67%">
-
-
-<p>The type for a simplex logic core is always
-<b>Simplex</b>.</p> </td>
-<td width="15%">
-</td></tr>
-</table>
-
-<p style="margin-left:9%;"><b>MUTE_RX_ON_TX</b></p>
-
-<p style="margin-left:18%;">Set to 1 to mute the receiver
-when the transmitter is transmitting (default) or set it to
-0 to make the RX active during transmissions. One might want
-to set this to 0 if the link is operating on a split
-frequency. Then the link can accept commands even when
-it&rsquo;s transmitting. The normal setting is 1, to mute
-the RX when transmitting.</p>
-
-<p style="margin-left:9%;"><b>MUTE_TX_ON_RX</b></p>
-
-<p style="margin-left:18%;">Set to 1 to mute the
-transmitter when the squelch is open (default) or set it to
-0 to make the TX active during squelch open. One might want
-to set this to 0 if the link is operating on a split
-frequency or if it&rsquo;s connected to some full duplex
-device. The normal setting is 1, to mute the TX when the
-squelch is open.</p>
-
-<p style="margin-left:9%;"><b>RGR_SOUND_ALWAYS</b></p>
-
-<p style="margin-left:18%;">Set to 1 to always send roger
-sound after squelch close, even when no module is
-active.</p>
+CTCSS_TO_TG_DELAY=1000</p>
 
 <p style="margin-left:9%;"><b>COMMAND_PTY</b></p>
 
@@ -991,6 +945,67 @@ prepended with &quot;::&quot;. Example: EVENT ::playNumber
 <p style="margin-left:9%; margin-top: 1em">Example:
 COMMAND_PTY=/dev/shm/repeater_logic_ctrl</p>
 
+<h3>Simplex Logic Section
+<a name="Simplex Logic Section"></a>
+</h3>
+
+
+<p style="margin-left:9%; margin-top: 1em">The Simplex
+Logic section contains configuration data for a simplex
+logic core. The name of the section, which in the example
+configuration file is <b>SimplexLogic</b>, must have a
+corresponding list item in the GLOBAL/LOGICS config variable
+for this logic core to be activated. The name
+&quot;SimplexLogic&quot; is not magic. It could be called
+what ever you like but it must match the namespace name in
+the SimplexLogic.tcl script. The configuration variables
+below are those that are specific for a simplex logic
+core.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="9%"></td>
+<td width="5%">
+
+
+<p style="margin-top: 1em"><b>TYPE</b></p></td>
+<td width="4%"></td>
+<td width="67%">
+
+
+<p style="margin-top: 1em">The type for a simplex logic
+core is always <b>Simplex</b>.</p></td>
+<td width="15%">
+</td></tr>
+</table>
+
+<p style="margin-left:9%;"><b>MUTE_RX_ON_TX</b></p>
+
+<p style="margin-left:18%;">Set to 1 to mute the receiver
+when the transmitter is transmitting (default) or set it to
+0 to make the RX active during transmissions. One might want
+to set this to 0 if the link is operating on a split
+frequency. Then the link can accept commands even when
+it&rsquo;s transmitting. The normal setting is 1, to mute
+the RX when transmitting.</p>
+
+<p style="margin-left:9%;"><b>MUTE_TX_ON_RX</b></p>
+
+<p style="margin-left:18%;">Set to 1 to mute the
+transmitter when the squelch is open (default) or set it to
+0 to make the TX active during squelch open. One might want
+to set this to 0 if the link is operating on a split
+frequency or if it&rsquo;s connected to some full duplex
+device. The normal setting is 1, to mute the TX when the
+squelch is open.</p>
+
+<p style="margin-left:9%;"><b>RGR_SOUND_ALWAYS</b></p>
+
+<p style="margin-left:18%;">Set to 1 to always send roger
+sound after squelch close, even when no module is
+active.</p>
+
 <h3>Repeater Logic Section
 <a name="Repeater Logic Section"></a>
 </h3>
@@ -1015,13 +1030,13 @@ core.</p>
 <td width="5%">
 
 
-<p style="margin-top: 1em"><b>TYPE</b></p></td>
+<p><b>TYPE</b></p></td>
 <td width="4%"></td>
 <td width="69%">
 
 
-<p style="margin-top: 1em">The type for a repeater logic
-core is always <b>Repeater</b>.</p></td>
+<p>The type for a repeater logic core is always
+<b>Repeater</b>.</p> </td>
 <td width="13%">
 </td></tr>
 </table>
@@ -1146,6 +1161,16 @@ of consecutive short squelch openings allowed before
 shutting the repeater down. A good value is in between
 5-10.</p>
 
+<p style="margin-left:9%;"><b>SQL_TIMEOUT</b></p>
+
+<p style="margin-left:18%;">This is a soft timeout value,
+in seconds, that can be used to indicate to repeater users
+that they have exceeded the recommended maximum time for a
+transmission. When the time is up, a sound will be emitted
+once every second. When the squelch closes, or alternatively
+when the roger sound is sent, a message informing about the
+timeout will be played back.</p>
+
 
 <p style="margin-left:9%;"><b>ACTIVATE_MODULE_ON_LONG_CMD</b></p>
 
@@ -1188,6 +1213,15 @@ disables the feature.</p>
 milliseconds, that a transmission must last to be considered
 as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.</p>
+
+
+<p style="margin-left:9%;"><b>DTMF_IGNORE_WHEN_NOT_UP</b></p>
+
+<p style="margin-left:18%;">If set to 1 (default), all
+received DTMF will be ignored when the repeater is down (in
+inactive state). Those using a very short IDLE_TIMEOUT may
+need to set this config variable to 0 to get the desired
+behavior.</p>
 
 <h3>ReflectorLogic
 <a name="ReflectorLogic"></a>
@@ -1480,13 +1514,7 @@ included in the timeout time. A good value is within 10 to
 <p style="margin-left:18%;">Set to 0 to suppress reflector
 leave/join printouts.</p>
 
-<p style="margin-left:9%; margin-top: 1em">It is also
-possible to set audio codec parameters using the same
-configuration variables as documented for networked
-receivers and transmitters. For example, to lighten the
-encoder CPU load for the Opus encoder, set
-OPUS_ENC_COMPLEXITY to something lower than 9. <b><br>
-CERT_PKI_DIR</b></p>
+<p style="margin-left:9%;"><b>CERT_PKI_DIR</b></p>
 
 <p style="margin-left:18%;">The path to the directory where
 PKI (Public Key Infrastructure) files will be stored.</p>
@@ -1624,6 +1652,13 @@ addresses where the SvxLink node owners can be reached.</p>
 
 <p style="margin-left:18%; margin-top: 1em">Example:
 CERT_EMAIL=mycall1@example.com,mycall2@example.com</p>
+
+<p style="margin-left:9%; margin-top: 1em">It is also
+possible to set audio codec parameters using the same
+configuration variables as documented for networked
+receivers and transmitters. For example, to lighten the
+encoder CPU load for the Opus encoder, set
+OPUS_ENC_COMPLEXITY to something lower than 9.</p>
 
 <h3>QSO Recorder Section
 <a name="QSO Recorder Section"></a>
@@ -1864,10 +1899,12 @@ transmitted by the other logic(s).</p>
 
 <p style="margin-left:9%; margin-top: 1em">The name of the
 logic linking section can be chosen freely. In the example
-configuration file, there is a section [LinkToR4]. To use a
-logic linking section in a logic core it must be pointed out
-by the LINKS configuration variable in the GLOBAL section.
-Example: GLOBAL/LINKS=LinkToR4 <b><br>
+configuration file, there are a couple of sections:
+[ReflectorLink] and [LinkToR4]. To use a logic linking
+section in a logic core it must be pointed out by the LINKS
+configuration variable in the GLOBAL section. Multiple links
+are separated with a comma. Example:
+GLOBAL/LINKS=ReflectorLink,LinkToR4 <b><br>
 CONNECT_LOGICS</b></p>
 
 <p style="margin-left:18%;">A comma separated list of logic
@@ -1881,7 +1918,7 @@ deactivate the link from the just specified logic,
 name&quot; is used when announcing link related activities
 like activation or deactivation. Both &quot;command&quot;
 and &quot;announcement name&quot; may be left empty if no
-manual control is wanted. An example config line may look
+manual control is desired. An example config line may look
 like this:</p>
 
 
@@ -1928,6 +1965,17 @@ the connection of a microphone/speaker combination (without
 DTMF encoder) for brief announcements but without having to
 constantly listen in. Example:
 ACTIVATE_ON_ACTIVITY=MicSpkrLogic</p>
+
+<p style="margin-left:9%;"><b>ACTIVATE_ON_TG</b></p>
+
+<p style="margin-left:18%;">Enter a comma separated list of
+entries on the form logic:tg_regex, which should
+automatically activate the link if the specified talkgroup
+regular expression matches a talkgroup that is activated on
+the specified logic core. Use CTCSS_TO_TG in a SimplexLogic
+or RepeaterLogic to make it emit a talkgroup for a specific
+subtone. Example:
+ACTIVATE_ON_TG=SimplexLogic:240.*,RepeaterLogic:2403|2404|123</p>
 
 <h3>Local Receiver Section
 <a name="Local Receiver Section"></a>
@@ -2497,13 +2545,11 @@ GPIO_SQL_PIN=!gpio4</p>
 
 <p style="margin-left:9%;"><b>SQL_GPIOD_CHIP</b></p>
 
-<p style="margin-left:18%;">The GPIO chip to use for
-squelch. The application tries to figure out whether the
-value is the path to the GPIO chip, its name, label or
-number.</p>
+<p style="margin-left:18%;">The path to the GPIO chip
+device node to use for squelch.</p>
 
 <p style="margin-left:18%; margin-top: 1em">Example:
-SQL_GPIOD_CHIP=gpiochip0</p>
+SQL_GPIOD_CHIP=/dev/gpiochip0</p>
 
 <p style="margin-left:9%;"><b>SQL_GPIOD_LINE</b></p>
 
@@ -4040,12 +4086,11 @@ Orange Pi, the path is /sys/class/gpio_sw.</p>
 
 <p style="margin-left:9%;"><b>PTT_GPIOD_CHIP</b></p>
 
-<p style="margin-left:18%;">The GPIO chip to use for PTT.
-The application tries to figure out whether the value is the
-path to the GPIO chip, its name, label or number.</p>
+<p style="margin-left:18%;">The path to the GPIO chip
+device node to use for PTT.</p>
 
 <p style="margin-left:18%; margin-top: 1em">Example:
-PTT_GPIOD_CHIP=gpiochip0</p>
+PTT_GPIOD_CHIP=/dev/gpiochip0</p>
 
 <p style="margin-left:9%;"><b>PTT_GPIOD_LINE</b></p>
 
@@ -4832,6 +4877,16 @@ repeater shift.</p>
 <p style="margin-left:18%; margin-top: 1em">Example: <br>
 FREQUENCY=430.050 # tx-frequency is 430.050 MHz</p>
 
+<p style="margin-left:9%;"><b>FREQUENCY_SEPARATOR</b></p>
+
+<p style="margin-left:18%;">Use the specified character to
+separate the PHG from the frequency. Unfortunately different
+transceivers understand different APRS formats. For example
+the Yaesu FTM-510D require that no separator is used and the
+Kenwood TM-D710 require a separator (e.g. &quot;/&quot;) to
+be present. The default is to use a slash as the separator
+character.</p>
+
 <p style="margin-left:9%;"><b>TX_OFFSET</b></p>
 
 <p style="margin-left:18%;">The tx offset is the number of
@@ -4973,7 +5028,7 @@ maps. Symbols are specified using two characters where the
 first one determines which symbol table to use and the
 second one select the actual symbol to use from the selected
 table. So for example &quot;/-&quot; is a house and
-&quot;/r&quot; mean a repeater tower. For all details abount
+&quot;/r&quot; mean a repeater tower. For all details about
 APRS symbols, have a look at the latest documentation:
 https://www.aprs.org/symbols/symbolsX.txt. The specified
 symbol is only applied to the base callsign and not to the
@@ -5017,10 +5072,10 @@ aprs network. Range: 5-60 minutes, default is 10 minutes</p>
 
 <p style="margin-left:18%;">The name of the logic core that
 statistics (telemetry) should be sent for. If this
-configuration varible is not set, telemetry will be sent for
-all logics. That will probably lead to unpredictable results
-but it depend on what logic core types that are loaded in
-SvxLink.</p>
+configuration variable is not set, telemetry will be sent
+for all logics. That will probably lead to unpredictable
+results but it depend on what logic core types that are
+loaded in SvxLink.</p>
 
 <p style="margin-left:18%; margin-top: 1em">Example:
 STATISTICS_LOGIC=SimplexLogic</p>
