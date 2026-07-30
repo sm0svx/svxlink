@@ -1,17 +1,11 @@
- 1.10.1 -- ?? Jul 2026
+ 1.10.1 -- 26 Jul 2026
 -----------------------
-
-* Security: Fix stack buffer overflow in EchoLink StationData::setData.
-  Credit: Mark Rose
 
 * Security: RemoteTrx NetUplink unvalidated audio length (OOB read).
   Credit: Mark Rose
 
 * Security: Emit warning if AUTH_KEY is unset in RemoteTrx NetUplink.
   Suggested by: Mark Rose
-
-* Security: Fix out-of-bounds reads in EchoLink RTCP/SDES packet parsing
-  Credit: Mark Rose
 
 * Security: LocationInfo: Avoid buffer overflow in APRS message construction
   Credit: Mark Rose
