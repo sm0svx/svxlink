@@ -7,7 +7,8 @@
 #include "rtp.h"
 #include "rtpacket.h"
 
-#define addText(block, text) {	int sl = strlen(text); *block++ = sl; \
+#define addText(block, text) {	size_t sl = strlen(text); if (sl > 255) sl = 255; \
+                                *block++ = (unsigned char)sl; \
                                 memcpy(block, text, sl); block += sl;  }
 
 /*************** RTP_MAKE_SDES *************/
@@ -51,7 +52,7 @@ int rtp_make_sdes(unsigned char *p, const char *callsign,
     addText(ap, "CALLSIGN");
 
     *ap++ = RTCP_SDES_NAME;
-    sprintf(tmp, "%-15s%s", callsign, name);
+    snprintf(tmp, sizeof(tmp), "%-15s%s", callsign, name);
     addText(ap, tmp);
 
     *ap++ = RTCP_SDES_EMAIL;
