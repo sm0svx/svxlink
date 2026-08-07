@@ -353,9 +353,18 @@ bool Logic::initialize(Async::Config& cfgobj, const std::string& logic_name)
   if (cfg().getValue(name(), "SEL5_MACRO_RANGE", sel5_macros))
   {
     size_t comma = sel5_macros.find(",");
-    sel5_from = sel5_macros.substr(0, int(comma));
-    sel5_to = sel5_macros.substr(int(comma) + 1, sel5_macros.length());
-    cout << "Sel5 macro range from " << sel5_from << " to " << sel5_to << endl;
+    if (comma == string::npos)
+    {
+      cerr << "*** ERROR: Bad format for config variable SEL5_MACRO_RANGE. "
+           << "Valid format for value is from,to.\n";
+    }
+    else
+    {
+      sel5_from = sel5_macros.substr(0, comma);
+      sel5_to = sel5_macros.substr(comma + 1, sel5_macros.length());
+      cout << "Sel5 macro range from " << sel5_from << " to " << sel5_to
+           << endl;
+    }
   }
 
   if (cfg().getValue(name(), "TX_CTCSS", value))
@@ -849,7 +858,8 @@ void Logic::recordStart(const string& filename, unsigned max_time)
     cerr << "*** ERROR: Could not open file " << filename
          << " for recording in logic " << name() << ": "
          << recorder->errorMsg() << endl;
-    recordStop();
+    delete recorder;
+    recorder = 0;
     return;
   }
   recorder->setMaxRecordingTime(max_time);
