@@ -989,7 +989,11 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   
-  if (qsos.size() >= max_connections)
+    // Count only currently-connected stations. A QSO object lingering in
+    // STATE_DISCONNECTED (it is destroyed ~5s after disconnect) must not
+    // count here, otherwise a station that reconnects within that window is
+    // wrongly rejected as "too many connections".
+  if (numConnectedStations() >= max_connections)
   {
     cerr << "*** WARNING: Ignoring incoming connection (too many "
       	    "connections)\n";
@@ -1053,7 +1057,11 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   selector->addSource(qso);
   selector->enableAutoSelect(qso, 0);
 
-  if (qsos.size() > max_qsos)
+    // The just-created QSO is still in STATE_DISCONNECTED here, so it is not
+    // counted by numConnectedStations(); reject when the existing connected
+    // count already reaches max_qsos. Counting qsos.size() previously let a
+    // lingering disconnected QSO wrongly trip this limit.
+  if (numConnectedStations() >= max_qsos)
   {
     qso->reject(false);
     return;
@@ -1395,11 +1403,13 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     return;
   }
 
-  if (qsos.size() >= max_qsos)
+    // Count only currently-connected stations so a lingering disconnected
+    // QSO does not block a new outgoing connection.
+  if (numConnectedStations() >= max_qsos)
   {
     cerr << "Couldn't connect to " << station.callsign() << " due to the "
-         << "number of active connections (" << qsos.size() << " > "
-         << max_qsos << ")" << endl;
+         << "number of active connections (" << numConnectedStations()
+         << " >= " << max_qsos << ")" << endl;
     processEvent("no_more_connections_allowed");
     return;
   }
