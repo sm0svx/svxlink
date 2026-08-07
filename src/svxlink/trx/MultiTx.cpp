@@ -169,7 +169,7 @@ bool MultiTx::initialize(void)
       Tx *tx = TxFactory::createNamedTx(cfg, tx_name);
       if ((tx == 0) || !tx->initialize())
       {
-      	// FIXME: Cleanup
+      	delete tx;
       	return false;
       }
       tx->setVerbose(false);
