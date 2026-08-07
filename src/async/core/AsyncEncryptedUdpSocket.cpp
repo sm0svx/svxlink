@@ -363,8 +363,13 @@ void EncryptedUdpSocket::onDataReceived(const IpAddress& ip, uint16_t port,
   //std::cout << "### iv_length=" << iv_length << std::endl;
   if (key_length > 0)
   {
-    //OPENSSL_assert(key_length == m_cipher_key.size());
-    //OPENSSL_assert(iv_length == m_cipher_iv.size());
+    if (m_cipher_key.size() != static_cast<size_t>(key_length))
+    {
+      std::cout << "*** WARNING: EncryptedUdpSocket: cipher key length "
+                << m_cipher_key.size() << " does not match the required "
+                << key_length << " bytes; dropping datagram" << std::endl;
+      return;
+    }
 
       // Set key and IV in the cipher context
     EVP_DecryptInit_ex(m_cipher_ctx, NULL, NULL, m_cipher_key.data(),
