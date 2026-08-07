@@ -1001,7 +1001,8 @@ void Voter::VotingDelay::entry(void)
 void Voter::VotingDelay::init(SatRx *srx)
 {
   //cout << "### VotingDelay::init\n";
-  startTimer(max(votingDelay() - srx->sqlOpenDelay(), 0U));
+  int delay = static_cast<int>(votingDelay()) - static_cast<int>(srx->sqlOpenDelay());
+  startTimer(max(delay, 0));
 } /* Voter::VotingDelay::init */
 
 
