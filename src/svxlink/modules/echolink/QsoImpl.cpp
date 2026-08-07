@@ -514,8 +514,14 @@ void QsoImpl::onStateChange(Qso::State state)
 	ss << "disconnected " << remoteCallsign();
       	module->processEvent(ss.str());
       }
-      destroy_timer = new Timer(5000);
-      destroy_timer->expired.connect(mem_fun(*this, &QsoImpl::destroyMeNow));
+        // Guard against re-entering DISCONNECTED (e.g. a reject followed by a
+        // BYE) which would otherwise leak the previous timer and schedule a
+        // second destroyMeNow. connect() clears destroy_timer when reused.
+      if (destroy_timer == 0)
+      {
+        destroy_timer = new Timer(5000);
+        destroy_timer->expired.connect(mem_fun(*this, &QsoImpl::destroyMeNow));
+      }
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";
