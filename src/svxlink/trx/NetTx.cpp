@@ -133,7 +133,10 @@ NetTx::~NetTx(void)
   clearHandler();
   delete audio_enc;
   delete pacer;
-  tcp_con->deleteInstance();
+  if (tcp_con != 0)
+  {
+    tcp_con->deleteInstance();
+  }
 } /* NetTx::~NetTx */
 
 
