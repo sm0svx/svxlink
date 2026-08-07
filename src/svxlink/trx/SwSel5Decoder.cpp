@@ -104,6 +104,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
+template <typename GoertzelStateT>
+static inline void feedGoertzel(GoertzelStateT &s, float famp);
 
 
 /****************************************************************************
@@ -127,6 +129,21 @@ using namespace Async;
  * Public member functions
  *
  ****************************************************************************/
+
+/*
+ * Feed one sample into the Goertzel filter state, advancing its recursive
+ * IIR stage. Shared by the main and half-block-offset detector banks so
+ * that both are actually fed samples.
+ */
+template <typename GoertzelStateT>
+static inline void feedGoertzel(GoertzelStateT &s, float famp)
+{
+    float v1 = s.v2;
+    s.v2 = s.v3;
+    s.v3 = s.fac * s.v2 - v1 + famp * *(s.win++);
+
+} /* feedGoertzel */
+
 
 SwSel5Decoder::SwSel5Decoder(Config &cfg, const string &name)
   : Sel5Decoder(cfg, name), samples_left(SEL5_BLOCK_LENGTH), last_hit(0),
@@ -330,15 +347,12 @@ int SwSel5Decoder::writeSamples(const float *buf, int len)
 {
     for (int i = 0; i < len; i++)
     {
-        float v1;
         float famp = *(buf++);
 
         for (size_t k=0; k<tonedef.size(); k++)
         {
-          v1 = row_out[k].v2;
-          row_out[k].v2 = row_out[k].v3;
-          row_out[k].v3 = row_out[k].fac * row_out[k].v2 - v1 +
-			  famp * *(row_out[k].win++);
+          feedGoertzel(row_out[k], famp);
+          feedGoertzel(row_out[k+20], famp);
         }
 
         /* Row result calculators */
