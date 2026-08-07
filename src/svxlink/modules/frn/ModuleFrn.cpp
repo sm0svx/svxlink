@@ -129,6 +129,7 @@ ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
   , audio_valve(0)
   , audio_splitter(0)
   , audio_selector(0)
+  , audio_fifo(0)
 {
   cout << "\tModule Frn v" MODULE_FRN_VERSION " starting...\n";
 
@@ -229,6 +230,7 @@ bool ModuleFrn::initialize(void)
   if (!qso->initOk())
   {
     delete qso;
+    qso = 0;
     cerr << "*** ERROR: Creation of Qso object failed\n";
     return false;
   }
@@ -241,10 +243,19 @@ bool ModuleFrn::initialize(void)
 void ModuleFrn::moduleCleanup()
 {
   AudioSource::clearHandler();
-  audio_fifo->unregisterSource();
+  if (audio_fifo != 0)
+  {
+    audio_fifo->unregisterSource();
+  }
 
-  audio_splitter->removeSink(qso);
-  audio_valve->unregisterSink();
+  if (audio_splitter != 0)
+  {
+    audio_splitter->removeSink(qso);
+  }
+  if (audio_valve != 0)
+  {
+    audio_valve->unregisterSink();
+  }
   AudioSink::clearHandler();
 
   delete qso;
