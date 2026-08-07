@@ -255,6 +255,20 @@ LocalTx::LocalTx(Config& cfg, const string& name)
 LocalTx::~LocalTx(void)
 {
   transmit(false);
+
+  // Make sure that PTT is unconditionally deasserted. If a PTT hangtime
+  // is in progress (or was just started by transmit(false) above),
+  // transmit(false) will not call setPtt() to actually turn the PTT off,
+  // and the pending hangtimer is about to be deleted without ever firing.
+  // Guard against ptt being 0, which happens whenever initialize() failed
+  // or was never called (e.g. unknown/missing PTT_TYPE or an early
+  // config-error return), since all callers still delete the Tx object
+  // in that case.
+  if (ptt != 0)
+  {
+    setPtt(false);
+  }
+
   if (audio_io != 0)
   {
     audio_io->close();
@@ -307,6 +321,13 @@ bool LocalTx::initialize(void)
   ptt = PttFactoryBase::createNamedPtt(cfg, name());
   if ((ptt == 0) || (!ptt->initialize(cfg, name())))
   {
+      // createNamedPtt may return a constructed-but-uninitialized object when
+      // initialize() fails (e.g. missing PTT_PORT/PTT_PTY leaves the internal
+      // serial/pty handle null). Delete it and reset to 0 so that ~LocalTx's
+      // PTT-deassert guard (if (ptt != 0)) never dereferences a Ptt whose
+      // backend was never opened.
+    delete ptt;
+    ptt = 0;
     return false;
   }
 
@@ -932,8 +953,8 @@ void LocalTx::transmit(bool do_transmit)
     {
       cerr << "*** ERROR: Could not open audio device for transmitter \""
            << name() << "\"\n";
-      //is_transmitting = false;
-      //return;
+      setIsTransmitting(false);
+      return;
     }
     
     if (ctcss_enable)
