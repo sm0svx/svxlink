@@ -271,7 +271,7 @@ static inline const char* strError(int errnum)
       return ret;
     }
   } wrap;
-  return wrap(strerror_r(errno, wrap.errstr, sizeof(wrap.errstr)));
+  return wrap(strerror_r(errnum, wrap.errstr, sizeof(wrap.errstr)));
 } /* strError */
 
 
