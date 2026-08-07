@@ -680,6 +680,14 @@ bool LocalRxBase::initialize(void)
 
 void LocalRxBase::setMuteState(MuteState new_mute_state)
 {
+  if ((new_mute_state < MUTE_NONE) || (new_mute_state > MUTE_ALL))
+  {
+    std::cerr << "*** WARNING: Ignoring out-of-range mute state "
+              << static_cast<int>(new_mute_state) << " for receiver "
+              << name() << std::endl;
+    return;
+  }
+
   auto mute_state = muteState();
 
   //std::cout << "### LocalRxBase::setMuteState[" << name()
