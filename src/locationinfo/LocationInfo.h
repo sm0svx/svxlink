@@ -216,6 +216,7 @@ class LocationInfo
 
     Cfg           loc_cfg; // weshalb?
     ClientList    clients;
+    Async::Config::Subscription m_sub_debug;
     int           sequence          {0};
     Async::Timer  aprs_stats_timer  {-1, Async::Timer::TYPE_PERIODIC};
     unsigned int  sinterval         {10}; // Minutes

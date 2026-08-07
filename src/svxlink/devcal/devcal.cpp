@@ -464,6 +464,8 @@ static bool wb_mode = false;
 static int flat_fq_response = false;
 static string cfgfile;
 static string cfgsect;
+static char* config = nullptr;
+static char* dbconfig = nullptr;
 static FdWatch *stdin_watch = 0;
 static SineGenerator *gen = 0;
 static DevPrinter *dp = 0;
@@ -523,12 +525,42 @@ int main(int argc, const char *argv[])
   cout << fixed;
 
   Config cfg;
-  if (!cfg.open(cfgfile))
+
+  // Map CLI options to openWithFallback arguments.
+  // --config → explicit file backend; --dbconfig → explicit DB backend;
+  // positional cfgfile → legacy path (auto-detect db.conf by name for compat).
+  string cli_config;
+  string cli_dbconfig;
+  if (config != nullptr)
   {
-    cerr << "*** ERROR: Could not open configuration file \""
-         << cfgfile << "\".\n";
+    cli_config = cfgfile;
+  }
+  else if (dbconfig != nullptr)
+  {
+    cli_dbconfig = cfgfile;
+  }
+  else if (!cfgfile.empty())
+  {
+    if (cfgfile.find("db.conf") != string::npos)
+      cli_dbconfig = cfgfile;
+    else
+      cli_config = cfgfile;
+  }
+  else
+  {
+    cerr << "*** ERROR: No configuration file specified.\n"
+            "Use --config <file>, --dbconfig <db.conf>, "
+            "or provide the config path as a positional argument.\n";
     exit(1);
   }
+
+  if (!cfg.openWithFallback(cli_config, cli_dbconfig, "svxlink.conf"))
+  {
+    cerr << "*** ERROR: " << cfg.getLastError() << "\n";
+    exit(1);
+  }
+  cout << "Configuration loaded from: " << cfg.getMainConfigFile()
+       << " (" << cfg.getBackendType() << " backend)" << endl;
 
   AudioIO *audio_io = 0;
   if (cal_tx)
@@ -733,10 +765,10 @@ static void parse_arguments(int argc, const char **argv)
 	    "The maximum deviation for the channel", "<deviation in Hz>"},
     {"headroom", 'H', POPT_ARG_FLOAT | POPT_ARGFLAG_SHOW_DEFAULT,
             &headroom_db, 0, "The headroom to use", "<headroom in dB>"},
-    /*
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
-    */
+    {"dbconfig", 0, POPT_ARG_STRING, &dbconfig, 0,
+	    "Specify the database configuration file to use", "<filename>"},
     {"rxcal", 'r', POPT_ARG_NONE, &cal_rx, 0, "Do receiver calibration", NULL},
     {"txcal", 't', POPT_ARG_NONE, &cal_tx, 0,
             "Do transmitter calibration", NULL},
@@ -775,7 +807,15 @@ static void parse_arguments(int argc, const char **argv)
     switch (argcnt++)
     {
       case 0:
-        cfgfile = arg;
+        if (config == nullptr && dbconfig == nullptr)
+        {
+          cfgfile = arg;
+        }
+        else
+        {
+          cfgsect = arg;
+          argcnt = 2; // Skip to section parsing since config file was specified via flag
+        }
         break;
       case 1:
         cfgsect = arg;
@@ -785,6 +825,16 @@ static void parse_arguments(int argc, const char **argv)
         poptPrintUsage(optCon, stderr, 0);
         exit(1);
     }
+  }
+  
+  // Handle new configuration arguments
+  if (config != nullptr)
+  {
+    cfgfile = string(config);
+  }
+  else if (dbconfig != nullptr)
+  {
+    cfgfile = string(dbconfig);
   }
 
   if (print_version)

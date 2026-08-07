@@ -161,6 +161,7 @@ class ModuleParrot : public Module
     void allSamplesWritten(void);
     void onRepeatDelayExpired(void);
     void execCmdQueue(void);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value) override;
 
 };  /* class ModuleParrot */
 

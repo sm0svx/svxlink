@@ -205,6 +205,7 @@ class ModuleMetarInfo : public Module
     void say(std::stringstream &tmp);
     int handleMetar(std::string input);
     std::string getXmlParam(std::string token, std::string input);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value) override;
 };  /* class ModuleMetarInfo */
 
 

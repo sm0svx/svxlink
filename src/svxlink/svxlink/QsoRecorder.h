@@ -137,7 +137,15 @@ class QsoRecorder
      * @param   name The name of the config section tp read config from
      * @return  Returns \rm true on success or else \em false
      */
-    bool initialize(const Async::Config &cfg, const std::string &name);
+    bool initialize(Async::Config &cfg, const std::string &name);
+
+    /**
+     * @brief   Handle configuration updates
+     * @param   section The configuration section name
+     * @param   tag     The configuration tag that was updated
+     * @param   value   The new value
+     */
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
 
     /**
      * @brief   Add an audio source to the QSO recorder
@@ -191,6 +199,8 @@ class QsoRecorder
     Async::Timer          *qso_tmo_timer;
     unsigned              min_samples;
     std::string           encoder_cmd;
+    Async::Config         *cfg_ptr;
+    std::string           cfg_section;
 
     QsoRecorder(const QsoRecorder&);
     QsoRecorder& operator=(const QsoRecorder&);

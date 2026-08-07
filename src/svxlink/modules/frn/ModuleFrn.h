@@ -138,6 +138,7 @@ class ModuleFrn : public Module
     void reportState(void);
     bool validateCommand(const std::string& cmd, size_t argc);
     void onQsoError(void);
+    virtual void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value) override;
 
   private:
     QsoFrn *qso;

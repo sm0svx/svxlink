@@ -587,6 +587,8 @@ bool Voter::initialize(void)
     ++start;
   }
 
+  cfg.valueUpdated.connect(sigc::mem_fun(*this, &Voter::cfgUpdated));
+
   return true;
   
 } /* Voter::initialize */
@@ -1428,6 +1430,18 @@ void Voter::setRxEnabled(const std::string &rx_name,
   std::cerr << "*** WARNING: " << mute_str << " receiver failed: "
           " non-existent receiver \"" << rx_name << "\"" << std::endl;
 } /* Voter::setRxEnabled */
+
+
+void Voter::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == name())
+  {
+    if (tag == "VERBOSE")
+    {
+      cfg.getValue(name(), "VERBOSE", m_print_sat_squelch);
+    }
+  }
+} /* Voter::cfgUpdated */
 
 
 /*

@@ -1013,7 +1013,7 @@ void LocalRxBase::publishSquelchState(void)
 } /* LocalRxBase::publishSquelchState */
 
 
-void LocalRxBase::cfgUpdated(const std::string& section, const std::string& tag)
+void LocalRxBase::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
 {
   //std::cout << "### LocalRxBase::cfgUpdated: "
   //          << section << "/" << tag << "=" << cfg().getValue(section, tag)

@@ -604,6 +604,8 @@ bool ModuleMetarInfo::initialize(void)
      longmsg = "_long ";  // taking "cavok_long" instead of "cavok"
   }
 
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ModuleMetarInfo::cfgUpdated));
+
   return true;
 
 } /* initialize */
@@ -2316,6 +2318,61 @@ int ModuleMetarInfo::splitEmptyStr(StrList& L, const string& seq)
   return L.size();
 
 } /* ModuleMetarInfo::splitEmptyStr */
+
+
+void ModuleMetarInfo::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  // Call base class to handle TIMEOUT and MUTE_LOGIC_LINKING
+  Module::cfgUpdated(section, tag, value);
+
+  if (section == cfgName())
+  {
+    if (tag == "STARTDEFAULT")
+    {
+      string new_default;
+      if (cfg().getValue(cfgName(), "STARTDEFAULT", new_default))
+      {
+        if (new_default.length() == 4)
+        {
+          // Convert to uppercase like in initialize()
+          transform(new_default.begin(), new_default.end(), new_default.begin(),
+                    (int(*)(int))toupper);
+          icao_default = new_default;
+        }
+        else
+        {
+          cerr << "*** WARNING: Config variable " << cfgName()
+               << "/STARTDEFAULT: " << new_default << " is not valid.\n";
+        }
+      }
+    }
+    else if (tag == "REMARKS")
+    {
+      string value_str;
+      if (cfg().getValue(cfgName(), "REMARKS", value_str))
+      {
+        remarks = !value_str.empty();
+      }
+    }
+    else if (tag == "DEBUG")
+    {
+      string value_str;
+      if (cfg().getValue(cfgName(), "DEBUG", value_str))
+      {
+        debug = !value_str.empty();
+      }
+    }
+    else if (tag == "LONGMESSAGES")
+    {
+      string value_str;
+      if (cfg().getValue(cfgName(), "LONGMESSAGES", value_str))
+      {
+        longmsg = !value_str.empty() ? "_long " : "";
+      }
+    }
+    // Note: AIRPORTS, TYPE, SERVER, LINK would require restart
+  }
+} /* ModuleMetarInfo::cfgUpdated */
 
 
 /*

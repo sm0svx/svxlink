@@ -138,6 +138,7 @@ class ModuleDtmfRepeater : public Module
     void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value) override;
 
     void setupRepeatDelay(void);
     void onRepeatDelayExpired(void);

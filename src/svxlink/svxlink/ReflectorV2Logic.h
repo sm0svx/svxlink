@@ -301,6 +301,7 @@ class ReflectorLogic : public LogicBase
     void checkTmpMonitorTimeout(void);
     void qsyPendingTimeout(void);
     void checkIdle(void);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
     bool isIdle(void);
     void handlePlayFile(const std::string& path);
     void handlePlaySilence(int duration);

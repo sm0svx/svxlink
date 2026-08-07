@@ -166,6 +166,13 @@ class SipLogic : public LogicBase
      * @brief 	Destructor
      */
     virtual ~SipLogic(void) override;
+    
+    /**
+     * @brief Called when a configuration parameter is updated
+     * @param section The configuration section name  
+     * @param tag The configuration tag name
+     */
+    virtual void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value) override;
 
     virtual void allMsgsWritten(void);
     std::string initCallHandler(int argc, const char* argv[]);

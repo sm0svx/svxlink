@@ -150,6 +150,11 @@ class RfUplink : public Uplink
     Rx	      	         *uplink_rx;
     Async::AudioSelector *tx_audio_sel;
     
+    // Connections to connect/disconnect
+    // when config values change
+    // yeah, it's big, I know, it's to make it clear
+    sigc::connection uplink_tx_transmitter_state_change_connection;
+    
     RfUplink(const RfUplink&);
     RfUplink& operator=(const RfUplink&);
     
@@ -161,6 +166,7 @@ class RfUplink : public Uplink
     void rxDtmfDigitDetected(char digit, int duration);
     void rxToneDetected(float fq);
     void uplinkTxTransmitterStateChange(bool is_transmitting);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
 
 };  /* class RfUplink */
 
