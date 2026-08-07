@@ -983,28 +983,32 @@ void Directory::onRefreshRegistration(Timer *timer)
 void Directory::onCmdTimeout(Timer *timer)
 {
   error("Command timeout while communicating to the directory server");
+
+    // If the connection is already idle (e.g. it timed out during DNS lookup
+    // or before the connection completed), DirectoryCon::disconnect() will not
+    // emit a disconnected callback, so ctrlSockDisconnected() will not run to
+    // advance the command queue. Detect that case and perform the same cleanup
+    // here; otherwise com_state never returns to CS_IDLE and the directory
+    // client wedges, never sending another command (registration/refresh stops).
+  bool already_idle = ctrl_con->isIdle();
   ctrl_con->disconnect();
-
-  /*
-  assert(!cmd_queue.empty());
-
-  switch (cmd_queue.front().type)
+  if (already_idle && !cmd_queue.empty())
   {
-    case Cmd::OFFLINE:
-    case Cmd::ONLINE:
-    case Cmd::BUSY:
-      setStatus(StationData::STAT_UNKNOWN);
-      break;
-    
-    case Cmd::GET_CALLS:
-      break;
-  }
+    switch (cmd_queue.front().type)
+    {
+      case Cmd::OFFLINE:
+      case Cmd::ONLINE:
+      case Cmd::BUSY:
+        setStatus(StationData::STAT_UNKNOWN);
+        break;
 
-  //cmd_queue.pop_front();
-  cmd_queue.front().done = true;
-  com_state = CS_IDLE;
-  sendNextCmd();
-  */
+      case Cmd::GET_CALLS:
+        break;
+    }
+    cmd_queue.front().done = true;
+    com_state = CS_IDLE;
+    sendNextCmd();
+  }
 } /* Directory::onCmdTimeout */
 
 
