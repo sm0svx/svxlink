@@ -305,6 +305,15 @@ void LinkManager::addLogic(LogicBase *logic)
     // Now create a connection from the new logic source to each sink.
   for (SinkMap::iterator it=sinks.begin(); it != sinks.end(); ++it)
   {
+      // Skip the connection from the new logic's source to its own sink: it is
+      // created by the loop below (over sources), which writes the same
+      // sinks[name].connectors[name] entry. Creating it here as well left the
+      // first AudioPassthrough orphaned (leaked, and still wired into the
+      // splitter/selector) when the second loop overwrote the map entry.
+    if ((*it).first == logic->name())
+    {
+      continue;
+    }
     AudioPassthrough *connector = new AudioPassthrough;
     splitter->addSink(connector, true);
     AudioSelector *other_selector = (*it).second.selector;
