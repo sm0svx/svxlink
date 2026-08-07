@@ -1423,6 +1423,14 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 	processEvent(ss.str());
 	return;
       }
+      if ((*it)->connectionRejected())
+      {
+        // Do not reuse a QSO object that carries a stale reject_qso flag
+        // from a previous rejection. Fall through and create a fresh
+        // object instead so that the new outgoing connection is not
+        // silently suppressed.
+        break;
+      }
       qso = *it;
       qsos.erase(it);
       qsos.push_back(qso);
