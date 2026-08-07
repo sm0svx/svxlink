@@ -94,6 +94,17 @@ foreach(logic_name ${SVXLINK_LOGIC_CORES})
   #target_link_libraries(${logic_name}Logic ${LIBS})
 endforeach()
 
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+# CmdParserTest and DtmfDigitHandlerTest compile an extra source each; those
+# are declared in <Name>.deps.cmake sidecars next to the test.
+svxlink_add_tests(LIBS asynccpp asynccore)
+
+# Smoke test: every TCL event script loads cleanly under tclsh
+add_test(NAME tcl_event_scripts_load
+  COMMAND ${CMAKE_COMMAND} -E env python3
+          ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/test_tcl_loads.py)
+
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
