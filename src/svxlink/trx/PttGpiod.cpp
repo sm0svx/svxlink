@@ -195,14 +195,15 @@ bool PttGpiod::initialize(Async::Config &cfg, const std::string name)
   else
   {
 #if GPIOD_VERSION_MAJOR >= 2
-    m_line_offset = gpiod_chip_get_line_offset_from_name(m_chip, line.c_str());
-    if (m_line_offset < 0)
+    int line_offset = gpiod_chip_get_line_offset_from_name(m_chip, line.c_str());
+    if (line_offset < 0)
     {
       std::cerr << "*** ERROR: Get GPIOD line \"" << line
                 << "\" failed for TX " << name << ": "
                 << std::strerror(errno) << std::endl;
       return false;
     }
+    m_line_offset = line_offset;
 #else
     m_line = gpiod_chip_find_line(m_chip, line.c_str());
     if (!m_line)
@@ -225,8 +226,13 @@ bool PttGpiod::initialize(Async::Config &cfg, const std::string name)
   }
 
   gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
-  gpiod_line_settings_set_output_value(settings,
-      active_low ? GPIOD_LINE_VALUE_ACTIVE : GPIOD_LINE_VALUE_INACTIVE);
+    // Initialise the line to the unkeyed (INACTIVE) state. setTxOn() drives
+    // the line ACTIVE to key the transmitter, and the active-low inversion is
+    // handled by set_active_low() below, so the initial output value must be
+    // INACTIVE in both the active-high and active-low cases. Previously an
+    // active-low PTT was initialised to ACTIVE, which keyed the transmitter
+    // the moment the line was requested (e.g. at startup).
+  gpiod_line_settings_set_output_value(settings, GPIOD_LINE_VALUE_INACTIVE);
 
   if (active_low)
   {
