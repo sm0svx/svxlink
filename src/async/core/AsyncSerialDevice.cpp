@@ -148,6 +148,7 @@ SerialDevice *SerialDevice::open(const string& port, bool flush)
   {
     if (!dev->openPort(flush))
     {
+      dev_map.erase(port);
       delete dev;
       dev = 0;
     }
