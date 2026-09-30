@@ -6,6 +6,9 @@
   administration interfaces, like SvxMonitor, to list, review, sign and remove
   pending CSRs and to list, review and remove client certificates.
 
+* SvxReflector: The JSON error message body was never sent for 404 and 501
+  responses from the HTTP status server.
+
 
 
  1.10.1 -- 26 Jul 2026

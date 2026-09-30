@@ -1425,9 +1425,14 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   Async::HttpServerConnection::Response res;
   if ((req.method != "GET") && (req.method != "HEAD"))
   {
+    Json::Value body(Json::objectValue);
+    body["msg"] = req.method + ": Method not implemented";
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "";
     res.setCode(501);
-    res.setContent("application/json",
-        "{\"msg\":\"" + req.method + ": Method not implemented\"}");
+    res.setContent("application/json", Json::writeString(builder, body));
+    res.setSendContent(true);
     con->write(res);
     return;
   }
@@ -1437,6 +1442,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     res.setCode(404);
     res.setContent("application/json",
         "{\"msg\":\"Not found!\"}");
+    res.setSendContent(req.method == "GET");
     con->write(res);
     return;
   }
