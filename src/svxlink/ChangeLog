@@ -1,3 +1,13 @@
+ 1.11.0 -- ?? ??? ????
+-----------------------
+
+* SvxReflector: New HTTP admin API, enabled using the HTTP_ADMIN_SRV_PORT
+  configuration variable, for managing the CA. It is used by web based
+  administration interfaces, like SvxMonitor, to list, review, sign and remove
+  pending CSRs and to list, review and remove client certificates.
+
+
+
  1.10.1 -- 26 Jul 2026
 -----------------------
 
