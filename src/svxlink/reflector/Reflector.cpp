@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iomanip>
 #include <sstream>
 #include <ctime>
+#include <cctype>
 #include <dirent.h>   // for listing directories (list certs)
 #include <sys/stat.h> // for checking if a directory exists (list certs)
 
@@ -189,6 +190,29 @@ namespace {
     }
     return ss.str();
   } /* hexString */
+
+
+  bool percentDecode(const std::string& in, std::string& out)
+  {
+    out.clear();
+    for (std::string::size_type i=0; i<in.size(); ++i)
+    {
+      if (in[i] != '%')
+      {
+        out += in[i];
+        continue;
+      }
+      if ((i + 2 >= in.size()) ||
+          !std::isxdigit(static_cast<unsigned char>(in[i+1])) ||
+          !std::isxdigit(static_cast<unsigned char>(in[i+2])))
+      {
+        return false;
+      }
+      out += static_cast<char>(std::stoi(in.substr(i+1, 2), nullptr, 16));
+      i += 2;
+    }
+    return true;
+  } /* percentDecode */
 
 
   std::string isoTimeString(time_t t)
@@ -1528,13 +1552,74 @@ void Reflector::httpAdminRequestReceived(
   };
 
     // Split the target path, ignoring any query string, into its segments.
-    // The ids we hand out only contain characters that are left untouched
-    // by percent-encoding so no decoding is needed. An id containing
-    // anything else will just not match.
+    // Each segment is percent-decoded after splitting so that an encoded
+    // slash, e.g. in a callsign, does not split the segment.
   std::string path(req.target.substr(0, req.target.find('?')));
   std::vector<std::string> seg;
   SvxLink::splitStr(seg, path, "/");
   seg.erase(std::remove(seg.begin(), seg.end(), ""), seg.end());
+  for (auto& s : seg)
+  {
+    std::string decoded;
+    if (!percentDecode(s, decoded))
+    {
+      send_error(400, "Invalid percent-encoding in request target");
+      return;
+    }
+    s = std::move(decoded);
+  }
+
+  if ((seg.size() >= 3) && (seg[0] == "nodes") && (seg[2] == "block"))
+  {
+    if (seg.size() > 4)
+    {
+      send_error(404, "Not found");
+      return;
+    }
+    const bool is_set = (seg.size() == 4);
+    if (is_set ? (req.method != "PUT")
+               : (!is_read && (req.method != "DELETE")))
+    {
+      method_not_allowed(is_set ? "PUT" : "GET, HEAD, DELETE");
+      return;
+    }
+
+    unsigned blocktime = 0;
+    if (is_set)
+    {
+        // At most nine digits so that the value always fit in an unsigned
+      const std::string& time_str = seg[3];
+      if ((time_str.size() > 9) ||
+          (time_str.find_first_not_of("0123456789") != std::string::npos))
+      {
+        send_error(400, "Invalid block time '" + time_str + "'");
+        return;
+      }
+      blocktime = std::stoul(time_str);
+    }
+
+    const std::string& callsign = seg[1];
+    auto node = ReflectorClient::lookup(callsign);
+    if (node == nullptr)
+    {
+      send_error(404, "Could not find node '" + callsign + "'");
+      return;
+    }
+    if (is_read)
+    {
+      Json::Value status(Json::objectValue);
+      status["blocked"] = node->isBlocked();
+      status["blocktime"] = node->blockTime();
+      status["remaining"] = node->remainingBlockTime();
+      send_json(200, status);
+      return;
+    }
+    std::cout << callsign << ": Set block time to " << blocktime
+              << " seconds via admin API" << std::endl;
+    node->setBlock(blocktime);
+    send_ok();
+    return;
+  }
 
   if ((seg.size() < 2) || (seg.size() > 4) || (seg[0] != "ca") ||
       ((seg[1] != "csrs") && (seg[1] != "certs")))

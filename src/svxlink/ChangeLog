@@ -4,7 +4,11 @@
 * SvxReflector: New HTTP admin API, enabled using the HTTP_ADMIN_SRV_PORT
   configuration variable, for managing the CA. It is used by web based
   administration interfaces, like SvxMonitor, to list, review, sign and remove
-  pending CSRs and to list, review and remove client certificates.
+  pending CSRs and to list, review and remove client certificates. Nodes can
+  also be blocked, just like using the NODE BLOCK PTY command.
+
+* SvxReflector: New "listenOnly" attribute in the node info in the HTTP status
+  server output. It is set to true when the node is blocked from talking.
 
 * SvxReflector: The JSON error message body was never sent for 404 and 501
   responses from the HTTP status server.

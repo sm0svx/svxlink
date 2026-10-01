@@ -145,12 +145,12 @@ Example: HTTP_SRV_PORT=8080
 Set which port to use for the HTTP admin server. The admin server expose a
 JSON API for managing the certificate authority (CA), e.g. listing, reviewing,
 signing and removing certificate signing requests (CSR) and client
-certificates. It is typically used by a web based administration interface.
+certificates, and for blocking nodes. It is typically used by a web based administration interface.
 See the "HTTP ADMIN API" section below for more information. No port is set by
 default, meaning that the admin server is disabled.
 
 There is no authentication at all on the admin server so anyone that can
-connect to it have full control over the CA. By default it is only reachable
+connect to it have full control over the CA and the connected nodes. By default it is only reachable
 from the local host. See HTTP_ADMIN_SRV_BIND_ADDR if it need to be reachable
 from other hosts. Never expose this port to the public Internet.
 
@@ -422,8 +422,8 @@ stop a node from logging in, use the REJECT_CALLSIGN configuration variable.
 .
 .SH HTTP ADMIN API
 If an admin port has been set up using the HTTP_ADMIN_SRV_PORT configuration
-variable, the certificate authority can be managed using the HTTP requests
-described below. All responses are in JSON format. On error, a HTTP status
+variable, the certificate authority and the connected nodes can be managed
+using the HTTP requests described below. All responses are in JSON format. On error, a HTTP status
 code other than 200 is returned together with a JSON object containing a
 "message" member describing the error.
 
@@ -432,6 +432,9 @@ Since the id change if the node send in an updated CSR, it is not possible to
 sign a CSR that differ from the one that was reviewed. Certificates are
 identified by their serial number. The server certificate and the CA
 certificates are never included.
+
+Each path segment, e.g. a callsign, is percent-decoded so callsigns containing
+special characters, like "/", must be percent-encoded (e.g. "SM0ABC%2FP").
 .TP
 .B GET /ca/csrs
 List all pending CSRs. Each list item contain the members "id", "subject" and
@@ -459,6 +462,21 @@ Get one client certificate. In addition to the list item members, the members
 Remove the client certificate and the CSR it was signed from. A pending CSR
 for the same callsign is left untouched. Just like for the CA RM PTY command,
 this will not stop a node that still has a valid certificate from logging in.
+.TP
+.B GET /nodes/<callsign>/block
+Get the block status for a connected node. The returned object contain the
+members "blocked" (true or false), "blocktime" (the block time set using
+NODE BLOCK, or using the admin API, in seconds) and "remaining" (the number of
+seconds left until the block expire). Both times are 0 if the node is not
+blocked.
+.TP
+.B PUT /nodes/<callsign>/block/<blocktime seconds>
+Block a connected node from being a talker, the same as the NODE BLOCK PTY
+command. A blocktime of 0 removes the block.
+.TP
+.B DELETE /nodes/<callsign>/block
+Remove the block for a connected node, the same as a NODE BLOCK PTY command
+with a blocktime of 0.
 .
 .SH FILES
 .
