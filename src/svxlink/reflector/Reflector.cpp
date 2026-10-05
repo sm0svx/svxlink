@@ -256,7 +256,7 @@ namespace {
     Json::Value summary(Json::objectValue);
     summary["id"] = cert.serialNumberString();
     summary["subject"] = cert.subjectNameString();
-    summary["sanEmails"] = sanEmailsJson(cert.subjectAltName());
+    summary["notAfter"] = isoTimeString(cert.notAfter());
     return summary;
   } /* certSummaryJson */
 };
@@ -1787,9 +1787,9 @@ void Reflector::httpAdminRequestReceived(
     return;
   }
   Json::Value detail(certSummaryJson(cert));
+  detail["sanEmails"] = sanEmailsJson(cert.subjectAltName());
   detail["serial"] = cert.serialNumberString();
   detail["notBefore"] = isoTimeString(cert.notBefore());
-  detail["notAfter"] = isoTimeString(cert.notAfter());
   detail["decoded"] = cert.toText();
   send_json(200, detail);
 } /* Reflector::httpAdminRequestReceived */

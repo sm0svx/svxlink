@@ -452,11 +452,12 @@ Remove the pending CSR without signing it.
 .TP
 .B GET /ca/certs
 List all client certificates, including expired ones. Each list item contain
-the members "id", "subject" and "sanEmails".
+the members "id", "subject" and "notAfter" (ISO 8601, UTC).
 .TP
 .B GET /ca/certs/<id>
 Get one client certificate. In addition to the list item members, the members
-"serial", "notBefore", "notAfter" (ISO 8601, UTC) and "decoded" are included.
+"sanEmails", "serial", "notBefore" (ISO 8601, UTC) and "decoded" are
+included.
 .TP
 .B DELETE /ca/certs/<id>
 Remove the client certificate and the CSR it was signed from. A pending CSR
