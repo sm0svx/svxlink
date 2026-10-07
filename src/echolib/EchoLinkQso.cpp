@@ -648,7 +648,12 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     size_t pos = str.find_first_of(" \t\n\r");
     if (pos != string::npos)
     {
-      remote_call = str.substr(0, pos);
+      remote_id[pos] = 0;
+      sanitizeCallsign(remote_id);
+      if (remote_id[0] != 0)
+      {
+        remote_call = remote_id;
+      }
       pos = str.find_first_not_of(" \t\n\r", pos);
       if (pos != string::npos)
       {
