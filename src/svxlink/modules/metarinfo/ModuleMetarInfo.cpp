@@ -186,8 +186,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
 
    ~Http()
    {
-     if (pending_curl)
-       curl_easy_cleanup(pending_curl);
+     removePendingCurl();
      while (!url_queue.empty())
      {
        curl_easy_cleanup(url_queue.front());
@@ -212,7 +211,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      if (handle_count == 0) 
      {
        disableAllWatches();
-       curl_easy_cleanup(pending_curl);
+       removePendingCurl();
        if (url_queue.empty())
        {
          pending_curl = 0;
@@ -237,7 +236,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      if (handle_count == 0)
      {
        disableAllWatches();
-       curl_easy_cleanup(pending_curl);
+       removePendingCurl();
        if (url_queue.empty())
        {
          pending_curl = 0;
@@ -254,6 +253,16 @@ class ModuleMetarInfo::Http : public sigc::trackable
      }
      update_timer.reset();
    } /* onActivity */
+
+   void removePendingCurl(void)
+   {
+     if (pending_curl != 0)
+     {
+       curl_multi_remove_handle(multi_handle, pending_curl);
+       curl_easy_cleanup(pending_curl);
+       pending_curl = 0;
+     }
+   } /* removePendingCurl */
 
    static size_t callback(char *contents, size_t size, size_t nmemb,
                                        void *userp)
