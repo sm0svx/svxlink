@@ -19,6 +19,10 @@
   handle before being cleaned up (GHSA-6w9x-486p-ggrj)
   Credit: mark-mcu
 
+* ModuleEchoLink: The PTY object was not deleted on module cleanup
+  (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
 
 
  1.10.1 -- 26 Jul 2026

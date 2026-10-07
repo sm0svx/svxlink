@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -580,6 +580,8 @@ void ModuleEchoLink::moduleCleanup(void)
   dir = 0;
   delete proxy;
   proxy = 0;
+  delete pty;
+  pty = 0;
   delete cbc_timer;
   cbc_timer = 0;
   delete dbc_timer;
