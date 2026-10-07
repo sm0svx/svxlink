@@ -11,6 +11,10 @@
   failure (GHSA-6w9x-486p-ggrj)
   Credit: mark-mcu
 
+* Security: LocationInfo: Stack buffer overflow via unbounded sprintf in
+  APRS UDP status reporting (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
 
 
  1.10.1 -- 26 Jul 2026
