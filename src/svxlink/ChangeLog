@@ -6,6 +6,11 @@
   (GHSA-m4q5-8r78-5gqg)
   Credit: Mark Rose <markrose@markrose.ca>
 
+* Security: SvxReflector: Use-after-free / iterator invalidation in
+  Reflector::broadcastMsg when a client is disconnected due to a write
+  failure (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
 
 
  1.10.1 -- 26 Jul 2026
