@@ -1,3 +1,13 @@
+ 1.10.2 -- ?? ??? 2026
+-----------------------
+
+* Security: ModuleMetarInfo: malformed METAR report → uncaught
+  std::out_of_range crash and 100% CPU infinite-loop hang (remote)
+  (GHSA-m4q5-8r78-5gqg)
+  Credit: Mark Rose <markrose@markrose.ca>
+
+
+
  1.10.1 -- 26 Jul 2026
 -----------------------
 

@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <queue>
 #include <regex.h>
+#include <stdexcept>
 
 
 /****************************************************************************
@@ -760,7 +761,10 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
         //pos = (cmdit->substr(0,1)).c_str();
         //spos= mypad[pos[0]];
         string spos = mypad[(*cmdit)[0]];
-        icao += spos.substr(cmdit->length(),1);
+        if (cmdit->length() < spos.length())
+        {
+          icao += spos.substr(cmdit->length(),1);
+        }
      }
   }
 
@@ -926,7 +930,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
         cout << "XML-METAR: " << metar << endl;
       }
 
-      if (met_utc.length() == 20 && !isvalidUTC(met_utc))
+      if (met_utc.length() != 20 || !isvalidUTC(met_utc))
       {
         stringstream temp;
         cout << "Metar information outdated" << endl;
@@ -957,6 +961,12 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
       cout << "ERROR 404 from webserver -> no such airport\n";
       temp << "no_such_airport";
       say(temp);
+      return;
+    }
+
+    if (values.size() < 2)
+    {
+      cout << "ERROR: wrong Metarfile format, too few lines received" << endl;
       return;
     }
 
@@ -1028,367 +1038,396 @@ std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)
 
 int ModuleMetarInfo::handleMetar(std::string input)
 {
-   std::string current;
-   std::string tempstr;
-   std::stringstream temp;
-   StrList values;
-   bool is_false = false;
-   bool endflag = false;
-   bool nceiling = false;
-   float temp_view = 0;
-   int metartoken;
+  std::string current;
+  std::string tempstr;
+  std::stringstream temp;
+  StrList values;
+  bool is_false = false;
+  bool endflag = false;
+  bool nceiling = false;
+  float temp_view = 0;
+  int metartoken;
 
-   metartoken = 0;
+  metartoken = 0;
 
-   // This is a raw MEATAR-report:
-   //
-   // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
-   //
-   temp << "metar \"" << input << "\"";
-   say(temp);
+    // This is a raw MEATAR-report:
+    //
+    // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
+    //
+  temp << "metar \"" << input << "\"";
+  say(temp);
 
-   temp << "announce_airport " << icao;
-   say(temp);
+  temp << "announce_airport " << icao;
+  say(temp);
 
-   splitStr(values, input, " ");
-   StrList::iterator it = values.begin();
+  splitStr(values, input, " ");
+  StrList::iterator it = values.begin();
 
-   while (it != values.end() && !endflag) {
+    // Advance "it" to the next token, used where a token's value is carried
+    // in the following token (e.g. PEAKWIND, WINDSHIFT, RMKVISIBILITY).
+    // If there is no next token, set endflag and leave "it" untouched so
+    // that the loop's trailing "it++" does not step past values.end().
+  auto advanceOrEnd = [&it, &values, &endflag]() -> bool
+  {
+    StrList::iterator next = it;
+    ++next;
+    if (next == values.end())
+    {
+      endflag = true;
+      return false;
+    }
+    it = next;
+    return true;
+  };
 
-     current = *it;
+  try
+  {
+    while (it != values.end() && !endflag) {
 
-     // == current.tolower()
-     transform(current.begin(),current.end(),current.begin(),
-               (int(*)(int))tolower);
+      current = *it;
 
-     metartoken = checkToken(current);
+      // == current.tolower()
+      transform(current.begin(),current.end(),current.begin(),
+                (int(*)(int))tolower);
 
-     switch (metartoken)
-     {
+      metartoken = checkToken(current);
 
-         case INTOKEN:
-            break;
+      switch (metartoken)
+      {
+        case INTOKEN:
+          break;
 
-         case UTC:
-            temp << "metreport_time " << current.substr(2,4);
-            say(temp);
-            break;
+        case UTC:
+          temp << "metreport_time " << current.substr(2,4);
+          say(temp);
+          break;
 
-         case AUTO:
+        case AUTO:
           //  temp << " automatic_station ";
-            break;
+          break;
 
-         case WIND:
-            if (isWind(tempstr, current))
+        case WIND:
+          if (isWind(tempstr, current))
+          {
+            temp << "wind " << tempstr;
+            say(temp);
+          }
+          break;
+
+        case VALUEVARIES:
+          isValueVaries(tempstr, current);
+          if (!nceiling)
+             temp << "windvaries " << tempstr;
+          else
+          {
+             temp << "ceilingvaries " << tempstr;
+             nceiling = false;
+          }
+          say(temp);
+          nceiling = false;
+          break;
+
+        case IS1STPARTOFVIEW:
+          temp_view = atof(current.c_str());
+          break;
+
+        case ISPARTOFMILES:
+          isPartofMiles(tempstr, current);
+            temp_view += atof(tempstr.c_str());
+          temp << "visibility " << temp_view << " unit_miles";
+          say(temp);
+          break;
+
+        case ISVIEW:
+          if (isView(tempstr, current))
+          {
+            temp << "visibility " << tempstr;
+            say(temp);
+          }
+          break;
+
+        case WORDSEXT:
+          temp << "say " << current << longmsg;
+          say(temp);
+          break;
+
+        case WORDSNOEXT:
+          temp << "say " << current;
+          say(temp);
+          break;
+
+        case CLOUDSVALID:
+          if (ispObscurance(tempstr, current))
+          {
+            if (!is_false)     // only once
             {
-              temp << "wind " << tempstr;
+               processEvent("say clouds");
+               is_false = true;
+            }
+            temp << "clouds " << tempstr;
+            say(temp);
+          }
+          break;
+
+        case VERTICALVIEW:
+          isVerticalView(tempstr, current);
+          temp << "ceiling " << tempstr;
+          say(temp);
+          break;
+
+        case ACTUALWX:
+          if (isActualWX(tempstr, current))
+          {
+             temp << "actualWX " << tempstr;
+             say(temp);
+          }
+          break;
+
+        case RVR:
+          if (isRVR(tempstr, current))
+          {
+             temp << "rvr " << tempstr;
+             say(temp);
+            }
+          break;
+
+        case TEMPERATURE:
+          validTemp(tempstr, current);
+          temp << "temperature " << tempstr;
+          say(temp);
+          validDp(tempstr, current);
+          temp << "dewpoint " << tempstr;
+          say(temp);
+          break;
+
+        case QNH:
+          isQnh(tempstr, current);
+          temp << tempstr;
+          say(temp);
+          is_false = false;
+          break;
+
+        case RUNWAY:
+          isRunway(tempstr, current);
+          temp << "runway " << tempstr;
+          say(temp);
+          break;
+
+        case ALLRWYSTATE:
+          isRwyState(tempstr, current);
+          temp << "runwaystate " << tempstr;
+          say(temp);
+          break;
+
+        case TIME:
+          isTime(tempstr, current);
+          temp << "time " << tempstr;
+          say(temp);
+          break;
+
+        case FORECAST:
+          temp << "trend " << current << longmsg;
+          say(temp);
+          break;
+
+        case RMK:
+          if (!remarks)
+                endflag = true;
+          else
+          {
+              temp << "remarks";
               say(temp);
-            }
-            break;
+          }
+          break;
 
-         case VALUEVARIES:
-            isValueVaries(tempstr, current);
-            if (!nceiling)
-               temp << "windvaries " << tempstr;
-            else
-            {
-               temp << "ceilingvaries " << tempstr;
-               nceiling = false;
-            }
-            say(temp);
-            nceiling = false;
-            break;
+        case SLP:
+          temp << "slp " << getSlp(current);
+          say(temp);
+          break;
 
-         case IS1STPARTOFVIEW:
-            temp_view = atof(current.c_str());
-            break;
+        case SNOWCLOSED:
+          processEvent("snowclosed");
+          break;
 
-         case ISPARTOFMILES:
-            isPartofMiles(tempstr, current);
-              temp_view += atof(tempstr.c_str());
-            temp << "visibility " << temp_view << " unit_miles";
-            say(temp);
-            break;
+        case PEAKWIND:
+          if (!advanceOrEnd()) break;
+          current = *it;
+          if (getPeakWind(tempstr, current))
+          {
+             temp << "peakwind " << tempstr;
+             say(temp);
+          }
+          break;
 
-         case ISVIEW:
-            if (isView(tempstr, current))
-            {
-              temp << "visibility " << tempstr;
-              say(temp);
-            }
-            break;
+        case NOSPECI:
+          processEvent("nospeci");
+          break;
 
-         case WORDSEXT:
-            temp << "say " << current << longmsg;
-            say(temp);
-            break;
+        case WINDSHIFT:
+          if (!advanceOrEnd()) break;
+          current = *it;
+          temp << "windshift " << current;
+          say(temp);
+          break;
 
-         case WORDSNOEXT:
-            temp << "say " << current;
-            say(temp);
-            break;
+        case AUTOTYPE:
+          temp << "say " << current << longmsg;
+          say(temp);
+          break;
 
-         case CLOUDSVALID:
-            if (ispObscurance(tempstr, current))
-            {
-              if (!is_false)     // only once
-              {
-                 processEvent("say clouds");
-                 is_false = true;
-              }
-              temp << "clouds " << tempstr;
-              say(temp);
-            }
-            break;
-
-         case VERTICALVIEW:
-            isVerticalView(tempstr, current);
-            temp << "ceiling " << tempstr;
-            say(temp);
-            break;
-
-         case ACTUALWX:
-            if (isActualWX(tempstr, current))
-            {
-               temp << "actualWX " << tempstr;
-               say(temp);
-            }
-            break;
-
-         case RVR:
-            if (isRVR(tempstr, current))
-            {
-               temp << "rvr " << tempstr;
-               say(temp);
-              }
-            break;
-
-         case TEMPERATURE:
-            validTemp(tempstr, current);
-            temp << "temperature " << tempstr;
-            say(temp);
-            validDp(tempstr, current);
-            temp << "dewpoint " << tempstr;
-            say(temp);
-            break;
-
-         case QNH:
-            isQnh(tempstr, current);
-            temp << tempstr;
-            say(temp);
-            is_false = false;
-            break;
-
-         case RUNWAY:
-            isRunway(tempstr, current);
-            temp << "runway " << tempstr;
-            say(temp);
-            break;
-
-         case ALLRWYSTATE:
-            isRwyState(tempstr, current);
-            temp << "runwaystate " << tempstr;
-            say(temp);
-            break;
-
-         case TIME:
-            isTime(tempstr, current);
-            temp << "time " << tempstr;
-            say(temp);
-            break;
-
-         case FORECAST:
-            temp << "trend " << current << longmsg;
-            say(temp);
-            break;
-
-         case RMK:
-            if (!remarks)
-                  endflag = true;
-            else
-            {
-                temp << "remarks";
-                say(temp);
-            }
-            break;
-
-         case SLP:
-            temp << "slp " << getSlp(current);
-            say(temp);
-            break;
-
-         case SNOWCLOSED:
-            processEvent("snowclosed");
-            break;
-
-         case PEAKWIND:
+        case RMKVISIBILITY:
+          if (!advanceOrEnd()) break;
+          current = *it;
+/*        temp << "rmk_visibility ";
+          // check if a direction is given?
+          if (checkDirection(tempstr, current))
+          {
+            temp << "dir_" << tempstr << " ";
             it++;
             current = *it;
-            if (getPeakWind(tempstr, current))
-            {
-               temp << "peakwind " << tempstr;
-               say(temp);
-            }
-            break;
+          }
 
-         case NOSPECI:
-            processEvent("nospeci");
-            break;
-
-         case WINDSHIFT:
-            it++;
-            current = *it;
-            temp << "windshift " << current;
-            say(temp);
-            break;
-
-         case AUTOTYPE:
-            temp << "say " << current << longmsg;
-            say(temp);
-            break;
-
-         case RMKVISIBILITY:
-            it++;
-            current = *it;
-/*          temp << "rmk_visibility ";
-            // check if a direction is given?
-            if (checkDirection(tempstr, current))
-            {
-              temp << "dir_" << tempstr << " ";
-              it++;
-              current = *it;
-            }
-
-            if (getRmkVisibility(tempstr, current))
-            {
-               temp << tempstr;
-               say(temp);
-            }
+          if (getRmkVisibility(tempstr, current))
+          {
+             temp << tempstr;
+             say(temp);
+          }
 */
-            break;
+          break;
 
-         case FROPA:
-            break;
+        case FROPA:
+          break;
 
-         case LIGHTNING:
-            temp << "ltg " << getLightning(current);
+        case LIGHTNING:
+          temp << "ltg " << getLightning(current);
+          say(temp);
+          break;
+
+        case VIRGA:
+          break;
+
+        case CEILING:
+          nceiling = true;
+          break;
+
+        case DAYTEMPMAX:
+          temp << "max_daytemp " << getTempTime(current);
+          say(temp);
+          break;
+
+        case DAYTEMPMIN:
+          temp << "min_daytemp " << getTempTime(current);
+          say(temp);
+          break;
+
+        case FLIGHTLEVEL:
+          current.erase(0,2);
+          temp << "flightlevel " << current;
+          say(temp);
+          break;
+
+        case WORDSINRMK:
+          temp << "say " << current;
+          say(temp);
+          break;
+
+        case TEMPOOBSCURATION:
+          if (current.length() >= 4)
+          {
+            temp << "tempo_obscuration "
+                 << current.substr(current.length()-4,2)
+                 << " " << current.substr(current.length()-2,2);
             say(temp);
-            break;
+          }
+          break;
 
-         case VIRGA:
-            break;
+        case TEMPINRMK:
+          temp << "rmk_tempdew " << getTempinRmk(current);
+          say(temp);
+          break;
 
-         case CEILING:
-            nceiling = true;
-            break;
+        case MINMAXTEMP:
+          temp << "rmk_minmaxtemp " << getTempinRmk(current);
+          say(temp);
+          break;
 
-         case DAYTEMPMAX:
-            temp << "max_daytemp " << getTempTime(current);
-            say(temp);
-            break;
+        case MINTEMP:
+          temp << "rmk_mintemp " << getTemp(current);
+          say(temp);
+          break;
 
-         case DAYTEMPMIN:
-            temp << "min_daytemp " << getTempTime(current);
-            say(temp);
-            break;
+        case MAXTEMP:
+          temp << "rmk_maxtemp " << getTemp(current);
+          say(temp);
+          break;
 
-         case FLIGHTLEVEL:
-            current.erase(0,2);
-            temp << "flightlevel " << current;
-            say(temp);
-            break;
+        case PRESSURETENDENCY:
+          temp << "rmk_pressure " << getPressureinRmk(current);
+          say(temp);
+          break;
 
-         case WORDSINRMK:
-            temp << "say " << current;
-            say(temp);
-            break;
+        case PRECIPITATION1:
+          temp << "rmk_precipitation 1 " << getPrecipitationinRmk(current);
+          say(temp);
+          break;
 
-         case TEMPOOBSCURATION:
-            temp << "tempo_obscuration " << current.substr(-4,2)
-                 << " " << current.substr(-2,2);
-            say(temp);
-            break;
+        case PRECIPITATION6:
+          temp << "rmk_precipitation 6 " << getPrecipitationinRmk(current);
+          say(temp);
+          break;
 
-         case TEMPINRMK:
-            temp << "rmk_tempdew " << getTempinRmk(current);
-            say(temp);
-            break;
+        case PRECIPITATION24:
+          temp << "rmk_precipitation 24 " << getPrecipitationinRmk(current);
+          say(temp);
+          break;
 
-         case MINMAXTEMP:
-            temp << "rmk_minmaxtemp " << getTempinRmk(current);
-            say(temp);
-            break;
+        case PRECIPINRMK:
+          cout << "PRECIPINRMK\n";
+          temp << "rmk_precip " << getPrecipitation(current);
+          say(temp);
+          break;
 
-         case MINTEMP:
-            temp << "rmk_mintemp " << getTemp(current);
-            say(temp);
-            break;
+        case NOSEVEREWX:
+          temp << "say " << current;
+          say(temp);
+          break;
 
-         case MAXTEMP:
-            temp << "rmk_maxtemp " << getTemp(current);
-            say(temp);
-            break;
+        case CLOUDTYPE:
+          temp << "cloudtypes" << getCloudType(current);
+          say(temp);
+          break;
 
-         case PRESSURETENDENCY:
-            temp << "rmk_pressure " << getPressureinRmk(current);
-            say(temp);
-            break;
+        case QFEINRMK:
+          temp << "qfe " << current.erase(0,3);
+          say(temp);
+          break;
 
-         case PRECIPITATION1:
-            temp << "rmk_precipitation 1 " << getPrecipitationinRmk(current);
-            say(temp);
-            break;
+        case MAINTENANCE:
+          temp << "say maintenance_needed";
+          say(temp);
+          break;
 
-         case PRECIPITATION6:
-            temp << "rmk_precipitation 6 " << getPrecipitationinRmk(current);
-            say(temp);
-            break;
+        case INVALID:
+          break;
 
-         case PRECIPITATION24:
-            temp << "rmk_precipitation 24 " << getPrecipitationinRmk(current);
-            say(temp);
-            break;
+        case END:
+          endflag = true;
+          break;
 
-         case PRECIPINRMK:
-            cout << "PRECIPINRMK\n";
-            temp << "rmk_precip " << getPrecipitation(current);
-            say(temp);
-            break;
-
-         case NOSEVEREWX:
-            temp << "say " << current;
-            say(temp);
-            break;
-
-         case CLOUDTYPE:
-            temp << "cloudtypes" << getCloudType(current);
-            say(temp);
-            break;
-
-         case QFEINRMK:
-            temp << "qfe " << current.erase(0,3);
-            say(temp);
-            break;
-
-         case MAINTENANCE:
-            temp << "say maintenance_needed";
-            say(temp);
-            break;
-
-         case INVALID:
-            break;
-
-         case END:
-            endflag = true;
-            break;
-
-         default:
-            break;
-     }
-  //   cout << current << endl;
-     it++;
-   }
-   return 1;
+        default:
+          break;
+      }
+      //cout << current << endl;
+      it++;
+    }
+  } /* try */
+  catch (const std::exception &e)
+  {
+    cout << "*** ERROR: Exception while parsing METAR token \"" << current
+         << "\": " << e.what() << endl;
+    return 0;
+  }
+  return 1;
 }
 
 
@@ -1493,6 +1532,7 @@ std::string ModuleMetarInfo::getCloudType(std::string token)
 
    while (token.length() > 0)
    {
+     bool matched = false;
      for (a=0; a<15; a++)
      {
         if (token.find(clouds[a],0) != string::npos)
@@ -1501,7 +1541,12 @@ std::string ModuleMetarInfo::getCloudType(std::string token)
            token.erase(0,clouds[a].length());
            ss << token.substr(0,1);
            token.erase(0,1);
+           matched = true;
         }
+     }
+     if (!matched)
+     {
+        break;
      }
    }
 
@@ -1531,6 +1576,8 @@ bool ModuleMetarInfo::getPeakWind(std::string &retval, std::string token)
    if (token.length() < 8 || token.length() > 11) return false;
 
    splitStr(tlist, token, "/");
+   if (tlist.size() < 2) return false;
+
    ss << tlist[0].substr(0,3) << " ";   // direction
    ss << tlist[0].substr(3,2) << " ";   // velocity
 
@@ -1620,6 +1667,8 @@ std::string ModuleMetarInfo::getTempTime(std::string token)
 std::string ModuleMetarInfo::getSlp(std::string token)
 {
     stringstream ss;
+
+    if (token.length() < 6) return "";
 
     (atoi(token.substr(3,1).c_str()) > 6) ? ss << "9" : ss << "10";
     ss << token.substr(3,2) << "." << token.substr(5,1);
@@ -2081,7 +2130,10 @@ void ModuleMetarInfo::isTime(std::string &retval, std::string token)
    std::map <string, string>::iterator tt;
 
    tt = shdesig.find(token.substr(0,2));  // fm -> from,  tl -> until
-   ss << tt->second;
+   if (tt != shdesig.end())
+   {
+     ss << tt->second;
+   }
    ss << " " << token.substr(2,4);
    retval = ss.str();
 } /* isTime */
