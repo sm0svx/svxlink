@@ -15,6 +15,33 @@
 
 
 
+ 1.10.2 -- ?? ??? 2026
+-----------------------
+
+* Security: ModuleMetarInfo: malformed METAR report → uncaught
+  std::out_of_range crash and 100% CPU infinite-loop hang (remote)
+  (GHSA-m4q5-8r78-5gqg)
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: SvxReflector: Use-after-free / iterator invalidation in
+  Reflector::broadcastMsg when a client is disconnected due to a write
+  failure (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+* Security: LocationInfo: Stack buffer overflow via unbounded sprintf in
+  APRS UDP status reporting (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+* ModuleMetarInfo: The libcurl handle was not removed from the multi
+  handle before being cleaned up (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+* ModuleEchoLink: The PTY object was not deleted on module cleanup
+  (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+
+
  1.10.1 -- 26 Jul 2026
 -----------------------
 

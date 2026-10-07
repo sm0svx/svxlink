@@ -498,7 +498,12 @@ void Reflector::nodeList(std::vector<std::string>& nodes) const
 void Reflector::broadcastMsg(const ReflectorMsg& msg,
                              const ReflectorClient::Filter& filter)
 {
-  for (const auto& item : m_client_con_map)
+    // Iterate over a copy of the client map since a failed write will
+    // disconnect the client, which will remove it from the map. Client
+    // objects are not deleted until later so the pointers in the copy
+    // stay valid. A disconnected client will not be in the CONNECTED state.
+  auto client_con_map_copy = m_client_con_map;
+  for (const auto& item : client_con_map_copy)
   {
     ReflectorClient *client = item.second;
     if (filter(client) &&

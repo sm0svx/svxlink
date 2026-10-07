@@ -9,7 +9,7 @@ information, see the documentation for class EchoLink::Qso.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -648,7 +648,12 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     size_t pos = str.find_first_of(" \t\n\r");
     if (pos != string::npos)
     {
-      remote_call = str.substr(0, pos);
+      remote_id[pos] = 0;
+      sanitizeCallsign(remote_id);
+      if (remote_id[0] != 0)
+      {
+        remote_call = remote_id;
+      }
       pos = str.find_first_not_of(" \t\n\r", pos);
       if (pos != string::npos)
       {
@@ -691,7 +696,12 @@ void Qso::handleAudioInput(unsigned char *buf, int len)
       	    " since we are disconnected.\n";
     return;
   }
-  
+
+  if (len <= 0)
+  {
+    return;
+  }
+
   if(buf[0] != 0xc0) /* Not an audio packet */
   {
     handleNonAudioPacket(buf, len);
@@ -707,13 +717,20 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 {
   //printData(buf, len);
 
-  if(memcmp(buf+1, "NDATA", 5) == 0)
+  if (len < 7)
+  {
+    cerr << "Ignoring short non-audio packet received:\n";
+    printData(buf, len);
+    return;
+  }
+
+  if (memcmp(buf+1, "NDATA", 5) == 0)
   {
     if (buf[6] == 0x0d) // Remote station info / conference status
     {
       char *info_buf = reinterpret_cast<char *>(buf);
       char *null = (char *)memchr(info_buf, 0, len);
-      if (null == 0)
+      if (null == 0 || null < info_buf + 7)
       {
       	cerr << "Malformed info packet received:\n";
 	printData(buf, len);
@@ -736,7 +753,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
     {
       char *chat_buf = reinterpret_cast<char *>(buf);
       char *null = (char *)memchr(buf, 0, len);
-      if (null == 0)
+      if (null == 0 || null < chat_buf + 6)
       {
       	cerr << "Malformed chat packet received:\n";
 	printData(buf, len);
