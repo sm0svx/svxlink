@@ -1,11 +1,11 @@
 # Project release version
-PROJECT=26.05.1.99.2
+PROJECT=26.05.1.99.3
 
 # Version for the Qtel application
 QTEL=1.3.0
 
 # Version for the EchoLib library
-LIBECHOLIB=1.3.7.99.1
+LIBECHOLIB=1.3.7.99.2
 
 # Version for the Async library
 LIBASYNC=1.9.1

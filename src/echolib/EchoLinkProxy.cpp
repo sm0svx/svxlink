@@ -543,6 +543,10 @@ void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
       memcpy(recv_buf + recv_buf_cnt, buf, len);
       recv_buf_cnt += len;
       int processed = tcpDataReceived(recv_buf, recv_buf_cnt);
+      if (processed < 0)
+      {
+        processed = 0;
+      }
       if (processed >= recv_buf_cnt)
       {
         recv_buf_cnt = 0;
@@ -556,8 +560,17 @@ void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
     else
     {
       int processed = tcpDataReceived(buf, len);
+      if (processed < 0)
+      {
+        processed = 0;
+      }
       if (processed < len)
       {
+        if (len - processed > recv_buf_size)
+        {
+          reset();
+          return;
+        }
         recv_buf_cnt = len - processed;
         memcpy(recv_buf, buf + processed, recv_buf_cnt);
       }
