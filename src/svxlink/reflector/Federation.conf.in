@@ -1,0 +1,98 @@
+###################################################################
+#
+# Optional SVXReflector federation
+#
+# Load this file by including its directory through GLOBAL/CFG_DIR
+# in svxreflector.conf. Federation is disabled unless ENABLE=1.
+#
+###################################################################
+
+
+[FEDERATION]
+
+# Set to 1 to enable federation.
+ENABLE=0
+
+# Administrative federation domain containing this reflector.
+#DOMAIN=UK-WIDE
+
+# Globally unique, stable identity for this reflector.
+# This identity is carried in federation stream messages and must
+# match REFLECTOR_ID in each remote peer's configuration.
+#REFLECTOR_ID=uk-wide.example.org
+
+# Federation access identity used by this reflector when connecting
+# to its configured peers.
+#
+# CALLSIGN is the established SVXReflector configuration name. The
+# value identifies a federated reflector and is not the callsign of
+# a user originating audio.
+#
+# Before use, this identity must be registered and accepted through
+# the normal callsign and X.509 certificate administration of every
+# receiving reflector. Each receiving reflector must then map it to
+# the appropriate peer in [FEDERATION_TRUST].
+#CALLSIGN=REFLECTOR-FUK
+
+# JSON routing and peer-policy library.
+#LIBRARY=@SVX_SYSCONF_INSTALL_DIR@/federation.json
+
+# Comma-separated peer names. Each name requires a matching
+# [FEDERATION_PEER_<name>] section below.
+#PEERS=NORTH-AMERICA
+
+
+###################################################################
+#
+# Federation peers
+#
+# CONNECT controls only the locally originated outgoing connection.
+# CONNECT=1 makes this reflector connect and reconnect to the peer.
+# CONNECT=0 permits a trusted incoming session without starting a
+# local outgoing connector.
+#
+# For bidirectional traffic, configure the peer on both reflectors
+# and normally set CONNECT=1 at both ends. This creates one
+# independently authenticated session in each direction.
+#
+###################################################################
+
+
+#[FEDERATION_PEER_NORTH-AMERICA]
+
+# Remote reflector hostname or address.
+#HOST=reflector.example.org
+
+# Expected identity announced by the remote reflector.
+# Defaults to HOST when omitted.
+#REFLECTOR_ID=north-america.example.org
+
+# Remote SVXReflector TCP/UDP service port.
+#PORT=35300
+
+# Federation connections currently negotiate SVXReflector client
+# protocol version 2.0.
+#PROTOCOL=2
+
+# Authentication key for the local CALLSIGN access identity on the
+# remote reflector.
+#AUTH_KEY=change-this-key
+
+# Start and maintain an outgoing connection to this peer.
+#CONNECT=1
+
+
+# Each configured peer requires exactly one trusted incoming
+# federation access identity.
+#
+# The identity must first be registered and accepted through the
+# receiving reflector's normal callsign and X.509 certificate
+# administration. [FEDERATION_TRUST] then grants that accepted
+# identity the federation privileges of the named peer.
+
+# Example trusted identities for a UK-WIDE reflector:
+#
+#[FEDERATION_TRUST]
+#REFLECTOR-FNA=NORTH-AMERICA
+#REFLECTOR-FAU=AUSTRALIA
+#REFLECTOR-FYN=YORKSHIRENET

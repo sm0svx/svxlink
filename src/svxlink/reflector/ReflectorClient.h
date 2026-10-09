@@ -447,6 +447,31 @@ class ReflectorClient : public sigc::trackable
      */
     ConState conState(void) const { return m_con_state; }
 
+    bool isFederationPeer(void) const
+    {
+      return m_federation_session;
+    }
+
+    const std::string& federationPeer(void) const
+    {
+      return m_federation_peer;
+    }
+
+    const std::string& federationReflectorId(void) const
+    {
+      return m_federation_reflector_id;
+    }
+
+    uint16_t federationMinor(void) const
+    {
+      return m_federation_minor;
+    }
+
+    uint32_t federationCapabilities(void) const
+    {
+      return m_federation_capabilities;
+    }
+
     /**
      * @brief   Get the protocol version of the client
      * @return  Returns the protocol version of the client
@@ -543,6 +568,11 @@ class ReflectorClient : public sigc::trackable
     ConState                    m_con_state;
     Async::Timer                m_disc_timer;
     std::string                 m_callsign;
+    bool                        m_federation_session {false};
+    std::string                 m_federation_peer;
+    std::string                 m_federation_reflector_id;
+    uint16_t                    m_federation_minor {0};
+    uint32_t                    m_federation_capabilities {0};
     ClientId                    m_client_id;
     ClientSrc                   m_client_src;
     uint16_t                    m_remote_udp_port;
@@ -580,6 +610,9 @@ class ReflectorClient : public sigc::trackable
     void handleMsgStartEncryptionRequest(std::istream& is);
     void handleMsgAuthResponse(std::istream& is);
     void handleMsgClientCsr(std::istream& is);
+    void handleFederationHello(std::istream& is);
+    void handleFederationStreamStart(std::istream& is);
+    void handleFederationStreamStop(std::istream& is);
     void handleSelectTG(std::istream& is);
     void handleTgMonitor(std::istream& is);
     void handleNodeInfo(std::istream& is);

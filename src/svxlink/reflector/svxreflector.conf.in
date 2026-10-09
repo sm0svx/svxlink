@@ -5,7 +5,7 @@
 ###################################################################
 
 [GLOBAL]
-#CFG_DIR=svxreflector.d
+CFG_DIR=svxreflector.d
 TIMESTAMP_FORMAT="%c"
 LISTEN_PORT=5300
 #SQL_TIMEOUT=600
