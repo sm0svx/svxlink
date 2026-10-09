@@ -1,4 +1,4 @@
- 1.10.2 -- ?? ??? 2026
+ 1.10.2 -- 09 Oct 2026
 -----------------------
 
 * Security: ModuleMetarInfo: malformed METAR report → uncaught
