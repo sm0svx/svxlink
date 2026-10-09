@@ -36,6 +36,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fstream>
 #include <iterator>
 #include <regex>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
+#include <cctype>
 #include <dirent.h>   // for listing directories (list certs)
 #include <sys/stat.h> // for checking if a directory exists (list certs)
 
@@ -177,6 +181,87 @@ namespace {
     timer.setExpireOffset(10000);
     timer.start();
   } /* startCertRenewTimer */
+
+
+  std::string hexString(const std::vector<unsigned char>& bytes)
+  {
+    std::ostringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (auto byte : bytes)
+    {
+      ss << std::setw(2) << static_cast<unsigned>(byte);
+    }
+    return ss.str();
+  } /* hexString */
+
+
+  bool percentDecode(const std::string& in, std::string& out)
+  {
+    out.clear();
+    for (std::string::size_type i=0; i<in.size(); ++i)
+    {
+      if (in[i] != '%')
+      {
+        out += in[i];
+        continue;
+      }
+      if ((i + 2 >= in.size()) ||
+          !std::isxdigit(static_cast<unsigned char>(in[i+1])) ||
+          !std::isxdigit(static_cast<unsigned char>(in[i+2])))
+      {
+        return false;
+      }
+      out += static_cast<char>(std::stoi(in.substr(i+1, 2), nullptr, 16));
+      i += 2;
+    }
+    return true;
+  } /* percentDecode */
+
+
+  std::string isoTimeString(time_t t)
+  {
+    struct tm tm;
+    char buf[32];
+    if ((gmtime_r(&t, &tm) == nullptr) ||
+        (strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &tm) == 0))
+    {
+      return std::string();
+    }
+    return buf;
+  } /* isoTimeString */
+
+
+  Json::Value sanEmailsJson(const Async::SslX509ExtSubjectAltName& san)
+  {
+    Json::Value emails(Json::arrayValue);
+    san.forEach(
+        [&](int type, std::string value)
+        {
+          emails.append(value);
+        },
+        GEN_EMAIL);
+    return emails;
+  } /* sanEmailsJson */
+
+
+  Json::Value csrSummaryJson(const Async::SslCertSigningReq& csr)
+  {
+    Json::Value summary(Json::objectValue);
+    summary["id"] = hexString(csr.digest());
+    summary["subject"] = csr.subjectNameString();
+    summary["sanEmails"] = sanEmailsJson(csr.extensions().subjectAltName());
+    return summary;
+  } /* csrSummaryJson */
+
+
+  Json::Value certSummaryJson(const Async::SslX509& cert)
+  {
+    Json::Value summary(Json::objectValue);
+    summary["id"] = cert.serialNumberString();
+    summary["subject"] = cert.subjectNameString();
+    summary["notAfter"] = isoTimeString(cert.notAfter());
+    return summary;
+  } /* certSummaryJson */
 };
 
 
@@ -268,6 +353,8 @@ Reflector::~Reflector(void)
 {
   delete m_http_server;
   m_http_server = 0;
+  delete m_http_admin_server;
+  m_http_admin_server = nullptr;
   delete m_udp_sock;
   m_udp_sock = 0;
   delete m_srv;
@@ -354,6 +441,26 @@ bool Reflector::initialize(Async::Config &cfg)
         sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
   }
 
+  std::string http_admin_srv_port;
+  if (m_cfg->getValue("GLOBAL", "HTTP_ADMIN_SRV_PORT", http_admin_srv_port))
+  {
+    std::string bind_addr_str("127.0.0.1");
+    m_cfg->getValue("GLOBAL", "HTTP_ADMIN_SRV_BIND_ADDR", bind_addr_str);
+    Async::IpAddress bind_addr(bind_addr_str);
+    if (bind_addr.isEmpty())
+    {
+      std::cerr << "*** ERROR: Invalid IP address '" << bind_addr_str
+                << "' specified in configuration variable "
+                   "GLOBAL/HTTP_ADMIN_SRV_BIND_ADDR" << std::endl;
+      return false;
+    }
+    m_http_admin_server = new HttpServer(http_admin_srv_port, bind_addr);
+    m_http_admin_server->clientConnected.connect(
+        sigc::mem_fun(*this, &Reflector::httpAdminClientConnected));
+    m_http_admin_server->clientDisconnected.connect(
+        sigc::mem_fun(*this, &Reflector::httpClientDisconnected));
+  }
+
     // Path for command PTY
   string pty_path;
   m_cfg->getValue("GLOBAL", "COMMAND_PTY", pty_path);
@@ -416,7 +523,12 @@ void Reflector::nodeList(std::vector<std::string>& nodes) const
 void Reflector::broadcastMsg(const ReflectorMsg& msg,
                              const ReflectorClient::Filter& filter)
 {
-  for (const auto& item : m_client_con_map)
+    // Iterate over a copy of the client map since a failed write will
+    // disconnect the client, which will remove it from the map. Client
+    // objects are not deleted until later so the pointers in the copy
+    // stay valid. A disconnected client will not be in the CONNECTED state.
+  auto client_con_map_copy = m_client_con_map;
+  for (const auto& item : client_con_map_copy)
   {
     ReflectorClient *client = item.second;
     if (filter(client) &&
@@ -1556,9 +1668,14 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
   Async::HttpServerConnection::Response res;
   if ((req.method != "GET") && (req.method != "HEAD"))
   {
+    Json::Value body(Json::objectValue);
+    body["msg"] = req.method + ": Method not implemented";
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "";
     res.setCode(501);
-    res.setContent("application/json",
-        "{\"msg\":\"" + req.method + ": Method not implemented\"}");
+    res.setContent("application/json", Json::writeString(builder, body));
+    res.setSendContent(true);
     con->write(res);
     return;
   }
@@ -1568,6 +1685,7 @@ void Reflector::httpRequestReceived(Async::HttpServerConnection *con,
     res.setCode(404);
     res.setContent("application/json",
         "{\"msg\":\"Not found!\"}");
+    res.setSendContent(req.method == "GET");
     con->write(res);
     return;
   }
@@ -1603,6 +1721,297 @@ void Reflector::httpClientDisconnected(Async::HttpServerConnection *con,
   //          << ": " << Async::HttpServerConnection::disconnectReasonStr(reason)
   //          << std::endl;
 } /* Reflector::httpClientDisconnected */
+
+
+void Reflector::httpAdminClientConnected(Async::HttpServerConnection *con)
+{
+  con->requestReceived.connect(
+      sigc::mem_fun(*this, &Reflector::httpAdminRequestReceived));
+} /* Reflector::httpAdminClientConnected */
+
+
+void Reflector::httpAdminRequestReceived(
+    Async::HttpServerConnection *con,
+    Async::HttpServerConnection::Request& req)
+{
+  const bool is_read = (req.method == "GET") || (req.method == "HEAD");
+
+  auto send_json = [&](unsigned code, const Json::Value& body,
+                       const std::string& allow="")
+  {
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "";
+    Async::HttpServerConnection::Response res;
+    res.setCode(code);
+    if (!allow.empty())
+    {
+      res.setHeader("Allow", allow);
+    }
+    res.setContent("application/json", Json::writeString(builder, body));
+    res.setSendContent(req.method != "HEAD");
+    con->write(res);
+  };
+  auto send_error = [&](unsigned code, const std::string& msg,
+                        const std::string& allow="")
+  {
+    Json::Value body(Json::objectValue);
+    body["message"] = msg;
+    send_json(code, body, allow);
+  };
+  auto send_ok = [&](void)
+  {
+    Json::Value body(Json::objectValue);
+    body["ok"] = true;
+    send_json(200, body);
+  };
+  auto method_not_allowed = [&](const std::string& allow)
+  {
+    send_error(405, req.method + ": Method not allowed", allow);
+  };
+
+    // Split the target path, ignoring any query string, into its segments.
+    // Each segment is percent-decoded after splitting so that an encoded
+    // slash, e.g. in a callsign, does not split the segment.
+  std::string path(req.target.substr(0, req.target.find('?')));
+  std::vector<std::string> seg;
+  SvxLink::splitStr(seg, path, "/");
+  seg.erase(std::remove(seg.begin(), seg.end(), ""), seg.end());
+  for (auto& s : seg)
+  {
+    std::string decoded;
+    if (!percentDecode(s, decoded))
+    {
+      send_error(400, "Invalid percent-encoding in request target");
+      return;
+    }
+    s = std::move(decoded);
+  }
+
+  if ((seg.size() >= 3) && (seg[0] == "nodes") && (seg[2] == "block"))
+  {
+    if (seg.size() > 4)
+    {
+      send_error(404, "Not found");
+      return;
+    }
+    const bool is_set = (seg.size() == 4);
+    if (is_set ? (req.method != "PUT")
+               : (!is_read && (req.method != "DELETE")))
+    {
+      method_not_allowed(is_set ? "PUT" : "GET, HEAD, DELETE");
+      return;
+    }
+
+    unsigned blocktime = 0;
+    if (is_set)
+    {
+        // At most nine digits so that the value always fit in an unsigned
+      const std::string& time_str = seg[3];
+      if ((time_str.size() > 9) ||
+          (time_str.find_first_not_of("0123456789") != std::string::npos))
+      {
+        send_error(400, "Invalid block time '" + time_str + "'");
+        return;
+      }
+      blocktime = std::stoul(time_str);
+    }
+
+    const std::string& callsign = seg[1];
+    auto node = ReflectorClient::lookup(callsign);
+    if (node == nullptr)
+    {
+      send_error(404, "Could not find node '" + callsign + "'");
+      return;
+    }
+    if (is_read)
+    {
+      Json::Value status(Json::objectValue);
+      status["blocked"] = node->isBlocked();
+      status["blocktime"] = node->blockTime();
+      status["remaining"] = node->remainingBlockTime();
+      send_json(200, status);
+      return;
+    }
+    std::cout << callsign << ": Set block time to " << blocktime
+              << " seconds via admin API" << std::endl;
+    node->setBlock(blocktime);
+    send_ok();
+    return;
+  }
+
+  if ((seg.size() < 2) || (seg.size() > 4) || (seg[0] != "ca") ||
+      ((seg[1] != "csrs") && (seg[1] != "certs")))
+  {
+    send_error(404, "Not found");
+    return;
+  }
+
+  if (seg[1] == "csrs")
+  {
+    if (seg.size() == 2)
+    {
+      if (!is_read)
+      {
+        method_not_allowed("GET, HEAD");
+        return;
+      }
+      Json::Value list(Json::arrayValue);
+      for (const auto& callsign : listCallsignFiles(m_pending_csrs_dir, ".csr"))
+      {
+        auto csr = loadClientPendingCsr(callsign);
+        if (!csr.isNull())
+        {
+          list.append(csrSummaryJson(csr));
+        }
+      }
+      send_json(200, list);
+      return;
+    }
+
+    const std::string& id = seg[2];
+    if ((seg.size() == 4) && (seg[3] != "sign"))
+    {
+      send_error(404, "Not found");
+      return;
+    }
+    const bool is_sign = (seg.size() == 4);
+    if (is_sign ? (req.method != "POST")
+                : (!is_read && (req.method != "DELETE")))
+    {
+      method_not_allowed(is_sign ? "POST" : "GET, HEAD, DELETE");
+      return;
+    }
+
+    const std::string callsign = pendingCsrCallsign(id);
+    if (callsign.empty())
+    {
+      send_error(404, "No pending CSR with id '" + id + "'");
+      return;
+    }
+
+    if (is_sign)
+    {
+      auto cert = signClientCsr(callsign);
+      if (cert.isNull())
+      {
+        send_error(500, "Failed to sign the CSR for '" + callsign + "'");
+        return;
+      }
+      std::cout << callsign << ": Signed client certificate via admin API\n"
+                << cert.toString()
+                << std::flush;
+      send_ok();
+    }
+    else if (req.method == "DELETE")
+    {
+      const std::string csr_path(m_pending_csrs_dir + "/" + callsign + ".csr");
+      if (unlink(csr_path.c_str()) != 0)
+      {
+        auto errstr = SvxLink::strError(errno);
+        std::cerr << "*** ERROR: Failed to remove pending CSR '" << csr_path
+                  << "': " << errstr << std::endl;
+        send_error(500, "Failed to remove the pending CSR for '" +
+                        callsign + "': " + errstr);
+        return;
+      }
+      std::cout << callsign << ": Removed pending CSR via admin API"
+                << std::endl;
+      send_ok();
+    }
+    else
+    {
+      auto csr = loadClientPendingCsr(callsign);
+      Json::Value detail(csrSummaryJson(csr));
+      detail["decoded"] = csr.toText();
+      send_json(200, detail);
+    }
+    return;
+  }
+
+    // seg[1] == "certs"
+  if (seg.size() == 2)
+  {
+    if (!is_read)
+    {
+      method_not_allowed("GET, HEAD");
+      return;
+    }
+    Json::Value list(Json::arrayValue);
+    for (const auto& callsign : listCallsignFiles(m_certs_dir, ".crt"))
+    {
+      Async::SslX509 cert(nullptr);
+      if (readClientCertFile(callsign, cert))
+      {
+        list.append(certSummaryJson(cert));
+      }
+    }
+    send_json(200, list);
+    return;
+  }
+
+  if (seg.size() != 3)
+  {
+    send_error(404, "Not found");
+    return;
+  }
+  if (!is_read && (req.method != "DELETE"))
+  {
+    method_not_allowed("GET, HEAD, DELETE");
+    return;
+  }
+
+  const std::string& id = seg[2];
+  const std::string callsign = clientCertCallsign(id);
+  if (callsign.empty())
+  {
+    send_error(404, "No certificate with id '" + id + "'");
+    return;
+  }
+
+  if (req.method == "DELETE")
+  {
+      // Remove the certificate and the CSR it was signed from but leave any
+      // pending CSR for the same callsign alone since that is listed and
+      // handled separately.
+    bool success = true;
+    std::string errstr;
+    for (const auto& path : {m_certs_dir + "/" + callsign + ".crt",
+                             m_csrs_dir + "/" + callsign + ".csr"})
+    {
+      if ((unlink(path.c_str()) != 0) && (errno != ENOENT))
+      {
+        success = false;
+        errstr = SvxLink::strError(errno);
+        std::cerr << "*** ERROR: Failed to remove file '" << path << "': "
+                  << errstr << std::endl;
+      }
+    }
+    if (!success)
+    {
+      send_error(500, "Failed to remove the certificate for '" +
+                      callsign + "': " + errstr);
+      return;
+    }
+    std::cout << callsign << ": Removed client certificate via admin API"
+              << std::endl;
+    send_ok();
+    return;
+  }
+
+  Async::SslX509 cert(nullptr);
+  if (!readClientCertFile(callsign, cert))
+  {
+    send_error(500, "Failed to read the certificate for '" + callsign + "'");
+    return;
+  }
+  Json::Value detail(certSummaryJson(cert));
+  detail["sanEmails"] = sanEmailsJson(cert.subjectAltName());
+  detail["serial"] = cert.serialNumberString();
+  detail["notBefore"] = isoTimeString(cert.notBefore());
+  detail["decoded"] = cert.toText();
+  send_json(200, detail);
+} /* Reflector::httpAdminRequestReceived */
 
 
 void Reflector::onRequestAutoQsy(uint32_t from_tg)
@@ -2719,6 +3128,83 @@ std::string Reflector::formatCerts(bool signedCerts, bool pendingCerts)
   ss << "-----------------------------------------------\n";
   return ss.str();
 } /* Reflector::formatCerts */
+
+
+std::vector<std::string> Reflector::listCallsignFiles(
+    const std::string& dir, const std::string& ext) const
+{
+  std::vector<std::string> callsigns;
+  DIR* dirp = opendir(dir.c_str());
+  if (dirp == nullptr)
+  {
+    return callsigns;
+  }
+  struct dirent* entry;
+  while ((entry = readdir(dirp)) != nullptr)
+  {
+    std::string filename(entry->d_name);
+    if ((filename.size() > ext.size()) && (filename[0] != '.') &&
+        (filename.compare(filename.size()-ext.size(), ext.size(), ext) == 0))
+    {
+      callsigns.push_back(filename.substr(0, filename.size()-ext.size()));
+    }
+  }
+  closedir(dirp);
+  std::sort(callsigns.begin(), callsigns.end());
+  return callsigns;
+} /* Reflector::listCallsignFiles */
+
+
+std::string Reflector::pendingCsrCallsign(const std::string& id) const
+{
+  for (const auto& callsign : listCallsignFiles(m_pending_csrs_dir, ".csr"))
+  {
+    Async::SslCertSigningReq csr;
+    if (csr.readPemFile(m_pending_csrs_dir + "/" + callsign + ".csr") &&
+        !csr.isNull() && (hexString(csr.digest()) == id))
+    {
+      return callsign;
+    }
+  }
+  return std::string();
+} /* Reflector::pendingCsrCallsign */
+
+
+std::string Reflector::clientCertCallsign(const std::string& id) const
+{
+  for (const auto& callsign : listCallsignFiles(m_certs_dir, ".crt"))
+  {
+    Async::SslX509 cert(nullptr);
+    if (readClientCertFile(callsign, cert) &&
+        (cert.serialNumberString() == id))
+    {
+      return callsign;
+    }
+  }
+  return std::string();
+} /* Reflector::clientCertCallsign */
+
+
+bool Reflector::readClientCertFile(const std::string& callsign,
+                                   Async::SslX509& cert) const
+{
+  if (!cert.readPemFile(m_certs_dir + "/" + callsign + ".crt"))
+  {
+    return false;
+  }
+
+    // The certs directory also contain the CA certificates and the server
+    // certificate. Those must never be handled as client certificates.
+  const auto md = cert.digest();
+  Async::SslX509 server_cert(nullptr);
+  if ((md == m_ca_cert.digest()) || (md == m_issue_ca_cert.digest()) ||
+      (server_cert.readPemFile(m_crtfile) && (md == server_cert.digest())))
+  {
+    cert.set(nullptr);
+    return false;
+  }
+  return true;
+} /* Reflector::readClientCertFile */
 
 
 /*

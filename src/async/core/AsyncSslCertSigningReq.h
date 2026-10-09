@@ -610,6 +610,40 @@ class SslCertSigningReq
     }
 
     /**
+     * @brief   Get a verbose, human readable dump of the CSR
+     * @return  Returns the CSR in text form
+     *
+     * The output is similar to that of "openssl req -text -noout" except
+     * that the signature dump is left out.
+     */
+    std::string toText(void) const
+    {
+      if (isNull())
+      {
+        return std::string();
+      }
+      std::string str;
+      BIO *mem = BIO_new(BIO_s_mem());
+      assert(mem != nullptr);
+      const X509_ALGOR* sig_alg = nullptr;
+      X509_REQ_get0_signature(m_req, nullptr, &sig_alg);
+      if ((X509_REQ_print_ex(mem, m_req,
+                             XN_FLAG_ONELINE & ~ASN1_STRFLGS_ESC_MSB,
+                             X509_FLAG_NO_SIGDUMP) == 1) &&
+          (X509_signature_print(mem, sig_alg, nullptr) == 1))
+      {
+        char *buf = nullptr;
+        long len = BIO_get_mem_data(mem, &buf);
+        if ((len > 0) && (buf != nullptr))
+        {
+          str = std::string(buf, len);
+        }
+      }
+      BIO_free(mem);
+      return str;
+    }
+
+    /**
      * @brief   Print the info in this CSR to std::cout
      * @param   prefix A string to prefix each printed row with
      */

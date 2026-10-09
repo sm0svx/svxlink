@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2025 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -272,7 +273,9 @@ void AprsUdpClient::sendLocationInfo(Timer *t)
 
   if (sock.initOk())
   {
-    char sdes_packet[256];
+      // Room for the header, two SDES items of max 255 bytes each, the
+      // end marker and padding
+    char sdes_packet[1024];
     int sdes_len = buildSdesPacket(sdes_packet);
 
     //std::cout << "### AprsUdpClient::sendLocationInfo" << std::endl;
@@ -302,7 +305,7 @@ void AprsUdpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 #define addText(block, text) \
   do { \
-    int sl = strlen(text); \
+    int sl = std::min(strlen(text), size_t(255)); \
     *block++ = sl; \
     memcpy(block, text, sl); \
     block += sl; \
@@ -336,10 +339,10 @@ int AprsUdpClient::buildSdesPacket(char *p)
           sprintf(info, " On  @");
           break;
         case 1:
-          sprintf(info, "=%s ", curr_call.c_str());
+          snprintf(info, sizeof(info), "=%s ", curr_call.c_str());
           break;
         default:
-          sprintf(info, "+%s ", curr_call.c_str());
+          snprintf(info, sizeof(info), "+%s ", curr_call.c_str());
           break;
       }
       break;
@@ -371,19 +374,21 @@ int AprsUdpClient::buildSdesPacket(char *p)
   ap = p + 8;
 
   *ap++ = RTCP_SDES_CNAME;
-  sprintf(tmp, "%s-%s/%d", loc_cfg.mycall.c_str(), loc_cfg.prefix.c_str(),
-                           getPasswd(loc_cfg.mycall));
+  snprintf(tmp, sizeof(tmp), "%s-%s/%d",
+           loc_cfg.mycall.c_str(), loc_cfg.prefix.c_str(),
+           getPasswd(loc_cfg.mycall));
   addText(ap, tmp);
 
   *ap++ = RTCP_SDES_LOC;
-  sprintf(tmp, ")EL-%.6s!%s0PHG%c%c%c%c/%06d/%03d%6s%02d%02d\r\n",
-               loc_cfg.mycall.c_str(), pos,
-               getPowerParam(loc_cfg.power),
-               getHeightParam(loc_cfg.height),
-               getGainParam(loc_cfg.gain),
-               getDirectionParam(loc_cfg.beam_dir),
-               loc_cfg.frequency, getToneParam(),
-               info, utc.tm_hour, utc.tm_min);
+  snprintf(tmp, sizeof(tmp),
+           ")EL-%.6s!%s0PHG%c%c%c%c/%06d/%03d%6s%02d%02d\r\n",
+           loc_cfg.mycall.c_str(), pos,
+           getPowerParam(loc_cfg.power),
+           getHeightParam(loc_cfg.height),
+           getGainParam(loc_cfg.gain),
+           getDirectionParam(loc_cfg.beam_dir),
+           loc_cfg.frequency, getToneParam(),
+           info, utc.tm_hour, utc.tm_min);
   addText(ap, tmp);
 
   *ap++ = RTCP_SDES_END;

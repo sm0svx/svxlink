@@ -1,3 +1,47 @@
+ 1.11.0 -- ?? ??? ????
+-----------------------
+
+* SvxReflector: New HTTP admin API, enabled using the HTTP_ADMIN_SRV_PORT
+  configuration variable, for managing the CA. It is used by web based
+  administration interfaces, like SvxMonitor, to list, review, sign and remove
+  pending CSRs and to list, review and remove client certificates. Nodes can
+  also be blocked, just like using the NODE BLOCK PTY command.
+
+* SvxReflector: New "listenOnly" attribute in the node info in the HTTP status
+  server output. It is set to true when the node is blocked from talking.
+
+* SvxReflector: The JSON error message body was never sent for 404 and 501
+  responses from the HTTP status server.
+
+
+
+ 1.10.2 -- 09 Oct 2026
+-----------------------
+
+* Security: ModuleMetarInfo: malformed METAR report → uncaught
+  std::out_of_range crash and 100% CPU infinite-loop hang (remote)
+  (GHSA-m4q5-8r78-5gqg)
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: SvxReflector: Use-after-free / iterator invalidation in
+  Reflector::broadcastMsg when a client is disconnected due to a write
+  failure (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+* Security: LocationInfo: Stack buffer overflow via unbounded sprintf in
+  APRS UDP status reporting (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+* ModuleMetarInfo: The libcurl handle was not removed from the multi
+  handle before being cleaned up (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+* ModuleEchoLink: The PTY object was not deleted on module cleanup
+  (GHSA-6w9x-486p-ggrj)
+  Credit: mark-mcu
+
+
+
  1.10.1 -- 26 Jul 2026
 -----------------------
 

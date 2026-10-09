@@ -427,6 +427,21 @@ class ReflectorClient : public sigc::trackable
     bool isBlocked(void) const { return (m_remaining_blocktime > 0); }
 
     /**
+     * @brief   Get the block time set using setBlock
+     * @return  Returns the block time in seconds, 0 if not blocked
+     */
+    unsigned blockTime(void) const { return m_blocktime; }
+
+    /**
+     * @brief   Get the remaining block time
+     * @return  Returns the number of seconds left until the block expire
+     *
+     * The remaining block time is reset to the block time each time the
+     * client try to send audio.
+     */
+    unsigned remainingBlockTime(void) const { return m_remaining_blocktime; }
+
+    /**
      * @brief   Get the state of the connection
      * @return  Returns the state of the connection
      */
@@ -620,6 +635,7 @@ class ReflectorClient : public sigc::trackable
     void renewClientCertificate(void);
     void setMonitoredTGs(const std::set<uint32_t>& tgs);
     void setTg(uint32_t tg);
+    void updateListenOnly(void);
 
     template <typename T>
     void setRxParam(char id, const std::string& name, const T& value)

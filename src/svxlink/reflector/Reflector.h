@@ -274,6 +274,7 @@ class Reflector : public sigc::trackable
     uint32_t                    m_random_qsy_hi;
     uint32_t                    m_random_qsy_tg;
     HttpServer*                 m_http_server;
+    HttpServer*                 m_http_admin_server = nullptr;
     Async::Pty*                 m_cmd_pty;
     ReflectorFederation*        m_federation;
     Async::SslContext           m_ssl_ctx;
@@ -320,6 +321,9 @@ class Reflector : public sigc::trackable
     void httpClientConnected(Async::HttpServerConnection *con);
     void httpClientDisconnected(Async::HttpServerConnection *con,
         Async::HttpServerConnection::DisconnectReason reason);
+    void httpAdminClientConnected(Async::HttpServerConnection *con);
+    void httpAdminRequestReceived(Async::HttpServerConnection *con,
+                                  Async::HttpServerConnection::Request& req);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
     void ctrlPtyDataReceived(const void *buf, size_t count);
@@ -338,6 +342,12 @@ class Reflector : public sigc::trackable
     std::vector<CertInfo> getAllCerts(void);
     std::vector<CertInfo> getAllPendingCSRs(void);
     std::string formatCerts(bool signedCerts=true, bool pendingCerts=true);
+    std::vector<std::string> listCallsignFiles(const std::string& dir,
+                                               const std::string& ext) const;
+    std::string pendingCsrCallsign(const std::string& id) const;
+    std::string clientCertCallsign(const std::string& id) const;
+    bool readClientCertFile(const std::string& callsign,
+                            Async::SslX509& cert) const;
 };  /* class Reflector */
 
 
