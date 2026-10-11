@@ -119,7 +119,10 @@ PttPty::PttPty(void)
 
 PttPty::~PttPty(void)
 {
-  pty->destroy();
+  if (pty != 0)
+  {
+    pty->destroy();
+  }
 } /* PttPty::~PttPty */
 
 

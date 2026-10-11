@@ -131,7 +131,10 @@ class RefCountingPty : public Async::Pty
           delete pty;
           pty = 0;
         }
-        ptys()[name] = pty;
+        if (pty != 0)
+        {
+          ptys()[name] = pty;
+        }
       }
       else
       {
