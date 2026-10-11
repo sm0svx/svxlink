@@ -91,6 +91,27 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+
+/**
+ * @brief   Close a set of file descriptors, ignoring invalid ones
+ * @param   fds The file descriptors to close
+ *
+ * Helper used to release pipe file descriptors that were already
+ * successfully opened when a later step of Exec::run fails.
+ */
+void closeFds(std::initializer_list<int> fds)
+{
+  for (int fd : fds)
+  {
+    if (fd >= 0)
+    {
+      close(fd);
+    }
+  }
+} /* closeFds */
+
+}; // anonymous namespace
 
 
 /****************************************************************************
@@ -263,6 +284,13 @@ void Exec::setTimeout(int time_s)
 
 bool Exec::run(void)
 {
+  if (args.empty())
+  {
+    cerr << "*** ERROR: Cannot execute subprocess with an empty "
+            "command line\n";
+    return false;
+  }
+
     // Create pipe file descriptor pair for handling stdin to subprocess
   int in_filedes[2];
   int ret = pipe(in_filedes);
@@ -280,6 +308,7 @@ bool Exec::run(void)
   {
     cerr << "*** ERROR: Could not set up stdout pipe for subprocess "
          << args[0] << ": " << strerror(errno) << endl;
+    closeFds({in_filedes[0], in_filedes[1]});
     return false;
   }
 
@@ -290,6 +319,7 @@ bool Exec::run(void)
   {
     cerr << "*** ERROR: Could not set up stderr pipe for subprocess "
          << args[0] << ": " << strerror(errno) << endl;
+    closeFds({in_filedes[0], in_filedes[1], out_filedes[0], out_filedes[1]});
     return false;
   }
 
@@ -298,6 +328,8 @@ bool Exec::run(void)
   {
     cerr << "*** ERROR: The fork system call failed for subprocess "
          << args[0] << ": " << strerror(errno) << endl;
+    closeFds({in_filedes[0], in_filedes[1], out_filedes[0], out_filedes[1],
+              err_filedes[0], err_filedes[1]});
     return false;
   }
 
@@ -420,7 +452,13 @@ bool Exec::kill(int sig)
 
 bool Exec::closeStdin(void)
 {
-  return (close(stdin_fd) == 0);
+  if (stdin_fd == -1)
+  {
+    return true;
+  }
+  bool success = (close(stdin_fd) == 0);
+  stdin_fd = -1;
+  return success;
 } /* Exec::closeStdin */
 
 
