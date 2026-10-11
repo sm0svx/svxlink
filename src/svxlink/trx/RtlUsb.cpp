@@ -177,6 +177,13 @@ class RtlUsb::SampleBuffer : public sigc::trackable
 
     bool addSamples(const unsigned char *samples, uint32_t len)
     {
+      if (block_size == 0)
+      {
+          // Guard against a degenerate block size: with block_size == 0 the
+          // copy count below is always 0 while len stays > 0, so the loop
+          // never terminates and pushes empty blocks forever (OOM).
+        return false;
+      }
       lockMutex();
       while (len > 0)
       {
