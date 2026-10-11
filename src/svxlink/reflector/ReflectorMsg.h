@@ -439,6 +439,11 @@ class MsgAuthResponse : public ReflectorMsgBase<11>
     const uint8_t *digest(void) const { return &m_digest.front(); }
 
     /**
+     * @brief   Get the digest length
+     */
+    size_t digestSize(void) const { return m_digest.size(); }
+
+    /**
      * @brief   Get the callsign
      */
     const std::string& callsign(void) const { return m_callsign; }
