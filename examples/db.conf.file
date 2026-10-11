@@ -1,0 +1,9 @@
+# SVXLink Database Configuration - File Backend
+# This configuration uses the traditional INI file backend
+
+[DATABASE]
+# Backend type: file, sqlite, mysql, postgresql
+TYPE=file
+
+# For file backend, SOURCE is the path to the INI configuration file
+SOURCE=/etc/svxlink/svxlink.conf

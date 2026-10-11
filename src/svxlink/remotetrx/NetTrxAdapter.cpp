@@ -486,6 +486,19 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(rxa1, true);
   prev_src = 0;
 
+  m_sub_rx_siglev = cfg.subscribeValue(net_uplink_name, "RX_SIGLEV", 1.0f, [this](float siglev) {
+    char rx_id = Rx::ID_UNKNOWN;
+    if (!cfg.getValue(net_uplink_name, "RX_ID", rx_id, true))
+    {
+      cerr << "*** ERROR: Invalid RX id specified for RX "
+           << net_uplink_name << endl;
+      return false;
+    }
+
+    rxa1->setSignalLevel(rx_id, siglev);
+    return true;
+  });
+
   txa1->sigTransmit.connect(mem_fun(*rxa1, &RxAdapter::setSquelchState));
   txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.make_slot());
   txa1->sendTone.connect(rxa1->toneDetected.make_slot());

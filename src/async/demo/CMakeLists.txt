@@ -8,7 +8,7 @@ set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo
              AsyncAudioContainer_demo AsyncTcpPrioClient_demo
              AsyncStateMachine_demo AsyncPlugin_demo
              AsyncSslTcpServer_demo AsyncSslTcpClient_demo
-             AsyncSslX509_demo AsyncDigest_demo
+             AsyncSslX509_demo AsyncDigest_demo AsyncConfigBackend_demo
              )
 
 set(QTPROGS AsyncQtApplication_demo)

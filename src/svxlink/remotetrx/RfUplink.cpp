@@ -272,7 +272,7 @@ bool RfUplink::initialize(void)
   uplink_rx->setMuteState(Rx::MUTE_NONE);
   if (mute_rx_on_tx)
   {
-    uplink_tx->transmitterStateChange.connect(
+    uplink_tx_transmitter_state_change_connection = uplink_tx->transmitterStateChange.connect(
         mem_fun(*this, &RfUplink::uplinkTxTransmitterStateChange));
   }
   prev_src = uplink_rx;
@@ -398,7 +398,61 @@ void RfUplink::uplinkTxTransmitterStateChange(bool is_transmitting)
   uplink_rx->setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
 } /* RfUplink::uplinkTxTransmitterStateChange */
 
+void RfUplink::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == name)
+  {
+    if (tag == "MUTE_UPLINK_RX_ON_TX")
+    {
+      bool mute_rx_on_tx = false;
+      mute_rx_on_tx = atoi(value.c_str()) != 0;
 
+      uplink_tx_transmitter_state_change_connection.disconnect();
+
+      if(mute_rx_on_tx)
+      {
+        uplink_tx_transmitter_state_change_connection = uplink_tx->
+          transmitterStateChange.connect(mem_fun(*this, &RfUplink::uplinkTxTransmitterStateChange));
+      }
+    }
+    else if (tag == "LOOP_RX_TO_TX")
+    {
+      bool loop_rx_to_tx = false;
+      loop_rx_to_tx = atoi(value.c_str()) != 0;
+
+      // Not really sure how I'm going to handle this yet...
+      // TODO -- TO BE IMPLEMENTED
+      if(loop_rx_to_tx)
+      {
+
+      }
+      else 
+      {
+      
+      }
+    }
+    else if (tag == "DETECT_CTCSS")
+    {
+      std::vector<CtcssDetPar> ctcss_det_par;
+      if (!cfg.getValue(name, "DETECT_CTCSS", ctcss_det_par, true))
+      {
+        cerr << "*** ERROR: Format error for config variable "
+             << name << "/DETECT_CTCSS. Valid format: "
+             << "tone_fq:min_duration\n";
+        return;
+      }
+
+      // Yeah, well, how to remove the already added tone detectors and
+      // add the new ones?
+      // TODO -- TO BE IMPLEMENTED
+    }
+    else if (tag == "DETECT_1750")
+    {
+      // Yeah, and another one .......
+      // TODO -- TO BE IMPLEMENTED
+    }
+  }
+} /* RfUplink::cfgUpdated */
 
 /*
  * This file has not been truncated

@@ -625,21 +625,22 @@ void RepeaterLogic::squelchOpen(bool is_open)
 	
       if (sql_flap_sup_max_cnt > 0)
       {
-	if (diff_ms < sql_flap_sup_min_time)
-	{
-      	  if (++short_sql_open_cnt >= sql_flap_sup_max_cnt)
-	  {
-	    short_sql_open_cnt = 0;
-	    cout << name() << ": Interference detected: "
-                 << sql_flap_sup_max_cnt << " squelch openings less than "
-		 << sql_flap_sup_min_time << "ms in length detected.\n";
-	    setUp(false, "SQL_FLAP_SUP");
-	  }
-	}
-	else
-	{
-      	  short_sql_open_cnt = 0;
-	}
+        if (diff_ms < sql_flap_sup_min_time) 
+        {
+          if (++short_sql_open_cnt >= sql_flap_sup_max_cnt) 
+          {
+            short_sql_open_cnt = 0;
+            cout << name()
+                 << ": Interference detected: " << sql_flap_sup_max_cnt
+                 << " squelch openings less than " << sql_flap_sup_min_time
+                 << "ms in length detected.\n";
+            setUp(false, "SQL_FLAP_SUP");
+          }
+        } 
+        else 
+        {
+          short_sql_open_cnt = 0;
+        }
       }
       
       if (ident_nag_timer.isEnabled() && (diff_ms > ident_nag_min_time))
@@ -772,6 +773,111 @@ void RepeaterLogic::identNag(Timer *t)
   }
 } /* RepeaterLogic::identNag */
 
+
+void RepeaterLogic::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == name())
+  {
+    if (tag == "IDLE_TIMEOUT")
+    {
+      up_timer.setTimeout(atoi(value.c_str()));
+    }
+    else if (tag == "OPEN_ON_1750")
+    {
+      // TODO -- TO BE IMPLEMENTED
+      // Need to figure out how to change the already implemented tone detectors
+    }
+    else if (tag == "OPEN_ON_CTCSS")
+    {
+      // TODO -- TO BE IMPLEMENTED
+      // Need to save the signal connection object from the 
+      // open_on_ctcss_timer.expired and check if it exists,
+      // and if it doesn't, add it. If it exists and it's not
+      // supposed to exist anymore, disconnect it.
+    }
+    else if(tag == "OPEN_ON_SQL")
+    {
+      open_on_sql_timer.setTimeout(atoi(value.c_str()));
+    }
+    else if(tag == "OPEN_ON_SQL_AFTER_RPT_CLOSE")
+    {
+      open_on_sql_after_rpt_close = atoi(value.c_str());
+    }
+    else if(tag == "OPEN_ON_DTMF")
+    {
+      open_on_dtmf = value.c_str()[0];
+    }
+    else if(tag == "OPEN_ON_SEL5")
+    {
+      if (value.length() > 25 || value.length() < 4)
+      {
+        cerr << "*** WARNING: Sel5 sequence to long/short in logic " << name()
+           << ", valid range from 4 to 25 digits, ignoring\n";
+      }
+      else
+      {
+        open_on_sel5 = value;
+      }
+    }
+    else if(tag == "CLOSE_ON_SEL5")
+    {
+      if (value.length() > 25 || value.length() < 4)
+      {
+        cerr << "*** WARNING: Sel5 sequence to long/short in logic " << name()
+             << ", valid range from 4 to 25 digits, ignoring\n";
+      }
+      else
+      {
+        close_on_sel5 = value;
+      }
+    }
+    else if(tag == "OPEN_SQL_FLANK")
+    {
+      if (value == "OPEN")
+      {
+        open_sql_flank = SQL_FLANK_OPEN;
+      }
+      else if (value == "CLOSE")
+      {
+        open_sql_flank = SQL_FLANK_CLOSE;
+      }
+      else
+      {
+        cerr << "*** ERROR: Valid values for configuration variable "
+             << name() << "/OPEN_SQL_FLANK are OPEN and CLOSE.\n";
+      }
+    }
+    else if(tag == "IDLE_SOUND_INTERVAL")
+    {
+      idle_sound_timer.setTimeout(atoi(value.c_str()));
+    }
+    else if(tag == "NO_REPEAT")
+    {
+      no_repeat = atoi(value.c_str()) != 0;
+      rptValveSetOpen(!no_repeat);
+    }
+    else if(tag == "SQL_FLAP_SUP_MIN_TIME")
+    {
+      sql_flap_sup_min_time = atoi(value.c_str());
+    }
+    else if(tag == "SQL_FLAP_SUP_MAX_COUNT")
+    {
+      sql_flap_sup_max_cnt = atoi(value.c_str());
+    }
+    else if(tag == "IDENT_NAG_TIMEOUT")
+    {
+      ident_nag_timer.setTimeout(1000 * atoi(value.c_str()));
+    }
+    else if(tag == "IDENT_NAG_MIN_TIME")
+    {
+      ident_nag_min_time = atoi(value.c_str());
+    }
+    else if(tag == "DTMF_IGNORE_WHEN_NOT_UP")
+    {
+      m_dtmf_ignore_when_not_up = atoi(value.c_str()) != 0;
+    }
+  }
+} /* RepeaterLogic::cfgUpdated */
 
 
 /*

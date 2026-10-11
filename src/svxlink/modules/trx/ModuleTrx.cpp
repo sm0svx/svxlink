@@ -326,6 +326,8 @@ bool ModuleTrx::initialize(void)
 
   setTrx("NONE", "NONE");
 
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ModuleTrx::cfgUpdated));
+
   return true;
 
 } /* initialize */
@@ -639,6 +641,34 @@ void ModuleTrx::rxSquelchOpen(bool is_open)
     }
   }
 } /* ModuleTrx::rxSquelchOpen */
+
+
+void ModuleTrx::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  // Call base class to handle TIMEOUT and MUTE_LOGIC_LINKING
+  Module::cfgUpdated(section, tag, value);
+
+  if (section == cfgName())
+  {
+    if (tag == "RX_TIMEOUT")
+    {
+      int rx_timeout = -1;
+      if (cfg().getValue(cfgName(), "RX_TIMEOUT", rx_timeout))
+      {
+        rx_timeout_timer.setTimeout(rx_timeout);
+        // If timer is currently enabled and new timeout is <= 0, disable it
+        if (rx_timeout <= 0 && rx_timeout_timer.isEnabled())
+        {
+          rx_timeout_timer.setEnable(false);
+        }
+        // If timer is currently disabled but should be enabled, don't enable it
+        // (it will be enabled when squelch opens)
+      }
+    }
+    // Note: RX, TX, MODULATION, SHIFT would require recreating bands, which is complex
+    // Note: Band-specific settings (ModuleTrx:Band:*) would require re-parsing bands
+  }
+} /* ModuleTrx::cfgUpdated */
 
 
 /*

@@ -391,8 +391,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);
 
-    void cfgUpdated(Async::Config& cfg, const std::string& section,
-                    const std::string& tag);
+    void cfgUpdated(const std::string& section,
+                    const std::string& tag, const std::string& value);
     void setSignalDetectedP(bool is_detected);
     void setOpen(bool is_open);
 

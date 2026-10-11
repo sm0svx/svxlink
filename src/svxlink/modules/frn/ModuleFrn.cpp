@@ -233,6 +233,8 @@ bool ModuleFrn::initialize(void)
     return false;
   }
 
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ModuleFrn::cfgUpdated));
+
   return true;
   
 } /* initialize */
@@ -484,6 +486,21 @@ void ModuleFrn::onQsoError(void)
   cerr << "QSO errored, deactivating module" << endl;
   deactivateMe();
 }
+
+
+void ModuleFrn::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  // Call parent implementation first
+  Module::cfgUpdated(section, tag, value);
+  
+  // Update QsoFrn configuration if this is our section
+  // This will probably require a restart.......
+  if (section == cfgName() && qso != nullptr)
+  {
+    qso->updateConfig(cfg(), cfgName());
+  }
+} /* ModuleFrn::cfgUpdated */
+
 
 /*
  * This file has not been truncated

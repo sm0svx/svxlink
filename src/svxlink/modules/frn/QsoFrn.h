@@ -273,6 +273,13 @@ class QsoFrn
       * @return true if rf tx is disabled
       */
      bool isRfDisabled() const { return is_rf_disabled; }
+     
+     /**
+      * @brief Update configuration values when they change
+      * @param cfg The configuration object
+      * @param cfg_name The module configuration section name
+      */
+     void updateConfig(Async::Config& cfg, const std::string& cfg_name);
 
      /**
       * @brief  QSO is erroring out and cannot recover itself

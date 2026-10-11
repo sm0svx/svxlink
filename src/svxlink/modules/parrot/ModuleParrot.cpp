@@ -214,6 +214,8 @@ bool ModuleParrot::initialize(void)
   fifo->registerSink(valve, true);
   
   AudioSource::setHandler(valve);
+
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ModuleParrot::cfgUpdated));
   
   return true;
   
@@ -433,6 +435,24 @@ void ModuleParrot::execCmdQueue(void)
 } /* ModuleParrot::execCmdQueue */
 
 
+void ModuleParrot::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  // Call base class to handle TIMEOUT and MUTE_LOGIC_LINKING
+  Module::cfgUpdated(section, tag, value);
+
+  if (section == cfgName())
+  {
+    if (tag == "REPEAT_DELAY")
+    {
+      int repeat_delay = -1;
+      if (cfg().getValue(cfgName(), "REPEAT_DELAY", repeat_delay))
+      {
+        repeat_delay_timer.setTimeout(repeat_delay);
+      }
+    }
+    // Note: FIFO_LEN would require recreating the audio chain, so restart is needed
+  }
+} /* ModuleParrot::cfgUpdated */
 
 
 /*

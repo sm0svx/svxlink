@@ -142,7 +142,7 @@ namespace {
 QsoRecorder::QsoRecorder(Logic *logic)
   : recorder(0), hard_chunk_limit(0), soft_chunk_limit(0), max_dirsize(0),
     default_active(false), tmo_timer(0), logic(logic), qso_tmo_timer(0),
-    min_samples(0)
+    min_samples(0), cfg_ptr(0)
 {
   selector = new AudioSelector;
 } /* QsoRecorder::QsoRecorder */
@@ -157,8 +157,11 @@ QsoRecorder::~QsoRecorder(void)
 } /* QsoRecorder::~QsoRecorder */
 
 
-bool QsoRecorder::initialize(const Config &cfg, const string &name)
+bool QsoRecorder::initialize(Config &cfg, const string &name)
 {
+  cfg_ptr = &cfg;
+  cfg_section = name;
+
   if (!cfg.getValue(name, "REC_DIR", rec_dir))
   {
     cerr << "*** ERROR: Config variable " << name << "/REC_DIR not set\n";
@@ -206,6 +209,8 @@ bool QsoRecorder::initialize(const Config &cfg, const string &name)
 
   logic->idleStateChanged.connect(
       hide(mem_fun(*this, &QsoRecorder::checkTimeoutTimers)));
+
+  cfg.valueUpdated.connect(sigc::mem_fun(*this, &QsoRecorder::cfgUpdated));
 
   return true;
 } /* QsoRecorder::initialize */
@@ -487,6 +492,97 @@ void QsoRecorder::onError(void)
   cerr << "*** ERROR: The QsoRecorder in logic " << logic->name() 
        << " failed: " << recorder->errorMsg() << endl;
 } /* QsoRecorder::onError */
+
+
+void QsoRecorder::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == cfg_section)
+  {
+    if (tag == "MAX_TIME" || tag == "SOFT_TIME")
+    {
+      unsigned max_time = 0;
+      cfg_ptr->getValue(cfg_section, "MAX_TIME", max_time);
+      unsigned soft_time = 0;
+      cfg_ptr->getValue(cfg_section, "SOFT_TIME", soft_time);
+      setMaxChunkTime(max_time, soft_time);
+      // Update recorder if it exists
+      if (recorder != 0)
+      {
+        recorder->setMaxRecordingTime(hard_chunk_limit, soft_chunk_limit);
+      }
+    }
+    else if (tag == "MAX_DIRSIZE")
+    {
+      unsigned max_dirsize = 0;
+      cfg_ptr->getValue(cfg_section, "MAX_DIRSIZE", max_dirsize);
+      setMaxRecDirSize(max_dirsize * 1024 * 1024);
+    }
+    else if (tag == "DEFAULT_ACTIVE")
+    {
+      cfg_ptr->getValue(cfg_section, "DEFAULT_ACTIVE", default_active);
+    }
+    else if (tag == "TIMEOUT")
+    {
+      unsigned timeout = 0;
+      cfg_ptr->getValue(cfg_section, "TIMEOUT", timeout);
+      if (timeout > 0)
+      {
+        if (tmo_timer == 0)
+        {
+          tmo_timer = new Timer(1000 * timeout);
+          tmo_timer->setEnable(false);
+          tmo_timer->expired.connect(
+              hide(mem_fun(*this, &QsoRecorder::timerExpired)));
+        }
+        else
+        {
+          tmo_timer->setTimeout(1000 * timeout);
+        }
+      }
+      else if (tmo_timer != 0)
+      {
+        delete tmo_timer;
+        tmo_timer = 0;
+      }
+    }
+    else if (tag == "QSO_TIMEOUT")
+    {
+      unsigned qso_timeout = 0;
+      cfg_ptr->getValue(cfg_section, "QSO_TIMEOUT", qso_timeout);
+      if (qso_timeout > 0)
+      {
+        if (qso_tmo_timer == 0)
+        {
+          qso_tmo_timer = new Timer(1000 * qso_timeout);
+          qso_tmo_timer->setEnable(false);
+          qso_tmo_timer->expired.connect(
+              hide(mem_fun(*this, &QsoRecorder::openNewFile)));
+        }
+        else
+        {
+          qso_tmo_timer->setTimeout(1000 * qso_timeout);
+        }
+      }
+      else if (qso_tmo_timer != 0)
+      {
+        delete qso_tmo_timer;
+        qso_tmo_timer = 0;
+      }
+    }
+    else if (tag == "MIN_TIME")
+    {
+      unsigned min_time = 0;
+      cfg_ptr->getValue(cfg_section, "MIN_TIME", min_time);
+      min_samples = min_time * INTERNAL_SAMPLE_RATE / 1000;
+    }
+    else if (tag == "ENCODER_CMD")
+    {
+      cfg_ptr->getValue(cfg_section, "ENCODER_CMD", encoder_cmd);
+    }
+    // Note: REC_DIR changes could require re-opening files, which is complex
+    // For now, just ignore runtime changes to REC_DIR
+  }
+} /* QsoRecorder::cfgUpdated */
 
 
 
