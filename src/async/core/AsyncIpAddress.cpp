@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <cmath>
+#include <cstdlib>
 #include <algorithm>
 
 
@@ -88,6 +88,40 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+
+
+/****************************************************************************
+ *
+ * Local functions
+ *
+ ****************************************************************************/
+
+  /**
+   * @brief   Parse a netmask prefix length (0-32) into a 32 bit mask
+   * @param   prefix_str The prefix length as a string, e.g. "24"
+   * @param   mask       Set to the resulting network byte order mask
+   * @return  Return \em true if the prefix was valid, otherwise \em false
+   *
+   * The mask is computed using integer shifts only, avoiding the undefined
+   * behaviour that comes from converting an out of range double, produced
+   * by a bad or out of range prefix, to an integer type.
+   */
+  bool parseNetmaskPrefix(const std::string& prefix_str, uint32_t& mask)
+  {
+    char *endptr = 0;
+    long prefix = strtol(prefix_str.c_str(), &endptr, 10);
+    if ((endptr == prefix_str.c_str()) || (*endptr != '\0') ||
+        (prefix < 0) || (prefix > 32))
+    {
+      return false;
+    }
+    mask = (prefix == 0) ? 0 : (0xffffffffU << (32 - prefix));
+    return true;
+  } /* parseNetmaskPrefix */
+
+
+}; /* End of anonymous namespace */
 
 
 /****************************************************************************
@@ -186,7 +220,11 @@ bool IpAddress::isWithinSubet(const std::string& subnet) const
     return false;
   }
   string mask_str(slash, subnet.end());
-  uint32_t mask = 0xffffffff ^ ((uint32_t)pow(2.0, 32-atoi(mask_str.c_str())) - 1);
+  uint32_t mask;
+  if (!parseNetmaskPrefix(mask_str, mask))
+  {
+    return false;
+  }
 
   return (ntohl(m_addr.s_addr) & mask) == (ntohl(ip.s_addr) & mask);
  
