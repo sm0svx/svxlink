@@ -11,7 +11,7 @@ pkg_check_modules(PC_SIGC2 sigc++-2.0)
 #set(SIGC2_DEFINITIONS ${PC_SIGC2_CFLAGS_OTHER})
 
 if(${PC_SIGC2_VERSION} VERSION_GREATER "2.5.0")
-  set(SIGC2_CXX_FLAGS "--std=c++11")
+  set(SIGC2_CXX_FLAGS "--std=c++17")
 endif()
 
 find_path(SIGC2_CONFIG_INCLUDE_DIR sigc++config.h
