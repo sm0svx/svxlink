@@ -200,6 +200,14 @@ class SslCertSigningReq
      */
     SslCertSigningReq& operator=(SslCertSigningReq& other)
     {
+      if (this == &other)
+      {
+        return *this;
+      }
+      if (m_req != nullptr)
+      {
+        X509_REQ_free(m_req);
+      }
 #if OPENSSL_VERSION_MAJOR >= 3
       m_req = X509_REQ_dup(other);
 #else
@@ -356,27 +364,7 @@ class SslCertSigningReq
      */
     std::string subjectNameString(void) const
     {
-      std::string str;
-      const X509_NAME* nm = subjectName();
-      if (nm != nullptr)
-      {
-        BIO *mem = BIO_new(BIO_s_mem());
-        assert(mem != nullptr);
-          // Print all subject names on one line. Don't escape multibyte chars.
-        int len = X509_NAME_print_ex(mem, nm, 0,
-            XN_FLAG_ONELINE & ~ASN1_STRFLGS_ESC_MSB);
-        if (len > 0)
-        {
-          char buf[len+1];
-          len = BIO_read(mem, buf, sizeof(buf));
-          if (len > 0)
-          {
-            str = std::string(buf, len);
-          }
-        }
-        BIO_free(mem);
-      }
-      return str;
+      return x509NameOnelineString(subjectName());
     }
 
     /**
@@ -406,7 +394,7 @@ class SslCertSigningReq
       {
         X509_NAME_ENTRY *e = X509_NAME_get_entry(subj, lastpos);
         ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
-        cn = reinterpret_cast<const char*>(ASN1_STRING_get0_data(d));
+        cn = asn1StringToStdString(d);
       }
       return cn;
     }
@@ -467,9 +455,7 @@ class SslCertSigningReq
     {
       assert(m_req != nullptr);
       auto md = EVP_sha256();
-      //auto md_size = EVP_MD_get_size(md);
-      auto md_size = EVP_MD_size(md);
-      return (X509_REQ_sign(m_req, privkey, md) == md_size);
+      return (X509_REQ_sign(m_req, privkey, md) > 0);
     }
 
     /**
