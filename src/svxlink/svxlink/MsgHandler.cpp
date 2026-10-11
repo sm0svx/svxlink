@@ -293,11 +293,11 @@ void MsgHandler::playFile(const string& path, bool idle_marked)
 {
   QueueItem *item = 0;
   const char *ext = strrchr(path.c_str(), '.');
-  if (strcmp(ext, ".gsm") == 0)
+  if (ext != 0 && strcmp(ext, ".gsm") == 0)
   {
     item = new GsmFileQueueItem(path, idle_marked);
   }
-  else if (strcmp(ext, ".wav") == 0)
+  else if (ext != 0 && strcmp(ext, ".wav") == 0)
   {
     item = new WavFileQueueItem(path, idle_marked);
   }
