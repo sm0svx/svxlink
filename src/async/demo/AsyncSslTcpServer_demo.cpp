@@ -86,8 +86,8 @@ class MySslServer
               {
                   break;
               }
-              X509_NAME_ENTRY *e = X509_NAME_get_entry(subj, lastpos);
-              ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
+              const X509_NAME_ENTRY *e = X509_NAME_get_entry(subj, lastpos);
+              const ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
               const unsigned char* str = (ASN1_STRING_get0_data(d));
               std::cout << "### CN=" << str << std::endl;
           }
