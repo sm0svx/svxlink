@@ -380,17 +380,19 @@ void UdpSocket::sendRest(FdWatch *watch)
     {
       return;
     }
-    else
-    {
-      perror("sendto in UdpSocket::sendRest");
-    }
+    perror("sendto in UdpSocket::sendRest");
   }
   else
   {
     assert(ret == send_buf->len);
-    sendBufferFull(false);
   }
-  
+
+    // The deferred send is now finished, whether the datagram was sent or
+    // dropped due to a hard error. Clear the buffer-full condition that was
+    // signalled in write() in both cases. Previously it was only cleared on
+    // success, so a non-EAGAIN send error left the sender stalled.
+  sendBufferFull(false);
+
   delete send_buf;
   send_buf = 0;
   wr_watch->setEnabled(false);
