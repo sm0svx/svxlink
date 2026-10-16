@@ -1708,6 +1708,12 @@ void Reflector::httpAdminRequestReceived(
     else
     {
       auto csr = loadClientPendingCsr(callsign);
+        // The file may have been removed or changed since it was looked up
+      if (csr.isNull())
+      {
+        send_error(404, "No pending CSR for '" + callsign + "'");
+        return;
+      }
       Json::Value detail(csrSummaryJson(csr));
       detail["decoded"] = csr.toText();
       send_json(200, detail);
