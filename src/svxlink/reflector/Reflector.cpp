@@ -771,6 +771,19 @@ bool Reflector::callsignOk(const std::string& callsign, bool verbose) const
     return false;
   }
 
+    // The callsign is used as a file name in the CA directories, so it must
+    // never be able to act as a path, whatever ACCEPT_CALLSIGN allows
+  if ((callsign.find_first_of(std::string("/\\\0", 3)) != std::string::npos) ||
+      (callsign[0] == '.'))
+  {
+    if (verbose)
+    {
+      std::cerr << "*** WARNING: The callsign '" << callsign
+                << "' contains characters that are not allowed" << std::endl;
+    }
+    return false;
+  }
+
     // Accept check
   std::string accept_cs_re_str;
   if (!m_cfg->getValue("GLOBAL", "ACCEPT_CALLSIGN", accept_cs_re_str) ||
