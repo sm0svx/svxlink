@@ -153,6 +153,8 @@ class SslX509Extensions
     explicit SslX509Extensions(const SslX509Extensions& other)
     {
       //std::cout << "### SslX509Extensions copy constructor" << std::endl;
+        // Always allocate the stack, also when there is nothing to copy
+      m_exts = sk_X509_EXTENSION_new_null();
       for (int i=0; i<X509v3_get_ext_count(other.m_exts); ++i)
       {
         const auto ext = X509v3_get_ext(other.m_exts, i);
@@ -254,7 +256,16 @@ class SslX509Extensions
 #else
       auto ext = X509_EXTENSION_dup(const_cast<X509_EXTENSION*>(other_ext));
 #endif
-      return (sk_X509_EXTENSION_push(m_exts, ext) > 0);
+      if (ext == nullptr)
+      {
+        return false;
+      }
+      if (sk_X509_EXTENSION_push(m_exts, ext) <= 0)
+      {
+        X509_EXTENSION_free(ext);
+        return false;
+      }
+      return true;
     }
 
     /**
@@ -272,7 +283,11 @@ class SslX509Extensions
       {
         return false;
       }
-      sk_X509_EXTENSION_push(m_exts, ex);
+      if (sk_X509_EXTENSION_push(m_exts, ex) <= 0)
+      {
+        X509_EXTENSION_free(ex);
+        return false;
+      }
       return true;
     }
 

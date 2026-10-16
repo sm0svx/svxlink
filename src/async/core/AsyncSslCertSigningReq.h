@@ -216,10 +216,17 @@ class SslCertSigningReq
      */
     SslCertSigningReq& operator=(SslCertSigningReq&& other)
     {
-      m_req = other.m_req;
-      m_file_path = other.m_file_path;
-      other.m_req = nullptr;
-      other.m_file_path.clear();
+      if (this != &other)
+      {
+        if (m_req != nullptr)
+        {
+          X509_REQ_free(m_req);
+        }
+        m_req = other.m_req;
+        m_file_path = other.m_file_path;
+        other.m_req = nullptr;
+        other.m_file_path.clear();
+      }
       return *this;
     }
 
