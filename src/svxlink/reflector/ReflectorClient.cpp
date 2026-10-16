@@ -931,6 +931,15 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
     //std::cout << "### handleNodeInfo: udpSrcPort()=" << msg.udpSrcPort()
     //          << " JSON=" << msg.json() << std::endl;
     //setRemoteUdpSource(msg.udpSrcPort());
+    if ((msg.udpCipherKey().size() != UdpCipher::KEYLEN) ||
+        (msg.ivRand().size() != UdpCipher::IVRANDLEN))
+    {
+      cout << "Client " << m_con->remoteHost() << ":" << m_con->remotePort()
+           << " ERROR: Invalid UDP cipher key or IV length in MsgNodeInfo"
+           << endl;
+      sendError("Illegal MsgNodeInfo protocol message received");
+      return;
+    }
     setUdpCipherIVRand(msg.ivRand());
     setUdpCipherKey(msg.udpCipherKey());
     jsonstr = msg.json();
