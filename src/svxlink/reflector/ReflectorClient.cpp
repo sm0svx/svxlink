@@ -1396,7 +1396,13 @@ bool ReflectorClient::sendClientCert(const Async::SslX509& cert)
     //sendMsg(MsgClientCert());
     return false;
   }
-  return sendMsg(MsgClientCert(m_reflector->clientCertPem(callsign)));
+  const auto pem = m_reflector->clientCertPem(callsign);
+  if (pem.empty())
+  {
+    return false;
+  }
+    // sendMsg returns -1 on failure
+  return sendMsg(MsgClientCert(pem)) >= 0;
 } /* ReflectorClient::sendClientCert */
 
 
@@ -1425,7 +1431,12 @@ void ReflectorClient::renewClientCertificate(void)
     return;
   }
   std::cout << m_callsign << ": Send renewed client certificate" << std::endl;
-  sendClientCert(cert);
+  if (!sendClientCert(cert))
+  {
+    std::cerr << "*** WARNING: Could not send the renewed certificate to '"
+              << m_callsign << "'" << std::endl;
+    return;
+  }
   m_con_state = STATE_EXPECT_DISCONNECT;
 } /* ReflectorClient::renewClientCertificate */
 

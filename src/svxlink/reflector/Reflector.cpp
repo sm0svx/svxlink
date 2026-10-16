@@ -621,14 +621,33 @@ bool Reflector::renewedClientCert(Async::SslX509& cert)
 
   std::string callsign(cert.commonName());
   Async::SslX509 new_cert = loadClientCertificate(callsign);
-  if (!new_cert.isNull() &&
-      ((new_cert.publicKey() != cert.publicKey()) ||
-       (timeToRenewCert(new_cert) <= std::time(NULL))))
+  if (new_cert.isNull())
+  {
+    cert = std::move(new_cert);
+    return false;
+  }
+
+  if (new_cert.publicKey() != cert.publicKey())
+  {
+      // The node presented a certificate for another key than the one on
+      // disk. That happens e.g. when a certificate for a new key has been
+      // issued while the node is still connected with its old certificate.
+      // Prefer whichever certificate was issued last, so that the two are not
+      // renewed over each other again and again.
+    if (new_cert.notBefore() > cert.notBefore())
+    {
+      cert = std::move(new_cert);
+      return true;
+    }
+    return signClientCert(cert, "CRT_RENEWED");
+  }
+
+  if (timeToRenewCert(new_cert) <= std::time(NULL))
   {
     return signClientCert(cert, "CRT_RENEWED");
   }
   cert = std::move(new_cert);
-  return !cert.isNull();
+  return true;
 } /* Reflector::renewedClientCert */
 
 
@@ -647,18 +666,16 @@ bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
     return false;
   }
   auto crtfile = m_certs_dir + "/" + cn + ".crt";
-  if (cert.writePemFile(crtfile) && m_issue_ca_cert.appendPemFile(crtfile))
+  if (!cert.writePemFile(crtfile) || !m_issue_ca_cert.appendPemFile(crtfile))
   {
-    runCAHook({
-        { "CA_OP",      ca_op },
-        { "CA_CRT_PEM", cert.pem() }
-      });
-  }
-  else
-  {
-    std::cerr << "*** WARNING: Failed to write client certificate file '"
+    std::cerr << "*** ERROR: Failed to write client certificate file '"
               << crtfile << "'" << std::endl;
+    return false;
   }
+  runCAHook({
+      { "CA_OP",      ca_op },
+      { "CA_CRT_PEM", cert.pem() }
+    });
   return true;
 } /* Reflector::signClientCert */
 
@@ -694,7 +711,9 @@ Async::SslX509 Reflector::signClientCsr(const std::string& cn)
 
   if (!signClientCert(cert, "CSR_SIGNED"))
   {
+      // Leave the CSR pending so that signing can be retried
     cert.set(nullptr);
+    return cert;
   }
 
   std::string csr_path = m_csrs_dir + "/" + cn + ".csr";
@@ -767,6 +786,19 @@ bool Reflector::callsignOk(const std::string& callsign, bool verbose) const
     if (verbose)
     {
       std::cout << "*** WARNING: The callsign is empty" << std::endl;
+    }
+    return false;
+  }
+
+    // The callsign is used as a file name in the CA directories, so it must
+    // never be able to act as a path, whatever ACCEPT_CALLSIGN allows
+  if ((callsign.find_first_of(std::string("/\\\0", 3)) != std::string::npos) ||
+      (callsign[0] == '.'))
+  {
+    if (verbose)
+    {
+      std::cerr << "*** WARNING: The callsign '" << callsign
+                << "' contains characters that are not allowed" << std::endl;
     }
     return false;
   }
