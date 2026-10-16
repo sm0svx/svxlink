@@ -188,6 +188,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
+  , pending_unkey(false)
   , gsmh(gsm_create())
   , lines_to_read(-1)
   , is_receiving_voice(false)
@@ -444,6 +445,8 @@ int QsoFrn::writeSamples(const float *samples, int count)
     setState(STATE_TX_AUDIO_WAITING);
   }
 
+  pending_unkey = false;
+
   int samples_read = 0;
   if (state == STATE_TX_AUDIO)
   {
@@ -497,6 +500,14 @@ void QsoFrn::flushSamples(void)
       send_buffer_cnt = 0;
     }
     sendRequest(RQ_RX0);
+  }
+  else if ((state == STATE_TX_AUDIO_WAITING) ||
+           (state == STATE_TX_AUDIO_APPROVED))
+  {
+    // The transmission ended before the server approved it. Drop the
+    // buffered audio and unkey as soon as the approval arrives.
+    send_buffer_cnt = 0;
+    pending_unkey = true;
   }
   sourceAllSamplesFlushed();
 }
@@ -552,6 +563,8 @@ void QsoFrn::resetConnectionState(void)
 {
   cur_item_list.clear();
   lines_to_read = -1;
+  send_buffer_cnt = 0;
+  pending_unkey = false;
 
   rx_timeout_timer->setEnable(false);
   if (is_receiving_voice)
@@ -987,6 +1000,11 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
           break;
         bytes_read += CLIENT_INDEX_SIZE;
         setState(STATE_TX_AUDIO);
+        if (pending_unkey)
+        {
+          pending_unkey = false;
+          sendRequest(RQ_RX0);
+        }
         break;
 
       case STATE_TX_AUDIO:
