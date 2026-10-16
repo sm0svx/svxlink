@@ -363,6 +363,12 @@ bool QsoFrn::initOk(void)
 
 void QsoFrn::connect(bool is_backup)
 {
+  reconnect_timer->setEnable(false);
+  if (!tcp_client->isIdle())
+  {
+    tcp_client->disconnect();
+  }
+
   setState(STATE_CONNECTING);
 
   server = is_backup ? opt_server_backup : opt_server;
@@ -378,11 +384,13 @@ void QsoFrn::disconnect(void)
   setState(STATE_DISCONNECTED);
 
   con_timeout_timer->setEnable(false);
+  reconnect_timer->setEnable(false);
+  connect_retry_cnt = 0;
+  reconnect_timeout_ms = RECONNECT_TIMEOUT_TIME;
 
-  if (tcp_client->isConnected())
-  {
-    tcp_client->disconnect();
-  }
+  // Also abort a connection attempt that is still in progress (DNS
+  // lookup or TCP connect), which isConnected() does not report
+  tcp_client->disconnect();
 }
 
 
