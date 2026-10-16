@@ -539,6 +539,13 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);
+      if (!mute_msg->isValid())
+      {
+        std::cerr << "*** WARNING[" << rx->name()
+                  << "]: Ignoring out-of-range mute state in SetMuteState "
+                     "message" << std::endl;
+        break;
+      }
       std::cout << rx->name() << ": SetMuteState("
                 << Rx::muteStateToString(mute_msg->muteState())
                 << ")" << std::endl;
