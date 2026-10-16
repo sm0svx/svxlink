@@ -450,9 +450,11 @@ void NetTx::flushEncodedSamples(void)
 {
   if (is_connected)
   {
+      // Set the flag before sending since a failing send will disconnect,
+      // which will then report the flush as done
+    pending_flush = true;
     MsgFlush *msg = new MsgFlush;
     sendMsg(msg);
-    pending_flush = true;
   }
   else
   {
