@@ -516,13 +516,17 @@ class SslX509
      */
     std::string notBeforeString(void) const
     {
+      if (m_cert == nullptr)
+      {
+        return std::string();
+      }
       const ASN1_TIME* t = X509_get_notBefore(m_cert);
-      int len = ASN1_STRING_length(t);
       if (t == nullptr)
       {
         return std::string();
       }
       const unsigned char* data = ASN1_STRING_get0_data(t);
+      int len = ASN1_STRING_length(t);
       return std::string(data, data+len);
     }
 
@@ -567,13 +571,17 @@ class SslX509
      */
     std::string notAfterString(void) const
     {
+      if (m_cert == nullptr)
+      {
+        return std::string();
+      }
       const ASN1_TIME* t = X509_get_notAfter(m_cert);
-      const unsigned char* data = ASN1_STRING_get0_data(t);
-      int len = ASN1_STRING_length(t);
       if (t == nullptr)
       {
         return std::string();
       }
+      const unsigned char* data = ASN1_STRING_get0_data(t);
+      int len = ASN1_STRING_length(t);
       return std::string(data, data+len);
     }
 
