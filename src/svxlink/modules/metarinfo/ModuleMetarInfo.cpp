@@ -247,10 +247,10 @@ class ModuleMetarInfo::Http : public sigc::trackable
          pending_curl = url_queue.front();
          url_queue.pop();
          curl_multi_add_handle(multi_handle, pending_curl);
-         updateWatchMap();
          update_timer.setEnable(true);
        }
      }
+     updateWatchMap();
      update_timer.reset();
    } /* onActivity */
 
@@ -309,35 +309,48 @@ class ModuleMetarInfo::Http : public sigc::trackable
      FD_ZERO(&fdexcep);
      curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
 
-     for (int fd = 0; fd <= maxfd; fd++) 
+     // Stop watching file descriptors that curl is no longer using. Curl
+     // may already have closed them and a closed file descriptor must not
+     // be handed to select. The watches are only disabled, not removed,
+     // since this function may be called from one of their callbacks.
+     for (WatchMap::iterator it = watch_map.begin();
+          it != watch_map.end(); ++it)
+     {
+       int fd = it->first;
+       if ((fd > maxfd) || !FD_ISSET(fd, &fdread))
+       {
+         it->second.rd.setEnabled(false);
+       }
+       if ((fd > maxfd) || !FD_ISSET(fd, &fdwrite))
+       {
+         it->second.wr.setEnabled(false);
+       }
+     }
+
+     for (int fd = 0; fd <= maxfd; fd++)
      {
        bool read_isset = FD_ISSET(fd, &fdread);
        bool write_isset = FD_ISSET(fd, &fdwrite);
-       WatchSet *ws = 0;
-       WatchMap::iterator it = watch_map.find(fd);
-       if (it != watch_map.end())
+       if (!(read_isset || write_isset))
        {
-         ws = &(it->second);
+         continue;
        }
-       else
+       bool is_new = (watch_map.find(fd) == watch_map.end());
+       WatchSet& ws = watch_map[fd];
+       if (is_new)
        {
-         if (!(read_isset || write_isset))
-         {
-           continue;
-         }
-         ws = &(watch_map[fd]);
+         ws.rd.activity.connect(mem_fun(*this, &Http::onActivity));
+         ws.wr.activity.connect(mem_fun(*this, &Http::onActivity));
        }
-       if (read_isset && !ws->rd.isEnabled())
+       if (read_isset && !ws.rd.isEnabled())
        {
-         ws->rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
-         ws->rd.activity.connect(mem_fun(*this, &Http::onActivity));
-         ws->rd.setEnabled(true);
+         ws.rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
+         ws.rd.setEnabled(true);
        }
-       if (write_isset && !ws->wr.isEnabled())
+       if (write_isset && !ws.wr.isEnabled())
        {
-         ws->wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
-         ws->wr.activity.connect(mem_fun(*this, &Http::onActivity));
-         ws->wr.setEnabled(true);
+         ws.wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
+         ws.wr.setEnabled(true);
        }
      }
    } /* updateWatchMap */
