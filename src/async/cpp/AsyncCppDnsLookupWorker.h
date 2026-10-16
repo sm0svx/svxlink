@@ -46,6 +46,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <sstream>
 #include <future>
+#include <list>
+#include <memory>
+#include <utility>
 #include <netdb.h>
 
 
@@ -183,6 +186,15 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
     Async::FdWatch                  m_notifier_watch;
     std::future<void>               m_result;
     std::unique_ptr<ThreadContext>  m_ctx;
+
+      // Lookups that were aborted while still running. The resolver thread
+      // cannot be interrupted, so each one is kept here, together with the
+      // context the thread uses, until the thread has finished.
+    using AbandonedLookup =
+        std::pair<std::future<void>, std::unique_ptr<ThreadContext>>;
+    static std::list<AbandonedLookup> s_abandoned_lookups;
+
+    static void reapAbandonedLookups(void);
 
     static void workerFunc(ThreadContext& ctx);
     void notificationReceived(FdWatch *w);
