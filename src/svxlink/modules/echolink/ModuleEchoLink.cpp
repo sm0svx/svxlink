@@ -1510,7 +1510,8 @@ QsoImpl *ModuleEchoLink::findFirstTalker(void) const
   vector<QsoImpl*>::const_iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
-    if ((*it)->receivingAudio())
+    if ((*it)->receivingAudio() &&
+        ((*it)->currentState() != Qso::STATE_DISCONNECTED))
     {
       return *it;
     }

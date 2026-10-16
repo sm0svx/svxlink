@@ -831,15 +831,9 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         return;
       }
 
-      if (rx_indicator_timer == 0)
+      if (!startReceiving())
       {
-        receiving_audio = true;
-        isReceiving(true);
-        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
-                                       Timer::TYPE_PERIODIC);
-        rx_indicator_timer->expired.connect(
-            mem_fun(*this, &Qso::checkRxActivity));
-        rx_timeout_left = RX_INDICATOR_SLACK;
+        return;
       }
       
       float samples[160];
@@ -848,6 +842,10 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
       }
       sinkWriteSamples(samples, 160);
+      if (state == STATE_DISCONNECTED)
+      {
+        return;
+      }
       sbuff += 160;
     }
   }
@@ -862,15 +860,9 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
     for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
     {
       gsm_decode(gsmh, voice_packet->data + frameno*33, sbuff);
-      if (rx_indicator_timer == 0)
+      if (!startReceiving())
       {
-        receiving_audio = true;
-        isReceiving(true); 
-        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
-                                       Timer::TYPE_PERIODIC);
-        rx_indicator_timer->expired.connect(
-            mem_fun(*this, &Qso::checkRxActivity));
-        rx_timeout_left = RX_INDICATOR_SLACK;
+        return;
       }
       
       float samples[160];
@@ -879,6 +871,10 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
       }
       sinkWriteSamples(samples, 160);
+      if (state == STATE_DISCONNECTED)
+      {
+        return;
+      }
       sbuff += 160;
     }
   }
@@ -896,6 +892,24 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
   audioReceivedRaw(&raw_packet);
 
 } /* Qso::handleAudioPacket */
+
+
+bool Qso::startReceiving(void)
+{
+  if (rx_indicator_timer == 0)
+  {
+      // Set up the receive state before telling anyone, since the handler
+      // may disconnect this QSO, which tears that state down again
+    receiving_audio = true;
+    rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
+                                   Timer::TYPE_PERIODIC);
+    rx_indicator_timer->expired.connect(
+        mem_fun(*this, &Qso::checkRxActivity));
+    rx_timeout_left = RX_INDICATOR_SLACK;
+    isReceiving(true);
+  }
+  return state != STATE_DISCONNECTED;
+} /* Qso::startReceiving */
 
 
 bool Qso::sendSdesPacket(void)

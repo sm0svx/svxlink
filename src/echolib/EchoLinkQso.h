@@ -513,6 +513,7 @@ class Qso
     inline void handleNonAudioPacket(unsigned char *buf, int len);
     inline void handleAudioPacket(unsigned char *buf, int len);
     void micAudioRead(void *buf, size_t len);
+    bool startReceiving(void);
     bool sendSdesPacket(void);
     void sendKeepAlive(Async::Timer *timer);
     void setState(State state);
