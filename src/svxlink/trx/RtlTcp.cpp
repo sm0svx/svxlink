@@ -128,7 +128,11 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
 
   reconnect_timer.expired.connect(sigc::track_obj(
         [this](Async::Timer*) {
-          con.connect();
+            // A connection attempt may still be in progress
+          if (con.isIdle())
+          {
+            con.connect();
+          }
         }, *this));
 } /* RtlTcp::RtlTcp */
 
