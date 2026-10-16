@@ -387,6 +387,8 @@ class SslX509
       }
       m_cert = PEM_read_bio_X509(mem, nullptr, nullptr, nullptr);
       BIO_free(mem);
+        // A newly read certificate is owned by this object
+      m_managed = true;
       return (m_cert != nullptr);
     }
 
@@ -427,6 +429,8 @@ class SslX509
       }
       m_cert = PEM_read_X509(p_file, nullptr, nullptr, nullptr);
       fclose(p_file);
+        // A newly read certificate is owned by this object
+      m_managed = true;
       return (m_cert != nullptr);
     }
 
