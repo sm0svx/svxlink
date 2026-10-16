@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cctype>
 #include <dirent.h>   // for listing directories (list certs)
 #include <sys/stat.h> // for checking if a directory exists (list certs)
+#include <arpa/inet.h>
+#include <strings.h>
 
 
 /****************************************************************************
@@ -459,6 +461,23 @@ bool Reflector::initialize(Async::Config &cfg)
                 << "' specified in configuration variable "
                    "GLOBAL/HTTP_ADMIN_SRV_BIND_ADDR" << std::endl;
       return false;
+    }
+    if ((ntohl(bind_addr.ip4Addr().s_addr) >> 24) != 127)
+    {
+      std::cerr << "*** WARNING: The HTTP admin API has no authentication and "
+                   "is reachable from other hosts since it is bound to "
+                << bind_addr_str << " (GLOBAL/HTTP_ADMIN_SRV_BIND_ADDR). Make "
+                   "sure that only trusted hosts can reach port "
+                << http_admin_srv_port << "." << std::endl;
+    }
+    std::string allowed_hosts;
+    m_cfg->getValue("GLOBAL", "HTTP_ADMIN_SRV_ALLOWED_HOSTS", allowed_hosts);
+    std::vector<std::string> hosts;
+    SvxLink::splitStr(hosts, allowed_hosts, ",");
+    for (auto host : hosts)
+    {
+      std::transform(host.begin(), host.end(), host.begin(), ::tolower);
+      m_http_admin_allowed_hosts.insert(host);
     }
     m_http_admin_server = new HttpServer(http_admin_srv_port, bind_addr);
     if (!m_http_admin_server->isListening())
@@ -1574,6 +1593,64 @@ void Reflector::httpAdminRequestReceived(
   {
     send_error(405, req.method + ": Method not allowed", allow);
   };
+
+    // Protect the unauthenticated API against being used through a web
+    // browser, e.g. by DNS rebinding or a cross-site request. Requests must
+    // address the server by IP address, as localhost or by a host name given
+    // in HTTP_ADMIN_SRV_ALLOWED_HOSTS, and a request from a web page (which
+    // carries an Origin header) must come from such a host too.
+  auto find_header = [&](const char* name) -> const std::string*
+  {
+    for (const auto& header : req.headers)
+    {
+      if (strcasecmp(header.first.c_str(), name) == 0)
+      {
+        return &header.second;
+      }
+    }
+    return nullptr;
+  };
+  auto host_allowed = [&](std::string host)
+  {
+      // Strip the port, keeping a bracketed IPv6 address intact
+    if (!host.empty() && (host[0] == '['))
+    {
+      host = host.substr(1, host.find(']') - 1);
+    }
+    else if (host.find(':') == host.rfind(':'))
+    {
+      host = host.substr(0, host.find(':'));
+    }
+    std::transform(host.begin(), host.end(), host.begin(), ::tolower);
+    struct in6_addr addr;
+    return (host == "localhost") ||
+           (inet_pton(AF_INET, host.c_str(), &addr) == 1) ||
+           (inet_pton(AF_INET6, host.c_str(), &addr) == 1) ||
+           (m_http_admin_allowed_hosts.count(host) > 0);
+  };
+  const std::string* host_hdr = find_header("Host");
+  if ((host_hdr != nullptr) && !host_allowed(*host_hdr))
+  {
+    send_error(403, "Host '" + *host_hdr + "' is not allowed");
+    return;
+  }
+  const std::string* origin_hdr = find_header("Origin");
+  if (origin_hdr != nullptr)
+  {
+    std::string origin_host;
+    auto scheme_end = origin_hdr->find("://");
+    if (scheme_end != std::string::npos)
+    {
+      origin_host = origin_hdr->substr(scheme_end + 3);
+      origin_host = origin_host.substr(0, origin_host.find('/'));
+    }
+    if (origin_host.empty() || !host_allowed(origin_host))
+    {
+      send_error(403, "Requests from origin '" + *origin_hdr +
+                      "' are not allowed");
+      return;
+    }
+  }
 
     // Split the target path, ignoring any query string, into its segments.
     // Each segment is percent-decoded after splitting so that an encoded
