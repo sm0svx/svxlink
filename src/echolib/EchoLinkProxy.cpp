@@ -453,6 +453,17 @@ int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
     msg_len |= static_cast<uint32_t>(*buf++) << 16;
     msg_len |= static_cast<uint32_t>(*buf++) << 24;
 
+      // No message block is anywhere near this big. Do not keep buffering
+      // received data while waiting for a block of a bogus length.
+    const uint32_t MAX_MSG_LEN = 65536;
+    if (msg_len > MAX_MSG_LEN)
+    {
+      cerr << "*** ERROR: Too large message block (" << msg_len
+           << " bytes) received from EchoLink proxy\n";
+      reset();
+      return len + total_processed;
+    }
+
     if (msg_len > static_cast<uint32_t>(len - MSG_HEADER_SIZE))
     {
       break;
@@ -523,6 +534,12 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
 
 void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
 {
+    // Data that was already on its way when we closed the TCP connection
+  if (tcp_state == TCP_STATE_DISCONNECTING)
+  {
+    return;
+  }
+
   if (tcp_state != TCP_STATE_CONNECTED)
   {
     cerr << "*** ERROR: TCP data received from EchoLink proxy but no TCP "
