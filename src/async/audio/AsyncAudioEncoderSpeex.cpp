@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+#include <vector>
 
 
 /****************************************************************************
@@ -201,6 +202,14 @@ void AudioEncoderSpeex::printCodecParams(void)
 
 void AudioEncoderSpeex::setFramesPerPacket(unsigned fpp)
 {
+    // With zero frames per packet no packet would ever be sent, and a large
+    // number would just delay the audio and use a lot of memory
+  if ((fpp < 1) || (fpp > 10))
+  {
+    cerr << "*** WARNING AudioEncoderSpeex: Ignoring invalid FRAMES_PER_PACKET ("
+         << fpp << "). Valid range is 1 to 10.\n";
+    return;
+  }
   frames_per_packet = fpp;
 } /* AudioEncoderSpeex::setFramesPerPacket */
 
@@ -338,11 +347,11 @@ int AudioEncoderSpeex::writeSamples(const float *samples, int count)
         frame_cnt = 0;
       	speex_bits_insert_terminator(&bits);
         int nbytes = speex_bits_nbytes(&bits);
-        char output_buf[nbytes];
-        nbytes = speex_bits_write(&bits, output_buf, nbytes);
+        std::vector<char> output_buf(nbytes);
+        nbytes = speex_bits_write(&bits, output_buf.data(), nbytes);
         speex_bits_reset(&bits);
         //cout << "writing " << nbytes << " bytes\n";
-        writeEncodedSamples(output_buf, nbytes);
+        writeEncodedSamples(output_buf.data(), nbytes);
       }
     }
   }
