@@ -1078,6 +1078,13 @@ void ReflectorLogic::onSslConnectionReady(TcpConnection*)
   }
 
   auto peer_cert = m_con.sslPeerCertificate();
+  if (peer_cert.isNull())
+  {
+    std::cerr << "*** ERROR[" << name()
+              << "]: The server did not present a certificate" << std::endl;
+    disconnect();
+    return;
+  }
   //std::cout << "###   Common Name=" << peer_cert.commonName() << std::endl;
 
   bool cert_match_host = false;
