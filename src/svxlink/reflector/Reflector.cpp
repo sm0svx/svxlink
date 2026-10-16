@@ -1183,6 +1183,17 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
       return;
     }
 
+      // A client using protocol version 3 or later only sends encrypted UDP
+      // datagrams, so an unencrypted one cannot come from it. Accepting it
+      // would let anyone register a forged UDP source for the client.
+    if (client->protoVer() >= ProtoVer(3, 0))
+    {
+      std::cerr << "*** WARNING[" << client->callsign()
+                << "]: Ignoring unencrypted UDP datagram from " << addr << ":"
+                << port << " for a client using encrypted UDP" << std::endl;
+      return;
+    }
+
     if (addr != client->remoteHost())
     {
       cerr << "*** WARNING[" << client->callsign()
