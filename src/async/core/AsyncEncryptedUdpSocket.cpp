@@ -268,8 +268,13 @@ bool EncryptedUdpSocket::write(const IpAddress& remote_ip, int remote_port,
     //OPENSSL_assert(iv_length == m_cipher_iv.size());
 
       // Set key and IV in the cipher context
-    EVP_EncryptInit_ex(m_cipher_ctx, NULL, NULL, m_cipher_key.data(),
-                       m_cipher_iv.data());
+    if (!EVP_EncryptInit_ex(m_cipher_ctx, NULL, NULL, m_cipher_key.data(),
+                            m_cipher_iv.data()))
+    {
+      std::cout << "### EVP_EncryptInit_ex failed" << std::endl;
+      ERR_print_errors_fp(stderr);
+      return false;
+    }
   }
 
   //auto taglen = EVP_CIPHER_CTX_get_tag_length(m_cipher_ctx);
@@ -277,7 +282,9 @@ bool EncryptedUdpSocket::write(const IpAddress& remote_ip, int remote_port,
 
     // Allow enough space in output buffer for AAD, tag, encrypted plaintext
     // and one additional block
-  uint8_t outbuf[aadlen + m_taglen + cnt + EVP_MAX_BLOCK_LENGTH];
+  std::vector<uint8_t> outbuf_vec(
+      aadlen + m_taglen + cnt + EVP_MAX_BLOCK_LENGTH);
+  uint8_t* outbuf = outbuf_vec.data();
   auto outbufp = outbuf;
   int outlen = 0;
   int totoutlen = aadlen + m_taglen;
@@ -367,8 +374,13 @@ void EncryptedUdpSocket::onDataReceived(const IpAddress& ip, uint16_t port,
     //OPENSSL_assert(iv_length == m_cipher_iv.size());
 
       // Set key and IV in the cipher context
-    EVP_DecryptInit_ex(m_cipher_ctx, NULL, NULL, m_cipher_key.data(),
-                      m_cipher_iv.data());
+    if (!EVP_DecryptInit_ex(m_cipher_ctx, NULL, NULL, m_cipher_key.data(),
+                            m_cipher_iv.data()))
+    {
+      std::cout << "### EVP_DecryptInit_ex failed" << std::endl;
+      ERR_print_errors_fp(stderr);
+      return;
+    }
   }
 
   int outlen = 0;

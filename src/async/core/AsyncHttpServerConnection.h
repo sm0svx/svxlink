@@ -137,6 +137,7 @@ class HttpServerConnection : public TcpConnection
       unsigned ver_major;
       unsigned ver_minor;
       Headers headers;
+      std::string content;
 
       Request(void)
       {
@@ -148,6 +149,7 @@ class HttpServerConnection : public TcpConnection
         method.clear();
         target.clear();
         headers.clear();
+        content.clear();
         ver_major = 0;
         ver_minor = 0;
         headers.clear();
@@ -343,6 +345,7 @@ class HttpServerConnection : public TcpConnection
     std::string             m_row;
     Request                 m_req;
     bool                    m_chunked;
+    size_t                  m_content_left = 0;
 
     HttpServerConnection(const HttpServerConnection&);
     HttpServerConnection& operator=(const HttpServerConnection&);
