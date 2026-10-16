@@ -944,7 +944,7 @@ Async::SslX509 Reflector::csrReceived(Async::SslCertSigningReq& req)
 
 Json::Value& Reflector::clientStatus(const std::string& callsign)
 {
-  if (!m_status.isMember(callsign))
+  if (!m_status["nodes"].isMember(callsign))
   {
     m_status["nodes"][callsign] = Json::Value(Json::objectValue);
   }
