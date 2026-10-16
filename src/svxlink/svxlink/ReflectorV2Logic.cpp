@@ -1056,6 +1056,8 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   m_udp_sock->dataReceived.connect(
       mem_fun(*this, &ReflectorLogic::udpDatagramReceived));
 
+    // Tell the connection that this server works, like the v3 logic does
+  m_con.markAsEstablished();
   m_con_state = STATE_CONNECTED;
 
   std::ostringstream node_info_os;
