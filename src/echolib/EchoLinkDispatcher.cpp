@@ -340,11 +340,16 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, uint16_t port,
 	char strtok_buf[256];
 	char *strtok_buf_ptr = strtok_buf;
 	char *remote_call = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
-	const char *remote_name = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
+	char *remote_name_tok = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
 	if (remote_call != 0)
 	{
 	  sanitizeCallsign(remote_call);
 	}
+	if (remote_name_tok != 0)
+	{
+	  sanitizeName(remote_name_tok);
+	}
+	const char *remote_name = remote_name_tok;
 	if ((remote_call != 0) && (remote_call[0] != 0))
 	{
 	  if (remote_name == 0)

@@ -657,7 +657,9 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
       pos = str.find_first_not_of(" \t\n\r", pos);
       if (pos != string::npos)
       {
-        remote_name = str.substr(pos);
+        char *name = remote_id + pos;
+        sanitizeName(name);
+        remote_name = name;
       }
     }
   }
