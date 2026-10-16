@@ -375,6 +375,15 @@ class QsoFrn
     void login(void);
 
     /**
+     * @brief Reset the list parser and voice receive state
+     *
+     * Called when the connection to the server is closed so that a list
+     * or voice stream cut off by the disconnect does not leak into the
+     * next connection.
+     */
+    void resetConnectionState(void);
+
+    /**
      * @brief Sends pcm raw frames to FRN server
      *
      * @param Pcm buffer with samples

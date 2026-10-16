@@ -391,6 +391,8 @@ void QsoFrn::disconnect(void)
   // Also abort a connection attempt that is still in progress (DNS
   // lookup or TCP connect), which isConnected() does not report
   tcp_client->disconnect();
+
+  resetConnectionState();
 }
 
 
@@ -544,6 +546,20 @@ void QsoFrn::setState(State newState)
       error();
   }
 }
+
+
+void QsoFrn::resetConnectionState(void)
+{
+  cur_item_list.clear();
+  lines_to_read = -1;
+
+  rx_timeout_timer->setEnable(false);
+  if (is_receiving_voice)
+  {
+    is_receiving_voice = false;
+    sinkFlushSamples();
+  }
+} /* QsoFrn::resetConnectionState */
 
 
 void QsoFrn::login(void)
@@ -787,6 +803,7 @@ int QsoFrn::handleListHeader(unsigned char *data, int len)
     bytes_read += CLIENT_INDEX_SIZE;
     setState(STATE_RX_CLIENT_LIST);
     lines_to_read = -1;
+    cur_item_list.clear();
   }
   return bytes_read;
 }
@@ -897,6 +914,7 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
   setState(STATE_DISCONNECTED);
 
   con_timeout_timer->setEnable(false);
+  resetConnectionState();
 
   switch (reason)
   {
