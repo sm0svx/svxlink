@@ -916,6 +916,10 @@ class SslX509
      */
     bool matchHost(const std::string& name) const
     {
+      if (m_cert == nullptr)
+      {
+        return false;
+      }
       int chk = X509_check_host(m_cert, name.c_str(), name.size(), 0, nullptr);
       return chk > 0;
     }
@@ -927,6 +931,10 @@ class SslX509
      */
     bool matchIp(const IpAddress& ip) const
     {
+      if (m_cert == nullptr)
+      {
+        return false;
+      }
       int chk = X509_check_ip_asc(m_cert, ip.toString().c_str(), 0);
       return chk > 0;
     }
