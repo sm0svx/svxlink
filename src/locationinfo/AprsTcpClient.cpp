@@ -167,7 +167,6 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    con->connected.connect(mem_fun(*this, &AprsTcpClient::tcpConnected));
    con->disconnected.connect(mem_fun(*this, &AprsTcpClient::tcpDisconnected));
    con->dataReceived.connect(mem_fun(*this, &AprsTcpClient::tcpDataReceived));
-   con->connect();
 
    beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
@@ -188,6 +187,10 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    reconnect_timer->setEnable(false);
    reconnect_timer->expired.connect(mem_fun(*this,
                  &AprsTcpClient::reconnectAprsServer));
+
+   // Connect last. A connection failure may be reported synchronously
+   // and tcpDisconnected uses the timers created above.
+   con->connect();
 } /* AprsTcpClient::AprsTcpClient */
 
 
