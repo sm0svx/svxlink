@@ -282,6 +282,12 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       {
         m_size_received = false;
         frameReceived(this, m_frame);
+          // The frame handler may have disconnected, in which case the rest
+          // of the received data must not be parsed
+        if (!isConnected())
+        {
+          return orig_count;
+        }
       }
     }
   }
@@ -333,6 +339,12 @@ void FramedTcpConnection::disconnectCleanup(void)
     delete *it;
   }
   m_txq.clear();
+
+    // Drop any partially received frame, so that a new connection made with
+    // this object does not continue on it
+  m_size_received = false;
+  m_frame_size = 0;
+  m_frame.clear();
 } /* FramedTcpConnection::disconnectCleanup */
 
 
