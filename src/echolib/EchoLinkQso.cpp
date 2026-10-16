@@ -161,6 +161,13 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     receiving_audio(false), use_gsm_only(false), p(new Private),
     rx_timeout_left(0)
 {
+    // Set up what the destructor always frees before any early return
+  gsmh = gsm_create();
+#ifdef SPEEX_MAJOR
+  speex_bits_init(&p->enc_bits);
+  speex_bits_init(&p->dec_bits);
+#endif
+
   if (!addr.isUnicast())
   {
     cerr << "IP address is not a unicast address: " << addr << endl;
@@ -168,13 +175,8 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   }
   
   setLocalCallsign(callsign);
-      
-  gsmh = gsm_create();
 
 #ifdef SPEEX_MAJOR
-  speex_bits_init(&p->enc_bits);
-  speex_bits_init(&p->dec_bits);
-    
   p->enc_state = speex_encoder_init(&speex_nb_mode);
   p->dec_state = speex_decoder_init(&speex_nb_mode);
 
@@ -211,8 +213,15 @@ Qso::~Qso(void)
   speex_bits_destroy(&p->enc_bits);
   speex_bits_destroy(&p->dec_bits);
 
-  speex_encoder_destroy(p->enc_state);
-  speex_decoder_destroy(p->dec_state);
+    // The encoder and decoder are not created for an invalid address
+  if (p->enc_state != 0)
+  {
+    speex_encoder_destroy(p->enc_state);
+  }
+  if (p->dec_state != 0)
+  {
+    speex_decoder_destroy(p->dec_state);
+  }
 #endif
   
   if (init_ok)
@@ -324,17 +333,21 @@ bool Qso::disconnect(void)
     return true;
   }
   
+  bool bye_sent = true;
   if (state != STATE_BYE_RECEIVED)
   {
-    if (!sendByePacket())
+      // Saying goodbye is best effort. Even if it could not be sent, the
+      // connection is torn down, so that it does not linger.
+    bye_sent = sendByePacket();
+    if (!bye_sent)
     {
-      return false;
+      cerr << "*** WARNING: Could not send BYE to " << remote_call << endl;
     }
   }
   
   cleanupConnection();
   
-  return true;
+  return bye_sent;
   
 } /* Qso::disconnect */
 
@@ -611,14 +624,12 @@ void Qso::handleCtrlInput(unsigned char *buf, int len)
 
 inline void Qso::handleByePacket(unsigned char *buf, int len)
 {
+    // A BYE received when already disconnected is not answered, since two
+    // disconnected nodes would otherwise keep sending BYEs to each other
   if (state != STATE_DISCONNECTED)
   {
     setState(STATE_BYE_RECEIVED);
     disconnect();
-  }
-  else
-  {
-    sendByePacket();
   }
 } /* Qso::handleByePacket */
 
@@ -820,15 +831,9 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         return;
       }
 
-      if (rx_indicator_timer == 0)
+      if (!startReceiving())
       {
-        receiving_audio = true;
-        isReceiving(true);
-        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
-                                       Timer::TYPE_PERIODIC);
-        rx_indicator_timer->expired.connect(
-            mem_fun(*this, &Qso::checkRxActivity));
-        rx_timeout_left = RX_INDICATOR_SLACK;
+        return;
       }
       
       float samples[160];
@@ -837,6 +842,10 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
       }
       sinkWriteSamples(samples, 160);
+      if (state == STATE_DISCONNECTED)
+      {
+        return;
+      }
       sbuff += 160;
     }
   }
@@ -851,15 +860,9 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
     for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
     {
       gsm_decode(gsmh, voice_packet->data + frameno*33, sbuff);
-      if (rx_indicator_timer == 0)
+      if (!startReceiving())
       {
-        receiving_audio = true;
-        isReceiving(true); 
-        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
-                                       Timer::TYPE_PERIODIC);
-        rx_indicator_timer->expired.connect(
-            mem_fun(*this, &Qso::checkRxActivity));
-        rx_timeout_left = RX_INDICATOR_SLACK;
+        return;
       }
       
       float samples[160];
@@ -868,6 +871,10 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
       }
       sinkWriteSamples(samples, 160);
+      if (state == STATE_DISCONNECTED)
+      {
+        return;
+      }
       sbuff += 160;
     }
   }
@@ -885,6 +892,24 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
   audioReceivedRaw(&raw_packet);
 
 } /* Qso::handleAudioPacket */
+
+
+bool Qso::startReceiving(void)
+{
+  if (rx_indicator_timer == 0)
+  {
+      // Set up the receive state before telling anyone, since the handler
+      // may disconnect this QSO, which tears that state down again
+    receiving_audio = true;
+    rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
+                                   Timer::TYPE_PERIODIC);
+    rx_indicator_timer->expired.connect(
+        mem_fun(*this, &Qso::checkRxActivity));
+    rx_timeout_left = RX_INDICATOR_SLACK;
+    isReceiving(true);
+  }
+  return state != STATE_DISCONNECTED;
+} /* Qso::startReceiving */
 
 
 bool Qso::sendSdesPacket(void)
