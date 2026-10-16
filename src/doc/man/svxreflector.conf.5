@@ -164,6 +164,17 @@ reach it. The default is 127.0.0.1.
 
 Example: HTTP_ADMIN_SRV_BIND_ADDR=172.17.1.42
 .TP
+.B HTTP_ADMIN_SRV_ALLOWED_HOSTS
+To protect the admin server against being reached through a web browser, e.g.
+by DNS rebinding or a cross-site request from a web page, it only accepts
+requests that address it by IP address or as localhost, and requests from a
+web page (with an Origin header) only from such an address. If the admin
+server is to be reached by a host name, list the allowed host names here,
+separated by commas. The default is to allow no host names besides
+localhost.
+
+Example: HTTP_ADMIN_SRV_ALLOWED_HOSTS=reflector.example.com,admin.local
+.TP
 .B COMMAND_PTY
 Configure a path for a pseudo tty device to send runtime commands to the
 svxreflector. The device may be defined as COMMAND_PTY=/dev/shm/reflector_ctrl.
