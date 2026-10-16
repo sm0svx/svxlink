@@ -388,6 +388,7 @@ int main(int argc, const char *argv[])
   }
 
   Reflector ref;
+  int exit_code = 0;
   if (ref.initialize(cfg))
   {
     std::cout << "NOTICE: Initialization done. Starting main application."
@@ -397,6 +398,7 @@ int main(int argc, const char *argv[])
   else
   {
     cerr << ":-(" << endl;
+    exit_code = 1;
   }
 
   if (stdin_watch != 0)
@@ -405,7 +407,7 @@ int main(int argc, const char *argv[])
     tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
   }
 
-  return 0;
+  return exit_code;
 } /* main */
 
 
