@@ -387,6 +387,8 @@ class SslX509
       }
       m_cert = PEM_read_bio_X509(mem, nullptr, nullptr, nullptr);
       BIO_free(mem);
+        // A newly read certificate is owned by this object
+      m_managed = true;
       return (m_cert != nullptr);
     }
 
@@ -400,11 +402,12 @@ class SslX509
       BIO *mem = BIO_new(BIO_s_mem());
       int ret = PEM_write_bio_X509(mem, m_cert);
       assert(ret == 1);
-      char buf[16384];
-      int len = BIO_read(mem, buf, sizeof(buf));
+      char* data = nullptr;
+      long len = BIO_get_mem_data(mem, &data);
       assert(len > 0);
+      std::string pem_str(data, len);
       BIO_free(mem);
-      return std::string(buf, len);
+      return pem_str;
     }
 
     /**
@@ -427,6 +430,8 @@ class SslX509
       }
       m_cert = PEM_read_X509(p_file, nullptr, nullptr, nullptr);
       fclose(p_file);
+        // A newly read certificate is owned by this object
+      m_managed = true;
       return (m_cert != nullptr);
     }
 
@@ -516,13 +521,17 @@ class SslX509
      */
     std::string notBeforeString(void) const
     {
+      if (m_cert == nullptr)
+      {
+        return std::string();
+      }
       const ASN1_TIME* t = X509_get_notBefore(m_cert);
-      int len = ASN1_STRING_length(t);
       if (t == nullptr)
       {
         return std::string();
       }
       const unsigned char* data = ASN1_STRING_get0_data(t);
+      int len = ASN1_STRING_length(t);
       return std::string(data, data+len);
     }
 
@@ -567,13 +576,17 @@ class SslX509
      */
     std::string notAfterString(void) const
     {
+      if (m_cert == nullptr)
+      {
+        return std::string();
+      }
       const ASN1_TIME* t = X509_get_notAfter(m_cert);
-      const unsigned char* data = ASN1_STRING_get0_data(t);
-      int len = ASN1_STRING_length(t);
       if (t == nullptr)
       {
         return std::string();
       }
+      const unsigned char* data = ASN1_STRING_get0_data(t);
+      int len = ASN1_STRING_length(t);
       return std::string(data, data+len);
     }
 
@@ -903,6 +916,10 @@ class SslX509
      */
     bool matchHost(const std::string& name) const
     {
+      if (m_cert == nullptr)
+      {
+        return false;
+      }
       int chk = X509_check_host(m_cert, name.c_str(), name.size(), 0, nullptr);
       return chk > 0;
     }
@@ -914,6 +931,10 @@ class SslX509
      */
     bool matchIp(const IpAddress& ip) const
     {
+      if (m_cert == nullptr)
+      {
+        return false;
+      }
       int chk = X509_check_ip_asc(m_cert, ip.toString().c_str(), 0);
       return chk > 0;
     }
