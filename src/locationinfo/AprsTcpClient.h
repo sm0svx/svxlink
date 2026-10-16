@@ -142,6 +142,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
     int			num_connected;
 
     std::string         recv_buf;
+    bool                recv_discard = false;
     std::string         current_status;
 
     static std::string qsoStatusMsg(int action, const std::string& call,
