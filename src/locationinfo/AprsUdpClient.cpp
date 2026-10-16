@@ -186,6 +186,7 @@ AprsUdpClient::~AprsUdpClient(void)
 {
   updateDirectoryStatus(StationData::STAT_OFFLINE);
   delete beacon_timer;
+  delete dns;
 } /* AprsUdpClient::~AprsUdpClient */
 
 
