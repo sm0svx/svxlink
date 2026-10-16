@@ -965,8 +965,9 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
         break;
 
       case STATE_TX_AUDIO_APPROVED:
-        if (remaining_bytes >= CLIENT_INDEX_SIZE)
-          bytes_read += CLIENT_INDEX_SIZE;
+        if (remaining_bytes < CLIENT_INDEX_SIZE)
+          break;
+        bytes_read += CLIENT_INDEX_SIZE;
         setState(STATE_TX_AUDIO);
         break;
 
