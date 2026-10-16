@@ -161,6 +161,13 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     receiving_audio(false), use_gsm_only(false), p(new Private),
     rx_timeout_left(0)
 {
+    // Set up what the destructor always frees before any early return
+  gsmh = gsm_create();
+#ifdef SPEEX_MAJOR
+  speex_bits_init(&p->enc_bits);
+  speex_bits_init(&p->dec_bits);
+#endif
+
   if (!addr.isUnicast())
   {
     cerr << "IP address is not a unicast address: " << addr << endl;
@@ -168,13 +175,8 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   }
   
   setLocalCallsign(callsign);
-      
-  gsmh = gsm_create();
 
 #ifdef SPEEX_MAJOR
-  speex_bits_init(&p->enc_bits);
-  speex_bits_init(&p->dec_bits);
-    
   p->enc_state = speex_encoder_init(&speex_nb_mode);
   p->dec_state = speex_decoder_init(&speex_nb_mode);
 
@@ -211,8 +213,15 @@ Qso::~Qso(void)
   speex_bits_destroy(&p->enc_bits);
   speex_bits_destroy(&p->dec_bits);
 
-  speex_encoder_destroy(p->enc_state);
-  speex_decoder_destroy(p->dec_state);
+    // The encoder and decoder are not created for an invalid address
+  if (p->enc_state != 0)
+  {
+    speex_encoder_destroy(p->enc_state);
+  }
+  if (p->dec_state != 0)
+  {
+    speex_decoder_destroy(p->dec_state);
+  }
 #endif
   
   if (init_ok)
