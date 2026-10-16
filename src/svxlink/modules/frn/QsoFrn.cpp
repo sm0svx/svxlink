@@ -443,7 +443,10 @@ int QsoFrn::writeSamples(const float *samples, int count)
   }
 
   int samples_read = 0;
-  con_timeout_timer->reset();
+  if (state == STATE_TX_AUDIO)
+  {
+    con_timeout_timer->reset();
+  }
 
   while (samples_read < count)
   {
@@ -1008,8 +1011,11 @@ void QsoFrn::onSendBufferFull(bool is_full)
 void QsoFrn::onConnectTimeout(Timer *timer)
 {
   //cout << __FUNCTION__ << endl;
-  if (state == STATE_IDLE)
+  if ((state != STATE_DISCONNECTED) && (state != STATE_CONNECTING) &&
+      (state != STATE_ERROR))
   {
+    cerr << "*** WARNING: No data received from the FRN server in state "
+         << stateToString(state) << ", reconnecting" << endl;
     disconnect();
     reconnect();
   }
