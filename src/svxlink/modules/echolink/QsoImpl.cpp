@@ -348,6 +348,11 @@ bool QsoImpl::connect(void)
 
 bool QsoImpl::accept(void)
 {
+  if (destroy_timer != 0)
+  {
+    delete destroy_timer;
+    destroy_timer = 0;
+  }
   cout << remoteCallsign() << ": Accepting connection. EchoLink ID is "
        << station.id() << "...\n";
   bool success = m_qso.accept();
@@ -514,8 +519,14 @@ void QsoImpl::onStateChange(Qso::State state)
 	ss << "disconnected " << remoteCallsign();
       	module->processEvent(ss.str());
       }
-      destroy_timer = new Timer(5000);
-      destroy_timer->expired.connect(mem_fun(*this, &QsoImpl::destroyMeNow));
+        // Never overwrite a pending destroy timer: that would leak it and
+        // schedule a second destroyMeNow. connect() and accept() delete a
+        // pending timer if the QSO object is brought back into use.
+      if (destroy_timer == 0)
+      {
+        destroy_timer = new Timer(5000);
+        destroy_timer->expired.connect(mem_fun(*this, &QsoImpl::destroyMeNow));
+      }
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";
