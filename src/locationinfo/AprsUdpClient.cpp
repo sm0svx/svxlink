@@ -102,7 +102,12 @@ char AprsUdpClient::getPowerParam(unsigned int power)
 
 char AprsUdpClient::getHeightParam(unsigned int height)
 {
-  return '0' + lrintf(logf(height / 10.0f) / logf(2.0f));
+    // The PHG height digit is log2(height / 10 ft), limited to 0-9
+  if (height < 10)
+  {
+    return '0';
+  }
+  return '0' + std::min(lrintf(logf(height / 10.0f) / logf(2.0f)), 9L);
 } /* AprsUdpClient::getHeightParam */
 
 
@@ -186,6 +191,7 @@ AprsUdpClient::~AprsUdpClient(void)
 {
   updateDirectoryStatus(StationData::STAT_OFFLINE);
   delete beacon_timer;
+  delete dns;
 } /* AprsUdpClient::~AprsUdpClient */
 
 
