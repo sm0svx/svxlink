@@ -1012,7 +1012,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     station = dir->findCall(callsign);
     if (station == 0)
     {
-      getDirectoryList();
+      refreshDirectoryForIncoming();
       return;
     }
   }
@@ -1023,7 +1023,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	 << " since the IP address registered in the directory server "
 	 << "(" << station->ip() << ") is not the same as the remote IP "
 	 << "address (" << ip << ") of the incoming connection\n";
-    getDirectoryList();
+    refreshDirectoryForIncoming();
     return;
   }
 
@@ -1372,6 +1372,27 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
       	    mem_fun(*this, &ModuleEchoLink::getDirectoryList));
   }
 } /* ModuleEchoLink::getDirectoryList */
+
+
+void ModuleEchoLink::refreshDirectoryForIncoming(void)
+{
+    // An incoming connection from a station that is not (correctly) listed
+    // in our copy of the directory triggers a directory refresh. Any station
+    // can send such a request, so limit how often that happens, and do not
+    // reschedule the regular refresh.
+  const auto now = std::chrono::steady_clock::now();
+  if ((last_incoming_dir_refresh != std::chrono::steady_clock::time_point()) &&
+      (now - last_incoming_dir_refresh < std::chrono::seconds(60)))
+  {
+    return;
+  }
+  last_incoming_dir_refresh = now;
+  if ((dir->status() == StationData::STAT_ONLINE) ||
+      (dir->status() == StationData::STAT_BUSY))
+  {
+    dir->getCalls();
+  }
+} /* ModuleEchoLink::refreshDirectoryForIncoming */
 
 
 void ModuleEchoLink::createOutgoingConnection(const StationData &station)

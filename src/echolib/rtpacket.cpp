@@ -305,3 +305,25 @@ void sanitizeCallsign(char *call)
     }
     *dst = 0;
 }
+
+/*
+ * Make a station name received from a peer safe to show to others: keep
+ * printable ASCII characters only (in particular no line breaks, since the
+ * name ends up in multi-line station info text) and limit the length.
+ */
+void sanitizeName(char *name)
+{
+    const int max_len = 32;
+    char *dst = name;
+    const char *src;
+
+    for (src = name; (*src != 0) && (dst - name < max_len); ++src)
+    {
+	char ch = *src;
+	if ((ch >= 0x20) && (ch <= 0x7e))
+	{
+	    *dst++ = ch;
+	}
+    }
+    *dst = 0;
+}
