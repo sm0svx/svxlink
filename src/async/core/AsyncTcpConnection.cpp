@@ -223,6 +223,9 @@ TcpConnection& TcpConnection::operator=(TcpConnection&& other)
   other.m_ssl_encrypt_buf.clear();
   other.m_ssl_encrypt_buf.reserve(m_ssl_encrypt_buf.capacity());
 
+  m_ssl_plain_buf = std::move(other.m_ssl_plain_buf);
+  other.m_ssl_plain_buf.clear();
+
   return *this;
 } /* TcpConnection::operator= */
 
@@ -436,6 +439,7 @@ void TcpConnection::closeConnection(void)
   m_recv_buf.clear();
   m_write_buf.clear();
   m_ssl_encrypt_buf.clear();
+  m_ssl_plain_buf.clear();
 
   m_wr_watch.setEnabled(false);
   rd_watch.setEnabled(false);
@@ -684,7 +688,24 @@ int TcpConnection::sslRecvHandler(char* src, int count)
       //std::cout << "### SSL_read: n=" << n << std::endl;
       if (n > 0)
       {
-        onDataReceived(buf, n);
+          // Keep any decrypted data that the receiver did not consume (e.g.
+          // a partial frame) and hand it over again together with the next
+          // data, just like for an unencrypted connection
+        m_ssl_plain_buf.insert(m_ssl_plain_buf.end(), buf, buf + n);
+        int processed = onDataReceived(m_ssl_plain_buf.data(),
+                                       m_ssl_plain_buf.size());
+        if ((m_ssl == nullptr) || !isConnected())
+        {
+          return orig_count;
+        }
+        if (processed < 0)
+        {
+          return -1;
+        }
+        m_ssl_plain_buf.erase(m_ssl_plain_buf.begin(),
+            m_ssl_plain_buf.begin() +
+              std::min(static_cast<size_t>(processed),
+                       m_ssl_plain_buf.size()));
       }
     } while (n > 0);
 
