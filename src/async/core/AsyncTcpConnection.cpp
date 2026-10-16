@@ -767,6 +767,18 @@ int TcpConnection::sslEncrypt(void)
                       m_ssl_encrypt_buf.size());
     status = sslGetStatus(n);
 
+    if (n <= 0)
+    {
+        // Nothing was written. Either it failed, or OpenSSL needs to do
+        // something else first (e.g. read), in which case the data stays
+        // queued for the next call instead of retrying in a busy loop.
+      if (status == SSLSTATUS_FAIL)
+      {
+        return -1;
+      }
+      break;
+    }
+
     if (n > 0)
     {
       if (n == static_cast<int>(m_ssl_encrypt_buf.size()))
