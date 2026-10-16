@@ -806,6 +806,14 @@ void ReflectorLogic::onConnected(void)
 void ReflectorLogic::onDisconnected(TcpConnection *con,
                                     TcpConnection::DisconnectReason reason)
 {
+    // The disconnect may be reported more than once for the same connection,
+    // e.g. when a received frame both made us disconnect and was followed by
+    // garbage. Only handle it once, so that the reconnect timer armed for the
+    // first report is not cancelled again by a later one.
+  if (m_con_state == STATE_DISCONNECTED)
+  {
+    return;
+  }
   cout << name() << ": Disconnected from " << m_con.remoteHost() << ":"
        << m_con.remotePort() << ": "
        << TcpConnection::disconnectReasonStr(reason) << endl;
