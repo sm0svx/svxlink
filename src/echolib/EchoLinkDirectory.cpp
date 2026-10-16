@@ -735,6 +735,23 @@ int Directory::ctrlSockDataReceived(void *ptr, unsigned len)
   size_t tot_read_len = 0;
   size_t read_len = 0;
 
+    // The server sends lines of text. Complete lines are consumed below, so
+    // the data starts with an incomplete line. Do not keep buffering a line
+    // that never ends.
+  const size_t MAX_LINE_LEN = 4096;
+  if ((len > MAX_LINE_LEN) && (memchr(buf, '\n', MAX_LINE_LEN) == nullptr))
+  {
+    if (!cmd_queue.empty())
+    {
+      cmd_queue.front().done = true;
+    }
+    com_state = CS_IDLE;
+    ctrl_con->disconnect();
+    error("Too long line received from the EchoLink directory server");
+    sendNextCmd();
+    return len;
+  }
+
   //cerr << "Data received: ";
   //printBuf(reinterpret_cast<unsigned char *>(buf), len);
   
