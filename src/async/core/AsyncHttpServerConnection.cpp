@@ -33,6 +33,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cerrno>
 #include <sstream>
+#include <algorithm>
+#include <cstdlib>
+#include <strings.h>
 #include <cassert>
 
 
@@ -95,6 +98,9 @@ namespace
    * @brief The maximum number of headers accepted for a single request
    */
   constexpr size_t MAX_HTTP_HEADER_COUNT = 100;
+
+    // The maximum accepted size of a request body
+  constexpr size_t MAX_HTTP_CONTENT_LENGTH = 65536;
 
   /**
    * @brief   Accumulate one CRLF terminated line from streaming data
@@ -223,6 +229,9 @@ TcpConnection& HttpServerConnection::operator=(TcpConnection&& other_base)
 
   m_chunked = other.m_chunked;
   other.m_chunked = false;
+
+  m_content_left = other.m_content_left;
+  other.m_content_left = 0;
 
   return *this;
 } /* HttpServerConnection::operator=(TcpConnection&&) */
@@ -377,18 +386,34 @@ int HttpServerConnection::onDataReceived(void *buf, int count)
         m_row.clear();
       }
     }
+    else if (m_state == STATE_EXPECT_PAYLOAD)
+    {
+      const size_t len = std::min(m_content_left, data.size() - data_pos);
+      m_req.content.append(data, data_pos, len);
+      data_pos += len;
+      m_content_left -= len;
+      if (m_content_left == 0)
+      {
+        m_state = STATE_REQ_COMPLETE;
+      }
+    }
     else
     {
-      data_pos = std::string::npos;
-      //m_req.content.append(data);
+      break;
     }
-  }
 
-  if (m_state == STATE_REQ_COMPLETE)
-  {
-    requestReceived(this, m_req);
-    m_req.clear();
-    m_state = STATE_EXPECT_START_LINE;
+      // Deliver each request as soon as it is complete and go on parsing
+      // the rest of the data, which may hold further (pipelined) requests
+    if (m_state == STATE_REQ_COMPLETE)
+    {
+      m_state = STATE_EXPECT_START_LINE;
+      requestReceived(this, m_req);
+      m_req.clear();
+      if (!isConnected())
+      {
+        break;
+      }
+    }
   }
 
   return count;
@@ -448,7 +473,37 @@ void HttpServerConnection::handleHeader(void)
 
   if (m_row.empty())
   {
-    m_state = STATE_REQ_COMPLETE;
+      // End of the header block. Find out if a request body follows.
+    m_content_left = 0;
+    bool have_content_length = false;
+    for (const auto& header : m_req.headers)
+    {
+      if (strcasecmp(header.first.c_str(), "Transfer-Encoding") == 0)
+      {
+        std::cerr << "*** ERROR: HTTP transfer encodings are not supported"
+                  << std::endl;
+        disconnect();
+        return;
+      }
+      if (strcasecmp(header.first.c_str(), "Content-Length") == 0)
+      {
+        const std::string& value = header.second;
+        errno = 0;
+        unsigned long long len = strtoull(value.c_str(), nullptr, 10);
+        if (have_content_length || value.empty() ||
+            (value.find_first_not_of("0123456789") != std::string::npos) ||
+            (errno != 0) || (len > MAX_HTTP_CONTENT_LENGTH))
+        {
+          std::cerr << "*** ERROR: Duplicate, invalid or too large HTTP "
+                       "Content-Length: " << value << std::endl;
+          disconnect();
+          return;
+        }
+        m_content_left = len;
+        have_content_length = true;
+      }
+    }
+    m_state = (m_content_left > 0) ? STATE_EXPECT_PAYLOAD : STATE_REQ_COMPLETE;
     return;
   }
 
@@ -520,6 +575,7 @@ void HttpServerConnection::disconnectCleanup(void)
   m_state = STATE_DISCONNECTED;
   m_row.clear();
   m_req.clear();
+  m_content_left = 0;
 } /* HttpServerConnection::disconnectCleanup */
 
 
