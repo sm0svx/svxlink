@@ -184,8 +184,15 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
 
 AprsUdpClient::~AprsUdpClient(void)
 {
-  updateDirectoryStatus(StationData::STAT_OFFLINE);
+    // Only send the offline status if the server address is already known.
+    // Otherwise a new DNS lookup would be started, which would then just be
+    // aborted below, possibly blocking until the resolver times out.
+  if (!ip_addr.isEmpty())
+  {
+    updateDirectoryStatus(StationData::STAT_OFFLINE);
+  }
   delete beacon_timer;
+  delete dns;
 } /* AprsUdpClient::~AprsUdpClient */
 
 
