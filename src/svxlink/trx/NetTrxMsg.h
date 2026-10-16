@@ -495,11 +495,32 @@ class MsgSetRxModulation : public Msg
   public:
     static const unsigned TYPE = 204;
     MsgSetRxModulation(Modulation::Type mod)
-      : Msg(TYPE, sizeof(MsgSetRxModulation)), m_modulation(mod) {}
-    Modulation::Type modulation(void) const { return m_modulation; }
+      : Msg(TYPE, sizeof(MsgSetRxModulation)),
+        m_modulation(static_cast<int32_t>(mod)) {}
+
+    /**
+     * @brief   Check if the received modulation is a valid one
+     * @return  Returns \em true if the modulation is in range
+     */
+    bool isValid(void) const
+    {
+      return (m_modulation >= Modulation::MOD_FM) &&
+             (m_modulation <= Modulation::MOD_WBCW);
+    }
+
+    /**
+     * @brief   Get the modulation
+     * @return  Returns the modulation. Only meaningful if isValid() is true.
+     */
+    Modulation::Type modulation(void) const
+    {
+      return static_cast<Modulation::Type>(m_modulation);
+    }
 
   private:
-    Modulation::Type  m_modulation;
+      // The value comes from the network, so it is stored as a fixed-width
+      // integer and only converted to a Modulation::Type once validated
+    int32_t m_modulation;
 
 }; /* MsgSetRxModulation */
 
@@ -520,7 +541,7 @@ class MsgSquelch : public Msg
       std::strncpy(m_sql_activity_info, sql_activity_info.data(),
           MAX_ACTIVITY_INFO_LEN);
     }
-    bool isOpen(void) const { return m_is_open; }
+    bool isOpen(void) const { return m_is_open != 0; }
     float signalStrength(void) const { return m_signal_strength; }
     char sqlRxId(void) const { return m_sql_rx_id; }
     std::string sqlActivityInfo(void) const
@@ -535,7 +556,9 @@ class MsgSquelch : public Msg
     }
 
   private:
-    bool  m_is_open;
+      // Booleans received from the network are stored as uint8_t since any
+      // value but 0 and 1 in a bool is undefined behaviour
+    uint8_t m_is_open;
     float m_signal_strength;
     char  m_sql_rx_id;
     char  m_sql_activity_info[MAX_ACTIVITY_INFO_LEN+1];
@@ -617,11 +640,32 @@ class MsgSetTxCtrlMode : public Msg
   public:
     static const unsigned TYPE = 300;
     MsgSetTxCtrlMode(Tx::TxCtrlMode mode)
-      : Msg(TYPE, sizeof(MsgSetTxCtrlMode)), m_mode(mode) {}
-    Tx::TxCtrlMode mode(void) const { return m_mode; }
+      : Msg(TYPE, sizeof(MsgSetTxCtrlMode)),
+        m_mode(static_cast<int32_t>(mode)) {}
+
+    /**
+     * @brief   Check if the received mode is a valid Tx::TxCtrlMode
+     * @return  Returns \em true if the mode is in range
+     */
+    bool isValid(void) const
+    {
+      return (m_mode == Tx::TX_OFF) || (m_mode == Tx::TX_ON) ||
+             (m_mode == Tx::TX_AUTO);
+    }
+
+    /**
+     * @brief   Get the transmitter control mode
+     * @return  Returns the mode. Only meaningful if isValid() is true.
+     */
+    Tx::TxCtrlMode mode(void) const
+    {
+      return static_cast<Tx::TxCtrlMode>(m_mode);
+    }
   
   private:
-    Tx::TxCtrlMode m_mode;
+      // The value comes from the network, so it is stored as a fixed-width
+      // integer and only converted to a Tx::TxCtrlMode once validated
+    int32_t m_mode;
     
 }; /* MsgSetTxCtrlMode */
 
@@ -632,10 +676,10 @@ class MsgEnableCtcss : public Msg
     static const unsigned TYPE = 301;
     MsgEnableCtcss(bool enable)
       : Msg(TYPE, sizeof(MsgEnableCtcss)), m_enable(enable) {}
-    bool enable(void) const { return m_enable; }
+    bool enable(void) const { return m_enable != 0; }
   
   private:
-    bool m_enable;
+    uint8_t m_enable;   // A bool, received from the network
         
 }; /* MsgEnableCtcss */
 
@@ -707,11 +751,32 @@ class MsgSetTxModulation : public Msg
   public:
     static const unsigned TYPE = 306;
     MsgSetTxModulation(Modulation::Type mod)
-      : Msg(TYPE, sizeof(MsgSetTxModulation)), m_modulation(mod) {}
-    Modulation::Type modulation(void) const { return m_modulation; }
+      : Msg(TYPE, sizeof(MsgSetTxModulation)),
+        m_modulation(static_cast<int32_t>(mod)) {}
+
+    /**
+     * @brief   Check if the received modulation is a valid one
+     * @return  Returns \em true if the modulation is in range
+     */
+    bool isValid(void) const
+    {
+      return (m_modulation >= Modulation::MOD_FM) &&
+             (m_modulation <= Modulation::MOD_WBCW);
+    }
+
+    /**
+     * @brief   Get the modulation
+     * @return  Returns the modulation. Only meaningful if isValid() is true.
+     */
+    Modulation::Type modulation(void) const
+    {
+      return static_cast<Modulation::Type>(m_modulation);
+    }
 
   private:
-    Modulation::Type  m_modulation;
+      // The value comes from the network, so it is stored as a fixed-width
+      // integer and only converted to a Modulation::Type once validated
+    int32_t m_modulation;
 
 }; /* MsgSetTxModulation */
 
@@ -733,10 +798,10 @@ class MsgTransmitterStateChange : public Msg
     MsgTransmitterStateChange(bool is_transmitting)
       : Msg(TYPE, sizeof(MsgTransmitterStateChange)),
       	m_is_transmitting(is_transmitting) {}
-    bool isTransmitting(void) const { return m_is_transmitting; }
+    bool isTransmitting(void) const { return m_is_transmitting != 0; }
   
   private:
-    bool m_is_transmitting;
+    uint8_t m_is_transmitting;   // A bool, received from the network
     
 }; /* MsgTransmitterStateChange */
 
