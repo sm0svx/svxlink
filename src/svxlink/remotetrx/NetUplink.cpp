@@ -328,12 +328,17 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
     case STATE_DISC:
       handleIncomingConnection(incoming_con);
       break;
+    case STATE_DISC_CLEANUP:
+        // The previous client has disconnected but the deferred cleanup
+        // has not run yet. Run it now instead of rejecting the new client,
+        // which would otherwise have to wait for its next reconnect attempt.
+      disconnectCleanup();
+      handleIncomingConnection(incoming_con);
+      break;
     case STATE_CON_SETUP:
     case STATE_READY:
       std::cout << name << ": Only one client allowed. Disconnecting..."
                 << std::endl;
-      // Fall through
-    case STATE_DISC_CLEANUP:
       incoming_con->disconnect();
       break;
   }
@@ -342,6 +347,13 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
 
 void NetUplink::disconnectCleanup(void)
 {
+    // The cleanup is deferred after a disconnect, but may also have been run
+    // already when a new client connected in the meantime
+  if (state != STATE_DISC_CLEANUP)
+  {
+    return;
+  }
+
   con = 0;
   recv_exp = 0;
   setState(STATE_DISC);
