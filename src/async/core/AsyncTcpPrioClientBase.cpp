@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sys/time.h>
+#include <algorithm>
 #include <cassert>
 
 
@@ -584,6 +585,16 @@ class TcpPrioClientBase::Machine
         }
         else
         {
+            // The record list was replaced, so the iterator to the record
+            // currently in use is no longer valid. Point it at the matching
+            // record in the new list, if there is one.
+          auto& rrs = ctx().rrs;
+          ctx().next_rr = std::find_if(rrs.begin(), rrs.end(),
+              [this](const auto& rr)
+              {
+                return (rr->target() == ctx().remoteHostName()) &&
+                       (rr->port() == ctx().remotePort());
+              });
           setState<StateConnected>();
         }
       }
