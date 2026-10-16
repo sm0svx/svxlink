@@ -280,6 +280,16 @@ class TcpConnection : virtual public sigc::trackable
      * @return	Returns \em true if the connection is established or
      *	      	\em false if the connection is not established
      */
+    /**
+     * @brief   Get the number of bytes waiting to be sent
+     * @return  Returns the number of bytes in the write buffer
+     *
+     * Data written to the connection is buffered until the socket can take
+     * it. A sender that writes faster than the peer reads can use this to
+     * detect a peer that falls too far behind.
+     */
+    size_t writeBufferSize(void) const { return m_write_buf.size(); }
+
     bool isConnected(void) const { return sock != -1; }
 
     /**
