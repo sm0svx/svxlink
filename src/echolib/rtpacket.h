@@ -15,5 +15,6 @@ bool parseSDES(char *, unsigned char *, int, unsigned char);
 bool isRTCPByepacket(unsigned char *, int);
 bool isRTCPSdespacket(unsigned char *, int);
 void sanitizeCallsign(char *);
+void sanitizeName(char *);
 
 #endif
