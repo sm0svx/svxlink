@@ -579,7 +579,19 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSendDtmf::TYPE:
     {
       MsgSendDtmf *dtmf_msg = reinterpret_cast<MsgSendDtmf *>(msg);
-      tx->sendDtmf(dtmf_msg->digits(), dtmf_msg->duration());
+        // The duration comes from the remote end. Zero means the default
+        // duration. Limit it so that a digit cannot key the transmitter for
+        // a very long time.
+      const unsigned MAX_DTMF_DURATION = 2000;
+      unsigned duration = dtmf_msg->duration();
+      if (duration > MAX_DTMF_DURATION)
+      {
+        std::cerr << "*** WARNING[" << name << "]: Limiting DTMF duration "
+                  << duration << " ms to " << MAX_DTMF_DURATION << " ms"
+                  << std::endl;
+        duration = MAX_DTMF_DURATION;
+      }
+      tx->sendDtmf(dtmf_msg->digits(), duration);
       break;
     }
     
