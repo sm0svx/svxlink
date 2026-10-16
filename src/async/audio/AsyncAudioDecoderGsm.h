@@ -144,6 +144,11 @@ class AudioDecoderGsm : public AudioDecoder
      * @param 	size The size of the buffer
      */
     virtual void writeEncodedSamples(void *buf, int size);
+
+    /**
+     * @brief Call this function when all encoded samples have been received
+     */
+    virtual void flushEncodedSamples(void) override;
     
 
   protected:
