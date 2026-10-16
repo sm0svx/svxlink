@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <netdb.h>
 
 #include <cassert>
+#include <chrono>
 #include <cstring>
 #include <mutex>
 
@@ -178,6 +179,10 @@ namespace {
  ****************************************************************************/
 
 
+std::list<CppDnsLookupWorker::AbandonedLookup>
+    CppDnsLookupWorker::s_abandoned_lookups;
+
+
 CppDnsLookupWorker::CppDnsLookupWorker(const DnsLookup& dns)
   : DnsLookupWorker(dns)
 {
@@ -201,6 +206,7 @@ DnsLookupWorker& CppDnsLookupWorker::operator=(DnsLookupWorker&& other_base)
 
   m_result = std::move(other.m_result);
   assert(!other.m_result.valid());
+  m_ctx = std::move(other.m_ctx);
 
   m_notifier_watch = std::move(other.m_notifier_watch);
 
@@ -221,6 +227,8 @@ bool CppDnsLookupWorker::doLookup(void)
   {
     return true;
   }
+
+  reapAbandonedLookups();
 
   setLookupFailed(false);
 
@@ -251,8 +259,20 @@ void CppDnsLookupWorker::abortLookup(void)
 {
   if (m_result.valid())
   {
-    m_result.get();
+    if (m_result.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+    {
+      m_result.get();
+    }
+    else
+    {
+        // Do not wait for the resolver thread, which may take a long time,
+        // e.g. when the DNS server does not answer. That would stall the
+        // whole application. Keep the thread's context alive until it has
+        // finished and discard its result.
+      s_abandoned_lookups.emplace_back(std::move(m_result), std::move(m_ctx));
+    }
   }
+  reapAbandonedLookups();
 
   int fd = m_notifier_watch.fd();
   if (fd >= 0)
@@ -263,6 +283,25 @@ void CppDnsLookupWorker::abortLookup(void)
 
   m_ctx.reset();
 } /* CppDnsLookupWorker::abortLookup */
+
+
+void CppDnsLookupWorker::reapAbandonedLookups(void)
+{
+  auto it = s_abandoned_lookups.begin();
+  while (it != s_abandoned_lookups.end())
+  {
+    if (it->first.wait_for(std::chrono::seconds(0)) ==
+        std::future_status::ready)
+    {
+      it->first.get();
+      it = s_abandoned_lookups.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+} /* CppDnsLookupWorker::reapAbandonedLookups */
 
 
 /****************************************************************************
@@ -401,9 +440,18 @@ void CppDnsLookupWorker::workerFunc(CppDnsLookupWorker::ThreadContext& ctx)
  */
 void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 {
+    // The resolver thread signals that it is done by closing the write end
+    // of the pipe, so nothing is expected to be read
   char buf[1];
-  int cnt = read(w->fd(), buf, sizeof(buf));
-  assert(cnt == 0);
+  int cnt;
+  do
+  {
+    cnt = read(w->fd(), buf, sizeof(buf));
+  } while ((cnt < 0) && (errno == EINTR));
+  if (cnt != 0)
+  {
+    printErrno("WARNING: Unexpected result reading DNS lookup notifier pipe");
+  }
   close(w->fd());
   w->setFd(-1, FdWatch::FD_WATCH_RD);
 
@@ -496,10 +544,18 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
       uint32_t ttl = ns_rr_ttl(rr);
       uint16_t type = ns_rr_type(rr);
       const unsigned char *cp = ns_rr_rdata(rr);
+      const uint16_t rdlen = ns_rr_rdlen(rr);
       switch (type)
       {
         case ns_t_a:
         {
+          if (rdlen < NS_INADDRSZ)
+          {
+            std::cerr << "*** WARNING: Too short A record in DNS answer"
+                      << std::endl;
+            setLookupFailed();
+            continue;
+          }
           struct in_addr in_addr;
           uint32_t ip = ns_get32(cp);
           in_addr.s_addr = ntohl(ip);
@@ -546,6 +602,13 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 
         case ns_t_srv:
         {
+          if (rdlen < 3 * NS_INT16SZ)
+          {
+            std::cerr << "*** WARNING: Too short SRV record in DNS answer"
+                      << std::endl;
+            setLookupFailed();
+            continue;
+          }
           unsigned int prio = ns_get16(cp);
           cp += NS_INT16SZ;
           unsigned int weight = ns_get16(cp);
