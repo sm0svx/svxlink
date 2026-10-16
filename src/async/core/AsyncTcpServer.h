@@ -193,10 +193,12 @@ class TcpServer : public TcpServerBase
       }
       virtual TcpConnection& operator=(TcpConnection&& other_base) override
       {
-        this->TcpConnection::operator=(std::move(other_base));
+          // Move through ConT, so that e.g. FramedTcpConnection state is
+          // moved too
+        this->ConT::operator=(std::move(other_base));
         auto& other = dynamic_cast<TcpServerConnection&>(other_base);
         m_is_connected = other.m_is_connected;
-        m_is_connected = false;
+        other.m_is_connected = false;
         return *this;
       }
       virtual void onDisconnected(
