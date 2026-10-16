@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cassert>
+#include <vector>
 #include <algorithm>
 #include <sstream>
 #include <regex>
@@ -356,28 +357,47 @@ void TGHandler::checkTimers(Async::Timer *t)
 {
   struct timeval now;
   gettimeofday(&now, NULL);
-  for (IdMap::iterator it = m_id_map.begin(); it != m_id_map.end(); ++it)
+
+    // Setting the talker for a TG notifies other parts of the reflector,
+    // which may in turn remove TGs (e.g. when a client is disconnected), so
+    // work on a copy of the TG ids and look each one up before using it.
+  std::vector<uint32_t> tg_ids;
+  tg_ids.reserve(m_id_map.size());
+  for (const auto& id_item : m_id_map)
   {
+    tg_ids.push_back(id_item.first);
+  }
+
+  for (const auto tg_id : tg_ids)
+  {
+    IdMap::iterator it = m_id_map.find(tg_id);
+    if (it == m_id_map.end())
+    {
+      continue;
+    }
     TGInfo *tg_info = it->second;
     assert(tg_info != 0);
-    if (tg_info->talker != 0)
+    if (tg_info->talker == 0)
     {
-      struct timeval diff;
-      timersub(&now, &tg_info->last_talker_timestamp, &diff);
-      if (diff.tv_sec > TALKER_AUDIO_TIMEOUT)
-      {
-        cout << tg_info->talker->callsign() << ": Talker audio timeout on TG #"
-             << tg_info->id << endl;
-        setTalkerForTG(tg_info->id, 0);
-      }
+      continue;
+    }
 
-      if ((tg_info->sql_timeout_cnt > 0) && (--tg_info->sql_timeout_cnt == 0))
-      {
-        cout << tg_info->talker->callsign() << ": Talker audio timeout on TG #"
-             << tg_info->id << endl;
-        tg_info->talker->setBlock(m_sql_timeout_blocktime);
-        setTalkerForTG(tg_info->id, 0);
-      }
+    struct timeval diff;
+    timersub(&now, &tg_info->last_talker_timestamp, &diff);
+    if (diff.tv_sec > TALKER_AUDIO_TIMEOUT)
+    {
+      cout << tg_info->talker->callsign() << ": Talker audio timeout on TG #"
+           << tg_info->id << endl;
+      setTalkerForTG(tg_id, 0);
+      continue;
+    }
+
+    if ((tg_info->sql_timeout_cnt > 0) && (--tg_info->sql_timeout_cnt == 0))
+    {
+      cout << tg_info->talker->callsign() << ": Talker audio timeout on TG #"
+           << tg_info->id << endl;
+      tg_info->talker->setBlock(m_sql_timeout_blocktime);
+      setTalkerForTG(tg_id, 0);
     }
   }
 } /* TGHandler::checkTimers */
