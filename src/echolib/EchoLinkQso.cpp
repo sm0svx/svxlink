@@ -333,17 +333,21 @@ bool Qso::disconnect(void)
     return true;
   }
   
+  bool bye_sent = true;
   if (state != STATE_BYE_RECEIVED)
   {
-    if (!sendByePacket())
+      // Saying goodbye is best effort. Even if it could not be sent, the
+      // connection is torn down, so that it does not linger.
+    bye_sent = sendByePacket();
+    if (!bye_sent)
     {
-      return false;
+      cerr << "*** WARNING: Could not send BYE to " << remote_call << endl;
     }
   }
   
   cleanupConnection();
   
-  return true;
+  return bye_sent;
   
 } /* Qso::disconnect */
 
