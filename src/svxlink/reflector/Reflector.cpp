@@ -647,18 +647,16 @@ bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
     return false;
   }
   auto crtfile = m_certs_dir + "/" + cn + ".crt";
-  if (cert.writePemFile(crtfile) && m_issue_ca_cert.appendPemFile(crtfile))
+  if (!cert.writePemFile(crtfile) || !m_issue_ca_cert.appendPemFile(crtfile))
   {
-    runCAHook({
-        { "CA_OP",      ca_op },
-        { "CA_CRT_PEM", cert.pem() }
-      });
-  }
-  else
-  {
-    std::cerr << "*** WARNING: Failed to write client certificate file '"
+    std::cerr << "*** ERROR: Failed to write client certificate file '"
               << crtfile << "'" << std::endl;
+    return false;
   }
+  runCAHook({
+      { "CA_OP",      ca_op },
+      { "CA_CRT_PEM", cert.pem() }
+    });
   return true;
 } /* Reflector::signClientCert */
 
@@ -694,7 +692,9 @@ Async::SslX509 Reflector::signClientCsr(const std::string& cn)
 
   if (!signClientCert(cert, "CSR_SIGNED"))
   {
+      // Leave the CSR pending so that signing can be retried
     cert.set(nullptr);
+    return cert;
   }
 
   std::string csr_path = m_csrs_dir + "/" + cn + ".csr";
