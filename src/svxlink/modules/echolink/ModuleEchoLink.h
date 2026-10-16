@@ -255,7 +255,7 @@ class ModuleEchoLink : public Module
     void disconnectByCallsign(const std::string &cmd);
     void handleDisconnectByCall(const std::string& cmd);
     void dbcTimeout(Async::Timer *t);
-    int numConnectedStations(void);
+    unsigned numConnectedStations(void);
     int listQsoCallsigns(std::list<std::string>& call_list);
     void handleCommand(const std::string& cmd);
     void commandFailed(const std::string& cmd);
