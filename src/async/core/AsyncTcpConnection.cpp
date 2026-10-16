@@ -492,6 +492,11 @@ void TcpConnection::recvHandler(FdWatch *watch)
   //std::cout << "###   cnt=" << cnt << std::endl;
   if (cnt <= -1)
   {
+    if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR))
+    {
+        // Nothing to read right now, try again when the socket is readable
+      return;
+    }
     int errno_tmp = errno;
     closeConnection();
     errno = errno_tmp;
@@ -608,7 +613,7 @@ int TcpConnection::rawWrite(const void* buf, int count)
   int cnt = ::send(sock, buf, count, MSG_NOSIGNAL);
   if (cnt < 0)
   {
-    if (errno != EAGAIN)
+    if ((errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
     {
       return -1;
     }
