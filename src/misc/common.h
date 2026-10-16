@@ -209,6 +209,29 @@ static typename Container::size_type splitStr(Container &L,
 
 
 /**
+ * @brief   Make a string safe to write to a log or terminal
+ * @param   str The string, e.g. one received from a remote peer
+ * @param   max_len The maximum number of characters to keep
+ * @return  Returns a copy of the string with all control characters replaced
+ *          by '?', cut to at most max_len characters
+ */
+inline std::string printableString(const std::string& str,
+                                   size_t max_len=256)
+{
+  std::string out(str.substr(0, max_len));
+  for (auto& ch : out)
+  {
+    const auto uch = static_cast<unsigned char>(ch);
+    if ((uch < 0x20) || (uch == 0x7f))
+    {
+      ch = '?';
+    }
+  }
+  return out;
+} /* printableString */
+
+
+/**
  * @brief A pair type with separator which can be streamed
  * @param a The first type in the pair
  * @param b The second type in the pair
