@@ -1055,7 +1055,11 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   }
   else
   {
-    cout << "No supported codec :-(";
+    cout << "No supported codec :-(" << endl;
+      // Without a common codec no audio can be exchanged, so like the v3
+      // logic, do not stay connected
+    disconnect();
+    return;
   }
   cout << endl;
 
