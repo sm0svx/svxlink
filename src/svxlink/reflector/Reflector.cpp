@@ -371,6 +371,12 @@ bool Reflector::initialize(Async::Config &cfg)
   std::string listen_port("5300");
   cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port);
   m_srv = new TcpServer<FramedTcpConnection>(listen_port);
+  if (!m_srv->isListening())
+  {
+    std::cerr << "*** ERROR: Could not listen on GLOBAL/LISTEN_PORT="
+              << listen_port << std::endl;
+    return false;
+  }
   m_srv->setConnectionThrottling(10, 0.1, 1000);
   m_srv->clientConnected.connect(
       mem_fun(*this, &Reflector::clientConnected));
@@ -429,6 +435,12 @@ bool Reflector::initialize(Async::Config &cfg)
   if (m_cfg->getValue("GLOBAL", "HTTP_SRV_PORT", http_srv_port))
   {
     m_http_server = new Async::TcpServer<Async::HttpServerConnection>(http_srv_port);
+    if (!m_http_server->isListening())
+    {
+      std::cerr << "*** ERROR: Could not listen on GLOBAL/HTTP_SRV_PORT="
+                << http_srv_port << std::endl;
+      return false;
+    }
     m_http_server->clientConnected.connect(
         sigc::mem_fun(*this, &Reflector::httpClientConnected));
     m_http_server->clientDisconnected.connect(
@@ -449,6 +461,13 @@ bool Reflector::initialize(Async::Config &cfg)
       return false;
     }
     m_http_admin_server = new HttpServer(http_admin_srv_port, bind_addr);
+    if (!m_http_admin_server->isListening())
+    {
+      std::cerr << "*** ERROR: Could not listen on GLOBAL/HTTP_ADMIN_SRV_PORT="
+                << http_admin_srv_port << " (bind address " << bind_addr_str
+                << ")" << std::endl;
+      return false;
+    }
     m_http_admin_server->clientConnected.connect(
         sigc::mem_fun(*this, &Reflector::httpAdminClientConnected));
     m_http_admin_server->clientDisconnected.connect(

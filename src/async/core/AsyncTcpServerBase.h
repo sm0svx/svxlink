@@ -168,6 +168,12 @@ class TcpServerBase : public sigc::trackable
     int writeExcept(TcpConnection *con, const void *buf, int count);
 
     /**
+     * @brief   Check if the server is listening for connections
+     * @return  Returns \em false if setting up the listening socket failed
+     */
+    bool isListening(void) const { return m_sock >= 0; }
+
+    /**
      * @brief   Set the SSL context for all new connections
      * @param   ctx The SSL context to set
      *
