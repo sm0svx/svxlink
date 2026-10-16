@@ -621,14 +621,33 @@ bool Reflector::renewedClientCert(Async::SslX509& cert)
 
   std::string callsign(cert.commonName());
   Async::SslX509 new_cert = loadClientCertificate(callsign);
-  if (!new_cert.isNull() &&
-      ((new_cert.publicKey() != cert.publicKey()) ||
-       (timeToRenewCert(new_cert) <= std::time(NULL))))
+  if (new_cert.isNull())
+  {
+    cert = std::move(new_cert);
+    return false;
+  }
+
+  if (new_cert.publicKey() != cert.publicKey())
+  {
+      // The node presented a certificate for another key than the one on
+      // disk. That happens e.g. when a certificate for a new key has been
+      // issued while the node is still connected with its old certificate.
+      // Prefer whichever certificate was issued last, so that the two are not
+      // renewed over each other again and again.
+    if (new_cert.notBefore() > cert.notBefore())
+    {
+      cert = std::move(new_cert);
+      return true;
+    }
+    return signClientCert(cert, "CRT_RENEWED");
+  }
+
+  if (timeToRenewCert(new_cert) <= std::time(NULL))
   {
     return signClientCert(cert, "CRT_RENEWED");
   }
   cert = std::move(new_cert);
-  return !cert.isNull();
+  return true;
 } /* Reflector::renewedClientCert */
 
 
