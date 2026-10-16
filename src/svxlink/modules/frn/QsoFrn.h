@@ -559,6 +559,7 @@ class QsoFrn
     short               receive_buffer[BUFFER_SIZE];
     short               send_buffer[BUFFER_SIZE];
     int                 send_buffer_cnt;
+    bool                pending_unkey;
     gsm                 gsmh;
     int                 lines_to_read;
     FrnList             cur_item_list;
