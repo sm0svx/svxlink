@@ -19,5 +19,9 @@ endforeach(incfile)
 add_library(${LIBNAME} STATIC ${LIBSRC})
 target_link_libraries(${LIBNAME} ${LIBS})
 
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+svxlink_add_tests(LIBS ${LIBNAME} ${LIBS})
+
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
