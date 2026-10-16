@@ -115,6 +115,13 @@ using namespace NetTrxMsg;
  *
  ****************************************************************************/
 
+namespace {
+  bool isValidModulation(Modulation::Type mod)
+  {
+    return (mod >= Modulation::MOD_FM) && (mod <= Modulation::MOD_WBCW);
+  }
+} /* anonymous namespace */
+
 
 
 /****************************************************************************
@@ -542,6 +549,13 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetRxModulation::TYPE:
     {
       MsgSetRxModulation *mod_msg = reinterpret_cast<MsgSetRxModulation*>(msg);
+      if ((msg->size() != sizeof(MsgSetRxModulation)) ||
+          !isValidModulation(mod_msg->modulation()))
+      {
+        std::cerr << "*** ERROR: Illegal SetRxModulation message received in "
+                  << "NetUplink " << name << ". Ignoring it." << std::endl;
+        break;
+      }
       std::cout << rx->name() << ": SetRxModulation("
                 << Modulation::toString(mod_msg->modulation()) << ")"
                 << std::endl;
@@ -573,6 +587,15 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetTxCtrlMode::TYPE:
     {
       MsgSetTxCtrlMode *mode_msg = reinterpret_cast<MsgSetTxCtrlMode *>(msg);
+      if ((msg->size() != sizeof(MsgSetTxCtrlMode)) ||
+          ((mode_msg->mode() != Tx::TX_OFF) &&
+           (mode_msg->mode() != Tx::TX_ON) &&
+           (mode_msg->mode() != Tx::TX_AUTO)))
+      {
+        std::cerr << "*** ERROR: Illegal SetTxCtrlMode message received in "
+                  << "NetUplink " << name << ". Ignoring it." << std::endl;
+        break;
+      }
       tx_ctrl_mode = mode_msg->mode();
       if (!tx_muted)
       {
@@ -730,6 +753,13 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetTxModulation::TYPE:
     {
       MsgSetTxModulation *mod_msg = reinterpret_cast<MsgSetTxModulation*>(msg);
+      if ((msg->size() != sizeof(MsgSetTxModulation)) ||
+          !isValidModulation(mod_msg->modulation()))
+      {
+        std::cerr << "*** ERROR: Illegal SetTxModulation message received in "
+                  << "NetUplink " << name << ". Ignoring it." << std::endl;
+        break;
+      }
       std::cout << tx->name() << ": SetTxModulation("
                 << Modulation::toString(mod_msg->modulation()) << ")"
                 << std::endl;
