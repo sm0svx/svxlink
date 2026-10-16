@@ -385,6 +385,7 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
             << std::endl;
 
   con = 0;
+  heartbeat_timer->setEnable(false);
   setState(STATE_DISC_CLEANUP);
   Application::app().runTask(mem_fun(*this, &NetUplink::disconnectCleanup));
 } /* NetUplink::clientDisconnected */
@@ -820,6 +821,13 @@ void NetUplink::allEncodedSamplesFlushed(void)
 
 void NetUplink::heartbeat(Timer *t)
 {
+    // The timer may still fire after the client disconnected, before the
+    // deferred cleanup has run
+  if ((state != STATE_CON_SETUP) && (state != STATE_READY))
+  {
+    return;
+  }
+
   sendMsg(MsgHeartbeat());
 
   struct timeval diff_tv;
@@ -883,6 +891,10 @@ void NetUplink::signalLevelUpdated(float siglev)
 
 void NetUplink::forceDisconnect(void)
 {
+  if (con == 0)
+  {
+    return;
+  }
   con->disconnect();
   clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* NetUplink::forceDisconnect */
