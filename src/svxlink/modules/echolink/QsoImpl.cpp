@@ -373,6 +373,13 @@ void QsoImpl::reject(bool perm)
     stringstream ss;
     ss << "reject_remote_connection " << (perm ? "1" : "0");
     processEvent(ss.str());
+      // The connection is closed when the reject message has been played.
+      // If the event handler did not queue any message, close it now, or
+      // the rejected station would stay connected.
+    if (!msg_handler->isWritingMessage())
+    {
+      disconnect();
+    }
   }
 } /* QsoImpl::reject */
 
