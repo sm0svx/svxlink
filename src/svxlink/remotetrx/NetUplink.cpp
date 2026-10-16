@@ -733,7 +733,8 @@ void NetUplink::sendMsg(const Msg& msg)
                 << "\": " << strerror(errno) << "." << std::endl;
       forceDisconnect();
     }
-    else if (written != static_cast<int>(msg.size()))
+    else if ((written != static_cast<int>(msg.size())) ||
+             (con->writeBufferSize() > MAX_TCP_WRITE_BUF_SIZE))
     {
       std::cerr << "*** ERROR: TCP transmit buffer overflow in NetUplink "
                 << name << "." << std::endl;

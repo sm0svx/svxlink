@@ -476,7 +476,8 @@ void NetTrxTcpClient::sendMsgP(Msg *msg)
   assert(isConnected());
 
   int written = write(msg, msg->size());
-  if (written != static_cast<int>(msg->size()))
+  if ((written != static_cast<int>(msg->size())) ||
+      (writeBufferSize() > MAX_TCP_WRITE_BUF_SIZE))
   {
     if (written == -1)
     {

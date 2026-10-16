@@ -590,9 +590,13 @@ void TcpConnection::onWriteSpaceAvailable(Async::FdWatch* w)
       m_write_buf.resize(m_write_buf.size() - n);
     }
   }
-  else
+  else if ((errno != ENOBUFS) && (errno != EINTR))
   {
-    perror("### TcpConnection::onWriteSpaceAvailable: rawWrite()");
+      // A hard error, e.g. the connection was reset. Do not keep trying to
+      // write, which would busy-loop until the read side notices.
+    closeConnection();
+    onDisconnected(DR_SYSTEM_ERROR);
+    return;
   }
   w->setEnabled(!m_write_buf.empty());
 } /* TcpConnection::onWriteSpaceAvailable */
