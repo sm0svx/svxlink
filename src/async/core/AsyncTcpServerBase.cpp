@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <cmath>
 
 
@@ -123,7 +124,8 @@ using namespace Async;
 
 TcpServerBase::TcpServerBase(const string& port_str,
                              const Async::IpAddress &bind_ip)
-  : m_sock(-1), m_rd_watch(0), m_con_throt_timer(-1, Timer::TYPE_PERIODIC)
+  : m_sock(-1), m_rd_watch(0), m_con_throt_timer(-1, Timer::TYPE_PERIODIC),
+    m_accept_retry_timer(500, Timer::TYPE_ONESHOT, false)
 {
   if ((m_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
@@ -201,6 +203,12 @@ TcpServerBase::TcpServerBase(const string& port_str,
 
   m_rd_watch = new FdWatch(m_sock, FdWatch::FD_WATCH_RD);
   m_rd_watch->activity.connect(mem_fun(*this, &TcpServerBase::onConnection));
+  m_accept_retry_timer.expired.connect([this](Timer*) {
+        if (m_rd_watch != 0)
+        {
+          m_rd_watch->setEnabled(true);
+        }
+      });
 
   m_con_throt_timer.expired.connect(
       sigc::mem_fun(*this, &TcpServerBase::updateConnThrotMap));
@@ -420,7 +428,34 @@ void TcpServerBase::onConnection(FdWatch *watch)
   client_sock = accept(m_sock, (struct sockaddr *)&client, &addrlen);
   if (client_sock == -1)
   {
-    perror("accept");
+    switch (errno)
+    {
+      case EAGAIN:
+#if EWOULDBLOCK != EAGAIN
+      case EWOULDBLOCK:
+#endif
+      case EINTR:
+      case ECONNABORTED:
+      case EPROTO:
+          // The connection went away or there was nothing to accept
+        break;
+
+      case EMFILE:
+      case ENFILE:
+      case ENOBUFS:
+      case ENOMEM:
+          // Out of resources. The pending connection stays queued, so the
+          // listening socket stays readable. Stop watching it for a while
+          // instead of trying again, and logging, on every main loop pass.
+        perror("accept");
+        m_rd_watch->setEnabled(false);
+        m_accept_retry_timer.setEnable(true);
+        break;
+
+      default:
+        perror("accept");
+        break;
+    }
     return;
   }
   
