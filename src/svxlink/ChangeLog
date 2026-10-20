@@ -15,6 +15,16 @@
 
 
 
+ 1.10.3 -- ?? ??? 2026
+-----------------------
+
+* ModuleMetarInfo: The XML observation time from the Aviation Weather API
+  was rejected if it contained fractional seconds, causing all METAR reports
+  to be reported as not valid. Fixes GitHub issue #833.
+  Credit: Chris Jackson, G4NAB
+
+
+
  1.10.2 -- 09 Oct 2026
 -----------------------
 

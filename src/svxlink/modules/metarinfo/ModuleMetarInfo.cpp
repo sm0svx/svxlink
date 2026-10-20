@@ -926,7 +926,7 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
     }
 
     // check day and time, if not in limit throw information away
-    // e.g.: 2016-08-10T08:20:00Z
+    // e.g.: 2016-08-10T08:20:00Z or 2016-08-10T08:20:00.000Z
     std::string met_utc = getXmlParam("observation_time", html);
 
     // look for raw metar data
@@ -939,7 +939,9 @@ void ModuleMetarInfo::onData(std::string metarinput, size_t count)
         cout << "XML-METAR: " << metar << endl;
       }
 
-      if (met_utc.length() != 20 || !isvalidUTC(met_utc))
+      std::string utc_reg = "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}"
+                            ":[0-9]{2}(\\.[0-9]+)?Z$";
+      if (!rmatch(met_utc, utc_reg) || !isvalidUTC(met_utc))
       {
         stringstream temp;
         cout << "Metar information outdated" << endl;
