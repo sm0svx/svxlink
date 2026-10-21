@@ -25,11 +25,17 @@ OWNERSHIP = ("domain", "peer", "network-wide")
 DISTRIBUTION = ("local", "selected-peers", "network-wide")
 
 
+class OperationCancelled(Exception):
+    """Raised when the operator cancels the current operation."""
+
+
 def ask(prompt: str, default: str | None = None,
         required: bool = True) -> str:
     suffix = f" [{default}]" if default is not None else ""
     while True:
-        value = input(f"{prompt}{suffix}: ").strip()
+        value = input(f"{prompt}{suffix} (q=cancel): ").strip()
+        if value.lower() == "q":
+            raise OperationCancelled
         if not value and default is not None:
             return default
         if value or not required:
@@ -40,14 +46,16 @@ def ask(prompt: str, default: str | None = None,
 def ask_bool(prompt: str, default: bool = False) -> bool:
     marker = "Y/n" if default else "y/N"
     while True:
-        value = input(f"{prompt} [{marker}]: ").strip().lower()
+        value = input(f"{prompt} [{marker}] (q=cancel): ").strip().lower()
+        if value == "q":
+            raise OperationCancelled
         if not value:
             return default
         if value in ("y", "yes", "1", "true"):
             return True
         if value in ("n", "no", "0", "false"):
             return False
-        print("Please answer yes or no.")
+        print("Please answer yes, no, or q to cancel.")
 
 
 def ask_int(prompt: str, default: int | None = None,
@@ -74,6 +82,7 @@ def choose(prompt: str, labels: list[str], default: int | None = None) -> int:
     print(f"\n{prompt}")
     for number, label in enumerate(labels, 1):
         print(f"  {number}. {label}")
+    print("  0. Cancel / Return")
     while True:
         raw = ask("Selection", str(default) if default is not None else None)
         try:
@@ -81,6 +90,8 @@ def choose(prompt: str, labels: list[str], default: int | None = None) -> int:
         except ValueError:
             print("Enter one of the displayed numbers.")
             continue
+        if selected == 0:
+            raise OperationCancelled
         if 1 <= selected <= len(labels):
             return selected - 1
         print("Enter one of the displayed numbers.")
@@ -95,6 +106,7 @@ def choose_many(prompt: str, peers: list[dict[str, Any]],
     for number, name in enumerate(names, 1):
         marker = "selected" if name in selected_defaults else "not selected"
         print(f"  {number}. {name} [{marker}]")
+    print("  0. Cancel / Return")
     while True:
         default_numbers = ",".join(
             str(index + 1) for index, name in enumerate(names)
@@ -105,6 +117,8 @@ def choose_many(prompt: str, peers: list[dict[str, Any]],
             default_numbers, required=not allow_none)
         if not raw:
             return []
+        if raw == "0":
+            raise OperationCancelled
         try:
             numbers = [int(item.strip()) for item in raw.split(",")]
         except ValueError:
@@ -261,16 +275,37 @@ def collect_peers() -> list[dict[str, Any]]:
     print("exchange talkgroup traffic directly.\n")
     peers: list[dict[str, Any]] = []
     while True:
-        peer = ask_peer({str(item["name"]) for item in peers})
+        try:
+            peer = ask_peer({str(item["name"]) for item in peers})
+        except OperationCancelled:
+            print("\nPeer entry cancelled. No peer was added.")
+            peer = None
+
         if peer is not None:
             peers.append(peer)
         print_peer_summary(peers)
-        if peers and ask_bool("Are all required direct peers listed", False):
-            return peers
-        if not ask_bool("Add a remote reflector peer", not peers):
+        if peers:
+            try:
+                complete = ask_bool(
+                    "Are all required direct peers listed", False)
+            except OperationCancelled:
+                print("\nPeer collection complete. Retaining configured peers.")
+                return peers
+
+            if complete:
+                return peers
+        try:
+            add_another = ask_bool("Add a remote reflector peer", not peers)
+        except OperationCancelled:
             if peers:
                 return peers
-            print("At least one peer is required for a federation plan.")
+            raise
+
+        if not add_another:
+            if peers:
+                return peers
+            print("\nNo peers configured. New plan creation cancelled.")
+            raise OperationCancelled
 
 
 def ownership_for_tg(domain: str, peers: list[dict[str, Any]]) -> tuple[str, str]:
@@ -349,8 +384,13 @@ def collect_talkgroups(domain: str,
     print("numeric routes, not wildcard or prefix routes.")
     talkgroups: list[dict[str, Any]] = []
     while True:
-        route = ask_talkgroup(
-            domain, peers, {int(item["tg"]) for item in talkgroups})
+        try:
+            route = ask_talkgroup(
+                domain, peers, {int(item["tg"]) for item in talkgroups})
+        except OperationCancelled:
+            print("\nTalkgroup entry cancelled. No talkgroup was added.")
+            continue
+
         if route is None:
             return talkgroups
         if route:
@@ -571,9 +611,13 @@ def new_plan(path: Path) -> int:
         print(f"Use 'edit {path}' to review or change it.", file=sys.stderr)
         print("No file was changed.", file=sys.stderr)
         return 1
-    reflector = ask_reflector()
-    peers = collect_peers()
-    talkgroups = collect_talkgroups(str(reflector["domain"]), peers)
+    try:
+        reflector = ask_reflector()
+        peers = collect_peers()
+        talkgroups = collect_talkgroups(str(reflector["domain"]), peers)
+    except OperationCancelled:
+        print("\nNew federation plan cancelled. No file was written.")
+        return 0
     plan = {
         "plan_schema": PLAN_SCHEMA,
         "library_generation": 1,
@@ -588,7 +632,13 @@ def new_plan(path: Path) -> int:
         return 1
     show_plan(plan)
     print("\nThis new plan uses federation policy generation 1.")
-    if not ask_bool("Save this new plan", False):
+    try:
+        save = ask_bool("Save this new plan", False)
+    except OperationCancelled:
+        print("\nSave cancelled. No file was written.")
+        return 0
+
+    if not save:
         print("No file was written.")
         return 0
     write_json(path, plan)
@@ -608,37 +658,53 @@ def choose_talkgroup(plan: dict[str, Any]) -> dict[str, Any] | None:
 
 def edit_talkgroups(plan: dict[str, Any]) -> None:
     labels = ["Add a talkgroup", "Remove a talkgroup", "Change shared peers",
-              "Change description", "Change administrative ownership",
-              "Return to main menu"]
+              "Change description", "Change administrative ownership"]
+
     while True:
-        action = choose("Talkgroup policy", labels, 6)
-        if action == 5:
-            return
-        if action == 0:
-            route = ask_talkgroup(
-                plan["reflector"]["domain"], plan["peers"],
-                {int(item["tg"]) for item in plan["talkgroups"]})
-            if route:
-                plan["talkgroups"].append(route)
+        action = None
+        try:
+            action = choose("Talkgroup policy", labels, 6)
+
+            if action == 0:
+                route = ask_talkgroup(
+                    plan["reflector"]["domain"], plan["peers"],
+                    {int(item["tg"]) for item in plan["talkgroups"]})
+                if route:
+                    plan["talkgroups"].append(route)
+                continue
+
+            route = choose_talkgroup(plan)
+            if route is None:
+                continue
+
+            if action == 1:
+                if ask_bool(f"Remove TG {route['tg']} from this plan", False):
+                    plan["talkgroups"].remove(route)
+
+            elif action == 2:
+                distribution, shared = distribution_for_tg(
+                    plan["peers"], route["tg"])
+                route["distribution"] = distribution
+                route["import_from"] = shared
+                route["export_to"] = list(shared)
+
+            elif action == 3:
+                description = ask(
+                    "Talkgroup description", route["description"])
+                route["description"] = description
+
+            elif action == 4:
+                ownership, home = ownership_for_tg(
+                    plan["reflector"]["domain"], plan["peers"])
+                route["ownership"] = ownership
+                route["home"] = home
+
+        except OperationCancelled:
+            if "action" not in locals() or action is None:
+                print("\nReturning to main menu.")
+                return
+            print("\nOperation cancelled. No changes applied.")
             continue
-        route = choose_talkgroup(plan)
-        if route is None:
-            continue
-        if action == 1:
-            if ask_bool(f"Remove TG {route['tg']} from this plan", False):
-                plan["talkgroups"].remove(route)
-        elif action == 2:
-            distribution, shared = distribution_for_tg(plan["peers"], route["tg"])
-            route["distribution"] = distribution
-            route["import_from"] = shared
-            route["export_to"] = list(shared)
-        elif action == 3:
-            route["description"] = ask("Talkgroup description", route["description"])
-        elif action == 4:
-            ownership, home = ownership_for_tg(
-                plan["reflector"]["domain"], plan["peers"])
-            route["ownership"] = ownership
-            route["home"] = home
 
 
 def peer_snippet(peer: dict[str, Any]) -> str:
@@ -668,66 +734,122 @@ def peer_removal(peer: dict[str, Any]) -> str:
 
 def edit_peers(plan: dict[str, Any], added: list[dict[str, Any]],
                removed: list[dict[str, Any]]) -> None:
-    labels = ["Add a peer", "Remove a peer", "Change peer details",
-              "Return to main menu"]
+    labels = ["Add a peer", "Remove a peer", "Change peer details"]
+
     while True:
-        action = choose("Peer definitions", labels, 4)
-        if action == 3:
-            return
-        if action == 0:
-            peer = ask_peer({str(item["name"]) for item in plan["peers"]})
-            if peer is not None:
-                plan["peers"].append(peer)
-                added.append(peer)
-                print("No talkgroups are shared with the new peer automatically.")
-            continue
-        if not plan["peers"]:
-            print("No peers are configured.")
-            continue
-        index = choose("Select a peer", [str(peer["name"]) for peer in plan["peers"]])
-        peer = plan["peers"][index]
-        if action == 1:
-            affected = [route for route in plan["talkgroups"]
-                        if peer["name"] in route["import_from"]]
-            if affected:
-                print("\nAffected talkgroups:")
-                for route in affected:
-                    print(f"  TG {route['tg']} - {route['description']}")
-            if not ask_bool(f"Remove peer {peer['name']} and these permissions", False):
+        action = None
+        try:
+            action = choose("Peer definitions", labels, 4)
+
+            if action == 0:
+                peer = ask_peer(
+                    {str(item["name"]) for item in plan["peers"]})
+                if peer is not None:
+                    plan["peers"].append(peer)
+                    added.append(peer)
+                    print("No talkgroups are shared with the new peer automatically.")
                 continue
-            for route in affected:
-                route["import_from"].remove(peer["name"])
-                route["export_to"].remove(peer["name"])
-                if not route["import_from"]:
-                    route["distribution"] = "local"
-            plan["peers"].remove(peer)
-            removed.append(copy.deepcopy(peer))
-        elif action == 2:
-            peer["host"] = ask("Remote federation service hostname", peer["host"])
-            peer["reflector_id"] = peer["host"]
-            peer["port"] = ask_int("Remote service port", peer["port"], 1, 65535)
-            peer["connect"] = ask_bool(
-                f"Maintain an outgoing connection to {peer['name']}",
-                bool(peer.get("connect")))
-            peer["trust_callsign"] = ask(
-                f"Incoming identity used by {peer['name']}",
-                peer["trust_callsign"]).upper()
-            if peer not in added:
-                added.append(copy.deepcopy(peer))
+
+            if not plan["peers"]:
+                print("No peers are configured.")
+                continue
+
+            index = choose(
+                "Select a peer",
+                [str(peer["name"]) for peer in plan["peers"]])
+            peer = plan["peers"][index]
+
+            if action == 1:
+                affected = [
+                    route for route in plan["talkgroups"]
+                    if peer["name"] in route["import_from"]
+                ]
+
+                if affected:
+                    print("\nAffected talkgroups:")
+                    for route in affected:
+                        print(f"  TG {route['tg']} - {route['description']}")
+
+                if not ask_bool(
+                    f"Remove peer {peer['name']} and these permissions",
+                    False
+                ):
+                    continue
+
+                for route in affected:
+                    route["import_from"].remove(peer["name"])
+                    route["export_to"].remove(peer["name"])
+                    if not route["import_from"]:
+                        route["distribution"] = "local"
+
+                plan["peers"].remove(peer)
+                removed.append(copy.deepcopy(peer))
+
+            elif action == 2:
+                updated = copy.deepcopy(peer)
+
+                updated["host"] = ask(
+                    "Remote federation service hostname",
+                    updated["host"])
+
+                updated["reflector_id"] = updated["host"]
+
+                updated["port"] = ask_int(
+                    "Remote service port",
+                    updated["port"], 1, 65535)
+
+                updated["connect"] = ask_bool(
+                    f"Maintain an outgoing connection to {peer['name']}",
+                    bool(updated.get("connect")))
+
+                updated["trust_callsign"] = ask(
+                    f"Incoming identity used by {peer['name']}",
+                    updated["trust_callsign"]).upper()
+
+                # Apply changes only after every prompt is completed.
+                peer.update(updated)
+
+                if peer not in added:
+                    added.append(copy.deepcopy(peer))
+
+        except OperationCancelled:
+            if action is None:
+                print("\nReturning to main menu.")
+                return
+            print("\nOperation cancelled. No changes applied.")
+            continue
 
 
 def edit_reflector(plan: dict[str, Any]) -> None:
     reflector = plan["reflector"]
+    updated = copy.deepcopy(reflector)
+
     print("\nChanging these values requires corresponding changes on affected peers.")
-    reflector["domain"] = ask("Federation domain", reflector["domain"]).upper()
-    reflector["reflector_id"] = ask(
-        "Federation service hostname", reflector["reflector_id"])
-    reflector["callsign"] = ask(
-        "Outgoing federation identity", reflector["callsign"]).upper()
-    reflector["library"] = ask("Federation policy file", reflector["library"])
-    reflector["enable"] = ask_bool(
-        "Enable federation in generated configuration",
-        bool(reflector.get("enable")))
+
+    try:
+        updated["domain"] = ask(
+            "Federation domain", updated["domain"]).upper()
+
+        updated["reflector_id"] = ask(
+            "Federation service hostname", updated["reflector_id"])
+
+        updated["callsign"] = ask(
+            "Outgoing federation identity", updated["callsign"]).upper()
+
+        updated["library"] = ask(
+            "Federation policy file", updated["library"])
+
+        updated["enable"] = ask_bool(
+            "Enable federation in generated configuration",
+            bool(updated.get("enable")))
+
+    except OperationCancelled:
+        print("\nReflector editing cancelled. No changes applied.")
+        return
+
+    # Apply the completed edit only after all prompts succeed.
+    reflector.update(updated)
+
     for route in plan["talkgroups"]:
         if route["ownership"] == "domain":
             route["home"] = reflector["domain"]
@@ -751,7 +873,14 @@ def save_edited_plan(path: Path, before: dict[str, Any], after: dict[str, Any],
     show_plan(after)
     print(f"\nPolicy generation will advance from "
           f"{before['library_generation']} to {after['library_generation']}.")
-    if not ask_bool("Save these changes and generate a candidate policy", False):
+    try:
+        save = ask_bool(
+            "Save these changes and generate a candidate policy", False)
+    except OperationCancelled:
+        print("\nSave cancelled. No file was changed.")
+        return 0
+
+    if not save:
         print("No file was changed.")
         return 0
 
@@ -793,7 +922,11 @@ def edit_plan(path: Path, output: Path) -> int:
               "Review proposed plan", "Save and generate", "Exit without changes"]
     while True:
         show_plan(proposed)
-        action = choose("Edit federation plan", labels, 4)
+        try:
+            action = choose("Edit federation plan", labels, 4)
+        except OperationCancelled:
+            print("\nExit without saving. No file was changed.")
+            return 0
         if action == 0:
             edit_talkgroups(proposed)
         elif action == 1:
@@ -854,9 +987,18 @@ def build(path: Path, output: Path, placeholders: bool) -> int:
         if placeholders:
             keys[peer["name"]] = "CHANGE_ME"
         else:
-            key = getpass.getpass(
-                f"AUTH_KEY for outgoing connection to {peer['name']} "
-                "(blank writes CHANGE_ME): ")
+            try:
+                key = getpass.getpass(
+                    f"AUTH_KEY for outgoing connection to {peer['name']} "
+                    "(blank writes CHANGE_ME, q=cancel): ")
+            except (EOFError, KeyboardInterrupt):
+                print("\nBuild cancelled. No configuration files were written.")
+                return 0
+
+            if key.lower() == "q":
+                print("\nBuild cancelled. No configuration files were written.")
+                return 0
+
             keys[peer["name"]] = key or "CHANGE_ME"
     domain_dir = output / safe_name(plan["reflector"]["domain"])
     conf = domain_dir / "Federation.conf"
