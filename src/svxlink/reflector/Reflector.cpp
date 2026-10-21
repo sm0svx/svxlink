@@ -71,6 +71,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Reflector.h"
 #include "ReflectorClient.h"
 #include "TGHandler.h"
+#include "FederationMsg.h"
+#include "ReflectorFederation.h"
+
 
 
 /****************************************************************************
@@ -316,6 +319,7 @@ time_t Reflector::timeToRenewCert(const Async::SslX509& cert)
 Reflector::Reflector(void)
   : m_srv(0), m_udp_sock(0), m_tg_for_v1_clients(1), m_random_qsy_lo(0),
     m_random_qsy_hi(0), m_random_qsy_tg(0), m_http_server(0), m_cmd_pty(0),
+    m_federation(0),
     m_keys_dir("private/"), m_pending_csrs_dir("pending_csrs/"),
     m_csrs_dir("csrs/"), m_certs_dir("certs/"), m_pki_dir("pki/")
 {
@@ -359,6 +363,8 @@ Reflector::~Reflector(void)
   m_cmd_pty = 0;
   m_client_con_map.clear();
   ReflectorClient::cleanup();
+  delete m_federation;
+  m_federation = 0;
   delete TGHandler::instance();
 } /* Reflector::~Reflector */
 
@@ -474,8 +480,27 @@ bool Reflector::initialize(Async::Config &cfg)
   }
 
   m_cfg->getValue("GLOBAL", "ACCEPT_CERT_EMAIL", m_accept_cert_email);
+  m_federation = new ReflectorFederation;
+  if ((m_federation == 0) || !m_federation->initialize(cfg))
+  {
+    std::cerr << "*** ERROR: Could not initialize reflector federation"
+              << std::endl;
+    return false;
+  }
+
+  m_federation->incomingStreamStarted.connect(
+      sigc::mem_fun(
+          *this,
+          &Reflector::onFederationStreamStarted));
+
+  m_federation->incomingStreamStopped.connect(
+      sigc::mem_fun(
+          *this,
+          &Reflector::onFederationStreamStopped));
 
   m_cfg->valueUpdated.connect(sigc::mem_fun(*this, &Reflector::cfgUpdated));
+
+  m_federation->startPeerConnections();
 
   return true;
 } /* Reflector::initialize */
@@ -1279,28 +1304,68 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
                << "]: Could not unpack incoming MsgUdpAudioV1 message" << endl;
           return;
         }
+
         uint32_t tg = TGHandler::instance()->TGForClient(client);
         if (!msg.audioData().empty() && (tg > 0))
         {
-          ReflectorClient* talker = TGHandler::instance()->talkerForTG(tg);
+          if ((m_federation != 0) &&
+              (m_federation->findIncomingStream(tg) != 0))
+          {
+            break;
+          }
+
+          ReflectorClient* talker =
+              TGHandler::instance()->talkerForTG(tg);
+
           if (talker == 0)
           {
             TGHandler::instance()->setTalkerForTG(tg, client);
             talker = TGHandler::instance()->talkerForTG(tg);
           }
+
           if (talker == client)
           {
             TGHandler::instance()->setTalkerForTG(tg, client);
-            broadcastUdpMsg(msg,
+
+            broadcastUdpMsg(
+                msg,
                 ReflectorClient::mkAndFilter(
-                  ReflectorClient::ExceptFilter(client),
-                  ReflectorClient::TgFilter(tg)));
-            //broadcastUdpMsgExcept(tg, client, msg,
-            //    ProtoVerRange(ProtoVer(0, 6),
-            //                  ProtoVer(1, ProtoVer::max().minor())));
-            //MsgUdpAudio msg_v2(msg);
-            //broadcastUdpMsgExcept(tg, client, msg_v2,
-            //    ProtoVerRange(ProtoVer(2, 0), ProtoVer::max()));
+                    ReflectorClient::ExceptFilter(client),
+                    ReflectorClient::TgFilter(tg)));
+
+            if ((m_federation != 0) &&
+                m_federation->isEnabled())
+            {
+              if (m_federation->findLocalStream(tg) == 0)
+              {
+                std::uint64_t stream_id = 0;
+                std::vector<std::string> started_peers;
+                std::string error;
+
+                if (!m_federation->beginLocalStream(
+                        tg,
+                        client->callsign(),
+                        "OPUS",
+                        stream_id,
+                        started_peers,
+                        error))
+                {
+                  std::cerr << "*** WARNING["
+                            << client->callsign()
+                            << "]: Could not begin local federation stream:"
+                            << " tg=" << tg
+                            << " detail=" << error
+                            << std::endl;
+                }
+              }
+
+              if (m_federation->findLocalStream(tg) != 0)
+              {
+                m_federation->sendLocalStreamAudio(
+                    tg,
+                    msg.audioData());
+              }
+            }
           }
         }
       }
@@ -1341,14 +1406,85 @@ void Reflector::udpDatagramReceived(const IpAddress& addr, uint16_t port,
     //  break;
     //}
 
+    case MsgUdpFederationAudio::TYPE:
+    {
+      if (!client->isFederationPeer())
+      {
+        cerr << "*** WARNING[" << client->callsign()
+             << "]: Federation audio received from a non-federation client"
+             << endl;
+        return;
+      }
+
+      if ((m_federation == 0) ||
+          (m_federation->peerSession(client->federationPeer()) != client))
+      {
+        cerr << "*** WARNING[" << client->callsign()
+             << "]: Federation audio received from an unregistered session"
+             << endl;
+        return;
+      }
+
+      if (client->isBlocked())
+      {
+        break;
+      }
+
+      MsgUdpFederationAudio msg;
+      if (!msg.unpack(ss))
+      {
+        cerr << "*** WARNING[" << client->callsign()
+             << "]: Could not unpack MsgUdpFederationAudio message"
+             << endl;
+        return;
+      }
+
+      if (msg.audioData().empty())
+      {
+        break;
+      }
+
+      string error;
+      if (!m_federation->acceptIncomingAudio(
+              client->federationPeer(),
+              msg.originReflectorId(),
+              msg.tg(),
+              msg.streamId(),
+              msg.sequence(),
+              error))
+      {
+        cerr << "*** WARNING[" << client->callsign()
+             << "]: Federation audio rejected:"
+             << " peer=" << client->federationPeer()
+             << " origin=" << msg.originReflectorId()
+             << " tg=" << msg.tg()
+             << " stream_id=" << msg.streamId()
+             << " sequence=" << msg.sequence()
+             << " detail=" << error
+             << endl;
+        return;
+      }
+
+      MsgUdpAudio local_audio(msg.audioData());
+      broadcastUdpMsg(
+          local_audio,
+          ReflectorClient::mkAndFilter(
+              ReflectorClient::ExceptFilter(client),
+              ReflectorClient::TgFilter(msg.tg())));
+      break;
+    }
+
     case MsgUdpFlushSamples::TYPE:
     {
       uint32_t tg = TGHandler::instance()->TGForClient(client);
-      ReflectorClient* talker = TGHandler::instance()->talkerForTG(tg);
+      ReflectorClient* talker =
+          TGHandler::instance()->talkerForTG(tg);
+
       if ((tg > 0) && (client == talker))
       {
         TGHandler::instance()->setTalkerForTG(tg, 0);
       }
+
         // To be 100% correct the reflector should wait for all connected
         // clients to send a MsgUdpAllSamplesFlushed message but that will
         // probably lead to problems, especially on reflectors with many
@@ -1411,20 +1547,52 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
 {
   if (old_talker != 0)
   {
-    cout << old_talker->callsign() << ": Talker stop on TG #" << tg << endl;
+    if ((m_federation != 0) &&
+        m_federation->isEnabled() &&
+        (m_federation->findLocalStream(tg) != 0))
+    {
+      std::vector<std::string> stopped_peers;
+      std::string error;
+
+      m_federation->endLocalStream(
+          tg,
+          stopped_peers,
+          error);
+
+      if (!error.empty())
+      {
+        std::cerr << "*** WARNING["
+                  << old_talker->callsign()
+                  << "]: Could not end local federation stream:"
+                  << " tg=" << tg
+                  << " detail=" << error
+                  << std::endl;
+      }
+    }
+
+    cout << old_talker->callsign()
+         << ": Talker stop on TG #" << tg << endl;
+
     old_talker->updateIsTalker();
-    broadcastMsg(MsgTalkerStop(tg, old_talker->callsign()),
+
+    broadcastMsg(
+        MsgTalkerStop(tg, old_talker->callsign()),
         ReflectorClient::mkAndFilter(
-          ge_v2_client_filter,
-          ReflectorClient::mkOrFilter(
-            ReflectorClient::TgFilter(tg),
-            ReflectorClient::TgMonitorFilter(tg))));
+            ge_v2_client_filter,
+            ReflectorClient::mkOrFilter(
+                ReflectorClient::TgFilter(tg),
+                ReflectorClient::TgMonitorFilter(tg))));
+
     if (tg == tgForV1Clients())
     {
-      broadcastMsg(MsgTalkerStopV1(old_talker->callsign()), v1_client_filter);
+      broadcastMsg(
+          MsgTalkerStopV1(old_talker->callsign()),
+          v1_client_filter);
     }
-    broadcastUdpMsg(MsgUdpFlushSamples(),
-          ReflectorClient::mkAndFilter(
+
+    broadcastUdpMsg(
+        MsgUdpFlushSamples(),
+        ReflectorClient::mkAndFilter(
             ReflectorClient::TgFilter(tg),
             ReflectorClient::ExceptFilter(old_talker)));
   }
@@ -1444,6 +1612,52 @@ void Reflector::onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
     }
   }
 } /* Reflector::onTalkerUpdated */
+
+
+void Reflector::onFederationStreamStarted(
+    uint32_t tg,
+    const std::string& source_callsign)
+{
+  broadcastMsg(
+      MsgTalkerStart(tg, source_callsign),
+      ReflectorClient::mkAndFilter(
+          ge_v2_client_filter,
+          ReflectorClient::mkOrFilter(
+              ReflectorClient::TgFilter(tg),
+              ReflectorClient::TgMonitorFilter(tg))));
+
+  if (tg == tgForV1Clients())
+  {
+    broadcastMsg(
+        MsgTalkerStartV1(source_callsign),
+        v1_client_filter);
+  }
+} /* Reflector::onFederationStreamStarted */
+
+
+void Reflector::onFederationStreamStopped(
+    uint32_t tg,
+    const std::string& source_callsign)
+{
+  broadcastMsg(
+      MsgTalkerStop(tg, source_callsign),
+      ReflectorClient::mkAndFilter(
+          ge_v2_client_filter,
+          ReflectorClient::mkOrFilter(
+              ReflectorClient::TgFilter(tg),
+              ReflectorClient::TgMonitorFilter(tg))));
+
+  if (tg == tgForV1Clients())
+  {
+    broadcastMsg(
+        MsgTalkerStopV1(source_callsign),
+        v1_client_filter);
+  }
+
+  broadcastUdpMsg(
+      MsgUdpFlushSamples(),
+      ReflectorClient::TgFilter(tg));
+} /* Reflector::onFederationStreamStopped */
 
 
 void Reflector::httpRequestReceived(Async::HttpServerConnection *con,

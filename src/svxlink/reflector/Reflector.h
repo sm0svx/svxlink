@@ -78,6 +78,7 @@ namespace Async
   class Pty;
 };
 
+class ReflectorFederation;
 class ReflectorMsg;
 class ReflectorUdpMsg;
 
@@ -163,6 +164,16 @@ class Reflector : public sigc::trackable
      * @return	Return \em true on success or else \em false
      */
     bool initialize(Async::Config &cfg);
+
+    ReflectorFederation* federation(void)
+    {
+      return m_federation;
+    }
+
+    const ReflectorFederation* federation(void) const
+    {
+      return m_federation;
+    }
 
     /**
      * @brief   Return a list of all connected nodes
@@ -265,6 +276,7 @@ class Reflector : public sigc::trackable
     HttpServer*                 m_http_server;
     HttpServer*                 m_http_admin_server = nullptr;
     Async::Pty*                 m_cmd_pty;
+    ReflectorFederation*        m_federation;
     Async::SslContext           m_ssl_ctx;
     std::string                 m_keys_dir;
     std::string                 m_pending_csrs_dir;
@@ -295,6 +307,15 @@ class Reflector : public sigc::trackable
                              void* aad, void *buf, int count);
     void onTalkerUpdated(uint32_t tg, ReflectorClient* old_talker,
                          ReflectorClient *new_talker);
+
+    void onFederationStreamStarted(
+        uint32_t tg,
+        const std::string& source_callsign);
+
+    void onFederationStreamStopped(
+        uint32_t tg,
+        const std::string& source_callsign);
+
     void httpRequestReceived(Async::HttpServerConnection *con,
                              Async::HttpServerConnection::Request& req);
     void httpClientConnected(Async::HttpServerConnection *con);

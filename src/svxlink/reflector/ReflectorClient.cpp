@@ -62,6 +62,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ReflectorClient.h"
 #include "Reflector.h"
+#include "FederationMsg.h"
+#include "ReflectorFederation.h"
 #include "TGHandler.h"
 
 
@@ -244,6 +246,12 @@ ReflectorClient::ReflectorClient(Reflector *ref, Async::FramedTcpConnection *con
 
 ReflectorClient::~ReflectorClient(void)
 {
+  ReflectorFederation* federation = m_reflector->federation();
+  if (federation != 0)
+  {
+    federation->unregisterPeerSession(this);
+  }
+
   m_status = nullptr;
   auto client_it = client_map.find(m_client_id);
   assert(client_it != client_map.end());
@@ -313,7 +321,9 @@ void ReflectorClient::udpMsgReceived(const ReflectorUdpMsg &header)
 {
   m_udp_heartbeat_rx_cnt = UDP_HEARTBEAT_RX_CNT_RESET;
 
-  if ((m_blocktime > 0) && (header.type() == MsgUdpAudio::TYPE))
+  if ((m_blocktime > 0) &&
+      ((header.type() == MsgUdpAudio::TYPE) ||
+       (header.type() == MsgUdpFederationAudio::TYPE)))
   {
     m_remaining_blocktime = m_blocktime;
   }
@@ -547,6 +557,15 @@ void ReflectorClient::onFrameReceived(FramedTcpConnection *con,
       break;
     case MsgClientCsr::TYPE:
       handleMsgClientCsr(ss);
+      break;
+    case MsgFederationHello::TYPE:
+      handleFederationHello(ss);
+      break;
+    case MsgFederationStreamStart::TYPE:
+      handleFederationStreamStart(ss);
+      break;
+    case MsgFederationStreamStop::TYPE:
+      handleFederationStreamStop(ss);
       break;
     case MsgSelectTG::TYPE:
       handleSelectTG(ss);
@@ -851,6 +870,267 @@ void ReflectorClient::handleMsgClientCsr(std::istream& is)
     m_con_state = STATE_EXPECT_AUTH_RESPONSE;
   }
 } /* ReflectorClient::handleMsgClientCsr */
+
+
+void ReflectorClient::handleFederationHello(std::istream& is)
+{
+  if (m_con_state != STATE_CONNECTED)
+  {
+    sendError("Federation hello received before authentication");
+    return;
+  }
+
+  if (m_federation_session)
+  {
+    sendError("Federation hello already accepted");
+    return;
+  }
+
+  MsgFederationHello msg;
+  if (!msg.unpack(is))
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Could not unpack MsgFederationHello"
+              << std::endl;
+    sendError("Illegal federation hello");
+    return;
+  }
+
+  ReflectorFederation* federation = m_reflector->federation();
+  if (federation == 0)
+  {
+    sendError("Federation is unavailable");
+    return;
+  }
+
+  std::string peer;
+  uint16_t negotiated_minor = 0;
+  uint32_t negotiated_capabilities = 0;
+  std::string error;
+
+  if (!federation->validatePeerHello(
+          m_callsign,
+          msg.reflectorId(),
+          msg.domain(),
+          msg.major(),
+          msg.minor(),
+          msg.capabilities(),
+          peer,
+          negotiated_minor,
+          negotiated_capabilities,
+          error))
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Federation hello rejected: "
+              << error << std::endl;
+    sendError(error);
+    return;
+  }
+
+  if (!federation->registerPeerSession(peer, this, error))
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Federation session rejected: "
+              << error << std::endl;
+    sendError(error);
+    return;
+  }
+
+  MsgFederationHelloAck ack(
+      FederationProtocol::VERSION_MAJOR,
+      negotiated_minor,
+      federation->reflectorId(),
+      federation->domain(),
+      negotiated_capabilities);
+
+  if (sendMsg(ack) < 0)
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Could not send federation hello acknowledgement"
+              << std::endl;
+    federation->unregisterPeerSession(this);
+    disconnect();
+    return;
+  }
+
+  m_federation_session = true;
+  m_federation_peer = peer;
+  m_federation_reflector_id = msg.reflectorId();
+  m_federation_minor = negotiated_minor;
+  m_federation_capabilities = negotiated_capabilities;
+
+  std::cout << m_callsign
+            << ": Federation peer accepted:"
+            << " peer=" << m_federation_peer
+            << " reflector_id=" << m_federation_reflector_id
+            << " version=" << FederationProtocol::VERSION_MAJOR
+            << "." << m_federation_minor
+            << " capabilities=" << m_federation_capabilities
+            << std::endl;
+} /* ReflectorClient::handleFederationHello */
+
+void ReflectorClient::handleFederationStreamStart(std::istream& is)
+{
+  if (!m_federation_session)
+  {
+    sendError("Federation stream start received before federation hello");
+    return;
+  }
+
+  ReflectorFederation* federation = m_reflector->federation();
+  if ((federation == 0) ||
+      (federation->peerSession(m_federation_peer) != this))
+  {
+    sendError("Federation session is not registered");
+    return;
+  }
+
+  MsgFederationStreamStart msg;
+  if (!msg.unpack(is))
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Could not unpack MsgFederationStreamStart"
+              << std::endl;
+    sendError("Illegal federation stream start");
+    return;
+  }
+
+  std::string error;
+  uint16_t reason = FederationProtocol::STREAM_ACCEPTED;
+
+  ReflectorClient* talker =
+      TGHandler::instance()->talkerForTG(msg.tg());
+
+  if (talker != 0)
+  {
+    reason = FederationProtocol::STREAM_REJECT_LOCAL_BUSY;
+    error = "Talkgroup already has an active local talker";
+  }
+  else
+  {
+    reason = federation->startIncomingStream(
+        m_federation_peer,
+        msg.originReflectorId(),
+        msg.tg(),
+        msg.streamId(),
+        msg.sourceCallsign(),
+        msg.codec(),
+        error);
+  }
+
+  const bool accepted =
+      reason == FederationProtocol::STREAM_ACCEPTED;
+
+  MsgFederationStreamResult result(
+      msg.originReflectorId(),
+      msg.tg(),
+      msg.streamId(),
+      accepted,
+      reason,
+      error);
+
+  if (sendMsg(result) < 0)
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Could not send federation stream result"
+              << std::endl;
+
+    if (accepted)
+    {
+      std::string rollback_error;
+      federation->stopIncomingStream(
+          m_federation_peer,
+          msg.originReflectorId(),
+          msg.tg(),
+          msg.streamId(),
+          rollback_error);
+    }
+
+    disconnect();
+    return;
+  }
+
+  if (accepted)
+  {
+    std::cout << m_callsign
+              << ": Federation stream accepted:"
+              << " peer=" << m_federation_peer
+              << " origin=" << msg.originReflectorId()
+              << " tg=" << msg.tg()
+              << " stream_id=" << msg.streamId()
+              << " source=" << msg.sourceCallsign()
+              << " codec=" << msg.codec()
+              << std::endl;
+  }
+  else
+  {
+    std::cerr << "*** WARNING[" << m_callsign
+              << "]: Federation stream rejected:"
+              << " peer=" << m_federation_peer
+              << " origin=" << msg.originReflectorId()
+              << " tg=" << msg.tg()
+              << " stream_id=" << msg.streamId()
+              << " reason=" << reason
+              << " detail=" << error
+              << std::endl;
+  }
+} /* ReflectorClient::handleFederationStreamStart */
+
+
+void ReflectorClient::handleFederationStreamStop(std::istream& is)
+{
+  if (!m_federation_session)
+  {
+    sendError("Federation stream stop received before federation hello");
+    return;
+  }
+
+  ReflectorFederation* federation = m_reflector->federation();
+  if ((federation == 0) ||
+      (federation->peerSession(m_federation_peer) != this))
+  {
+    sendError("Federation session is not registered");
+    return;
+  }
+
+  MsgFederationStreamStop msg;
+  if (!msg.unpack(is))
+  {
+    std::cerr << "*** ERROR[" << m_callsign
+              << "]: Could not unpack MsgFederationStreamStop"
+              << std::endl;
+    sendError("Illegal federation stream stop");
+    return;
+  }
+
+  std::string error;
+  if (!federation->stopIncomingStream(
+          m_federation_peer,
+          msg.originReflectorId(),
+          msg.tg(),
+          msg.streamId(),
+          error))
+  {
+    std::cerr << "*** WARNING[" << m_callsign
+              << "]: Federation stream stop rejected:"
+              << " peer=" << m_federation_peer
+              << " origin=" << msg.originReflectorId()
+              << " tg=" << msg.tg()
+              << " stream_id=" << msg.streamId()
+              << " detail=" << error
+              << std::endl;
+    sendError(error);
+    return;
+  }
+
+  std::cout << m_callsign
+            << ": Federation stream stopped:"
+            << " peer=" << m_federation_peer
+            << " origin=" << msg.originReflectorId()
+            << " tg=" << msg.tg()
+            << " stream_id=" << msg.streamId()
+            << std::endl;
+} /* ReflectorClient::handleFederationStreamStop */
 
 
 void ReflectorClient::handleSelectTG(std::istream& is)
@@ -1232,6 +1512,12 @@ void ReflectorClient::onDiscTimeout(Timer *t)
 void ReflectorClient::disconnectCleanup(
     Async::FramedTcpConnection::DisconnectReason reason)
 {
+  ReflectorFederation* federation = m_reflector->federation();
+  if (federation != 0)
+  {
+    federation->unregisterPeerSession(this);
+  }
+
   m_disc_timer.setEnable(false);
   m_heartbeat_timer.setEnable(false);
   m_remote_udp_port = 0;
