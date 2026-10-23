@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <map>
 #include <utility>
 #include <cmath>
+#include <cstdint>
 
 
 /****************************************************************************
@@ -185,9 +186,12 @@ void DtmfEncoder::send(const std::string &str, unsigned duration)
   //current_str += str;
   for (size_t i=0; i<str.size(); ++i)
   {
+      // Compute in 64 bits so that a long duration cannot wrap around
     send_queue.push_back(SendQueueItem(
                            str[i],
-                           duration * sampling_rate / 1000
+                           static_cast<unsigned>(
+                             static_cast<uint64_t>(duration) * sampling_rate /
+                             1000)
                          ));
   }
   playNextDigit();

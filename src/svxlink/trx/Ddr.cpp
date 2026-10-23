@@ -1008,6 +1008,11 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 
     void setModulation(Modulation::Type mod)
     {
+      if ((mod < Modulation::MOD_FM) || (mod > Modulation::MOD_WBCW))
+      {
+        cerr << "*** WARNING: Ignoring unknown modulation " << mod << endl;
+        return;
+      }
       demod = 0;
       ch_offset = 0;
       switch (mod)

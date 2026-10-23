@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
+#include <cctype>
+#include <cmath>
 #include <json/json.h>
 
 
@@ -123,6 +125,42 @@ class ToneDet
  *
  ****************************************************************************/
 
+
+
+
+/****************************************************************************
+ *
+ * Local functions
+ *
+ ****************************************************************************/
+
+namespace {
+    // The values below come from the remote end and end up in event
+    // handler (TCL) calls, so only let through what they can really be
+  bool isValidDtmfDigit(char digit)
+  {
+    return ((digit >= '0') && (digit <= '9')) ||
+           ((digit >= 'A') && (digit <= 'D')) ||
+           (digit == '*') || (digit == '#');
+  }
+
+  bool isValidSel5Sequence(const std::string& digits)
+  {
+    return !digits.empty() &&
+           (digits.find_first_not_of("0123456789ABCDEF") == std::string::npos);
+  }
+
+  char validRxId(char rx_id)
+  {
+    return std::isalnum(static_cast<unsigned char>(rx_id)) ? rx_id
+                                                           : Rx::ID_UNKNOWN;
+  }
+
+  float validSignalStrength(float siglev)
+  {
+    return std::isfinite(siglev) ? siglev : 0.0f;
+  }
+} /* anonymous namespace */
 
 
 /****************************************************************************
@@ -449,8 +487,8 @@ void NetRx::handleMsg(Msg *msg)
       if (muteState() != Rx::MUTE_ALL)
       {
         MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
-        last_signal_strength = sql_msg->signalStrength();
-        last_sql_rx_id = sql_msg->sqlRxId();
+        last_signal_strength = validSignalStrength(sql_msg->signalStrength());
+        last_sql_rx_id = validRxId(sql_msg->sqlRxId());
         sql_is_open = sql_msg->isOpen();
         last_sql_activity_info = sql_msg->sqlActivityInfo();
         if (sql_msg->isOpen())
@@ -477,8 +515,8 @@ void NetRx::handleMsg(Msg *msg)
       if (muteState() != Rx::MUTE_ALL)
       {
         MsgSiglevUpdate *sql_msg = reinterpret_cast<MsgSiglevUpdate*>(msg);
-        last_signal_strength = sql_msg->signalStrength();
-        last_sql_rx_id = sql_msg->sqlRxId();
+        last_signal_strength = validSignalStrength(sql_msg->signalStrength());
+        last_sql_rx_id = validRxId(sql_msg->sqlRxId());
         signalLevelUpdated(last_signal_strength);
         publishSquelchState();
       }
@@ -490,7 +528,10 @@ void NetRx::handleMsg(Msg *msg)
       if (muteState() == Rx::MUTE_NONE)
       {
       	MsgDtmf *dtmf_msg = reinterpret_cast<MsgDtmf*>(msg);
-      	dtmfDigitDetected(dtmf_msg->digit(), dtmf_msg->duration());
+        if (isValidDtmfDigit(dtmf_msg->digit()))
+        {
+      	  dtmfDigitDetected(dtmf_msg->digit(), dtmf_msg->duration());
+        }
       }
       break;
     }
@@ -533,7 +574,10 @@ void NetRx::handleMsg(Msg *msg)
       if (muteState() == Rx::MUTE_NONE)
       {
         MsgSel5 *sel5_msg = reinterpret_cast<MsgSel5*>(msg);
-        selcallSequenceDetected(sel5_msg->digits());
+        if (isValidSel5Sequence(sel5_msg->digits()))
+        {
+          selcallSequenceDetected(sel5_msg->digits());
+        }
       }
       break;
     }
