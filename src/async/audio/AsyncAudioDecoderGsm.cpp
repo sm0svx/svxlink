@@ -133,8 +133,14 @@ void AudioDecoderGsm::writeEncodedSamples(void *buf, int size)
     frame[frame_len++] = ptr[i];
     if (frame_len == sizeof(frame))
     {
+      frame_len = 0;
       gsm_signal s16_samples[FRAME_SAMPLE_CNT];
-      gsm_decode(gsmh, frame, s16_samples);
+      if (gsm_decode(gsmh, frame, s16_samples) != 0)
+      {
+          // Not a valid GSM frame. The output buffer is left untouched, so
+          // skip the frame instead of writing garbage.
+        continue;
+      }
     
       float samples[FRAME_SAMPLE_CNT];
       for (int j=0; j<FRAME_SAMPLE_CNT; ++j)
@@ -142,10 +148,18 @@ void AudioDecoderGsm::writeEncodedSamples(void *buf, int size)
         samples[j] = static_cast<float>(s16_samples[j]) / 32768.0;
       }
       sinkWriteSamples(samples, FRAME_SAMPLE_CNT);
-      frame_len = 0;
     }
   }
 } /* AudioDecoderGsm::writeEncodedSamples */
+
+
+void AudioDecoderGsm::flushEncodedSamples(void)
+{
+    // Drop a partially received frame, so that the next frame is not
+    // decoded misaligned
+  frame_len = 0;
+  AudioDecoder::flushEncodedSamples();
+} /* AudioDecoderGsm::flushEncodedSamples */
 
 
 
