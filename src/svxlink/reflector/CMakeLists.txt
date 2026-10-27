@@ -22,12 +22,24 @@ set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 # Add project libraries
 set(LIBS asynccpp asyncaudio asynccore svxmisc ${LIBS})
 
+# Find libcurl libraries
+pkg_check_modules(CURL REQUIRED libcurl)
+include_directories(${CURL_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${CURL_LIBRARIES})
+
 # Build the executable
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_executable(svxreflector
   svxreflector.cpp Reflector.cpp ReflectorClient.cpp TGHandler.cpp
+  RemoteUserAuth.cpp
 )
-target_link_libraries(svxreflector ${LIBS})
+target_link_libraries(svxreflector ${LIBS} ${CURL_LIBRARIES})
 set_target_properties(svxreflector PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
