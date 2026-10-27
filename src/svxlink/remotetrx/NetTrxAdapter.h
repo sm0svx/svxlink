@@ -172,6 +172,7 @@ class NetTrxAdapter
     TxAdapter*      txa2;
     RxAdapter*      rxa1;
     std::string     net_uplink_name;
+    Async::Config::Subscription m_sub_rx_siglev;
     
     NetTrxAdapter(const NetTrxAdapter&);
     NetTrxAdapter& operator=(const NetTrxAdapter&);

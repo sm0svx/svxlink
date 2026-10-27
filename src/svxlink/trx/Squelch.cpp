@@ -32,6 +32,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cstdlib>
+#include <functional>
+
 
 
 /****************************************************************************
@@ -191,7 +194,7 @@ bool Squelch::initialize(Async::Config& cfg, const std::string& rx_name)
   }
 
   cfg.valueUpdated.connect(
-      sigc::bind<0>(sigc::mem_fun(*this, &Squelch::cfgUpdated), cfg));
+      sigc::mem_fun(*this, &Squelch::cfgUpdated));
 
   return true;
 } /* Squelch::initialize */
@@ -288,37 +291,31 @@ int Squelch::writeSamples(const float *samples, int count)
  *
  ****************************************************************************/
 
-void Squelch::cfgUpdated(Async::Config& cfg, const std::string& section,
-                         const std::string& tag)
+void Squelch::cfgUpdated(const std::string& section,
+                         const std::string& tag, const std::string& value)
 {
   //std::cout << "### Squelch::cfgUpdated: "
-  //          << section << "/" << tag << "=" << cfg.getValue(section, tag)
+  //          << section << "/" << tag << "=" << value
   //          << std::endl;
   if (section == m_name)
   {
     if (tag == CFG_SQL_HANGTIME)
     {
-      int hangtime = 0;
-      if (cfg.getValue(m_name, CFG_SQL_HANGTIME, hangtime))
-      {
-        setHangtime(hangtime);
-      }
+      int hangtime = std::atoi(value.c_str());
+      setHangtime(hangtime);
       std::cout << "Setting " << CFG_SQL_HANGTIME << " to " << hangtime
                 << " for squelch " << m_name << std::endl;
     }
     else if (tag == CFG_SQL_EXTENDED_HANGTIME)
     {
-      int ext_hangtime = 0;
-      if (cfg.getValue(m_name, CFG_SQL_EXTENDED_HANGTIME, ext_hangtime))
-      {
-        setExtendedHangtime(ext_hangtime);
-      }
+      int ext_hangtime = std::atoi(value.c_str());
+      setExtendedHangtime(ext_hangtime);
       std::cout << "Setting " << CFG_SQL_EXTENDED_HANGTIME << " to "
                 << ext_hangtime
                 << " for squelch " << m_name << std::endl;
     }
   }
-} /* LocalRxBase::cfgUpdated */
+} /* Squelch::cfgUpdated */
 
 
 void Squelch::setSignalDetectedP(bool is_detected)

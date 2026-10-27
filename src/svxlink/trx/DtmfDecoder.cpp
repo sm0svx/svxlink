@@ -156,6 +156,7 @@ DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
 bool DtmfDecoder::initialize(void)
 {
   cfg().getValue(name(), "DTMF_HANGTIME", m_hangtime);
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &DtmfDecoder::cfgUpdated));
   return true;
 } /* DtmfDecoder::initialize */
 
@@ -174,6 +175,16 @@ bool DtmfDecoder::initialize(void)
  *
  ****************************************************************************/
 
+void DtmfDecoder::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  if (section == name())
+  {
+    if (tag == "DTMF_HANGTIME")
+    {
+      cfg().getValue(name(), "DTMF_HANGTIME", m_hangtime);
+    }
+  }
+} /* DtmfDecoder::cfgUpdated */
 
 
 /*

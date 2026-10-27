@@ -247,7 +247,7 @@ bool LocationInfo::initialize(Async::Config& cfg, const std::string& cfg_name)
   }
 
   loc_cfg.debug = false;
-  cfg.subscribeValue(cfg_name, "DEBUG", loc_cfg.debug,
+  _instance->m_sub_debug = cfg.subscribeValue(cfg_name, "DEBUG", loc_cfg.debug,
       [](bool debug)
       {
         LocationInfo::_instance->loc_cfg.debug = debug;

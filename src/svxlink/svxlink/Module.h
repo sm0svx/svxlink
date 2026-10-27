@@ -497,7 +497,8 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * @param   tag     The name of the configuration variable
      */
     virtual void cfgUpdated(const std::string& section,
-                            const std::string& tag);
+                            const std::string& tag,
+                            const std::string& value);
 
   private:
     void      	      *m_dl_handle;

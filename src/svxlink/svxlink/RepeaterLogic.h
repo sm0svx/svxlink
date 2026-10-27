@@ -221,6 +221,7 @@ class RepeaterLogic : public Logic
     void openOnSqlTimerExpired(Async::Timer *t);
     void activateOnOpenOrClose(SqlFlank flank);
     void identNag(Async::Timer *t);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
 
 };  /* class RepeaterLogic */
 

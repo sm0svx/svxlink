@@ -1633,6 +1633,70 @@ bool SipLogic::getConfigValue(const std::string& section,
   return cfg().getValue(section, tag, value, true);
 } /* SipLogic::getConfigValue */
 
+
+void SipLogic::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  // Call parent implementation first (if it exists)
+  // LogicBase::cfgUpdated(section, tag, value);
+  
+  if (section == name())
+  {
+    if (tag == "USERNAME")
+    {
+      cfg().getValue(name(), "USERNAME", m_username);
+    }
+    else if (tag == "PASSWORD")
+    {
+      cfg().getValue(name(), "PASSWORD", m_password);
+    }
+    else if (tag == "SIPSERVER")
+    {
+      cfg().getValue(name(), "SIPSERVER", m_sipserver);
+    }
+    else if (tag == "SIPEXTENSION")
+    {
+      cfg().getValue(name(), "SIPEXTENSION", m_sipextension);
+    }
+    else if (tag == "SIPSCHEMA")
+    {
+      cfg().getValue(name(), "SIPSCHEMA", m_schema);
+    }
+    else if (tag == "SIPPORT")
+    {
+      cfg().getValue(name(), "SIPPORT", m_sip_port);
+    }
+    else if (tag == "SIPREGISTRAR")
+    {
+      cfg().getValue(name(), "SIPREGISTRAR", m_sipregistrar);
+    }
+    else if (tag == "AUTOANSWER")
+    {
+      cfg().getValue(name(), "AUTOANSWER", m_autoanswer);
+    }
+    else if (tag == "AUTOCONNECT")
+    {
+      cfg().getValue(name(), "AUTOCONNECT", m_autoconnect);
+    }
+    else if (tag == "CALLERNAME")
+    {
+      cfg().getValue(name(), "CALLERNAME", m_callername);
+    }
+    else if (tag == "SIP_LOGLEVEL")
+    {
+      cfg().getValue(name(), "SIP_LOGLEVEL", m_siploglevel);
+    }
+    else if (tag == "REG_TIMEOUT")
+    {
+      cfg().getValue(name(), "REG_TIMEOUT", m_reg_timeout);
+    }
+    else if (tag == "CALL_TIMEOUT")
+    {
+      cfg().getValue(name(), "CALL_TIMEOUT", m_calltimeout);
+    }
+  }
+} /* SipLogic::cfgUpdated */
+
+
 /*
  * This file has not been truncated
  */

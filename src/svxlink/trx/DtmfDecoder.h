@@ -186,6 +186,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     
     Async::Config &cfg(void) { return m_cfg; }
     const std::string &name(void) const { return m_name; }
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
     
     
   private:

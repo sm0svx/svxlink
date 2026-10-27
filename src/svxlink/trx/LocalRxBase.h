@@ -296,7 +296,7 @@ class LocalRxBase : public Rx
     void setSqlHangtimeFromSiglev(float siglev);
     void rxReadyStateChanged(void);
     void publishSquelchState(void);
-    void cfgUpdated(const std::string& section, const std::string& tag);
+    void cfgUpdated(const std::string& section, const std::string& tag, const std::string& value);
 
 };  /* class LocalRxBase */
 

@@ -1,0 +1,16 @@
+# SVXLink Database Configuration - MySQL/MariaDB Backend
+# This configuration uses a MySQL or MariaDB database
+
+[DATABASE]
+# Backend type: file, sqlite, mysql, postgresql
+TYPE=mysql
+
+# For MySQL backend, SOURCE is the connection URL
+# Format: mysql://username:password@hostname:port/database
+# 
+# Before using this configuration:
+# 1. Create the database: CREATE DATABASE svxlink_config;
+# 2. Create a user: CREATE USER 'svxlink'@'localhost' IDENTIFIED BY 'your_password';
+# 3. Grant privileges: GRANT ALL PRIVILEGES ON svxlink_config.* TO 'svxlink'@'localhost';
+# 4. Replace 'your_password' below with the actual password
+SOURCE=mysql://svxlink:your_password@localhost:3306/svxlink_config

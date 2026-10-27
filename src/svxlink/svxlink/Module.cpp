@@ -272,16 +272,46 @@ bool Module::squelchIsOpen(void)
 } /* Module::squelchIsOpen */
 
 
-void Module::cfgUpdated(const std::string& section, const std::string& tag)
+void Module::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
 {
   if (section == cfgName())
   {
-    std::string value;
-    if (cfg().getValue(cfgName(), tag, value))
+    if (tag == "TIMEOUT")
     {
-      setEventVariable(name() + "::CFG_" + tag, value);
-      processEvent("config_updated CFG_" + tag + " \"" + value + "\"");
+      string timeout_str;
+      if (cfg().getValue(cfgName(), "TIMEOUT", timeout_str))
+      {
+        unsigned timeout = atoi(timeout_str.c_str());
+        if (timeout > 0)
+        {
+          if (m_tmo_timer == 0)
+          {
+            m_tmo_timer = new Timer(1000 * timeout);
+            m_tmo_timer->setEnable(false);
+            m_tmo_timer->expired.connect(mem_fun(*this, &Module::moduleTimeout));
+          }
+          else
+          {
+            m_tmo_timer->setTimeout(1000 * timeout);
+          }
+        }
+        else if (m_tmo_timer != 0)
+        {
+          delete m_tmo_timer;
+          m_tmo_timer = 0;
+        }
+      }
     }
+    else if (tag == "MUTE_LOGIC_LINKING")
+    {
+      cfg().getValue(cfgName(), "MUTE_LOGIC_LINKING", m_mute_linking);
+      // Apply the new setting if module is active
+      if (m_is_active)
+      {
+        m_logic->setMuteLinking(m_mute_linking);
+      }
+    }
+    // ID and NAME changes would require restart
   }
 } /* Module::cfgUpdated */
 

@@ -219,6 +219,8 @@ bool ModuleDtmfRepeater::initialize(void)
   {
     repeat_delay_timer.setTimeout(std::max(0, repeat_delay));
   }
+
+  cfg().valueUpdated.connect(sigc::mem_fun(*this, &ModuleDtmfRepeater::cfgUpdated));
   
   return true;
   
@@ -382,6 +384,25 @@ void ModuleDtmfRepeater::sendStoredDigits(void)
   sendDtmf(received_digits);
   received_digits.clear();
 } /* ModuleDtmfRepeater::sendStoredDigits */
+
+
+void ModuleDtmfRepeater::cfgUpdated(const std::string& section, const std::string& tag, const std::string& value)
+{
+  // Call base class to handle TIMEOUT and MUTE_LOGIC_LINKING
+  Module::cfgUpdated(section, tag, value);
+
+  if (section == cfgName())
+  {
+    if (tag == "REPEAT_DELAY")
+    {
+      int repeat_delay = 0;
+      if (cfg().getValue(cfgName(), "REPEAT_DELAY", repeat_delay))
+      {
+        repeat_delay_timer.setTimeout(std::max(0, repeat_delay));
+      }
+    }
+  }
+} /* ModuleDtmfRepeater::cfgUpdated */
 
 
 

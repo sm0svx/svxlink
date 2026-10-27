@@ -12,7 +12,7 @@ using namespace Async;
 int main(int argc, char **argv)
 {
   Config cfg;
-  if (!cfg.open("test.cfg"))
+  if (!cfg.openDirect("file://test.cfg"))
   {
     cerr << "*** Error: Could not open config file test.cfg\n";
     exit(1);
@@ -68,21 +68,21 @@ int main(int argc, char **argv)
 	    "not found or out of range.\n";
   }
 
-  cfg.subscribeValue("SECTION1", "VALUE1", "",
+  auto sub1 = cfg.subscribeValue("SECTION1", "VALUE1", "",
       [](const std::string& val)
       {
         cout << "SECTION1/VALUE1=" << val << endl;
       });
   cfg.setValue("SECTION1", "VALUE1", "A subscribed string value");
 
-  cfg.subscribeValue("SECTION2", "MY_INT", -1,
+  auto sub2 = cfg.subscribeValue("SECTION2", "MY_INT", -1,
       [](int val)
       {
         cout << "SECTION2/MY_INT=" << val << endl;
       });
   cfg.setValue("SECTION2", "MY_INT", 4711);
 
-  cfg.subscribeValue("SECTION1", "VEC", std::vector<int>{1,2,3},
+  auto sub3 = cfg.subscribeValue("SECTION1", "VEC", std::vector<int>{1,2,3},
       [=](const std::vector<int>& vec)
       {
         std::copy(vec.begin(), vec.end(),
