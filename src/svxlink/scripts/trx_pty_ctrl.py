@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import serial
 import select
@@ -33,7 +33,7 @@ class GadeliusGcom16:
             self.set_rx_fq(self.current_rx_fq)
             self.set_tx_fq(self.current_tx_fq)
         except serial.serialutil.SerialException as e:
-            print "*** WARNING: Could not open serial port:", e
+            print("*** WARNING: Could not open serial port:", e)
             self.ser = None
             self.reopen_cnt = 100
 
@@ -64,17 +64,17 @@ class GadeliusGcom16:
     def write(self, cmd):
         sys.stdout.write(">" + cmd)
         if self.ser is not None:
-            self.ser.write(cmd)
+            self.ser.write(cmd.encode())
 
     def set_rx_fq(self, fq):
         self.current_rx_fq = fq
         fq = float(fq) / 1000.0
-        self.write(b'RFQ %.0f\n' % fq)
+        self.write('RFQ %.0f\n' % fq)
 
     def set_tx_fq(self, fq):
         self.current_tx_fq = fq
         fq = float(fq) / 1000.0
-        self.write(b'TFQ %.0f\n' % fq)
+        self.write('TFQ %.0f\n' % fq)
         pass
 
     def set_tx_pwr(self, pwr):
@@ -83,13 +83,13 @@ class GadeliusGcom16:
 
     def set_rx_mod(self, mod):
         if mod != 'FM':
-            print "*** WARNING: This RX can only handle FM " + \
-                  "modulation, not " + mod
+            print("*** WARNING: This RX can only handle FM " +
+                  "modulation, not " + mod)
 
     def set_tx_mod(self, mod):
         if mod != 'FM':
-            print "*** WARNING: This TX can only handle FM " + \
-                  "modulation, not " + mod
+            print("*** WARNING: This TX can only handle FM " +
+                  "modulation, not " + mod)
 
     def set_tx_on(self, tx_on):
         self.current_tx_on = tx_on
@@ -97,12 +97,12 @@ class GadeliusGcom16:
             if self.ser is not None:
                 self.ser.dtr = tx_on
         except IOError as e:
-            print "*** WARNING: Failed to wrte to serial device:", e
+            print("*** WARNING: Failed to wrte to serial device:", e)
             self.reopen()
 
     def handle_input(self):
         line = self.ser.readline()
-        sys.stdout.write("<" + line)
+        sys.stdout.write("<" + line.decode('latin-1', 'replace'))
 
     def sql_open(self):
         try:
@@ -111,7 +111,7 @@ class GadeliusGcom16:
             else:
                 return False
         except IOError as e:
-            print "*** WARNING: Lost serial port connection:", e
+            print("*** WARNING: Lost serial port connection:", e)
             self.reopen()
 
 
@@ -134,7 +134,7 @@ class Pty:
     def _open_pty(self):
         if self.pty is not None:
             if self.sql_open:
-                self.pty.write('Z')
+                self.pty.write(b'Z')
             self.close()
         self.pty_cmd_state = Pty.CMD_IDLE
         self.sql_open = False
@@ -142,7 +142,7 @@ class Pty:
             self.pty = open(self.pty_path, "wb+", buffering=0)
             self.poller.register(self.pty, select.POLLIN)
         except IOError as e:
-            print e
+            print(e)
             self.pty = None
 
     def tick(self):
@@ -155,8 +155,8 @@ class Pty:
         sql_open = self.trx.sql_open()
         if sql_open != self.sql_open:
             self.sql_open = sql_open
-            self.pty.write('O' if sql_open else 'Z')
-            print 'The squelch is %s' % ('OPEN' if sql_open else 'CLOSED')
+            self.pty.write(b'O' if sql_open else b'Z')
+            print('The squelch is %s' % ('OPEN' if sql_open else 'CLOSED'))
 
     def fileno(self):
         return self.pty.fileno()
@@ -168,11 +168,12 @@ class Pty:
             self.pty = None
 
     def handle_input(self):
-        ch = self.pty.read(1)
-        if len(ch) == 0:
-            print "*** WARNING: PTY not connected"
+        data = self.pty.read(1)
+        if len(data) == 0:
+            print("*** WARNING: PTY not connected")
             self.close()
             self.reopen_cnt = 100
+        ch = data.decode('latin-1')
         if self.pty_cmd_state == Pty.CMD_IDLE:
             if ch == 'T':
                 print("Turning transmitter ON")
@@ -196,28 +197,28 @@ class Pty:
             if ch != ';':
                 self.fq += ch
             else:
-                print "Set RX FQ to %sHz" % self.fq
+                print("Set RX FQ to %sHz" % self.fq)
                 self.trx.set_rx_fq(self.fq)
                 self.pty_cmd_state = Pty.CMD_IDLE
         elif self.pty_cmd_state == Pty.CMD_TXFQ:
             if ch != ';':
                 self.fq += ch
             else:
-                print "Set TX FQ to %sHz" % self.fq
+                print("Set TX FQ to %sHz" % self.fq)
                 self.trx.set_tx_fq(self.fq)
                 self.pty_cmd_state = Pty.CMD_IDLE
         elif self.pty_cmd_state == Pty.CMD_RXMOD:
             if ch != ';':
                 self.mod += ch
             else:
-                print "Set RX modulation to %s" % self.mod
+                print("Set RX modulation to %s" % self.mod)
                 self.trx.set_rx_mod(self.mod)
                 self.pty_cmd_state = Pty.CMD_IDLE
         elif self.pty_cmd_state == Pty.CMD_TXMOD:
             if ch != ';':
                 self.mod += ch
             else:
-                print "Set TX modulation to %s" % self.mod
+                print("Set TX modulation to %s" % self.mod)
                 self.trx.set_tx_mod(self.mod)
                 self.pty_cmd_state = Pty.CMD_IDLE
 
@@ -232,7 +233,7 @@ while True:
     events = poller.poll(10)
     pty.tick()
     trx.tick()
-    for fd,event in events:
+    for fd, event in events:
         if fd == trx.fileno():
             trx.handle_input()
         elif fd == pty.fileno():
