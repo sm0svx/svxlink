@@ -1,6 +1,18 @@
  1.11.0 -- ?? ??? ????
 -----------------------
 
+* ModuleMetarInfo: four Bugfixes:
+  onData() - values.pop_back() was missing in the TXT-section causes the 
+  date-regex to fail
+  advanceOrEnd - (++next) For a token at the end of the list, the code would 
+  go beyond `values.end()` — in the case of `StrList = std::vector`, 
+  this results in undefined behavior. Replaced with a range check performed 
+  before the step.
+  isRunway() - now checks against `npos` plus the remaining length, limits 
+  the `erase` operation to the actual length, and compares the result of 
+  the `find` operation on `shdesig` against `end()`
+  AddRequest - checks the URI and the result of curl_easy_init() before 
+  setopt accesses them.
 * SvxReflector: New HTTP admin API, enabled using the HTTP_ADMIN_SRV_PORT
   configuration variable, for managing the CA. It is used by web based
   administration interfaces, like SvxMonitor, to list, review, sign and remove
@@ -98,6 +110,10 @@
   unbounded memory growth (DoS)
   Credit: Mark Rose
   Approved by: sh123
+
+* Bugfix in ModuleMetarInfo: bkn///cb was not output if the altitude was
+  missing
+  By Adi/DL1HRC
 
 
 
