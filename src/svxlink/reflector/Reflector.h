@@ -259,6 +259,7 @@ class Reflector : public sigc::trackable
     typedef std::map<Async::FramedTcpConnection*,
                      ReflectorClient*> ReflectorClientConMap;
     typedef Async::TcpServer<Async::FramedTcpConnection> FramedTcpServer;
+    using HttpServer = Async::TcpServer<Async::HttpServerConnection>;
 
     static constexpr unsigned ROOT_CA_VALIDITY_DAYS     = 25*365;
     static constexpr unsigned ISSUING_CA_VALIDITY_DAYS  = 4*90;
@@ -273,7 +274,8 @@ class Reflector : public sigc::trackable
     uint32_t                    m_random_qsy_lo;
     uint32_t                    m_random_qsy_hi;
     uint32_t                    m_random_qsy_tg;
-    Async::TcpServer<Async::HttpServerConnection>*  m_http_server;
+    HttpServer*                 m_http_server;
+    HttpServer*                 m_http_admin_server = nullptr;
     Async::Pty*                 m_cmd_pty;
     std::string                 cfg_filename;
     bool                        debug;
@@ -332,6 +334,9 @@ class Reflector : public sigc::trackable
     void httpClientConnected(Async::HttpServerConnection *con);
     void httpClientDisconnected(Async::HttpServerConnection *con,
         Async::HttpServerConnection::DisconnectReason reason);
+    void httpAdminClientConnected(Async::HttpServerConnection *con);
+    void httpAdminRequestReceived(Async::HttpServerConnection *con,
+                                  Async::HttpServerConnection::Request& req);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
     bool getUserData(void);
@@ -353,6 +358,12 @@ class Reflector : public sigc::trackable
     std::vector<CertInfo> getAllCerts(void);
     std::vector<CertInfo> getAllPendingCSRs(void);
     std::string formatCerts(bool signedCerts=true, bool pendingCerts=true);
+    std::vector<std::string> listCallsignFiles(const std::string& dir,
+                                               const std::string& ext) const;
+    std::string pendingCsrCallsign(const std::string& id) const;
+    std::string clientCertCallsign(const std::string& id) const;
+    bool readClientCertFile(const std::string& callsign,
+                            Async::SslX509& cert) const;
 };  /* class Reflector */
 
 

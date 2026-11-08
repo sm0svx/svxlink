@@ -1,3 +1,15 @@
+ 1.10.0 -- ?? ??? ????
+-----------------------
+
+* New SslX509::toText and SslCertSigningReq::toText functions that return a
+  verbose, human readable dump of the certificate/CSR.
+
+* New SslX509::subjectAltName function.
+
+* HttpServerConnection: Added reason phrases for status codes 400, 405 and 500.
+
+
+
  1.9.1 -- 26 Jul 2026
 ----------------------
 

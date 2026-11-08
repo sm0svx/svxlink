@@ -11,7 +11,7 @@ to indicate that an incoming connection is on its way.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2026 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -341,6 +341,10 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, uint16_t port,
 	char *strtok_buf_ptr = strtok_buf;
 	char *remote_call = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
 	const char *remote_name = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
+	if (remote_call != 0)
+	{
+	  sanitizeCallsign(remote_call);
+	}
 	if ((remote_call != 0) && (remote_call[0] != 0))
 	{
 	  if (remote_name == 0)

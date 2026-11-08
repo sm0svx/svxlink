@@ -348,6 +348,7 @@ void ReflectorClient::setBlock(unsigned blocktime)
   }
   m_blocktime = blocktime;
   m_remaining_blocktime = blocktime;
+  updateListenOnly();
 } /* ReflectorClient::setBlock */
 
 
@@ -965,6 +966,7 @@ void ReflectorClient::handleNodeInfo(std::istream& is)
     status["protoVer"]["minorVer"] = protoVer().minorVer();
     setMonitoredTGs(m_monitored_tgs);
     setTg(m_current_tg);
+    updateListenOnly();
     if (status.isMember("qth") && status["qth"].isArray())
     {
       //std::cout << "### Found qth" << std::endl;
@@ -1504,6 +1506,15 @@ void ReflectorClient::setTg(uint32_t tg)
 
   updateIsTalker();
 } /* ReflectorClient::setTg */
+
+
+void ReflectorClient::updateListenOnly(void)
+{
+  if (m_status != nullptr)
+  {
+    (*m_status)["listenOnly"] = (m_blocktime > 0);
+  }
+} /* ReflectorClient::updateListenOnly */
 
 
 
