@@ -276,12 +276,19 @@ class ModuleMetarInfo::Http : public sigc::trackable
 
    void AddRequest(const char* uri)
    {
+     if (uri == NULL) return;
+
      CURL* curl = curl_easy_init();
+     if (curl == NULL)
+     {
+       cout << "*** ERROR: curl_easy_init failed\n";
+       return;
+     }
      curl_easy_setopt(curl, CURLOPT_URL, uri);
      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &Http::callback);
      curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
 
-     if (!pending_curl)
+     if (pending_curl == NULL)
      {
        pending_curl = curl;
        curl_multi_add_handle(multi_handle, pending_curl);
@@ -1080,14 +1087,12 @@ int ModuleMetarInfo::handleMetar(std::string input)
     // that the loop's trailing "it++" does not step past values.end().
   auto advanceOrEnd = [&it, &values, &endflag]() -> bool
   {
-    StrList::iterator next = it;
-    ++next;
-    if (next == values.end())
+    if (values.empty() || it == values.end() || it+1 == values.end())
     {
       endflag = true;
       return false;
     }
-    it = next;
+    ++it;
     return true;
   };
 
@@ -2195,14 +2200,23 @@ bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
    stringstream ss;
    std::map <string, string>::iterator it;
 
-   token.erase(0,token.find("wy")+2);
+   size_t wy = token.find("wy");
+   if (wy == string::npos || token.length() < wy + 4) return false;
+   token.erase(0,wy+2);
    ss << token.substr(0,2);
-   token.erase(0,3);
+   token.erase(0, std::min<size_t>(3, token.length()));
 
    if (token.length() > 0)
    {
      it = shdesig.find(token);
-     ss << " " << it->second;
+     if (it != shdesig.end())
+     {
+       ss << " " << it->second;
+     }
+     else
+     {
+       ss << " " << token; // unknown extension, give it out without changes
+     }
    }
 
    retval = ss.str();

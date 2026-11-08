@@ -4,11 +4,21 @@ by Adi / DL1HRC
 VERSION 1.0.99.0 (21 Feb 2017)
 VERSION 1.2.0.0 (12 Mar 2018)
 VERSION 1.2.1.99.2 (19 Apr 2020)
-
+VERSION 1.2.6.99.0 (8 Nov 2026)
 
 CHANGES:
-- make airport announcement more flexible, porting code from c++ to tcl
-
+  four Bugfixes:
+  onData() - values.pop_back() was missing in the TXT-section causes the
+  date-regex to fail
+  advanceOrEnd - (++next) For a token at the end of the list, the code would
+  go beyond `values.end()` — in the case of `StrList = std::vector`,
+  this results in undefined behavior. Replaced with a range check performed
+  before the step.
+  isRunway() - now checks against `npos` plus the remaining length, limits
+  the `erase` operation to the actual length, and compares the result of
+  the `find` operation on `shdesig` against `end()`
+  AddRequest - checks the URI and the result of curl_easy_init() before
+  setopt accesses them.
 
 FUNCTION:
 
