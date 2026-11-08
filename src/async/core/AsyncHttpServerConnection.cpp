@@ -529,10 +529,16 @@ const char* HttpServerConnection::codeToString(unsigned code)
   {
     case 200:
       return "OK";
+    case 400:
+      return "Bad Request";
     case 404:
       return "Not Found";
+    case 405:
+      return "Method Not Allowed";
     case 406:
       return "Not Acceptable";
+    case 500:
+      return "Internal Server Error";
     case 501:
       return "Not Implemented";
     default:

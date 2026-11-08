@@ -235,6 +235,12 @@ class Reflector : public sigc::trackable
 
     Json::Value& clientStatus(const std::string& callsign);
 
+    /**
+     * @brief   Called from the ReflectorClient class
+     */
+    void clientDisconnectCleanup(Async::FramedTcpConnection *con,
+                            Async::FramedTcpConnection::DisconnectReason reason);
+
   protected:
 
   private:
@@ -257,6 +263,7 @@ class Reflector : public sigc::trackable
     uint32_t                    m_random_qsy_hi;
     uint32_t                    m_random_qsy_tg;
     HttpServer*                 m_http_server;
+    HttpServer*                 m_http_admin_server = nullptr;
     Async::Pty*                 m_cmd_pty;
     Async::SslContext           m_ssl_ctx;
     std::string                 m_keys_dir;
@@ -282,8 +289,6 @@ class Reflector : public sigc::trackable
     Reflector(const Reflector&);
     Reflector& operator=(const Reflector&);
     void clientConnected(Async::FramedTcpConnection *con);
-    void clientDisconnected(Async::FramedTcpConnection *con,
-                            Async::FramedTcpConnection::DisconnectReason reason);
     bool udpCipherDataReceived(const Async::IpAddress& addr, uint16_t port,
                                void *buf, int count);
     void udpDatagramReceived(const Async::IpAddress& addr, uint16_t port,
@@ -295,6 +300,9 @@ class Reflector : public sigc::trackable
     void httpClientConnected(Async::HttpServerConnection *con);
     void httpClientDisconnected(Async::HttpServerConnection *con,
         Async::HttpServerConnection::DisconnectReason reason);
+    void httpAdminClientConnected(Async::HttpServerConnection *con);
+    void httpAdminRequestReceived(Async::HttpServerConnection *con,
+                                  Async::HttpServerConnection::Request& req);
     void onRequestAutoQsy(uint32_t from_tg);
     uint32_t nextRandomQsyTg(void);
     void ctrlPtyDataReceived(const void *buf, size_t count);
@@ -313,6 +321,12 @@ class Reflector : public sigc::trackable
     std::vector<CertInfo> getAllCerts(void);
     std::vector<CertInfo> getAllPendingCSRs(void);
     std::string formatCerts(bool signedCerts=true, bool pendingCerts=true);
+    std::vector<std::string> listCallsignFiles(const std::string& dir,
+                                               const std::string& ext) const;
+    std::string pendingCsrCallsign(const std::string& id) const;
+    std::string clientCertCallsign(const std::string& id) const;
+    bool readClientCertFile(const std::string& callsign,
+                            Async::SslX509& cert) const;
 };  /* class Reflector */
 
 

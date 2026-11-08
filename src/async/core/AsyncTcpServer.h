@@ -172,9 +172,7 @@ class TcpServer : public TcpServerBase
     virtual void createConnection(int sock, const IpAddress& remote_addr,
                                   uint16_t remote_port) override
     {
-      ConT *con = new TcpServerConnection(sock, remote_addr, remote_port);
-      con->disconnected.connect(
-          mem_fun(*this, &TcpServer<ConT>::onDisconnected));
+      ConT *con = new TcpServerConnection(*this, sock, remote_addr, remote_port);
       addConnection(con);
     }
 
@@ -188,9 +186,9 @@ class TcpServer : public TcpServerBase
   private:
     struct TcpServerConnection : public ConT
     {
-      TcpServerConnection(int sock, const IpAddress& remote_addr,
-                          uint16_t remote_port)
-        : ConT(sock, remote_addr, remote_port)
+      TcpServerConnection(TcpServer& srv, int sock,
+                          const IpAddress& remote_addr, uint16_t remote_port)
+        : ConT(sock, remote_addr, remote_port), m_srv(srv)
       {
       }
       virtual TcpConnection& operator=(TcpConnection&& other_base) override
@@ -201,16 +199,25 @@ class TcpServer : public TcpServerBase
         m_is_connected = false;
         return *this;
       }
+      virtual void onDisconnected(
+          typename ConT::DisconnectReason reason) override
+      {
+        m_srv.onDisconnected(this, reason);
+        m_is_connected = false;
+        ConT::onDisconnected(reason);
+      }
 
-      bool m_is_connected = false;
+      TcpServer&  m_srv;
+      bool        m_is_connected  {false};
     };
 
     void onDisconnected(ConT *con_base, typename ConT::DisconnectReason reason)
     {
       auto con = dynamic_cast<TcpServerConnection*>(con_base);
-      if (con->m_is_connected)
+      assert(con != nullptr);
+      if (con->m_is_connected &&
+          (reason != TcpConnection::DR_ORDERED_DISCONNECT))
       {
-        con->m_is_connected = false;
         clientDisconnected(con_base, reason);
       }
       removeConnection(con_base);

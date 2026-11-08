@@ -200,7 +200,7 @@ class NetUplink : public Uplink
       	      	      	    Async::TcpConnection::DisconnectReason reason);
     int tcpDataReceived(Async::TcpConnection *con, void *data, int size);
     void handleMsg(NetTrxMsg::Msg *msg);
-    void sendMsg(NetTrxMsg::Msg *msg);
+    void sendMsg(const NetTrxMsg::Msg& msg);
 
     /**
      * @brief 	Set squelch state to open/closed

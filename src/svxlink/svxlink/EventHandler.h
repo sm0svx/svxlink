@@ -117,6 +117,21 @@ class EventHandler : public sigc::trackable
     using CommandHandler = std::function<std::string(int argc, const char *argv[])>;
 
     /**
+     * @brief   Make a string safe for interpolation into a TCL event string
+     * @param   str The string to make TCL safe
+     * @return  Returns a copy of \em str with all characters not valid in an
+     *          amateur radio callsign removed
+     *
+     * This function whitelist filters a string down to the characters that
+     * are valid in an amateur radio callsign (alphanumerics, '-' and '/').
+     * It must be used whenever untrusted data, e.g. a callsign received from
+     * a remote reflector server or EchoLink peer, is interpolated into a TCL
+     * event string before being passed to EventHandler::processEvent, to
+     * guard against TCL command injection.
+     */
+    static std::string tclSafeCallsign(const std::string& str);
+
+    /**
      * @brief 	Constuctor
      */
     EventHandler(const std::string& event_script, const std::string& logic_name);

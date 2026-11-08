@@ -821,6 +821,21 @@ class SslX509
     }
 
     /**
+     * @brief   Get the subject alternative names extension
+     * @return  Returns the SAN extension (null object if there is none)
+     */
+    SslX509ExtSubjectAltName subjectAltName(void) const
+    {
+      assert(m_cert != nullptr);
+      int ext_idx = X509_get_ext_by_NID(m_cert, NID_subject_alt_name, -1);
+      if (ext_idx < 0)
+      {
+        return nullptr;
+      }
+      return X509_get_ext(m_cert, ext_idx);
+    }
+
+    /**
      * @brief   Get the public key
      * @retrun  Returns the public key
      */
@@ -946,6 +961,36 @@ class SslX509
       //      return std::move(ss) << std::setw(2) << unsigned(x);
       //    }).str() + "\n"
       return ss.str();
+    }
+
+    /**
+     * @brief   Get a verbose, human readable dump of the certificate
+     * @return  Returns the certificate in text form
+     *
+     * The output is similar to that of "openssl x509 -text -noout" except
+     * that the signature dump is left out.
+     */
+    std::string toText(void) const
+    {
+      if (isNull())
+      {
+        return std::string();
+      }
+      std::string str;
+      BIO *mem = BIO_new(BIO_s_mem());
+      assert(mem != nullptr);
+      if (X509_print_ex(mem, m_cert, XN_FLAG_ONELINE & ~ASN1_STRFLGS_ESC_MSB,
+                        X509_FLAG_NO_SIGDUMP) == 1)
+      {
+        char *buf = nullptr;
+        long len = BIO_get_mem_data(mem, &buf);
+        if ((len > 0) && (buf != nullptr))
+        {
+          str = std::string(buf, len);
+        }
+      }
+      BIO_free(mem);
+      return str;
     }
 
     /**

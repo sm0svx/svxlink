@@ -119,6 +119,57 @@ using namespace FrnUtils;
  *
  ****************************************************************************/
 
+namespace {
+
+  // Upper bound on the number of items accepted in a single FRN list.
+  // Guards against a malicious or buggy FRN server sending a bogus (e.g.
+  // negative) item count, which would otherwise leave the list parser
+  // stuck reading list items forever, accumulating them without bound.
+  const long MAX_LIST_ITEM_COUNT = 10000;
+
+  // Parse the item count line at the start of an FRN list into a
+  // validated, non-negative count. A line that fails to parse as a
+  // non-negative integer, or that exceeds MAX_LIST_ITEM_COUNT, yields a
+  // count of 0 so that the list is treated as empty instead of hanging
+  // the parser.
+  int parseListItemCount(const std::string &line)
+  {
+    char *endp = 0;
+    long count = strtol(line.c_str(), &endp, 10);
+    if (endp == line.c_str() || count < 0)
+    {
+      return 0;
+    }
+    if (count > MAX_LIST_ITEM_COUNT)
+    {
+      return MAX_LIST_ITEM_COUNT;
+    }
+    return static_cast<int>(count);
+  }
+
+  // Read one line from a buffer and return the number of bytes it
+  // consumed, terminator included. safeGetline() consumes the line
+  // terminator (\n, \r or \r\n) itself but does not report how many
+  // bytes that was, so the byte count is derived from the stream
+  // position before and after the read. This gives an exact count per
+  // line instead of guessing from a single has-Windows-newline flag for
+  // the whole buffer, which miscounts as soon as line endings are mixed.
+  int readTerminatedLine(std::istringstream &lines, std::string &line)
+  {
+    std::streampos start_pos = lines.tellg();
+    if (!safeGetline(lines, line))
+    {
+      return 0;
+    }
+    std::streampos end_pos = lines.tellg();
+    if (end_pos == std::streampos(-1))
+    {
+      return static_cast<int>(line.length()) + 1;
+    }
+    return static_cast<int>(end_pos - start_pos);
+  }
+
+} // namespace
 
 
 /****************************************************************************
@@ -288,13 +339,16 @@ QsoFrn::~QsoFrn(void)
   con_timeout_timer = 0;
 
   delete rx_timeout_timer;
-  con_timeout_timer = 0;
+  rx_timeout_timer = 0;
 
   delete tcp_client;
   tcp_client = 0;
 
   delete keepalive_timer;
   keepalive_timer = 0;
+
+  delete reconnect_timer;
+  reconnect_timer = 0;
 
   gsm_destroy(gsmh);
   gsmh = 0;
@@ -696,6 +750,8 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
     case DT_BLOCK_LIST:
     case DT_MUTE_LIST:
     case DT_ACCESS_MODE:
+      lines_to_read = -1;
+      cur_item_list.clear();
       setState(STATE_RX_LIST);
       break;
 
@@ -730,20 +786,23 @@ int QsoFrn::handleList(unsigned char *data, int len)
   int bytes_read = 0;
   std::string line;
   std::istringstream lines(std::string((char*)data, len));
-  bool has_win_newline = hasWinNewline(lines);
 
-  if (hasLine(lines) && safeGetline(lines, line))
+  if (hasLine(lines))
   {
-    if (lines_to_read == -1)
+    int line_bytes = readTerminatedLine(lines, line);
+    if (line_bytes > 0)
     {
-      lines_to_read = atoi(line.c_str());
+      if (lines_to_read == -1)
+      {
+        lines_to_read = parseListItemCount(line);
+      }
+      else
+      {
+        cur_item_list.push_back(line);
+        lines_to_read--;
+      }
+      bytes_read += line_bytes;
     }
-    else
-    {
-      cur_item_list.push_back(line);
-      lines_to_read--;
-    }
-    bytes_read += line.length() + (has_win_newline ? 2 : 1);
   }
   if (lines_to_read == 0)
   {
@@ -764,40 +823,43 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
   int bytes_read = 0;
   std::string line;
   std::istringstream lines(std::string((char*)data, len));
-  bool has_win_newline = hasWinNewline(lines);
 
-  if (hasLine(lines) && safeGetline(lines, line))
+  if (hasLine(lines))
   {
-    if (stage_one)
+    int line_bytes = readTerminatedLine(lines, line);
+    if (line_bytes > 0)
     {
-      if (line.length() == std::string("2014003").length() ||
-          line.length() == std::string("0").length())
+      if (stage_one)
       {
-        setState(STATE_LOGGING_IN_2);
-        cout << "login stage 1 completed: " << line << endl;
+        if (line.length() == std::string("2014003").length() ||
+            line.length() == std::string("0").length())
+        {
+          setState(STATE_LOGGING_IN_2);
+          cout << "login stage 1 completed: " << line << endl;
+        }
+        else
+        {
+          setState(STATE_ERROR);
+          cerr << "login stage 1 failed: " << line << endl;
+        }
       }
       else
       {
-        setState(STATE_ERROR);
-        cerr << "login stage 1 failed: " << line << endl;
+        if (line.find("<AL>BLOCK</AL>") == std::string::npos &&
+            line.find("<AL>WRONG</AL>") == std::string::npos)
+        {
+          setState(STATE_IDLE);
+          sendRequest(RQ_RX0);
+          cout << "login stage 2 completed: " << line << endl;
+        }
+        else
+        {
+          setState(STATE_ERROR);
+          cerr << "login stage 2 failed: " << line << endl;
+        }
       }
+      bytes_read += line_bytes;
     }
-    else
-    {
-      if (line.find("<AL>BLOCK</AL>") == std::string::npos &&
-          line.find("<AL>WRONG</AL>") == std::string::npos)
-      {
-        setState(STATE_IDLE);
-        sendRequest(RQ_RX0);
-        cout << "login stage 2 completed: " << line << endl;
-      }
-      else
-      {
-        setState(STATE_ERROR);
-        cerr << "login stage 2 failed: " << line << endl;
-      }
-    }
-    bytes_read += line.length() + (has_win_newline ? 2 : 1);
   }
   return bytes_read;
 }

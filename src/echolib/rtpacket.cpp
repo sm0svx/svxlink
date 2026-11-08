@@ -275,3 +275,33 @@ bool isRTCPSdespacket(unsigned char *p, int len)
     return sawsdes;
 }
 
+
+/*  SANITIZECALLSIGN  --  Remove characters that are not valid in an
+			  EchoLink callsign and limit the length of it.
+
+    The callsign received in an SDES packet is controlled by the remote
+    station. It is used by applications in for example TCL event strings
+    and fixed size buffers so make sure that it only contain characters
+    that are valid in a callsign (e.g. SM0SVX-L, *ECHOTEST*) and that it
+    is of a reasonable length. The string is modified in place. */
+
+/***************************************************/
+
+void sanitizeCallsign(char *call)
+{
+    const int max_len = 32;
+    char *dst = call;
+    const char *src;
+
+    for (src = call; (*src != 0) && (dst - call < max_len); ++src)
+    {
+	char ch = *src;
+	if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')) ||
+	    ((ch >= '0') && (ch <= '9')) ||
+	    (ch == '-') || (ch == '/') || (ch == '*') || (ch == '_'))
+	{
+	    *dst++ = ch;
+	}
+    }
+    *dst = 0;
+}

@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <cctype>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -116,6 +118,17 @@ using namespace Async;
  * Public member functions
  *
  ****************************************************************************/
+
+std::string EventHandler::tclSafeCallsign(const std::string& str)
+{
+  std::string safe;
+  safe.reserve(str.size());
+  std::copy_if(str.begin(), str.end(), std::back_inserter(safe),
+      [](unsigned char ch) {
+        return isalnum(ch) || (ch == '-') || (ch == '/');
+      });
+  return safe;
+} /* EventHandler::tclSafeCallsign */
 
 
 EventHandler::EventHandler(const string& event_script, const string& logic_name)

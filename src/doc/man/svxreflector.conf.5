@@ -141,6 +141,29 @@ disturbances in the reflector operation.
 
 Example: HTTP_SRV_PORT=8080
 .TP
+.B HTTP_ADMIN_SRV_PORT
+Set which port to use for the HTTP admin server. The admin server expose a
+JSON API for managing the certificate authority (CA), e.g. listing, reviewing,
+signing and removing certificate signing requests (CSR) and client
+certificates, and for blocking nodes. It is typically used by a web based administration interface.
+See the "HTTP ADMIN API" section below for more information. No port is set by
+default, meaning that the admin server is disabled.
+
+There is no authentication at all on the admin server so anyone that can
+connect to it have full control over the CA and the connected nodes. By default it is only reachable
+from the local host. See HTTP_ADMIN_SRV_BIND_ADDR if it need to be reachable
+from other hosts. Never expose this port to the public Internet.
+
+Example: HTTP_ADMIN_SRV_PORT=8081
+.TP
+.B HTTP_ADMIN_SRV_BIND_ADDR
+The IP address to bind the HTTP admin server to. Only connections to this
+address will be accepted. Set to 0.0.0.0 to listen on all interfaces but make
+sure to then protect the port using a firewall so that only trusted hosts can
+reach it. The default is 127.0.0.1.
+
+Example: HTTP_ADMIN_SRV_BIND_ADDR=172.17.1.42
+.TP
 .B COMMAND_PTY
 Configure a path for a pseudo tty device to send runtime commands to the
 svxreflector. The device may be defined as COMMAND_PTY=/dev/shm/reflector_ctrl.
@@ -396,6 +419,65 @@ Remove all certificate files associated with the given callsign. Note that it
 is NOT sufficient to remove the files to stop the given callsign from logging
 in. If the node already has a valid certificate, it can be used to log in. To
 stop a node from logging in, use the REJECT_CALLSIGN configuration variable.
+.
+.SH HTTP ADMIN API
+If an admin port has been set up using the HTTP_ADMIN_SRV_PORT configuration
+variable, the certificate authority and the connected nodes can be managed
+using the HTTP requests described below. All responses are in JSON format. On error, a HTTP status
+code other than 200 is returned together with a JSON object containing a
+"message" member describing the error.
+
+Pending CSRs are identified by the SHA-256 digest of the CSR, as a hex string.
+Since the id change if the node send in an updated CSR, it is not possible to
+sign a CSR that differ from the one that was reviewed. Certificates are
+identified by their serial number. The server certificate and the CA
+certificates are never included.
+
+Each path segment, e.g. a callsign, is percent-decoded so callsigns containing
+special characters, like "/", must be percent-encoded (e.g. "SM0ABC%2FP").
+.TP
+.B GET /ca/csrs
+List all pending CSRs. Each list item contain the members "id", "subject" and
+"sanEmails".
+.TP
+.B GET /ca/csrs/<id>
+Get one pending CSR. In addition to the list item members, a "decoded" member
+is included with a human readable dump of the full CSR.
+.TP
+.B POST /ca/csrs/<id>/sign
+Sign the pending CSR, the same as the CA SIGN PTY command.
+.TP
+.B DELETE /ca/csrs/<id>
+Remove the pending CSR without signing it.
+.TP
+.B GET /ca/certs
+List all client certificates, including expired ones. Each list item contain
+the members "id", "subject" and "notAfter" (ISO 8601, UTC).
+.TP
+.B GET /ca/certs/<id>
+Get one client certificate. In addition to the list item members, the members
+"sanEmails", "serial", "notBefore" (ISO 8601, UTC) and "decoded" are
+included.
+.TP
+.B DELETE /ca/certs/<id>
+Remove the client certificate and the CSR it was signed from. A pending CSR
+for the same callsign is left untouched. Just like for the CA RM PTY command,
+this will not stop a node that still has a valid certificate from logging in.
+.TP
+.B GET /nodes/<callsign>/block
+Get the block status for a connected node. The returned object contain the
+members "blocked" (true or false), "blocktime" (the block time set using
+NODE BLOCK, or using the admin API, in seconds) and "remaining" (the number of
+seconds left until the block expire). Both times are 0 if the node is not
+blocked.
+.TP
+.B PUT /nodes/<callsign>/block/<blocktime seconds>
+Block a connected node from being a talker, the same as the NODE BLOCK PTY
+command. A blocktime of 0 removes the block.
+.TP
+.B DELETE /nodes/<callsign>/block
+Remove the block for a connected node, the same as a NODE BLOCK PTY command
+with a blocktime of 0.
 .
 .SH FILES
 .

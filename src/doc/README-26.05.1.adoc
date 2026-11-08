@@ -1,0 +1,85 @@
+= SvxLink release 26.05.1 -- 26 Jul 2026
+
+This is a SECURITY bugfix release for the 26.05 release. Several security
+related bugs was fixed by Mark Rose using AI. Have a look at the ChangeLogs
+below for an overview of all fixes.
+
+In depth description of each security patch can be found at the
+https://github.com/sm0svx/svxlink/security/advisories?state=published[GitHub Security Advisories page].
+
+'''
+
+== Complete ChangeLog for SvxLink Server version 1.10.1
+
+* Security: RemoteTrx NetUplink unvalidated audio length (OOB read).
+  Credit: Mark Rose
+
+* Security: Emit warning if AUTH_KEY is unset in RemoteTrx NetUplink.
+  Suggested by: Mark Rose
+
+* Security: LocationInfo: Avoid buffer overflow in APRS message construction
+  Credit: Mark Rose
+
+* Security: SvxReflector: Fix use-after-free from stale cached JSON on
+  repeated MsgNodeInfo
+  Credit: Mark Rose
+
+* Security: SvxReflector: Reentrant delete client → use-after-free on
+  this via sendError() write-failure path
+  Credit: Mark Rose
+
+* Bugfix in ModuleMetarInfo: bkn///cb was not output if the altitude was
+  missing
+  By Adi/DL1HRC
+
+* Security: SvxReflector client: TCL command injection via server-supplied
+  talker callsign
+  Credit: Mark Rose
+
+* Security: NetRx: unvalidated MsgAudio length → out-of-bounds read
+  (network)
+  Credit: Mark Rose
+
+* Security: RemoteTrx NetUplink: server-initiated disconnect leaks the
+  connection object → unbounded resource exhaustion (network DoS)
+  Credit: Mark Rose
+
+* Bugfix: Fix memory handling problem in RemoteTrx
+
+* Security: RtlTcp: malformed rtl_tcp greeting triggers `exit(1)` → full
+  daemon denial of service
+  Credit: Mark Rose
+
+* Security: FRN module: unvalidated server-supplied list item count →
+  unbounded memory growth (DoS)
+  Credit: Mark Rose
+  Approved by: sh123
+
+
+== Complete ChangeLog for Qtel version 1.3.1
+
+No changes in this release.
+
+
+== Complete ChangeLog for EchoLib version 1.3.7
+
+* Security: Fix stack buffer overflow in EchoLink StationData::setData.
+  Credit: Mark Rose
+
+* Security: Fix out-of-bounds reads in EchoLink RTCP/SDES packet parsing
+  Credit: Mark Rose
+
+* Security: EchoLink proxy message-length integer truncation
+  Credit: Mark Rose <markrose@markrose.ca>
+
+
+== Complete ChangeLog for the Async library version 1.9.1
+
+* Security: Async HTTP server: unbounded request-line/header accumulation may
+  lead to memory-exhaustion DoS.
+  Credit: Mark Rose <markrose@markrose.ca>
+
+* Security: Audio decoders: attacker-sized stack VLA from encoded-frame
+  length → stack exhaustion (network) lead to memory-exhaustion DoS.
+  Credit: Mark Rose <markrose@markrose.ca>
+
