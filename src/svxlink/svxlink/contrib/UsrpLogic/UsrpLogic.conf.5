@@ -1,0 +1,107 @@
+.TH USRPLOGIC.CONF 5 "OCTOBER 2025" Linux "File Formats"
+.
+.SH NAME
+.
+UsrpLogic.conf \- Configuration file for the SvxLink server with Usrp extension
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration file format.
+.
+.SS UsrpLogic
+.
+The UsprLogic is used to connect SvxLink with a digital Hamradio network. The 
+communication is based on Udp transmission. Some Hamradio applications
+are able to accept the protocol (Asterisk, MMDVM).
+.TP
+.B TYPE
+The type for a Usrp Logic is always "Usrp"
+.TP
+.B CALL
+Specify the callsign used at this logic.
+.TP
+.B USRP_HOST
+The hostname of the Usrp server.
+.TP
+.B USRP_TX_PORT
+The Udp port used to send Udp messages to Usrp server
+.TP
+.B USRP_RX_PORT
+The Udp port used to receive Udp messages from the Usrp server.
+.TP
+.B DMRID
+The DMR-ID ssigned to the callsign.
+.TP
+.B RPTID
+The repeater ID. It's not used in most cases.
+.TP
+.B DEFAULT_TG
+The talk group. Default is 0
+.TP
+.B DEFAULT_CC
+The color code. It's not used in most cases, default is 1
+.TP
+.B DEFAULT_TS
+The time slot. It's not used in most cases, default is 1
+.TP
+.B PREAMP
+The signal (internal audio from connected logic) will be amplified/reduced 
+by the specified number of dB. This processed audio is sent to the usrp server.
+.TP
+.B NET_PREAMP
+The signal received from Usrp network will be amplified/reduced by the 
+number of dB. This processed audio is sent to connected logics.
+.TP
+.B NET_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter from the net site. The audio 
+limiter really is a compressor with a very steep compression ratio like 10:1. 
+The limiter is used to help keeping down the audio level to not overmodulate 
+the local connected logics.A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.TP
+.B LOCAL_LIMITER_THRESH
+Set the threshold, in dBFS, for the audio limiter from the local site to Usrp 
+network. The audio limiter really is a compressor with a very steep compression 
+ratio like 10:1. The limiter is used to help keeping down the audio level to 
+not overmodulate the remote connected usrp nodes. A good value
+to start with for this parameter is then -6 but try to lower it further (like
+-9 to -12) if it does not affect audio quality negatively.
+.TP
+.B SHARE_USERINFO
+If set, the logic shares information about local users defined in dv_users.json
+file with other nodes by sending over a connected reflector.
+.TP
+.B DEBUG
+Define the debug level (0..4) to get more information.
+.TP
+.B DV_USER_INFOFILE
+Path to the file that contain specific information about local users of the
+node.
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.d/UsrpLogic.conf"
+The configuration file for the UsrpLogic part.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at svxlink dot org>
+
+Adi Bier (DL1HRC) <dl1hrc at gmx dot de>
+.
+.SH REPORTING BUGS
+.
+Bugs should be reported using the issue tracker at
+https://github.com/dl1hrc/svxlink.
+
+Questions about SvxLink should not be asked using the issue tracker. Instead
+use the group set up for this purpose at groups.io:
+https://groups.io/g/svxlink
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1)

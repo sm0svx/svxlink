@@ -1,3 +1,7 @@
+pkg_check_modules (JSONCPP REQUIRED jsoncpp)
+include_directories(${JSONCPP_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
+
 # The name of the module without the Module prefix
 set(MODNAME EchoLink)
 
