@@ -14,7 +14,7 @@ if(PC_SIGC_VERSION)
   if(${PC_SIGC_VERSION} VERSION_GREATER "3.0.0")
     set(SIGC_CXX_FLAGS "--std=c++17")
   elseif(${PC_SIGC_VERSION} VERSION_GREATER "2.5.0")
-    set(SIGC_CXX_FLAGS "--std=c++11")
+    set(SIGC_CXX_FLAGS "--std=c++17")
   endif()
 
   find_path(SIGC_CONFIG_INCLUDE_DIR sigc++config.h
