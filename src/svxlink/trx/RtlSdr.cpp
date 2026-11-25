@@ -150,6 +150,14 @@ void RtlSdr::setCenterFq(uint32_t fq)
 void RtlSdr::setSampleRate(uint32_t rate)
 {
   block_size = 10 * 2 * rate / 1000; // 10ms block size
+  if (block_size < 2)
+  {
+      // The block size is counted in bytes, two per I/Q sample
+    cerr << "*** WARNING: RtlSdr sample rate " << rate << " Hz is too low to "
+            "form a 10ms block; using a block size of one I/Q sample. "
+            "Use a valid RTL-SDR sample rate.\n";
+    block_size = 2;
+  }
   samp_rate = rate;
   samp_rate_set = true;
   handleSetSampleRate(rate);
