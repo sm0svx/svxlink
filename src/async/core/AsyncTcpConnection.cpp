@@ -223,6 +223,9 @@ TcpConnection& TcpConnection::operator=(TcpConnection&& other)
   other.m_ssl_encrypt_buf.clear();
   other.m_ssl_encrypt_buf.reserve(m_ssl_encrypt_buf.capacity());
 
+  m_ssl_plain_buf = std::move(other.m_ssl_plain_buf);
+  other.m_ssl_plain_buf.clear();
+
   return *this;
 } /* TcpConnection::operator= */
 
@@ -436,6 +439,7 @@ void TcpConnection::closeConnection(void)
   m_recv_buf.clear();
   m_write_buf.clear();
   m_ssl_encrypt_buf.clear();
+  m_ssl_plain_buf.clear();
 
   m_wr_watch.setEnabled(false);
   rd_watch.setEnabled(false);
@@ -684,7 +688,24 @@ int TcpConnection::sslRecvHandler(char* src, int count)
       //std::cout << "### SSL_read: n=" << n << std::endl;
       if (n > 0)
       {
-        onDataReceived(buf, n);
+          // Keep any decrypted data that the receiver did not consume (e.g.
+          // a partial frame) and hand it over again together with the next
+          // data, just like for an unencrypted connection
+        m_ssl_plain_buf.insert(m_ssl_plain_buf.end(), buf, buf + n);
+        int processed = onDataReceived(m_ssl_plain_buf.data(),
+                                       m_ssl_plain_buf.size());
+        if ((m_ssl == nullptr) || !isConnected())
+        {
+          return orig_count;
+        }
+        if (processed < 0)
+        {
+          return -1;
+        }
+        m_ssl_plain_buf.erase(m_ssl_plain_buf.begin(),
+            m_ssl_plain_buf.begin() +
+              std::min(static_cast<size_t>(processed),
+                       m_ssl_plain_buf.size()));
       }
     } while (n > 0);
 
@@ -713,6 +734,12 @@ int TcpConnection::sslRecvHandler(char* src, int count)
         }
       } while (n > 0);
     }
+  }
+
+    // Try to write data that was queued while OpenSSL could not write it
+  if ((m_ssl != nullptr) && !m_ssl_encrypt_buf.empty() && (sslEncrypt() < 0))
+  {
+    return -1;
   }
 
   return (orig_count - count);
@@ -766,6 +793,31 @@ int TcpConnection::sslEncrypt(void)
     int n = SSL_write(m_ssl, m_ssl_encrypt_buf.data(),
                       m_ssl_encrypt_buf.size());
     status = sslGetStatus(n);
+
+    if (n <= 0)
+    {
+        // Nothing was written. Either it failed, or OpenSSL needs to do
+        // something else first (e.g. read), in which case the data stays
+        // queued instead of retrying in a busy loop. It is written when more
+        // data has been received, or on the next call. Data that OpenSSL
+        // may have produced, e.g. for a renegotiation, is sent right away.
+      if (status == SSLSTATUS_FAIL)
+      {
+        return -1;
+      }
+      do {
+        n = BIO_read(m_ssl_wr_bio, buf, sizeof(buf));
+        if (n > 0)
+        {
+          addToWriteBuf(buf, n);
+        }
+        else if (!BIO_should_retry(m_ssl_wr_bio))
+        {
+          return -1;
+        }
+      } while (n > 0);
+      break;
+    }
 
     if (n > 0)
     {

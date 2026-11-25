@@ -536,6 +536,7 @@ class TcpConnection : virtual public sigc::trackable
     BIO*              m_ssl_rd_bio        = nullptr; // SSL reads, we write
     BIO*              m_ssl_wr_bio        = nullptr; // SSL writes, we read
     std::vector<char> m_ssl_encrypt_buf;
+    std::vector<char> m_ssl_plain_buf;
 
     bool              m_freezed           = false;
 
