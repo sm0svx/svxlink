@@ -80,6 +80,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace NetTrxMsg
 {
 
+  /**
+   * The maximum amount of data, in bytes, that may be waiting to be sent on
+   * a NetTrx TCP connection. A peer that falls further behind than this is
+   * disconnected instead of letting the delay and memory use grow without
+   * bound.
+   */
+  static const size_t MAX_TCP_WRITE_BUF_SIZE = 256 * 1024;
+
+
 
 /****************************************************************************
  *

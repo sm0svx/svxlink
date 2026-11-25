@@ -229,6 +229,7 @@ class TcpServerBase : public sigc::trackable
 
     ConThrotMap       m_con_throt_map;
     Timer             m_con_throt_timer;
+    Timer             m_accept_retry_timer;
     unsigned          m_con_throt_bucket_max  = 0;
     unsigned          m_con_throt_bucket_inc  = 0;
 
