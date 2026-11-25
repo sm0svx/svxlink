@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -174,6 +175,7 @@ class ModuleEchoLink : public Module
 
     EchoLink::Directory   *dir;
     Async::Timer      	  *dir_refresh_timer;
+    std::chrono::steady_clock::time_point last_incoming_dir_refresh;
     std::string       	  mycall;
     std::string       	  location;
     std::string       	  sysop_name;
@@ -240,6 +242,8 @@ class ModuleEchoLink : public Module
     void destroyQsoObject(QsoImpl *qso);
 
     void getDirectoryList(Async::Timer *timer=0);
+
+    void refreshDirectoryForIncoming(void);
 
     void createOutgoingConnection(const EchoLink::StationData &station);
     int audioFromRemote(float *samples, int count, QsoImpl *qso);
