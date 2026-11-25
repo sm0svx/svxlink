@@ -216,10 +216,17 @@ class SslCertSigningReq
      */
     SslCertSigningReq& operator=(SslCertSigningReq&& other)
     {
-      m_req = other.m_req;
-      m_file_path = other.m_file_path;
-      other.m_req = nullptr;
-      other.m_file_path.clear();
+      if (this != &other)
+      {
+        if (m_req != nullptr)
+        {
+          X509_REQ_free(m_req);
+        }
+        m_req = other.m_req;
+        m_file_path = other.m_file_path;
+        other.m_req = nullptr;
+        other.m_file_path.clear();
+      }
       return *this;
     }
 
@@ -602,11 +609,12 @@ class SslCertSigningReq
       BIO *mem = BIO_new(BIO_s_mem());
       int ret = PEM_write_bio_X509_REQ(mem, m_req);
       assert(ret == 1);
-      char buf[16384];
-      int len = BIO_read(mem, buf, sizeof(buf));
+      char* data = nullptr;
+      long len = BIO_get_mem_data(mem, &data);
       assert(len > 0);
+      std::string pem_str(data, len);
       BIO_free(mem);
-      return std::string(buf, len);
+      return pem_str;
     }
 
     /**
