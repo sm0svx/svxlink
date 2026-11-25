@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/sigc++.h>
 #include <sys/time.h>
 #include <vector>
+#include <set>
 #include <string>
 #include <json/json.h>
 
@@ -264,6 +265,7 @@ class Reflector : public sigc::trackable
     uint32_t                    m_random_qsy_tg;
     HttpServer*                 m_http_server;
     HttpServer*                 m_http_admin_server = nullptr;
+    std::set<std::string>       m_http_admin_allowed_hosts;
     Async::Pty*                 m_cmd_pty;
     Async::SslContext           m_ssl_ctx;
     std::string                 m_keys_dir;
