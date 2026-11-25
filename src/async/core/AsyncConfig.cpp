@@ -404,13 +404,14 @@ bool Config::parseCfgFile(FILE *file)
 char *Config::trimSpaces(char *line)
 {
   char *begin = line;
-  while ((*begin != 0) && isspace(*begin))
+  while ((*begin != 0) && isspace(static_cast<unsigned char>(*begin)))
   {
     ++begin;
   }
-  
+
   char *end = begin + strlen(begin);
-  while ((end != begin) && (isspace(*end) || (*end == 0)))
+  while ((end != begin) &&
+         (isspace(static_cast<unsigned char>(*end)) || (*end == 0)))
   {
     *end-- = 0;
   }
