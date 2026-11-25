@@ -991,7 +991,11 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   
-  if (qsos.size() >= max_connections)
+    // Count only active QSOs. A QSO object lingering in STATE_DISCONNECTED
+    // (it is destroyed ~5s after disconnect) must not count here, otherwise
+    // another station connecting within that window is wrongly rejected as
+    // "too many connections".
+  if (numActiveQsos() >= max_connections)
   {
     cerr << "*** WARNING: Ignoring incoming connection (too many "
       	    "connections)\n";
@@ -1055,7 +1059,11 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   selector->addSource(qso);
   selector->enableAutoSelect(qso, 0);
 
-  if (qsos.size() > max_qsos)
+    // The just-created QSO is still in STATE_DISCONNECTED here, so it is not
+    // counted by numActiveQsos(); reject when the existing active count
+    // already reaches max_qsos. Counting qsos.size() previously let a
+    // lingering disconnected QSO wrongly trip this limit.
+  if (numActiveQsos() >= max_qsos)
   {
     qso->reject(false);
     return;
@@ -1397,11 +1405,13 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     return;
   }
 
-  if (qsos.size() >= max_qsos)
+    // Count only active QSOs so a lingering disconnected QSO does not block
+    // a new outgoing connection.
+  if (numActiveQsos() >= max_qsos)
   {
     cerr << "Couldn't connect to " << station.callsign() << " due to the "
-         << "number of active connections (" << qsos.size() << " > "
-         << max_qsos << ")" << endl;
+         << "number of active connections (" << numActiveQsos()
+         << " >= " << max_qsos << ")" << endl;
     processEvent("no_more_connections_allowed");
     return;
   }
@@ -1810,9 +1820,9 @@ void ModuleEchoLink::dbcTimeout(Timer *t)
 } /* ModuleEchoLink::dbcTimeout  */
 
 
-int ModuleEchoLink::numConnectedStations(void)
+unsigned ModuleEchoLink::numConnectedStations(void)
 {
-  int cnt = 0;
+  unsigned cnt = 0;
   vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
@@ -1825,6 +1835,25 @@ int ModuleEchoLink::numConnectedStations(void)
   return cnt;
   
 } /* ModuleEchoLink::numConnectedStations */
+
+
+unsigned ModuleEchoLink::numActiveQsos(void)
+{
+    // Like numConnectedStations() but also count outgoing connections that
+    // have not been started yet. They stay in STATE_DISCONNECTED until the
+    // "connecting to" announcement has been played.
+  unsigned cnt = 0;
+  for (QsoImpl *qso : qsos)
+  {
+    if ((qso->currentState() != Qso::STATE_DISCONNECTED) ||
+        (find(outgoing_con_pending.begin(), outgoing_con_pending.end(), qso)
+         != outgoing_con_pending.end()))
+    {
+      ++cnt;
+    }
+  }
+  return cnt;
+} /* ModuleEchoLink::numActiveQsos */
 
 
 int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
