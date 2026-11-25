@@ -34,6 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 
 
 /****************************************************************************
@@ -135,9 +138,41 @@ class AudioDecoderRaw : public AudioDecoder
      */
     virtual void writeEncodedSamples(void *buf, int size)
     {
-      const float *samples = reinterpret_cast<const float *>(buf);
-      int count = size / sizeof(*samples);
-      sinkWriteSamples(samples, count);
+      if (size < 0)
+      {
+        return;
+      }
+        // The samples come from the remote end. Pass them on in fixed size
+        // chunks, replacing values that are not finite (which would get stuck
+        // in e.g. filter state) with silence and clamping the rest to the
+        // valid range.
+      const char *ptr = reinterpret_cast<const char *>(buf);
+      int count = size / sizeof(float);
+      float samples[512];
+      while (count > 0)
+      {
+        const int max_chunk = sizeof(samples) / sizeof(*samples);
+        const int chunk = std::min(count, max_chunk);
+        std::memcpy(samples, ptr, chunk * sizeof(*samples));
+        for (int i = 0; i < chunk; ++i)
+        {
+          if (!std::isfinite(samples[i]))
+          {
+            samples[i] = 0.0f;
+          }
+          else if (samples[i] > 1.0f)
+          {
+            samples[i] = 1.0f;
+          }
+          else if (samples[i] < -1.0f)
+          {
+            samples[i] = -1.0f;
+          }
+        }
+        sinkWriteSamples(samples, chunk);
+        ptr += chunk * sizeof(*samples);
+        count -= chunk;
+      }
     }
     
 
