@@ -80,6 +80,9 @@ using namespace SvxLink;
 
 #define SVXVER_STATUS "__SVXVER__"
 
+// APRS-IS lines are at most 512 bytes. Anything much longer is not valid.
+#define MAX_LINE_LEN 4096
+
 
 /****************************************************************************
  *
@@ -167,7 +170,6 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    con->connected.connect(mem_fun(*this, &AprsTcpClient::tcpConnected));
    con->disconnected.connect(mem_fun(*this, &AprsTcpClient::tcpDisconnected));
    con->dataReceived.connect(mem_fun(*this, &AprsTcpClient::tcpDataReceived));
-   con->connect();
 
    beacon_timer = new Timer(loc_cfg.binterval * 60 * 1000, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
@@ -188,6 +190,10 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    reconnect_timer->setEnable(false);
    reconnect_timer->expired.connect(mem_fun(*this,
                  &AprsTcpClient::reconnectAprsServer));
+
+   // Connect last. A connection failure may be reported synchronously
+   // and tcpDisconnected uses the timers created above.
+   con->connect();
 } /* AprsTcpClient::AprsTcpClient */
 
 
@@ -714,20 +720,32 @@ int AprsTcpClient::tcpDataReceived(TcpClient<>::TcpConnection *con,
   while (count > 0)
   {
     const char* nl = reinterpret_cast<const char*>(memchr(first, '\n', count));
+    size_t len = (nl != nullptr) ? (nl - first) : count;
+    if (!recv_discard && (recv_buf.size() + len > MAX_LINE_LEN))
+    {
+      std::cerr << "*** WARNING: Too long line received from APRS server "
+                << con->remoteHost() << ":" << con->remotePort()
+                << ". Ignoring it." << std::endl;
+      recv_buf.clear();
+      recv_discard = true;
+    }
+    if (!recv_discard)
+    {
+      recv_buf.append(first, len);
+    }
     if (nl != nullptr)
     {
-      recv_buf.append(first, nl);
-      if (!recv_buf.empty())
+      if (!recv_discard && !recv_buf.empty())
       {
         decodeAprsPacket(recv_buf);
-        recv_buf.clear();
       }
+      recv_buf.clear();
+      recv_discard = false;
       count -= nl - first + 1;
       first = nl+1;
     }
     else
     {
-      recv_buf.append(first, count);
       count = 0;
     }
   }
@@ -751,6 +769,7 @@ void AprsTcpClient::tcpDisconnected(TcpClient<>::TcpConnection *con,
   offset_timer->setEnable(false);
   offset_timer->reset();
   recv_buf.clear();
+  recv_discard = false;
 } /* AprsTcpClient::tcpDisconnected */
 
 

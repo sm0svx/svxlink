@@ -102,7 +102,12 @@ char AprsUdpClient::getPowerParam(unsigned int power)
 
 char AprsUdpClient::getHeightParam(unsigned int height)
 {
-  return '0' + lrintf(logf(height / 10.0f) / logf(2.0f));
+    // The PHG height digit is log2(height / 10 ft), limited to 0-9
+  if (height < 10)
+  {
+    return '0';
+  }
+  return '0' + std::min(lrintf(logf(height / 10.0f) / logf(2.0f)), 9L);
 } /* AprsUdpClient::getHeightParam */
 
 
@@ -184,8 +189,15 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
 
 AprsUdpClient::~AprsUdpClient(void)
 {
-  updateDirectoryStatus(StationData::STAT_OFFLINE);
+    // Only send the offline status if the server address is already known.
+    // Otherwise a new DNS lookup would be started, which would then just be
+    // aborted below, possibly blocking until the resolver times out.
+  if (!ip_addr.isEmpty())
+  {
+    updateDirectoryStatus(StationData::STAT_OFFLINE);
+  }
   delete beacon_timer;
+  delete dns;
 } /* AprsUdpClient::~AprsUdpClient */
 
 
