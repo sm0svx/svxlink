@@ -380,20 +380,21 @@ void UdpSocket::sendRest(FdWatch *watch)
     {
       return;
     }
-    else
-    {
-      perror("sendto in UdpSocket::sendRest");
-    }
+    perror("sendto in UdpSocket::sendRest");
   }
   else
   {
     assert(ret == send_buf->len);
-    sendBufferFull(false);
   }
-  
+
   delete send_buf;
   send_buf = 0;
   wr_watch->setEnabled(false);
+
+    // The deferred send is now finished, whether the datagram was sent or
+    // dropped due to a hard error. Signal that the buffer is no longer full
+    // last, since a handler may write again or delete this socket.
+  sendBufferFull(false);
   
 } /* UdpSocket::sendRest */
 
