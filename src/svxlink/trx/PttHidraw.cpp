@@ -266,6 +266,11 @@ bool PttHidraw::setTxOn(bool tx_on)
 {
   //cerr << "### PttHidraw::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
 
+  if ((m_fd < 0) && !openDevice())
+  {
+    return false;
+  }
+
   const char a[5] = {
     '\000',
     '\000',
@@ -273,11 +278,6 @@ bool PttHidraw::setTxOn(bool tx_on)
     m_pin,
     '\000'
   };
-
-  if ((m_fd < 0) && !openDevice())
-  {
-    return false;
-  }
 
   if (::write(m_fd, a, sizeof(a)) == -1)
   {
