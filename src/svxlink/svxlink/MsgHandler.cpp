@@ -777,8 +777,14 @@ bool WavFileQueueItem::initialize(void)
   }
 
     // Read subchunks
+  if (chunk_size < 4)
+  {
+    cerr << "*** WARNING: Illegal WAV file header in \"" << filename << "\". "
+         << "ChunkSize field is too small.\n";
+    return false;
+  }
   std::streampos data_file_pos(0);
-  int64_t rest_size = chunk_size - 4;
+  int64_t rest_size = static_cast<int64_t>(chunk_size) - 4;
   while (rest_size > 0)
   {
       // Read subchunk header
@@ -802,7 +808,7 @@ bool WavFileQueueItem::initialize(void)
     uint32_t subchunk_size;
     ptr += read32bitValue(ptr, &subchunk_size);
 
-    rest_size -= subchunk_size + 8;
+    rest_size -= static_cast<int64_t>(subchunk_size) + 8;
 
     if (memcmp(subchunk_id, "data", 4) == 0)
     {
