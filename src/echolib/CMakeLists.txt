@@ -59,6 +59,11 @@ add_executable(echolib_test echolib_test.cpp EchoLinkQsoTest.cpp)
 target_link_libraries(echolib_test ${LIBS} ${POPT_LIBRARIES} echolib asynccpp
                         asyncaudio asynccore)
 
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+# EchoLinkQsoTest.cpp is not a standalone test but part of echolib_test.
+svxlink_add_tests(LIBS ${LIBNAME} EXCLUDE EchoLinkQsoTest.cpp)
+
 # Install files
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
 if (BUILD_STATIC_LIBS)

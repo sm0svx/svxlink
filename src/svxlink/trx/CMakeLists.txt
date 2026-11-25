@@ -90,8 +90,13 @@ set(LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})
 target_link_libraries(${LIBNAME} ${LIBS})
 
-add_executable(DtmfDecoderTest DtmfDecoderTest.cpp)
-target_link_libraries(DtmfDecoderTest ${LIBNAME} asynccore asyncaudio)
+# Unit tests: every *Test.cpp here is auto-registered (see SvxLinkAddTests).
+# Adding a new test = drop in a new *Test.cpp file; no edits needed here.
+# trx is a static library, so linking it into a test that does not reference
+# its objects is harmless (the linker only pulls archive members that resolve
+# an otherwise-unresolved symbol). Tests needing extra sources use a
+# <Name>.deps.cmake sidecar (e.g. ModulationTest compiles Modulation.cpp).
+svxlink_add_tests(LIBS ${LIBNAME} asynccpp asynccore asyncaudio svxmisc)
 
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
