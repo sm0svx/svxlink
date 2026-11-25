@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
+#include <regex>
 #include <set>
 
 
@@ -303,6 +305,8 @@ class LinkManager : public sigc::trackable
       LogicPropMap  logic_props;
       StrSet        auto_activate;
       StrPairMap    auto_activate_on_tg;
+        // The ACTIVATE_ON_TG patterns, compiled once in initialize()
+      std::map<std::string, std::regex> auto_activate_on_tg_regex;
       bool          default_active;
       bool          is_activated;
       Async::Timer  *timeout_timer;
