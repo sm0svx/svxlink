@@ -810,15 +810,32 @@ void ModuleEchoLink::allMsgsWritten(void)
 {
   if (!outgoing_con_pending.empty())
   {
+    vector<QsoImpl*> failed;
     vector<QsoImpl*>::iterator it;
     for (it=outgoing_con_pending.begin(); it!=outgoing_con_pending.end(); ++it)
     {
-      (*it)->connect();
+      if (!(*it)->connect())
+      {
+        failed.push_back(*it);
+      }
     }
     //outgoing_con_pending->connect();
     updateDescription();
     broadcastTalkerStatus();
     outgoing_con_pending.clear();
+
+      // A connection that could not even be started, e.g. because the
+      // proxy is down, will never change state, so nothing else would clean
+      // it up. Report it like a failed connection attempt and remove it.
+    for (QsoImpl *qso : failed)
+    {
+      cerr << "*** WARNING: Could not connect to " << qso->remoteCallsign()
+           << endl;
+      stringstream ss;
+      ss << "disconnected " << qso->remoteCallsign();
+      processEvent(ss.str());
+      destroyQsoObject(qso);
+    }
   }
 } /* allMsgsWritten */
 
@@ -1464,7 +1481,14 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   stringstream ss;
   ss << "connecting_to " << qso->remoteCallsign();
   processEvent(ss.str());
-  outgoing_con_pending.push_back(qso);
+    // The same station may be dialed again before the pending connection
+    // has been started. Only queue it once so that it is not cleaned up
+    // twice if it cannot be started.
+  if (find(outgoing_con_pending.begin(), outgoing_con_pending.end(), qso) ==
+      outgoing_con_pending.end())
+  {
+    outgoing_con_pending.push_back(qso);
+  }
   
   if (LocationInfo::has_instance())
   {
@@ -1510,7 +1534,8 @@ QsoImpl *ModuleEchoLink::findFirstTalker(void) const
   vector<QsoImpl*>::const_iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
-    if ((*it)->receivingAudio())
+    if ((*it)->receivingAudio() &&
+        ((*it)->currentState() != Qso::STATE_DISCONNECTED))
     {
       return *it;
     }
