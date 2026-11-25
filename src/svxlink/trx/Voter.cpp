@@ -412,6 +412,14 @@ Voter::Voter(Config &cfg, const std::string& name)
 
 Voter::~Voter(void)
 {
+    // Put the state machine in the muted state before anything is deleted.
+    // Leaving the current state may access the active receiver, which must
+    // then still exist.
+  if (!is_processing_event)
+  {
+    setMuteState(Rx::MUTE_ALL);
+  }
+
   delete command_pty;
   command_pty = 0;
   delete selector;
