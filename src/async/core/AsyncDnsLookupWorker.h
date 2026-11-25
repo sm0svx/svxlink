@@ -131,7 +131,13 @@ class DnsLookupWorker
     {
       //std::cout << "### DnsLookupWorker::DnsLookupWorker: m_lookup_pending="
       //          << m_lookup_pending << std::endl;
-      srand(time(0));
+        // Seed the random number generator once, not for every lookup
+      static bool rand_seeded = false;
+      if (!rand_seeded)
+      {
+        srand(time(0));
+        rand_seeded = true;
+      }
     }
 
     /**
