@@ -171,6 +171,11 @@ class ModuleMetarInfo::Http : public sigc::trackable
    WatchMap watch_map;
    std::queue<CURL*> url_queue;
    CURL* pending_curl;
+   std::string body;
+
+   // Upper limit for the size of a response. A METAR report is a few
+   // kilobytes at most.
+   static const size_t MAX_BODY_SIZE = 64 * 1024;
 
   public:
 
@@ -206,52 +211,12 @@ class ModuleMetarInfo::Http : public sigc::trackable
    // update the html handler periodically
    void onTimeout(Async::Timer *timer)
    {
-     int handle_count;
-     curl_multi_perform(multi_handle, &handle_count);
-     if (handle_count == 0) 
-     {
-       disableAllWatches();
-       removePendingCurl();
-       if (url_queue.empty())
-       {
-         pending_curl = 0;
-         update_timer.setEnable(false);
-       }
-       else
-       {
-         pending_curl = url_queue.front();
-         url_queue.pop();
-         curl_multi_add_handle(multi_handle, pending_curl);
-         update_timer.setEnable(true);
-       }
-     }
-     updateWatchMap();
-     update_timer.reset();
-   } /* Update */
+     update();
+   } /* onTimeout */
 
    void onActivity(Async::FdWatch *watch)
    {
-     int handle_count;
-     curl_multi_perform(multi_handle, &handle_count);
-     if (handle_count == 0)
-     {
-       disableAllWatches();
-       removePendingCurl();
-       if (url_queue.empty())
-       {
-         pending_curl = 0;
-         update_timer.setEnable(false);
-       }
-       else
-       {
-         pending_curl = url_queue.front();
-         url_queue.pop();
-         curl_multi_add_handle(multi_handle, pending_curl);
-         updateWatchMap();
-         update_timer.setEnable(true);
-       }
-     }
-     update_timer.reset();
+     update();
    } /* onActivity */
 
    void removePendingCurl(void)
@@ -268,9 +233,14 @@ class ModuleMetarInfo::Http : public sigc::trackable
                                        void *userp)
    {
      if (userp == NULL) return 0;
+     Http *http = static_cast<Http*>(userp);
      size_t written = size * nmemb;
-     std::string html((const char *)contents, written);
-     static_cast<Http*>(userp)->metarInfo(html, html.size());
+     if (http->body.size() + written > MAX_BODY_SIZE)
+     {
+       std::cerr << "*** WARNING: METAR server response too large" << std::endl;
+       return 0;
+     }
+     http->body.append(contents, written);
      return written;
    } /* callback */
 
@@ -284,6 +254,7 @@ class ModuleMetarInfo::Http : public sigc::trackable
      if (!pending_curl)
      {
        pending_curl = curl;
+       body.clear();
        curl_multi_add_handle(multi_handle, pending_curl);
        updateWatchMap();
        update_timer.reset();
@@ -297,6 +268,59 @@ class ModuleMetarInfo::Http : public sigc::trackable
 
   private:
 
+   // Let curl do its work. When the current transfer has finished, start
+   // the next queued one and then emit the whole response, or emit
+   // metarTimeout if the transfer failed.
+   void update(void)
+   {
+     int handle_count;
+     curl_multi_perform(multi_handle, &handle_count);
+
+     bool is_done = false;
+     CURLcode result = CURLE_OK;
+     std::string response;
+     if ((pending_curl != 0) && (handle_count == 0))
+     {
+       is_done = true;
+       result = CURLE_RECV_ERROR;
+       CURLMsg *msg;
+       int msgs_left;
+       while ((msg = curl_multi_info_read(multi_handle, &msgs_left)) != 0)
+       {
+         if ((msg->msg == CURLMSG_DONE) && (msg->easy_handle == pending_curl))
+         {
+           result = msg->data.result;
+         }
+       }
+       response.swap(body);
+       removePendingCurl();
+       if (!url_queue.empty())
+       {
+         pending_curl = url_queue.front();
+         url_queue.pop();
+         curl_multi_add_handle(multi_handle, pending_curl);
+       }
+     }
+     update_timer.setEnable(pending_curl != 0);
+     updateWatchMap();
+     update_timer.reset();
+
+     // Emit last since a signal handler may delete this object
+     if (is_done)
+     {
+       if (result == CURLE_OK)
+       {
+         metarInfo(response, response.size());
+       }
+       else
+       {
+         std::cerr << "*** WARNING: METAR request failed: "
+                   << curl_easy_strerror(result) << std::endl;
+         metarTimeout();
+       }
+     }
+   } /* update */
+
    void updateWatchMap()
    {
      fd_set fdread;
@@ -309,35 +333,48 @@ class ModuleMetarInfo::Http : public sigc::trackable
      FD_ZERO(&fdexcep);
      curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
 
-     for (int fd = 0; fd <= maxfd; fd++) 
+     // Stop watching file descriptors that curl is no longer using. Curl
+     // may already have closed them and a closed file descriptor must not
+     // be handed to select. The watches are only disabled, not removed,
+     // since this function may be called from one of their callbacks.
+     for (WatchMap::iterator it = watch_map.begin();
+          it != watch_map.end(); ++it)
+     {
+       int fd = it->first;
+       if ((fd > maxfd) || !FD_ISSET(fd, &fdread))
+       {
+         it->second.rd.setEnabled(false);
+       }
+       if ((fd > maxfd) || !FD_ISSET(fd, &fdwrite))
+       {
+         it->second.wr.setEnabled(false);
+       }
+     }
+
+     for (int fd = 0; fd <= maxfd; fd++)
      {
        bool read_isset = FD_ISSET(fd, &fdread);
        bool write_isset = FD_ISSET(fd, &fdwrite);
-       WatchSet *ws = 0;
-       WatchMap::iterator it = watch_map.find(fd);
-       if (it != watch_map.end())
+       if (!(read_isset || write_isset))
        {
-         ws = &(it->second);
+         continue;
        }
-       else
+       bool is_new = (watch_map.find(fd) == watch_map.end());
+       WatchSet& ws = watch_map[fd];
+       if (is_new)
        {
-         if (!(read_isset || write_isset))
-         {
-           continue;
-         }
-         ws = &(watch_map[fd]);
+         ws.rd.activity.connect(mem_fun(*this, &Http::onActivity));
+         ws.wr.activity.connect(mem_fun(*this, &Http::onActivity));
        }
-       if (read_isset && !ws->rd.isEnabled())
+       if (read_isset && !ws.rd.isEnabled())
        {
-         ws->rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
-         ws->rd.activity.connect(mem_fun(*this, &Http::onActivity));
-         ws->rd.setEnabled(true);
+         ws.rd.setFd(fd, Async::FdWatch::FD_WATCH_RD);
+         ws.rd.setEnabled(true);
        }
-       if (write_isset && !ws->wr.isEnabled())
+       if (write_isset && !ws.wr.isEnabled())
        {
-         ws->wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
-         ws->wr.activity.connect(mem_fun(*this, &Http::onActivity));
-         ws->wr.setEnabled(true);
+         ws.wr.setFd(fd, Async::FdWatch::FD_WATCH_WR);
+         ws.wr.setEnabled(true);
        }
      }
    } /* updateWatchMap */
