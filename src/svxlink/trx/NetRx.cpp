@@ -146,7 +146,10 @@ NetRx::~NetRx(void)
   clearHandler();
   delete audio_dec;
   
-  tcp_con->deleteInstance();
+  if (tcp_con != 0)
+  {
+    tcp_con->deleteInstance();
+  }
   
   list<ToneDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
