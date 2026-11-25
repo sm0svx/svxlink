@@ -351,8 +351,8 @@ void WbRxRtlSdr::findBestCenterFq(void)
   {
     deque<uint32_t>::iterator next = it+1;
     int32_t dist = *it - center_fq;
-    int32_t next_dist = *next - center_fq;
-    if ((next == fqs.end()) || (abs(dist) < abs(next_dist)))
+    if ((next == fqs.end()) ||
+        (abs(dist) < abs(static_cast<int32_t>(*next - center_fq))))
     {
       if (abs(dist) < 12500)
       {
