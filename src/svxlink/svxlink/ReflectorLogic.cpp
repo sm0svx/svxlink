@@ -1114,7 +1114,7 @@ void ReflectorLogic::onFrameReceived(FramedTcpConnection*,
 {
   //std::cout << "### ReflectorLogic::onFrameReceived: data.size()="
   //          << data.size() << std::endl;
-  char *buf = reinterpret_cast<char*>(&data.front());
+  char *buf = reinterpret_cast<char*>(data.data());
   int len = data.size();
 
   stringstream ss;
