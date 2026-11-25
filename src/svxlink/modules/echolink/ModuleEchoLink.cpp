@@ -1532,6 +1532,11 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   msg << "SvxLink " << SVXLINK_APP_VERSION << " - " << mycall
       << " (" << numConnectedStations() << ")\n\n";
 
+  if (!description.empty())
+  {
+    msg << description << "\n\n";
+  } 
+
   if (squelch_is_open && listen_only_valve->isOpen())
   {
     msg << "> " << mycall << "         " << sysop_name << "\n\n";
