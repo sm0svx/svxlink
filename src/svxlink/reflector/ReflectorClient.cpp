@@ -39,6 +39,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctime>
 #include <iterator>
 
+#include <openssl/err.h>
+
 
 /****************************************************************************
  *
@@ -822,6 +824,24 @@ void ReflectorClient::handleMsgClientCsr(std::istream& is)
     sendError("Invalid CSR received");
     return;
   }
+
+    // The CSR must be signed with the private key that belongs to the public
+    // key in it. Without this check anyone can submit a CSR carrying another
+    // node's public key, which the checks against the stored CSR and
+    // certificate would take for a request from that node.
+  Async::SslKeypair req_pkey(req.publicKey());
+  if (req_pkey.isNull() || !req.verify(req_pkey))
+  {
+      // The failed verification leaves errors in the OpenSSL error queue.
+      // Clear them so that they are not taken as an error on the TLS
+      // connection that this message was received on.
+    ERR_clear_error();
+    std::cerr << "*** ERROR[" << idss.str()
+              << "]: Received CSR with invalid signature" << std::endl;
+    sendError("Invalid CSR received");
+    return;
+  }
+
   req.print(idss.str() + ":   ");
   auto errstr = m_reflector->checkCsr(req);
   if (!errstr.empty())
