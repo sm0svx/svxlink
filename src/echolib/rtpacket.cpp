@@ -84,6 +84,13 @@ int rtp_make_sdes(unsigned char *p, const char *callsign,
     return (ap - p) + 8;
 }
 
+/* Read a 16 bit big endian value. The data is not necessarily aligned, e.g.
+   when received through an EchoLink proxy, so read it a byte at a time. */
+static inline uint16_t readUint16(const unsigned char *p)
+{
+    return (static_cast<uint16_t>(p[0]) << 8) | p[1];
+}
+
 /************* RTP_MAKE_BYE ***************/
 
 int rtp_make_bye(unsigned char *p)
@@ -162,7 +169,7 @@ bool parseSDES(char *r_text, unsigned char *packet, int packet_len,
     while ((p + 4 <= end) &&
            ((p[0] >> 6 & 3) == RTP_VERSION || (p[0] >> 6 & 3) == 1))
     {
-        int len = (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
+        int len = (readUint16(p + 2) + 1) * 4;
 
 	/* The subpacket must lie entirely within the datagram. */
 	if ((len <= 0) || (p + len > end))
@@ -237,7 +244,7 @@ bool isRTCPByepacket(unsigned char *p, int len)
             sawbye = true;
         }
         /* Advance to next subpacket */
-        p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
+        p += (readUint16(p + 2) + 1) * 4;
     } while (p + 4 <= end && (((p[0] >> 6) & 3) == RTP_VERSION));
 
     return sawbye;
@@ -269,7 +276,7 @@ bool isRTCPSdespacket(unsigned char *p, int len)
             sawsdes = true;
         }
         /* Advance to next subpacket */
-        p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
+        p += (readUint16(p + 2) + 1) * 4;
     } while (p + 4 <= end && (((p[0] >> 6) & 3) == RTP_VERSION));
 
     return sawsdes;

@@ -288,8 +288,12 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
   *msg_ptr++ = (len >> 16) & 0xff;
   *msg_ptr++ = (len >> 24) & 0xff;
 
-    // Store the message data
-  memcpy(msg_ptr, data, len);
+    // Store the message data. Some message types have no data, in which
+    // case data may be a null pointer.
+  if (len > 0)
+  {
+    memcpy(msg_ptr, data, len);
+  }
 
     // Send the message
   int ret = con.write(msg_buf, msg_len);
@@ -437,7 +441,8 @@ int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
   while (len >= MSG_HEADER_SIZE)
   {
       // Extract message type
-    MsgBlockType msg_type = static_cast<MsgBlockType>(*buf++);
+      // Not cast to MsgBlockType since the proxy may send any value
+    uint8_t msg_type = *buf++;
 
       // Extract ip address of proxied remote host
     IpAddress::Ip4Addr remote_ip_addr;
@@ -469,7 +474,7 @@ int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
 } /* Proxy::parseProxyMessageBlock */
 
 
-void Proxy::handleProxyMessageBlock(MsgBlockType type,
+void Proxy::handleProxyMessageBlock(uint8_t type,
     const IpAddress &remote_ip, uint32_t len, unsigned char *data)
 {
   if (state != STATE_CONNECTED)
@@ -514,7 +519,7 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
 
     default:
       cerr << "*** ERROR: Unknown EchoLink proxy message type received: "
-           << type << "\n";
+           << static_cast<unsigned>(type) << "\n";
       reset();
       break;
   }

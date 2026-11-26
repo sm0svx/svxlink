@@ -363,7 +363,7 @@ class Proxy : public sigc::trackable
     void disconnectHandler(void);
     int handleAuthentication(const unsigned char *buf, int len);
     int parseProxyMessageBlock(unsigned char *buf, int len);
-    void handleProxyMessageBlock(MsgBlockType type,
+    void handleProxyMessageBlock(uint8_t type,
         const Async::IpAddress &remote_ip, uint32_t len,
         unsigned char *data);
     void handleTcpDataMsg(uint8_t *buf, int len);
