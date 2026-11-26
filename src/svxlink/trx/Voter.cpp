@@ -846,8 +846,16 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
   
   if (bestSrx() == 0)
   {
-    assert(is_open);
-    box().best_srx = srx;
+      // A squelch close can arrive when there is no best receiver. That
+      // happens when more than one receiver has the squelch open and all
+      // receivers are muted at the same time. The squelch close events are
+      // then handled one by one, after all receivers have closed, so the
+      // first one that concerns the best receiver finds no other open
+      // receiver and the rest arrive with no best receiver set.
+    if (is_open)
+    {
+      box().best_srx = srx;
+    }
   }
   else if (srx == bestSrx())
   {
