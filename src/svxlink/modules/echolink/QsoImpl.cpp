@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioValve.h>
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDebugger.h>
@@ -265,11 +266,18 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   m_qso.infoMsgReceived.connect(mem_fun(*this, &QsoImpl::onInfoMsgReceived));
   m_qso.chatMsgReceived.connect(mem_fun(*this, &QsoImpl::onChatMsgReceived));
   m_qso.stateChange.connect(mem_fun(*this, &QsoImpl::onStateChange));
-  m_qso.isReceiving.connect(sigc::bind(isReceiving.make_slot(), this));
+  m_qso.isReceiving.connect(mem_fun(*this, &QsoImpl::onIsReceiving));
   m_qso.audioReceivedRaw.connect(
-      sigc::bind(audioReceivedRaw.make_slot(), this));
+      mem_fun(*this, &QsoImpl::onAudioReceivedRaw));
   
   prev_src = &m_qso;
+
+    // Audio from a station whose connection is rejected is stopped here. The
+    // connection is set up for a short while also for a rejected station,
+    // to be able to send the reject message to it.
+  input_valve = new AudioValve;
+  prev_src->registerSink(input_valve, true);
+  prev_src = input_valve;
   
   AudioFifo *input_fifo = new AudioFifo(2048);
   input_fifo->setOverwrite(true);
@@ -347,6 +355,7 @@ bool QsoImpl::connect(void)
   reject_qso = false;
   disc_when_done = false;
   idle_timer_cnt = 0;
+  input_valve->setOpen(true);
   return m_qso.connect();
 } /* QsoImpl::connect */
 
@@ -371,6 +380,7 @@ void QsoImpl::reject(bool perm)
   cout << "Rejecting connection from " << remoteCallsign()
        << (perm ? " permanently" : " temporarily") << endl;
   reject_qso = true;
+  input_valve->setOpen(false);
   bool success = m_qso.accept();
   if (success)
   {
@@ -460,6 +470,11 @@ void QsoImpl::allRemoteMsgsWritten(void)
  */
 void QsoImpl::onInfoMsgReceived(const string& msg)
 {
+  if (reject_qso)
+  {
+    return;
+  }
+
   if (msg != last_info_msg)
   {
     cout << "--- EchoLink info message received from " << remoteCallsign()
@@ -486,6 +501,11 @@ void QsoImpl::onInfoMsgReceived(const string& msg)
  */
 void QsoImpl::onChatMsgReceived(const string& msg)
 {
+  if (reject_qso)
+  {
+    return;
+  }
+
   cout << "--- EchoLink chat message received from " << remoteCallsign()
        << " ---" << endl
        << msg << endl;
@@ -506,6 +526,24 @@ void QsoImpl::onChatMsgReceived(const string& msg)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
+void QsoImpl::onIsReceiving(bool is_receiving)
+{
+  if (!reject_qso)
+  {
+    isReceiving(is_receiving, this);
+  }
+} /* QsoImpl::onIsReceiving */
+
+
+void QsoImpl::onAudioReceivedRaw(Qso::RawPacket *packet)
+{
+  if (!reject_qso)
+  {
+    audioReceivedRaw(packet, this);
+  }
+} /* QsoImpl::onAudioReceivedRaw */
+
+
 void QsoImpl::onStateChange(Qso::State state)
 {
   cout << remoteCallsign() << ": EchoLink QSO state changed to ";
