@@ -718,7 +718,9 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
 int QsoFrn::handleCommand(unsigned char *data, int len)
 {
   int bytes_read = 0;
-  Response cmd = (Response)data[0];
+    // Compare as an integer, since the server may send a byte that is not
+    // one of the Response values
+  const int cmd = data[0];
   if (opt_frn_debug)
     cout << "cmd:   " << cmd << endl;
 
