@@ -680,6 +680,10 @@ int TcpConnection::sslRecvHandler(char* src, int count)
       {
         return (orig_count - count);
       }
+        // SSL_get_error() looks at the thread's OpenSSL error queue, so
+        // clear errors left there by unrelated calls, e.g. in the handler
+        // of the previous received data, before the operation it checks
+      ERR_clear_error();
       n = SSL_read(m_ssl, buf, sizeof(buf));
       //std::cout << "### SSL_read: n=" << n << std::endl;
       if (n > 0)
@@ -724,6 +728,7 @@ enum TcpConnection::SslStatus TcpConnection::sslDoHandshake(void)
   char buf[DEFAULT_BUF_SIZE];
   SslStatus status;
 
+  ERR_clear_error();
   int n = SSL_do_handshake(m_ssl);
   status = sslGetStatus(n);
 
@@ -763,6 +768,7 @@ int TcpConnection::sslEncrypt(void)
 
   while (!m_ssl_encrypt_buf.empty())
   {
+    ERR_clear_error();
     int n = SSL_write(m_ssl, m_ssl_encrypt_buf.data(),
                       m_ssl_encrypt_buf.size());
     status = sslGetStatus(n);
