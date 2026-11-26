@@ -72,6 +72,7 @@ namespace Async
   class Config;
   class AudioPacer;
   class AudioPassthrough;
+  class AudioValve;
 };
 
 
@@ -323,6 +324,7 @@ class QsoImpl
     Async::AudioSelector    *output_sel;
     bool      	      	    init_ok;
     bool      	      	    reject_qso;
+    Async::AudioValve       *input_valve            {nullptr};
     std::string       	    last_message;
     std::string       	    last_info_msg;
     Async::Timer      	    *idle_timer;
@@ -338,6 +340,8 @@ class QsoImpl
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
     void onChatMsgReceived(const std::string& msg);
+    void onIsReceiving(bool is_receiving);
+    void onAudioReceivedRaw(EchoLink::Qso::RawPacket *packet);
     void onStateChange(EchoLink::Qso::State state);
     void idleTimeoutCheck(Async::Timer *t);
     void destroyMeNow(Async::Timer *t);
