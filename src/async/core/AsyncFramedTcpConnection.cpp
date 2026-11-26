@@ -247,7 +247,9 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
   int orig_count = count;
   uint8_t* ptr = reinterpret_cast<uint8_t*>(buf);
 
-  while (count > 0)
+    // An empty frame is complete as soon as its size has been read, so also
+    // go around when such a frame is waiting to be delivered
+  while ((count > 0) || (m_size_received && (m_frame_size == 0)))
   {
     if (!m_size_received)
     {
@@ -275,13 +277,22 @@ int FramedTcpConnection::onDataReceived(void *buf, int count)
       size_t cur_size = m_frame.size();
       size_t copy_cnt = min(m_frame_size - cur_size, static_cast<size_t>(count));
       m_frame.resize(cur_size + copy_cnt);
-      ::memcpy(m_frame.data()+cur_size, ptr, copy_cnt);
+      if (copy_cnt > 0)
+      {
+        ::memcpy(m_frame.data()+cur_size, ptr, copy_cnt);
+      }
       count -= copy_cnt;
       ptr += copy_cnt;
       if (m_frame.size() == m_frame_size)
       {
         m_size_received = false;
         frameReceived(this, m_frame);
+          // The frame handler may have disconnected, in which case the rest
+          // of the received data must not be parsed
+        if (!isConnected())
+        {
+          return orig_count;
+        }
       }
     }
   }
@@ -333,6 +344,12 @@ void FramedTcpConnection::disconnectCleanup(void)
     delete *it;
   }
   m_txq.clear();
+
+    // Drop any partially received frame, so that a new connection made with
+    // this object does not continue on it
+  m_size_received = false;
+  m_frame_size = 0;
+  m_frame.clear();
 } /* FramedTcpConnection::disconnectCleanup */
 
 

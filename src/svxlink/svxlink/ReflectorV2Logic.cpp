@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncUdpSocket.h>
+#include <common.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioValve.h>
 #include <version/SVXLINK.h>
@@ -917,8 +918,8 @@ void ReflectorLogic::handleMsgError(std::istream& is)
     disconnect();
     return;
   }
-  cout << name() << ": Error message received from server: " << msg.message()
-       << endl;
+  cout << name() << ": Error message received from server: "
+       << SvxLink::printableString(msg.message()) << endl;
   disconnect();
 } /* ReflectorLogic::handleMsgError */
 
@@ -1020,10 +1021,10 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   if (!nodes.empty())
   {
     vector<string>::const_iterator it = nodes.begin();
-    cout << *it++;
+    cout << SvxLink::printableString(*it++);
     for (; it != nodes.end(); ++it)
     {
-      cout << ", " << *it;
+      cout << ", " << SvxLink::printableString(*it);
     }
   }
   cout << endl;
@@ -1047,7 +1048,11 @@ void ReflectorLogic::handleMsgServerInfo(std::istream& is)
   }
   else
   {
-    cout << "No supported codec :-(";
+    cout << "No supported codec :-(" << endl;
+      // Without a common codec no audio can be exchanged, so like the v3
+      // logic, do not stay connected
+    disconnect();
+    return;
   }
   cout << endl;
 
@@ -1145,10 +1150,10 @@ void ReflectorLogic::handleMsgNodeList(std::istream& is)
   if (!nodes.empty())
   {
     vector<string>::const_iterator it = nodes.begin();
-    cout << *it++;
+    cout << SvxLink::printableString(*it++);
     for (; it != nodes.end(); ++it)
     {
-      cout << ", " << *it;
+      cout << ", " << SvxLink::printableString(*it);
     }
   }
   cout << endl;
@@ -1167,7 +1172,8 @@ void ReflectorLogic::handleMsgNodeJoined(std::istream& is)
   }
   if (m_verbose)
   {
-    std::cout << name() << ": Node joined: " << msg.callsign() << std::endl;
+    std::cout << name() << ": Node joined: "
+              << SvxLink::printableString(msg.callsign()) << std::endl;
   }
 } /* ReflectorLogic::handleMsgNodeJoined */
 
@@ -1184,7 +1190,8 @@ void ReflectorLogic::handleMsgNodeLeft(std::istream& is)
   }
   if (m_verbose)
   {
-    std::cout << name() << ": Node left: " << msg.callsign() << std::endl;
+    std::cout << name() << ": Node left: "
+              << SvxLink::printableString(msg.callsign()) << std::endl;
   }
 } /* ReflectorLogic::handleMsgNodeLeft */
 
@@ -1200,7 +1207,7 @@ void ReflectorLogic::handleMsgTalkerStart(std::istream& is)
     return;
   }
   cout << name() << ": Talker start on TG #" << msg.tg() << ": "
-       << msg.callsign() << endl;
+       << SvxLink::printableString(msg.callsign()) << endl;
 
     // Select the incoming TG if idle
   if (m_tg_select_timeout_cnt == 0)
@@ -1245,7 +1252,7 @@ void ReflectorLogic::handleMsgTalkerStop(std::istream& is)
     return;
   }
   cout << name() << ": Talker stop on TG #" << msg.tg() << ": "
-       << msg.callsign() << endl;
+       << SvxLink::printableString(msg.callsign()) << endl;
 
   std::ostringstream ss;
   ss << "talker_stop " << msg.tg() << " "
