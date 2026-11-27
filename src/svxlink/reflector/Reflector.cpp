@@ -475,6 +475,26 @@ bool Reflector::initialize(Async::Config &cfg)
 
   m_cfg->getValue("GLOBAL", "ACCEPT_CERT_EMAIL", m_accept_cert_email);
 
+    // Check the regular expressions in the configuration now. They are
+    // otherwise first used when a node tries to log in, and an invalid one
+    // would stop the reflector at that point.
+  for (const char* tag : {"ACCEPT_CALLSIGN", "REJECT_CALLSIGN",
+                          "ACCEPT_CERT_EMAIL"})
+  {
+    std::string re_str;
+    m_cfg->getValue("GLOBAL", tag, re_str);
+    try
+    {
+      const std::regex re(re_str);
+    }
+    catch (const std::regex_error& e)
+    {
+      std::cerr << "*** ERROR: The regular expression in GLOBAL/" << tag
+                << " is not valid: " << e.what() << std::endl;
+      return false;
+    }
+  }
+
   m_cfg->valueUpdated.connect(sigc::mem_fun(*this, &Reflector::cfgUpdated));
 
   return true;
@@ -621,14 +641,33 @@ bool Reflector::renewedClientCert(Async::SslX509& cert)
 
   std::string callsign(cert.commonName());
   Async::SslX509 new_cert = loadClientCertificate(callsign);
-  if (!new_cert.isNull() &&
-      ((new_cert.publicKey() != cert.publicKey()) ||
-       (timeToRenewCert(new_cert) <= std::time(NULL))))
+  if (new_cert.isNull())
+  {
+    cert = std::move(new_cert);
+    return false;
+  }
+
+  if (new_cert.publicKey() != cert.publicKey())
+  {
+      // The node presented a certificate for another key than the one on
+      // disk. That happens e.g. when a certificate for a new key has been
+      // issued while the node is still connected with its old certificate.
+      // Prefer whichever certificate was issued last, so that the two are not
+      // renewed over each other again and again.
+    if (new_cert.notBefore() > cert.notBefore())
+    {
+      cert = std::move(new_cert);
+      return true;
+    }
+    return signClientCert(cert, "CRT_RENEWED");
+  }
+
+  if (timeToRenewCert(new_cert) <= std::time(NULL))
   {
     return signClientCert(cert, "CRT_RENEWED");
   }
   cert = std::move(new_cert);
-  return !cert.isNull();
+  return true;
 } /* Reflector::renewedClientCert */
 
 
@@ -647,18 +686,16 @@ bool Reflector::signClientCert(Async::SslX509& cert, const std::string& ca_op)
     return false;
   }
   auto crtfile = m_certs_dir + "/" + cn + ".crt";
-  if (cert.writePemFile(crtfile) && m_issue_ca_cert.appendPemFile(crtfile))
+  if (!cert.writePemFile(crtfile) || !m_issue_ca_cert.appendPemFile(crtfile))
   {
-    runCAHook({
-        { "CA_OP",      ca_op },
-        { "CA_CRT_PEM", cert.pem() }
-      });
-  }
-  else
-  {
-    std::cerr << "*** WARNING: Failed to write client certificate file '"
+    std::cerr << "*** ERROR: Failed to write client certificate file '"
               << crtfile << "'" << std::endl;
+    return false;
   }
+  runCAHook({
+      { "CA_OP",      ca_op },
+      { "CA_CRT_PEM", cert.pem() }
+    });
   return true;
 } /* Reflector::signClientCert */
 
@@ -694,7 +731,9 @@ Async::SslX509 Reflector::signClientCsr(const std::string& cn)
 
   if (!signClientCert(cert, "CSR_SIGNED"))
   {
+      // Leave the CSR pending so that signing can be retried
     cert.set(nullptr);
+    return cert;
   }
 
   std::string csr_path = m_csrs_dir + "/" + cn + ".csr";
@@ -771,42 +810,68 @@ bool Reflector::callsignOk(const std::string& callsign, bool verbose) const
     return false;
   }
 
-    // Accept check
-  std::string accept_cs_re_str;
-  if (!m_cfg->getValue("GLOBAL", "ACCEPT_CALLSIGN", accept_cs_re_str) ||
-      accept_cs_re_str.empty())
-  {
-    accept_cs_re_str =
-      "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{0,3}[A-Z](?:-[A-Z0-9]{1,3})?";
-  }
-  const std::regex accept_callsign_re(accept_cs_re_str);
-  if (!std::regex_match(callsign, accept_callsign_re))
+    // The callsign is used as a file name in the CA directories, so it must
+    // never be able to act as a path, whatever ACCEPT_CALLSIGN allows
+  if ((callsign.find_first_of(std::string("/\\\0", 3)) != std::string::npos) ||
+      (callsign[0] == '.'))
   {
     if (verbose)
     {
       std::cerr << "*** WARNING: The callsign '" << callsign
-                << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
-                << std::endl;
+                << "' contains characters that are not allowed" << std::endl;
     }
     return false;
   }
 
-    // Reject check
-  std::string reject_cs_re_str;
-  m_cfg->getValue("GLOBAL", "REJECT_CALLSIGN", reject_cs_re_str);
-  if (!reject_cs_re_str.empty())
+    // The regular expressions come from the configuration, which can be
+    // changed while the reflector is running. An invalid one must not stop
+    // the reflector, so no callsign is accepted while that is the case.
+  try
   {
-    const std::regex reject_callsign_re(reject_cs_re_str);
-    if (std::regex_match(callsign, reject_callsign_re))
+      // Accept check
+    std::string accept_cs_re_str;
+    if (!m_cfg->getValue("GLOBAL", "ACCEPT_CALLSIGN", accept_cs_re_str) ||
+        accept_cs_re_str.empty())
+    {
+      accept_cs_re_str =
+        "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{0,3}[A-Z](?:-[A-Z0-9]{1,3})?";
+    }
+    const std::regex accept_callsign_re(accept_cs_re_str);
+    if (!std::regex_match(callsign, accept_callsign_re))
     {
       if (verbose)
       {
         std::cerr << "*** WARNING: The callsign '" << callsign
-                  << "' has been rejected by configuration (REJECT_CALLSIGN)."
+                  << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
                   << std::endl;
       }
       return false;
     }
+
+      // Reject check
+    std::string reject_cs_re_str;
+    m_cfg->getValue("GLOBAL", "REJECT_CALLSIGN", reject_cs_re_str);
+    if (!reject_cs_re_str.empty())
+    {
+      const std::regex reject_callsign_re(reject_cs_re_str);
+      if (std::regex_match(callsign, reject_callsign_re))
+      {
+        if (verbose)
+        {
+          std::cerr << "*** WARNING: The callsign '" << callsign
+                    << "' has been rejected by configuration (REJECT_CALLSIGN)."
+                    << std::endl;
+        }
+        return false;
+      }
+    }
+  }
+  catch (const std::regex_error& e)
+  {
+    std::cerr << "*** ERROR: Invalid regular expression in GLOBAL/"
+                 "ACCEPT_CALLSIGN or GLOBAL/REJECT_CALLSIGN: " << e.what()
+              << std::endl;
+    return false;
   }
 
   return true;
@@ -819,7 +884,16 @@ bool Reflector::emailOk(const std::string& email) const
   {
     return true;
   }
-  return std::regex_match(email, std::regex(m_accept_cert_email));
+  try
+  {
+    return std::regex_match(email, std::regex(m_accept_cert_email));
+  }
+  catch (const std::regex_error& e)
+  {
+    std::cerr << "*** ERROR: Invalid regular expression in GLOBAL/"
+                 "ACCEPT_CERT_EMAIL: " << e.what() << std::endl;
+    return false;
+  }
 } /* Reflector::emailOk */
 
 
