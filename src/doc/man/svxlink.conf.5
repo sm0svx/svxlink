@@ -2433,9 +2433,13 @@ SvxLink. Just so that the transmitter will not transmit indefinitely. It is not 
 be used to keep people from talking too long. 
 .TP
 .B TX_DELAY
-The number of milliseconds (0-1000) to wait after the transmitter has been turned on until
-audio is starting to be transmitted. This can be used to compensate for slow TX reaction
-or remote stations with slow reacting squelches.
+The number of milliseconds (0-5000) to wait after the transmitter has been
+turned on until audio is starting to be transmitted. The delay is applied every
+time the transmitter is keyed up. Audio is not cut during the delay. It is
+buffered and transmitted, delayed, when the delay has passed. This can be used to
+compensate for slow TX reaction or remote stations with slow reacting
+squelches, e.g. remote repeaters or linked networks that are slow to wake up.
+Default is 0, no delay. Values outside the range are a configuration error.
 .TP
 .B CTCSS_FQ
 The frequency in Hz of the CTCSS tone to transmit. It is possible to specify

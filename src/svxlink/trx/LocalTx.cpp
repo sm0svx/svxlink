@@ -325,9 +325,12 @@ bool LocalTx::initialize(void)
   }
   
   int tx_delay = 0;
-  if (cfg.getValue(name(), "TX_DELAY", value))
+  if (!cfg.getValue(name(), "TX_DELAY", 0, 5000, tx_delay, true))
   {
-    tx_delay = atoi(value.c_str());
+    cerr << "*** ERROR: Config variable " << name()
+         << "/TX_DELAY must be an integer in the range 0 to 5000 "
+         << "milliseconds\n";
+    return false;
   }
 
   if (!setPtt(false))
