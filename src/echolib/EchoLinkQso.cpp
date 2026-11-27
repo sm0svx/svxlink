@@ -650,7 +650,13 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     {
       remote_id[pos] = 0;
       sanitizeCallsign(remote_id);
-      if (remote_id[0] != 0)
+        // Only take the callsign from the remote station if the application
+        // has not set it. The application sets it from the directory server
+        // data, after having checked that the station is who it says it is.
+        // If any later packet could change it, a connected station (or
+        // anyone sending from its address) could rename itself to any
+        // callsign after that check.
+      if ((remote_id[0] != 0) && (remote_call == "?"))
       {
         remote_call = remote_id;
       }
@@ -799,6 +805,11 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 #ifdef SPEEX_MAJOR
   if (voice_packet->header.pt == 0x96)
   {
+      // Never pass on more than a voice packet can hold
+    if ((unsigned)len > sizeof(VoicePacket))
+    {
+      raw_packet.length = sizeof(VoicePacket);
+    }
     speex_bits_read_from(&p->dec_bits, (char*)voice_packet->data,
                          len - sizeof(voice_packet->header));
           
@@ -848,6 +859,8 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       cerr << "*** WARNING: Invalid GSM audio packet size." << endl;
       return;
     }
+      // A GSM packet has a fixed size. Don't pass on anything more
+    raw_packet.length = sizeof(voice_packet->header)+FRAME_COUNT*33;
     for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
     {
       gsm_decode(gsmh, voice_packet->data + frameno*33, sbuff);
