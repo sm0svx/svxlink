@@ -805,6 +805,11 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 #ifdef SPEEX_MAJOR
   if (voice_packet->header.pt == 0x96)
   {
+      // Never pass on more than a voice packet can hold
+    if ((unsigned)len > sizeof(VoicePacket))
+    {
+      raw_packet.length = sizeof(VoicePacket);
+    }
     speex_bits_read_from(&p->dec_bits, (char*)voice_packet->data,
                          len - sizeof(voice_packet->header));
           
@@ -854,6 +859,8 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       cerr << "*** WARNING: Invalid GSM audio packet size." << endl;
       return;
     }
+      // A GSM packet has a fixed size. Don't pass on anything more
+    raw_packet.length = sizeof(voice_packet->header)+FRAME_COUNT*33;
     for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
     {
       gsm_decode(gsmh, voice_packet->data + frameno*33, sbuff);
