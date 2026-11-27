@@ -495,10 +495,18 @@ int Directory::handleCallList(char *buf, int len)
 	buf[read_len-1] = 0;
 	get_call_cnt = atoi(buf);
 	//printf("Number of calls to get: %d\n", get_call_cnt);
-	if (get_call_cnt > 0)
+	if (get_call_cnt > MAX_CALL_LIST_ENTRIES)
+	{
+	  fprintf(stderr, "Error in call list format (the list is too "
+	                  "long: %d entries).\n", get_call_cnt);
+	  error_str = "The station list from the directory server is too long";
+	  com_state = CS_IDLE;
+	}
+	else if (get_call_cnt > 0)
 	{
 	  get_call_list.clear();
 	  the_message = "";
+	  get_call_entries_seen = 0;
 	  com_state = CS_WAITING_FOR_CALL;
 	}
 	else
@@ -573,6 +581,19 @@ int Directory::handleCallList(char *buf, int len)
 	}
 	*/
 	
+	  // Entries that are not counted by the server (".") and message
+	  // lines (" ") must not be able to make the list or the message
+	  // grow without limit either
+	if (++get_call_entries_seen > 2 * MAX_CALL_LIST_ENTRIES)
+	{
+	  fprintf(stderr, "Error in call list format (too many entries).\n");
+	  get_call_list.clear();
+	  the_message = "";
+	  error_str = "The station list from the directory server is too long";
+	  com_state = CS_IDLE;
+	  break;
+	}
+
 	if (get_call_entry.callsign() == ".")
 	{
 	  com_state = CS_WAITING_FOR_CALL;

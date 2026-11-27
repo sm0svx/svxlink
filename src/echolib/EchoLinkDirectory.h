@@ -386,6 +386,11 @@ class Directory : public sigc::trackable
     std::string       	      error_str;
     
     int       	      	      get_call_cnt;
+    int                       get_call_entries_seen = 0;
+
+      // The largest number of stations accepted in a list from the
+      // directory server. The real list holds a few thousand.
+    static const int          MAX_CALL_LIST_ENTRIES = 50000;
     StationData       	      get_call_entry;
     std::list<StationData>    get_call_list;
     
