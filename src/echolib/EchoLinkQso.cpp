@@ -650,7 +650,13 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     {
       remote_id[pos] = 0;
       sanitizeCallsign(remote_id);
-      if (remote_id[0] != 0)
+        // Only take the callsign from the remote station if the application
+        // has not set it. The application sets it from the directory server
+        // data, after having checked that the station is who it says it is.
+        // If any later packet could change it, a connected station (or
+        // anyone sending from its address) could rename itself to any
+        // callsign after that check.
+      if ((remote_id[0] != 0) && (remote_call == "?"))
       {
         remote_call = remote_id;
       }
