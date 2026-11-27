@@ -475,6 +475,26 @@ bool Reflector::initialize(Async::Config &cfg)
 
   m_cfg->getValue("GLOBAL", "ACCEPT_CERT_EMAIL", m_accept_cert_email);
 
+    // Check the regular expressions in the configuration now. They are
+    // otherwise first used when a node tries to log in, and an invalid one
+    // would stop the reflector at that point.
+  for (const char* tag : {"ACCEPT_CALLSIGN", "REJECT_CALLSIGN",
+                          "ACCEPT_CERT_EMAIL"})
+  {
+    std::string re_str;
+    m_cfg->getValue("GLOBAL", tag, re_str);
+    try
+    {
+      const std::regex re(re_str);
+    }
+    catch (const std::regex_error& e)
+    {
+      std::cerr << "*** ERROR: The regular expression in GLOBAL/" << tag
+                << " is not valid: " << e.what() << std::endl;
+      return false;
+    }
+  }
+
   m_cfg->valueUpdated.connect(sigc::mem_fun(*this, &Reflector::cfgUpdated));
 
   return true;
@@ -803,42 +823,55 @@ bool Reflector::callsignOk(const std::string& callsign, bool verbose) const
     return false;
   }
 
-    // Accept check
-  std::string accept_cs_re_str;
-  if (!m_cfg->getValue("GLOBAL", "ACCEPT_CALLSIGN", accept_cs_re_str) ||
-      accept_cs_re_str.empty())
+    // The regular expressions come from the configuration, which can be
+    // changed while the reflector is running. An invalid one must not stop
+    // the reflector, so no callsign is accepted while that is the case.
+  try
   {
-    accept_cs_re_str =
-      "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{0,3}[A-Z](?:-[A-Z0-9]{1,3})?";
-  }
-  const std::regex accept_callsign_re(accept_cs_re_str);
-  if (!std::regex_match(callsign, accept_callsign_re))
-  {
-    if (verbose)
+      // Accept check
+    std::string accept_cs_re_str;
+    if (!m_cfg->getValue("GLOBAL", "ACCEPT_CALLSIGN", accept_cs_re_str) ||
+        accept_cs_re_str.empty())
     {
-      std::cerr << "*** WARNING: The callsign '" << callsign
-                << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
-                << std::endl;
+      accept_cs_re_str =
+        "[A-Z0-9][A-Z]{0,2}\\d[A-Z0-9]{0,3}[A-Z](?:-[A-Z0-9]{1,3})?";
     }
-    return false;
-  }
-
-    // Reject check
-  std::string reject_cs_re_str;
-  m_cfg->getValue("GLOBAL", "REJECT_CALLSIGN", reject_cs_re_str);
-  if (!reject_cs_re_str.empty())
-  {
-    const std::regex reject_callsign_re(reject_cs_re_str);
-    if (std::regex_match(callsign, reject_callsign_re))
+    const std::regex accept_callsign_re(accept_cs_re_str);
+    if (!std::regex_match(callsign, accept_callsign_re))
     {
       if (verbose)
       {
         std::cerr << "*** WARNING: The callsign '" << callsign
-                  << "' has been rejected by configuration (REJECT_CALLSIGN)."
+                  << "' is not accepted by configuration (ACCEPT_CALLSIGN)"
                   << std::endl;
       }
       return false;
     }
+
+      // Reject check
+    std::string reject_cs_re_str;
+    m_cfg->getValue("GLOBAL", "REJECT_CALLSIGN", reject_cs_re_str);
+    if (!reject_cs_re_str.empty())
+    {
+      const std::regex reject_callsign_re(reject_cs_re_str);
+      if (std::regex_match(callsign, reject_callsign_re))
+      {
+        if (verbose)
+        {
+          std::cerr << "*** WARNING: The callsign '" << callsign
+                    << "' has been rejected by configuration (REJECT_CALLSIGN)."
+                    << std::endl;
+        }
+        return false;
+      }
+    }
+  }
+  catch (const std::regex_error& e)
+  {
+    std::cerr << "*** ERROR: Invalid regular expression in GLOBAL/"
+                 "ACCEPT_CALLSIGN or GLOBAL/REJECT_CALLSIGN: " << e.what()
+              << std::endl;
+    return false;
   }
 
   return true;
@@ -851,7 +884,16 @@ bool Reflector::emailOk(const std::string& email) const
   {
     return true;
   }
-  return std::regex_match(email, std::regex(m_accept_cert_email));
+  try
+  {
+    return std::regex_match(email, std::regex(m_accept_cert_email));
+  }
+  catch (const std::regex_error& e)
+  {
+    std::cerr << "*** ERROR: Invalid regular expression in GLOBAL/"
+                 "ACCEPT_CERT_EMAIL: " << e.what() << std::endl;
+    return false;
+  }
 } /* Reflector::emailOk */
 
 
