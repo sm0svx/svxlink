@@ -87,7 +87,9 @@ PttCtrl::PttCtrl(int tx_delay)
       
   if (tx_delay > 0)
   {
-    fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
+    fifo = new AudioFifo(static_cast<unsigned>(
+          (static_cast<long long>(tx_delay) + 500) * INTERNAL_SAMPLE_RATE /
+          1000));
     fifo->registerSink(&valve);
     AudioSink::setHandler(fifo);
   }
