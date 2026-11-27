@@ -726,8 +726,6 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
   if (opt_frn_debug)
     cout << "cmd:   " << cmd << endl;
 
-  keepalive_timer->reset();
-
   bytes_read += 1;
 
   switch (cmd)
@@ -966,6 +964,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
   con_timeout_timer->reset();
   int remaining_bytes = len;
+  bool cmd_received = false;
 
   while (remaining_bytes > 0)
   {
@@ -991,6 +990,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
       case STATE_TX_AUDIO_WAITING:
       case STATE_IDLE:
         bytes_read += handleCommand(p_data, remaining_bytes);
+        cmd_received = true;
         break;
 
       case STATE_RX_AUDIO:
@@ -1015,6 +1015,17 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
     remaining_bytes -= bytes_read;
     p_data += bytes_read;
   }
+
+    // Reset the keep alive timer once for all the commands handled above.
+    // A timer reset is not cheap when done many times before the main loop
+    // gets to run again (each one leaves an entry behind in the timer list
+    // that the next one has to step over), and a server can send thousands
+    // of one byte commands in one go.
+  if (cmd_received)
+  {
+    keepalive_timer->reset();
+  }
+
   return len - remaining_bytes;
 }
 
