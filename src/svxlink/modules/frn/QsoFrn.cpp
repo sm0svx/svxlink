@@ -294,6 +294,9 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   int gsm_one = 1;
   assert(gsm_option(gsmh, GSM_OPT_WAV49, &gsm_one) != -1);
 
+    // The server speaks a line based protocol. Never keep more than this
+    // of data in which no complete line or frame has been found.
+  tcp_client->setMaxRecvBufLen(MAX_RECV_BUF_SIZE);
   tcp_client->connected.connect(
       mem_fun(*this, &QsoFrn::onConnected));
   tcp_client->disconnected.connect(
