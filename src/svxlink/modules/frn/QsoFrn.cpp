@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <sigc++/bind.h>
 #include <sstream>
+#include <algorithm>
 #include <regex.h>
 
 
@@ -788,7 +789,19 @@ int QsoFrn::handleList(unsigned char *data, int len)
 {
   int bytes_read = 0;
   std::string line;
-  std::istringstream lines(std::string((char*)data, len));
+    // Only look at the first line. Making a stream of everything received
+    // for each line made the time to handle a buffer with many lines grow
+    // with the square of its size. One more byte than the line end is
+    // included so that a two character line end is consumed as a whole.
+  int first_line_len = 0;
+  const void *nl = std::memchr(data, '\n', len);
+  if (nl != 0)
+  {
+    first_line_len = static_cast<int>(
+        static_cast<const unsigned char*>(nl) - data) + 1;
+    first_line_len = std::min(len, first_line_len + 1);
+  }
+  std::istringstream lines(std::string((char*)data, first_line_len));
 
   if (hasLine(lines))
   {
@@ -825,7 +838,19 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
 {
   int bytes_read = 0;
   std::string line;
-  std::istringstream lines(std::string((char*)data, len));
+    // Only look at the first line. Making a stream of everything received
+    // for each line made the time to handle a buffer with many lines grow
+    // with the square of its size. One more byte than the line end is
+    // included so that a two character line end is consumed as a whole.
+  int first_line_len = 0;
+  const void *nl = std::memchr(data, '\n', len);
+  if (nl != 0)
+  {
+    first_line_len = static_cast<int>(
+        static_cast<const unsigned char*>(nl) - data) + 1;
+    first_line_len = std::min(len, first_line_len + 1);
+  }
+  std::istringstream lines(std::string((char*)data, first_line_len));
 
   if (hasLine(lines))
   {
