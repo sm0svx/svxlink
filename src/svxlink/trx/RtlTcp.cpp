@@ -301,17 +301,28 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     return 12;
   }
 
-  if (static_cast<size_t>(count) < blockSize())
+    // Handle all complete blocks that have been received. Handling only one
+    // block per call leaves the rest in the receive buffer, which grows for
+    // as long as data arrives faster than one block per read.
+  const size_t block_size = blockSize();
+  if (block_size < 2)
   {
     return 0;
   }
-  count = blockSize();
+  size_t handled = 0;
+  while (static_cast<size_t>(count) - handled >= block_size)
+  {
+    complex<uint8_t> *samples = reinterpret_cast<complex<uint8_t>*>(
+        static_cast<char*>(buf) + handled);
+    handleIq(samples, block_size / 2);
+    handled += 2 * (block_size / 2);
+    if (!con->isConnected())
+    {
+      break;
+    }
+  }
 
-  int samp_count = count / 2;
-  complex<uint8_t> *samples = reinterpret_cast<complex<uint8_t>*>(buf);
-  handleIq(samples, samp_count);
-
-  return 2 * samp_count;
+  return handled;
 } /* RtlTcp::dataReceived */
 
 
