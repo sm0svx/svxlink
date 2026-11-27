@@ -109,6 +109,12 @@ using namespace Async;
  */
 class Voter::SatRx : public AudioSource, public sigc::trackable
 {
+  private:
+      // The largest number of DTMF digits and selcall sequences that are
+      // kept for a receiver while it is not the active receiver
+    static const size_t MAX_BUFFERED_DTMF_DIGITS        = 64;
+    static const size_t MAX_BUFFERED_SELCALL_SEQUENCES  = 8;
+
   public:
     SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
       : rx_id(id), rx(0), fifo(0), sql_open(false), enabled(true),
@@ -289,7 +295,13 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     {
       if (!valve.isOpen())
       {
-	dtmf_buf.push_back(pair<char, int>(digit, duration));
+          // Only keep a limited number of digits. A receiver that is not
+          // the active one may be a remote receiver, which must not be able
+          // to make this buffer grow without limit.
+        if (dtmf_buf.size() < MAX_BUFFERED_DTMF_DIGITS)
+        {
+	  dtmf_buf.push_back(pair<char, int>(digit, duration));
+        }
       }
       else
       {
@@ -301,7 +313,10 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     {
       if (!valve.isOpen())
       {
-	selcall_buf.push_back(sequence);
+        if (selcall_buf.size() < MAX_BUFFERED_SELCALL_SEQUENCES)
+        {
+	  selcall_buf.push_back(sequence);
+        }
       }
       else
       {
