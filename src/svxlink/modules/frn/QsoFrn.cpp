@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <sigc++/bind.h>
 #include <sstream>
+#include <algorithm>
 #include <regex.h>
 
 
@@ -294,6 +295,9 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   int gsm_one = 1;
   assert(gsm_option(gsmh, GSM_OPT_WAV49, &gsm_one) != -1);
 
+    // The server speaks a line based protocol. Never keep more than this
+    // of data in which no complete line or frame has been found.
+  tcp_client->setMaxRecvBufLen(MAX_RECV_BUF_SIZE);
   tcp_client->connected.connect(
       mem_fun(*this, &QsoFrn::onConnected));
   tcp_client->disconnected.connect(
@@ -722,8 +726,6 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
   if (opt_frn_debug)
     cout << "cmd:   " << cmd << endl;
 
-  keepalive_timer->reset();
-
   bytes_read += 1;
 
   switch (cmd)
@@ -785,7 +787,19 @@ int QsoFrn::handleList(unsigned char *data, int len)
 {
   int bytes_read = 0;
   std::string line;
-  std::istringstream lines(std::string((char*)data, len));
+    // Only look at the first line. Making a stream of everything received
+    // for each line made the time to handle a buffer with many lines grow
+    // with the square of its size. One more byte than the line end is
+    // included so that a two character line end is consumed as a whole.
+  int first_line_len = 0;
+  const void *nl = std::memchr(data, '\n', len);
+  if (nl != 0)
+  {
+    first_line_len = static_cast<int>(
+        static_cast<const unsigned char*>(nl) - data) + 1;
+    first_line_len = std::min(len, first_line_len + 1);
+  }
+  std::istringstream lines(std::string((char*)data, first_line_len));
 
   if (hasLine(lines))
   {
@@ -822,7 +836,19 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
 {
   int bytes_read = 0;
   std::string line;
-  std::istringstream lines(std::string((char*)data, len));
+    // Only look at the first line. Making a stream of everything received
+    // for each line made the time to handle a buffer with many lines grow
+    // with the square of its size. One more byte than the line end is
+    // included so that a two character line end is consumed as a whole.
+  int first_line_len = 0;
+  const void *nl = std::memchr(data, '\n', len);
+  if (nl != 0)
+  {
+    first_line_len = static_cast<int>(
+        static_cast<const unsigned char*>(nl) - data) + 1;
+    first_line_len = std::min(len, first_line_len + 1);
+  }
+  std::istringstream lines(std::string((char*)data, first_line_len));
 
   if (hasLine(lines))
   {
@@ -938,6 +964,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
   con_timeout_timer->reset();
   int remaining_bytes = len;
+  bool cmd_received = false;
 
   while (remaining_bytes > 0)
   {
@@ -963,6 +990,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
       case STATE_TX_AUDIO_WAITING:
       case STATE_IDLE:
         bytes_read += handleCommand(p_data, remaining_bytes);
+        cmd_received = true;
         break;
 
       case STATE_RX_AUDIO:
@@ -987,6 +1015,17 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
     remaining_bytes -= bytes_read;
     p_data += bytes_read;
   }
+
+    // Reset the keep alive timer once for all the commands handled above.
+    // A timer reset is not cheap when done many times before the main loop
+    // gets to run again (each one leaves an entry behind in the timer list
+    // that the next one has to step over), and a server can send thousands
+    // of one byte commands in one go.
+  if (cmd_received)
+  {
+    keepalive_timer->reset();
+  }
+
   return len - remaining_bytes;
 }
 

@@ -523,6 +523,7 @@ class QsoFrn
   private:
     static const int        CLIENT_INDEX_SIZE       = 2;
     static const int        TCP_BUFFER_SIZE         = 65536;
+    static const size_t     MAX_RECV_BUF_SIZE       = 4 * 65536;
     static const int        FRAME_COUNT             = 5;
     static const int        PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
     static const int        GSM_FRAME_SIZE          = 65;     // WAV49 has 65

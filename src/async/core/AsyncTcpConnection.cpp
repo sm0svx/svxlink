@@ -520,6 +520,18 @@ void TcpConnection::recvHandler(FdWatch *watch)
   {
     processRecvBuf();
   }
+
+    // Don't let a peer make us buffer data without limit by sending data
+    // that the application does not (yet) handle
+  if ((m_max_recv_buf_len > 0) && isConnected() &&
+      (m_recv_buf.size() > m_max_recv_buf_len))
+  {
+    std::cerr << "*** ERROR: Too much unhandled data received from "
+              << remoteHost() << ":" << remotePort()
+              << ". Disconnecting." << std::endl;
+    closeConnection();
+    onDisconnected(DR_PROTOCOL_ERROR);
+  }
 } /* TcpConnection::recvHandler */
 
 

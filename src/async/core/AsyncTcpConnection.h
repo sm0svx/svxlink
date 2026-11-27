@@ -229,6 +229,19 @@ class TcpConnection : virtual public sigc::trackable
     size_t recvBufLen(void) const { return m_recv_buf.capacity(); }
 
     /**
+     * @brief   Set an upper limit for the amount of unhandled received data
+     * @param   max_len The largest number of bytes to keep, 0 for no limit
+     *
+     * Received data is kept in a buffer until the receiver of the
+     * dataReceived signal (or onDataReceived) has handled it. The buffer
+     * grows for as long as data is received but not handled, e.g. while a
+     * line based protocol waits for the end of a line. With a limit set, the
+     * connection is closed with reason DR_PROTOCOL_ERROR if more than max_len
+     * bytes are left unhandled. There is no limit by default.
+     */
+    void setMaxRecvBufLen(size_t max_len) { m_max_recv_buf_len = max_len; }
+
+    /**
      * @brief 	Disconnect from the remote host
      *
      * Call this function to disconnect from the remote host. If already
@@ -527,6 +540,7 @@ class TcpConnection : virtual public sigc::trackable
     int               sock                = -1;
     FdWatch           rd_watch;
     std::vector<Char> m_recv_buf;
+    size_t            m_max_recv_buf_len  = 0;
     Async::FdWatch    m_wr_watch;
     std::vector<char> m_write_buf;
 
